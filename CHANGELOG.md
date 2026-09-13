@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-13
+
+### Fixed
+
+- `RigShift.exe list` lists the profiles even when the display configuration cannot be read (for example over
+  SSH); the active profile is then not marked.
+
 ## [1.0.0] - 2026-09-13
 
 First release.
