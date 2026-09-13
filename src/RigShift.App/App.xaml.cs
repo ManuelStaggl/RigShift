@@ -91,6 +91,12 @@ public partial class App : Application, IAppShell
                 ConfirmationResult answer = await ConfirmationWindow.ShowAsync(preview, TimeSpan.FromSeconds(10), CancellationToken.None);
                 Log.Information("Confirmation preview answered {Answer}", answer);
             }
+
+            // Developer aid: the tray popup and the tray icon for other taskbars and DPI steps cannot be captured over RDP.
+            if (_request.PreviewBranding is { } previewDirectory)
+            {
+                BrandingPreview.Show(previewDirectory, Services.GetRequiredService<TrayPopupViewModel>());
+            }
 #endif
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) => await catalog.RefreshActiveAsync(CancellationToken.None);
@@ -122,7 +128,7 @@ public partial class App : Application, IAppShell
         base.OnExit(e);
     }
 
-    private static void ApplyWindowsTheme()
+    private void ApplyWindowsTheme()
     {
         ApplicationTheme theme = ApplicationThemeManager.GetSystemTheme() switch
         {
@@ -130,7 +136,20 @@ public partial class App : Application, IAppShell
             SystemTheme.Dark or SystemTheme.Glow or SystemTheme.CapturedMotion => ApplicationTheme.Dark,
             _ => ApplicationTheme.Light,
         };
-        ApplicationThemeManager.Apply(theme);
+
+        // Debug builds only: --preview-theme for screenshots; ignored in release builds.
+        theme = _request.PreviewTheme switch
+        {
+#if DEBUG
+            "light" => ApplicationTheme.Light,
+            "dark" => ApplicationTheme.Dark,
+#endif
+            _ => theme,
+        };
+        // The brand accent replaces the Windows accent, so theme changes must not bring the system accent back.
+        ApplicationThemeManager.Changed += (current, _) => BrandTheme.Apply(current);
+        ApplicationThemeManager.Apply(theme, updateAccent: false);
+        BrandTheme.Apply(theme);
     }
 
     private async Task ApplyDefaultProfileAsync(ProfileCatalog catalog)

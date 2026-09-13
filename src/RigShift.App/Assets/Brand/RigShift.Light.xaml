@@ -1,0 +1,30 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+  <Color x:Key="RigShift.Color.background">#F8FAFC</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.background" Color="{StaticResource RigShift.Color.background}"/>
+  <Color x:Key="RigShift.Color.surface">#FFFFFF</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.surface" Color="{StaticResource RigShift.Color.surface}"/>
+  <Color x:Key="RigShift.Color.surfaceAlt">#EFF4FA</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.surfaceAlt" Color="{StaticResource RigShift.Color.surfaceAlt}"/>
+  <Color x:Key="RigShift.Color.text">#0F172A</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.text" Color="{StaticResource RigShift.Color.text}"/>
+  <Color x:Key="RigShift.Color.textMuted">#475569</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.textMuted" Color="{StaticResource RigShift.Color.textMuted}"/>
+  <Color x:Key="RigShift.Color.border">#64748B</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.border" Color="{StaticResource RigShift.Color.border}"/>
+  <Color x:Key="RigShift.Color.primary">#0067B8</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.primary" Color="{StaticResource RigShift.Color.primary}"/>
+  <Color x:Key="RigShift.Color.onPrimary">#FFFFFF</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.onPrimary" Color="{StaticResource RigShift.Color.onPrimary}"/>
+  <Color x:Key="RigShift.Color.accent">#0078D4</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.accent" Color="{StaticResource RigShift.Color.accent}"/>
+  <Color x:Key="RigShift.Color.selected">#E2EEFF</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.selected" Color="{StaticResource RigShift.Color.selected}"/>
+  <Color x:Key="RigShift.Color.success">#0E743C</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.success" Color="{StaticResource RigShift.Color.success}"/>
+  <Color x:Key="RigShift.Color.warning">#805400</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.warning" Color="{StaticResource RigShift.Color.warning}"/>
+  <Color x:Key="RigShift.Color.error">#B42332</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.error" Color="{StaticResource RigShift.Color.error}"/>
+  <Color x:Key="RigShift.Color.focus">#0067B8</Color>
+  <SolidColorBrush x:Key="RigShift.Brush.focus" Color="{StaticResource RigShift.Color.focus}"/>
+</ResourceDictionary>

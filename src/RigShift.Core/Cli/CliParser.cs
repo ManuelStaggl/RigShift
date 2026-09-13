@@ -29,6 +29,12 @@ public sealed record CliRequest
 
     /// <summary>Debug builds only: show the confirmation window without switching.</summary>
     public bool PreviewConfirmation { get; init; }
+
+    /// <summary>Debug builds only: write a tray icon sheet into this folder and show the tray popup in a window.</summary>
+    public string? PreviewBranding { get; init; }
+
+    /// <summary>Debug builds only: <c>light</c> or <c>dark</c> instead of the Windows theme, for screenshots.</summary>
+    public string? PreviewTheme { get; init; }
 }
 
 /// <summary>Either a request to run, or text to print (help, version, usage errors) with its exit code.</summary>
@@ -62,6 +68,8 @@ public static class CliParser
     {
         var minimized = new Option<bool>("--minimized") { Description = "Start in the tray without opening the window." };
         var preview = new Option<bool>("--preview-confirmation") { Hidden = true };
+        var previewBranding = new Option<string>("--preview-branding") { Hidden = true };
+        var previewTheme = new Option<string>("--preview-theme") { Hidden = true };
 
         var applyName = new Argument<string>("name") { Description = "Profile name (not case-sensitive)." };
         var noConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new arrangement without asking." };
@@ -74,7 +82,7 @@ public static class CliParser
         var list = new Command("list", "List all profiles; the active one is marked with *.");
         var status = new Command("status", "Show the active profile and the active displays.");
 
-        var root = new RootCommand("RigShift switches displays and audio between profiles.") { minimized, preview, apply, list, save, status };
+        var root = new RootCommand("RigShift switches displays and audio between profiles.") { minimized, preview, previewBranding, previewTheme, apply, list, save, status };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
         foreach (Command command in (Command[])[root, apply, list, save, status])
@@ -95,6 +103,8 @@ public static class CliParser
         {
             Minimized = parsed.GetValue(minimized),
             PreviewConfirmation = parsed.GetValue(preview),
+            PreviewBranding = parsed.GetValue(previewBranding),
+            PreviewTheme = parsed.GetValue(previewTheme),
         };
 
         request = chosen == apply ? request with

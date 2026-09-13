@@ -109,9 +109,13 @@
   <data name="Editor_NewName" xml:space="preserve"><value>Neues Profil</value></data>
   <data name="Editor_ProblemsTitle" xml:space="preserve"><value>Noch nicht speicherbar</value></data>
   <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
-  <data name="Editor_Icon" xml:space="preserve"><value>Tray-Symbol</value></data>
-  <data name="Icon_Rig" xml:space="preserve"><value>Rig</value></data>
+  <data name="Editor_Icon" xml:space="preserve"><value>Symbol</value></data>
   <data name="Icon_Desk" xml:space="preserve"><value>Schreibtisch</value></data>
+  <data name="Icon_Rig" xml:space="preserve"><value>Sim Rig</value></data>
+  <data name="Icon_Vr" xml:space="preserve"><value>VR</value></data>
+  <data name="Icon_Tv" xml:space="preserve"><value>TV / Couch</value></data>
+  <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
+  <data name="Tray_Header" xml:space="preserve"><value>Profil wechseln</value></data>
   <data name="Editor_OwnTimeout" xml:space="preserve"><value>Eigene Bestätigungszeit (Sekunden)</value></data>
   <data name="Editor_OwnTimeoutHint" xml:space="preserve"><value>Sonst gilt die App-Einstellung ({0} s). 0 schaltet ohne Nachfrage.</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>

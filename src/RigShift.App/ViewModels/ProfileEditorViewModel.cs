@@ -44,8 +44,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         Title = Loc.Instance[isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
         TimeoutHint = Loc.Format("Editor_OwnTimeoutHint", appConfirmTimeoutSeconds);
         Name = profile.Name;
-        IconChoices = [new Choice("rig", Loc.Instance["Icon_Rig"]), new Choice("desk", Loc.Instance["Icon_Desk"])];
-        SelectedIcon = IconChoices.FirstOrDefault(c => string.Equals(c.Key, profile.Icon, StringComparison.OrdinalIgnoreCase)) ?? IconChoices[0];
+        IconChoices = [.. ProfileIcons.All.Select(key => new Choice(key, Loc.Instance["Icon_" + char.ToUpperInvariant(key[0]) + key[1..]]))];
+        SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(profile.Icon))
+            ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
         UseOwnTimeout = profile.ConfirmTimeoutSeconds is not null;
         OwnTimeoutSeconds = profile.ConfirmTimeoutSeconds ?? appConfirmTimeoutSeconds;
         SetDisplays(profile.Displays);

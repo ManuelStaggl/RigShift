@@ -3,35 +3,97 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization">
+  <!-- Layout after the brand package mockup (07-mockups), limited to what the app can do. -->
+  <UserControl.Resources>
+    <Style x:Key="TrayRowButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+      <Setter Property="Appearance" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="{DynamicResource RigShift.Radius.control}" />
+    </Style>
+  </UserControl.Resources>
+
   <Border
-    Width="290"
-    Padding="12"
+    Width="320"
+    Padding="8,16,8,8"
     Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
     BorderThickness="1"
-    CornerRadius="8">
+    CornerRadius="{DynamicResource RigShift.Radius.card}">
     <StackPanel>
-      <ui:TextBlock FontTypography="BodyStrong" Text="RigShift" />
-      <TextBlock Margin="0,2,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ActiveText}" />
+      <StackPanel Margin="12,0,12,12" Orientation="Horizontal">
+        <Image
+          Width="48"
+          Height="32"
+          AutomationProperties.Name="RigShift"
+          RenderOptions.BitmapScalingMode="HighQuality"
+          Source="{DynamicResource RigShift.Image.symbol}"
+          Stretch="Uniform" />
+        <TextBlock
+          Margin="12,0,0,0"
+          VerticalAlignment="Center"
+          FontFamily="{DynamicResource RigShift.Font.Display}"
+          FontSize="{DynamicResource RigShift.Type.subtitle.Size}"
+          FontWeight="{DynamicResource RigShift.Type.subtitle.Weight}"
+          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+          Text="{loc:Tr Tray_Header}" />
+      </StackPanel>
+
+      <TextBlock
+        Margin="12,0,12,8"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{Binding StatusText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
 
       <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <ui:Button
-              Margin="0,2"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Left"
+              AutomationProperties.Name="{Binding AccessibleName}"
               Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
               CommandParameter="{Binding}"
               IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}">
+              <ui:Button.Style>
+                <Style TargetType="ui:Button" BasedOn="{StaticResource TrayRowButton}">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                      <Setter Property="Background" Value="{DynamicResource RigShift.Brush.selected}" />
+                      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.primary}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ui:Button.Style>
               <Grid>
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="28" />
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <ui:SymbolIcon Symbol="Checkmark24" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
-                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}" />
+                <controls:ProfileIcon Width="24" Height="24" VerticalAlignment="Center" IconKey="{Binding IconKey}" IsFilled="{Binding IsActive}" />
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                  <TextBlock
+                    FontFamily="{DynamicResource RigShift.Font.Text}"
+                    FontSize="{DynamicResource RigShift.Type.body.Size}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                  <TextBlock
+                    FontFamily="{DynamicResource RigShift.Font.Small}"
+                    FontSize="{DynamicResource RigShift.Type.caption.Size}"
+                    Text="{loc:Tr Profile_Active}"
+                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+                <ui:SymbolIcon
+                  Grid.Column="2"
+                  Margin="12,0,0,0"
+                  VerticalAlignment="Center"
+                  Symbol="Checkmark24"
+                  Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
               </Grid>
             </ui:Button>
           </DataTemplate>
@@ -39,16 +101,16 @@
       </ItemsControl>
 
       <TextBlock
-        Margin="0,6,0,0"
+        Margin="12,6,12,0"
+        AutomationProperties.LiveSetting="Polite"
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{loc:Tr Tray_Switching}"
         Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
 
-      <Separator Margin="0,8" />
-      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-        <ui:Button Margin="0,0,8,0" Command="{Binding OpenCommand}" Content="{loc:Tr Tray_Open}" />
-        <ui:Button Command="{Binding ExitCommand}" Content="{loc:Tr Tray_Exit}" />
-      </StackPanel>
+      <Separator Margin="4,8" />
+      <ui:Button Command="{Binding OpenCommand}" Content="{loc:Tr Tray_Open}" Icon="{ui:SymbolIcon Window24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
+      <ui:Button Command="{Binding SettingsCommand}" Content="{loc:Tr Tray_Settings}" Icon="{ui:SymbolIcon Settings24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
+      <ui:Button Command="{Binding ExitCommand}" Content="{loc:Tr Tray_Exit}" Icon="{ui:SymbolIcon Power24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
     </StackPanel>
   </Border>
 </UserControl>

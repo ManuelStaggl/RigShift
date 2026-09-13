@@ -11,7 +11,7 @@ public sealed record Profile
 
     public required string Name { get; init; }
 
-    /// <summary>Optional icon key (built-in name or path relative to the profile store).</summary>
+    /// <summary>Optional symbol key, one of <see cref="ProfileIcons.All"/>; unknown keys show the RigShift symbol.</summary>
     public string? Icon { get; init; }
 
     public required IReadOnlyList<DisplayAssignment> Displays { get; init; }

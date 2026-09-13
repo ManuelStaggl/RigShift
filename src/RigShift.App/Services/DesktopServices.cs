@@ -1,10 +1,13 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using System.Windows.Threading;
 using H.NotifyIcon;
 using H.NotifyIcon.Core;
+using Microsoft.Win32;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
@@ -70,9 +73,11 @@ public sealed class DisplayChangeWatcher : IDisposable
 /// <summary>Tray icon: left click opens the profile popup, right click (or the keyboard menu key) the context menu.</summary>
 public sealed class TrayIconService : IDisposable
 {
-    private static readonly Dictionary<string, BitmapImage> Icons = [];
+    /// <summary>Brand charcoal: the symbol color on a light taskbar (white on a dark one).</summary>
+    private static readonly Color LightTaskbarStroke = Color.FromRgb(0x0F, 0x17, 0x2A);
 
     private readonly TaskbarIcon _icon;
+    private System.Drawing.Icon? _trayIcon;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
     private readonly ProfilesViewModel _profiles;
@@ -112,6 +117,17 @@ public sealed class TrayIconService : IDisposable
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
         coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
+        coordinator.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
+            {
+                UpdateIcon();
+            }
+        };
+
+        // Taskbar theme, contrast theme and DPI can change at any time.
+        SystemEvents.UserPreferenceChanged += OnSystemChanged;
+        SystemEvents.DisplaySettingsChanged += OnSystemChanged;
     }
 
     public void Start()
@@ -122,7 +138,48 @@ public sealed class TrayIconService : IDisposable
         _log.Information("Tray icon created");
     }
 
-    public void Dispose() => _icon.Dispose();
+    public void Dispose()
+    {
+        SystemEvents.UserPreferenceChanged -= OnSystemChanged;
+        SystemEvents.DisplaySettingsChanged -= OnSystemChanged;
+        _icon.Dispose();
+        _trayIcon?.Dispose();
+    }
+
+    // SystemEvents may raise on its own thread.
+    private void OnSystemChanged(object? sender, EventArgs e) => _icon.Dispatcher.InvokeAsync(UpdateIcon);
+
+    /// <summary>
+    /// The active profile's symbol in the taskbar's color, rendered for the current DPI; the RigShift symbol while
+    /// switching or when no profile with a known symbol is active.
+    /// </summary>
+    private void UpdateIcon()
+    {
+        int size = NativeWindow.SmallIconSize();
+        bool highContrast = SystemParameters.HighContrast;
+        bool lightTaskbar = highContrast ? BrandTheme.IsLight(SystemColors.WindowColor) : NativeWindow.IsTaskbarLight();
+        string? key = _coordinator.IsSwitching ? null : ProfileIcons.Normalize(_catalog.ActiveProfile?.Icon);
+
+        System.Drawing.Icon icon;
+        Color color = highContrast ? SystemColors.WindowTextColor : lightTaskbar ? LightTaskbarStroke : Colors.White;
+        if (ProfileIconRenderer.Render(key, size, color) is { } bitmap)
+        {
+            icon = ProfileIconRenderer.ToIcon(bitmap);
+        }
+        else
+        {
+            // Tray file names name the taskbar background: "light" holds the dark symbol.
+            var uri = new Uri("pack://application:,,,/Assets/Brand/rigshift-tray-" + (lightTaskbar ? "light" : "dark") + ".ico", UriKind.Absolute);
+            using Stream stream = Application.GetResourceStream(uri).Stream;
+            icon = new System.Drawing.Icon(stream, size, size);
+        }
+
+        System.Drawing.Icon? previous = _trayIcon;
+        _trayIcon = icon;
+        _icon.Icon = icon;
+        previous?.Dispose();
+        _log.Debug("Tray icon {Symbol} at {Size} px, light taskbar {LightTaskbar}", key ?? "rigshift", size, lightTaskbar);
+    }
 
     private void Notify((string Title, string Text, NotificationIcon Icon) message) =>
         _icon.ShowNotification(message.Title, message.Text, message.Icon);
@@ -130,7 +187,7 @@ public sealed class TrayIconService : IDisposable
     private void Refresh()
     {
         Profile? active = _catalog.ActiveProfile;
-        _icon.IconSource = IconFor(active);
+        UpdateIcon();
         _icon.ToolTipText = "RigShift – " + (active?.Name ?? Loc.Instance["Tray_ActiveNone"]);
         RebuildMenu();
     }
@@ -171,23 +228,5 @@ public sealed class TrayIconService : IDisposable
         var item = new MenuItem { Header = header };
         item.Click += (_, _) => action();
         return item;
-    }
-
-    private static BitmapImage IconFor(Profile? profile)
-    {
-        string name = profile?.Icon?.ToLowerInvariant() switch
-        {
-            "desk" => "desk",
-            _ => "rig",
-        };
-
-        if (!Icons.TryGetValue(name, out BitmapImage? image))
-        {
-            image = new BitmapImage(new Uri("pack://application:,,,/Assets/" + name + ".ico", UriKind.Absolute));
-            image.Freeze();
-            Icons[name] = image;
-        }
-
-        return image;
     }
 }

@@ -34,9 +34,8 @@ dotnet test --solution RigShift.slnx
 ## Stand
 
 Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
-**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) fertig. Als Nächstes **M4.5**: Markenauftritt aus
-`RigShift-Brand-Package/` (gitignoriert, Plan Abschnitt 4.8), danach **M5**: Hardwaretest am Gaming-PC.
-Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) und **M4.5** (Markenauftritt, Plan Abschnitt 4.8)
+fertig. Als Nächstes **M5**: Hardwaretest am Gaming-PC. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
 
 CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
 `--dry-run`**, auch keine erzeugte Verknüpfung starten.
@@ -44,7 +43,8 @@ CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --
 App-Prüfung am Server ohne Umschalten: App starten, Screenshots per `PrintWindow` (Flag 2) des Fensters –
 `CopyFromScreen` fängt verdeckende Fenster mit ein, und computer-use kennt die Dev-EXE nicht. Navigation per
 UI-Automation-Fokus + Enter. Countdown-Dialog nur in
-Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar.
+Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup (mit aktivem Profil) und Tray-Icon-Bögen
+für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 
 Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
 `dotnet run --project tools/RigShift.Probe -- snapshot | audio | import <ordner> | plan <ordner> <profil>`.

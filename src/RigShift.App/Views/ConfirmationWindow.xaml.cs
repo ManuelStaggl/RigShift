@@ -69,11 +69,15 @@ public partial class ConfirmationWindow : FluentWindow
             Log.Warning("Global Esc hotkey for the confirmation window could not be registered; Esc works only while the window has focus");
         }
 
-        SystemThemeWatcher.Watch(this);
+        SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: false);
     }
 
     private void OnContentRendered(object? sender, EventArgs e)
     {
+        var content = (FrameworkElement)Content;
+        Log.Debug(
+            "Confirmation window {Width}x{Height} (min {MinWidth}x{MinHeight}), content {ContentWidth}x{ContentHeight}",
+            ActualWidth, ActualHeight, MinWidth, MinHeight, content.ActualWidth, content.ActualHeight);
         NativeWindow.CenterOnPrimaryMonitor(_hwnd);
         Activate();
         KeepButton.Focus();

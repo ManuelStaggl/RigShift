@@ -1,4 +1,9 @@
-# RigShift
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/rigshift-horizontal-color-dark-tagline.svg">
+    <img alt="RigShift – Desk to rig. In one shift." src="docs/brand/rigshift-horizontal-color-light-tagline.svg" width="420">
+  </picture>
+</h1>
 
 [![CI](https://github.com/ManuelStaggl/RigShift/actions/workflows/ci.yml/badge.svg)](https://github.com/ManuelStaggl/RigShift/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -7,7 +12,7 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **early development (milestone M4 – tray app, command line and profile editor done).** Not yet tested
+> Status: **early development (milestone M4.5 – tray app, command line, profile editor and brand identity done).** Not yet tested
 > on real multi-monitor hardware, no release yet. Watch the repo or check the [roadmap](docs/ROADMAP.md).
 
 ## Why another display switcher?

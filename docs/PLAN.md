@@ -207,26 +207,29 @@ dort sind verbindlich (Schreibweise „RigShift", Logo nie verändern, aktiver Z
 Farbe; keine Fontdateien mitliefern). Entscheidungen des Nutzers (2026-09-13) in Abschnitt 10.
 
 1. **Ablage.** Nur Genutztes ins Repo: `src/RigShift.App/Assets/Brand/` bekommt `rigshift-app-light.ico`,
-   `rigshift-tray-light.ico`/`-dark.ico`, die vier ResourceDictionaries und das Symbol als PNG (hell/dunkel) für
-   Kopfzeilen. `docs/brand/` bekommt das horizontale Logo (SVG + PNG, hell/dunkel) für README und GitHub.
+   `rigshift-tray-light.ico`/`-dark.ico`, die ResourceDictionaries Shared/Light/Dark und das Symbol als PNG (hell/dunkel) für
+   den Popup-Kopf. `docs/brand/` bekommt das horizontale Logo mit Slogan (SVG, hell/dunkel) und das App-Icon als
+   PNG für README und GitHub. Prüfhilfe nur im Debug-Build: `RigShift.exe --preview-branding <ordner>
+   [--preview-theme light|dark]` schreibt Tray-Icon-Bögen und zeigt das Popup in einem Fenster.
    `Assets/desk.ico`/`rig.ico` entfallen.
 2. **App-Icon.** `ApplicationIcon` und das Icon aller Fenster (Hauptfenster, Editor, Countdown) = `rigshift-app-light.ico`.
-3. **Ressourcen.** `RigShift.Shared` + genau eines von `RigShift.Light`/`RigShift.Dark` + `RigShift.Profiles` in
-   `App.xaml` mergen; der vorhandene Theme-Wechsel (Windows-Theme-Watcher) tauscht das Brand-Dictionary mit aus.
+3. **Ressourcen.** `RigShift.Shared` + genau eines von `RigShift.Light`/`RigShift.Dark` in `App.xaml` mergen
+   (`BrandTheme`); der vorhandene Theme-Wechsel (Windows-Theme-Watcher) tauscht das Brand-Dictionary mit aus.
    Bei hohem Kontrast bleiben WPF-UI-/Systemfarben maßgeblich. WPF-UI-Akzent = Markenblau (`primary` #0067B8
    hell, #79B8FF dunkel) statt Windows-Akzent. Keine WPF-UI-Schlüssel überschreiben.
 4. **Profilsymbole.** Bekannte Icon-Schlüssel `desk`, `rig`, `vr`, `tv`, `stream` (Core, getestet; Alt-Profile nutzen
-   schon `desk`/`rig`). Darstellung aus den Geometrien in `RigShift.Profiles.xaml` (Strich 1,75 auf 24er-Raster) –
-   im Editor als Auswahl mit Vorschau, in der Profilliste und im Popup vor dem Namen. Unbekannter Schlüssel →
-   RigShift-Symbol.
-5. **Tray-Icon.** Zeigt das Profilsymbol des aktiven Profils, zur Laufzeit aus der Geometrie gerendert (weiß auf
+   schon `desk`/`rig`). Darstellung mit **Fluent System Icons aus WPF-UI** statt der Paket-Geometrien (Nutzer:
+   gefielen nicht): `Desktop`, `TopSpeed`, `HeadsetVr`, `Tv`, `Live`; Umriss, beim aktiven Profil gefüllt – im
+   Editor als Auswahl mit Vorschau, in der Profilliste und im Popup vor dem Namen. Ohne bzw. mit unbekanntem
+   Schlüssel: im Tray das RigShift-Symbol, in Listen kein Symbol.
+5. **Tray-Icon.** Zeigt das Profilsymbol des aktiven Profils, zur Laufzeit gefüllt gerendert (weiß auf
    dunkler, dunkel auf heller **Taskleiste** – `SystemUsesLightTheme`, nicht das App-Theme) in der Pixelgröße der
    aktuellen DPI. Kein Profil erkannt oder Wechsel läuft → `rigshift-tray-*.ico`. Neu zuweisen bei
-   Taskleisten-Theme-, Kontrast- und DPI-Wechsel; bei 16 px mit den `04-profile-icons/*-16w.png` des Pakets vergleichen.
+   Taskleisten-Theme-, Kontrast- und DPI-Wechsel.
 6. **Tray-Popup nach Mockup** (`07-mockups`): Kopf mit Symbol + „Profil wechseln", Profilzeilen mit Symbol und Name,
    aktives Profil hervorgehoben mit Häkchen und „Aktiv", Status „Wechsle …" bei laufendem Wechsel (Zeilen gesperrt),
-   unten Öffnen, Einstellungen, Beenden. Hauptfenster behält seine Seiten und bekommt nur Logo/Titelleiste,
-   Profilsymbole und Tokens. Mockup-Inhalte ohne Funktion (Monitor-Grafik, Seiten Anzeige/Audio) werden nicht gebaut.
+   unten Öffnen, Einstellungen, Beenden. Hauptfenster behält seine Seiten und bekommt nur das App-Icon in der
+   Titelleiste (kein großes Logo in der Seitenleiste – Nutzer, 2026-09-13), Profilsymbole und Tokens. Mockup-Inhalte ohne Funktion (Monitor-Grafik, Seiten Anzeige/Audio) werden nicht gebaut.
 7. **Texte.** Neue Strings de/en für Icon-Namen (VR, TV/Couch, Streaming) und Popup; Markentexte aus
    `BRAND-GUIDELINES.md` („Sim Rig ist aktiv", „Vorheriges Profil wiederhergestellt").
 8. **README.** Logo per `<picture>` hell/dunkel, Slogan „Desk to rig. In one shift."; Social-Preview-Bild lädt der
@@ -348,6 +351,11 @@ Entschieden für M4.5 Markenauftritt (Nutzer, 2026-09-13), Umsetzung Abschnitt 4
   Kontrast bleibt korrekt.
 - **Nur das Tray-Popup folgt dem Mockup**, das Hauptfenster behält Profile/Diagnose/Einstellungen. Begründung: die
   Mockup-Seiten zeigen Funktionen, die es nicht gibt; das Paket sagt selbst, Mockups an den Funktionsumfang anzupassen.
+- **Profilsymbole = Fluent System Icons statt Paket-Geometrien:** Desk `Desktop`, Rig `TopSpeed`, VR `HeadsetVr`,
+  TV `Tv`, Streaming `Live`; Umriss, aktives Profil gefüllt, Tray immer gefüllt. Begründung: die Paketsymbole
+  wirkten auf den Nutzer unmodern und unpassend; die Fluent-Symbole sind dieselbe Familie wie die übrigen
+  App-Symbole und bei 16 px besser lesbar. Nicht alle Fluent-Namen sind in der WPF-UI-Schrift enthalten
+  (`Desk`, `DesktopTower`, `LaptopPerson` fehlen) – neue Symbole vorher rendern.
 - **Nur genutzte Dateien ins Repo**, das Paket bleibt lokal und gitignoriert. Begründung: 12 MB Rastergrößen und
   Originaltafeln gehören nicht in die ausführbare Datei und blähen das Repo.
 

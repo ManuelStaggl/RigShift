@@ -31,3 +31,10 @@ All notable changes to this project are documented here. The format follows
   "save current arrangement" in the window and tray menu, profile editor (name, tray icon, own confirmation time,
   main and optional displays, playback/recording devices per role, take over the current arrangement), duplicate,
   delete and desktop shortcuts per profile.
+- Brand identity (milestone M4.5): new RigShift app icon for the executable and all windows; brand blue as accent
+  color (the app still follows the Windows light, dark and high-contrast theme); five Fluent profile symbols (desk,
+  sim rig, VR, TV/couch, streaming) selectable in the editor and shown in the profile list and tray popup, filled for
+  the active profile; the tray icon
+  shows the active profile's symbol in the taskbar's color at the current DPI and the RigShift symbol while
+  switching or when no profile is recognized; tray popup redesigned with the active profile marked by highlight,
+  check mark and "Active"; logo in the README.

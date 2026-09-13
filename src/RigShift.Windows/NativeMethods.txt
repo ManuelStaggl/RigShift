@@ -50,6 +50,9 @@ GetMonitorInfo
 MONITORINFO
 GetWindowRect
 SetWindowPos
+// Tray icon size at the primary monitor's current DPI.
+GetDpiForMonitor
+GetSystemMetricsForDpi
 // CLI output from a GUI-subsystem executable.
 AttachConsole
 GetStdHandle

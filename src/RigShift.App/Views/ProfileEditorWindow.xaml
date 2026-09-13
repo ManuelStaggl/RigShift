@@ -3,8 +3,10 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   Title="{Binding Title}"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="760"
   Height="720"
   MinWidth="560"
@@ -52,9 +54,18 @@
             <ComboBox
               Margin="0,4,0,0"
               AutomationProperties.Name="{loc:Tr Editor_Icon}"
-              DisplayMemberPath="Name"
               ItemsSource="{Binding IconChoices}"
-              SelectedItem="{Binding SelectedIcon}" />
+              SelectedItem="{Binding SelectedIcon}"
+              TextSearch.TextPath="Name">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Orientation="Horizontal">
+                    <controls:ProfileIcon Width="20" Height="20" VerticalAlignment="Center" IconKey="{Binding Key}" />
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding Name}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
           </StackPanel>
           <StackPanel Grid.Column="2">
             <CheckBox Content="{loc:Tr Editor_OwnTimeout}" IsChecked="{Binding UseOwnTimeout}" />

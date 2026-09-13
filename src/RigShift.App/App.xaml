@@ -10,6 +10,9 @@
         <!-- Replaced at startup by the Windows theme (light, dark or high contrast). -->
         <ui:ThemesDictionary Theme="Dark" />
         <ui:ControlsDictionary />
+        <!-- Brand tokens; BrandTheme swaps the Light dictionary for Dark or high contrast. -->
+        <ResourceDictionary Source="/Assets/Brand/RigShift.Shared.xaml" />
+        <ResourceDictionary Source="/Assets/Brand/RigShift.Light.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </ResourceDictionary>

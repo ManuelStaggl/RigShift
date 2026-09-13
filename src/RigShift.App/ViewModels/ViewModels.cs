@@ -22,6 +22,12 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
 
     public string Name => Profile.Name;
 
+    /// <summary>Known symbol key, or <c>null</c> for no symbol.</summary>
+    public string? IconKey => ProfileIcons.Normalize(Profile.Icon);
+
+    /// <summary>Name for screen readers; the active state is also shown as text and check mark, not only by color.</summary>
+    public string AccessibleName => IsActive ? $"{Name}, {Loc.Instance["Profile_Active"]}" : Name;
+
     /// <summary>Left to right, as the displays stand on the desk.</summary>
     public IReadOnlyList<string> DisplayLines { get; } = profile.Displays
         .OrderBy(d => d.PositionX)
@@ -30,6 +36,7 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
         .ToList();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AccessibleName))]
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
@@ -67,8 +74,8 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         Catalog = catalog;
         Coordinator = coordinator;
         _shell = shell;
-        catalog.Changed += (_, _) => OnPropertyChanged(nameof(ActiveText));
-        Loc.Instance.PropertyChanged += (_, _) => OnPropertyChanged(nameof(ActiveText));
+        catalog.Changed += (_, _) => OnStatusChanged();
+        Loc.Instance.PropertyChanged += (_, _) => OnStatusChanged();
     }
 
     public event EventHandler? CloseRequested;
@@ -77,9 +84,12 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
     public SwitchCoordinator Coordinator { get; }
 
-    public string ActiveText => Catalog.ActiveProfile is { } active
-        ? Loc.Format("Tray_Active", active.Name)
-        : Loc.Instance["Tray_ActiveNone"];
+    /// <summary>Shown below the header only when no profile row is marked active.</summary>
+    public string? StatusText => Catalog.IsEmpty ? Loc.Instance["Tray_NoProfiles"]
+        : Catalog.ActiveProfile is null ? Loc.Instance["Tray_ActiveNone"]
+        : null;
+
+    public bool HasStatusText => StatusText is not null;
 
     [RelayCommand]
     private async Task SwitchAsync(ProfileItem? item)
@@ -101,7 +111,20 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void Settings()
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+        _shell.ShowMainWindow(typeof(Views.Pages.SettingsPage));
+    }
+
+    [RelayCommand]
     private void Exit() => _shell.Quit();
+
+    private void OnStatusChanged()
+    {
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(HasStatusText));
+    }
 }
 
 public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoordinator coordinator, ProfileDialogs dialogs, ILogger log) : ObservableObject
@@ -234,7 +257,11 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
     private void OpenFolder() => ShellFolders.Open(catalog.ProfileDirectory, log);
 }
 
-public sealed record Choice(string? Key, string Name);
+public sealed record Choice(string? Key, string Name)
+{
+    /// <summary>Screen readers and type-ahead in combo boxes read the display name.</summary>
+    public override string ToString() => Name;
+}
 
 public sealed partial class SettingsViewModel : ObservableObject
 {

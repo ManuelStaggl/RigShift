@@ -5,7 +5,10 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   Title="RigShift"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   ExtendsContentIntoTitleBar="True"
+  MinWidth="0"
+  MinHeight="0"
   ResizeMode="NoResize"
   ShowInTaskbar="True"
   SizeToContent="WidthAndHeight"
@@ -13,7 +16,8 @@
   WindowBackdropType="Mica"
   WindowCornerPreference="Round"
   WindowStartupLocation="Manual">
-  <StackPanel MinWidth="420" MaxWidth="560" Margin="32">
+  <!-- No bottom margin: FluentWindow keeps the hidden caption height (about 40 px) below the content. -->
+  <StackPanel MinWidth="420" MaxWidth="560" Margin="32,32,32,0">
     <ui:TextBlock FontTypography="Subtitle" Text="{loc:Tr Confirm_Title}" TextWrapping="Wrap" />
     <ui:TextBlock x:Name="ProfileText" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
     <ui:TextBlock

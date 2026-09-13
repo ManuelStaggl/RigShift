@@ -6,6 +6,7 @@
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   xmlns:pages="clr-namespace:RigShift.App.Views.Pages"
   Title="RigShift"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="980"
   Height="660"
   MinWidth="720"
@@ -20,7 +21,11 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="RigShift" />
+    <ui:TitleBar Grid.Row="0" Title="RigShift">
+      <ui:TitleBar.Icon>
+        <ui:ImageIcon Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
+      </ui:TitleBar.Icon>
+    </ui:TitleBar>
 
     <ui:NavigationView
       x:Name="RootNavigation"

@@ -8,7 +8,7 @@
     <AssemblyName>RigShift</AssemblyName>
     <UseWPF>true</UseWPF>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
-    <ApplicationIcon>Assets\rig.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Brand\rigshift-app-light.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <!-- Publish defaults (see docs/PLAN.md, section Verteilung). -->
@@ -37,7 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\*.ico" />
+    <!-- Brand package 1.0: only the assets the app uses (docs/PLAN.md, section 4.8). -->
+    <Resource Include="Assets\Brand\*.ico;Assets\Brand\*.png" />
   </ItemGroup>
 
 </Project>

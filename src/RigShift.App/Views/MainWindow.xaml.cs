@@ -19,7 +19,7 @@ public partial class MainWindow : FluentWindow
         RootNavigation.SetServiceProvider(services);
         Loaded += (_, _) =>
         {
-            SystemThemeWatcher.Watch(this);
+            SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: false);
             RootNavigation.Navigate(_page);
         };
     }
