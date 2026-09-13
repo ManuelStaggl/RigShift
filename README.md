@@ -12,8 +12,8 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **early development (milestone M5 – hardware test on a real desk ↔ sim rig setup passed).** No release yet.
-> Watch the repo or check the [roadmap](docs/ROADMAP.md).
+> Status: **1.0** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
+> · [Roadmap](docs/ROADMAP.md)
 
 <p align="center">
   <picture>
@@ -49,6 +49,20 @@ Beyond that, RigShift is designed to be boring in the good way:
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Profile editor with displays and audio devices" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
 | **Profile editor** – main display, optional displays, audio devices. | **Settings** – default profile, autostart, confirmation time, language. |
+
+## Installation
+
+Download **`RigShift-win-Setup.exe`** from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
+and run it. RigShift installs for your user account (no admin rights), adds a Start menu entry and starts in the tray.
+A portable ZIP is attached to every release as well.
+
+RigShift is not code-signed yet, so Windows SmartScreen may say *"Windows protected your PC"*. Click
+**More info → Run anyway**. Signing is planned (see roadmap).
+
+**Updates** install themselves: RigShift checks GitHub at startup and once a day, downloads a new version in the
+background and installs it the next time it starts.
+
+Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when you uninstall.
 
 ## Planned features
 
@@ -122,7 +136,7 @@ RigShift focuses on the atomic switch, robustness on real hardware and sim-racin
 ## Contributing
 
 Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). Please attach the log from
-`%LocalAppData%\RigShift\logs` to bug reports (it contains display device paths, nothing else personal).
+`%AppData%\RigShift\logs` to bug reports (it contains display device paths, nothing else personal).
 
 ## License
 

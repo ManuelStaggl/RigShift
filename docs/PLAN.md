@@ -325,6 +325,10 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 - Workflow `.github/workflows/release.yml` läuft bei Tag `v*`; `ci.yml` bei jedem Push/PR (Build + Tests).
 - Versionsquelle: `Directory.Build.props` → `<Version>`; der Tag muss übereinstimmen (Workflow prüft).
 - Auto-Update: App prüft beim Start und alle 24 h gegen GitHub Releases, installiert beim nächsten Neustart.
+  Umsetzung M6: `UpdateService` lädt im Hintergrund und meldet per Tray-Balloon; Velopacks „Auto-Apply beim Start“
+  ist nur für die Tray-App an, nicht für CLI-Aufrufe (der Neustart zum Installieren würde den Exit-Code verlieren).
+- Release-Notes = Abschnitt der Version aus `CHANGELOG.md`; der Workflow bricht ab, wenn er fehlt. Vor dem Packen
+  lädt `vpk download github` das vorige Release, damit ein Delta-Paket entsteht.
 - v1 ohne Signatur (SmartScreen-Hinweis im README erklärt); Signatur in v2.
 
 ---
@@ -351,7 +355,7 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Prozess-Trigger per WMI braucht ggf. Adminrechte | In v1.1 evaluieren; Fallback Polling |
 | `CcdDisplayConfigurator` übergibt pro Bildschirm nur den Source-Modus (Auflösung, Position) und die Bildrate im Pfad, **kein Target-Timing** – das Skript hat gespeicherte Target-Modi mitgegeben | Entscheidung M2: Das Profilmodell speichert kein Timing, Windows wählt es per `SDC_ALLOW_CHANGES` (dokumentiertes Verhalten). In M5 prüfen; scheitert es, Target-Timing ins Profil aufnehmen |
 | Bildschirm im Standby liefert evtl. keinen `monitorDevicePath` → Planner meldet `NotAttached` statt `AttachedButUnavailable` und wartet nicht | **M5 geklärt:** der schlafende G9 meldet sich als verfügbar, fällt beim Aufwachen aber ~3 s ganz vom Bus (Fehler 31, dann 1610) → nach einem Fehlversuch wird auch auf verschwundene Bildschirme gewartet |
-| Velopack installiert nach `%LocalAppData%\RigShift` – derselbe Ordner wie Profile/Einstellungen; eine Deinstallation könnte die Profile löschen | In M6 prüfen; notfalls Daten nach `%AppData%\RigShift` verlegen (mit Migration) |
+| Velopack installiert nach `%LocalAppData%\RigShift` – derselbe Ordner wie Profile/Einstellungen; eine Deinstallation könnte die Profile löschen | **M6 geklärt:** Velopack löscht bei der Deinstallation den ganzen Installationsordner (Doku „Uninstalling“) → Daten liegen ab 1.0 in `%AppData%\RigShift`. Keine Migration im Code, weil es vor 1.0 keine Nutzer gab; der Gaming-PC wird einmalig von Hand umgezogen |
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 
 Offen (klärt die Entwicklungssession, wenn es ansteht): Port der HTTP-API; Lizenz der Markendateien (MIT

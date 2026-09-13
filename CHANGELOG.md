@@ -6,35 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-13
+
+First release.
+
 ### Added
 
-- Project skeleton (milestone M0): solution, Core/Windows/App projects, domain model, OS interfaces,
-  legacy `.display` parser with tests, CI workflow, documentation and roadmap.
-- Switch logic (milestone M1): `TopologyPlanner` matches profile displays by device path with an unambiguous
-  EDID fallback, reports missing/sleeping displays and warns about the estimated display-head budget;
-  `SwitchOrchestrator` waits for sleeping targets, retries with database modes and on error 31 within a time
-  budget, switches audio without failing the display switch, and rolls back display and audio when the user
-  does not confirm (`ISwitchConfirmation`).
-- Windows layer (milestone M2): `CcdDisplayConfigurator` (topology snapshot over all paths, one atomic
-  `SetDisplayConfig` with per-display source assignment), `PolicyConfigAudioController` (Core Audio enumeration,
-  default endpoint via `IPolicyConfig`, volume), `JsonProfileStore` with schema version and atomic writes,
-  import of the legacy script's `.display` files and `DisplayProfiles.json`, and the read-only
-  `tools/RigShift.Probe` check tool.
-- Tray app (milestone M3): tray icon reflecting the active profile, profile popup and context menu, main window
-  with profiles (switch, dry-run check), diagnostics (displays, audio devices, recent switches) and settings
-  (default profile, apply at startup, start with Windows, confirmation time, language), keep-or-revert countdown
-  window on the new primary display with a global Esc hotkey, balloon notifications, English and German UI,
-  Windows light/dark/high-contrast theme, detection of the active profile after every display change.
-- Command line and profile management (milestone M4): `RigShift.exe apply <name> [--no-confirm] [--dry-run]`,
-  `list`, `save <name>` and `status` with documented exit codes; a single tray instance per session that receives
-  commands from further processes over the `\\.\pipe\RigShift` named pipe (starting the tray app when needed);
-  "save current arrangement" in the window and tray menu, profile editor (name, tray icon, own confirmation time,
-  main and optional displays, playback/recording devices per role, take over the current arrangement), duplicate,
-  delete and desktop shortcuts per profile.
-- Brand identity (milestone M4.5): new RigShift app icon for the executable and all windows; brand blue as accent
-  color (the app still follows the Windows light, dark and high-contrast theme); five Fluent profile symbols (desk,
-  sim rig, VR, TV/couch, streaming) selectable in the editor and shown in the profile list and tray popup, filled for
-  the active profile; the tray icon
-  shows the active profile's symbol in the taskbar's color at the current DPI and the RigShift symbol while
-  switching or when no profile is recognized; tray popup redesigned with the active profile marked by highlight,
-  check mark and "Active"; logo in the README.
+- **Atomic switching:** a profile's complete display topology is applied in a single `SetDisplayConfig` call, so
+  NVIDIA display-head limits are not exceeded mid-sequence. Displays are matched by device path with an unambiguous
+  EDID fallback; the estimated head budget is checked before switching.
+- **Robust on real hardware:** waits for displays that are still waking up (including monitors that briefly drop off
+  the bus, Windows errors 31 and 1610), treats displays as required or optional, picks up optional displays such as
+  spacedesk as soon as they connect, and restores the previous arrangement if displays stay dark.
+- **Safety net:** a keep-or-revert countdown on the new primary display (Esc reverts from any screen); without
+  confirmation display and audio return to the previous state. The confirmation time can be set per profile, 0 skips it.
+- **Audio:** default playback and recording devices per role for every profile.
+- **Tray app:** tray icon showing the active profile's symbol in the taskbar's color, profile popup, main window with
+  profiles, diagnostics and settings (default profile, apply at startup, start with Windows, confirmation time,
+  language), balloon notifications, English and German UI, Windows light/dark/high-contrast theme.
+- **Profile management:** save the current arrangement, editor (name, symbol, confirmation time, main and optional
+  displays, audio devices), duplicate, delete, desktop shortcut per profile, import of the legacy PowerShell script's
+  profiles.
+- **Command line:** `RigShift.exe apply <name> [--no-confirm] [--dry-run]`, `list`, `save <name>`, `status` with
+  documented exit codes; commands are forwarded to the running tray instance.
+- **Installer and automatic updates** (Velopack): per-user setup without admin rights, portable ZIP, update check at
+  startup and every 24 hours, installation on the next start.
