@@ -15,6 +15,13 @@ desk and an ultrawide / triple-screen / VR cockpit.
 > Status: **early development (milestone M4.5 – tray app, command line, profile editor and brand identity done).** Not yet tested
 > on real multi-monitor hardware, no release yet. Watch the repo or check the [roadmap](docs/ROADMAP.md).
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/profiles-light.png">
+    <img alt="RigShift main window with a Desk and a Rig profile" src="docs/screenshots/profiles-dark.png" width="820">
+  </picture>
+</p>
+
 ## Why another display switcher?
 
 Because the existing ones fail on modern GPUs. NVIDIA cards have a fixed budget of display heads, and
@@ -33,6 +40,15 @@ Beyond that, RigShift is designed to be boring in the good way:
 - **Audio included:** default playback and communications devices per profile.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
 - **Scriptable:** `RigShift.exe apply Rig` from a Stream Deck, button box, SimHub or shortcut.
+
+## Screenshots
+
+| | |
+|---|---|
+| <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
+| **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
+| <img alt="Profile editor with displays and audio devices" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
+| **Profile editor** – main display, optional displays, audio devices. | **Settings** – default profile, autostart, confirmation time, language. |
 
 ## Planned features
 
