@@ -74,7 +74,17 @@ communications separately. Check `DEVICE_STATE_ACTIVE` first; setting an unplugg
 - Surface Pro as a wired monitor is impossible (USB-C is output-only); spacedesk over Wi-Fi is the workable path,
   Miracast the native alternative.
 
-## 8. Reference implementation
+## 8. Windows switches on its own when the set of monitors changes
+
+Observed 2026-09-13 20:17 (M5): `SDC_SAVE_TO_DATABASE` stores each layout under the set of connected monitors. When a
+display appears or disappears (a spacedesk viewer connects, a sleeping monitor drops off), Windows re-applies whatever
+layout its database holds for the new set – here it jumped from the rig to the desk when spacedesk connected, and
+back to the rig when it disconnected. The active profile after a display change therefore says nothing about the
+user's intent. The follow-up pass re-applies the pending profile whenever one of its missing displays resolves,
+regardless of which profile Windows made active; it only gives up when another profile is active and no missing
+display showed up.
+
+## 9. Reference implementation
 
 `legacy/DisplayProfile.ps1` contains the proven C# interop for save/apply (structs, mapping, fallback, retry)
 and the `IPolicyConfig` declaration. RigShift reimplements it with CsWin32-generated types, but the algorithm

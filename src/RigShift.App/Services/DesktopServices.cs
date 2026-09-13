@@ -16,6 +16,7 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Windows.Ui;
 using Serilog;
+using Wpf.Ui.Appearance;
 
 namespace RigShift.App.Services;
 
@@ -113,6 +114,17 @@ public sealed class TrayIconService : IDisposable
         };
 
         popupViewModel.CloseRequested += (_, _) => _icon.CloseTrayPopup();
+
+        // Application resource changes only reach Application.Windows; the popup is no window and kept half of the old
+        // theme (M5: light background, white rows after switching Windows light → dark). Touching its own resources
+        // makes WPF re-resolve every DynamicResource below it.
+        ApplicationThemeManager.Changed += (theme, _) => popup.Dispatcher.InvokeAsync(() =>
+        {
+            var nudge = new ResourceDictionary();
+            popup.Resources.MergedDictionaries.Add(nudge);
+            popup.Resources.MergedDictionaries.Remove(nudge);
+            _log.Debug("Tray popup resources refreshed for theme {Theme}", theme);
+        });
         catalog.Changed += (_, _) => Refresh();
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
         coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));

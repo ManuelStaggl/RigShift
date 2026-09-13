@@ -21,6 +21,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private readonly ILogger _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>Last switch applied partially: the profile and how many displays it got. Cleared by any other switch.</summary>
+    private (Profile Profile, int Displays)? _pendingCatchUp;
+
     public SwitchCoordinator(SwitchOrchestrator orchestrator, ProfileCatalog catalog, SettingsService settings, TimeProvider time, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
@@ -85,9 +88,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
             if (!dryRun)
             {
-                Complete(new SwitchRecord(started, profile.Name, result.Outcome, result.Audio, result.Attempts, result.Duration,
-                    result.LastNativeError, result.Message,
-                    result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment.Identity)).ToList()));
+                RememberCatchUp(profile, result);
+                Complete(ToRecord(started, profile, result));
             }
 
             return result;
@@ -115,6 +117,63 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _gate.Release();
         }
     }
+
+    /// <summary>
+    /// Call after the active profile was refreshed on a display change. If the last switch skipped optional displays and
+    /// its profile is still active, re-applies it once more of them are there. No time limit: a spacedesk viewer often
+    /// connects minutes after the switch (deviation from the 60 s in PLAN 4.3, decided in M5).
+    /// </summary>
+    public async Task CatchUpAsync()
+    {
+        if (_pendingCatchUp is not { } pending)
+        {
+            return;
+        }
+
+        if (!await _gate.WaitAsync(0))
+        {
+            return;
+        }
+
+        IsSwitching = true;
+        DateTimeOffset started = _time.GetLocalNow();
+        try
+        {
+            // The active profile does not decide: when the missing display connects, Windows itself may restore whatever
+            // layout its database holds for that set of monitors (M5 2026-09-13 20:17: spacedesk connected → Desk).
+            SwitchResult? result = await Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, CancellationToken.None));
+            if (result is not null)
+            {
+                RememberCatchUp(pending.Profile, result);
+                Complete(ToRecord(started, pending.Profile, result));
+            }
+            else if (_catalog.ActiveProfile is { } active && active.Id != pending.Profile.Id)
+            {
+                // Changed to another profile outside RigShift without the missing display showing up: stop following.
+                _log.Information("Catch-up for {Profile} dropped, {Active} is active now", pending.Profile.Name, active.Name);
+                _pendingCatchUp = null;
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "Catch-up of {Profile} threw", pending.Profile.Name);
+            _pendingCatchUp = null;
+        }
+        finally
+        {
+            IsSwitching = false;
+            _gate.Release();
+        }
+    }
+
+    private void RememberCatchUp(Profile profile, SwitchResult result) =>
+        _pendingCatchUp = result.Outcome == SwitchOutcome.AppliedPartially ? (profile, result.Plan.Resolved.Count)
+            : result.Outcome == SwitchOutcome.Failed && _pendingCatchUp?.Profile.Id == profile.Id ? _pendingCatchUp
+            : null;
+
+    private static SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
+        new(started, profile.Name, result.Outcome, result.Audio, result.Attempts, result.Duration, result.LastNativeError, result.Message,
+            result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment.Identity)).ToList());
 
     private void Complete(SwitchRecord record)
     {

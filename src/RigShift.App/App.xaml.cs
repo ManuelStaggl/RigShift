@@ -99,7 +99,11 @@ public partial class App : Application, IAppShell
             }
 #endif
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
-                async (_, _) => await catalog.RefreshActiveAsync(CancellationToken.None);
+                async (_, _) =>
+                {
+                    await catalog.RefreshActiveAsync(CancellationToken.None);
+                    await Services.GetRequiredService<SwitchCoordinator>().CatchUpAsync();
+                };
 
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
@@ -147,7 +151,11 @@ public partial class App : Application, IAppShell
             _ => theme,
         };
         // The brand accent replaces the Windows accent, so theme changes must not bring the system accent back.
-        ApplicationThemeManager.Changed += (current, _) => BrandTheme.Apply(current);
+        ApplicationThemeManager.Changed += (current, _) =>
+        {
+            Log.Information("App theme changed to {Theme} (Windows reports {SystemTheme})", current, ApplicationThemeManager.GetSystemTheme());
+            BrandTheme.Apply(current);
+        };
         ApplicationThemeManager.Apply(theme, updateAccent: false);
         BrandTheme.Apply(theme);
     }

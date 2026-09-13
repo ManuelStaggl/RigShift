@@ -189,6 +189,29 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task CatchUp_OptionalDisplayAppears_ReappliesFullProfile()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult? result = await Create(display).CatchUpAsync(Rig(confirmSeconds: 15), appliedDisplays: 1, Ct);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.Applied.Single().Plan.Resolved.Count.ShouldBe(2);
+        await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default, default);
+    }
+
+    [Fact]
+    public async Task CatchUp_NothingNew_DoesNotApply()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(tabletAttached: false));
+
+        SwitchResult? result = await Create(display).CatchUpAsync(Rig(), appliedDisplays: 1, Ct);
+
+        result.ShouldBeNull();
+        display.Applied.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Switch_DryRun_TouchesNothing()
     {
         var display = new FakeDisplayConfigurator(DeskActive());

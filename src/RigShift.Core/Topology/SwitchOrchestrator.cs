@@ -131,6 +131,42 @@ public sealed class SwitchOrchestrator
         }, started);
     }
 
+    /// <summary>
+    /// FollowUp (PLAN 4.3): after a partial switch, a skipped optional display (spacedesk viewer) may appear later.
+    /// Re-plans the profile and re-applies the full path set when more displays resolve than were applied.
+    /// No confirmation and no audio – the user already accepted this profile. Returns null when nothing changed.
+    /// </summary>
+    public async Task<SwitchResult?> CatchUpAsync(Profile profile, int appliedDisplays, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+        TopologyPlan plan = _planner.Plan(profile, snapshot);
+        if (plan.IsBlocked || plan.Resolved.Count <= appliedDisplays)
+        {
+            return null;
+        }
+
+        long started = _time.GetTimestamp();
+        _log.Information("Catching up {Profile}: {Resolved} displays available, {Applied} applied", profile.Name, plan.Resolved.Count, appliedDisplays);
+        LogPlan(plan);
+
+        ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        SwitchOutcome outcome = !applied.Succeeded ? SwitchOutcome.Failed
+            : applied.Plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially
+            : SwitchOutcome.Applied;
+        _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts", profile.Name, outcome, applied.Attempts);
+
+        return Finish(new SwitchResult
+        {
+            Outcome = outcome,
+            Plan = applied.Plan,
+            Attempts = applied.Attempts,
+            LastNativeError = applied.LastNativeError,
+            Message = applied.Message,
+        }, started);
+    }
+
     private async Task<SwitchResult> RollBackAsync(
         DisplaySnapshot before,
         IReadOnlyList<AudioRestore> audioRestore,
