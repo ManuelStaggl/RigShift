@@ -44,6 +44,8 @@ Maus-Routing, VR-Runtime-Verwaltung, Wheelbase-Profile.
 | **Lizenz** | MIT | Verbreitetste OSS-Lizenz, niedrigste Hürde für Community-Beiträge. |
 | **UI-Stack** | WPF + WPF-UI 4.3 (Entscheidung von Claude, Nutzer hat den Stack freigegeben) | Siehe Abschnitt 3. |
 | **Sprache** | Repo/Code/README Englisch, Plan Deutsch, App de+en | Community-Reichweite ohne Umgewöhnung für den Nutzer. |
+| **Nachziehen (FollowUp)** | Ohne Zeitlimit, solange kein anderer Wechsel läuft; greift auch, wenn Windows zwischendurch ein anderes Profil geladen hat (M5) | Ein spacedesk-Viewer verbindet sich oft erst Minuten später; Windows lädt beim Verbinden selbst gespeicherte Anordnungen, das erkannte Profil taugt nicht als Absicht. |
+| **Bestätigung für Desk** | Nutzerprofil Desk mit eigener Bestätigungszeit 0 (Nutzer, M5) | Vom Rig aus ist der Dialog auf dem Schreibtisch nicht erreichbar; Desk ist die bewährte Anordnung. Keine Code-Änderung, Rig behält das Netz. |
 | **Repo-Wurzel** | Projektordner `Sim Rig Umschalter` ist die Git-Wurzel | Sitzungen starten im Projektordner (Auto-Memory pro Repo). `Bestehend/` und das Briefing sind gitignoriert (private Gerätepfade, IDs). |
 
 ---
@@ -119,7 +121,7 @@ Idle ─► Planning ─► Applying ─► AudioSwitch ─► Confirming ─►
                                                    │
                        (optionale Bildschirme fehlen)
                                                    ▼
-                                               FollowUp (wartet auf WM_DISPLAYCHANGE, max. 60 s, plant erneut)
+                                               FollowUp (wartet auf WM_DISPLAYCHANGE, solange das Profil aktiv ist, plant erneut)
 ```
 
 **Planning** (`TopologyPlanner`, Core, voll getestet):
@@ -256,6 +258,18 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | **M5** | **Test am Gaming-PC:** Desk ↔ Rig, Rig mit schlafendem G9 (Fehler-31-Fall), Rig ohne spacedesk + Nachziehen, Rollback bei Nicht-Bestätigung | Alle vier Fälle protokolliert; Skript bleibt parallel installiert |
 | **M6** | Release 1.0: Velopack-Paket, GitHub-Release-Workflow, README mit Screenshots, CHANGELOG | Installation + Auto-Update von 1.0.0 auf 1.0.1 nachgewiesen |
 
+### M5-Protokoll (Gaming-PC, 2026-09-13, Release-Build)
+
+| Fall | Ergebnis (Log) | Befund → Korrektur |
+|---|---|---|
+| Desk ↔ Rig | Rig 1 Pfad, Desk 3 Pfade, je Versuch 1, Audio gesetzt | – |
+| Rig mit schlafendem G9 | Erst **gescheitert** nach 2 s (31, dann 1610); nach Korrektur Erfolg in Versuch 5–6 nach ~5 s | 1610 gilt als vorübergehend; nach Fehlversuch auf verschwundene Bildschirme warten; dunkle Bildschirme nach endgültigem Fehlschlag wiederherstellen |
+| Rollback bei Nicht-Bestätigung | Zurücksetzen und Timeout stellen Anzeige + Audio her; Rückweg zu eingeschlafenem G9 scheiterte zunächst | Auch auf die (rein optionale) Rollback-Topologie warten |
+| Rig ohne spacedesk + Nachziehen | Erst verworfen, weil Windows beim Verbinden selbst Desk lud; nach Korrektur nachgezogen in einem Versuch | FollowUp ohne Zeitlimit und unabhängig vom erkannten Profil (display-topology.md, Regel 8) |
+| `apply Rig` per Verknüpfung, Countdown-Fokus | Enter bestätigt ohne Klick | – |
+| Tray-Popup auf G9 (125 %) nach Start am Desk (150 %) | Popup weit neben dem Tray | Eigene Platzierung in physischen Pixeln (H.NotifyIcon rechnet mit Start-DPI) |
+| Tray-Icon helle Taskleiste, DPI | Icon folgt live, 24 px bei 150 %, 20 px bei 125 % | Popup blieb nach Theme-Wechsel halb hell → Ressourcen bei Theme-Wechsel neu auflösen |
+
 ---
 
 ## 6. Roadmap nach v1 (vom Nutzer gewählt, priorisiert)
@@ -335,7 +349,7 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Head-Budget-Heuristik liefert Fehlalarm bei AMD/Intel | Nur Warnung, Budget je Adapter einstellbar, „nicht mehr anzeigen" |
 | Prozess-Trigger per WMI braucht ggf. Adminrechte | In v1.1 evaluieren; Fallback Polling |
 | `CcdDisplayConfigurator` übergibt pro Bildschirm nur den Source-Modus (Auflösung, Position) und die Bildrate im Pfad, **kein Target-Timing** – das Skript hat gespeicherte Target-Modi mitgegeben | Entscheidung M2: Das Profilmodell speichert kein Timing, Windows wählt es per `SDC_ALLOW_CHANGES` (dokumentiertes Verhalten). In M5 prüfen; scheitert es, Target-Timing ins Profil aufnehmen |
-| Bildschirm im Standby liefert evtl. keinen `monitorDevicePath` → Planner meldet `NotAttached` statt `AttachedButUnavailable` und wartet nicht | In M5 mit schlafendem G9 prüfen (`RigShift.Probe snapshot`) |
+| Bildschirm im Standby liefert evtl. keinen `monitorDevicePath` → Planner meldet `NotAttached` statt `AttachedButUnavailable` und wartet nicht | **M5 geklärt:** der schlafende G9 meldet sich als verfügbar, fällt beim Aufwachen aber ~3 s ganz vom Bus (Fehler 31, dann 1610) → nach einem Fehlversuch wird auch auf verschwundene Bildschirme gewartet |
 | Velopack installiert nach `%LocalAppData%\RigShift` – derselbe Ordner wie Profile/Einstellungen; eine Deinstallation könnte die Profile löschen | In M6 prüfen; notfalls Daten nach `%AppData%\RigShift` verlegen (mit Migration) |
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 

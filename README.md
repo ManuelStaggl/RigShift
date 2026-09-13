@@ -12,8 +12,8 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **early development (milestone M4.5 – tray app, command line, profile editor and brand identity done).** Not yet tested
-> on real multi-monitor hardware, no release yet. Watch the repo or check the [roadmap](docs/ROADMAP.md).
+> Status: **early development (milestone M5 – hardware test on a real desk ↔ sim rig setup passed).** No release yet.
+> Watch the repo or check the [roadmap](docs/ROADMAP.md).
 
 <p align="center">
   <picture>

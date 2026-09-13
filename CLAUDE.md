@@ -34,8 +34,14 @@ dotnet test --solution RigShift.slnx
 ## Stand
 
 Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
-**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) und **M4.5** (Markenauftritt, Plan Abschnitt 4.8)
-fertig. Als Nächstes **M5**: Hardwaretest am Gaming-PC. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
+**M5** (Hardwaretest am Gaming-PC, 2026-09-13) fertig. Als Nächstes **M6**: Release 1.0. Reihenfolge und
+Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+
+M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
+`C:\Users\manue\RigShift-M5` auf den Gaming-PC (`ssh -i C:\Users\Administrator\.ssh\gamingpc_ed25519 manue@192.168.178.31`,
+laufende Instanz vorher mit `taskkill /im RigShift.exe /f` beenden); der User startet an der Konsole, Logs per SSH aus
+`%LOCALAPPDATA%\RigShift\logs`. Über SSH ist die Anzeige nicht abfragbar (`QueryDisplayConfig` → ACCESS_DENIED).
 
 CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
 `--dry-run`**, auch keine erzeugte Verknüpfung starten.
