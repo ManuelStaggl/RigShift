@@ -200,6 +200,41 @@ bis der Nutzer die Verknüpfungen selbst entfernt).
 - Diagnoseseite (v1, einfach): angeschlossene Bildschirme mit Pfad, EDID, Verfügbarkeit, aktiver Modus;
   Audiogeräte; letzte zehn Wechsel.
 
+### 4.8 Markenauftritt (M4.5)
+
+Quelle: `RigShift-Brand-Package/` (lokal, gitignoriert, 12 MB; Einstieg `06-guides/CLAUDE-HANDOFF.md`). Markenregeln
+dort sind verbindlich (Schreibweise „RigShift", Logo nie verändern, aktiver Zustand mit Häkchen + Text, nicht nur
+Farbe; keine Fontdateien mitliefern). Entscheidungen des Nutzers (2026-09-13) in Abschnitt 10.
+
+1. **Ablage.** Nur Genutztes ins Repo: `src/RigShift.App/Assets/Brand/` bekommt `rigshift-app-light.ico`,
+   `rigshift-tray-light.ico`/`-dark.ico`, die vier ResourceDictionaries und das Symbol als PNG (hell/dunkel) für
+   Kopfzeilen. `docs/brand/` bekommt das horizontale Logo (SVG + PNG, hell/dunkel) für README und GitHub.
+   `Assets/desk.ico`/`rig.ico` entfallen.
+2. **App-Icon.** `ApplicationIcon` und das Icon aller Fenster (Hauptfenster, Editor, Countdown) = `rigshift-app-light.ico`.
+3. **Ressourcen.** `RigShift.Shared` + genau eines von `RigShift.Light`/`RigShift.Dark` + `RigShift.Profiles` in
+   `App.xaml` mergen; der vorhandene Theme-Wechsel (Windows-Theme-Watcher) tauscht das Brand-Dictionary mit aus.
+   Bei hohem Kontrast bleiben WPF-UI-/Systemfarben maßgeblich. WPF-UI-Akzent = Markenblau (`primary` #0067B8
+   hell, #79B8FF dunkel) statt Windows-Akzent. Keine WPF-UI-Schlüssel überschreiben.
+4. **Profilsymbole.** Bekannte Icon-Schlüssel `desk`, `rig`, `vr`, `tv`, `stream` (Core, getestet; Alt-Profile nutzen
+   schon `desk`/`rig`). Darstellung aus den Geometrien in `RigShift.Profiles.xaml` (Strich 1,75 auf 24er-Raster) –
+   im Editor als Auswahl mit Vorschau, in der Profilliste und im Popup vor dem Namen. Unbekannter Schlüssel →
+   RigShift-Symbol.
+5. **Tray-Icon.** Zeigt das Profilsymbol des aktiven Profils, zur Laufzeit aus der Geometrie gerendert (weiß auf
+   dunkler, dunkel auf heller **Taskleiste** – `SystemUsesLightTheme`, nicht das App-Theme) in der Pixelgröße der
+   aktuellen DPI. Kein Profil erkannt oder Wechsel läuft → `rigshift-tray-*.ico`. Neu zuweisen bei
+   Taskleisten-Theme-, Kontrast- und DPI-Wechsel; bei 16 px mit den `04-profile-icons/*-16w.png` des Pakets vergleichen.
+6. **Tray-Popup nach Mockup** (`07-mockups`): Kopf mit Symbol + „Profil wechseln", Profilzeilen mit Symbol und Name,
+   aktives Profil hervorgehoben mit Häkchen und „Aktiv", Status „Wechsle …" bei laufendem Wechsel (Zeilen gesperrt),
+   unten Öffnen, Einstellungen, Beenden. Hauptfenster behält seine Seiten und bekommt nur Logo/Titelleiste,
+   Profilsymbole und Tokens. Mockup-Inhalte ohne Funktion (Monitor-Grafik, Seiten Anzeige/Audio) werden nicht gebaut.
+7. **Texte.** Neue Strings de/en für Icon-Namen (VR, TV/Couch, Streaming) und Popup; Markentexte aus
+   `BRAND-GUIDELINES.md` („Sim Rig ist aktiv", „Vorheriges Profil wiederhergestellt").
+8. **README.** Logo per `<picture>` hell/dunkel, Slogan „Desk to rig. In one shift."; Social-Preview-Bild lädt der
+   Nutzer selbst in den GitHub-Einstellungen hoch.
+9. **Prüfung.** Build + Tests grün; Screenshots (PrintWindow) von Popup, Hauptfenster, Editor, Countdown in Hell und
+   Dunkel; Tray-Icon bei 100 % hier, weitere DPI-Stufen und beide Taskleisten-Themes in M5 am Gaming-PC;
+   Publish-Ordner enthält keine `.ttf/.otf/.woff*`.
+
 ---
 
 ## 5. Meilensteine v1
@@ -214,6 +249,7 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | **M2** | Windows-Schicht: `CcdDisplayConfigurator` (Query/Apply/Snapshot, Struct-Dekodierung), `PolicyConfigAudioController`, `JsonProfileStore`, Legacy-Import inkl. Struct-Dekodierung | Manuelle Prüfung auf dem Entwicklungsrechner: Snapshot zeigt echte Displays; Import erzeugt aus den Beispieldateien plausible Profile (Dateien lokal, nicht im Repo) |
 | **M3** | App: Tray-Shell, Profilliste, Wechsel mit Countdown-Dialog, Toast, Einstellungen (Standardprofil, Autostart, Timeout, Sprache), Diagnoseseite | Bedienbar ohne Maus; de/en umschaltbar |
 | **M4** | CLI + Einzelinstanz + Pipe; Autostart; „Aktuelle Anordnung als Profil speichern"; Profil bearbeiten (Bildschirme, Primär, Audio aus Liste) | `RigShift.exe apply Rig` aus Stream-Deck-Aktion oder Verknüpfung funktioniert |
+| **M4.5** | Markenauftritt aus dem Brand Package 1.0 einbauen (Abschnitt 4.8) | App-/Fenster-Icon neu; Tray zeigt Profilsymbol passend zur Taskleistenfarbe und folgt Theme-/DPI-Wechsel; Tray-Popup nach Mockup; fünf Profilsymbole im Editor wählbar; README mit Logo; keine Fontdateien im Publish-Ordner |
 | **M5** | **Test am Gaming-PC:** Desk ↔ Rig, Rig mit schlafendem G9 (Fehler-31-Fall), Rig ohne spacedesk + Nachziehen, Rollback bei Nicht-Bestätigung | Alle vier Fälle protokolliert; Skript bleibt parallel installiert |
 | **M6** | Release 1.0: Velopack-Paket, GitHub-Release-Workflow, README mit Screenshots, CHANGELOG | Installation + Auto-Update von 1.0.0 auf 1.0.1 nachgewiesen |
 
@@ -300,8 +336,20 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Velopack installiert nach `%LocalAppData%\RigShift` – derselbe Ordner wie Profile/Einstellungen; eine Deinstallation könnte die Profile löschen | In M6 prüfen; notfalls Daten nach `%AppData%\RigShift` verlegen (mit Migration) |
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 
-Offen (klärt die Entwicklungssession, wenn es ansteht): Icon-Design (vorerst `desk.ico`/`rig.ico` aus dem
-Skript), Port der HTTP-API.
+Offen (klärt die Entwicklungssession, wenn es ansteht): Port der HTTP-API; Lizenz der Markendateien (MIT
+deckt Code, Logo ggf. ausnehmen – vor M6 klären).
+
+Entschieden für M4.5 Markenauftritt (Nutzer, 2026-09-13), Umsetzung Abschnitt 4.8:
+- **Tray-Icon zeigt weiter das aktive Profil**, jetzt als Brand-Profilsymbol in Taskleistenfarbe; das RigShift-Logo
+  nur ohne erkanntes Profil bzw. während des Wechsels. Begründung: der Status auf einen Blick bleibt erhalten; die
+  Markenregel „Icon ist kein Status-Text" betrifft Slogans, nicht Symbole.
+- **Fluent + Marken-Akzent statt voller Markenpalette:** WPF-UI folgt weiter Windows (hell/dunkel/Kontrast), die
+  Marke kommt über Akzentblau, Symbole, Logo und Tokens. Begründung: kein Umbiegen der WPF-UI-Flächen, hoher
+  Kontrast bleibt korrekt.
+- **Nur das Tray-Popup folgt dem Mockup**, das Hauptfenster behält Profile/Diagnose/Einstellungen. Begründung: die
+  Mockup-Seiten zeigen Funktionen, die es nicht gibt; das Paket sagt selbst, Mockups an den Funktionsumfang anzupassen.
+- **Nur genutzte Dateien ins Repo**, das Paket bleibt lokal und gitignoriert. Begründung: 12 MB Rastergrößen und
+  Originaltafeln gehören nicht in die ausführbare Datei und blähen das Repo.
 
 Entschieden in M3 (Nutzer, 2026-09-13): **Tray-Balloon** als Ergebnismeldung (keine App-Kennung/Verknüpfung
 nötig, geht auch portabel); **Tray-Popup + Hauptfenster** mit den Seiten Profile, Diagnose, Einstellungen;

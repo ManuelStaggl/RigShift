@@ -5,6 +5,9 @@ AUFTRAG_Entwicklung.md
 .claude/settings.local.json
 .claude/worktrees/
 
+# Brand package source (only the assets actually used are copied into the repo)
+RigShift-Brand-Package/
+
 # Build output
 bin/
 obj/

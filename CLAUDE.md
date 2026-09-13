@@ -34,8 +34,9 @@ dotnet test --solution RigShift.slnx
 ## Stand
 
 Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
-**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) fertig. Als Nächstes **M5**: Hardwaretest am
-Gaming-PC. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) fertig. Als Nächstes **M4.5**: Markenauftritt aus
+`RigShift-Brand-Package/` (gitignoriert, Plan Abschnitt 4.8), danach **M5**: Hardwaretest am Gaming-PC.
+Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
 
 CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
 `--dry-run`**, auch keine erzeugte Verknüpfung starten.
