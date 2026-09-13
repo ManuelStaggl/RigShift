@@ -1,0 +1,29 @@
+<Project>
+  <!-- Central Package Management: every version is pinned here, exactly once. Verified against nuget.org on 2026-09-13. -->
+  <ItemGroup>
+    <!-- UI -->
+    <PackageVersion Include="WPF-UI" Version="4.3.0" />
+    <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+
+    <!-- Hosting / DI / Logging -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
+
+    <!-- Win32 interop -->
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.333" />
+
+    <!-- CLI / distribution -->
+    <PackageVersion Include="System.CommandLine" Version="2.0.12" />
+    <PackageVersion Include="Velopack" Version="1.2.0" />
+
+    <!-- Tests -->
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+  </ItemGroup>
+</Project>

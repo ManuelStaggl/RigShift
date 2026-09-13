@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Display and audio setup
+      description: GPU + driver version, each monitor with resolution/refresh/connection, virtual displays (spacedesk, VR), audio devices involved.
+      placeholder: |
+        RTX 4080 SUPER, driver 32.0.16.1656
+        Desk: 3840x2160@165 DP (primary), 2x 1920x1080@100 DP
+        Rig: 5120x1440@240 HDMI, spacedesk 2880x1920
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RigShift version
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Paste the relevant part of `%LocalAppData%\RigShift\logs\rigshift-<date>.log`. Device paths are fine to include; redact anything you consider personal.
+      render: text

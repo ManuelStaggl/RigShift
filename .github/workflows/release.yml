@@ -1,0 +1,43 @@
+name: Release
+
+# Builds a Velopack package and attaches it to the GitHub release for tag vX.Y.Z.
+# Activated with milestone M6 – until then this workflow is intentionally manual-only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to package (must match Directory.Build.props)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Verify version
+        shell: pwsh
+        run: |
+          $props = [xml](Get-Content Directory.Build.props)
+          $v = $props.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($v -ne '${{ inputs.version }}') { throw "Directory.Build.props has $v, workflow input is ${{ inputs.version }}" }
+
+      - name: Publish
+        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Pack
+        run: vpk pack --packId RigShift --packVersion ${{ inputs.version }} --packDir publish --mainExe RigShift.exe --outputDir Releases
+
+      - name: Upload to GitHub release
+        run: vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir Releases --publish --releaseName "RigShift ${{ inputs.version }}" --tag v${{ inputs.version }}

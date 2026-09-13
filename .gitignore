@@ -1,0 +1,20 @@
+# Private material – never publish (device paths, endpoint IDs, IPs, logs)
+Bestehend/
+AUFTRAG_Entwicklung.md
+.claude/handoff.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# Build output
+bin/
+obj/
+publish/
+Releases/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+*.binlog
+*.nupkg
+*.snupkg

@@ -1,0 +1,27 @@
+<ui:FluentWindow
+  x:Class="RigShift.App.Views.MainWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  Title="RigShift"
+  Width="900"
+  Height="600"
+  ExtendsContentIntoTitleBar="True"
+  WindowBackdropType="Mica"
+  WindowCornerPreference="Round"
+  WindowStartupLocation="CenterScreen">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Grid.Row="0" Title="RigShift" />
+
+    <StackPanel Grid.Row="1" Margin="32" VerticalAlignment="Center" HorizontalAlignment="Center">
+      <ui:TextBlock FontTypography="Title" Text="RigShift" HorizontalAlignment="Center" />
+      <ui:TextBlock FontTypography="Body" Margin="0,8,0,0" HorizontalAlignment="Center"
+                    Text="Project skeleton – development starts with milestone M1 (docs/PLAN.md)." />
+    </StackPanel>
+  </Grid>
+</ui:FluentWindow>

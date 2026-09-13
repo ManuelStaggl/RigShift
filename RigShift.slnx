@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RigShift.Core/RigShift.Core.csproj" />
+    <Project Path="src/RigShift.Windows/RigShift.Windows.csproj" />
+    <Project Path="src/RigShift.App/RigShift.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RigShift.Core.Tests/RigShift.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/solution items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path=".editorconfig" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>

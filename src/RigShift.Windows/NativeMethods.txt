@@ -1,0 +1,32 @@
+// CsWin32 source generator input. One symbol per line. Generated code lands in Windows.Win32.PInvoke.
+// CCD (Connecting and Configuring Displays) API – atomic topology switching.
+GetDisplayConfigBufferSizes
+QueryDisplayConfig
+SetDisplayConfig
+DisplayConfigGetDeviceInfo
+DISPLAYCONFIG_PATH_INFO
+DISPLAYCONFIG_MODE_INFO
+DISPLAYCONFIG_TARGET_DEVICE_NAME
+DISPLAYCONFIG_ADAPTER_NAME
+DISPLAYCONFIG_SOURCE_DEVICE_NAME
+DISPLAYCONFIG_TOPOLOGY_ID
+QUERY_DISPLAY_CONFIG_FLAGS
+SET_DISPLAY_CONFIG_FLAGS
+DISPLAYCONFIG_DEVICE_INFO_TYPE
+DISPLAYCONFIG_MODE_INFO_TYPE
+DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY
+// Device arrival / removal notifications (USB, monitors).
+RegisterDeviceNotification
+UnregisterDeviceNotification
+DEV_BROADCAST_DEVICEINTERFACE_W
+DEV_BROADCAST_HDR
+WM_DEVICECHANGE
+WM_DISPLAYCHANGE
+DBT_DEVICEARRIVAL
+DBT_DEVICEREMOVECOMPLETE
+// Global hotkeys (v1.1).
+RegisterHotKey
+UnregisterHotKey
+WM_HOTKEY
+// Error codes we branch on (all live in the WIN32_ERROR enum).
+WIN32_ERROR
