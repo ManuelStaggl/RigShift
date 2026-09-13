@@ -48,6 +48,7 @@
   <data name="Result_FailedText" xml:space="preserve"><value>Windows reported error {0}. Details are in the log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details are in the log.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>A switch is already running.</value></data>
+  <data name="Update_Ready" xml:space="preserve"><value>Version {0} is ready and will be installed the next time RigShift starts.</value></data>
   <data name="Outcome_Applied" xml:space="preserve"><value>Switched</value></data>
   <data name="Outcome_AppliedPartially" xml:space="preserve"><value>Partially switched</value></data>
   <data name="Outcome_RolledBack" xml:space="preserve"><value>Reverted</value></data>

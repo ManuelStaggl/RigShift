@@ -26,9 +26,9 @@ public sealed class JsonProfileStore : IProfileStore
         _log = log.ForContext<JsonProfileStore>();
     }
 
-    /// <summary><c>%LocalAppData%\RigShift\profiles</c>.</summary>
+    /// <summary><c>%AppData%\RigShift\profiles</c> – outside the Velopack install folder, which uninstall deletes.</summary>
     public static string DefaultDirectory => Path.GetFullPath(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RigShift", "profiles"));
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift", "profiles"));
 
     public async Task<IReadOnlyList<Profile>> LoadAllAsync(CancellationToken cancellationToken)
     {

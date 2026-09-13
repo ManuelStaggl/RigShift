@@ -40,7 +40,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 |---|---|---|
 | `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
-| `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%LocalAppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |
+| `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |
 | `IDeviceEvents` (M2/M4) | `DeviceNotificationListener` | `WM_DISPLAYCHANGE`, `WM_DEVICECHANGE` from a hidden message window. |
 | `IAutostart` (M4) | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
 | `ISwitchConfirmation` (M3) | countdown window in `RigShift.App` | "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |
@@ -51,7 +51,11 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
   `\\.\pipe\RigShift` and exits with the result code.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | list | save <name> | status`.
   Exit codes: 0 applied, 1 failed, 2 blocked, 3 rolled back, 4 unknown profile.
-- Logs: `%LocalAppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).
+- Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).
+- Data lives in `%AppData%\RigShift` because Velopack installs into `%LocalAppData%\RigShift` and deletes that
+  folder on uninstall.
+- Updates: `UpdateService` checks GitHub Releases at startup and every 24 h and downloads a newer version; Velopack
+  installs it the next time the tray app starts (never during a CLI call, which would lose its exit code).
 
 ## Coding rules
 

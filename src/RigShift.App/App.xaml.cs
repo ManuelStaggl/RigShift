@@ -30,8 +30,12 @@ public partial class App : Application, IAppShell
         _request = request;
     }
 
+    /// <summary>
+    /// <c>%AppData%\RigShift</c>: Velopack installs into <c>%LocalAppData%\RigShift</c> and deletes that folder on
+    /// uninstall, so profiles and settings must live elsewhere.
+    /// </summary>
     public static AppPaths Paths { get; } = new(Path.GetFullPath(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RigShift")));
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift")));
 
     public bool IsExiting { get; private set; }
 
@@ -108,6 +112,7 @@ public partial class App : Application, IAppShell
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
             Services.GetRequiredService<CommandPipeServer>().Start();
+            Services.GetRequiredService<UpdateService>().Start();
 
             if (!_request.Minimized)
             {
@@ -208,6 +213,7 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<SwitchCoordinator>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
+        services.AddSingleton(_ => new UpdateService(Log.Logger));
 
         // UI
         services.AddSingleton<TrayPopupViewModel>();

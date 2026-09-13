@@ -92,11 +92,13 @@ public sealed class TrayIconService : IDisposable
         TrayPopupViewModel popupViewModel,
         ProfilesViewModel profiles,
         IAppShell shell,
+        UpdateService updates,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(popupViewModel);
+        ArgumentNullException.ThrowIfNull(updates);
         ArgumentNullException.ThrowIfNull(log);
 
         _catalog = catalog;
@@ -129,6 +131,7 @@ public sealed class TrayIconService : IDisposable
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
         coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
+        updates.UpdateReady += (_, version) => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info));
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))

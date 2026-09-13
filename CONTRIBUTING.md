@@ -29,7 +29,7 @@ dotnet test --solution RigShift.slnx
 
 ## Bug reports
 
-Please include the log from `%LocalAppData%\RigShift\logs`, your GPU and driver version, and the display
+Please include the log from `%AppData%\RigShift\logs`, your GPU and driver version, and the display
 configuration (resolution/refresh per monitor). Device paths in the log are not personal data, but feel free to
 redact them.
 

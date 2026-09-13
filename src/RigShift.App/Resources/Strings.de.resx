@@ -48,6 +48,7 @@
   <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details stehen im Log.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>Es läuft bereits ein Wechsel.</value></data>
+  <data name="Update_Ready" xml:space="preserve"><value>Version {0} ist bereit und wird beim nächsten Start von RigShift installiert.</value></data>
   <data name="Outcome_Applied" xml:space="preserve"><value>Umgeschaltet</value></data>
   <data name="Outcome_AppliedPartially" xml:space="preserve"><value>Teilweise umgeschaltet</value></data>
   <data name="Outcome_RolledBack" xml:space="preserve"><value>Zurückgenommen</value></data>

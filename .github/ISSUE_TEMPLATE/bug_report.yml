@@ -30,5 +30,5 @@ body:
     id: log
     attributes:
       label: Log
-      description: Paste the relevant part of `%LocalAppData%\RigShift\logs\rigshift-<date>.log`. Device paths are fine to include; redact anything you consider personal.
+      description: Paste the relevant part of `%AppData%\RigShift\logs\rigshift-<date>.log`. Device paths are fine to include; redact anything you consider personal.
       render: text

@@ -14,7 +14,10 @@ public static class Program
     public static int Main(string[] args)
     {
         // Velopack must run first: it handles install/update/uninstall hooks and may exit the process.
-        VelopackApp.Build().Run();
+        // A pending update restarts the process to install itself. Only the tray app may do that: a CLI call would lose
+        // its exit code. Commands are verbs; tray and Velopack hook arguments start with a dash.
+        bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
+        VelopackApp.Build().SetAutoApplyOnStartup(!isCommand).Run();
 
         CliParseResult parsed = CliParser.Parse(args);
         if (parsed.Request is not { } request)
