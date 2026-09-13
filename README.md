@@ -126,4 +126,6 @@ Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-[MIT](LICENSE) © 2026 Manuel Staggl
+Code: [MIT](LICENSE) © 2026 Manuel Staggl.
+The RigShift logo, symbol and app icons are excluded from the MIT license – see [brand assets](docs/brand/README.md)
+for what you may do with them. Forks are welcome, with their own logo.
