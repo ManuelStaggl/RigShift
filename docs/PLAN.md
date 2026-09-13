@@ -288,6 +288,8 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Countdown-Dialog erscheint auf einem Bildschirm ohne Bild | Dialog auf der **neuen Hauptanzeige** und zusätzlich Hotkey `Esc` = Rollback von jedem Bildschirm aus |
 | Head-Budget-Heuristik liefert Fehlalarm bei AMD/Intel | Nur Warnung, Budget je Adapter einstellbar, „nicht mehr anzeigen" |
 | Prozess-Trigger per WMI braucht ggf. Adminrechte | In v1.1 evaluieren; Fallback Polling |
+| `CcdDisplayConfigurator` übergibt pro Bildschirm nur den Source-Modus (Auflösung, Position) und die Bildrate im Pfad, **kein Target-Timing** – das Skript hat gespeicherte Target-Modi mitgegeben | Entscheidung M2: Das Profilmodell speichert kein Timing, Windows wählt es per `SDC_ALLOW_CHANGES` (dokumentiertes Verhalten). In M5 prüfen; scheitert es, Target-Timing ins Profil aufnehmen |
+| Bildschirm im Standby liefert evtl. keinen `monitorDevicePath` → Planner meldet `NotAttached` statt `AttachedButUnavailable` und wartet nicht | In M5 mit schlafendem G9 prüfen (`RigShift.Probe snapshot`) |
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 
 Offen (klärt die Entwicklungssession, wenn es ansteht): Icon-Design (vorerst `desk.ico`/`rig.ico` aus dem

@@ -40,7 +40,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 |---|---|---|
 | `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
-| `IProfileStore` | `JsonProfileStore` (M2) | `%LocalAppData%\RigShift\profiles\*.json`, `schemaVersion`. |
+| `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%LocalAppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |
 | `IDeviceEvents` (M2/M4) | `DeviceNotificationListener` | `WM_DISPLAYCHANGE`, `WM_DEVICECHANGE` from a hidden message window. |
 | `IAutostart` (M4) | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
 | `ISwitchConfirmation` (M3) | countdown window in `RigShift.App` | "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |

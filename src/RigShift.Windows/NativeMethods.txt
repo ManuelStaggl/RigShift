@@ -15,6 +15,19 @@ SET_DISPLAY_CONFIG_FLAGS
 DISPLAYCONFIG_DEVICE_INFO_TYPE
 DISPLAYCONFIG_MODE_INFO_TYPE
 DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY
+DISPLAYCONFIG_PIXELFORMAT
+DISPLAYCONFIG_PATH_ACTIVE
+DISPLAYCONFIG_PATH_MODE_IDX_INVALID
+// Core Audio – endpoint enumeration, state, friendly name, volume.
+MMDeviceEnumerator
+IMMDeviceEnumerator
+IMMDeviceCollection
+IMMDevice
+IPropertyStore
+IAudioEndpointVolume
+PKEY_Device_FriendlyName
+DEVICE_STATE
+PropVariantClear
 // Device arrival / removal notifications (USB, monitors).
 RegisterDeviceNotification
 UnregisterDeviceNotification
@@ -30,3 +43,4 @@ UnregisterHotKey
 WM_HOTKEY
 // Error codes we branch on (all live in the WIN32_ERROR enum).
 WIN32_ERROR
+CoTaskMemFree

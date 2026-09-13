@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RigShift.App.Views;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Storage;
 using RigShift.Windows.Audio;
 using RigShift.Windows.Display;
 using Serilog;
@@ -40,6 +41,10 @@ public partial class App : Application
             .UseSerilog()
             .ConfigureServices(services =>
             {
+                services.AddSingleton(Log.Logger);
+                services.AddSingleton(TimeProvider.System);
+                services.AddSingleton<IProfileStore>(_ =>
+                    new JsonProfileStore(Path.Combine(DataDirectory, "profiles"), Log.Logger));
                 services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
                 services.AddSingleton<IAudioController, PolicyConfigAudioController>();
                 services.AddSingleton<MainWindow>();

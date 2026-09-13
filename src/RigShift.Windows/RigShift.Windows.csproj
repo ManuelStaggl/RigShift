@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="NativeMethods.txt" />
+    <InternalsVisibleTo Include="RigShift.Windows.Tests" />
   </ItemGroup>
 
 </Project>

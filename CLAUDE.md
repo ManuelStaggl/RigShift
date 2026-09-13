@@ -33,9 +33,13 @@ dotnet test --solution RigShift.slnx
 
 ## Stand
 
-Meilensteine **M0** (Skelett) und **M1** (`TopologyPlanner`, `SwitchOrchestrator`, `ISwitchConfirmation` in Core)
-fertig. Als Nächstes **M2**: Windows-Schicht (CCD, Audio, JSON-Store, Legacy-Import). Reihenfolge und
-Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+Meilensteine **M0** (Skelett), **M1** (Core-Logik) und **M2** (Windows-Schicht, JSON-Store, Legacy-Import)
+fertig. Als Nächstes **M3**: App (Tray, Profilliste, Countdown-Dialog, Einstellungen, Diagnoseseite).
+Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+
+Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
+`dotnet run --project tools/RigShift.Probe -- snapshot | audio | import <ordner> | plan <ordner> <profil>`.
+Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffentlichen.
 
 ## Stolperfallen
 
@@ -51,5 +55,10 @@ Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
 - Core-Tests mit Wartezeiten nutzen `tests/.../Fakes/AutoAdvanceTimeProvider` (Timer feuern sofort, Uhr springt
   vor) – keine echten Delays in Tests. xUnit1051 ist in `SwitchOrchestratorTests` per Pragma aus, weil
   NSubstitute-Aufrufe Token-Matcher statt echter Tokens übergeben.
+- CsWin32-Formen nicht raten: generierten Code mit `dotnet build -p:EmitCompilerGeneratedFiles=true
+  -p:CompilerGeneratedFilesOutputPath=<scratch>` ausgeben und nachsehen. Konstanten mit eigenem Enum
+  (z. B. `DEVICE_STATE`) über den Enum-Namen eintragen.
+- Dieser Server läuft per RDP: der Snapshot zeigt nur die RDP-Indirect-Display, Audio hat 0 Endpunkte.
+  Apply und Audio-Umschalten sind hier nicht prüfbar (→ M5 am Gaming-PC).
 - Der Rechner hier ist der Home-Server, nicht der Gaming-PC: **M5 (Hardwaretest) findet am Gaming-PC statt**;
   hier nur Build, Tests und Snapshot-Prüfungen mit den vorhandenen Bildschirmen.

@@ -15,3 +15,8 @@ All notable changes to this project are documented here. The format follows
   `SwitchOrchestrator` waits for sleeping targets, retries with database modes and on error 31 within a time
   budget, switches audio without failing the display switch, and rolls back display and audio when the user
   does not confirm (`ISwitchConfirmation`).
+- Windows layer (milestone M2): `CcdDisplayConfigurator` (topology snapshot over all paths, one atomic
+  `SetDisplayConfig` with per-display source assignment), `PolicyConfigAudioController` (Core Audio enumeration,
+  default endpoint via `IPolicyConfig`, volume), `JsonProfileStore` with schema version and atomic writes,
+  import of the legacy script's `.display` files and `DisplayProfiles.json`, and the read-only
+  `tools/RigShift.Probe` check tool.

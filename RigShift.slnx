@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/RigShift.Core.Tests/RigShift.Core.Tests.csproj" />
+    <Project Path="tests/RigShift.Windows.Tests/RigShift.Windows.Tests.csproj" />
   </Folder>
   <Folder Name="/solution items/">
     <File Path="Directory.Build.props" />
@@ -13,5 +14,8 @@
     <File Path="global.json" />
     <File Path=".editorconfig" />
     <File Path="README.md" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/RigShift.Probe/RigShift.Probe.csproj" />
   </Folder>
 </Solution>
