@@ -1,14 +1,11 @@
 name: Release
 
-# Builds a Velopack package and attaches it to the GitHub release for tag vX.Y.Z.
-# Activated with milestone M6 – until then this workflow is intentionally manual-only.
+# Builds the Velopack package for tag vX.Y.Z and publishes it as a GitHub release (docs/PLAN.md, section 8).
+# The release notes are the matching section of CHANGELOG.md.
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Version to package (must match Directory.Build.props)
-        required: true
+  push:
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -23,21 +20,41 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Verify version
+      - name: Verify version and extract release notes
+        id: version
         shell: pwsh
         run: |
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
           $props = [xml](Get-Content Directory.Build.props)
           $v = $props.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          if ($v -ne '${{ inputs.version }}') { throw "Directory.Build.props has $v, workflow input is ${{ inputs.version }}" }
+          if ($v -ne $tag) { throw "Directory.Build.props has $v, tag is $tag" }
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $section = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## \[|\z)")
+          if (-not $section.Success) { throw "CHANGELOG.md has no section for $v" }
+          $section.Groups[1].Value.Trim() | Set-Content release-notes.md
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Test
+        run: dotnet test --solution RigShift.slnx -c Release
 
       - name: Publish
         run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
 
       - name: Install Velopack CLI
-        run: dotnet tool install -g vpk
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      # The previous release's full package lets vpk build a delta package.
+      - name: Download previous release
+        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir Releases
 
       - name: Pack
-        run: vpk pack --packId RigShift --packVersion ${{ inputs.version }} --packDir publish --mainExe RigShift.exe --outputDir Releases
+        run: >
+          vpk pack --packId RigShift --packVersion ${{ steps.version.outputs.version }} --packTitle RigShift
+          --packAuthors "Manuel Staggl" --packDir publish --mainExe RigShift.exe
+          --icon src/RigShift.App/Assets/Brand/rigshift-app-light.ico --releaseNotes release-notes.md --outputDir Releases
 
       - name: Upload to GitHub release
-        run: vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir Releases --publish --releaseName "RigShift ${{ inputs.version }}" --tag v${{ inputs.version }}
+        run: >
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
+          --outputDir Releases --publish --releaseName "RigShift ${{ steps.version.outputs.version }}"
+          --tag ${{ github.ref_name }}
