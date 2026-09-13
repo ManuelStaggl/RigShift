@@ -7,8 +7,8 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **early development (milestone M0 – project skeleton).** Nothing usable yet. Watch the repo or check
-> the [roadmap](docs/ROADMAP.md).
+> Status: **early development (milestone M4 – tray app, command line and profile editor done).** Not yet tested
+> on real multi-monitor hardware, no release yet. Watch the repo or check the [roadmap](docs/ROADMAP.md).
 
 ## Why another display switcher?
 
@@ -34,6 +34,33 @@ Beyond that, RigShift is designed to be boring in the good way:
 See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights after 1.0: hotkeys, `rigshift://` links, per-profile apps,
 process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
 no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
+
+## Command line
+
+```bat
+RigShift.exe apply <name> [--no-confirm] [--dry-run]
+RigShift.exe list
+RigShift.exe save <name>
+RigShift.exe status
+```
+
+Names are not case-sensitive. `save` stores the current display arrangement and default playback device; an
+existing profile with that name is updated. `apply` and `save` start RigShift in the tray if it is not running and
+wait for the result; the easiest way to get a ready-made shortcut (also for a Stream Deck "Open" action) is
+**⋯ → Create desktop shortcut** on a profile.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | Applied (optional displays may be missing), or command succeeded |
+| 1 | Failed, or another switch is running |
+| 2 | Blocked: a required display is missing, nothing changed |
+| 3 | Not confirmed, previous arrangement restored |
+| 4 | Profile not found |
+| 5 | Invalid arguments |
+
+RigShift.exe is a Windows GUI program, so shells do not wait for it. To see output and exit code in a console,
+run `start /wait RigShift.exe status` (cmd) or `Start-Process RigShift.exe status -Wait -NoNewWindow`
+(PowerShell).
 
 ## Requirements
 

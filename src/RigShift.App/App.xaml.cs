@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -9,6 +8,7 @@ using RigShift.App.ViewModels;
 using RigShift.App.Views;
 using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Cli;
 using RigShift.Core.Settings;
 using RigShift.Core.Storage;
 using RigShift.Core.Topology;
@@ -22,7 +22,13 @@ namespace RigShift.App;
 
 public partial class App : Application, IAppShell
 {
+    private readonly CliRequest _request;
     private IHost? _host;
+
+    public App(CliRequest request)
+    {
+        _request = request;
+    }
 
     public static AppPaths Paths { get; } = new(Path.GetFullPath(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RigShift")));
@@ -55,17 +61,7 @@ public partial class App : Application, IAppShell
         base.OnStartup(e);
         Directory.CreateDirectory(Paths.DataDirectory);
 
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .Enrich.FromLogContext()
-            .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
-            .WriteTo.File(
-                Path.Combine(Paths.Logs, "rigshift-.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 14,
-                formatProvider: CultureInfo.InvariantCulture,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
-            .CreateLogger();
+        Log.Logger = AppLogging.Create(Paths);
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, Paths.DataDirectory);
@@ -74,7 +70,8 @@ public partial class App : Application, IAppShell
         {
             ApplyWindowsTheme();
 
-            _host = Host.CreateDefaultBuilder(e.Args)
+            // Arguments are parsed by CliParser; the host must not interpret them as configuration.
+            _host = Host.CreateDefaultBuilder()
                 .UseSerilog()
                 .ConfigureServices(RegisterServices)
                 .Build();
@@ -88,7 +85,7 @@ public partial class App : Application, IAppShell
 
 #if DEBUG
             // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
-            if (e.Args.Contains("--preview-confirmation", StringComparer.OrdinalIgnoreCase))
+            if (_request.PreviewConfirmation)
             {
                 var preview = new Core.Profiles.Profile { Id = Guid.Empty, Name = "Preview", Displays = [] };
                 ConfirmationResult answer = await ConfirmationWindow.ShowAsync(preview, TimeSpan.FromSeconds(10), CancellationToken.None);
@@ -98,7 +95,11 @@ public partial class App : Application, IAppShell
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) => await catalog.RefreshActiveAsync(CancellationToken.None);
 
-            if (!e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase))
+            CommandRunner runner = Services.GetRequiredService<CommandRunner>();
+            runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
+            Services.GetRequiredService<CommandPipeServer>().Start();
+
+            if (!_request.Minimized)
             {
                 ShowMainWindow();
             }
@@ -171,6 +172,15 @@ public partial class App : Application, IAppShell
         services.AddSingleton<SwitchCoordinator>();
         services.AddSingleton<DisplayChangeWatcher>();
         services.AddSingleton<TrayIconService>();
+        services.AddSingleton(sp => new CommandRunner(
+            sp.GetRequiredService<IProfileStore>(),
+            sp.GetRequiredService<IDisplayConfigurator>(),
+            sp.GetRequiredService<IAudioController>(),
+            sp.GetRequiredService<ActiveProfileMatcher>(),
+            Log.Logger,
+            sp.GetRequiredService<SwitchCoordinator>()));
+        services.AddSingleton<CommandPipeServer>();
+        services.AddSingleton<ProfileDialogs>();
 
         // UI
         services.AddSingleton<TrayPopupViewModel>();

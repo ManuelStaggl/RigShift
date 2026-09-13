@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using Serilog;
@@ -9,7 +10,7 @@ namespace RigShift.App.Services;
 /// <summary>
 /// Runs switches one at a time off the UI thread, keeps the recent history and tells the tray about results.
 /// </summary>
-public sealed partial class SwitchCoordinator : ObservableObject, IDisposable
+public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, IProfileSwitcher
 {
     private const int HistoryLength = 10;
 
@@ -47,18 +48,27 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable
     public async Task SwitchAsync(Profile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        await RunAsync(profile, dryRun: false);
+        await RunAsync(profile, new SwitchRequest(), rethrow: false);
     }
 
     /// <summary>Dry run: plans against the live topology without touching anything.</summary>
     public Task<SwitchResult?> CheckAsync(Profile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        return RunAsync(profile, dryRun: true);
+        return RunAsync(profile, new SwitchRequest { DryRun = true }, rethrow: false);
     }
 
-    private async Task<SwitchResult?> RunAsync(Profile profile, bool dryRun)
+    /// <summary>Command line: the caller needs the exception to report a failure instead of "busy".</summary>
+    Task<SwitchResult?> IProfileSwitcher.SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(request);
+        return RunAsync(profile, request, rethrow: true);
+    }
+
+    private async Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow)
+    {
+        bool dryRun = request.DryRun;
         if (!await _gate.WaitAsync(0))
         {
             _log.Information("Switch to {Profile} ignored, another switch is running", profile.Name);
@@ -70,8 +80,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable
         DateTimeOffset started = _time.GetLocalNow();
         try
         {
-            var request = new SwitchRequest { DryRun = dryRun, DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
-            SwitchResult result = await Task.Run(() => _orchestrator.SwitchAsync(profile, request, CancellationToken.None));
+            SwitchRequest effective = request with { DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
+            SwitchResult result = await Task.Run(() => _orchestrator.SwitchAsync(profile, effective, CancellationToken.None));
 
             if (!dryRun)
             {
@@ -90,6 +100,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable
             {
                 Complete(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, 0,
                     _time.GetLocalNow() - started, null, ex.Message, []));
+            }
+
+            if (rethrow)
+            {
+                throw;
             }
 
             return null;

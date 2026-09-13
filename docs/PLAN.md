@@ -163,8 +163,9 @@ Ergebnis `Failed` mit klarer Meldung und Log-Verweis.
 - **Einzelinstanz** über benannten Mutex; eine zweite Instanz übergibt ihre Argumente per Named Pipe
   `\\.\pipe\RigShift` an die laufende und beendet sich mit deren Exit-Code.
 - **CLI** (v1): `RigShift.exe apply <name> [--no-confirm] [--dry-run]`, `list`, `save <name>`, `status`.
-  Exit-Codes: 0 Applied, 1 Failed, 2 Blocked, 3 RolledBack, 4 Profil unbekannt. Läuft keine Instanz, startet
-  die App minimiert und führt den Befehl aus.
+  Exit-Codes: 0 Applied, 1 Failed, 2 Blocked, 3 RolledBack, 4 Profil unbekannt, 5 ungültige Argumente
+  (ergänzt in M4; „anderer Wechsel läuft" = 1). Läuft keine Instanz, startet die App minimiert und führt den
+  Befehl aus.
 - **Tray:** Linksklick → Popup mit Profilen (aktives markiert), Rechtsklick → Kontextmenü (Öffnen, Aktuelle
   Anordnung als Profil speichern, Einstellungen, Beenden). Ergebnis als Balloon-Toast und Snackbar.
 - **Autostart:** HKCU `Run` mit `--minimized`; Standardprofil beim Start optional anwenden.
@@ -296,6 +297,7 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Prozess-Trigger per WMI braucht ggf. Adminrechte | In v1.1 evaluieren; Fallback Polling |
 | `CcdDisplayConfigurator` übergibt pro Bildschirm nur den Source-Modus (Auflösung, Position) und die Bildrate im Pfad, **kein Target-Timing** – das Skript hat gespeicherte Target-Modi mitgegeben | Entscheidung M2: Das Profilmodell speichert kein Timing, Windows wählt es per `SDC_ALLOW_CHANGES` (dokumentiertes Verhalten). In M5 prüfen; scheitert es, Target-Timing ins Profil aufnehmen |
 | Bildschirm im Standby liefert evtl. keinen `monitorDevicePath` → Planner meldet `NotAttached` statt `AttachedButUnavailable` und wartet nicht | In M5 mit schlafendem G9 prüfen (`RigShift.Probe snapshot`) |
+| Velopack installiert nach `%LocalAppData%\RigShift` – derselbe Ordner wie Profile/Einstellungen; eine Deinstallation könnte die Profile löschen | In M6 prüfen; notfalls Daten nach `%AppData%\RigShift` verlegen (mit Migration) |
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 
 Offen (klärt die Entwicklungssession, wenn es ansteht): Icon-Design (vorerst `desk.ico`/`rig.ico` aus dem
@@ -305,6 +307,16 @@ Entschieden in M3 (Nutzer, 2026-09-13): **Tray-Balloon** als Ergebnismeldung (ke
 nötig, geht auch portabel); **Tray-Popup + Hauptfenster** mit den Seiten Profile, Diagnose, Einstellungen;
 **Farbschema folgt Windows** (inkl. hohem Kontrast). Bestätigungszeit ist eine App-Einstellung; ein Profil kann
 sie mit eigenem Wert überschreiben (`Profile.ConfirmTimeoutSeconds` ist dafür nullable).
+
+Entschieden in M4 (Nutzer, 2026-09-13):
+- **Profil bearbeiten = Eigenschaften + Übernahme:** Name, Icon, Bestätigungszeit; je Bildschirm optional, primär,
+  entfernen; Audio aus Auswahlliste. Auflösung und Position stellt man in Windows ein und übernimmt sie mit
+  „Aktuelle Anordnung übernehmen" – kein Zahleneditor (Fehlerquelle), kein visueller Anordner (v1.x).
+- **„Aktuelle Anordnung speichern" übernimmt die aktuellen Standard-Audiogeräte** (im Dialog änderbar).
+- **CLI:** `apply`/`save` starten die Tray-App minimiert, falls sie nicht läuft, und reden dann per Pipe mit ihr
+  (der CLI-Prozess ist immer der Client, damit der Exit-Code stimmt); `list`/`status` antworten ohne App-Start.
+  CLI-Ausgabe englisch (maschinennah, stabil für Skripte).
+- **Profilverwaltung:** Löschen (mit Rückfrage), Duplizieren, Desktop-Verknüpfung `RigShift.exe apply "<Name>"`.
 
 ---
 

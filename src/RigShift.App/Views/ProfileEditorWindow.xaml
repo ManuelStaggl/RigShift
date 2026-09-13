@@ -1,0 +1,164 @@
+<ui:FluentWindow
+  x:Class="RigShift.App.Views.ProfileEditorWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="{Binding Title}"
+  Width="760"
+  Height="720"
+  MinWidth="560"
+  MinHeight="420"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowCornerPreference="Round"
+  WindowStartupLocation="CenterOwner">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Grid.Row="0" Title="{Binding Title}" ShowMaximize="False" ShowMinimize="False" />
+
+    <ScrollViewer Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="24,8,24,16">
+        <ui:InfoBar
+          Margin="0,0,0,16"
+          Title="{loc:Tr Editor_ProblemsTitle}"
+          IsClosable="False"
+          IsOpen="{Binding HasProblems, Mode=OneWay}"
+          Message="{Binding Problems}"
+          Severity="Error"
+          AutomationProperties.LiveSetting="Assertive" />
+
+        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Name}" />
+        <ui:TextBox
+          x:Name="NameBox"
+          Margin="0,4,0,16"
+          AutomationProperties.Name="{loc:Tr Editor_Name}"
+          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+
+        <Grid Margin="0,0,0,4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="24" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Icon}" />
+            <ComboBox
+              Margin="0,4,0,0"
+              AutomationProperties.Name="{loc:Tr Editor_Icon}"
+              DisplayMemberPath="Name"
+              ItemsSource="{Binding IconChoices}"
+              SelectedItem="{Binding SelectedIcon}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <CheckBox Content="{loc:Tr Editor_OwnTimeout}" IsChecked="{Binding UseOwnTimeout}" />
+            <ui:NumberBox
+              Width="140"
+              Margin="0,4,0,0"
+              HorizontalAlignment="Left"
+              AutomationProperties.Name="{loc:Tr Editor_OwnTimeout}"
+              IsEnabled="{Binding UseOwnTimeout}"
+              MaxDecimalPlaces="0"
+              Maximum="120"
+              Minimum="0"
+              SmallChange="1"
+              Value="{Binding OwnTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeoutHint}" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+
+        <Grid Margin="0,24,0,4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Displays}" />
+          <ui:Button Grid.Column="1" Command="{Binding TakeCurrentCommand}" Content="{loc:Tr Editor_TakeCurrent}" Icon="{ui:SymbolIcon ArrowSync24}" />
+        </Grid>
+        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisplaysHint}" TextWrapping="Wrap" />
+        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ArrangementNote}" AutomationProperties.LiveSetting="Polite" />
+
+        <ItemsControl Margin="0,8,0,0" Focusable="False" ItemsSource="{Binding Displays}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ui:Card Margin="0,0,0,8" Padding="16,12">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModeText}" />
+                  </StackPanel>
+                  <RadioButton
+                    Grid.Column="1"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    Content="{loc:Tr Editor_Primary}"
+                    GroupName="PrimaryDisplay"
+                    IsChecked="{Binding IsPrimary}" />
+                  <CheckBox
+                    Grid.Column="2"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    Content="{loc:Tr Editor_Optional}"
+                    IsChecked="{Binding IsOptional}"
+                    IsEnabled="{Binding CanBeOptional}" />
+                  <ui:Button
+                    Grid.Column="3"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    AutomationProperties.Name="{loc:Tr Editor_Remove}"
+                    Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                    Icon="{ui:SymbolIcon Delete24}"
+                    ToolTip="{loc:Tr Editor_Remove}" />
+                </Grid>
+              </ui:Card>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Margin="0,24,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
+        <ItemsControl Focusable="False" ItemsSource="{Binding AudioSlots}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="220" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Label}" />
+                <ComboBox
+                  Grid.Column="1"
+                  AutomationProperties.Name="{Binding Label}"
+                  DisplayMemberPath="Name"
+                  ItemsSource="{Binding Choices}"
+                  SelectedItem="{Binding Selected}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="2" Padding="24,12" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+        <ui:Button Margin="0,0,8,0" Command="{Binding CancelCommand}" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
+        <ui:Button Appearance="Primary" Command="{Binding SaveCommand}" Content="{loc:Tr Editor_Save}" Icon="{ui:SymbolIcon Save24}" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</ui:FluentWindow>

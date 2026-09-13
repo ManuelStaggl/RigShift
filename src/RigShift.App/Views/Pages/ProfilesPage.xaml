@@ -14,10 +14,19 @@
         </Grid.ColumnDefinitions>
         <ui:TextBlock FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <ui:Button Margin="0,0,8,0" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
           <ui:Button Margin="0,0,8,0" Content="{loc:Tr Profiles_Reload}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ReloadCommand}" />
           <ui:Button Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenFolderCommand}" />
         </StackPanel>
       </Grid>
+
+      <ui:InfoBar
+        Margin="0,0,0,16"
+        IsClosable="True"
+        IsOpen="{Binding IsStatusOpen}"
+        Message="{Binding StatusMessage}"
+        Severity="{Binding StatusSeverity}"
+        AutomationProperties.LiveSetting="Polite" />
 
       <ui:InfoBar
         Margin="0,0,0,16"
@@ -65,7 +74,7 @@
                   <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding DisplayLines}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" />
+                        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
@@ -83,6 +92,7 @@
                     CommandParameter="{Binding}"
                     IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
                   <ui:Button
+                    Margin="0,0,8,0"
                     Appearance="Primary"
                     Content="{loc:Tr Profile_Apply}"
                     Icon="{ui:SymbolIcon Play24}"
@@ -90,6 +100,41 @@
                     Command="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                     CommandParameter="{Binding}"
                     IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                  <ui:Button
+                    Margin="0,0,8,0"
+                    Content="{loc:Tr Profile_Edit}"
+                    Icon="{ui:SymbolIcon Edit24}"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                    CommandParameter="{Binding}" />
+                  <ui:Button
+                    Click="OnMoreClick"
+                    Icon="{ui:SymbolIcon MoreHorizontal24}"
+                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Page}}"
+                    ToolTip="{loc:Tr Profile_More}"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    AutomationProperties.Name="{loc:Tr Profile_More}">
+                    <ui:Button.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem
+                          Command="{Binding PlacementTarget.Tag.DuplicateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}"
+                          Header="{loc:Tr Profile_Duplicate}"
+                          Icon="{ui:SymbolIcon Copy24}" />
+                        <MenuItem
+                          Command="{Binding PlacementTarget.Tag.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}"
+                          Header="{loc:Tr Profile_Shortcut}"
+                          Icon="{ui:SymbolIcon Link24}" />
+                        <Separator />
+                        <MenuItem
+                          Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}"
+                          Header="{loc:Tr Profile_Delete}"
+                          Icon="{ui:SymbolIcon Delete24}" />
+                      </ContextMenu>
+                    </ui:Button.ContextMenu>
+                  </ui:Button>
                 </StackPanel>
               </Grid>
             </ui:Card>

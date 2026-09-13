@@ -87,4 +87,54 @@
   <data name="Diag_Inactive" xml:space="preserve"><value>inactive</value></data>
   <data name="Diag_Playback" xml:space="preserve"><value>Playback</value></data>
   <data name="Diag_Recording" xml:space="preserve"><value>Recording</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Save current arrangement</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile…</value></data>
+  <data name="Profile_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Profile_More" xml:space="preserve"><value>More actions</value></data>
+  <data name="Profile_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="Profile_Shortcut" xml:space="preserve"><value>Create desktop shortcut</value></data>
+  <data name="Profile_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Profile_CopyName" xml:space="preserve"><value>{0} (copy)</value></data>
+  <data name="Profile_DeleteTitle" xml:space="preserve"><value>Delete profile?</value></data>
+  <data name="Profile_DeleteText" xml:space="preserve"><value>“{0}” will be deleted. This cannot be undone.</value></data>
+  <data name="Shortcut_Description" xml:space="preserve"><value>Switch to the RigShift profile “{0}”</value></data>
+  <data name="Status_Saved" xml:space="preserve"><value>“{0}” saved.</value></data>
+  <data name="Status_Duplicated" xml:space="preserve"><value>“{0}” created.</value></data>
+  <data name="Status_Deleted" xml:space="preserve"><value>“{0}” deleted.</value></data>
+  <data name="Status_ShortcutCreated" xml:space="preserve"><value>Shortcut “{0}” created on the desktop. It also works as a Stream Deck action.</value></data>
+  <data name="Status_Error" xml:space="preserve"><value>That did not work: {0}</value></data>
+  <data name="Editor_TitleNew" xml:space="preserve"><value>New profile</value></data>
+  <data name="Editor_TitleEdit" xml:space="preserve"><value>Edit profile</value></data>
+  <data name="Editor_NewName" xml:space="preserve"><value>New profile</value></data>
+  <data name="Editor_ProblemsTitle" xml:space="preserve"><value>Not ready to save</value></data>
+  <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Editor_Icon" xml:space="preserve"><value>Tray icon</value></data>
+  <data name="Icon_Rig" xml:space="preserve"><value>Rig</value></data>
+  <data name="Icon_Desk" xml:space="preserve"><value>Desk</value></data>
+  <data name="Editor_OwnTimeout" xml:space="preserve"><value>Own confirmation time (seconds)</value></data>
+  <data name="Editor_OwnTimeoutHint" xml:space="preserve"><value>Otherwise the app setting applies ({0} s). 0 switches without asking.</value></data>
+  <data name="Editor_Displays" xml:space="preserve"><value>Displays</value></data>
+  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Set resolution and position in the Windows display settings, then use the current arrangement here.</value></data>
+  <data name="Editor_TakeCurrent" xml:space="preserve"><value>Use current arrangement</value></data>
+  <data name="Editor_Taken" xml:space="preserve"><value>Current arrangement taken over: {0} display(s).</value></data>
+  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · position {3}, {4}</value></data>
+  <data name="Editor_Primary" xml:space="preserve"><value>Main display</value></data>
+  <data name="Editor_Optional" xml:space="preserve"><value>Optional (may be missing)</value></data>
+  <data name="Editor_Remove" xml:space="preserve"><value>Remove display</value></data>
+  <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Editor_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Audio_Playback" xml:space="preserve"><value>Playback</value></data>
+  <data name="Audio_PlaybackComms" xml:space="preserve"><value>Playback for calls</value></data>
+  <data name="Audio_Recording" xml:space="preserve"><value>Recording</value></data>
+  <data name="Audio_RecordingComms" xml:space="preserve"><value>Recording for calls</value></data>
+  <data name="Audio_Unchanged" xml:space="preserve"><value>Don't change</value></data>
+  <data name="Audio_SameAsAbove" xml:space="preserve"><value>Same as above</value></data>
+  <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
+  <data name="Audio_Unknown" xml:space="preserve"><value>{0} (not found on this PC)</value></data>
+  <data name="Problem_NameMissing" xml:space="preserve"><value>Enter a name.</value></data>
+  <data name="Problem_NameTaken" xml:space="preserve"><value>A profile with this name already exists.</value></data>
+  <data name="Problem_NoDisplays" xml:space="preserve"><value>The profile needs at least one display.</value></data>
+  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Choose a main display.</value></data>
+  <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>The main display cannot be optional.</value></data>
 </root>

@@ -55,7 +55,29 @@ public sealed partial class ProfileCatalog : ObservableObject
     [ObservableProperty]
     public partial bool IsEmpty { get; set; }
 
+    public IReadOnlyList<Profile> Profiles => _profiles;
+
     public Profile? Find(Guid id) => _profiles.FirstOrDefault(p => p.Id == id);
+
+    public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        await _store.SaveAsync(profile, cancellationToken);
+        await ReloadAsync(cancellationToken);
+    }
+
+    /// <summary>Deletes the profile; if it was the default profile, there is no default afterwards.</summary>
+    public async Task DeleteAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        await _store.DeleteAsync(profile.Id, cancellationToken);
+        if (_settings.Current.DefaultProfileId == profile.Id)
+        {
+            await _settings.UpdateAsync(s => s with { DefaultProfileId = null }, cancellationToken);
+        }
+
+        await ReloadAsync(cancellationToken);
+    }
 
     public async Task ReloadAsync(CancellationToken cancellationToken)
     {

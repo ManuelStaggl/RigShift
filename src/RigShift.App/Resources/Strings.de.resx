@@ -87,4 +87,54 @@
   <data name="Diag_Inactive" xml:space="preserve"><value>inaktiv</value></data>
   <data name="Diag_Playback" xml:space="preserve"><value>Wiedergabe</value></data>
   <data name="Diag_Recording" xml:space="preserve"><value>Aufnahme</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung speichern</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern…</value></data>
+  <data name="Profile_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="Profile_More" xml:space="preserve"><value>Weitere Aktionen</value></data>
+  <data name="Profile_Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
+  <data name="Profile_Shortcut" xml:space="preserve"><value>Verknüpfung auf dem Desktop erstellen</value></data>
+  <data name="Profile_Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Profile_CopyName" xml:space="preserve"><value>{0} (Kopie)</value></data>
+  <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
+  <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="Shortcut_Description" xml:space="preserve"><value>Auf das RigShift-Profil „{0}“ umschalten</value></data>
+  <data name="Status_Saved" xml:space="preserve"><value>„{0}“ gespeichert.</value></data>
+  <data name="Status_Duplicated" xml:space="preserve"><value>„{0}“ angelegt.</value></data>
+  <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>
+  <data name="Status_ShortcutCreated" xml:space="preserve"><value>Verknüpfung „{0}“ auf dem Desktop erstellt. Sie funktioniert auch als Stream-Deck-Aktion.</value></data>
+  <data name="Status_Error" xml:space="preserve"><value>Das hat nicht geklappt: {0}</value></data>
+  <data name="Editor_TitleNew" xml:space="preserve"><value>Neues Profil</value></data>
+  <data name="Editor_TitleEdit" xml:space="preserve"><value>Profil bearbeiten</value></data>
+  <data name="Editor_NewName" xml:space="preserve"><value>Neues Profil</value></data>
+  <data name="Editor_ProblemsTitle" xml:space="preserve"><value>Noch nicht speicherbar</value></data>
+  <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Editor_Icon" xml:space="preserve"><value>Tray-Symbol</value></data>
+  <data name="Icon_Rig" xml:space="preserve"><value>Rig</value></data>
+  <data name="Icon_Desk" xml:space="preserve"><value>Schreibtisch</value></data>
+  <data name="Editor_OwnTimeout" xml:space="preserve"><value>Eigene Bestätigungszeit (Sekunden)</value></data>
+  <data name="Editor_OwnTimeoutHint" xml:space="preserve"><value>Sonst gilt die App-Einstellung ({0} s). 0 schaltet ohne Nachfrage.</value></data>
+  <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>
+  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Auflösung und Position stellst du in den Windows-Anzeigeeinstellungen ein und übernimmst sie dann hier.</value></data>
+  <data name="Editor_TakeCurrent" xml:space="preserve"><value>Aktuelle Anordnung übernehmen</value></data>
+  <data name="Editor_Taken" xml:space="preserve"><value>Aktuelle Anordnung übernommen: {0} Bildschirm(e).</value></data>
+  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · Position {3}, {4}</value></data>
+  <data name="Editor_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
+  <data name="Editor_Optional" xml:space="preserve"><value>Optional (darf fehlen)</value></data>
+  <data name="Editor_Remove" xml:space="preserve"><value>Bildschirm entfernen</value></data>
+  <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Editor_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="Audio_Playback" xml:space="preserve"><value>Wiedergabe</value></data>
+  <data name="Audio_PlaybackComms" xml:space="preserve"><value>Wiedergabe für Kommunikation</value></data>
+  <data name="Audio_Recording" xml:space="preserve"><value>Aufnahme</value></data>
+  <data name="Audio_RecordingComms" xml:space="preserve"><value>Aufnahme für Kommunikation</value></data>
+  <data name="Audio_Unchanged" xml:space="preserve"><value>Nicht ändern</value></data>
+  <data name="Audio_SameAsAbove" xml:space="preserve"><value>Wie oben</value></data>
+  <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
+  <data name="Audio_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht gefunden)</value></data>
+  <data name="Problem_NameMissing" xml:space="preserve"><value>Bitte einen Namen eingeben.</value></data>
+  <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
+  <data name="Problem_NoDisplays" xml:space="preserve"><value>Das Profil braucht mindestens einen Bildschirm.</value></data>
+  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Bitte eine Hauptanzeige wählen.</value></data>
+  <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>Die Hauptanzeige kann nicht optional sein.</value></data>
 </root>

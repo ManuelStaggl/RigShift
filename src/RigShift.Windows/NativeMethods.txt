@@ -50,3 +50,13 @@ GetMonitorInfo
 MONITORINFO
 GetWindowRect
 SetWindowPos
+// CLI output from a GUI-subsystem executable.
+AttachConsole
+GetStdHandle
+ATTACH_PARENT_PROCESS
+AllowSetForegroundWindow
+ASFW_ANY
+// Desktop shortcuts for profiles.
+ShellLink
+IShellLinkW
+IPersistFile

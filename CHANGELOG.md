@@ -25,3 +25,9 @@ All notable changes to this project are documented here. The format follows
   (default profile, apply at startup, start with Windows, confirmation time, language), keep-or-revert countdown
   window on the new primary display with a global Esc hotkey, balloon notifications, English and German UI,
   Windows light/dark/high-contrast theme, detection of the active profile after every display change.
+- Command line and profile management (milestone M4): `RigShift.exe apply <name> [--no-confirm] [--dry-run]`,
+  `list`, `save <name>` and `status` with documented exit codes; a single tray instance per session that receives
+  commands from further processes over the `\\.\pipe\RigShift` named pipe (starting the tray app when needed);
+  "save current arrangement" in the window and tray menu, profile editor (name, tray icon, own confirmation time,
+  main and optional displays, playback/recording devices per role, take over the current arrangement), duplicate,
+  delete and desktop shortcuts per profile.

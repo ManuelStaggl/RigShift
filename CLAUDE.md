@@ -33,9 +33,12 @@ dotnet test --solution RigShift.slnx
 
 ## Stand
 
-Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store) und **M3** (Tray-App)
-fertig. Als Nächstes **M4**: CLI + Einzelinstanz + Pipe, „Aktuelle Anordnung als Profil speichern", Profil
-bearbeiten. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
+**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten) fertig. Als Nächstes **M5**: Hardwaretest am
+Gaming-PC. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+
+CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
+`--dry-run`**, auch keine erzeugte Verknüpfung starten.
 
 App-Prüfung am Server ohne Umschalten: App starten, Screenshots per `PrintWindow` (Flag 2) des Fensters –
 `CopyFromScreen` fängt verdeckende Fenster mit ein, und computer-use kennt die Dev-EXE nicht. Navigation per
@@ -73,5 +76,12 @@ Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffe
 - `App.Exit()` kollidiert mit `Application.Exit` (CS0108) und `Exit` als Interface-Member mit CA1716 → `Quit()`.
 - Dieser Server läuft per RDP: der Snapshot zeigt nur die RDP-Indirect-Display, Audio hat 0 Endpunkte.
   Apply und Audio-Umschalten sind hier nicht prüfbar (→ M5 am Gaming-PC).
+- CLI-Ausgabe prüfen: `Start-Process -Wait` wartet auf den ganzen Prozessbaum, also auch auf die vom CLI
+  gestartete Tray-App → hängt. Stattdessen `Process.Start` mit umgeleitetem stdout + `ReadToEnd()`. Aus demselben
+  Grund startet der CLI-Prozess die Tray-App mit `UseShellExecute = true` (sonst erbt sie stdout).
+- System.CommandLine lokalisiert Hilfe und Fehler nach `CurrentUICulture` schon beim Anlegen der Symbole →
+  `CliParser.Parse` läuft komplett unter `InvariantCulture`.
+- UI-Tests per UI-Automation: `InvokePattern.Invoke()` blockiert, solange ein dadurch geöffneter modaler Dialog
+  offen ist → im Thread-Job auslösen. Modale Dialoge hängen im UIA-Baum unter ihrem Besitzerfenster.
 - Der Rechner hier ist der Home-Server, nicht der Gaming-PC: **M5 (Hardwaretest) findet am Gaming-PC statt**;
   hier nur Build, Tests und Snapshot-Prüfungen mit den vorhandenen Bildschirmen.

@@ -104,13 +104,110 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     private void Exit() => _shell.Quit();
 }
 
-public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoordinator coordinator, ILogger log) : ObservableObject
+public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoordinator coordinator, ProfileDialogs dialogs, ILogger log) : ObservableObject
 {
     public ProfileCatalog Catalog => catalog;
 
     public SwitchCoordinator Coordinator => coordinator;
 
     public string EmptyMessage => Loc.Format("Profiles_EmptyText", catalog.ProfileDirectory);
+
+    [ObservableProperty]
+    public partial string? StatusMessage { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsStatusOpen { get; set; }
+
+    [ObservableProperty]
+    public partial Wpf.Ui.Controls.InfoBarSeverity StatusSeverity { get; set; }
+
+    [RelayCommand]
+    private async Task SaveCurrentAsync()
+    {
+        if (await dialogs.CreateFromCurrentAsync() is { } saved)
+        {
+            ShowStatus(Loc.Format("Status_Saved", saved.Name));
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditAsync(ProfileItem? item)
+    {
+        if (item is not null && await dialogs.EditAsync(item.Profile) is { } saved)
+        {
+            ShowStatus(Loc.Format("Status_Saved", saved.Name));
+        }
+    }
+
+    [RelayCommand]
+    private async Task DuplicateAsync(ProfileItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        Profile copy = item.Profile with
+        {
+            Id = Guid.NewGuid(),
+            Name = ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), catalog.Profiles.Select(p => p.Name)),
+        };
+        await RunStoreActionAsync(() => catalog.SaveAsync(copy, CancellationToken.None), Loc.Format("Status_Duplicated", copy.Name));
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync(ProfileItem? item)
+    {
+        if (item is not null && await ProfileDialogs.ConfirmDeleteAsync(item.Name))
+        {
+            await RunStoreActionAsync(() => catalog.DeleteAsync(item.Profile, CancellationToken.None), Loc.Format("Status_Deleted", item.Name));
+        }
+    }
+
+    [RelayCommand]
+    private void CreateShortcut(ProfileItem? item)
+    {
+        if (item is null || Environment.ProcessPath is not { } executable)
+        {
+            return;
+        }
+
+        string title = "RigShift – " + RigShift.Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
+        string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
+        try
+        {
+            RigShift.Windows.Shell.ShortcutWriter.Create(
+                file, executable, $"apply \"{item.Name.Replace("\"", "\\\"", StringComparison.Ordinal)}\"", Loc.Format("Shortcut_Description", item.Name));
+            log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
+            ShowStatus(Loc.Format("Status_ShortcutCreated", title));
+        }
+        catch (Exception ex) when (ex is COMException or UnauthorizedAccessException or IOException)
+        {
+            log.Error(ex, "Shortcut {File} could not be created", file);
+            ShowStatus(Loc.Format("Status_Error", ex.Message), Wpf.Ui.Controls.InfoBarSeverity.Error);
+        }
+    }
+
+    private async Task RunStoreActionAsync(Func<Task> action, string success)
+    {
+        try
+        {
+            await action();
+            ShowStatus(success);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            log.Error(ex, "Profile store action failed");
+            ShowStatus(Loc.Format("Status_Error", ex.Message), Wpf.Ui.Controls.InfoBarSeverity.Error);
+        }
+    }
+
+    private void ShowStatus(string message, Wpf.Ui.Controls.InfoBarSeverity severity = Wpf.Ui.Controls.InfoBarSeverity.Success)
+    {
+        StatusMessage = message;
+        StatusSeverity = severity;
+        IsStatusOpen = true;
+    }
 
     [RelayCommand]
     private async Task ApplyAsync(ProfileItem? item)

@@ -75,11 +75,18 @@ public sealed class TrayIconService : IDisposable
     private readonly TaskbarIcon _icon;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
+    private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
     private readonly ILogger _log;
 
     public TrayIconService(
-        ProfileCatalog catalog, SwitchCoordinator coordinator, TrayPopupView popup, TrayPopupViewModel popupViewModel, IAppShell shell, ILogger log)
+        ProfileCatalog catalog,
+        SwitchCoordinator coordinator,
+        TrayPopupView popup,
+        TrayPopupViewModel popupViewModel,
+        ProfilesViewModel profiles,
+        IAppShell shell,
+        ILogger log)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
@@ -88,6 +95,7 @@ public sealed class TrayIconService : IDisposable
 
         _catalog = catalog;
         _coordinator = coordinator;
+        _profiles = profiles;
         _shell = shell;
         _log = log.ForContext<TrayIconService>();
         _icon = new TaskbarIcon
@@ -146,6 +154,11 @@ public sealed class TrayIconService : IDisposable
         }
 
         menu.Items.Add(new Separator());
+        menu.Items.Add(Command(Loc.Instance["Tray_SaveCurrent"], () =>
+        {
+            _shell.ShowMainWindow(typeof(ProfilesPage));
+            _profiles.SaveCurrentCommand.Execute(null);
+        }));
         menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
         menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));
         menu.Items.Add(new Separator());

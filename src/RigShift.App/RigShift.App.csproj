@@ -33,7 +33,6 @@
     <PackageReference Include="Serilog.Extensions.Hosting" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Sinks.Debug" />
-    <PackageReference Include="System.CommandLine" />
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
