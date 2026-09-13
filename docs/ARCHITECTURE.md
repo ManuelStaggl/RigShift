@@ -43,6 +43,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 | `IProfileStore` | `JsonProfileStore` (M2) | `%LocalAppData%\RigShift\profiles\*.json`, `schemaVersion`. |
 | `IDeviceEvents` (M2/M4) | `DeviceNotificationListener` | `WM_DISPLAYCHANGE`, `WM_DEVICECHANGE` from a hidden message window. |
 | `IAutostart` (M4) | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
+| `ISwitchConfirmation` (M3) | countdown window in `RigShift.App` | "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |
 
 ## Process model
 

@@ -33,8 +33,9 @@ dotnet test --solution RigShift.slnx
 
 ## Stand
 
-Meilenstein **M0** (Skelett) fertig. Als Nächstes **M1**: `TopologyPlanner` und `SwitchOrchestrator` in Core,
-testgetrieben mit Fake-`IDisplayConfigurator`. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+Meilensteine **M0** (Skelett) und **M1** (`TopologyPlanner`, `SwitchOrchestrator`, `ISwitchConfirmation` in Core)
+fertig. Als Nächstes **M2**: Windows-Schicht (CCD, Audio, JSON-Store, Legacy-Import). Reihenfolge und
+Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
 
 ## Stolperfallen
 
@@ -47,5 +48,8 @@ testgetrieben mit Fake-`IDisplayConfigurator`. Reihenfolge und Akzeptanzkriterie
   (CA1305); Testnamen mit Unterstrich sind nur im `tests/`-Ordner erlaubt (`tests/.editorconfig`).
 - `RigShift.App` liefert `Main` selbst (`Program.cs`, `EnableDefaultApplicationDefinition=false`), weil
   `VelopackApp.Build().Run()` vor allem anderen laufen muss.
+- Core-Tests mit Wartezeiten nutzen `tests/.../Fakes/AutoAdvanceTimeProvider` (Timer feuern sofort, Uhr springt
+  vor) – keine echten Delays in Tests. xUnit1051 ist in `SwitchOrchestratorTests` per Pragma aus, weil
+  NSubstitute-Aufrufe Token-Matcher statt echter Tokens übergeben.
 - Der Rechner hier ist der Home-Server, nicht der Gaming-PC: **M5 (Hardwaretest) findet am Gaming-PC statt**;
   hier nur Build, Tests und Snapshot-Prüfungen mit den vorhandenen Bildschirmen.

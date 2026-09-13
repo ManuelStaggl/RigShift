@@ -15,6 +15,20 @@ public sealed record SwitchResult
     public int? LastNativeError { get; init; }
 
     public string? Message { get; init; }
+
+    /// <summary>Audio is judged separately: an audio problem never fails the display switch.</summary>
+    public AudioOutcome Audio { get; init; } = AudioOutcome.NotConfigured;
+}
+
+public enum AudioOutcome
+{
+    /// <summary>The profile assigns no audio devices, or audio was not reached.</summary>
+    NotConfigured,
+
+    Applied,
+
+    /// <summary>At least one device was inactive or could not be set; see the log.</summary>
+    Incomplete,
 }
 
 public enum SwitchOutcome
