@@ -33,9 +33,14 @@ dotnet test --solution RigShift.slnx
 
 ## Stand
 
-Meilensteine **M0** (Skelett), **M1** (Core-Logik) und **M2** (Windows-Schicht, JSON-Store, Legacy-Import)
-fertig. Als Nächstes **M3**: App (Tray, Profilliste, Countdown-Dialog, Einstellungen, Diagnoseseite).
-Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store) und **M3** (Tray-App)
+fertig. Als Nächstes **M4**: CLI + Einzelinstanz + Pipe, „Aktuelle Anordnung als Profil speichern", Profil
+bearbeiten. Reihenfolge und Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+
+App-Prüfung am Server ohne Umschalten: App starten, Screenshots per `PrintWindow` (Flag 2) des Fensters –
+`CopyFromScreen` fängt verdeckende Fenster mit ein, und computer-use kennt die Dev-EXE nicht. Navigation per
+UI-Automation-Fokus + Enter. Countdown-Dialog nur in
+Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar.
 
 Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
 `dotnet run --project tools/RigShift.Probe -- snapshot | audio | import <ordner> | plan <ordner> <profil>`.
@@ -58,6 +63,14 @@ Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffe
 - CsWin32-Formen nicht raten: generierten Code mit `dotnet build -p:EmitCompilerGeneratedFiles=true
   -p:CompilerGeneratedFilesOutputPath=<scratch>` ausgeben und nachsehen. Konstanten mit eigenem Enum
   (z. B. `DEVICE_STATE`) über den Enum-Namen eintragen.
+- WPF-UI 4.3: `ui:TextBlock` direkt auf dem Seitenhintergrund wird im Dark-Theme zu dunkel gezeichnet →
+  `Foreground="{DynamicResource TextFillColorPrimaryBrush}"` explizit setzen. Navigationspunkte haben kein
+  UIA-Invoke-Muster, sind aber per Tastatur (Fokus + Enter) bedienbar. API-Namen aus den XML-Docs bzw. per
+  `grep -a` in `Wpf.Ui.dll` prüfen (Symbol-Enums sind nicht dokumentiert).
+- Sprache: `CultureInfo.CurrentUICulture` in einer async-Methode zu setzen wirkt nach dem `await` beim Aufrufer
+  nicht mehr (Kultur fließt mit dem ExecutionContext). `Loc` hält die Kultur deshalb selbst (`Loc.Instance.Culture`);
+  Formatierung im UI-Code immer damit, nicht mit `CurrentCulture`.
+- `App.Exit()` kollidiert mit `Application.Exit` (CS0108) und `Exit` als Interface-Member mit CA1716 → `Quit()`.
 - Dieser Server läuft per RDP: der Snapshot zeigt nur die RDP-Indirect-Display, Audio hat 0 Endpunkte.
   Apply und Audio-Umschalten sind hier nicht prüfbar (→ M5 am Gaming-PC).
 - Der Rechner hier ist der Home-Server, nicht der Gaming-PC: **M5 (Hardwaretest) findet am Gaming-PC statt**;

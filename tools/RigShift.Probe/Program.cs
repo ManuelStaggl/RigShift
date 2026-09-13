@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using RigShift.Windows.Audio;
 using RigShift.Windows.Display;
@@ -48,6 +49,19 @@ switch (command)
     case "import" when args.Length >= 2:
         DisplaySnapshot live = await display.QueryAsync(CancellationToken.None);
         Print(LegacyProfileImporter.ImportFolder(args[1], live, log));
+        break;
+
+    case "convert" when args.Length >= 3:
+        // One-off conversion of the author's script profiles into RigShift profile files (not a product feature).
+        var store = new JsonProfileStore(args[2], log);
+        foreach (LegacyImportResult result in LegacyProfileImporter.ImportFolder(args[1], live: null, log))
+        {
+            if (result.Profile is { } converted)
+            {
+                await store.SaveAsync(converted with { Icon = converted.Name.ToLowerInvariant() }, CancellationToken.None);
+            }
+        }
+
         break;
 
     case "plan" when args.Length >= 3:

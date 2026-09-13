@@ -1,0 +1,101 @@
+<Page
+  x:Class="RigShift.App.Views.Pages.ProfilesPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="Profiles">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel Margin="24,8,24,24">
+      <Grid Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <ui:TextBlock FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <ui:Button Margin="0,0,8,0" Content="{loc:Tr Profiles_Reload}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ReloadCommand}" />
+          <ui:Button Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenFolderCommand}" />
+        </StackPanel>
+      </Grid>
+
+      <ui:InfoBar
+        Margin="0,0,0,16"
+        Title="{loc:Tr Profiles_EmptyTitle}"
+        Message="{Binding EmptyMessage}"
+        IsOpen="{Binding Catalog.IsEmpty}"
+        IsClosable="False"
+        Severity="Informational" />
+
+      <ItemsControl ItemsSource="{Binding Catalog.Items}" Focusable="False">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:Card Margin="0,0,0,12">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                  <StackPanel Orientation="Horizontal">
+                    <ui:TextBlock FontTypography="Subtitle" Text="{Binding Name}" />
+                    <Border
+                      Margin="12,0,0,0"
+                      Padding="8,2"
+                      VerticalAlignment="Center"
+                      BorderBrush="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                      BorderThickness="1"
+                      CornerRadius="4"
+                      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                      <TextBlock Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="{loc:Tr Profile_Active}" />
+                    </Border>
+                    <Border
+                      Margin="8,0,0,0"
+                      Padding="8,2"
+                      VerticalAlignment="Center"
+                      BorderBrush="{DynamicResource TextFillColorSecondaryBrush}"
+                      BorderThickness="1"
+                      CornerRadius="4"
+                      Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibility}}">
+                      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Profile_Default}" />
+                    </Border>
+                  </StackPanel>
+
+                  <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding DisplayLines}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <TextBlock Margin="0,8,0,0" Text="{Binding CheckMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                  <ui:Button
+                    Margin="0,0,8,0"
+                    Content="{loc:Tr Profile_Check}"
+                    Icon="{ui:SymbolIcon DocumentSearch24}"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    Command="{Binding DataContext.CheckCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                    CommandParameter="{Binding}"
+                    IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                  <ui:Button
+                    Appearance="Primary"
+                    Content="{loc:Tr Profile_Apply}"
+                    Icon="{ui:SymbolIcon Play24}"
+                    AutomationProperties.HelpText="{Binding Name}"
+                    Command="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                    CommandParameter="{Binding}"
+                    IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                </StackPanel>
+              </Grid>
+            </ui:Card>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

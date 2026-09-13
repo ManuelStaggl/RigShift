@@ -174,6 +174,12 @@ Ergebnis `Failed` mit klarer Meldung und Log-Verweis.
 
 ### 4.5 Import der bestehenden Profile
 
+> **Entscheidung 2026-09-13 (M3, Nutzer):** Kein Import in der Oberfläche. Die Skriptdateien hat nur der Autor;
+> Community-Nutzer hatten sie nie. Die Profile des Autors wurden einmalig mit
+> `RigShift.Probe convert <skriptordner> <zielordner>` in RigShift-JSON umgewandelt und liegen lokal als Vorlage
+> (`Bestehend/RigShiftProfiles/`, gitignoriert). Der Importcode aus M2 bleibt nur als Werkzeug im Probe-Programm.
+> Der folgende Absatz beschreibt den ursprünglichen Plan.
+
 Beim ersten Start (oder über Einstellungen): Ordner wählen (Vorschlag `C:\Tools\DisplayProfiles`), `.display`
 parsen (`LegacyDisplayFile`, Core, getestet), Structs in der Windows-Schicht dekodieren
 (`DISPLAYCONFIG_PATH_INFO`/`MODE_INFO` aus CsWin32 → `DisplayAssignment`), Audio aus `DisplayProfiles.json`
@@ -293,7 +299,12 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | spacedesk-Display nach Verbindung an falscher Position | FollowUp-Phase plant neu und wendet den vollständigen Pfadsatz erneut an |
 
 Offen (klärt die Entwicklungssession, wenn es ansteht): Icon-Design (vorerst `desk.ico`/`rig.ico` aus dem
-Skript), genaue Toast-Technik (Balloon vs. Windows-Toast), Port der HTTP-API.
+Skript), Port der HTTP-API.
+
+Entschieden in M3 (Nutzer, 2026-09-13): **Tray-Balloon** als Ergebnismeldung (keine App-Kennung/Verknüpfung
+nötig, geht auch portabel); **Tray-Popup + Hauptfenster** mit den Seiten Profile, Diagnose, Einstellungen;
+**Farbschema folgt Windows** (inkl. hohem Kontrast). Bestätigungszeit ist eine App-Einstellung; ein Profil kann
+sie mit eigenem Wert überschreiben (`Profile.ConfirmTimeoutSeconds` ist dafür nullable).
 
 ---
 

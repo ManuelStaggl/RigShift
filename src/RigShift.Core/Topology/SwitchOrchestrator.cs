@@ -77,7 +77,8 @@ public sealed class SwitchOrchestrator
             return Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
         }
 
-        bool confirm = profile.ConfirmTimeoutSeconds > 0 && !request.SkipConfirmation;
+        int confirmSeconds = profile.ConfirmTimeoutSeconds ?? request.DefaultConfirmTimeoutSeconds;
+        bool confirm = confirmSeconds > 0 && !request.SkipConfirmation;
         IReadOnlyList<AudioRestore> audioRestore = confirm
             ? await CaptureAudioDefaultsAsync(profile.Audio, cancellationToken)
             : [];
@@ -102,7 +103,7 @@ public sealed class SwitchOrchestrator
         if (confirm)
         {
             ConfirmationResult answer = await _confirmation.ConfirmAsync(
-                profile, TimeSpan.FromSeconds(profile.ConfirmTimeoutSeconds), cancellationToken);
+                profile, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
             if (answer != ConfirmationResult.Confirmed)
             {
                 _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);

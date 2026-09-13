@@ -1,0 +1,63 @@
+<Page
+  x:Class="RigShift.App.Views.Pages.SettingsPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="Settings">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel Margin="24,8,24,24">
+      <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Settings}" />
+
+      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_DefaultProfile}" Icon="{ui:SymbolIcon Star24}">
+        <ComboBox
+          MinWidth="220"
+          AutomationProperties.Name="{loc:Tr Settings_DefaultProfile}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding ProfileChoices}"
+          SelectedItem="{Binding SelectedDefaultProfile}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_ApplyOnStartup}" Icon="{ui:SymbolIcon Play24}">
+        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_ApplyOnStartup}" IsChecked="{Binding ApplyDefaultOnStartup}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Autostart}" Icon="{ui:SymbolIcon Power24}">
+        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_Autostart}" IsChecked="{Binding StartWithWindows}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Window24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" />
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Settings_ConfirmTimeoutHint}" TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:NumberBox
+          Width="140"
+          AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}"
+          MaxDecimalPlaces="0"
+          Maximum="120"
+          Minimum="0"
+          SmallChange="1"
+          Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Language}" Icon="{ui:SymbolIcon Info24}">
+        <ComboBox
+          MinWidth="220"
+          AutomationProperties.Name="{loc:Tr Settings_Language}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding LanguageChoices}"
+          SelectedItem="{Binding SelectedLanguage}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Folders}" Icon="{ui:SymbolIcon FolderOpen24}">
+        <StackPanel Orientation="Horizontal">
+          <ui:Button Margin="0,0,8,0" Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr Profiles_OpenFolder}" />
+          <ui:Button Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Settings_OpenLogs}" />
+        </StackPanel>
+      </ui:CardControl>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

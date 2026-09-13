@@ -26,4 +26,7 @@ public sealed record SwitchRequest
 
     /// <summary>Skip the keep-or-revert confirmation even if the profile asks for it.</summary>
     public bool SkipConfirmation { get; init; }
+
+    /// <summary>Confirmation timeout for profiles that do not set their own (application setting).</summary>
+    public int DefaultConfirmTimeoutSeconds { get; init; } = 15;
 }

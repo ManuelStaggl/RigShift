@@ -44,3 +44,9 @@ WM_HOTKEY
 // Error codes we branch on (all live in the WIN32_ERROR enum).
 WIN32_ERROR
 CoTaskMemFree
+// Confirmation window: placement on the primary monitor.
+MonitorFromPoint
+GetMonitorInfo
+MONITORINFO
+GetWindowRect
+SetWindowPos

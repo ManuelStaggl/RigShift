@@ -1,0 +1,54 @@
+<UserControl
+  x:Class="RigShift.App.Views.TrayPopupView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization">
+  <Border
+    Width="290"
+    Padding="12"
+    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+    BorderThickness="1"
+    CornerRadius="8">
+    <StackPanel>
+      <ui:TextBlock FontTypography="BodyStrong" Text="RigShift" />
+      <TextBlock Margin="0,2,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ActiveText}" />
+
+      <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:Button
+              Margin="0,2"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Left"
+              Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+              CommandParameter="{Binding}"
+              IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="28" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ui:SymbolIcon Symbol="Checkmark24" Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}" />
+              </Grid>
+            </ui:Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock
+        Margin="0,6,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Tray_Switching}"
+        Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+
+      <Separator Margin="0,8" />
+      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+        <ui:Button Margin="0,0,8,0" Command="{Binding OpenCommand}" Content="{loc:Tr Tray_Open}" />
+        <ui:Button Command="{Binding ExitCommand}" Content="{loc:Tr Tray_Exit}" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

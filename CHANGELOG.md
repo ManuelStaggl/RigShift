@@ -20,3 +20,8 @@ All notable changes to this project are documented here. The format follows
   default endpoint via `IPolicyConfig`, volume), `JsonProfileStore` with schema version and atomic writes,
   import of the legacy script's `.display` files and `DisplayProfiles.json`, and the read-only
   `tools/RigShift.Probe` check tool.
+- Tray app (milestone M3): tray icon reflecting the active profile, profile popup and context menu, main window
+  with profiles (switch, dry-run check), diagnostics (displays, audio devices, recent switches) and settings
+  (default profile, apply at startup, start with Windows, confirmation time, language), keep-or-revert countdown
+  window on the new primary display with a global Esc hotkey, balloon notifications, English and German UI,
+  Windows light/dark/high-contrast theme, detection of the active profile after every display change.

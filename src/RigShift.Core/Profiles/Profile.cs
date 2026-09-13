@@ -18,6 +18,9 @@ public sealed record Profile
 
     public AudioAssignment Audio { get; init; } = new();
 
-    /// <summary>Seconds the user has to confirm a switch before the previous profile is restored. 0 disables the safety net.</summary>
-    public int ConfirmTimeoutSeconds { get; init; } = 15;
+    /// <summary>
+    /// Seconds the user has to confirm a switch before the previous profile is restored. 0 disables the safety net
+    /// for this profile; <c>null</c> uses the application-wide setting.
+    /// </summary>
+    public int? ConfirmTimeoutSeconds { get; init; }
 }

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav_Profiles" xml:space="preserve"><value>Profile</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="Nav_Diagnostics" xml:space="preserve"><value>Diagnose</value></data>
+  <data name="Profiles_Reload" xml:space="preserve"><value>Neu laden</value></data>
+  <data name="Profiles_OpenFolder" xml:space="preserve"><value>Profilordner öffnen</value></data>
+  <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
+  <data name="Profiles_EmptyText" xml:space="preserve"><value>RigShift liest Profile aus {0}. Profildateien dorthin kopieren und „Neu laden" wählen.</value></data>
+  <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
+  <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="Profile_Default" xml:space="preserve"><value>Standard</value></data>
+  <data name="Profile_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
+  <data name="Profile_Optional" xml:space="preserve"><value>optional</value></data>
+  <data name="Display_Unnamed" xml:space="preserve"><value>Bildschirm ohne Namen</value></data>
+  <data name="Check_Ready" xml:space="preserve"><value>Bereit: alle Bildschirme sind verfügbar.</value></data>
+  <data name="Check_OptionalMissing" xml:space="preserve"><value>Bereit. Nicht verfügbar (optional, wird übersprungen): {0}</value></data>
+  <data name="Check_Blocked" xml:space="preserve"><value>Gerade nicht möglich. Fehlende Bildschirme: {0}</value></data>
+  <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>Die Grafikkarte kann bei diesen Auflösungen und Bildraten eventuell nicht alle Bildschirme gleichzeitig ansteuern. RigShift versucht es trotzdem.</value></data>
+  <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>Ein Bildschirm wurde an einem anderen Anschluss oder Kabel erkannt.</value></data>
+  <data name="Warning_NoPrimary" xml:space="preserve"><value>Kein Bildschirm ist als Hauptanzeige markiert; Windows wählt einen aus.</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>RigShift öffnen</value></data>
+  <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
+  <data name="Tray_Switching" xml:space="preserve"><value>Schalte um …</value></data>
+  <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
+  <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
+  <data name="Tray_Active" xml:space="preserve"><value>Aktiv: {0}</value></data>
+  <data name="Confirm_Title" xml:space="preserve"><value>Diese Anzeigeeinstellungen beibehalten?</value></data>
+  <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
+  <data name="Confirm_Hint" xml:space="preserve"><value>Enter behält die neuen Einstellungen. Esc setzt zurück – von jedem Bildschirm aus.</value></data>
+  <data name="Confirm_Keep" xml:space="preserve"><value>Beibehalten</value></data>
+  <data name="Confirm_Revert" xml:space="preserve"><value>Zurücksetzen</value></data>
+  <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} aktiv</value></data>
+  <data name="Result_AppliedText" xml:space="preserve"><value>Bildschirme umgeschaltet.</value></data>
+  <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
+  <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
+  <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
+  <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
+  <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} nicht möglich</value></data>
+  <data name="Result_BlockedText" xml:space="preserve"><value>Fehlende Bildschirme: {0}</value></data>
+  <data name="Result_FailedTitle" xml:space="preserve"><value>Wechsel zu {0} fehlgeschlagen</value></data>
+  <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
+  <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details stehen im Log.</value></data>
+  <data name="Result_Busy" xml:space="preserve"><value>Es läuft bereits ein Wechsel.</value></data>
+  <data name="Outcome_Applied" xml:space="preserve"><value>Umgeschaltet</value></data>
+  <data name="Outcome_AppliedPartially" xml:space="preserve"><value>Teilweise umgeschaltet</value></data>
+  <data name="Outcome_RolledBack" xml:space="preserve"><value>Zurückgenommen</value></data>
+  <data name="Outcome_Blocked" xml:space="preserve"><value>Nicht möglich</value></data>
+  <data name="Outcome_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="Outcome_DryRun" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="Settings_DefaultProfile" xml:space="preserve"><value>Standardprofil</value></data>
+  <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
+  <data name="Settings_ApplyOnStartup" xml:space="preserve"><value>Beim Start von RigShift auf das Standardprofil umschalten</value></data>
+  <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
+  <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Zeit zum Bestätigen eines Wechsels (Sekunden)</value></data>
+  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung kommen die vorherigen Einstellungen zurück. 0 schaltet ohne Nachfrage.</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
+  <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
+  <data name="Settings_Folders" xml:space="preserve"><value>Ordner</value></data>
+  <data name="Settings_OpenLogs" xml:space="preserve"><value>Log-Ordner öffnen</value></data>
+  <data name="Diag_Refresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="Diag_Displays" xml:space="preserve"><value>Bildschirme</value></data>
+  <data name="Diag_Audio" xml:space="preserve"><value>Audiogeräte</value></data>
+  <data name="Diag_History" xml:space="preserve"><value>Letzte Wechsel</value></data>
+  <data name="Diag_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Diag_State" xml:space="preserve"><value>Zustand</value></data>
+  <data name="Diag_Mode" xml:space="preserve"><value>Modus</value></data>
+  <data name="Diag_Edid" xml:space="preserve"><value>EDID</value></data>
+  <data name="Diag_Path" xml:space="preserve"><value>Gerätepfad</value></data>
+  <data name="Diag_Adapter" xml:space="preserve"><value>Adapter</value></data>
+  <data name="Diag_Direction" xml:space="preserve"><value>Richtung</value></data>
+  <data name="Diag_Time" xml:space="preserve"><value>Zeit</value></data>
+  <data name="Diag_Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="Diag_Result" xml:space="preserve"><value>Ergebnis</value></data>
+  <data name="Diag_Duration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="Diag_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Diag_Active" xml:space="preserve"><value>aktiv</value></data>
+  <data name="Diag_Connected" xml:space="preserve"><value>verbunden</value></data>
+  <data name="Diag_NotReady" xml:space="preserve"><value>nicht bereit</value></data>
+  <data name="Diag_Default" xml:space="preserve"><value>Standard</value></data>
+  <data name="Diag_Inactive" xml:space="preserve"><value>inaktiv</value></data>
+  <data name="Diag_Playback" xml:space="preserve"><value>Wiedergabe</value></data>
+  <data name="Diag_Recording" xml:space="preserve"><value>Aufnahme</value></data>
+</root>
