@@ -271,6 +271,16 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 | Tray-Popup auf G9 (125 %) nach Start am Desk (150 %) | Popup weit neben dem Tray | Eigene Platzierung in physischen Pixeln (H.NotifyIcon rechnet mit Start-DPI) |
 | Tray-Icon helle Taskleiste, DPI | Icon folgt live, 24 px bei 150 %, 20 px bei 125 % | Popup blieb nach Theme-Wechsel halb hell → Ressourcen bei Theme-Wechsel neu auflösen |
 
+### M6-Protokoll (Home-Server, 2026-09-13, Pakete aus GitHub Releases)
+
+| Schritt | Ergebnis (Log) | Befund |
+|---|---|---|
+| Release-Workflow v1.0.0 / v1.0.1 per Tag | beide grün; Setup, portable ZIP, Full-Paket, für 1.0.1 zusätzlich Delta (23 MB) | – |
+| `RigShift-win-Setup.exe --silent` (1.0.0) | installiert nach `%LocalAppData%\RigShift\current`, Uninstall-Eintrag geschrieben; App meldet „No update available, installed version 1.0.0“ | Setup **leert einen vorhandenen `%LocalAppData%\RigShift`** → Datenordner `%AppData%` bestätigt |
+| 1.0.1 veröffentlicht, 1.0.0 neu gestartet | „Downloading update 1.0.1“ → „downloaded“ nach 9 s, Balloon | – |
+| erneuter Start | Velopack installiert beim Start, „RigShift 1.0.1.0 starting“, EXE-Version 1.0.1 | – |
+| `RigShift.exe list` (1.0.1) | Exit 0 | – |
+
 ---
 
 ## 6. Roadmap nach v1 (vom Nutzer gewählt, priorisiert)

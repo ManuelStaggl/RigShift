@@ -35,13 +35,19 @@ dotnet test --solution RigShift.slnx
 
 Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
 **M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
-**M5** (Hardwaretest am Gaming-PC, 2026-09-13) fertig. Als Nächstes **M6**: Release 1.0. Reihenfolge und
-Akzeptanzkriterien: `docs/PLAN.md`, Abschnitt 5.
+**M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
+alle 2026-09-13. Aktuelle Version **1.0.1**. Als Nächstes die Roadmap v1.1 (`docs/PLAN.md`, Abschnitt 6).
+Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
 `C:\Users\manue\RigShift-M5` auf den Gaming-PC (`ssh -i C:\Users\Administrator\.ssh\gamingpc_ed25519 manue@192.168.178.31`,
 laufende Instanz vorher mit `taskkill /im RigShift.exe /f` beenden); der User startet an der Konsole, Logs per SSH aus
-`%LOCALAPPDATA%\RigShift\logs`. Über SSH ist die Anzeige nicht abfragbar (`QueryDisplayConfig` → ACCESS_DENIED).
+`%APPDATA%\RigShift\logs` (ab 1.0; M5-Build noch `%LOCALAPPDATA%`). Über SSH ist die Anzeige nicht abfragbar
+(`QueryDisplayConfig` → ACCESS_DENIED).
+
+Release: Version in `Directory.Build.props` + Abschnitt `## [X.Y.Z]` in `CHANGELOG.md`, committen, `git tag -a vX.Y.Z`,
+`git push origin vX.Y.Z` → `release.yml` baut und veröffentlicht (ca. 8 min). Lokaler Paket-Test ohne Upload:
+`vpk pack` mit denselben Optionen wie im Workflow.
 
 CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
 `--dry-run`**, auch keine erzeugte Verknüpfung starten.
@@ -57,6 +63,12 @@ Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
 Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffentlichen.
 
 ## Stolperfallen
+
+- **Velopack-Setup leert einen vorhandenen `%LocalAppData%\RigShift`** (am Server 2026-09-13 belegt: alte Logs und
+  Profile weg), die Deinstallation löscht ihn ganz. Daten deshalb nur in `%AppData%\RigShift`; nie etwas in den
+  Installationsordner legen.
+- Velopack-Auto-Apply startet die App mit den ursprünglichen Argumenten neu → für CLI-Aufrufe abgeschaltet
+  (`Program.cs`), sonst ginge der Exit-Code verloren. `UpdateService` prüft nur, wenn `UpdateManager.IsInstalled`.
 
 - **`Bestehend/` und `AUFTRAG_Entwicklung.md` sind gitignoriert** – sie enthalten private Gerätepfade,
   Endpoint-IDs und IPs. Für M2 sind die `.display`-/`.json`-Dateien dort die lokalen Testdaten; nie ins Repo,
