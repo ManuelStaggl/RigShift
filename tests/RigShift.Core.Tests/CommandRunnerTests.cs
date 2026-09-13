@@ -39,6 +39,20 @@ public sealed class CommandRunnerTests
     }
 
     [Fact]
+    public async Task List_WithoutDisplayAccess_StillListsProfiles()
+    {
+        IDisplayConfigurator display = Substitute.For<IDisplayConfigurator>();
+        display.QueryAsync(Arg.Any<CancellationToken>())
+            .Returns<DisplaySnapshot>(_ => throw new System.ComponentModel.Win32Exception(5));
+        var runner = new CommandRunner(_store, display, _audio, Matcher(), Serilog.Core.Logger.None);
+
+        CliResponse response = await runner.RunAsync(new CliRequest { Command = CliCommand.List }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldBe($"  Desk{Environment.NewLine}  Rig");
+    }
+
+    [Fact]
     public async Task Status_NamesActiveProfileAndDisplays()
     {
         CliResponse response = await Runner().RunAsync(new CliRequest { Command = CliCommand.Status }, CancellationToken.None);

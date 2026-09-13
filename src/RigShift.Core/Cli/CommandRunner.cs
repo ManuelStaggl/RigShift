@@ -85,7 +85,17 @@ public sealed class CommandRunner
             return new CliResponse(CliExitCodes.Applied, "No profiles.");
         }
 
-        Profile? active = _matcher.FindActive(profiles, await _display.QueryAsync(cancellationToken));
+        Profile? active = null;
+        try
+        {
+            active = _matcher.FindActive(profiles, await _display.QueryAsync(cancellationToken));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Without display access (e.g. an SSH session) the profiles are still worth listing, just unmarked.
+            _log.Warning(ex, "Display configuration unavailable, listing profiles without the active marker");
+        }
+
         return new CliResponse(CliExitCodes.Applied, string.Join(Environment.NewLine,
             profiles.Select(p => (p.Id == active?.Id ? "* " : "  ") + p.Name)));
     }
