@@ -14,6 +14,12 @@ public sealed class SwitchOrchestrator
     /// <summary>ERROR_GEN_FAILURE. In practice "target not ready yet", not "impossible" (display-topology.md, rule 4).</summary>
     public const int ErrorGenFailure = 31;
 
+    /// <summary>
+    /// ERROR_BAD_CONFIGURATION. Observed on the gaming PC (M5, 2026-09-13) when a sleeping ultrawide dropped off the bus
+    /// mid-switch and reappeared seconds later – as transient as error 31.
+    /// </summary>
+    public const int ErrorBadConfiguration = 1610;
+
     /// <summary>Per retry cycle: stored modes first, then database modes (display-topology.md, rule 5).</summary>
     private static readonly bool[] ModeSources = [false, true];
 
@@ -70,7 +76,7 @@ public sealed class SwitchOrchestrator
         }
 
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
-        plan = await PollTopologyAsync(profile, plan, deadline, pollAtLeastOnce: false, cancellationToken);
+        plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: false, cancellationToken);
         if (BlockReason(plan) is { } blocked)
         {
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
@@ -87,13 +93,14 @@ public sealed class SwitchOrchestrator
         if (!applied.Succeeded)
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
+            string? restored = await RestoreAfterFailureAsync(before, cancellationToken);
             return Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
                 Plan = applied.Plan,
                 Attempts = applied.Attempts,
                 LastNativeError = applied.LastNativeError,
-                Message = applied.Message,
+                Message = restored is null ? applied.Message : applied.Message + " " + restored,
             }, started);
         }
 
@@ -174,7 +181,43 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Stored modes first, then database modes (rule 5). On error 31: wait, re-query, re-plan and try again
+    /// A failed attempt may leave displays dark (Windows usually reverts on its own, but not reliably). If a display
+    /// that was active before is no longer active, re-apply the previous topology. Returns a note for the result message.
+    /// </summary>
+    private async Task<string?> RestoreAfterFailureAsync(DisplaySnapshot before, CancellationToken cancellationToken)
+    {
+        DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
+        bool changed = before.Displays
+            .Where(d => d.IsActive)
+            .Any(d => !now.Displays.Any(n => n.IsActive && n.Identity == d.Identity));
+        if (!changed)
+        {
+            return null;
+        }
+
+        _log.Warning("Previously active displays are dark after the failed switch, restoring the previous topology");
+        Profile previous = PreviousTopology(before);
+        TopologyPlan plan = _planner.Plan(previous, now);
+        LogPlan(plan);
+        if (plan.Resolved.Count == 0)
+        {
+            _log.Error("Restore impossible: none of the previously active displays is available");
+            return "Restoring the previous topology failed.";
+        }
+
+        ApplyOutcome restored = await ApplyWithRetryAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        if (!restored.Succeeded)
+        {
+            _log.Error("Restore after failed switch failed: {Reason}", restored.Message);
+            return "Restoring the previous topology failed.";
+        }
+
+        _log.Information("Previous topology restored after failed switch ({Attempts} attempts)", restored.Attempts);
+        return "Previous topology restored.";
+    }
+
+    /// <summary>
+    /// Stored modes first, then database modes (rule 5). On a transient error (31, 1610): wait, re-query, re-plan and try again
     /// within the time budget (rule 4). Every retry uses a fresh snapshot because LUIDs may change (rule 2).
     /// </summary>
     private async Task<ApplyOutcome> ApplyWithRetryAsync(Profile profile, TopologyPlan plan, DateTimeOffset deadline, CancellationToken cancellationToken)
@@ -206,7 +249,7 @@ public sealed class SwitchOrchestrator
                     attempts, code, databaseModes ? "database" : "stored");
             }
 
-            if (lastError != ErrorGenFailure)
+            if (lastError is not (ErrorGenFailure or ErrorBadConfiguration))
             {
                 return new ApplyOutcome(false, plan, attempts, lastError,
                     string.Create(CultureInfo.InvariantCulture, $"SetDisplayConfig failed with error {lastError}."));
@@ -219,7 +262,7 @@ public sealed class SwitchOrchestrator
                         $"A display did not become ready within {_options.TargetWaitBudget.TotalSeconds} s (error {lastError})."));
             }
 
-            plan = await PollTopologyAsync(profile, plan, deadline, pollAtLeastOnce: true, cancellationToken);
+            plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: true, cancellationToken);
             if (BlockReason(plan) is { } blocked)
             {
                 return new ApplyOutcome(false, plan, attempts, lastError, blocked);
@@ -227,12 +270,15 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    /// <summary>Re-queries the topology while a required display is attached but not ready, until the deadline.</summary>
+    /// <summary>
+    /// Re-queries the topology while a required display is attached but not ready, until the deadline. After a failed
+    /// attempt a required display that vanished is waited for too: a waking monitor can drop off the bus for seconds.
+    /// </summary>
     private async Task<TopologyPlan> PollTopologyAsync(
-        Profile profile, TopologyPlan plan, DateTimeOffset deadline, bool pollAtLeastOnce, CancellationToken cancellationToken)
+        Profile profile, TopologyPlan plan, DateTimeOffset deadline, bool afterAttempt, CancellationToken cancellationToken)
     {
-        bool force = pollAtLeastOnce;
-        while ((force || IsWaitingForTarget(plan)) && _time.GetUtcNow() < deadline)
+        bool force = afterAttempt;
+        while ((force || IsWaitingForTarget(plan, afterAttempt)) && _time.GetUtcNow() < deadline)
         {
             force = false;
             await Task.Delay(_options.PollInterval, _time, cancellationToken);
@@ -244,9 +290,13 @@ public sealed class SwitchOrchestrator
         return plan;
     }
 
-    private static bool IsWaitingForTarget(TopologyPlan plan) =>
-        plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.AttachedButUnavailable)
-        && !plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached);
+    // After an attempt: wait for vanished required displays, and for optional ones when nothing else is left to apply –
+    // the rollback profile marks every display optional (M5 log 2026-09-13 19:59: rollback to a G9 that fell asleep).
+    private static bool IsWaitingForTarget(TopologyPlan plan, bool includeDetached) =>
+        includeDetached
+            ? plan.Missing.Any(m => !m.Assignment.IsOptional) || (plan.Resolved.Count == 0 && plan.Missing.Count > 0)
+            : plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.AttachedButUnavailable)
+              && !plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached);
 
     private static string? BlockReason(TopologyPlan plan)
     {

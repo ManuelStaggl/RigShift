@@ -49,6 +49,12 @@ ultrawide had not woken up yet (`targetAvailable == 0`).
 Strategy: after a failure, re-query the topology and wait for the target to report available (poll, ~1 s) within
 a time budget, then retry. A fixed sleep is a workaround, not a solution.
 
+Observed 2026-09-13 19:52 (G9 in standby): the sleeping ultrawide still reports `targetAvailable`, the first call
+returns 31, and while it wakes it **drops off the bus entirely** for about three seconds – the next call returns
+**1610** (`ERROR_BAD_CONFIGURATION`), and the desk screens go dark until Windows reverts. Treat 1610 like 31, and
+after a failed attempt keep waiting for a required display that vanished instead of giving up. If a switch still
+fails, re-apply the previous topology when displays were left dark.
+
 ## 5. Fallback: apply without modes
 
 If `SetDisplayConfig` with the stored modes fails, set every `modeInfoIdx` to `DISPLAYCONFIG_PATH_MODE_IDX_INVALID`,

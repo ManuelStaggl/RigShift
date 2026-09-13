@@ -42,6 +42,36 @@ public static class NativeWindow
             SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
     }
 
+    /// <summary>
+    /// Moves the window next to the cursor – centered above it, clamped to the work area of the cursor's monitor – in
+    /// physical pixels. Returns the new top-left corner, or null when a Win32 call failed.
+    /// </summary>
+    public static unsafe (int X, int Y)? PlaceNearCursor(nint hwnd)
+    {
+        if (!PInvoke.GetCursorPos(out System.Drawing.Point cursor))
+        {
+            return null;
+        }
+
+        HMONITOR monitor = PInvoke.MonitorFromPoint(cursor, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        var info = new MONITORINFO { cbSize = (uint)sizeof(MONITORINFO) };
+        if (!PInvoke.GetMonitorInfo(monitor, &info) || !PInvoke.GetWindowRect(new HWND(hwnd), out RECT window))
+        {
+            return null;
+        }
+
+        RECT work = info.rcWork;
+        int width = window.right - window.left;
+        int height = window.bottom - window.top;
+        int x = Math.Clamp(cursor.X - (width / 2), work.left, Math.Max(work.left, work.right - width));
+        int y = Math.Clamp(cursor.Y - height, work.top, Math.Max(work.top, work.bottom - height));
+
+        return PInvoke.SetWindowPos(new HWND(hwnd), HWND.Null, x, y, 0, 0,
+            SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE)
+            ? (x, y)
+            : null;
+    }
+
     /// <summary>Pixel size of a small icon such as the tray icon, at the current DPI of the primary monitor (where the tray is).</summary>
     public static int SmallIconSize()
     {

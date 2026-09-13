@@ -86,7 +86,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
     /// <summary>Shown below the header only when no profile row is marked active.</summary>
     public string? StatusText => Catalog.IsEmpty ? Loc.Instance["Tray_NoProfiles"]
-        : Catalog.ActiveProfile is null ? Loc.Instance["Tray_ActiveNone"]
+        : !Catalog.Items.Any(i => i.IsActive) ? Loc.Instance["Tray_ActiveNone"]
         : null;
 
     public bool HasStatusText => StatusText is not null;

@@ -135,7 +135,41 @@ public sealed class TrayIconService : IDisposable
         Refresh();
         // No efficiency mode: it throttles timers, and the confirmation countdown must stay accurate.
         _icon.ForceCreate(enablesEfficiencyMode: false);
+        if (_icon.TrayPopupResolved is { } popup)
+        {
+            popup.Opened += OnTrayPopupOpened;
+        }
+        else
+        {
+            _log.Warning("Tray popup not resolved; its placement is left to H.NotifyIcon");
+        }
+
         _log.Information("Tray icon created");
+    }
+
+    /// <summary>
+    /// H.NotifyIcon converts the cursor position with the DPI factor captured at startup, so on a monitor with another
+    /// scale the popup lands far from the tray (M5, G9 at 125 % after starting on a 150 % desk). Re-place it in physical
+    /// pixels; once more after layout, because moving to another monitor rescales the popup.
+    /// </summary>
+    private void OnTrayPopupOpened(object? sender, EventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Primitives.Popup { Child: { } child })
+        {
+            return;
+        }
+
+        void Place(string pass)
+        {
+            if (PresentationSource.FromVisual(child) is HwndSource source)
+            {
+                (int X, int Y)? placed = NativeWindow.PlaceNearCursor(source.Handle);
+                _log.Debug("Tray popup placed ({Pass}) at {Position}", pass, placed?.ToString() ?? "failed");
+            }
+        }
+
+        Place("opened");
+        _icon.Dispatcher.InvokeAsync(() => Place("after layout"), DispatcherPriority.Loaded);
     }
 
     public void Dispose()

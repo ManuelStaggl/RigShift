@@ -80,6 +80,38 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_UltrawideDropsOffMidSwitch_WaitsForItAndSucceeds()
+    {
+        // M5 log 2026-09-13 19:52: 31, then 1610 while the sleeping G9 vanished from the bus; it reappeared 3 s later.
+        DisplaySnapshot ultrawideGone = Snapshot(
+            Attached(Desk4K, activeMode: DeskModes[0]),
+            Attached(DeskLeft, activeMode: DeskModes[1]),
+            Attached(DeskRight, activeMode: DeskModes[2]),
+            Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), ultrawideGone, ultrawideGone, DeskActive()], applyResults: [31, 1610, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Attempts.ShouldBe(3);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task Switch_FailureLeavesDeskDark_RestoresPreviousTopology()
+    {
+        DisplaySnapshot allDark = Snapshot(Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [87, 87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Message.ShouldNotBeNull().ShouldContain("Previous topology restored");
+        display.Applied.Count.ShouldBe(3);
+        display.Applied[2].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task Switch_Error31Persists_FailsWhenTimeBudgetIsSpent()
     {
         var display = new FakeDisplayConfigurator(DeskActive(), applyResults: Enumerable.Repeat(31, 100));
@@ -185,6 +217,21 @@ public sealed class SwitchOrchestratorTests
         rollback.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
         rollback.Resolved.Single(r => r.Assignment.IsPrimary).Target.Identity.ShouldBe(Desk4K);
         rollback.Resolved.Single(r => r.Target.Identity == DeskLeft).Assignment.PositionX.ShouldBe(-1920);
+    }
+
+    [Fact]
+    public async Task Switch_RollbackTargetsVanishMidRetry_WaitsForThemAndRestores()
+    {
+        // M5 log 2026-09-13 19:59: the rollback display dropped off the bus after 31/1610 and came back later.
+        DisplaySnapshot deskGone = Snapshot(Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), DeskActive(), deskGone, DeskActive()], applyResults: [0, 31, 1610, 0]);
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        display.Applied.Count.ShouldBe(4);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(2));
     }
 
     [Fact]
