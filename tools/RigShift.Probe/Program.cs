@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -118,7 +118,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 
