@@ -10,9 +10,15 @@ on:
 permissions:
   contents: write
 
+# Two release runs at once would upload to the same GitHub release; a second tag waits instead of cancelling.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   package:
     runs-on: windows-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
