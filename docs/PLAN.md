@@ -369,9 +369,32 @@ belegt: Schalter aus → `confirmTimeoutSeconds: 0`, Hinweistext wechselt, Sekun
 **Veröffentlicht als 1.2.0 (2026-09-14)**, Workflow-Run 34809298875 success; Assets Setup, Portable, full, delta;
 `releases/latest` = v1.2.0.
 
-3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis).
-4. Lautstärke pro Profil (`IAudioEndpointVolume`).
-5. Apps pro Profil starten/beenden (Reihenfolge, Wartezeit, „nur wenn nicht läuft").
+Zuschnitt Punkte 3–5 (vom Nutzer gewählt 2026-09-14): jetzt bauen und am Server mit Unit-Tests belegen, **kein
+Release vor dem Gaming-PC-Test**; der Test deckt dann 1.2.0 und diesen Block zusammen ab, danach 1.3.0.
+
+3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis). **War schon seit
+   M3 umgesetzt** (Editor: vier Audio-Zeilen, Orchestrator setzt Aufnahme/Kommunikation getrennt).
+4. Lautstärke pro Profil (`IAudioEndpointVolume`). Festlegung: **Wiedergabe und Aufnahme** je ein Regler mit
+   Schalter „Lautstärke festlegen“ (aus = unverändert); die Kommunikations-Geräte bekommen keinen, weil das den Editor
+   überfrachtet und der Pegel meist am selben Gerät hängt. Regler nur aktiv, wenn ein Gerät gewählt ist – die
+   Lautstärke gehört zum Gerät, nicht zum gerade zufälligen Standard. Beim Zurückrollen wird die vorherige Lautstärke
+   des Geräts wiederhergestellt (wie der Standard), sonst bliebe ein abgelehnter Wechsel halb bestehen.
+   **Umgesetzt 2026-09-14**: `AudioAssignment.RecordingVolumePercent`, `IAudioController.GetVolumeAsync`, Regler im
+   Editor. Unit-Tests belegen Setzen, Ignorieren ohne Gerät und Wiederherstellen beim Zurückrollen. **Nicht belegt**
+   (am Server keine Audio-Endpunkte, Editor nicht angesehen): echte Pegel, Editor-Optik → Gaming-PC.
+5. Apps pro Profil starten/beenden. Festlegung (Umfang „Starten + Beenden“): Liste pro Profil in fester Reihenfolge,
+   je Eintrag Aktion, Programmpfad (Umgebungsvariablen erlaubt), Argumente (nur Start), Wartezeit danach. Start nur,
+   wenn kein Prozess mit dem Namen der EXE läuft; Beenden schließt erst das Fenster und beendet nach 5 s hart.
+   Läuft **erst nach der Bestätigung** (bzw. direkt nach Audio ohne Bestätigung): ein abgelehnter Wechsel soll keine
+   Apps gestartet oder Arbeit geschlossen haben, und es gibt kein sinnvolles „App-Rückgängig“. Fehler machen den
+   Wechsel nicht kaputt, sondern melden „Apps unvollständig“ (wie Audio). Nicht in 1.3: Ziehen zum Sortieren, Start
+   als Admin, automatisches Beenden beim Zurückwechseln.
+   **Umgesetzt 2026-09-14**: `Profile.Apps` (`AppAction`; Property mit `set`, damit Profile ohne Schlüssel eine leere
+   Liste bekommen – Test `Load_ProfileFromVersion1_2_HasNoApps`), `IAppLauncher` + `ProcessAppLauncher` (Abgleich über
+   den Prozessnamen, weil der Pfad eines Admin-Prozesses ohne Admin-Rechte nicht lesbar ist), Ausgang
+   `SwitchResult.Apps` in Tray-Meldung und CLI. Unit-Tests belegen Reihenfolge nach Bestätigung, Wartezeit, kein
+   Doppelstart, Fehler → weiter + unvollständig, keine Apps bei Ablehnung. **Nicht belegt:** echtes Starten/Beenden
+   (Schließen per Fenster, harter Abbruch, Admin-Prozess) und Editor-Optik → Gaming-PC.
 6. Prozess-Trigger (WMI `Win32_ProcessStartTrace` oder ETW; Fallback Polling 2 s) + **Spiele-Vorlagen**
    (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1 – als JSON in `templates/`, per PR erweiterbar).
 

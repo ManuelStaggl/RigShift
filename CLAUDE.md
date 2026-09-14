@@ -37,8 +37,9 @@ Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSO
 **M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
 **M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
 alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
-`rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Als Nächstes Hardwaretest dieser Punkte am
-Gaming-PC, dann Roadmap Punkte 3–5 (Mikrofon, Lautstärke, Apps; `docs/PLAN.md`, Abschnitt 6).
+`rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Unveröffentlicht auf `main`: Lautstärke
+(Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da). Als Nächstes Hardwaretest von 1.2.0 und
+diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
