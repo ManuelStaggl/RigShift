@@ -19,6 +19,7 @@ self-updating download. Alternatives considered: WinUI 3 (used in the author's H
 
 ## Consequences
 
-- No Native AOT (WPF does not support it); ReadyToRun + single-file instead.
+- No Native AOT (WPF does not support it); ReadyToRun + single-file instead (single-file dropped in 1.4 for smaller delta updates, see
+  `docs/analysis/umsetzungsplan-1.3.md`, D-02).
 - `IPolicyConfig` stays a hand-written COM import because it is undocumented and absent from the metadata.
 - WinUI 3 code from HushKey is not reusable as-is; the Win32 patterns are.

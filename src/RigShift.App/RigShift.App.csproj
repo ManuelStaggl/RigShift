@@ -11,11 +11,10 @@
     <ApplicationIcon>Assets\Brand\rigshift-app-light.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
-    <!-- Publish defaults (see docs/PLAN.md, section Verteilung). -->
+    <!-- Publish defaults (see docs/PLAN.md, section Verteilung). No single file: Velopack packs the folder anyway, and
+         separate files keep delta updates small and avoid self-extraction at start (D-02). -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 

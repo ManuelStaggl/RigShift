@@ -668,7 +668,8 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 
 ## 8. Verteilung und Release
 
-- `dotnet publish -c Release -r win-x64` (self-contained, Single-File, ReadyToRun) → `vpk pack` → Velopack
+- `dotnet publish -c Release -r win-x64` (self-contained, ReadyToRun; seit 1.4 ohne Single-File – Nutzerentscheidung D-02:
+  kleinere Deltas, kein Selbstextrahieren beim Start) → `vpk pack` → Velopack
   erzeugt Setup-EXE, portable ZIP und Delta-Pakete → GitHub Release `vX.Y.Z`.
 - Workflow `.github/workflows/release.yml` läuft bei Tag `v*`; `ci.yml` bei jedem Push/PR (Build + Tests).
 - Versionsquelle: `Directory.Build.props` → `<Version>`; der Tag muss übereinstimmen (Workflow prüft).
