@@ -126,9 +126,13 @@ RigShift.exe is a Windows GUI program, so shells do not wait for it. To see outp
 
 ## Help and feedback
 
+A monitor is reported as missing although it is only asleep? See [Monitors in standby](docs/monitor-standby.md) – it
+also explains why HDR is worth trying in Windows first. Pedals or a wheelbase dropping out: see
+[USB power saving](docs/usb-power-saving.md).
+
 Something not working? Use **About & help → Copy diagnostic info** and open an
 [issue](https://github.com/ManuelStaggl/RigShift/issues/new) – the log from `%AppData%\RigShift\logs` helps too. The
-diagnostic info contains display device paths but no audio device IDs, and your user name is replaced; the log files
+diagnostic info contains display models and shortened device ids but no audio device IDs, and your user name is replaced; the log files
 are not anonymized (paths with your user name, audio device IDs), so look through them before attaching one. Ideas and pull requests are welcome, see
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/ROADMAP.md). RigShift is meant to stay small.
 

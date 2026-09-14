@@ -302,3 +302,22 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | HW-17 | Diagnosebericht zeigt pro Bildschirm die vollen Gerätepfade (`\?DISPLAY#…#5&…&UID…#{…}`, `\?PCI#VEN_…&SUBSYS_…#…`). Für ein öffentliches Issue unnötig identifizierend; zur Fehlersuche reichen Hersteller-/Produktcode und UID. „Recent switches“ zeigt bei Rig „AppliedPartially … error 1610 – spacedesk“ – der Zwischenfehler 1610 wirkt wie die Ursache | 1.4.1: Pfade kürzen (z. B. `AUS32F6 · UID4353`, Adapter `VEN_10DE&DEV_2702`); letzter Fehlercode nur bei gescheiterten Wechseln |
 | HW-04 | Nutzerwunsch: Bildschirme-Seite zeigt dieselben Nummern wie Windows-Einstellungen | nach der Testrunde |
 | HW-05 | Nutzerwunsch: „Identifizieren“ aus der App – existiert seit 1.3.0 als „Erkennen“ (eigenes Fenster), Nutzer hatte es übersehen; offen nur, ob die Nummern zu Windows passen (HW-04) | mit HW-04 |
+
+### Umsetzung 1.4.1 (2026-09-14, ohne Hardwaretest)
+
+| ID | Umsetzung | Beleg |
+|---|---|---|
+| HW-01 | NumberBox `ClearButtonEnabled=False`, Breite 150 (Automatik, Einstellungen, Editor) | nur Build |
+| HW-02 | Einstellungen: Sekundenfeld immer sichtbar, bei „aus“ deaktiviert. Editor: Haken „Ohne Nachfrage“ deaktiviert + Hinweis `Editor_ConfirmationOff` | nur Build |
+| HW-03 | `SwitchOutcome.Applied` auch bei fehlendem optionalem Bildschirm, `AppliedPartially` nur noch bei dunklem Bildschirm (Datenbank-Modi). Nachholen folgt `Plan.ShouldRetryLater`. Toast „… folgt, sobald verbunden“ | `Switch_OptionalDisplayMissing_CountsAsApplied`, `PartialResult_RemembersCatchUp_…` |
+| HW-06 | Debug-Zeile in `DuckingSwitcher.RestoreRemembered` | – |
+| HW-07 | `ConfirmationResult.Cancelled` (Fenster bei Abbruch, Orchestrator im Catch) | – |
+| HW-08 | `UsbDeviceChoices.Known`: Regel-Geräte, Warte-Geräte aller Profile, benannte Geräte – in Automatik und Editor | `DeviceChoices_OfferKnownDevicesThatAreNotConnected` |
+| HW-09 | `ProfileItem.AppsLine` („Apps: SimHub, X (beenden) · wartet auf Base“) auf der Profilkarte | nur Build |
+| HW-12 | (a) `Setting HDR of … to …` vor dem nativen Aufruf; (b) Aufruf auf eigenem Thread (`LongRunning`), `WaitAsync(HdrCallTimeout = 10 s)`, danach kein weiterer HDR-Aufruf in diesem Wechsel; (c) vor HDR zwei gleiche Snapshots in Folge (`HdrSettleBudget = 10 s`, sonst HDR unverändert); nur wenn ein Bildschirm abweicht oder keinen Zustand meldet; (e) Warnhinweis im Editor, sobald HDR an/aus gewählt ist | `Switch_HdrCallHangs_…`, `Switch_DisplaysStillChangingAfterApply_…`, `Switch_DisplaysNeverSettle_…` |
+| HW-13 | `RefreshRateMemory` in `settings.json` (`refreshRates`, Schlüssel Pfad + Auflösung); gemerkt im Editor und nach jedem Wechsel für alle aktiven Bildschirme; Editor bietet gemerkte Raten, sonst Hinweis `Editor_RefreshRatesUnknown` | `RefreshRateMemoryTests` |
+| HW-14 | `SwitchCoordinator.MissingForRecord`: bei `Blocked` nur Pflicht-Bildschirme | `Blocked_AsksForTheDisplay_AndNamesOnlyRequiredDisplays` |
+| HW-16 | Fehlt ein Pflicht-Bildschirm ganz (`NotAttached`): Ereignis `WaitingForDisplays` → Toast „Bildschirm einschalten“, Warten bis `MissingDisplayWaitBudget = 30 s`, dann anwenden oder blockieren. Doku `docs/monitor-standby.md` (OSD allgemein, keine geratenen Menünamen), README verlinkt | `Switch_RequiredDisplayNotAttached_AsksForItAndBlocksAfterTheWait`, `Switch_RequiredDisplaySwitchedOnWhileWaiting_Applies` |
+| HW-17 | Diagnose: `ShortTargetPath` (`AUS32F6 · UID4353`), `ShortAdapterPath` (`VEN_10DE&DEV_2702`), Fehlercode nur bei `Failed` | `ShortTargetPath_…`, `ShortAdapterPath_…`, `Build_ErrorCodeOnlyForFailedSwitches` |
+
+In die nächste Hardware-Testrunde: HW-16 (G9 ausgeschaltet → Toast, einschalten, Wechsel), HW-12 nur Log-Reihenfolge ohne HDR-Umschaltung am G9, HW-13 (spacedesk-Raten nach einem Rig-Wechsel im Editor), HW-03-Toast.
