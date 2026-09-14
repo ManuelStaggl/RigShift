@@ -99,7 +99,11 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
                 Identity = identity,
                 IsAvailable = target.Available,
                 IsActive = target.ActivePath is not null,
-                ActiveMode = target.ActivePath is { } activePath ? DecodeActiveMode(identity, activePath, modes) : null,
+                ActiveMode = target.ActivePath is { } activePath
+                    ? DecodeActiveMode(identity, activePath, modes) is { } mode
+                        ? mode with { Hdr = CcdNative.TryGetHdr(target.Adapter.ToLuid(), target.TargetId) }
+                        : null
+                    : null,
                 NativeHandle = new CcdTargetHandle(target.Adapter, target.TargetId, target.Sources, activeSource),
             });
         }
@@ -152,6 +156,46 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         int result = PInvoke.SetDisplayConfig(paths, modes, flags);
         _log.Information("SetDisplayConfig({Paths} paths, {Modes} modes, {Flags}) returned {Result}", paths.Length, modes.Length, flags, result);
         return Task.FromResult(result);
+    }
+
+    public Task<int> SetHdrAsync(AttachedDisplay display, bool enabled, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(display);
+        if (display.NativeHandle is not CcdTargetHandle handle)
+        {
+            return Task.FromResult((int)WIN32_ERROR.ERROR_INVALID_PARAMETER);
+        }
+
+        int result = CcdNative.SetHdr(handle.Adapter.ToLuid(), handle.TargetId, enabled);
+        _log.Information("HDR of {Display} set to {Enabled}: result {Result}", DisplayNames.Of(display.Identity), enabled, result);
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(identity);
+
+        (DISPLAYCONFIG_PATH_INFO[] paths, _) = CcdNative.QueryAllPaths();
+        foreach (DISPLAYCONFIG_PATH_INFO path in paths)
+        {
+            if ((path.flags & PInvoke.DISPLAYCONFIG_PATH_ACTIVE) == 0
+                || !CcdNative.TryGetTargetName(path.targetInfo.adapterId, path.targetInfo.id, out DISPLAYCONFIG_TARGET_DEVICE_NAME name, out _)
+                || !string.Equals(name.monitorDevicePath.ToString(), identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!CcdNative.TryGetSourceGdiName(path.sourceInfo.adapterId, path.sourceInfo.id, out string gdiName))
+            {
+                break;
+            }
+
+            IReadOnlyList<RefreshRate> rates = DxgiModes.RefreshRates(gdiName, width, height);
+            _log.Debug("{Display} offers {Count} refresh rates at {Width}x{Height}", DisplayNames.Of(identity), rates.Count, width, height);
+            return Task.FromResult(rates);
+        }
+
+        return Task.FromResult<IReadOnlyList<RefreshRate>>([]);
     }
 
     private static DisplayAssignment? DecodeActiveMode(DisplayIdentity identity, DISPLAYCONFIG_PATH_INFO path, DISPLAYCONFIG_MODE_INFO[] modes)

@@ -41,7 +41,7 @@ alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. *
 (Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da), Monitornamen, Seiten Bildschirme und
 Über & Hilfe, **Automatik** (Roadmap 6: Prozess-Trigger per Polling, Spiele-Vorlagen in `templates/games`) und **USB-Trigger**
 (Roadmap 7, im selben Polling), **lokale HTTP-API** (Roadmap 11, `docs/http-api.md`) und **Wach halten +
-Energieplan pro Profil** (Roadmap 8 + 9). Als Nächstes Hardwaretest von 1.2.0 und
+Energieplan pro Profil** (Roadmap 8 + 9) und **HDR + Bildwiederholrate pro Bildschirm** (Roadmap 10). Als Nächstes Hardwaretest von 1.2.0 und
 diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 

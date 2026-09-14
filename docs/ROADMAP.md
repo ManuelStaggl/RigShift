@@ -30,7 +30,7 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - 🟡 Keep awake per profile: no sleep, screen saver or display timeout (focus assist and game mode dropped: no
   official API, and Windows handles both for full-screen games)
 - 🟡 Power plan per profile, the previous plan comes back on switch back
-- HDR and refresh rate per display; night light (experimental)
+- 🟡 HDR and refresh rate per display (night light dropped: only an undocumented registry value)
 - 🟡 Local HTTP API for scripts, SimHub, Stream Deck ([docs](http-api.md))
 - Home Assistant via MQTT discovery
 

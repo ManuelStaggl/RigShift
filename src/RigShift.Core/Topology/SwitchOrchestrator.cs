@@ -300,6 +300,7 @@ public sealed class SwitchOrchestrator
                 {
                     _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays)",
                         attempts, databaseModes ? "database" : "stored", plan.Resolved.Count);
+                    await SwitchHdrAsync(profile, cancellationToken);
                     return new ApplyOutcome(true, plan, attempts, lastError, null);
                 }
 
@@ -368,6 +369,55 @@ public sealed class SwitchOrchestrator
         }
 
         return plan.Resolved.Count == 0 ? "None of the profile's displays is available." : null;
+    }
+
+    /// <summary>
+    /// HDR per display right after the arrangement, on a fresh snapshot: a display that was just switched on only
+    /// reports its HDR state once active. Rollbacks restore it the same way, because the previous topology carries the
+    /// state it had. Failures are logged and never fail the switch (docs/PLAN.md, section 6, item 10).
+    /// </summary>
+    private async Task SwitchHdrAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        if (!profile.Displays.Any(d => d.Hdr is not null))
+        {
+            return;
+        }
+
+        try
+        {
+            DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
+            foreach (DisplayAssignment wanted in profile.Displays)
+            {
+                if (wanted.Hdr is not { } enabled)
+                {
+                    continue;
+                }
+
+                AttachedDisplay? target = now.Displays.FirstOrDefault(d => d.IsActive
+                    && string.Equals(d.Identity.TargetDevicePath, wanted.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+                if (target?.ActiveMode is not { } mode)
+                {
+                    continue;
+                }
+
+                if (mode.Hdr is null)
+                {
+                    _log.Warning("Display {Display} does not support HDR, left unchanged", DisplayNames.Of(wanted));
+                }
+                else if (mode.Hdr != enabled)
+                {
+                    int code = await _display.SetHdrAsync(target, enabled, cancellationToken);
+                    if (code != 0)
+                    {
+                        _log.Warning("HDR of {Display} could not be set to {Enabled} (native error {Error})", DisplayNames.Of(wanted), enabled, code);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "HDR for {Profile} could not be set", profile.Name);
+        }
     }
 
     /// <summary>The topology before the switch, as a throwaway profile. All displays optional: a partial restore beats none.</summary>

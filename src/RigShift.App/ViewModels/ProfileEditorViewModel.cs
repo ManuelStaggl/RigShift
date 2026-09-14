@@ -14,7 +14,8 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// Editor for one profile: name, icon, confirmation time, which displays take part (primary, optional) and audio.
-/// Modes and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10, M4).
+/// Resolutions and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10, M4).
+/// Refresh rate and HDR are chosen per display (section 6, item 10).
 /// </summary>
 public sealed partial class ProfileEditorViewModel : ObservableObject
 {
@@ -264,6 +265,27 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         {
             Displays.Add(new DisplayEditItem(this, display));
         }
+
+        _ = LoadRefreshRatesAsync();
+    }
+
+    /// <summary>Offers the refresh rates each display reports at its resolution; displays that are off keep only their own.</summary>
+    private async Task LoadRefreshRatesAsync()
+    {
+        foreach (DisplayEditItem item in Displays.ToList())
+        {
+            DisplayAssignment assignment = item.Assignment;
+            try
+            {
+                IReadOnlyList<RefreshRate> rates = await Task.Run(() =>
+                    _display.ListRefreshRatesAsync(assignment.Identity, assignment.Width, assignment.Height, CancellationToken.None));
+                item.OfferRefreshRates(rates);
+            }
+            catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+            {
+                _log.Warning(ex, "Refresh rates of {Display} could not be read", DisplayNames.Of(assignment));
+            }
+        }
     }
 
     private Profile Build() => _original with
@@ -289,6 +311,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
 }
 
 public sealed record PowerPlanChoice(PowerPlan? Plan, string Name);
+
+public sealed record RefreshChoice(RefreshRate Rate)
+{
+    public string Text => Rate.Hertz.ToString("0.##", Loc.Instance.Culture) + " Hz";
+}
+
+public sealed record HdrChoice(bool? Value, string Text);
 
 /// <summary>One display row in the editor.</summary>
 public sealed partial class DisplayEditItem : ObservableObject
@@ -326,6 +355,21 @@ public sealed partial class DisplayEditItem : ObservableObject
 
     public bool CanBeOptional => !IsPrimary;
 
+    public ObservableCollection<RefreshChoice> RefreshChoices { get; } = [];
+
+    [ObservableProperty]
+    public partial RefreshChoice? SelectedRefresh { get; set; }
+
+    public IReadOnlyList<HdrChoice> HdrChoices { get; } =
+    [
+        new(null, Loc.Instance["Hdr_Unchanged"]),
+        new(true, Loc.Instance["Hdr_On"]),
+        new(false, Loc.Instance["Hdr_Off"]),
+    ];
+
+    [ObservableProperty]
+    public partial HdrChoice? SelectedHdr { get; set; }
+
     internal void Sync(DisplayAssignment assignment)
     {
         _syncing = true;
@@ -335,13 +379,58 @@ public sealed partial class DisplayEditItem : ObservableObject
             IsPrimary = assignment.IsPrimary;
             IsOptional = assignment.IsOptional;
             CustomName = assignment.CustomName ?? string.Empty;
-            double hertz = assignment.RefreshDenominator == 0 ? 0 : (double)assignment.RefreshNumerator / assignment.RefreshDenominator;
-            ModeText = Loc.Format("Editor_Mode", assignment.Width, assignment.Height, hertz.ToString("0.##", Loc.Instance.Culture),
-                assignment.PositionX, assignment.PositionY);
+            ModeText = Loc.Format("Editor_Mode", assignment.Width, assignment.Height, assignment.PositionX, assignment.PositionY);
+
+            RefreshRate rate = RefreshRate.Of(assignment);
+            if (!RefreshChoices.Any(c => c.Rate == rate))
+            {
+                RefreshChoices.Add(new RefreshChoice(rate));
+            }
+
+            SelectedRefresh = RefreshChoices.First(c => c.Rate == rate);
+            SelectedHdr = HdrChoices.First(c => c.Value == assignment.Hdr);
         }
         finally
         {
             _syncing = false;
+        }
+    }
+
+    /// <summary>Adds the rates the display offers. The saved rate stays, also when the list has one that looks the same.</summary>
+    internal void OfferRefreshRates(IReadOnlyList<RefreshRate> rates)
+    {
+        RefreshRate current = RefreshRate.Of(Assignment);
+        List<RefreshRate> all = [current, .. rates.Where(r => !r.LooksLike(current))];
+        _syncing = true;
+        try
+        {
+            RefreshChoices.Clear();
+            foreach (RefreshRate rate in all.OrderByDescending(r => r.Hertz))
+            {
+                RefreshChoices.Add(new RefreshChoice(rate));
+            }
+
+            SelectedRefresh = RefreshChoices.First(c => c.Rate == current);
+        }
+        finally
+        {
+            _syncing = false;
+        }
+    }
+
+    partial void OnSelectedRefreshChanged(RefreshChoice? value)
+    {
+        if (!_syncing && value is not null)
+        {
+            Assignment = Assignment with { RefreshNumerator = value.Rate.Numerator, RefreshDenominator = value.Rate.Denominator };
+        }
+    }
+
+    partial void OnSelectedHdrChanged(HdrChoice? value)
+    {
+        if (!_syncing && value is not null)
+        {
+            Assignment = Assignment with { Hdr = value.Value };
         }
     }
 

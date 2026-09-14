@@ -38,7 +38,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 
 | Interface | Windows implementation | Notes |
 |---|---|---|
-| `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. |
+| `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. HDR via `DisplayConfigGet/SetDeviceInfo` (24H2 `_2`/`SET_HDR_STATE`, older advanced color as fallback); refresh rates offered via DXGI output mode lists (exact rationals). |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
 | `IPowerController` | `PowerController` | Power plans via `PowerEnumerate`/`PowerSetActiveScheme`; keep-awake is a power request (display + system required) that Windows drops when the process ends. |
 | `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |

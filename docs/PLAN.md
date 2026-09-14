@@ -525,6 +525,26 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
    Gaming-PC.
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur
     über undokumentierte Registry → als „experimentell" markieren.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+    - **HDR pro Bildschirm** als „Unverändert / An / Aus“. „Aktuellen Zustand speichern“ merkt sich An/Aus für
+      HDR-fähige Bildschirme; bestehende Profile bleiben „Unverändert“. Gesetzt direkt nach der Anordnung über CCD
+      (`DisplayConfigSetDeviceInfo`), beim Zurückrollen zurück.
+    - **Bildwiederholrate im Editor wählbar**: Auswahl der Raten, die der Monitor bei der gespeicherten Auflösung
+      meldet. Gespeichert und gesetzt wurde sie schon seit 1.0.
+    - **Nachtlicht entfällt** – nur über einen undokumentierten Registry-Blob, der mit einem Windows-Update still
+      brechen kann (gleiche Begründung wie „Nicht stören“ in Punkt 8).
+    - Eigene Entscheidungen: HDR lesen/setzen erst mit der 24H2-Anfrage (`GET_ADVANCED_COLOR_INFO_2`/`SET_HDR_STATE`,
+      trennt HDR von Wide Color/Auto-Farbverwaltung), sonst die ältere „Advanced Color“-Anfrage. Gesetzt im
+      Orchestrator nach jedem erfolgreichen `SetDisplayConfig` auf frischem Snapshot (ein gerade eingeschalteter
+      Bildschirm meldet HDR erst aktiv) – dadurch stellen Zurückrollen und Wiederherstellen HDR mit dem gemerkten
+      Vorzustand zurück. Fehler nur im Log. Raten per **DXGI** (`GetDisplayModeList`) statt `EnumDisplaySettings`, weil
+      DXGI exakte Brüche liefert (239761/1000 statt 239) und die Wahl so unverändert durch CCD geht. Raten, die auf
+      zwei Nachkommastellen gleich aussehen, erscheinen einmal; die gespeicherte bleibt immer drin.
+    **Umgesetzt 2026-09-14**: `DisplayAssignment.Hdr`, `RefreshRate`, `IDisplayConfigurator.SetHdrAsync/
+    ListRefreshRatesAsync`, `DxgiModes`, Editor je Bildschirm Auswahl Hz + HDR, Probe `rates`. Unit-Tests belegen
+    HDR setzen nur bei Abweichung, unverändert/nicht unterstützt fasst nichts an, Zurückrollen stellt HDR zurück,
+    Fehler lässt den Wechsel gelingen. **Am Server belegt:** Probe `rates` liest HDR-Zustand und Raten der
+    RDP-Anzeige. **Nicht belegt:** HDR wirklich umschalten, gewählte Rate beim Wechsel, Editor-Optik → Gaming-PC.
 11. Lokale HTTP-API (`http://127.0.0.1:<port>/api/profiles`, Token in settings.json) für Skripte und SimHub.
     **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
     - **Standardmäßig aus**, Schalter in den Einstellungen. Beim Einschalten wird ein Token erzeugt und mit Port,
@@ -549,6 +569,13 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
     Dry-Run über den UI-Thread, Lauschen nur auf 127.0.0.1, „Neues Token“ macht das alte ungültig, Ausschalten schließt
     den Port, Einschalten öffnet ihn wieder, Karte angesehen. **Nicht belegt:** echtes Umschalten per API → Gaming-PC.
 12. Home Assistant: MQTT-Discovery (aktives Profil als Sensor, Wechsel als Select-Entität) auf Basis der API.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User):
+    - **MQTT-Discovery**, RigShift verbindet sich ausgehend zum Broker (z. B. Mosquitto-Add-on). Keine eigene
+      HA-Integration über die HTTP-API: die API bliebe sonst nicht auf 127.0.0.1, und ein zweites Repo wäre zu pflegen.
+    - Entitäten eines Geräts „RigShift (PC-Name)“: **Select „Profil“** (zeigt und schaltet), **ein Knopf pro Profil**,
+      **Schalter „Automatik pausiert“**, **Sensor „Letzter Wechsel“** (Ausgang + Zeitpunkt), Verfügbarkeit per Last Will.
+    - **Wechsel aus HA ohne Countdown** – am PC sitzt dann oft niemand, der bestätigen könnte.
+    - Eigene Entscheidungen: Bibliothek MQTTnet; Passwort per DPAPI (aktueller Nutzer) verschlüsselt in `settings.json`.
 
 **v2 – Community**
 

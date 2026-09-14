@@ -129,7 +129,13 @@
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Set resolution and position in the Windows display settings, then use the current arrangement here.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>Use current arrangement</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Current arrangement taken over: {0} display(s).</value></data>
-  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · position {3}, {4}</value></data>
+  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · position {2}, {3}</value></data>
+  <data name="Editor_RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
+  <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Refresh rate. The display lists its rates only while it is switched on.</value></data>
+  <data name="Editor_HdrHint" xml:space="preserve"><value>HDR after switching. Displays without HDR stay as they are.</value></data>
+  <data name="Hdr_Unchanged" xml:space="preserve"><value>HDR unchanged</value></data>
+  <data name="Hdr_On" xml:space="preserve"><value>HDR on</value></data>
+  <data name="Hdr_Off" xml:space="preserve"><value>HDR off</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Main display</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional (may be missing)</value></data>
   <data name="Editor_CustomName" xml:space="preserve"><value>Own name</value></data>

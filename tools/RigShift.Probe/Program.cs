@@ -37,6 +37,16 @@ switch (command)
         Print(snapshot.Displays.Select(d => new { d.Identity, d.IsAvailable, d.IsActive, d.ActiveMode, Handle = d.NativeHandle.ToString() }));
         break;
 
+    case "rates":
+        foreach (AttachedDisplay active in (await display.QueryAsync(CancellationToken.None)).Displays.Where(d => d.ActiveMode is not null))
+        {
+            DisplayAssignment mode = active.ActiveMode!;
+            IReadOnlyList<RefreshRate> rates = await display.ListRefreshRatesAsync(active.Identity, mode.Width, mode.Height, CancellationToken.None);
+            Print(new { active.Identity.FriendlyName, mode.Width, mode.Height, mode.Hdr, Rates = rates.Select(r => $"{r.Numerator}/{r.Denominator}") });
+        }
+
+        break;
+
     case "audio":
         var audio = new PolicyConfigAudioController(log);
         Print(new

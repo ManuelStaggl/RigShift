@@ -170,6 +170,25 @@
                       MinWidth="220"
                       PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
                       Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+                    <WrapPanel Margin="0,8,0,0">
+                      <ComboBox
+                        MinWidth="120"
+                        Margin="0,0,8,0"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        AutomationProperties.Name="{loc:Tr Editor_RefreshRate}"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding RefreshChoices}"
+                        SelectedItem="{Binding SelectedRefresh}"
+                        ToolTip="{loc:Tr Editor_RefreshRateHint}" />
+                      <ComboBox
+                        MinWidth="150"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        AutomationProperties.Name="HDR"
+                        DisplayMemberPath="Text"
+                        ItemsSource="{Binding HdrChoices}"
+                        SelectedItem="{Binding SelectedHdr}"
+                        ToolTip="{loc:Tr Editor_HdrHint}" />
+                    </WrapPanel>
                   </StackPanel>
                   <RadioButton
                     Grid.Column="1"

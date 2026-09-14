@@ -31,6 +31,9 @@ All notable changes to this project are documented here. The format follows
 - Power settings per profile: keep the PC awake (no sleep, screen saver or display timeout while racing with only a
   wheel) and a power plan such as High performance. Switching to a profile without a plan brings back the previous
   plan; if you do not confirm the switch, both are undone.
+- HDR per display: on, off or unchanged. Saving the current arrangement remembers it; if you do not confirm the
+  switch, HDR goes back too.
+- Choose the refresh rate per display in the profile editor from the rates the monitor offers.
 
 ### Changed
 

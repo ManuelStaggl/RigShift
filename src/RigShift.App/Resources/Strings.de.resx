@@ -129,7 +129,13 @@
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Auflösung und Position stellst du in den Windows-Anzeigeeinstellungen ein und übernimmst sie dann hier.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>Aktuelle Anordnung übernehmen</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Aktuelle Anordnung übernommen: {0} Bildschirm(e).</value></data>
-  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · Position {3}, {4}</value></data>
+  <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · Position {2}, {3}</value></data>
+  <data name="Editor_RefreshRate" xml:space="preserve"><value>Bildwiederholrate</value></data>
+  <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Bildwiederholrate. Der Bildschirm meldet seine Raten nur, solange er eingeschaltet ist.</value></data>
+  <data name="Editor_HdrHint" xml:space="preserve"><value>HDR nach dem Umschalten. Bildschirme ohne HDR bleiben, wie sie sind.</value></data>
+  <data name="Hdr_Unchanged" xml:space="preserve"><value>HDR unverändert</value></data>
+  <data name="Hdr_On" xml:space="preserve"><value>HDR an</value></data>
+  <data name="Hdr_Off" xml:space="preserve"><value>HDR aus</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional (darf fehlen)</value></data>
   <data name="Editor_CustomName" xml:space="preserve"><value>Eigener Name</value></data>

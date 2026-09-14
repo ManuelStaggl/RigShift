@@ -1,3 +1,4 @@
+using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 
 namespace RigShift.Core.Abstractions;
@@ -17,6 +18,16 @@ public interface IDisplayConfigurator
     /// </summary>
     /// <returns>0 on success, otherwise the native error code.</returns>
     Task<int> ApplyAsync(TopologyPlan plan, ApplyOptions options, CancellationToken cancellationToken);
+
+    /// <summary>Turns HDR on or off for an active display of a snapshot.</summary>
+    /// <returns>0 on success, otherwise the native error code.</returns>
+    Task<int> SetHdrAsync(AttachedDisplay display, bool enabled, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Refresh rates the display offers at the given resolution, highest first. Empty when the display is not active
+    /// right now – only active displays can be asked.
+    /// </summary>
+    Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken);
 }
 
 public sealed record ApplyOptions

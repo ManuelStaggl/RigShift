@@ -573,6 +573,70 @@ public sealed class SwitchOrchestratorTests
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
     }
 
+    [Fact]
+    public async Task Switch_Hdr_IsSetWhereTheActiveDisplayDiffers()
+    {
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet, activeMode: TabletMode)),
+        ]);
+        Profile rig = Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode with { Hdr = false }] };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        // The tablet reports no HDR support (null) and stays untouched.
+        display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+    }
+
+    [Fact]
+    public async Task Switch_HdrUnchangedOrAlreadyRight_SetsNothing()
+    {
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = true })),
+        ]);
+
+        await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await Create(display).SwitchAsync(Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode] }, SwitchRequest.Default, Ct);
+
+        display.HdrSet.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Switch_NotConfirmed_RestoresHdr()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        DisplaySnapshot deskHdrOn = Snapshot(Attached(Desk4K, activeMode: DeskModes[0] with { Hdr = true }), Attached(Ultrawide));
+        DisplaySnapshot rigActive = Snapshot(Attached(Desk4K), Attached(Ultrawide, activeMode: UltrawideMode));
+        DisplaySnapshot deskHdrOff = Snapshot(Attached(Desk4K, activeMode: DeskModes[0] with { Hdr = false }), Attached(Ultrawide));
+        var display = new FakeDisplayConfigurator([deskHdrOn, rigActive, deskHdrOff]);
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirmSeconds: 15) with { Displays = [UltrawideMode] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        display.HdrSet.ShouldBe([(Desk4K.TargetDevicePath, true)]);
+    }
+
+    [Fact]
+    public async Task Switch_HdrFailure_DoesNotFailTheSwitch()
+    {
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false })),
+        ])
+        {
+            HdrResult = 87,
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.Count.ShouldBe(1);
+    }
+
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
         new(display, _audio, _apps, _power, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()), options ?? new SwitchOptions(), _time, Logger.None);
 }
