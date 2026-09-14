@@ -138,7 +138,12 @@ public sealed class SwitchOrchestrator
         }
 
         plan = applied.Plan;
+        long audioStarted = _time.GetTimestamp();
         AudioOutcome audio = await SwitchAudioAsync(profile.Audio, cancellationToken);
+        if (audio != AudioOutcome.NotConfigured)
+        {
+            _log.Information("Audio for {Profile}: {Audio} after {Milliseconds:0} ms", profile.Name, audio, _time.GetElapsedTime(audioStarted).TotalMilliseconds);
+        }
 
         // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
         SwitchKeepAwake(profile);
@@ -147,6 +152,7 @@ public sealed class SwitchOrchestrator
         if (confirm)
         {
             ConfirmationResult answer;
+            long askedAt = _time.GetTimestamp();
             try
             {
                 answer = await _confirmation.ConfirmAsync(profile, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
@@ -154,6 +160,11 @@ public sealed class SwitchOrchestrator
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 answer = ConfirmationResult.TimedOut;
+            }
+
+            if (answer == ConfirmationResult.Confirmed)
+            {
+                _log.Information("Switch to {Profile} confirmed after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(askedAt).TotalSeconds);
             }
 
             if (answer != ConfirmationResult.Confirmed)
@@ -188,8 +199,8 @@ public sealed class SwitchOrchestrator
         AppsOutcome apps = await RunAppsAsync(profile, cancellationToken);
 
         SwitchOutcome outcome = plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
-        _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts",
-            profile.Name, outcome, audio, apps, applied.Attempts);
+        _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
+            profile.Name, outcome, audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
         return Finish(new SwitchResult
         {
             Outcome = outcome,
@@ -226,7 +237,8 @@ public sealed class SwitchOrchestrator
         SwitchOutcome outcome = !applied.Succeeded ? SwitchOutcome.Failed
             : applied.Plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially
             : SwitchOutcome.Applied;
-        _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts", profile.Name, outcome, applied.Attempts);
+        _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts, {Seconds:0.0} s",
+            profile.Name, outcome, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
 
         // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
         SwitchNote note = applied.Succeeded
@@ -282,7 +294,8 @@ public sealed class SwitchOrchestrator
             }, started);
         }
 
-        _log.Information("Previous topology restored after {Attempts} attempts", rolledBack.Attempts);
+        _log.Information("Previous topology restored after {Attempts} attempts; switch rolled back after {Seconds:0.0} s",
+            rolledBack.Attempts, _time.GetElapsedTime(started).TotalSeconds);
         return Finish(new SwitchResult
         {
             Outcome = SwitchOutcome.RolledBack,
@@ -480,6 +493,7 @@ public sealed class SwitchOrchestrator
             return;
         }
 
+        long started = _time.GetTimestamp();
         try
         {
             DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
@@ -510,6 +524,8 @@ public sealed class SwitchOrchestrator
                     }
                 }
             }
+
+            _log.Information("HDR for {Profile} handled in {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -600,9 +616,12 @@ public sealed class SwitchOrchestrator
         }
 
         // Wheel software and games want to see the device when they start; without it they start anyway.
+        long startedAt = _time.GetTimestamp();
         bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
         AppsOutcome started = await RunAppActionsAsync(apps, cancellationToken);
-        return deviceMissing ? AppsOutcome.DeviceMissing : started;
+        AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
+        _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", profile.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
+        return outcome;
     }
 
     private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
@@ -808,11 +827,10 @@ public sealed class SwitchOrchestrator
         try
         {
             await Task.Delay(_options.WindowRescueDelay, _time, cancellationToken);
+            long started = _time.GetTimestamp();
             int moved = _windows.RescueOffscreenWindows();
-            if (moved > 0)
-            {
-                _log.Information("Moved {Count} window(s) from displays that are off to the primary display", moved);
-            }
+            _log.Information("Moved {Count} window(s) from displays that are off to the primary display in {Milliseconds:0} ms",
+                moved, _time.GetElapsedTime(started).TotalMilliseconds);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

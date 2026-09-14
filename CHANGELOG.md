@@ -35,6 +35,9 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - The log now records every automation decision (device connected, gone, back, end action skipped and why).
+- The log records how long a switch and each of its steps took (display attempts, audio, HDR, apps, moving windows)
+  and when a switch was confirmed. Update installation steps are logged too, a day's log file starts anew at 50 MB,
+  and the startup no longer writes framework lines.
 - The profile editor opens wider, so refresh rate, HDR and the display options fit on one line.
 
 ## [1.3.0] - 2026-09-14

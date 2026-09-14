@@ -23,7 +23,6 @@ internal static class CommandLineClient
     /// <summary>A freshly started app first loads profiles and queries the displays.</summary>
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(30);
 
-    /// <summary>A property, not a field: <see cref="Log.Logger"/> is replaced once the command line is parsed.</summary>
     private static ILogger Logger => Log.ForContext(typeof(CommandLineClient));
 
     public static int Run(IReadOnlyList<string> args, CliRequest request) =>
@@ -42,7 +41,6 @@ internal static class CommandLineClient
 
     private static async Task<int> RunAsync(IReadOnlyList<string> args, CliRequest request)
     {
-        Log.Logger = AppLogging.Create(App.Paths);
         try
         {
             bool running = IsAppRunning();

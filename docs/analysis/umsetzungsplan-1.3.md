@@ -223,13 +223,13 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 
 | Punkt | Befund-IDs | Status | Commit |
 |---|---|---|---|
-| 1.1 Anruf-Absenkung persistent | B-01 | offen | |
-| 1.2 Beenden/Abmelden während Wechsel | B-02 | offen | |
-| 1.3 Automatik-Regelzustand, Entprellung, monotone Zeit | C-01, C-02, C-03 | offen | |
-| 1.4 Profilseite, InfoBar, Regelkarte, Editor-Layout | I-01, I-02, I-03, I-06, I-08 | offen | |
-| 1.5 App-Testprojekt, Settings-Reihenfolge, Fixtures, Fake | L-01, F-01, L-02, L-03 | offen | |
-| 1.6 Wiederherstellung und Rückmeldung | B-05, B-06, B-07, B-08 | offen | |
-| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | offen | |
+| 1.1 Anruf-Absenkung persistent | B-01 | erledigt (F-01 gleich mit: `SettingsService` speichert vor `Current`, Updates serialisiert) | 56bbd16 |
+| 1.2 Beenden/Abmelden während Wechsel | B-02 | erledigt (`SessionEnding` verweigert einmal und beendet nach dem Rollback; blockierendes Warten würde den Countdown-Dispatcher verklemmen) | f4bfb62 |
+| 1.3 Automatik-Regelzustand, Entprellung, monotone Zeit | C-01, C-02, C-03 | erledigt; **Abweichung:** nur `null`/`Blocked` versuchen nach der Frist (≥ 10 s) erneut, `RolledBack`/`Failed` erst nach Aus-/Einschalten (auch innerhalb der Frist) – sonst käme der abgelehnte Countdown alle 17 s wieder. K-02 (Ereignisliste) gleich mit | 445304e |
+| 1.4 Profilseite, InfoBar, Regelkarte, Editor-Layout | I-01, I-02, I-03, I-06, I-08 | erledigt, Screenshots 720/784/980 lg de-hell + en-dunkel geprüft, InfoBar erscheint nach X erneut | 8b73ae2 |
+| 1.5 App-Testprojekt, Settings-Reihenfolge, Fixtures, Fake | L-01, F-01, L-02, L-03 | erledigt (11 App-Tests; statt `ITicker` ein internes `PollAsync`) | d74991d |
+| 1.6 Wiederherstellung und Rückmeldung | B-05, B-06, B-07, B-08 | erledigt | 8ab5306 |
+| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | erledigt; Velopack 1.2.0 hat kein `UpdateManager(logger:)` – `VelopackApp.SetLogger` mit früh erzeugtem Serilog-Logger reicht (UpdateManager nutzt den Locator), Start-Log geprüft: Velopack-Zeilen da, keine Hosting-Zeilen. Dry-Run-Log noch nicht angesehen | (dieser Commit) |
 | 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | offen | |
 | 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | offen | |
 | 1.10 Release 1.3.1 | M-01, M-04 | offen | |

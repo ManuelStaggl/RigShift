@@ -109,8 +109,7 @@ public partial class App : Application, IAppShell
         base.OnStartup(e);
         Directory.CreateDirectory(Paths.DataDirectory);
 
-        Log.Logger = AppLogging.Create(Paths);
-
+        // Log.Logger was created in Program.Main, before Velopack ran.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, Paths.DataDirectory);
 

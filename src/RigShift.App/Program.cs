@@ -16,6 +16,20 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // The log comes first, so Velopack's hooks and update steps are recorded too (analysis finding F-03).
+        Log.Logger = AppLogging.Create(App.Paths);
+        try
+        {
+            return Run(args);
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
+
+    private static int Run(string[] args)
+    {
         // Velopack must run first: it handles install/update/uninstall hooks and may exit the process.
         // A pending update restarts the process to install itself. Only the tray app may do that: a CLI call would lose
         // its exit code. Commands are verbs; tray and Velopack hook arguments start with a dash. With automatic
@@ -23,6 +37,7 @@ public static class Program
         // A rigshift:// link is a command too.
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
         VelopackApp.Build()
+            .SetLogger(new SerilogVelopackLogger(Log.Logger))
             .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically())
             .OnAfterInstallFastCallback(_ => RegisterUriScheme())
             .OnAfterUpdateFastCallback(_ => RegisterUriScheme())
@@ -33,9 +48,7 @@ public static class Program
         {
             if (RigShiftUri.ToArguments(args[0]) is not { } linkArguments)
             {
-                Log.Logger = AppLogging.Create(App.Paths);
                 Log.Warning("Ignored invalid link {Link}; only rigshift://apply/<profile name> is supported", args[0]);
-                Log.CloseAndFlush();
                 return CliExitCodes.InvalidArguments;
             }
 
