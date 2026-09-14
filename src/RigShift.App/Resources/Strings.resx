@@ -46,6 +46,9 @@
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
   <data name="Result_FailedText" xml:space="preserve"><value>Windows reported error {0}. Details are in the log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details are in the log.</value></data>
+  <data name="Note_RestoredPrevious" xml:space="preserve"><value>The previous displays are back.</value></data>
+  <data name="Note_RestoreFailed" xml:space="preserve"><value>The previous displays could not be restored – some may stay dark. Switch to a profile again or use Win+P.</value></data>
+  <data name="Note_ModesFromDatabase" xml:space="preserve"><value>The saved resolution did not work; Windows chose the display modes.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>A switch is already running.</value></data>
   <data name="Update_Ready" xml:space="preserve"><value>Version {0} is ready and will be installed the next time RigShift starts.</value></data>
   <data name="Outcome_Applied" xml:space="preserve"><value>Switched</value></data>

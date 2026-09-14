@@ -113,7 +113,7 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
-        result.Message.ShouldNotBeNull().ShouldContain("Previous topology restored");
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
         display.Applied.Count.ShouldBe(3);
         display.Applied[2].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
     }
@@ -286,6 +286,83 @@ public sealed class SwitchOrchestratorTests
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.LastNativeError.ShouldBe(87);
         result.Message.ShouldNotBeNull().ShouldContain("restoring the previous topology failed");
+        result.Note.ShouldBe(SwitchNote.RestoreFailed);
+    }
+
+    [Fact]
+    public async Task Switch_TransientThenNonTransientInOneCycle_StillWaits()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [31, 87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Attempts.ShouldBe(3);
+        result.Note.ShouldBe(SwitchNote.None);
+    }
+
+    [Fact]
+    public async Task Switch_DatabaseModesWork_ReportsIt()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Note.ShouldBe(SwitchNote.ModesFromDatabase);
+    }
+
+    [Fact]
+    public async Task Switch_ApplyThrows_RestoresPreviousTopologyAndReportsFailed()
+    {
+        DisplaySnapshot allDark = Snapshot(Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), allDark]);
+        display.ApplyExceptions.Enqueue(new System.ComponentModel.Win32Exception(31));
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task Switch_QueryThrowsWhileWaiting_RestoresPreviousTopology()
+    {
+        DisplaySnapshot allDark = Snapshot(Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [31, 31, 0]);
+        display.QueryExceptions.Enqueue(null);
+        display.QueryExceptions.Enqueue(new System.ComponentModel.Win32Exception(87));
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
+    }
+
+    [Fact]
+    public async Task Switch_FailureAndNoPreviousDisplayAvailable_ReportsRestoreFailed()
+    {
+        var display = new FakeDisplayConfigurator([DeskActive(), Snapshot(Attached(Ultrawide), Attached(Tablet))], applyResults: [87, 87]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoreFailed);
+        display.Applied.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task CatchUp_ApplyFails_LeavesDisplaysDark_RestoresPrevious()
+    {
+        DisplaySnapshot allDark = Snapshot(Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [87, 87, 0]);
+
+        SwitchResult? result = await Create(display).CatchUpAsync(Rig(), appliedDisplays: 1, Ct);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
+        display.Applied.Count.ShouldBe(3);
     }
 
     [Fact]

@@ -125,14 +125,15 @@ public sealed class SwitchOrchestrator
         if (!applied.Succeeded)
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
-            string? restored = await RestoreAfterFailureAsync(before, cancellationToken);
+            SwitchNote restored = await RestoreAfterFailureAsync(before, cancellationToken);
             return Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
                 Plan = applied.Plan,
                 Attempts = applied.Attempts,
                 LastNativeError = applied.LastNativeError,
-                Message = restored is null ? applied.Message : applied.Message + " " + restored,
+                Message = applied.Message,
+                Note = restored,
             }, started);
         }
 
@@ -197,6 +198,7 @@ public sealed class SwitchOrchestrator
             LastNativeError = applied.LastNativeError,
             Audio = audio,
             Apps = apps,
+            Note = applied.UsedDatabaseModes ? SwitchNote.ModesFromDatabase : SwitchNote.None,
         }, started);
     }
 
@@ -226,6 +228,11 @@ public sealed class SwitchOrchestrator
             : SwitchOutcome.Applied;
         _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts", profile.Name, outcome, applied.Attempts);
 
+        // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
+        SwitchNote note = applied.Succeeded
+            ? applied.UsedDatabaseModes ? SwitchNote.ModesFromDatabase : SwitchNote.None
+            : await RestoreAfterFailureAsync(snapshot, cancellationToken);
+
         return Finish(new SwitchResult
         {
             Outcome = outcome,
@@ -233,6 +240,7 @@ public sealed class SwitchOrchestrator
             Attempts = applied.Attempts,
             LastNativeError = applied.LastNativeError,
             Message = applied.Message,
+            Note = note,
         }, started);
     }
 
@@ -252,7 +260,7 @@ public sealed class SwitchOrchestrator
         LogPlan(rollbackPlan);
 
         ApplyOutcome rolledBack = rollbackPlan.Resolved.Count == 0
-            ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.")
+            ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.", false)
             : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
 
         await RestoreAudioAsync(audioRestore, cancellationToken);
@@ -269,6 +277,7 @@ public sealed class SwitchOrchestrator
                 Attempts = applied.Attempts + rolledBack.Attempts,
                 LastNativeError = rolledBack.LastNativeError,
                 Message = message,
+                Note = SwitchNote.RestoreFailed,
                 Audio = audio,
             }, started);
         }
@@ -281,23 +290,34 @@ public sealed class SwitchOrchestrator
             Attempts = applied.Attempts + rolledBack.Attempts,
             LastNativeError = applied.LastNativeError,
             Message = string.Create(CultureInfo.InvariantCulture, $"Not confirmed ({answer}); previous topology restored."),
+            Note = SwitchNote.RestoredPrevious,
             Audio = audio,
         }, started);
     }
 
     /// <summary>
     /// A failed attempt may leave displays dark (Windows usually reverts on its own, but not reliably). If a display
-    /// that was active before is no longer active, re-apply the previous topology. Returns a note for the result message.
+    /// that was active before is no longer active, re-apply the previous topology.
     /// </summary>
-    private async Task<string?> RestoreAfterFailureAsync(DisplaySnapshot before, CancellationToken cancellationToken)
+    private async Task<SwitchNote> RestoreAfterFailureAsync(DisplaySnapshot before, CancellationToken cancellationToken)
     {
-        DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
+        DisplaySnapshot now;
+        try
+        {
+            now = await _display.QueryAsync(cancellationToken);
+        }
+        catch (Exception ex) when (IsDisplayApiFailure(ex))
+        {
+            _log.Error(ex, "Restore impossible: the displays could not be queried after the failed switch");
+            return SwitchNote.RestoreFailed;
+        }
+
         bool changed = before.Displays
             .Where(d => d.IsActive)
             .Any(d => !now.Displays.Any(n => n.IsActive && n.Identity == d.Identity));
         if (!changed)
         {
-            return null;
+            return SwitchNote.None;
         }
 
         _log.Warning("Previously active displays are dark after the failed switch, restoring the previous topology");
@@ -307,19 +327,23 @@ public sealed class SwitchOrchestrator
         if (plan.Resolved.Count == 0)
         {
             _log.Error("Restore impossible: none of the previously active displays is available");
-            return "Restoring the previous topology failed.";
+            return SwitchNote.RestoreFailed;
         }
 
         ApplyOutcome restored = await ApplyWithRetryAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
         if (!restored.Succeeded)
         {
             _log.Error("Restore after failed switch failed: {Reason}", restored.Message);
-            return "Restoring the previous topology failed.";
+            return SwitchNote.RestoreFailed;
         }
 
         _log.Information("Previous topology restored after failed switch ({Attempts} attempts)", restored.Attempts);
-        return "Previous topology restored.";
+        return SwitchNote.RestoredPrevious;
     }
+
+    /// <summary>What the Windows display layer throws when a query or an apply goes wrong (analysis finding B-07).</summary>
+    private static bool IsDisplayApiFailure(Exception ex) =>
+        ex is System.ComponentModel.Win32Exception or System.Runtime.InteropServices.COMException;
 
     /// <summary>
     /// Stored modes first, then database modes (rule 5). On a transient error (31, 1610): wait, re-query, re-plan and try again
@@ -332,47 +356,73 @@ public sealed class SwitchOrchestrator
 
         while (true)
         {
+            // A cycle is transient if any attempt in it said "not ready": the database-mode attempt after a 31 may fail
+            // with 87 only because the display is still waking up (analysis finding B-08).
+            bool transient = false;
             foreach (bool databaseModes in ModeSources)
             {
                 if (attempts >= _options.MaxApplyAttempts)
                 {
                     return new ApplyOutcome(false, plan, attempts, lastError,
-                        string.Create(CultureInfo.InvariantCulture, $"Gave up after {attempts} attempts (last error {lastError})."));
+                        string.Create(CultureInfo.InvariantCulture, $"Gave up after {attempts} attempts (last error {lastError})."), false);
                 }
 
                 attempts++;
-                int code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken);
+                string modeSource = databaseModes ? "database" : "stored";
+                long attemptStarted = _time.GetTimestamp();
+                int code;
+                try
+                {
+                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken);
+                }
+                catch (Exception ex) when (IsDisplayApiFailure(ex))
+                {
+                    _log.Error(ex, "Attempt {Attempt} threw ({ModeSource} modes)", attempts, modeSource);
+                    return new ApplyOutcome(false, plan, attempts, lastError, "The display configuration could not be applied: " + ex.Message, false);
+                }
+
+                double milliseconds = _time.GetElapsedTime(attemptStarted).TotalMilliseconds;
                 if (code == 0)
                 {
-                    _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays)",
-                        attempts, databaseModes ? "database" : "stored", plan.Resolved.Count);
+                    _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays, {Milliseconds:0} ms)",
+                        attempts, modeSource, plan.Resolved.Count, milliseconds);
                     await SwitchHdrAsync(profile, cancellationToken);
                     await RescueWindowsAsync(cancellationToken);
-                    return new ApplyOutcome(true, plan, attempts, lastError, null);
+                    return new ApplyOutcome(true, plan, attempts, lastError, null, databaseModes);
                 }
 
                 lastError = code;
-                _log.Warning("Attempt {Attempt} failed with native error {Error} ({ModeSource} modes)",
-                    attempts, code, databaseModes ? "database" : "stored");
+                transient |= code is ErrorGenFailure or ErrorBadConfiguration;
+                _log.Warning("Attempt {Attempt} failed with native error {Error} ({ModeSource} modes, {Milliseconds:0} ms)",
+                    attempts, code, modeSource, milliseconds);
             }
 
-            if (lastError is not (ErrorGenFailure or ErrorBadConfiguration))
+            if (!transient)
             {
                 return new ApplyOutcome(false, plan, attempts, lastError,
-                    string.Create(CultureInfo.InvariantCulture, $"SetDisplayConfig failed with error {lastError}."));
+                    string.Create(CultureInfo.InvariantCulture, $"SetDisplayConfig failed with error {lastError}."), false);
             }
 
             if (_time.GetUtcNow() >= deadline)
             {
                 return new ApplyOutcome(false, plan, attempts, lastError,
                     string.Create(CultureInfo.InvariantCulture,
-                        $"A display did not become ready within {_options.TargetWaitBudget.TotalSeconds} s (error {lastError})."));
+                        $"A display did not become ready within {_options.TargetWaitBudget.TotalSeconds} s (error {lastError})."), false);
             }
 
-            plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: true, cancellationToken);
+            try
+            {
+                plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: true, cancellationToken);
+            }
+            catch (Exception ex) when (IsDisplayApiFailure(ex))
+            {
+                _log.Error(ex, "Displays could not be queried while waiting for a retry");
+                return new ApplyOutcome(false, plan, attempts, lastError, "The displays could not be queried: " + ex.Message, false);
+            }
+
             if (BlockReason(plan) is { } blocked)
             {
-                return new ApplyOutcome(false, plan, attempts, lastError, blocked);
+                return new ApplyOutcome(false, plan, attempts, lastError, blocked, false);
             }
         }
     }
@@ -962,7 +1012,7 @@ public sealed class SwitchOrchestrator
     private SwitchResult Finish(SwitchResult result, long started) =>
         result with { Duration = _time.GetElapsedTime(started) };
 
-    private sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message);
+    private sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message, bool UsedDatabaseModes);
 
     private sealed record DefaultRestore(AudioEndpoint Endpoint, AudioRoleMask Roles);
 

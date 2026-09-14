@@ -16,11 +16,32 @@ public sealed record SwitchResult
 
     public string? Message { get; init; }
 
+    /// <summary>What happened besides the outcome, e.g. whether the previous displays came back after a failure.</summary>
+    public SwitchNote Note { get; init; }
+
     /// <summary>Audio is judged separately: an audio problem never fails the display switch.</summary>
     public AudioOutcome Audio { get; init; } = AudioOutcome.NotConfigured;
 
     /// <summary>Apps are judged separately too; they only run after a confirmed switch.</summary>
     public AppsOutcome Apps { get; init; } = AppsOutcome.NotConfigured;
+}
+
+/// <summary>
+/// The state the displays are left in when that is not obvious from the outcome – after a failure the user needs to
+/// know whether the old picture is back (analysis finding B-05).
+/// </summary>
+public enum SwitchNote
+{
+    None,
+
+    /// <summary>A failed switch or a rejected one: the previous displays were applied again.</summary>
+    RestoredPrevious,
+
+    /// <summary>The previous displays could not be applied again; some may stay dark.</summary>
+    RestoreFailed,
+
+    /// <summary>The stored modes did not work; Windows picked the modes from its own database.</summary>
+    ModesFromDatabase,
 }
 
 public enum AppsOutcome

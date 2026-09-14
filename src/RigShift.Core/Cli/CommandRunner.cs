@@ -229,6 +229,18 @@ public sealed class CommandRunner
             text.AppendLine().Append("  ").Append(message);
         }
 
+        string? note = result.Note switch
+        {
+            SwitchNote.RestoredPrevious when result.Outcome != SwitchOutcome.RolledBack => "previous displays restored",
+            SwitchNote.RestoreFailed => "the previous displays could not be restored",
+            SwitchNote.ModesFromDatabase => "Windows used its own display modes, the stored ones did not work",
+            _ => null,
+        };
+        if (note is not null)
+        {
+            text.AppendLine().Append("  note: ").Append(note);
+        }
+
         return text.ToString();
     }
 

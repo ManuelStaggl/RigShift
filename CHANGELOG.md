@@ -23,6 +23,10 @@ All notable changes to this project are documented here. The format follows
 - Automation: a device that disappears for a single moment no longer counts as gone, even with a wait time of 0 s, and
   waking the PC from sleep no longer ends a wait time that started before sleep.
 
+- After a failed switch the notification says whether the previous displays are back or could not be restored.
+- If catching up with a display that connected later (e.g. spacedesk) fails, the previous displays are restored like
+  after any failed switch, and an unexpected error from Windows during a switch no longer skips that restore.
+- A display that answers "not ready" and then "invalid" while waking up is waited for instead of failing at once.
 - The status message on the Profiles page shows up again after you closed it once.
 - The Profiles page, the automation rules and the profile editor stay usable in a narrow window: titles, names and
   buttons wrap instead of overlapping or being cut off. Long profile names end with "…"; names can be 60 characters at

@@ -124,7 +124,8 @@ public sealed record SwitchRecord(
     string? Message,
     IReadOnlyList<string> MissingDisplays,
     string? AppsWaitDevice = null,
-    int AppsWaitSeconds = 0)
+    int AppsWaitSeconds = 0,
+    SwitchNote Note = SwitchNote.None)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -198,6 +199,19 @@ public static class SwitchMessages
                 record.NativeError is { } code ? Loc.Format("Result_FailedText", code) : Loc.Instance["Result_FailedUnexpected"],
                 H.NotifyIcon.Core.NotificationIcon.Error),
         };
+
+        // Rolled back already says the previous settings are back.
+        string? note = record.Note switch
+        {
+            SwitchNote.RestoredPrevious when record.Outcome != SwitchOutcome.RolledBack => Loc.Instance["Note_RestoredPrevious"],
+            SwitchNote.RestoreFailed => Loc.Instance["Note_RestoreFailed"],
+            SwitchNote.ModesFromDatabase => Loc.Instance["Note_ModesFromDatabase"],
+            _ => null,
+        };
+        if (note is not null)
+        {
+            text += Environment.NewLine + note;
+        }
 
         if (record.Audio == AudioOutcome.Incomplete && record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
         {

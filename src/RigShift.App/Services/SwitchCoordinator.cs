@@ -230,7 +230,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private static SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
         new(started, profile.Name, result.Outcome, result.Audio, result.Apps, result.Attempts, result.Duration, result.LastNativeError, result.Message,
             result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment)).ToList(),
-            profile.AppsWaitForUsbDeviceName ?? profile.AppsWaitForUsbDeviceId, Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds));
+            profile.AppsWaitForUsbDeviceName ?? profile.AppsWaitForUsbDeviceId, Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds), result.Note);
 
     private void Complete(SwitchRecord record)
     {
