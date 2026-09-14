@@ -128,8 +128,9 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.LastNativeError.ShouldBe(31);
-        _time.Elapsed.ShouldBe(options.TargetWaitBudget);
-        result.Attempts.ShouldBe(42);
+        // The budget ended it, not the cap: retries kept coming for the whole budget (analysis finding L-05).
+        _time.Elapsed.ShouldBeInRange(options.TargetWaitBudget, options.TargetWaitBudget + options.PollInterval);
+        result.Attempts.ShouldBeInRange((int)(options.TargetWaitBudget / options.PollInterval), options.MaxApplyAttempts - 1);
     }
 
     [Fact]
