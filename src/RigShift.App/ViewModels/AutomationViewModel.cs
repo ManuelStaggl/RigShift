@@ -105,7 +105,25 @@ public sealed partial class AutomationViewModel : ObservableObject
         HasNoProfiles = _catalog.Profiles.Count == 0;
         IsEmpty = Rules.Count == 0;
         RefreshPowerWarnings();
+        UpdateDuplicates();
     });
+
+    /// <summary>Marks cards whose device another rule watches too: both switch when it connects (analysis finding C-05).</summary>
+    internal void UpdateDuplicates()
+    {
+        HashSet<string> shared = Rules
+            .Select(r => r.DeviceId)
+            .OfType<string>()
+            .GroupBy(id => id, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (RuleCard card in Rules)
+        {
+            card.HasDuplicateDevice = card.DeviceId is { } id && shared.Contains(id);
+        }
+    }
 
     /// <summary>Whether Windows may power the device down; checked once per device until the next refresh.</summary>
     internal bool HasPowerWarning(string? deviceId)
@@ -214,6 +232,7 @@ public sealed partial class AutomationViewModel : ObservableObject
         };
         Quietly(() => Rules.Add(new RuleCard(this, rule)));
         IsEmpty = false;
+        UpdateDuplicates();
         _log.Information("Automation rule {Rule} added", rule.Id);
         await SaveAsync();
     }
@@ -230,6 +249,7 @@ public sealed partial class AutomationViewModel : ObservableObject
 
         Rules.Remove(card);
         IsEmpty = Rules.Count == 0;
+        UpdateDuplicates();
         _log.Information("Automation rule {Rule} deleted", card.Id);
         await SaveAsync();
     }
@@ -357,6 +377,10 @@ public sealed partial class RuleCard : ObservableObject
 
     internal void UpdatePowerWarning() => HasPowerWarning = _owner.HasPowerWarning(DeviceId);
 
+    /// <summary>Another rule watches the same device (analysis finding C-05).</summary>
+    [ObservableProperty]
+    public partial bool HasDuplicateDevice { get; internal set; }
+
     public AutomationRule ToRule()
     {
         (ExitAction onExit, Guid? exitProfile) = AutomationViewModel.ExitFrom(SelectedExit);
@@ -379,6 +403,7 @@ public sealed partial class RuleCard : ObservableObject
     partial void OnSelectedDeviceChanged(Choice? value)
     {
         UpdatePowerWarning();
+        _owner.UpdateDuplicates();
         _owner.OnCardChanged();
     }
 

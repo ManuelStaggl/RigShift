@@ -46,7 +46,19 @@
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+
+                <!-- Another rule watches the same device: both run when it connects (analysis finding C-05). -->
+                <ui:InfoBar
+                  Grid.Row="4"
+                  Grid.ColumnSpan="2"
+                  Margin="0,4,0,0"
+                  IsClosable="False"
+                  IsOpen="{Binding HasDuplicateDevice, Mode=OneWay}"
+                  Message="{loc:Tr Automation_DuplicateDevice}"
+                  Severity="Warning"
+                  Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
 
                 <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
                 <StackPanel

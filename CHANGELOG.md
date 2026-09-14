@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The automation page warns when two rules use the same USB device – both of them switch when it connects.
+
 ### Changed
 
 - RigShift is no longer packed into one large EXE: updates download only the files that changed, and the app no longer
