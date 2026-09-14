@@ -37,6 +37,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="RigShift.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Brand package 1.0: only the assets the app uses (docs/PLAN.md, section 4.8). -->
     <Resource Include="Assets\Brand\*.ico;Assets\Brand\*.png" />
   </ItemGroup>

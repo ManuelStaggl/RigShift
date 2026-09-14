@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- App layer logic (settings, coordinator, automation, pipe, diagnostics) without UI automation. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>RigShift.App.Tests</RootNamespace>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <!-- The app publishes self-contained; the tests only load its assembly and run on the shared runtime. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RigShift.App\RigShift.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The core fakes and fixtures, shared as source: they are internal to the core test assembly. -->
+    <Compile Include="..\RigShift.Core.Tests\Fakes\*.cs" Link="Fakes\%(Filename)%(Extension)" />
+    <Compile Include="..\RigShift.Core.Tests\TestDisplays.cs" Link="TestDisplays.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+</Project>

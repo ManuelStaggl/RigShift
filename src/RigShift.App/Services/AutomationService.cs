@@ -102,7 +102,10 @@ public sealed class AutomationService : IDisposable
         });
     }
 
-    private async void OnTick(object? sender, EventArgs e)
+    private async void OnTick(object? sender, EventArgs e) => await PollAsync();
+
+    /// <summary>One poll: what the timer runs every 2 seconds; tests call it directly.</summary>
+    internal async Task PollAsync()
     {
         if (_polling)
         {

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "defaultProfileId": "5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11",
+  "applyDefaultProfileOnStartup": true,
+  "confirmTimeoutSeconds": 20,
+  "language": "de"
+}

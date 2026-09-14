@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "id": "8f3a1b2c-4d5e-4f60-8a9b-0c1d2e3f4a5b",
+    "name": "Desk",
+    "icon": null,
+    "displays": [
+      {
+        "identity": {
+          "adapterDevicePath": "\\\\?\\PCI#VEN_10DE&DEV_0000#FIXTURE#1",
+          "targetDevicePath": "\\\\?\\DISPLAY#AUS0002#FIXTURE&2",
+          "edidManufacturerId": 1129,
+          "edidProductCodeId": 2,
+          "friendlyName": "XG32UCWG"
+        },
+        "width": 3840,
+        "height": 2160,
+        "refreshNumerator": 164990,
+        "refreshDenominator": 1000,
+        "positionX": 0,
+        "positionY": 0,
+        "rotation": "Identity",
+        "isPrimary": true,
+        "isOptional": false
+      }
+    ],
+    "audio": {
+      "playback": null,
+      "playbackCommunications": null,
+      "recording": null,
+      "recordingCommunications": null,
+      "playbackVolumePercent": null
+    },
+    "confirmTimeoutSeconds": null,
+    "hotkey": {
+      "modifiers": "Alt, Control",
+      "virtualKey": 112
+    }
+  }
+}

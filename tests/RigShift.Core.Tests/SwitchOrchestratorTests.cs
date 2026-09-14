@@ -619,6 +619,23 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_HdrFailsOnOneDisplay_OthersStillSet()
+    {
+        DisplayAssignment left = Mode(DeskLeft, 1920, 1080, 100, x: 5120);
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(DeskLeft, activeMode: left with { Hdr = false })),
+        ]);
+        display.HdrResults[Ultrawide.TargetDevicePath] = 87;
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }, left with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true), (DeskLeft.TargetDevicePath, true)]);
+    }
+
+    [Fact]
     public async Task Switch_Applied_RescuesWindowsAfterTheDelay()
     {
         var options = new SwitchOptions { WindowRescueDelay = TimeSpan.FromSeconds(1) };

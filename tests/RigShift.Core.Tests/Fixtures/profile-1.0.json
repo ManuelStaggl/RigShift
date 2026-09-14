@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "id": "5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11",
+    "name": "Rig",
+    "icon": "rig",
+    "displays": [
+      {
+        "identity": {
+          "adapterDevicePath": "\\\\?\\PCI#VEN_10DE&DEV_0000#FIXTURE#1",
+          "targetDevicePath": "\\\\?\\DISPLAY#SAM0001#FIXTURE&1",
+          "edidManufacturerId": 19501,
+          "edidProductCodeId": 1,
+          "friendlyName": "Odyssey G93SC"
+        },
+        "width": 5120,
+        "height": 1440,
+        "refreshNumerator": 240000,
+        "refreshDenominator": 1000,
+        "positionX": 0,
+        "positionY": 0,
+        "rotation": "Identity",
+        "isPrimary": true,
+        "isOptional": false
+      },
+      {
+        "identity": {
+          "adapterDevicePath": "\\\\?\\SWD#SPACEDESK#FIXTURE#1",
+          "targetDevicePath": "\\\\?\\DISPLAY#Default_Monitor#FIXTURE&5",
+          "edidManufacturerId": 0,
+          "edidProductCodeId": 0,
+          "friendlyName": ""
+        },
+        "width": 2880,
+        "height": 1920,
+        "refreshNumerator": 30,
+        "refreshDenominator": 1,
+        "positionX": 5120,
+        "positionY": 0,
+        "rotation": "Rotate90",
+        "isPrimary": false,
+        "isOptional": true
+      }
+    ],
+    "audio": {
+      "playback": {
+        "endpointId": "{0.0.0.00000000}.{00000000-0000-0000-0000-00000000f001}",
+        "friendlyName": "Headset"
+      },
+      "playbackCommunications": null,
+      "recording": {
+        "endpointId": "{0.0.1.00000000}.{00000000-0000-0000-0000-00000000f002}",
+        "friendlyName": "Headset microphone"
+      },
+      "recordingCommunications": null,
+      "playbackVolumePercent": null
+    },
+    "confirmTimeoutSeconds": 15
+  }
+}

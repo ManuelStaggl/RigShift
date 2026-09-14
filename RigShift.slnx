@@ -7,6 +7,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/RigShift.Core.Tests/RigShift.Core.Tests.csproj" />
     <Project Path="tests/RigShift.Windows.Tests/RigShift.Windows.Tests.csproj" />
+    <Project Path="tests/RigShift.App.Tests/RigShift.App.Tests.csproj" />
   </Folder>
   <Folder Name="/solution items/">
     <File Path="Directory.Build.props" />

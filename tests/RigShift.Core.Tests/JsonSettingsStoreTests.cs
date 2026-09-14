@@ -84,6 +84,18 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_RuleWithoutExitDelay_UsesTenSeconds()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "automationRules": [ { "usbDeviceId": "VID_0EB7&PID_0020" } ] }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ExitDelaySeconds.ShouldBe(AutomationRule.DefaultExitDelaySeconds);
+        AutomationRule.DefaultExitDelaySeconds.ShouldBe(10);
+    }
+
+    [Fact]
     public async Task Load_FileFromVersion1_0_InstallsUpdatesAutomatically()
     {
         Directory.CreateDirectory(_directory);

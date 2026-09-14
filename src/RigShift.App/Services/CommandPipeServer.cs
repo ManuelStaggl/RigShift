@@ -20,20 +20,31 @@ public sealed class CommandPipeServer : IDisposable
     private readonly CommandRunner _runner;
     private readonly IAppShell _shell;
     private readonly ILogger _log;
+    private readonly string _pipeName;
+    private readonly Func<Func<Task<PipeResponse>>, Task<PipeResponse>> _onUiThread;
     private readonly CancellationTokenSource _stop = new();
 
     public CommandPipeServer(CommandRunner runner, IAppShell shell, ILogger log)
+        : this(runner, shell, log, PipeProtocol.PipeName, work => Application.Current.Dispatcher.InvokeAsync(work).Task.Unwrap())
+    {
+    }
+
+    /// <summary>Tests: an own pipe name and no WPF dispatcher.</summary>
+    internal CommandPipeServer(
+        CommandRunner runner, IAppShell shell, ILogger log, string pipeName, Func<Func<Task<PipeResponse>>, Task<PipeResponse>> onUiThread)
     {
         ArgumentNullException.ThrowIfNull(log);
         _runner = runner;
         _shell = shell;
         _log = log.ForContext<CommandPipeServer>();
+        _pipeName = pipeName;
+        _onUiThread = onUiThread;
     }
 
     public void Start()
     {
         _ = Task.Run(() => ListenAsync(_stop.Token));
-        _log.Information("Command pipe {Pipe} listening", PipeProtocol.PipeName);
+        _log.Information("Command pipe {Pipe} listening", _pipeName);
     }
 
     public void Dispose()
@@ -49,7 +60,7 @@ public sealed class CommandPipeServer : IDisposable
             NamedPipeServerStream server;
             try
             {
-                server = new NamedPipeServerStream(PipeProtocol.PipeName, PipeDirection.InOut, MaxConnections,
+                server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, MaxConnections,
                     PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             }
             catch (IOException ex)
@@ -86,10 +97,7 @@ public sealed class CommandPipeServer : IDisposable
             try
             {
                 PipeRequest request = await PipeProtocol.ReadRequestAsync(server, cancellationToken);
-                PipeResponse response = await Application.Current.Dispatcher
-                    .InvokeAsync(() => ExecuteAsync(request.Arguments))
-                    .Task
-                    .Unwrap();
+                PipeResponse response = await _onUiThread(() => ExecuteAsync(request.Arguments));
                 await PipeProtocol.WriteResponseAsync(server, response, cancellationToken);
             }
             catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or OperationCanceledException)
