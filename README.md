@@ -155,14 +155,6 @@ tests build anywhere.
 | `docs/` | [Architecture](docs/ARCHITECTURE.md), [display topology rules](docs/display-topology.md), [decisions](docs/decisions/), roadmap |
 | `legacy/` | The PowerShell script RigShift replaces – proven reference implementation |
 
-## Related projects
-
-- [DisplayProfileManager](https://github.com/zac15987/DisplayProfileManager) – WPF, .NET Framework 4.8, staged (non-atomic) application, on hold
-- [MonitorSwitcher](https://github.com/fernandoenzo/MonitorSwitcher) – tray tool for exclusive monitor switching
-- [DisplayMagician](https://github.com/terrymacdonald/DisplayMagician) – game-launcher-centric, NVIDIA/AMD APIs
-
-RigShift focuses on the atomic switch, robustness on real hardware and sim-racing workflows.
-
 ## Contributing
 
 Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). For bug reports, use
