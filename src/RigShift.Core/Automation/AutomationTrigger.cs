@@ -28,6 +28,12 @@ public enum TriggerEventKind
     /// <summary>The device came back before its end action ran.</summary>
     DeviceBack,
 
+    /// <summary>
+    /// The rule started with the end action "switch back", but no other profile was active, so there is nothing to go back
+    /// to (analysis finding C-05).
+    /// </summary>
+    NoPreviousProfile,
+
     /// <summary>The device stayed gone long enough, but the end action does nothing (<see cref="TriggerEvent.SkipReason"/>).</summary>
     ExitSkipped,
 
@@ -212,7 +218,7 @@ public sealed class AutomationTrigger
                     if (!restarted || !state.StartedByRule)
                     {
                         events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceConnected));
-                        OnStarted(rule, state, activeProfileId, actions);
+                        OnStarted(rule, state, activeProfileId, actions, events);
                     }
                 }
             }
@@ -249,10 +255,16 @@ public sealed class AutomationTrigger
         return new TriggerEvaluation(actions, events);
     }
 
-    private static void OnStarted(AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions)
+    private static void OnStarted(
+        AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions, List<TriggerEvent> events)
     {
         state.StartedByRule = true;
         state.PreviousProfileId = activeProfileId == rule.ProfileId ? null : activeProfileId;
+        if (rule.OnExit == ExitAction.SwitchBack && state.PreviousProfileId is null)
+        {
+            events.Add(new TriggerEvent(rule, TriggerEventKind.NoPreviousProfile));
+        }
+
         if (activeProfileId != rule.ProfileId)
         {
             actions.Add(new TriggerAction(rule, rule.ProfileId, TriggerReason.Started));

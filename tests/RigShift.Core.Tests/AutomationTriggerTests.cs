@@ -114,7 +114,9 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, null);
-        Poll(rule, null, Wheelbase).ShouldHaveSingleItem();
+        TriggerEvaluation started = Evaluate([rule], null, Wheelbase);
+        started.Actions.ShouldHaveSingleItem();
+        started.Events.Select(e => e.Kind).ShouldBe([TriggerEventKind.DeviceConnected, TriggerEventKind.NoPreviousProfile]);
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += AutomationTrigger.ExitDelayOf(rule);

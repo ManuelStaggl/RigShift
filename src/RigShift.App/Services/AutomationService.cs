@@ -229,6 +229,9 @@ public sealed class AutomationService : IDisposable
             case TriggerEventKind.DeviceBack:
                 _log.Information("{Subject} back within its delay, nothing to do", subject);
                 break;
+            case TriggerEventKind.NoPreviousProfile:
+                _log.Information("{Subject}: no other profile was active, so switching back when it is gone will do nothing", subject);
+                break;
             case TriggerEventKind.ExitSkipped:
                 _log.Information("{Subject} stayed gone, end action skipped: {Reason}", subject, triggerEvent.SkipReason);
                 break;
