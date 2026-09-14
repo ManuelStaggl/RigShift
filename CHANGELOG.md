@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-14
+
 ### Added
 
 - Settings show the installed version, the update status and a "Check for updates" button.
