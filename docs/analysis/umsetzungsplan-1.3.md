@@ -247,4 +247,5 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 2 Struktur | A-03 | offen | |
 | 2 Windows-Schicht-Fixture | L-04 | offen (Rohdaten aus Testrunde) | |
 | 2 SECURITY.md | H-03 | offen | |
+| 2 Nutzerbefund Testrunde 2026-09-14: Mausrad scrollt nur am rechten Rand, Release-Notes unförmig, Update-Knöpfe mittig neben dem Text | T-01, T-02, T-03 | offen | |
 | Nutzerfragen beantwortet und umgesetzt | D-02, O-01…O-08, A-09, C-07, C-08, F-06, F-07, D-03, I-18 | offen | |
