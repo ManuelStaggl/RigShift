@@ -21,11 +21,12 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - 🟢 Recording device and separate communications role per profile (1.0)
 - 🟡 Volume per profile (playback and recording)
 - 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …)
-- ⚪ Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1)
+- 🟡 Process triggers with game templates (LMU, iRacing, ACC, AC EVO, AC Rally, rFactor 2, AMS2, RaceRoom, F1,
+  Forza Horizon 6)
 
 ## v1.2 – automation and comfort
 
-- USB device triggers (wheelbase, headset dongle)
+- 🟡 USB device triggers (wheelbase, headset dongle)
 - Race mode: focus assist on, game mode, no sleep/screensaver – restored on switch back
 - Power plan per profile
 - HDR and refresh rate per display; night light (experimental)

@@ -469,6 +469,13 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
    Auswertung während eines Wechsels), `AutomationPage`. Unit-Tests belegen Start, Ausgangslage, Rückkehr nach
    Verzögerung, Neustart, Nutzerwechsel, alle Ende-Aktionen, deaktivierte Regel, Vorlagen und Settings-Roundtrip.
    **Nicht belegt:** echte Spiele und EXE-Namen (LMU, AC EVO aus Websuche) → Gaming-PC.
+   Nachtrag 2026-09-14: Vorlagen RaceRoom (`RRRE64.exe`, `RRRE.exe`), AC Rally (`acr.exe`) und Forza Horizon 6
+   (`forzahorizon6.exe`), Namen aus den Installationsordnern am Gaming-PC gelesen (nicht gestartet); Issue-Formular
+   „Game template request“. **Pausieren auf der Seite am Server belegt** (Dev-Build, ohne Regeln): Schalter per
+   UIA-`TogglePattern` → `automationPaused` true/false in `settings.json`, Log „Automation paused/resumed“, Infoleiste
+   sichtbar. Der frühere Fehlschlag lag am Testskript: `FindFirst` nach dem Namen trifft zuerst den gleichnamigen
+   `TextBlock` der CardControl – nach `ControlType.Button` filtern. Tray-Menüpunkt (nur mit Regeln) bleibt für den
+   Gaming-PC.
 
 **v1.2 – Automatik und Komfort**
 

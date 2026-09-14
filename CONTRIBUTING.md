@@ -33,6 +33,13 @@ Please include the log from `%AppData%\RigShift\logs`, your GPU and driver versi
 configuration (resolution/refresh per monitor). Device paths in the log are not personal data, but feel free to
 redact them.
 
-## Game templates (v1.1+)
+## Game templates
 
-Process-trigger templates live in `templates/` as JSON. Adding a sim is a documentation-level PR.
+The games the automation offers live in [`templates/games`](templates/games/README.md), one JSON file per game.
+Adding one is a small PR; the tests check every file. Not sure about the process name? Open a
+*Game template request* issue instead.
+
+## Code of conduct and security
+
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report security problems privately as described in
+[SECURITY.md](SECURITY.md), not as an issue.
