@@ -144,15 +144,26 @@
                 </Grid>
 
                 <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding EndLabel}" />
-                <ComboBox
-                  Grid.Row="4"
-                  Grid.Column="1"
-                  Margin="0,4,0,0"
-                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
-                  AutomationProperties.Name="{loc:Tr Automation_OnExit}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding Owner.ExitChoices}"
-                  SelectedItem="{Binding SelectedExit}" />
+                <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,4,0,0">
+                  <ComboBox
+                    AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                    AutomationProperties.Name="{loc:Tr Automation_OnExit}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding Owner.ExitChoices}"
+                    SelectedItem="{Binding SelectedExit}" />
+                  <StackPanel Margin="0,8,0,0" Orientation="Horizontal" ToolTip="{loc:Tr Automation_ExitDelayHint}">
+                    <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Automation_ExitDelay}" />
+                    <ui:NumberBox
+                      Width="130"
+                      AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
+                      AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
+                      MaxDecimalPlaces="0"
+                      Maximum="600"
+                      Minimum="0"
+                      SmallChange="5"
+                      Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=LostFocus}" />
+                  </StackPanel>
+                </StackPanel>
                 <CheckBox
                   Grid.Row="4"
                   Grid.Column="3"

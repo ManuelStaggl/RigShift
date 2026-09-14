@@ -235,6 +235,8 @@
   <data name="Automation_ExitStay" xml:space="preserve"><value>Stay in the profile</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Switch back to the previous profile</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Switch to {0}</value></data>
+  <data name="Automation_ExitDelay" xml:space="preserve"><value>Wait (seconds)</value></data>
+  <data name="Automation_ExitDelayHint" xml:space="preserve"><value>How long the game or device must stay gone before this happens. Turning it off and on again within this time changes nothing.</value></data>
   <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Switch without confirmation</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Delete rule</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(deleted profile)</value></data>

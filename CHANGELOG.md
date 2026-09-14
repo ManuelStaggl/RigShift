@@ -24,7 +24,9 @@ All notable changes to this project are documented here. The format follows
   decides what happens when the game closes (stay, switch back or switch to another profile) and whether to ask for
   confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
 - Automation rules can also react to a USB device, e.g. switch to the rig when you turn on the wheelbase and back when
-  you turn it off. Pick the device from the connected ones; it keeps matching in another USB port.
+  you turn it off. Pick the device from the connected ones; it keeps matching in another USB port. Each rule sets how
+  long the device or game must stay gone before it switches back (10 s by default), so a quick power cycle of the
+  wheelbase changes nothing.
 - Local HTTP API for scripts, SimHub and Stream Deck: list profiles, read the status and switch profiles. Off by
   default; turn it on in the settings. Only reachable from the same PC and protected by a token. See
   [docs/http-api.md](docs/http-api.md).

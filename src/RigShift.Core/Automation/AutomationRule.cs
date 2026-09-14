@@ -47,4 +47,14 @@ public sealed record AutomationRule
 
     /// <summary>Switch without the keep-or-revert countdown; otherwise the profile or application setting applies.</summary>
     public bool SkipConfirmation { get; init; }
+
+    /// <summary>
+    /// Seconds the game or device must stay gone before the end action runs, so turning a wheelbase off and on again is
+    /// no end. <c>set</c>: a rule written without the key keeps the initializer value.
+    /// </summary>
+    public int ExitDelaySeconds { get; set; } = DefaultExitDelaySeconds;
+
+    public const int DefaultExitDelaySeconds = 10;
+
+    public const int MaxExitDelaySeconds = 600;
 }

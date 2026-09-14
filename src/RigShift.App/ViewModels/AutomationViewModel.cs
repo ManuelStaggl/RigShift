@@ -281,6 +281,7 @@ public sealed partial class RuleCard : ObservableObject
         SelectedProfile = owner.ProfileChoiceFor(rule.ProfileId);
         SelectedExit = owner.ExitChoiceFor(rule);
         SkipConfirmation = rule.SkipConfirmation;
+        ExitDelaySeconds = rule.ExitDelaySeconds;
     }
 
     public Guid Id { get; }
@@ -319,6 +320,9 @@ public sealed partial class RuleCard : ObservableObject
     [ObservableProperty]
     public partial bool SkipConfirmation { get; set; }
 
+    [ObservableProperty]
+    public partial double? ExitDelaySeconds { get; set; }
+
     public AutomationRule ToRule()
     {
         (ExitAction onExit, Guid? exitProfile) = AutomationViewModel.ExitFrom(SelectedExit);
@@ -336,6 +340,9 @@ public sealed partial class RuleCard : ObservableObject
             OnExit = onExit,
             ExitProfileId = exitProfile,
             SkipConfirmation = SkipConfirmation,
+            ExitDelaySeconds = ExitDelaySeconds is { } seconds
+                ? (int)Math.Clamp(Math.Round(seconds), 0, AutomationRule.MaxExitDelaySeconds)
+                : AutomationRule.DefaultExitDelaySeconds,
         };
     }
 
@@ -361,4 +368,6 @@ public sealed partial class RuleCard : ObservableObject
     partial void OnSelectedExitChanged(Choice? value) => _owner.OnCardChanged();
 
     partial void OnSkipConfirmationChanged(bool value) => _owner.OnCardChanged();
+
+    partial void OnExitDelaySecondsChanged(double? value) => _owner.OnCardChanged();
 }

@@ -222,10 +222,34 @@ public sealed class AutomationTriggerTests
         Poll(rule with { TemplateId = null, UsbDeviceId = Wheelbase }, Desk, UsbDeviceIds.Key(Wheelbase)).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void DeviceOffForLessThanTheRuleDelay_DoesNotSwitchBack()
+    {
+        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig, OnExit = ExitAction.SwitchBack, ExitDelaySeconds = 60 };
+        string wheelbase = UsbDeviceIds.Key(Wheelbase);
+        Poll(rule, Desk);
+        Poll(rule, Desk, wheelbase).ShouldHaveSingleItem();
+
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += TimeSpan.FromSeconds(30);
+        Poll(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Rig, wheelbase).ShouldBeEmpty();
+
+        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+    }
+
+    [Fact]
+    public void ExitDelay_IsKeptWithinZeroAndTenMinutes()
+    {
+        AutomationTrigger.ExitDelayOf(new AutomationRule { ExitDelaySeconds = -5 }).ShouldBe(TimeSpan.Zero);
+        AutomationTrigger.ExitDelayOf(new AutomationRule { ExitDelaySeconds = 99_999 }).ShouldBe(TimeSpan.FromMinutes(10));
+        AutomationTrigger.ExitDelayOf(new AutomationRule()).ShouldBe(TimeSpan.FromSeconds(10));
+    }
+
     private IReadOnlyList<TriggerAction> GameGoneLongEnough(AutomationRule rule, Guid active)
     {
         Poll(rule, active).ShouldBeEmpty();
-        _now += _trigger.ExitDelay;
+        _now += AutomationTrigger.ExitDelayOf(rule);
         return Poll(rule, active);
     }
 }

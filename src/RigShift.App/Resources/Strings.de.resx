@@ -235,6 +235,8 @@
   <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
+  <data name="Automation_ExitDelay" xml:space="preserve"><value>Warten (Sekunden)</value></data>
+  <data name="Automation_ExitDelayHint" xml:space="preserve"><value>So lange muss das Spiel oder Gerät weg sein, bevor das passiert. Aus- und wieder Einschalten innerhalb dieser Zeit ändert nichts.</value></data>
   <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Ohne Bestätigung umschalten</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Regel löschen</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(gelöschtes Profil)</value></data>

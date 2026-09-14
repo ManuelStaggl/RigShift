@@ -22,7 +22,7 @@ public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerR
 /// <remarks>
 /// Start: a game or device that appears switches to the rule's profile, unless it is active already. Whatever is present
 /// at the first poll only sets the baseline, so starting RigShift next to a running game changes nothing.
-/// End: acted on once the game or device has been gone for <see cref="ExitDelay"/> (a restart in between is no end), and
+/// End: acted on once the game or device has been gone for the rule's <see cref="ExitDelayOf"/> (a restart in between is no end), and
 /// only while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
 /// </remarks>
 public sealed class AutomationTrigger
@@ -30,7 +30,12 @@ public sealed class AutomationTrigger
     private readonly Dictionary<Guid, RuleState> _states = [];
     private bool _hasBaseline;
 
-    public TimeSpan ExitDelay { get; init; } = TimeSpan.FromSeconds(10);
+    /// <summary>The rule's <see cref="AutomationRule.ExitDelaySeconds"/>, kept between 0 and 10 minutes.</summary>
+    public static TimeSpan ExitDelayOf(AutomationRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        return TimeSpan.FromSeconds(Math.Clamp(rule.ExitDelaySeconds, 0, AutomationRule.MaxExitDelaySeconds));
+    }
 
     /// <summary>Forget everything, e.g. after pausing: the next poll sets a new baseline.</summary>
     public void Reset()
@@ -105,7 +110,7 @@ public sealed class AutomationTrigger
                 state.GoneSince = now;
             }
 
-            if (!running && state.GoneSince is { } gone && now - gone >= ExitDelay)
+            if (!running && state.GoneSince is { } gone && now - gone >= ExitDelayOf(rule))
             {
                 state.GoneSince = null;
                 OnExited(rule, state, activeProfileId, actions);

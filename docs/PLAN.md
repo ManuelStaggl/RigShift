@@ -285,6 +285,14 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 
 ## 6. Roadmap nach v1 (vom Nutzer gewählt, priorisiert)
 
+**Umfangsprüfung 2026-09-14 (läuft):** Der Nutzer hält das Tool für überladen – Ziel ist ein kleines Tool, das
+nebenher läuft und schnell ins Rig wechselt. Home Assistant (Punkt 12) ist gestoppt und nicht committet. Automatik
+per Spiel steht in Frage (man startet Spiele erst im Rig; Umschalten während des Spielstarts ist riskant).
+**Entschieden: der USB-Trigger bleibt** („an das Rig gehen, Wheelbase einschalten, alles Weitere passiert
+automatisch“). Dazu auf Wunsch des Nutzers die **Wartezeit bis zur Ende-Aktion pro Regel einstellbar**
+(`AutomationRule.ExitDelaySeconds`, Standard 10 s, 0–600) – Sim-Hardware muss oft kurz aus- und wieder eingeschaltet
+werden. Über die übrigen 1.3-Funktionen wird nach einer Web-Recherche zu Nutzerwünschen entschieden.
+
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
 Releases nützlich)
 
