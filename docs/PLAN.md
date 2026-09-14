@@ -366,7 +366,8 @@ statt nur „0 Sekunden“, weil 0 schwer zu finden ist. Gespeichert wird weiter
 Ausschalten Hinweis auf den fehlenden Rückweg. Profil-Editor unverändert (eigener Wert 0 = ohne Nachfrage). Am Server
 belegt: Schalter aus → `confirmTimeoutSeconds: 0`, Hinweistext wechselt, Sekundenfeld verschwindet; wieder an → 15.
 
-**Veröffentlicht als 1.2.0 (2026-09-14).**
+**Veröffentlicht als 1.2.0 (2026-09-14)**, Workflow-Run 34809298875 success; Assets Setup, Portable, full, delta;
+`releases/latest` = v1.2.0.
 
 3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis).
 4. Lautstärke pro Profil (`IAudioEndpointVolume`).
