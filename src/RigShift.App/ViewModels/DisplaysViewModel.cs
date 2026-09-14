@@ -49,15 +49,15 @@ public sealed partial class DisplaysViewModel(IDisplayConfigurator display, Prof
             DisplaySnapshot snapshot = await Task.Run(() => display.QueryAsync(CancellationToken.None));
             IReadOnlyDictionary<string, string> names = catalog.KnownDisplayNames;
             Displays.Clear();
-            int number = 0;
-            foreach (AttachedDisplay attached in snapshot.Displays
-                .OrderByDescending(d => d.IsActive)
-                .ThenBy(d => d.ActiveMode?.PositionX ?? int.MaxValue)
-                .ThenBy(d => d.ActiveMode?.PositionY ?? 0))
+            IReadOnlyList<(AttachedDisplay Display, int? Number)> numbered = DisplayNumbers.Assign(snapshot.Displays);
+            foreach ((AttachedDisplay attached, int? shown) in numbered)
             {
-                int? shown = attached.IsActive && attached.ActiveMode is not null ? ++number : null;
                 Displays.Add(new DisplayCard(this, attached, shown, names.GetValueOrDefault(attached.Identity.TargetDevicePath), ProfilesWith(attached)));
             }
+
+            _log.Information("Display numbers: {Numbers}", string.Join(", ", numbered
+                .Where(n => n.Number is not null)
+                .Select(n => $"{n.Number} = {n.Display.Identity.FriendlyName} (Windows {n.Display.WindowsNumber?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "?"})")));
 
             IsEmpty = Displays.Count == 0;
             ErrorMessage = null;

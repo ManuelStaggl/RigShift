@@ -77,6 +77,29 @@ public sealed class CcdSnapshotBuilderTests
     }
 
     [Fact]
+    public void Build_ActiveTarget_TakesTheWindowsNumberFromItsSource()
+    {
+        CcdRawSnapshot raw = Load("ccd-synthetic.json");
+        CcdRawPath active = raw.Paths.First(p => p.Active);
+        raw = raw with { Sources = [new CcdRawSource(active.SourceAdapter, active.SourceId, @"\\.\DISPLAY7")] };
+
+        List<AttachedDisplay> displays = CcdSnapshotBuilder.Build(raw, Logger.None);
+
+        displays[0].WindowsNumber.ShouldBe(7);
+        displays[1].WindowsNumber.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(@"\\.\DISPLAY1", 1)]
+    [InlineData(@"\\.\display12", 12)]
+    [InlineData(@"\\.\DISPLAY", null)]
+    [InlineData(@"\\.\DISPLAY0", null)]
+    [InlineData(@"\\.\DISPLAY2\Monitor0", null)]
+    [InlineData("", null)]
+    public void ParseWindowsNumber_ReadsTheGdiName(string gdiName, int? expected) =>
+        CcdSnapshotBuilder.ParseWindowsNumber(gdiName).ShouldBe(expected);
+
+    [Fact]
     public void ParseAdapter_IsTheInverseOfToString()
     {
         var luid = new AdapterLuid(0xDEADBEEF, -2);

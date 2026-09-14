@@ -36,7 +36,7 @@ public sealed partial class DisplayCard : ObservableObject
 
     public string TargetDevicePath => _identity.TargetDevicePath;
 
-    /// <summary>Left-to-right number of an active display, as shown by "Identify".</summary>
+    /// <summary>Number of an active display as Windows counts it (<see cref="DisplayNumbers"/>), shown by "Identify".</summary>
     public int? Number { get; }
 
     public string NumberText => Number?.ToString(Loc.Instance.Culture) ?? "–";

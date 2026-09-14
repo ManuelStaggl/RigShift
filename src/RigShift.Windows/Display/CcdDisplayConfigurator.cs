@@ -47,6 +47,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         var rawPaths = new List<CcdRawPath>(paths.Length);
         var targetKeys = new List<(AdapterLuid Adapter, uint TargetId)>();
         var activeTargets = new HashSet<(AdapterLuid, uint)>();
+        var rawSources = new List<CcdRawSource>();
         foreach (DISPLAYCONFIG_PATH_INFO path in paths)
         {
             var targetAdapter = AdapterLuid.From(path.targetInfo.adapterId);
@@ -72,6 +73,12 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
             if (active)
             {
                 activeTargets.Add((targetAdapter, path.targetInfo.id));
+                string sourceAdapter = AdapterLuid.From(path.sourceInfo.adapterId).ToString();
+                if (!rawSources.Any(s => s.Adapter == sourceAdapter && s.SourceId == path.sourceInfo.id)
+                    && CcdNative.TryGetSourceGdiName(path.sourceInfo.adapterId, path.sourceInfo.id, out string gdiName))
+                {
+                    rawSources.Add(new CcdRawSource(sourceAdapter, path.sourceInfo.id, gdiName));
+                }
             }
         }
 
@@ -116,6 +123,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
             Modes = modes.Select(ToRawMode).ToList(),
             Targets = rawTargets,
             Adapters = rawAdapters,
+            Sources = rawSources,
         };
     }
 

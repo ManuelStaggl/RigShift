@@ -90,11 +90,27 @@ internal static class CcdSnapshotBuilder
                     ? mode with { Hdr = name.Hdr }
                     : null,
                 NativeHandle = new CcdTargetHandle(ParseAdapter(target.Adapter), target.TargetId, target.Sources, activeSource),
+                WindowsNumber = target.ActivePath is { } numbered
+                    && raw.Sources.FirstOrDefault(s => s.Adapter == numbered.SourceAdapter && s.SourceId == numbered.SourceId) is { } source
+                        ? ParseWindowsNumber(source.GdiName)
+                        : null,
             });
         }
 
         // Available targets first: if a monitor shows up on two targets, the planner takes the usable one.
         return displays.OrderByDescending(d => d.IsAvailable).ThenByDescending(d => d.IsActive).ToList();
+    }
+
+    /// <summary><c>\\.\DISPLAY12</c> → 12; anything else → null.</summary>
+    internal static int? ParseWindowsNumber(string gdiName)
+    {
+        const string Prefix = @"\\.\DISPLAY";
+        ArgumentNullException.ThrowIfNull(gdiName);
+        return gdiName.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(gdiName.AsSpan(Prefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int number)
+            && number > 0
+                ? number
+                : null;
     }
 
     /// <summary>Inverse of <see cref="AdapterLuid.ToString"/>: high part, then low part, 8 hex digits each.</summary>

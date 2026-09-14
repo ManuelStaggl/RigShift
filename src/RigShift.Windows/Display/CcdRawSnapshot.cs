@@ -19,7 +19,12 @@ public sealed record CcdRawSnapshot
 
     /// <summary>One entry per adapter of a target with a monitor.</summary>
     public required IReadOnlyList<CcdRawAdapter> Adapters { get; init; }
+
+    /// <summary>GDI names of the sources of active paths (<c>\\.\DISPLAY3</c>); empty in recordings made before 1.5.</summary>
+    public IReadOnlyList<CcdRawSource> Sources { get; init; } = [];
 }
+
+public sealed record CcdRawSource(string Adapter, uint SourceId, string GdiName);
 
 public sealed record CcdRawPath(
     string SourceAdapter,

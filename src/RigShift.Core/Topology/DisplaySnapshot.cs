@@ -26,6 +26,12 @@ public sealed record AttachedDisplay
     /// <summary>Current mode if active; null otherwise.</summary>
     public DisplayAssignment? ActiveMode { get; init; }
 
+    /// <summary>
+    /// <c>n</c> of the GDI name <c>\\.\DISPLAYn</c> of an active display: the number Windows counts displays with, which the
+    /// Windows settings show in most setups (finding HW-04). Null when inactive or unknown.
+    /// </summary>
+    public int? WindowsNumber { get; init; }
+
     /// <summary>Opaque OS handle (adapter LUID + target id) valid only for this snapshot. Never persisted.</summary>
     public required object NativeHandle { get; init; }
 }
