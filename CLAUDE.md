@@ -37,14 +37,13 @@ Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSO
 **M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
 **M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
 alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
-`rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Unveröffentlicht auf `main`: Lautstärke
-(Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da), Monitornamen, Seiten Bildschirme und
-Über & Hilfe, **Automatik mit USB-Trigger** (Roadmap 7, Polling), **Wach halten pro Profil** (Roadmap 8) und
-**HDR + Bildwiederholrate pro Bildschirm** (Roadmap 10). Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6):
-Spiele-Automatik (6), Energieplan (9), lokale HTTP-API (11), Home Assistant. Neu für 1.3 (ebenfalls unveröffentlicht):
-verlorene Fenster holen (`IWindowRescuer`), Apps warten auf USB-Gerät, Hinweis USB-Stromsparen (`IUsbPowerCheck`,
-`docs/usb-power-saving.md`) und Anruf-Absenkung pro Profil aus (`IDuckingPreference`). Als Nächstes Hardwaretest von 1.2.0 und
-diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
+`rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. **1.3.0** (2026-09-14, **ohne Hardwaretest**
+veröffentlicht – der User ist bisher einziger Nutzer): Lautstärke und Apps pro Profil, Monitornamen, Seiten
+Bildschirme und Über & Hilfe, **Automatik mit USB-Trigger** (Wartezeit pro Regel), **Wach halten**, **HDR +
+Bildwiederholrate pro Bildschirm**, verlorene Fenster holen (`IWindowRescuer`), Apps warten auf USB-Gerät, Hinweis
+USB-Stromsparen (`IUsbPowerCheck`, `docs/usb-power-saving.md`), Anruf-Absenkung pro Profil aus (`IDuckingPreference`).
+Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6): Spiele-Automatik, Energieplan, lokale HTTP-API, Home
+Assistant. Das Tool soll klein bleiben. Als Nächstes: Hardwaretest von 1.3.0 am Gaming-PC, Fehler als 1.3.x.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
