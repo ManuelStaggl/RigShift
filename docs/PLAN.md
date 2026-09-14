@@ -63,7 +63,7 @@ Alle Versionen am 2026-09-13 live gegen nuget.org verifiziert und in `Directory.
 | Tray | **H.NotifyIcon.Wpf** | 2.4.1 | Reifste Tray-Bibliothek (Nachfolger von Hardcodet), zuverlässige Kontextmenüs und Balloon-Toasts; das NotifyIcon von WPF-UI ist noch unausgereift. |
 | MVVM | **CommunityToolkit.Mvvm** | 8.4.2 | Source-Generatoren für `ObservableProperty`/`RelayCommand`, Messenger, kein Boilerplate. |
 | DI/Hosting | Microsoft.Extensions.Hosting | 10.0.12 | Generic Host, `IHostedService` für Tray, Pipe-Server und Trigger. |
-| Logging | Serilog + File + Debug Sinks | 4.4.0 / 7.0.0 / 3.0.0 | Strukturierte Logs (Vorgabe `dotnet-standards`), tägliche Rotation in `%LocalAppData%\RigShift\logs`. |
+| Logging | Serilog + File + Debug Sinks | 4.4.0 / 7.0.0 / 3.0.0 | Strukturierte Logs (Vorgabe `dotnet-standards`), tägliche Rotation in `%AppData%\RigShift\logs`. |
 | Win32 | **Microsoft.Windows.CsWin32** | 0.3.333 | Source-generierte P/Invokes und Structs aus den offiziellen Metadaten – keine handgeschriebenen Struct-Layouts mehr (die `MODE`-Struktur im Skript zeigt, was man sich damit erspart). |
 | CLI | System.CommandLine | 2.0.12 | `RigShift.exe apply Rig` mit sauberem Parsing und Hilfe. |
 | Verteilung | **Velopack** | 1.2.0 | Installer + Delta-Updates + portable EXE, GitHub-Releases als Update-Feed. |
@@ -85,16 +85,19 @@ CCD-API und `IPolicyConfig` laufen als normaler Nutzer).
 ```
 RigShift.App  ──►  RigShift.Windows  ──►  RigShift.Core
  (WPF, Tray,        (CCD, Core Audio,       (Profile, Planner,
-  DI, CLI)           IPolicyConfig,          Orchestrator,
-                     Geräteereignisse)       Import – kein Win32)
-                                                   ▲
-                                      RigShift.Core.Tests
+  DI, CLI,           IPolicyConfig,          Orchestrator, JSON-Store,
+  Anzeige-Watcher)   USB, Apps, Fenster)     Import – kein Win32)
+
+Tests: RigShift.Core.Tests, RigShift.Windows.Tests, RigShift.App.Tests
 ```
 
 - **Core** kennt kein Windows. Alles, was Logik ist (Matching, Planung, Wiederholungsstrategie,
   Rollback-Entscheidung, Head-Budget-Heuristik, Import-Parsing), liegt hier und ist ohne Monitore testbar.
-- **Windows** implementiert die Core-Schnittstellen `IDisplayConfigurator`, `IAudioController`,
-  `IProfileStore` sowie (ab M2/M4) `IDeviceEvents` und `IAutostart`. Referenz für die Algorithmen ist
+- **Windows** implementiert die Core-Schnittstellen `IDisplayConfigurator`, `IAudioController`, `IAutostart`,
+  ab 1.3 außerdem `IAppLauncher`, `IPowerController`, `IUsbDeviceList`, `IUsbPowerCheck`, `IWindowRescuer`,
+  `IDuckingPreference`. `IProfileStore` (`JsonProfileStore`) ist reine Datei-I/O und liegt in Core. Einen
+  Geräte-Listener gibt es nicht: `WM_DISPLAYCHANGE` fängt `DisplayChangeWatcher` in der App, USB-Geräte werden
+  abgefragt (Polling). Referenz für die Algorithmen ist
   `legacy/DisplayProfile.ps1`; die harten Regeln stehen in `docs/display-topology.md`.
 - **App** enthält nur UI, Komposition (DI) und Prozess-Belange (Einzelinstanz, CLI, Updates).
 
@@ -109,7 +112,8 @@ Profile sind reine Daten ohne flüchtige Bezeichner (`src/RigShift.Core/Profiles
   (spacedesk: fehlt → überspringen, später nachziehen).
 - `AudioAssignment` – Wiedergabe, Wiedergabe-Kommunikation, Aufnahme, Aufnahme-Kommunikation, Lautstärke.
 
-Ablage: `%LocalAppData%\RigShift\profiles\<guid>.json` und `settings.json`, jeweils mit `schemaVersion`.
+Ablage: `%AppData%\RigShift\profiles\<guid>.json` und `settings.json`, jeweils mit `schemaVersion` (nicht
+`%LocalAppData%` – den leert Velopack, Abschnitt 10).
 JSON über `System.Text.Json` mit Source-Generator-Kontext.
 
 ### 4.3 Der Wechsel als Zustandsautomat
@@ -198,10 +202,11 @@ bis der Nutzer die Verknüpfungen selbst entfernt).
 
 ### 4.7 Logging und Diagnose
 
-- Serilog, Tagesrotation, 14 Dateien, `%LocalAppData%\RigShift\logs\rigshift-<datum>.log`.
+- Serilog, Tagesrotation, 14 Dateien, `%AppData%\RigShift\logs\rigshift-<datum>.log`.
 - Jeder Wechsel: Profil, Plan (gefunden/fehlend/Warnungen), Versuche mit Fehlercode, Dauer, Ergebnis.
-- Diagnoseseite (v1, einfach): angeschlossene Bildschirme mit Pfad, EDID, Verfügbarkeit, aktiver Modus;
-  Audiogeräte; letzte zehn Wechsel.
+- Keine eigene Diagnoseseite mehr (ab 1.3): Seite **Bildschirme** zeigt die angeschlossenen Bildschirme (Namen,
+  Identifizieren); **Über & Hilfe → „Diagnose kopieren“** erzeugt einen Text (`DiagnosticsReport`) mit Version,
+  Bildschirmen samt Pfad, EDID, Verfügbarkeit und Modus, Audiogeräten, Profilen und den letzten zehn Wechseln.
 
 ### 4.8 Markenauftritt (M4.5)
 

@@ -2,7 +2,7 @@ using RigShift.Core.Profiles;
 
 namespace RigShift.Core.Abstractions;
 
-/// <summary>Persistence for profiles and settings. Windows implementation: JSON files under %LocalAppData%\RigShift.</summary>
+/// <summary>Persistence for profiles. Implementation: <c>JsonProfileStore</c>, JSON files under %AppData%\RigShift\profiles.</summary>
 public interface IProfileStore
 {
     Task<LoadResult> LoadAllAsync(CancellationToken cancellationToken);

@@ -104,7 +104,7 @@ All notable changes to this project are documented here. The format follows
   usual confirmation; pressing it again during the countdown keeps the new settings. Set it in the profile editor.
   If another app already uses the shortcut, RigShift tells you when it starts and when you save the profile.
 - Links like `rigshift://apply/Rig` switch to a profile, e.g. from a browser bookmark, Win+R or a Stream Deck
-  "Website" action. They always ask for confirmation and cannot change profiles. Available in the installed version.
+  "Website" action. They switch with the usual confirmation (none if it is turned off) and cannot change profiles. Available in the installed version.
 - New switch "Confirm after switching" in the settings, instead of entering 0 seconds.
 
 ### Fixed

@@ -14,9 +14,11 @@ Architekturfrage dort nachsehen, nicht neu entscheiden. Harte Regeln zur Anzeige
 | Projekt | Rolle |
 |---|---|
 | `src/RigShift.Core` (`net10.0`) | Profile, Planner, Orchestrator, Legacy-Parser – **kein Win32, kein UI**, voll testbar |
-| `src/RigShift.Windows` | CCD-API, Core Audio, `IPolicyConfig`, Geräteereignisse – Interop über **CsWin32** (`NativeMethods.txt`) |
+| `src/RigShift.Windows` | CCD-API, Core Audio, `IPolicyConfig`, Apps, USB, Energie, Fensterrettung – Interop über **CsWin32** (`NativeMethods.txt`); Anzeigeänderungen fängt `DisplayChangeWatcher` in der App |
 | `src/RigShift.App` | WPF + **WPF-UI 4.3**, H.NotifyIcon (Tray), CommunityToolkit.Mvvm, Generic Host, Serilog, System.CommandLine, Velopack |
 | `tests/RigShift.Core.Tests` | xunit v3 + Shouldly + NSubstitute auf Microsoft.Testing.Platform |
+| `tests/RigShift.Windows.Tests` | CCD-Structs, Pfadaufbau, Legacy-Import |
+| `tests/RigShift.App.Tests` | App-Dienste ohne UI-Automation (Koordinator, Pipe, Settings, Automatik, Diagnose) |
 
 Für C#-Code gilt der Skill **`dotnet-standards`**. Repo, Code, Commits und Community-Doku auf **Englisch**;
 Plan und Gespräch Deutsch. App-UI de + en.
@@ -33,8 +35,8 @@ dotnet test --solution RigShift.slnx
 
 ## Stand
 
-Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
-**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
+Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App),
+**M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8),
 **M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
 alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
 `rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. **1.3.0** (2026-09-14, **ohne Hardwaretest**
@@ -73,7 +75,9 @@ Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup 
 für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 
 Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
-`dotnet run --project tools/RigShift.Probe -- snapshot | audio | import <ordner> | plan <ordner> <profil>`.
+`dotnet run --project tools/RigShift.Probe -- snapshot | rates | audio | usb | usb-power <geräte-id> | import <ordner> | plan <ordner> <profil>`.
+`keep-awake <sekunden>` hält kurz eine Energieanforderung (prüfen mit `powercfg /requests`), `convert <quelle> <ziel>`
+schreibt Profildateien – beide ändern etwas, also nicht zur reinen Prüfung.
 Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffentlichen.
 
 ## Stolperfallen
@@ -98,7 +102,7 @@ Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffe
 - `RigShift.App` liefert `Main` selbst (`Program.cs`, `EnableDefaultApplicationDefinition=false`), weil
   `VelopackApp.Build().Run()` vor allem anderen laufen muss.
 - Core-Tests mit Wartezeiten nutzen `tests/.../Fakes/AutoAdvanceTimeProvider` (Timer feuern sofort, Uhr springt
-  vor) – keine echten Delays in Tests. xUnit1051 ist in `SwitchOrchestratorTests` per Pragma aus, weil
+  vor) – keine echten Delays in Tests. xUnit1051 ist in `SwitchOrchestratorTests`, `CommandRunnerTests` und `SwitchCoordinatorTests` per Pragma aus, weil
   NSubstitute-Aufrufe Token-Matcher statt echter Tokens übergeben.
 - CsWin32-Formen nicht raten: generierten Code mit `dotnet build -p:EmitCompilerGeneratedFiles=true
   -p:CompilerGeneratedFilesOutputPath=<scratch>` ausgeben und nachsehen. Konstanten mit eigenem Enum

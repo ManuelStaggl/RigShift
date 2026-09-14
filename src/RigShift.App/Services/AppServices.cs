@@ -10,7 +10,7 @@ using Serilog;
 
 namespace RigShift.App.Services;
 
-/// <summary>Where RigShift keeps its files: <c>%LocalAppData%\RigShift</c>.</summary>
+/// <summary>Where RigShift keeps its files: <c>%AppData%\RigShift</c>.</summary>
 public sealed record AppPaths(string DataDirectory)
 {
     public string Profiles => Path.GetFullPath(Path.Combine(DataDirectory, "profiles"));

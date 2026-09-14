@@ -25,13 +25,13 @@ RigShift is meant to stay small: switch into the rig and back, reliably.
 ## v1.3 – getting into the rig
 
 - 🟢 Volume per profile (playback and recording)
-- 🟢 Launch / stop apps per profile (SimHub, Crew Chief, …), optionally after a USB device is detected
-- 🟢 USB device triggers (wheelbase, headset dongle) with a delay per rule before switching back
-- 🟢 Keep awake per profile: no sleep, screen saver or display timeout
-- 🟢 HDR and refresh rate per display
-- 🟢 Windows left on switched-off screens move to the main screen
-- 🟢 Warning when Windows may power down a USB trigger device
-- 🟢 Game sound stays loud during calls (Windows communications ducking off per profile)
+- 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …), optionally after a USB device is detected
+- 🟡 USB device triggers (wheelbase, headset dongle) with a delay per rule before switching back
+- 🟡 Keep awake per profile: no sleep, screen saver or display timeout
+- 🟡 HDR and refresh rate per display
+- 🟡 Windows left on switched-off screens move to the main screen
+- 🟡 Warning when Windows may power down a USB trigger device
+- 🟡 Game sound stays loud during calls (Windows communications ducking off per profile)
 - 🟢 Custom monitor names, Displays and About & help pages
 
 Dropped after a scope review (the tool should stay small):
@@ -48,4 +48,3 @@ Dropped after a scope review (the tool should stay small):
 - Anonymised diagnostics export for issues
 - winget
 - AMD / Intel validation, per-GPU head-budget presets
-- Dry-run mode in the UI

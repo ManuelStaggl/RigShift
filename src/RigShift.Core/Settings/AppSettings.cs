@@ -5,7 +5,7 @@ using Serilog;
 
 namespace RigShift.Core.Settings;
 
-/// <summary>Application settings, stored as <c>%LocalAppData%\RigShift\settings.json</c>.</summary>
+/// <summary>Application settings, stored as <c>%AppData%\RigShift\settings.json</c>.</summary>
 public sealed record AppSettings
 {
     public const int CurrentSchemaVersion = 1;
