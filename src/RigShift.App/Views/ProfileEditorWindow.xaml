@@ -388,9 +388,10 @@
                     <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
                       <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr App_Wait}" />
                       <ui:NumberBox
-                        Width="120"
+                        Width="150"
                         Margin="8,0,0,0"
                         AutomationProperties.Name="{loc:Tr App_Wait}"
+                        ClearButtonEnabled="False"
                         MaxDecimalPlaces="0"
                         Maximum="300"
                         Minimum="0"

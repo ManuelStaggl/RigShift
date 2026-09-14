@@ -169,9 +169,10 @@
                   <StackPanel Margin="0,0,24,8" VerticalAlignment="Bottom" Orientation="Horizontal" ToolTip="{loc:Tr Automation_ExitDelayHint}">
                     <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Automation_ExitDelay}" />
                     <ui:NumberBox
-                      Width="130"
+                      Width="150"
                       AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
                       AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
+                      ClearButtonEnabled="False"
                       MaxDecimalPlaces="0"
                       Maximum="600"
                       Minimum="0"
