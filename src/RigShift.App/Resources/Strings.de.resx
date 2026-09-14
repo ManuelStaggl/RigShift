@@ -195,4 +195,24 @@
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
+  <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein Spiel startet. RigShift sieht alle 2 Sekunden nach, welche Programme laufen. Wird das Spiel beendet, wartet es 10 Sekunden, damit ein Neustart nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
+  <data name="Automation_Add" xml:space="preserve"><value>Regel hinzufügen</value></data>
+  <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
+  <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
+  <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein Spiel und das Profil, auf das umgeschaltet wird.</value></data>
+  <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>
+  <data name="Automation_Enabled" xml:space="preserve"><value>Regel ein</value></data>
+  <data name="Automation_Game" xml:space="preserve"><value>Wenn dieses Spiel startet</value></data>
+  <data name="Automation_CustomGame" xml:space="preserve"><value>Anderes Spiel (Programm wählen)…</value></data>
+  <data name="Automation_Executable" xml:space="preserve"><value>Programm des Spiels</value></data>
+  <data name="Automation_ExecutablePlaceholder" xml:space="preserve"><value>z. B. C:\Spiele\MeineSim\MeineSim.exe</value></data>
+  <data name="Automation_Profile" xml:space="preserve"><value>umschalten auf</value></data>
+  <data name="Automation_OnExit" xml:space="preserve"><value>Wenn das Spiel beendet wird</value></data>
+  <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
+  <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>
+  <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
+  <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Ohne Bestätigung umschalten</value></data>
+  <data name="Automation_Delete" xml:space="preserve"><value>Regel löschen</value></data>
+  <data name="Automation_MissingProfile" xml:space="preserve"><value>(gelöschtes Profil)</value></data>
 </root>

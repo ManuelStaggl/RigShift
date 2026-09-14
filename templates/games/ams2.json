@@ -1,0 +1,5 @@
+{
+  "id": "ams2",
+  "name": "Automobilista 2",
+  "executables": ["AMS2AVX.exe", "AMS2.exe"]
+}

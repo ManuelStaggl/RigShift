@@ -87,6 +87,7 @@ public partial class App : Application, IAppShell
 
             Services.GetRequiredService<TrayIconService>().Start();
             Services.GetRequiredService<HotkeyService>().Start();
+            Services.GetRequiredService<AutomationService>().Start();
 
 #if DEBUG
             // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
@@ -193,6 +194,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
+        services.AddSingleton<IProcessList, Windows.Apps.ProcessList>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());
@@ -206,6 +208,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<SwitchCoordinator>();
         services.AddSingleton<DisplayChangeWatcher>();
         services.AddSingleton<HotkeyService>();
+        services.AddSingleton<AutomationService>();
         services.AddSingleton<TrayIconService>();
         services.AddSingleton(sp => new CommandRunner(
             sp.GetRequiredService<IProfileStore>(),
@@ -224,10 +227,12 @@ public partial class App : Application, IAppShell
         services.AddSingleton<ProfilesViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<DisplaysViewModel>();
+        services.AddSingleton<AutomationViewModel>();
         services.AddSingleton<AboutViewModel>();
         services.AddSingleton<ProfilesPage>();
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<DisplaysPage>();
+        services.AddSingleton<AutomationPage>();
         services.AddSingleton<AboutPage>();
         services.AddSingleton<MainWindow>();
     }

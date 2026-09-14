@@ -84,6 +84,7 @@ public sealed class TrayIconService : IDisposable
     private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
+    private readonly AutomationService _automation;
     private readonly ILogger _log;
     private bool _updateNotificationShown;
 
@@ -96,9 +97,13 @@ public sealed class TrayIconService : IDisposable
         IAppShell shell,
         UpdateService updates,
         HotkeyService hotkeys,
+        AutomationService automation,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(hotkeys);
+        ArgumentNullException.ThrowIfNull(automation);
+        _automation = automation;
+        automation.Changed += (_, _) => RebuildMenu();
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(popupViewModel);
@@ -303,6 +308,13 @@ public sealed class TrayIconService : IDisposable
         }));
         menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
         menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));
+        if (_automation.Rules.Count > 0)
+        {
+            var pause = new MenuItem { Header = Loc.Instance["Automation_Pause"], IsCheckable = true, IsChecked = _automation.IsPaused };
+            pause.Click += async (_, _) => await _automation.SetPausedAsync(pause.IsChecked);
+            menu.Items.Add(pause);
+        }
+
         menu.Items.Add(new Separator());
         if (_updates.State is UpdateState.Ready or UpdateState.Available && _updates.TargetVersion is { } version)
         {

@@ -44,6 +44,10 @@
           Icon="{ui:SymbolIcon DesktopMac24}"
           TargetPageType="{x:Type pages:DisplaysPage}" />
         <ui:NavigationViewItem
+          Content="{loc:Tr Nav_Automation}"
+          Icon="{ui:SymbolIcon Flash24}"
+          TargetPageType="{x:Type pages:AutomationPage}" />
+        <ui:NavigationViewItem
           Content="{loc:Tr Nav_About}"
           Icon="{ui:SymbolIcon Info24}"
           TargetPageType="{x:Type pages:AboutPage}" />

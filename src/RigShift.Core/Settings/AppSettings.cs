@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using RigShift.Core.Automation;
 using Serilog;
 
 namespace RigShift.Core.Settings;
@@ -38,6 +39,12 @@ public sealed record AppSettings
     /// carry the name too, so the core and the command line do not need the settings (docs/PLAN.md, section 6).
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
+
+    /// <summary>Game rules of the automation page (docs/PLAN.md, section 6).</summary>
+    public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
+
+    /// <summary>All rules paused, e.g. from the tray menu. <c>false</c> is the default for files without the key.</summary>
+    public bool AutomationPaused { get; init; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>
@@ -91,6 +98,6 @@ public sealed class JsonSettingsStore
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(AppSettings))]
 internal sealed partial class SettingsJsonContext : JsonSerializerContext;

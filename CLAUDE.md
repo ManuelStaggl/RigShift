@@ -38,7 +38,8 @@ Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSO
 **M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
 alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
 `rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Unveröffentlicht auf `main`: Lautstärke
-(Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da). Als Nächstes Hardwaretest von 1.2.0 und
+(Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da), Monitornamen, Seiten Bildschirme und
+Über & Hilfe, **Automatik** (Roadmap 6: Prozess-Trigger per Polling, Spiele-Vorlagen in `templates/games`). Als Nächstes Hardwaretest von 1.2.0 und
 diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
@@ -51,6 +52,9 @@ laufende Instanz vorher mit `taskkill /im RigShift.exe /f` beenden); der User st
 Release: Version in `Directory.Build.props` + Abschnitt `## [X.Y.Z]` in `CHANGELOG.md`, committen, `git tag -a vX.Y.Z`,
 `git push origin vX.Y.Z` → `release.yml` baut und veröffentlicht (ca. 8 min). Lokaler Paket-Test ohne Upload:
 `vpk pack` mit denselben Optionen wie im Workflow.
+
+Automatik am Server nur ansehen, nie auslösen: eine Regel mit laufendem (auch nachgebautem) Spielprozess schaltet
+wirklich um – das wäre ein `apply` ohne `--dry-run`.
 
 CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --dry-run` – **nie `apply` ohne
 `--dry-run`**, auch keine erzeugte Verknüpfung starten.

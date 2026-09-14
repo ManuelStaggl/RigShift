@@ -1,3 +1,4 @@
+using RigShift.Core.Automation;
 using RigShift.Core.Settings;
 using Serilog.Core;
 using Shouldly;
@@ -31,6 +32,43 @@ public sealed class JsonSettingsStoreTests : IDisposable
         await store.SaveAsync(settings, Ct);
 
         (await store.LoadAsync(Ct)).ShouldBe(settings);
+    }
+
+    [Fact]
+    public async Task SaveThenLoad_RoundTripsAutomationRules()
+    {
+        var store = new JsonSettingsStore(File, Logger.None);
+        var rule = new AutomationRule
+        {
+            TemplateId = null,
+            ExecutablePath = @"C:\Games\MySim.exe",
+            ProfileId = Guid.NewGuid(),
+            OnExit = ExitAction.SwitchTo,
+            ExitProfileId = Guid.NewGuid(),
+            SkipConfirmation = true,
+            IsEnabled = false,
+        };
+
+        await store.SaveAsync(new AppSettings { AutomationRules = new List<AutomationRule> { rule }, AutomationPaused = true }, Ct);
+        AppSettings loaded = await store.LoadAsync(Ct);
+
+        loaded.AutomationPaused.ShouldBeTrue();
+        loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(rule);
+        (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldContain("\"switchTo\"", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task Load_RuleWithoutEnabledKey_IsEnabled()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "automationRules": [ { "templateId": "iracing", "onExit": "SwitchBack" } ] }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        AutomationRule rule = settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
+        rule.IsEnabled.ShouldBeTrue();
+        rule.OnExit.ShouldBe(ExitAction.SwitchBack);
+        settings.AutomationPaused.ShouldBeFalse();
     }
 
     [Fact]

@@ -1,0 +1,5 @@
+{
+  "id": "iracing",
+  "name": "iRacing",
+  "executables": ["iRacingSim64DX11.exe"]
+}

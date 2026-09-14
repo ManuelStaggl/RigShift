@@ -435,6 +435,24 @@ Bildschirm 3 s, per `NativeWindow.CenterOnRect` in physischen Pixeln mittig auf 
 Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-PC.
 6. Prozess-Trigger (WMI `Win32_ProcessStartTrace` oder ETW; Fallback Polling 2 s) + **Spiele-Vorlagen**
    (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1 – als JSON in `templates/`, per PR erweiterbar).
+   Festlegungen (Fragerunde 2026-09-14):
+   - **Nur Polling alle 2 s**, kein WMI: `Win32_ProcessStartTrace` braucht Adminrechte, zwei Wege wären doppelt zu
+     testen, und bis zu 2 s Verzögerung sind bei Sim-Titeln mit Ladebildschirm egal.
+   - Regel = Spiel (Vorlage **oder eigene EXE**) → Profil. Keine Auswahl aus laufenden Prozessen (Rauschen).
+     Vorlagen je Spiel eine Datei in `templates/games/`, eingebettet in Core; Tests prüfen jede Datei.
+   - **Spielende pro Regel wählbar**: im Profil bleiben / zurück zum vorigen Profil / auf Profil X. Gehandelt wird erst
+     nach 10 s ohne Prozess (Neustart ≠ Ende) und nur, solange das Profil der Regel noch aktiv ist – ein vom Nutzer
+     inzwischen gewähltes Profil wird nicht überschrieben.
+   - **Bestätigung pro Regel wählbar**: Einstellung wie bisher oder „ohne Bestätigung“.
+   - Beim ersten Abfragen laufende Spiele setzen nur die Ausgangslage (kein Umschalten beim App-Start neben
+     laufendem Spiel); ebenso eine neu angelegte oder auf ein anderes Spiel geänderte Regel.
+   - Regeln und „pausiert“ in `settings.json` (`automationRules`, `automationPaused`); Pausieren auf der Seite
+     „Automatik“ und im Tray-Menü (nur mit Regeln).
+   **Umgesetzt 2026-09-14**: `Core/Automation` (`AutomationRule`, `GameTemplates`, `ProcessNames`, `ProcessTrigger`),
+   `IProcessList` + `Windows/Apps/ProcessList`, `AutomationService` (DispatcherTimer, Abfrage im Thread-Pool, keine
+   Auswertung während eines Wechsels), `AutomationPage`. Unit-Tests belegen Start, Ausgangslage, Rückkehr nach
+   Verzögerung, Neustart, Nutzerwechsel, alle Ende-Aktionen, deaktivierte Regel, Vorlagen und Settings-Roundtrip.
+   **Nicht belegt:** echte Spiele und EXE-Namen (LMU, AC EVO aus Websuche) → Gaming-PC.
 
 **v1.2 – Automatik und Komfort**
 
