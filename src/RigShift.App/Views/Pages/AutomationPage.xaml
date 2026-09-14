@@ -48,11 +48,12 @@
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!-- Another rule watches the same device: both run when it connects (analysis finding C-05). -->
                 <ui:InfoBar
-                  Grid.Row="4"
+                  Grid.Row="5"
                   Grid.ColumnSpan="2"
                   Margin="0,4,0,0"
                   IsClosable="False"
@@ -63,7 +64,7 @@
 
                 <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
                 <StackPanel
-                  Grid.Row="3"
+                  Grid.Row="4"
                   Grid.ColumnSpan="2"
                   Margin="0,4,0,0"
                   Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
@@ -153,10 +154,21 @@
                   <CheckBox
                     Margin="0,0,0,12"
                     VerticalAlignment="Bottom"
-                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                    AutomationProperties.HelpText="{loc:Tr Automation_SkipConfirmationHint}"
                     Content="{loc:Tr Automation_SkipConfirmation}"
-                    IsChecked="{Binding SkipConfirmation}" />
+                    IsChecked="{Binding SkipConfirmation}"
+                    ToolTip="{loc:Tr Automation_SkipConfirmationHint}" />
                 </WrapPanel>
+
+                <!-- Without the countdown nothing reverts a dark display; say so where it is switched on (analysis finding I-12). -->
+                <TextBlock
+                  Grid.Row="3"
+                  Grid.ColumnSpan="2"
+                  Margin="0,0,0,4"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                  Text="{loc:Tr Automation_SkipConfirmationHint}"
+                  TextWrapping="Wrap"
+                  Visibility="{Binding SkipConfirmation, Converter={StaticResource BoolToVisibility}}" />
               </Grid>
             </ui:Card>
           </DataTemplate>

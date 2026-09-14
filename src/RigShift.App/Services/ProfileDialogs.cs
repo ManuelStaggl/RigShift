@@ -87,6 +87,22 @@ public sealed class ProfileDialogs
         return await box.ShowDialogAsync() == MessageBoxResult.Primary;
     }
 
+    /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
+    /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
+    public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName)
+    {
+        var box = new MessageBox
+        {
+            Title = Loc.Instance["Automation_DeleteTitle"],
+            Content = deviceName is null ? Loc.Instance["Automation_DeleteTextNoDevice"] : Loc.Format("Automation_DeleteText", deviceName),
+            PrimaryButtonText = Loc.Instance["Profile_Delete"],
+            PrimaryButtonAppearance = ControlAppearance.Danger,
+            CloseButtonText = Loc.Instance["Common_Cancel"],
+        };
+        SetOwner(box, ActiveWindow());
+        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+    }
+
     /// <summary>Asked when the editor closes with unsaved changes (analysis finding I-11). True: discard them.</summary>
     public static async Task<bool> ConfirmDiscardAsync(System.Windows.Window owner)
     {

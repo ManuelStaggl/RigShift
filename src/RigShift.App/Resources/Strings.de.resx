@@ -245,4 +245,8 @@
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows darf dieses Gerät abschalten</value></data>
   <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen – Pedale oder Wheelbase fallen dann während der Fahrt aus.</value></data>
   <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>So schaltest du es ab</value></data>
+  <data name="Automation_DeleteTitle" xml:space="preserve"><value>Regel löschen?</value></data>
+  <data name="Automation_DeleteText" xml:space="preserve"><value>Die Regel für „{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>Diese Regel wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>Die Regel schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt.</value></data>
 </root>

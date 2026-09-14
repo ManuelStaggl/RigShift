@@ -245,4 +245,8 @@
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows may turn this device off</value></data>
   <data name="Automation_PowerSavingText" xml:space="preserve"><value>USB power saving is on for this device. Windows may cut its power to save energy, and pedals or a wheelbase can then drop out while driving.</value></data>
   <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>How to turn it off</value></data>
+  <data name="Automation_DeleteTitle" xml:space="preserve"><value>Delete rule?</value></data>
+  <data name="Automation_DeleteText" xml:space="preserve"><value>The rule for “{0}” will be deleted. This cannot be undone.</value></data>
+  <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>This rule will be deleted. This cannot be undone.</value></data>
+  <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>The rule switches without asking. If a display stays dark, nothing is reverted automatically.</value></data>
 </root>

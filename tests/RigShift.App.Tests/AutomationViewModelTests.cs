@@ -51,6 +51,24 @@ public sealed class AutomationViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task DeleteRule_Cancelled_KeepsRule()
+    {
+        AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase));
+        string? askedFor = null;
+        viewModel.ConfirmDeleteRule = name =>
+        {
+            askedFor = name;
+            return Task.FromResult(false);
+        };
+
+        await viewModel.DeleteRuleCommand.ExecuteAsync(viewModel.Rules[0]);
+
+        askedFor.ShouldBe("Wheelbase");
+        viewModel.Rules.ShouldHaveSingleItem();
+        _host.Settings.Current.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
+    }
+
+    [Fact]
     public void NewRuleProfiles_WithDefaultProfile_EndsThereAndStartsWithAnother()
     {
         Profile desk = Profile("Desk", []);
@@ -95,7 +113,10 @@ public sealed class AutomationViewModelTests : IDisposable
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
         powerCheck.Check(Arg.Any<string>()).Returns(new UsbPowerFindings());
         var automation = new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, TimeProvider.System, Logger.None);
-        var viewModel = new AutomationViewModel(_host.Settings, _host.Catalog, automation, _host.Usb, powerCheck, Logger.None);
+        var viewModel = new AutomationViewModel(_host.Settings, _host.Catalog, automation, _host.Usb, powerCheck, Logger.None)
+        {
+            ConfirmDeleteRule = _ => Task.FromResult(true),
+        };
         viewModel.Load();
         return viewModel;
     }

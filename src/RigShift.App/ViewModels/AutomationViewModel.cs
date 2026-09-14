@@ -48,6 +48,9 @@ public sealed partial class AutomationViewModel : ObservableObject
         automation.Changed += (_, _) => Quietly(() => IsPaused = automation.IsPaused);
     }
 
+    /// <summary>Asks before a rule is deleted (analysis finding I-12); replaceable so tests run without a window.</summary>
+    internal Func<string?, Task<bool>> ConfirmDeleteRule { get; set; } = ProfileDialogs.ConfirmDeleteRuleAsync;
+
     public ObservableCollection<RuleCard> Rules { get; } = [];
 
     /// <summary>Connected USB devices, plus devices of rules that are not connected right now.</summary>
@@ -73,9 +76,10 @@ public sealed partial class AutomationViewModel : ObservableObject
 
     public bool HasError => ErrorMessage is not null;
 
-    public void Load() => Quietly(() =>
+    public void Load() => Rebuild(_automation.Rules);
+
+    private void Rebuild(IReadOnlyList<AutomationRule> rules) => Quietly(() =>
     {
-        IReadOnlyList<AutomationRule> rules = _automation.Rules;
         FillDevices(rules);
 
         ProfileChoices.Clear();
@@ -259,7 +263,7 @@ public sealed partial class AutomationViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteRuleAsync(RuleCard? card)
     {
-        if (card is null)
+        if (card is null || !await ConfirmDeleteRule(DeviceNameFor(card.DeviceId)))
         {
             return;
         }
