@@ -137,10 +137,7 @@ public sealed class TopologyPlanner
     {
         ArgumentNullException.ThrowIfNull(assignment);
 
-        double refresh = assignment.RefreshDenominator == 0
-            ? 0d
-            : (double)assignment.RefreshNumerator / assignment.RefreshDenominator;
-        double pixelRate = (double)assignment.Width * assignment.Height * refresh;
+        double pixelRate = (double)assignment.Width * assignment.Height * RefreshRate.Of(assignment).Hertz;
         return pixelRate > _options.DualHeadPixelRateThreshold ? 2 : 1;
     }
 

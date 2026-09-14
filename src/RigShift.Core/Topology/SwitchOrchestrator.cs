@@ -367,8 +367,7 @@ public sealed class SwitchOrchestrator
         return new ModeCheck(partial, SwitchNote.ModesFromDatabase, DisplaysDark: true);
     }
 
-    private static double Hertz(DisplayAssignment mode) =>
-        mode.RefreshDenominator == 0 ? 0d : (double)mode.RefreshNumerator / mode.RefreshDenominator;
+    private static double Hertz(DisplayAssignment mode) => RefreshRate.Of(mode).Hertz;
 
     /// <summary>
     /// FollowUp (PLAN 4.3): after a partial switch, a skipped optional display (spacedesk viewer) may appear later.

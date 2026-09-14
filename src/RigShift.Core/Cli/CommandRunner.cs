@@ -260,7 +260,7 @@ public sealed class CommandRunner
 
     private static string Describe(DisplayAssignment display)
     {
-        double hertz = display.RefreshDenominator == 0 ? 0 : (double)display.RefreshNumerator / display.RefreshDenominator;
+        double hertz = RefreshRate.Of(display).Hertz;
         return string.Create(CultureInfo.InvariantCulture,
             $"{NameOf(display)}: {display.Width}x{display.Height} @ {hertz:0.##} Hz at ({display.PositionX}, {display.PositionY}){(display.IsPrimary ? ", primary" : string.Empty)}");
     }

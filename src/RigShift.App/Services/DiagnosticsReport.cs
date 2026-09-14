@@ -116,7 +116,7 @@ public static partial class DiagnosticsReport
         text.Append(FormattableString.Invariant($"- {DisplayNames.Label(customName, display.Identity, "unnamed display")}: {state}"));
         if (display.ActiveMode is { } mode)
         {
-            double hertz = mode.RefreshDenominator == 0 ? 0 : (double)mode.RefreshNumerator / mode.RefreshDenominator;
+            double hertz = RefreshRate.Of(mode).Hertz;
             text.Append(FormattableString.Invariant(
                 $", {mode.Width}x{mode.Height} @ {hertz:0.##} Hz at ({mode.PositionX}, {mode.PositionY}){(mode.IsPrimary ? ", primary" : string.Empty)}"));
         }

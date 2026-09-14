@@ -47,7 +47,7 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
 
     private static string Describe(DisplayAssignment display)
     {
-        double hertz = display.RefreshDenominator == 0 ? 0 : (double)display.RefreshNumerator / display.RefreshDenominator;
+        double hertz = RefreshRate.Of(display).Hertz;
         string text = string.Create(Loc.Instance.Culture,
             $"{SwitchMessages.NameOf(display)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
         if (display.IsPrimary)
@@ -543,7 +543,7 @@ public sealed partial class DisplayCard : ObservableObject
             : Loc.Instance[display.IsAvailable ? "Displays_StateOff" : "Displays_StateNotReady"];
         DetailsText = Mode is { } mode
             ? state + " · " + Loc.Format("Displays_Mode", mode.Width, mode.Height,
-                (mode.RefreshDenominator == 0 ? 0 : (double)mode.RefreshNumerator / mode.RefreshDenominator).ToString("0.##", Loc.Instance.Culture))
+                RefreshRate.Of(mode).Hertz.ToString("0.##", Loc.Instance.Culture))
             : state;
     }
 
