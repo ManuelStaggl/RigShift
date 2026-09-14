@@ -341,6 +341,9 @@ Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, 
 **Reihenfolge nach 1.3.0 (entschieden 2026-09-14):** erst Hardware-Testrunde am Gaming-PC (Befunde → 1.3.x), dann
 eine vollständige Performance-, Last- und Zuverlässigkeitsanalyse (vom Nutzer gewünscht), dann v2. Begründung: die
 Analyse prüft den Stand, der wirklich läuft, mit echten Logs als Grundlage, und v2 baut auf einer geprüften Basis auf.
+**Geändert am selben Tag:** Analyse **vor** der Testrunde, weil der Nutzer länger nicht zu Hause ist und Probleme
+schon vorher behoben werden können. Ablauf: Analyse-Session (nur Analyse + Plan, Auftrag
+`docs/analysis/AUFTRAG-analyse-1.3.md`) → Umsetzungs-Session (Fixes, 1.3.1) → Hardware-Testrunde → v2.
 
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
 Releases nützlich)
