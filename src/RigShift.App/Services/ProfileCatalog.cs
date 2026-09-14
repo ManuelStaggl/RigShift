@@ -63,6 +63,10 @@ public sealed partial class ProfileCatalog : ObservableObject
     [ObservableProperty]
     public partial string? UnreadableFilesMessage { get; set; }
 
+    /// <summary>Empty-state text; rebuilt with the items, so it follows a language change (analysis finding I-13).</summary>
+    [ObservableProperty]
+    public partial string? EmptyMessage { get; set; }
+
     public IReadOnlyList<Profile> Profiles => _profiles;
 
     public Profile? Find(Guid id) => _profiles.FirstOrDefault(p => p.Id == id);
@@ -175,6 +179,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
 
         IsEmpty = Items.Count == 0;
+        EmptyMessage = Loc.Format("Profiles_EmptyText", ProfileDirectory);
         HasUnreadableFiles = _unreadable.Count > 0;
         UnreadableFilesMessage = HasUnreadableFiles
             ? Loc.Format("Profiles_UnreadableFiles", _unreadable.Count, string.Join(", ", _unreadable.Select(f => f.FileName)))

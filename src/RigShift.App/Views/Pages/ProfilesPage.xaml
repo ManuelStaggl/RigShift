@@ -45,7 +45,7 @@
       <ui:InfoBar
         Margin="0,0,0,16"
         Title="{loc:Tr Profiles_EmptyTitle}"
-        Message="{Binding EmptyMessage}"
+        Message="{Binding Catalog.EmptyMessage}"
         IsOpen="{Binding Catalog.IsEmpty}"
         IsClosable="False"
         Severity="Informational" />

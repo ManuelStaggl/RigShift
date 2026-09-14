@@ -113,8 +113,10 @@ Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffe
   UIA-Invoke-Muster, sind aber per Tastatur (Fokus + Enter) bedienbar. API-Namen aus den XML-Docs bzw. per
   `grep -a` in `Wpf.Ui.dll` prüfen (Symbol-Enums sind nicht dokumentiert).
 - Sprache: `CultureInfo.CurrentUICulture` in einer async-Methode zu setzen wirkt nach dem `await` beim Aufrufer
-  nicht mehr (Kultur fließt mit dem ExecutionContext). `Loc` hält die Kultur deshalb selbst (`Loc.Instance.Culture`);
-  Formatierung im UI-Code immer damit, nicht mit `CurrentCulture`.
+  nicht mehr (Kultur fließt mit dem ExecutionContext). `Loc` hält die Sprache deshalb selbst (`Loc.Instance.UICulture`
+  für Texte); `Loc.Instance.Culture` ist die Windows-Regionalformatkultur und bleibt beim Sprachwechsel gleich (J-02) –
+  Formatierung im UI-Code immer damit. Im Code gebaute Texte brauchen einen `Loc.PropertyChanged`-Handler, sonst bleiben
+  sie nach dem Sprachwechsel in der alten Sprache stehen (I-13).
 - `App.Exit()` kollidiert mit `Application.Exit` (CS0108) und `Exit` als Interface-Member mit CA1716 → `Quit()`.
 - Dieser Server läuft per RDP: der Snapshot zeigt nur die RDP-Indirect-Display, Audio hat 0 Endpunkte.
   Apply und Audio-Umschalten sind hier nicht prüfbar (→ M5 am Gaming-PC).

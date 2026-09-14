@@ -28,10 +28,9 @@
   <data name="Tray_Open" xml:space="preserve"><value>RigShift öffnen</value></data>
   <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
-  <data name="Tray_Switching" xml:space="preserve"><value>Schalte um …</value></data>
+  <data name="Tray_Switching" xml:space="preserve"><value>Wechsle …</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
-  <data name="Tray_Active" xml:space="preserve"><value>Aktiv: {0}</value></data>
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anzeigeeinstellungen beibehalten?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
   <data name="Confirm_Hint" xml:space="preserve"><value>Enter behält die neuen Einstellungen. Esc setzt zurück – von jedem Bildschirm aus.</value></data>
@@ -49,7 +48,7 @@
   <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details stehen im Log.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>Die vorherigen Bildschirme sind wiederhergestellt.</value></data>
-  <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden – manche bleiben eventuell dunkel. Erneut ein Profil wählen oder Win+P verwenden.</value></data>
+  <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden – manche bleiben eventuell dunkel. Wähle erneut ein Profil oder drücke Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>Die gespeicherte Auflösung ging nicht; Windows hat die Anzeigemodi gewählt.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>Es läuft bereits ein Wechsel.</value></data>
   <data name="Update_Ready" xml:space="preserve"><value>Version {0} ist bereit und wird beim nächsten Start von RigShift installiert.</value></data>
@@ -89,7 +88,7 @@
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung speichern</value></data>
-  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern…</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern …</value></data>
   <data name="Profile_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="Profile_More" xml:space="preserve"><value>Weitere Aktionen</value></data>
   <data name="Profile_Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
@@ -144,20 +143,20 @@
   <data name="Audio_SameAsRecording" xml:space="preserve"><value>Wie Aufnahme</value></data>
   <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Audio_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht gefunden)</value></data>
-  <data name="Problem_NameMissing" xml:space="preserve"><value>Bitte einen Namen eingeben.</value></data>
+  <data name="Problem_NameMissing" xml:space="preserve"><value>Gib einen Namen ein.</value></data>
   <data name="Problem_NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 60 Zeichen lang sein.</value></data>
   <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
   <data name="Problem_NoDisplays" xml:space="preserve"><value>Das Profil braucht mindestens einen Bildschirm.</value></data>
-  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Bitte eine Hauptanzeige wählen.</value></data>
+  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Wähle eine Hauptanzeige.</value></data>
   <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>Die Hauptanzeige kann nicht optional sein.</value></data>
   <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
-  <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Bitte ein anderes wählen.</value></data>
+  <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
-  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Hier klicken und Tastenkombination drücken</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Klicke hier und drücke eine Tastenkombination</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft. Strg, Alt oder Win zusammen mit einer weiteren Taste.</value></data>
-  <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Zusätzlich Strg, Alt oder Win halten.</value></data>
+  <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Halte zusätzlich Strg, Alt oder Win.</value></data>
   <data name="Hotkey_Failed" xml:space="preserve"><value>Eine andere App belegt das Tastenkürzel dieser Profile, es funktioniert daher nicht: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Strg</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Umschalt</value></data>
@@ -179,7 +178,7 @@
   <data name="App_Wait" xml:space="preserve"><value>Danach warten (Sekunden)</value></data>
   <data name="App_Remove" xml:space="preserve"><value>App entfernen</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*</value></data>
-  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Bitte für jede App ein Programm wählen.</value></data>
+  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App ein Programm.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
   <data name="Nav_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Über &amp; Hilfe</value></data>
@@ -195,11 +194,11 @@
   <data name="Displays_InProfiles" xml:space="preserve"><value>In Profilen: {0}</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Noch in keinem Profil</value></data>
   <data name="About_Troubleshooting" xml:space="preserve"><value>Fehlersuche</value></data>
-  <data name="About_History" xml:space="preserve"><value>Letzte Umschaltungen</value></data>
-  <data name="About_NoHistory" xml:space="preserve"><value>Seit dem Start von RigShift noch keine Umschaltung.</value></data>
+  <data name="About_History" xml:space="preserve"><value>Letzte Wechsel</value></data>
+  <data name="About_NoHistory" xml:space="preserve"><value>Seit dem Start von RigShift noch kein Wechsel.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Diagnose-Infos kopieren</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Er enthält Version, Bildschirme mit Gerätepfaden, Namen der Audiogeräte, Profile und die letzten Umschaltungen – keine Audio-Geräte-IDs, und dein Benutzername in Pfaden wird ersetzt. Die Protokolldateien sind nicht anonymisiert: Sie enthalten Pfade mit deinem Benutzernamen und Audio-Geräte-IDs – sieh sie durch, bevor du eine anhängst.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Er enthält Version, Bildschirme mit Gerätepfaden, Namen der Audiogeräte, Profile und die letzten Wechsel – keine Audio-Geräte-IDs, und dein Benutzername in Pfaden wird ersetzt. Die Protokolldateien sind nicht anonymisiert: Sie enthalten Pfade mit deinem Benutzernamen und Audio-Geräte-IDs – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>

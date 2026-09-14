@@ -45,6 +45,15 @@ public partial class DisplaysPage : Page
         DataContext = viewModel;
         InitializeComponent();
         Loaded += (_, _) => viewModel.RefreshCommand.Execute(null);
+
+        // The cards' state and "in profiles" texts are built in code; rebuild them on a language change (I-13).
+        Localization.Loc.Instance.PropertyChanged += (_, _) =>
+        {
+            if (IsLoaded)
+            {
+                viewModel.RefreshCommand.Execute(null);
+            }
+        };
     }
 
     private async void OnNameLostFocus(object sender, RoutedEventArgs e)

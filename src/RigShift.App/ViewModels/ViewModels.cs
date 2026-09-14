@@ -135,8 +135,6 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
 
     public SwitchCoordinator Coordinator => coordinator;
 
-    public string EmptyMessage => Loc.Format("Profiles_EmptyText", catalog.ProfileDirectory);
-
     [ObservableProperty]
     public partial string? StatusMessage { get; set; }
 
@@ -293,6 +291,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settings = settings;
         _catalog = catalog;
         _log = log.ForContext<SettingsViewModel>();
+
+        // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
+        Loc.Instance.PropertyChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ConfirmHint));
+            Load();
+        };
     }
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
@@ -606,6 +611,15 @@ public sealed partial class AboutViewModel : ObservableObject
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
         _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoHistory));
         RefreshUpdateStatus();
+
+        // Version, update status and the history rows are built in code; re-read them on a language change (I-13).
+        Loc.Instance.PropertyChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(VersionText));
+            RefreshUpdateStatus();
+            CopyStatus = null;
+            System.Windows.Data.CollectionViewSource.GetDefaultView(History).Refresh();
+        };
     }
 
     public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);

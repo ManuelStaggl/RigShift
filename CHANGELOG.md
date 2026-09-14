@@ -93,6 +93,9 @@ All notable changes to this project are documented here. The format follows
   to do nothing.
 - Keyboard shortcuts show key names as your keyboard layout calls them, e.g. "Alt+," or "Ctrl+Alt+Page Up" instead of
   "OemComma" or "Prior".
+- Switching the language in Settings now also updates texts that stayed in the old language until a restart (hints,
+  update status, recent switches, the Displays page), and dates and numbers keep your Windows regional format.
+- German texts use one wording throughout ("Wechsel", addressing you directly) and consistent ellipses.
 
 ## [1.3.1] - 2026-09-14
 
