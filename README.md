@@ -39,6 +39,7 @@ Beyond that, RigShift is designed to be boring in the good way:
   RigShift rolls back to the previous one.
 - **Audio included:** playback, recording and communications devices plus volume per profile.
 - **Apps per profile:** start SimHub or Crew Chief and close Discord once the switch is confirmed.
+- **Your names for monitors** ("Left · CM27X3") everywhere, and **Identify** shows which screen is which.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
 - **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
 - **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
@@ -63,8 +64,9 @@ RigShift is not code-signed yet, so Windows SmartScreen may say *"Windows protec
 **More info → Run anyway**. Signing is planned (see roadmap).
 
 **Updates** install themselves: RigShift checks GitHub at startup and once a day, downloads a new version in the
-background and installs it the next time it starts. **Settings** show the version and what is new, and let you
-check for updates, install one right away, or turn automatic installation off so RigShift only reports new versions.
+background and installs it the next time it starts. **About & help** shows the version and what is new and lets you
+check for updates or install one right away; in **Settings** you can turn automatic installation off so RigShift only
+reports new versions.
 
 Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when you uninstall.
 
@@ -141,8 +143,9 @@ RigShift focuses on the atomic switch, robustness on real hardware and sim-racin
 
 ## Contributing
 
-Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). Please attach the log from
-`%AppData%\RigShift\logs` to bug reports (it contains display device paths, nothing else personal).
+Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). For bug reports, use
+**About & help → Copy diagnostic info** and attach the log from `%AppData%\RigShift\logs` (both contain display device
+paths, nothing else personal).
 
 ## License
 
