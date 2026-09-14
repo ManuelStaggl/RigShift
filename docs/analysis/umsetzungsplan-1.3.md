@@ -234,18 +234,18 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | erledigt; „section 10, M4“-Verweise sind korrekt (Abschnitt 10 = „Entschieden in M4“), nur zwei statt vier – unverändert; Probe-Usage-Kommentar nachgezogen | 06eb33d, (Release-Commit) |
 | 1.10 Release 1.3.1 | M-01, M-04 | erledigt (M-04 erlaubt ±1 Tag Abweichung zwischen Überschrift und UTC) | b951d58, Tag v1.3.1 |
 | 2 Apps-Nachlauf außerhalb des Gates | B-03 | erledigt; **Abweichungen:** `AppsOutcome.Pending/Cancelled`, `SwitchResult.AppsCompletion` + `SwitchCoordinator.AppsCompleted` (zweiter Toast nur bei unvollständigen Apps/fehlendem Gerät); Abbruch im Orchestrator (`CancelPendingAppsAsync`); CLI `apply` wartet nicht mehr auf Apps; `StopAsync` bricht Apps ab | 571ca3f |
-| 2 Fensterrettung robust | B-04, B-14, B-12 | offen (Testrunde) | |
+| 2 Fensterrettung robust | B-04, B-14, B-12 | Code erledigt, Beleg in der Testrunde (Tests 8, 10); zusätzlich 250-ms-Probe per `SendMessageTimeout(WM_NULL)`; Rettung nach Bestätigung, nach Nachholen und nach Wiederherstellung; HDR-Wiederholung im Orchestrator (sonst kostet jede Abfrage ohne HDR 1 s) | 471eb2e, 773463b |
 | 2 Zeitbudget und Zwillinge | B-09, B-10, B-11 | erledigt; B-10 greift nur innerhalb des Profils (Zwilling außerhalb des Profils ist vom Portwechsel nicht unterscheidbar); B-11: dunkler Bildschirm → `AppliedPartially`, `ModesFromDatabase` nur bei echter Modus-Abweichung (auch beim Nachholen) | aeb7620, 571ca3f |
 | 2 Dry-Run ohne Gate | B-13 | erledigt; gilt auch für CLI `apply --dry-run` | 571ca3f |
-| 2 Stromspar-Prüfung | C-04, N-06 | offen (Testrunde) | |
+| 2 Stromspar-Prüfung | C-04, N-06 | Code erledigt, Beleg in der Testrunde (Test 7): welches WDF-Flag beim Häkchen kippt, ist offen; `byte[]{1,1}` gilt als „aus“ (Zahl 257); Liste nicht lesbar → alle Instanzen mit Warning | 80f204a |
 | 2 Automatik-Kleinkram | C-05, C-06, A-07 | erledigt; `SetPausedAsync` meldet Fehler an die Seite und stellt den Schalter zurück | 6d57df3, 4e8566a, 5e87c42, 571ca3f |
 | 2 Umschalt-Feedback im Fenster | I-04, I-07 | offen | |
 | 2 Tray-Popup, Editor, Dialoge | I-05, I-09, I-10, I-11, I-12, I-15, I-16 | offen | |
 | 2 Sprache und Texte | I-13, I-14, I-17, J-01, J-02, J-03 | offen | |
-| 2 Interop-Kleinkram | G-01, G-02, G-03, G-04, H-04, H-05 | offen (G-02 Testrunde) | |
+| 2 Interop-Kleinkram | G-01, G-02, G-03, G-04, H-04, H-05 | erledigt (G-02, H-05, G-03 mit Admin-App: Beleg in der Testrunde); G-02: Fehler von `SET_HDR_STATE` wird zurückgegeben statt still auszuweichen; G-03 gilt auch für `IsRunning`; H-05: Hinweis stand schon auf der Seite, Text ergänzt, Benutzerordner in Pfaden des Berichts ersetzt | e02387a, bd1ff9e, be32930, 5c3f88d, ab7454e, d39e4db |
 | 2 Aufräumen | A-01, A-02, A-04, A-05, A-08, K-05, L-05, M-02, M-03 | offen | |
 | 2 Struktur | A-03 | offen | |
 | 2 Windows-Schicht-Fixture | L-04 | offen (Rohdaten aus Testrunde) | |
-| 2 SECURITY.md | H-03 | offen | |
+| 2 SECURITY.md | H-03 | erledigt (Datei gab es schon, Abschnitt Update-Kette ergänzt) | 785c5c1 |
 | 2 Nutzerbefund Testrunde 2026-09-14: Mausrad scrollt nur am rechten Rand, Release-Notes unförmig, Update-Knöpfe mittig neben dem Text | T-01, T-02, T-03 | offen | |
 | Nutzerfragen beantwortet und umgesetzt | D-02, O-01…O-08, A-09, C-07, C-08, F-06, F-07, D-03, I-18 | offen | |
