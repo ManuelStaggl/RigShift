@@ -2,6 +2,8 @@
 
 Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned · ❌ dropped
 
+RigShift is meant to stay small: switch into the rig and back, reliably.
+
 ## v1.0 – replace the script, small and stable
 
 | Milestone | Status | Scope |
@@ -14,24 +16,31 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 | M5 Hardware validation | 🟢 | Desk ↔ rig, sleeping HDMI monitor (error 31), missing spacedesk + follow-up, rollback on no confirmation |
 | M6 Release 1.0 | 🟢 | Velopack package, release workflow, README with screenshots, changelog |
 
-## v1.1 – triggering and control
+## v1.1 / v1.2 – triggering and control
 
 - 🟢 Global hotkeys per profile (1.2.0)
 - 🟢 `rigshift://apply/<name>` URI scheme (1.2.0)
 - 🟢 Recording device and separate communications role per profile (1.0)
-- 🟡 Volume per profile (playback and recording)
-- 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …)
-- ❌ Process triggers with game templates – dropped: the switch comes too late, while the game is already starting
 
-## v1.2 – automation and comfort
+## v1.3 – getting into the rig
 
-- 🟡 USB device triggers (wheelbase, headset dongle)
-- 🟡 Keep awake per profile: no sleep, screen saver or display timeout (focus assist and game mode dropped: no
-  official API, and Windows handles both for full-screen games)
-- ❌ Power plan per profile – dropped: no demand
-- 🟡 HDR and refresh rate per display (night light dropped: only an undocumented registry value)
-- ❌ Local HTTP API for scripts, SimHub, Stream Deck – dropped: no demand; the CLI and `rigshift://` links cover scripts
-- ❌ Home Assistant via MQTT discovery – dropped: no demand
+- 🟢 Volume per profile (playback and recording)
+- 🟢 Launch / stop apps per profile (SimHub, Crew Chief, …), optionally after a USB device is detected
+- 🟢 USB device triggers (wheelbase, headset dongle) with a delay per rule before switching back
+- 🟢 Keep awake per profile: no sleep, screen saver or display timeout
+- 🟢 HDR and refresh rate per display
+- 🟢 Windows left on switched-off screens move to the main screen
+- 🟢 Warning when Windows may power down a USB trigger device
+- 🟢 Game sound stays loud during calls (Windows communications ducking off per profile)
+- 🟢 Custom monitor names, Displays and About & help pages
+
+Dropped after a scope review (the tool should stay small):
+
+- ❌ Process triggers with game templates – the switch came too late, while the game was already starting
+- ❌ Power plan per profile – no demand
+- ❌ Local HTTP API – no demand; the CLI, hotkeys and `rigshift://` links cover scripts and Stream Deck
+- ❌ Home Assistant via MQTT discovery – no demand
+- ❌ Focus assist, game mode, night light – no official API
 
 ## v2 – community
 

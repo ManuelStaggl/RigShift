@@ -61,7 +61,9 @@ Made for getting into the rig:
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Profile editor with displays, audio devices and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Profile editor** – displays, audio devices with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
+| **Profile editor** – displays with refresh rate and HDR, audio with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
+| <img alt="Automation page with a wheelbase rule" src="docs/screenshots/automation-dark.png" width="400"> | |
+| **Automation** – switch to the rig when the wheelbase turns on, and back when it is off. | |
 | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="About and help page" src="docs/screenshots/about-dark.png" width="400"> |
 | **Displays** – every connected monitor, your own names, Identify. | **About & help** – version, updates, recent switches, diagnostic info. |
 
