@@ -3,10 +3,10 @@ using System.Security;
 using RigShift.App.Services;
 using RigShift.Core.Cli;
 using RigShift.Core.Settings;
-using Serilog;
-using Serilog.Core;
 using RigShift.Windows.Shell;
 using RigShift.Windows.Startup;
+using Serilog;
+using Serilog.Core;
 using Velopack;
 
 namespace RigShift.App;

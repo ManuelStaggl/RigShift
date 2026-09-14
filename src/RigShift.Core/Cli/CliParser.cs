@@ -115,13 +115,13 @@ public static class CliParser
         };
 
         request = chosen == apply ? request with
-            {
-                Command = CliCommand.Apply,
-                ProfileName = parsed.GetValue(applyName),
-                NoConfirm = parsed.GetValue(noConfirm),
-                DryRun = parsed.GetValue(dryRun),
-                FromLink = parsed.GetValue(fromLink),
-            }
+        {
+            Command = CliCommand.Apply,
+            ProfileName = parsed.GetValue(applyName),
+            NoConfirm = parsed.GetValue(noConfirm),
+            DryRun = parsed.GetValue(dryRun),
+            FromLink = parsed.GetValue(fromLink),
+        }
             : chosen == save ? request with { Command = CliCommand.Save, ProfileName = parsed.GetValue(saveName) }
             : chosen == list ? request with { Command = CliCommand.List }
             : chosen == status ? request with { Command = CliCommand.Status }

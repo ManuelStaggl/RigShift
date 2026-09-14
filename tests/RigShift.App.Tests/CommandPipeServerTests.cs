@@ -1,15 +1,15 @@
 using System.Collections.Concurrent;
 using System.IO.Pipes;
 using NSubstitute;
-using Serilog;
-using Serilog.Events;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Ipc;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Shouldly;
 using Xunit;
 using static RigShift.Core.Tests.TestDisplays;
