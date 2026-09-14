@@ -1,6 +1,6 @@
 # Roadmap
 
-Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned · ❌ dropped
+Status legend: 🟢 released · ⚪ planned · ❌ dropped
 
 RigShift is meant to stay small: switch into the rig and back, reliably.
 
@@ -27,12 +27,12 @@ RigShift is meant to stay small: switch into the rig and back, reliably.
 - 🟢 Volume per profile (playback and recording)
 - 🟢 Launch / stop apps per profile (SimHub, Crew Chief, …), optionally after a USB device is detected
 - 🟢 USB device triggers (wheelbase, headset dongle) with a delay per rule before switching back
-- 🟡 Keep awake per profile: no sleep, screen saver or display timeout
-- 🟡 HDR and refresh rate per display – HDR over HDMI froze the graphics driver of the test PC, also from the Windows
+- 🟢 Keep awake per profile: no sleep, screen saver or display timeout
+- 🟢 HDR and refresh rate per display – HDR over HDMI froze the graphics driver of the test PC, also from the Windows
   settings; 1.4.1 guards the call
 - 🟢 Windows left on switched-off screens move to the main screen
 - 🟢 Warning when Windows may power down a USB trigger device
-- 🟡 Game sound stays loud during calls (Windows communications ducking off per profile)
+- 🟢 Game sound stays loud during calls (Windows communications ducking off per profile)
 - 🟢 Custom monitor names, Displays and About & help pages
 
 ## v1.4 – polish after the first hardware round
@@ -40,11 +40,11 @@ RigShift is meant to stay small: switch into the rig and back, reliably.
 - 🟢 Automation rules with several USB devices and custom device names (1.4.0)
 - 🟢 Apps start after the switch; hotkeys and automation keep working while they wait for their device (1.4.0)
 - 🟢 Diagnostic info without user name and full device paths (1.4.0, 1.4.1)
-- 🟡 Ask to switch on a monitor that is off and wait for it (1.4.1)
-- 🟡 Known USB devices and refresh rates stay selectable while the device or display is off (1.4.1)
-- 🟡 Display numbers as in the Windows settings (1.5.0)
-- 🟡 App picker with installed and running programs instead of a file dialog (1.5.0)
-- 🟡 Offer to apply audio and apps when Windows itself restores a profile's display layout (1.5.0)
+- 🟢 Ask to switch on a monitor that is off and wait for it (1.4.1)
+- 🟢 Known USB devices and refresh rates stay selectable while the device or display is off (1.4.1)
+- 🟢 Display numbers as in the Windows settings (1.5.0)
+- 🟢 App picker with installed and running programs instead of a file dialog (1.5.0)
+- 🟢 Offer to apply audio and apps when Windows itself restores a profile's display layout (1.5.0)
 
 Dropped after a scope review (the tool should stay small):
 
