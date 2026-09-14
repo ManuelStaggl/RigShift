@@ -34,8 +34,15 @@ All notable changes to this project are documented here. The format follows
   buttons wrap instead of overlapping or being cut off. Long profile names end with "…"; names can be 60 characters at
   most.
 
+### Security
+
+- Links always ask for confirmation now: a `rigshift://apply/…` link no longer switches without asking when "Confirm
+  after switching" is off or the profile's timeout is 0 (it waits at least 15 s for your answer).
+
 ### Changed
 
+- Uninstalling RigShift removes its autostart entry, so Windows no longer tries to start a deleted program at sign-in.
+  Your profiles and settings in `%AppData%\RigShift` stay.
 - The log now records every automation decision (device connected, gone, back, end action skipped and why).
 - The log records how long a switch and each of its steps took (display attempts, audio, HDR, apps, moving windows)
   and when a switch was confirmed. Update installation steps are logged too, a day's log file starts anew at 50 MB,

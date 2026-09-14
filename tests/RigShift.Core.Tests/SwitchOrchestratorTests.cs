@@ -413,6 +413,22 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_FromLink_TimeoutZero_StillConfirms()
+    {
+        // Analysis finding H-02: a web page must not switch without asking, even with confirmation turned off.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirmSeconds: 0),
+            new SwitchRequest { FromLink = true, SkipConfirmation = true, DefaultConfirmTimeoutSeconds = 0 },
+            Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        await _confirmation.Received(1).ConfirmAsync(Arg.Any<Profile>(), SwitchOptions.DefaultConfirmTimeout, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Switch_SetsPlaybackForAllRoles()
     {
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);

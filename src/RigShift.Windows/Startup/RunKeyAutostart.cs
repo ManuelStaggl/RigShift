@@ -43,8 +43,16 @@ public sealed class RunKeyAutostart : IAutostart
         }
         else
         {
-            key.DeleteValue(ValueName, throwOnMissingValue: false);
-            _log.Information("Autostart disabled");
+            Disable(_log);
         }
+    }
+
+    /// <summary>Removes the autostart entry, e.g. before uninstalling, so it does not point at a deleted executable.</summary>
+    public static void Disable(ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+        key?.DeleteValue(ValueName, throwOnMissingValue: false);
+        log.ForContext<RunKeyAutostart>().Information("Autostart disabled");
     }
 }

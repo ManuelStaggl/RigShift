@@ -2,12 +2,15 @@ namespace RigShift.Core.Cli;
 
 /// <summary>
 /// The <c>rigshift://apply/&lt;name&gt;</c> link (docs/PLAN.md, section 6): Windows starts <c>RigShift.exe "&lt;uri&gt;"</c>,
-/// which becomes <c>apply &lt;name&gt;</c> with the usual confirmation. Only <c>apply</c> exists – a link on a web page
-/// must not be able to save or change profiles.
+/// which becomes <c>apply &lt;name&gt; --from-link</c>. Only <c>apply</c> exists – a link on a web page must not be able
+/// to save or change profiles – and it always asks for confirmation, even when confirmation is turned off.
 /// </summary>
 public static class RigShiftUri
 {
     public const string Scheme = "rigshift";
+
+    /// <summary>Hidden <c>apply</c> option marking a link; travels with the arguments over the pipe.</summary>
+    public const string FromLinkOption = "--from-link";
 
     public static bool IsUri(string argument)
     {
@@ -29,6 +32,6 @@ public static class RigShiftUri
         }
 
         string name = Uri.UnescapeDataString(parsed.AbsolutePath.Trim('/')).Trim();
-        return name.Length == 0 || name.Contains('/', StringComparison.Ordinal) ? null : ["apply", name];
+        return name.Length == 0 || name.Contains('/', StringComparison.Ordinal) ? null : ["apply", name, FromLinkOption];
     }
 }

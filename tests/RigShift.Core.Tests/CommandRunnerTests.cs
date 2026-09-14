@@ -94,12 +94,12 @@ public sealed class CommandRunnerTests
             .Returns(call => new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = EmptyPlan(call.Arg<Profile>()) });
 
         CliResponse response = await Runner(_switcher).RunAsync(
-            Apply("Rig") with { NoConfirm = true, DryRun = true }, CancellationToken.None);
+            Apply("Rig") with { NoConfirm = true, DryRun = true, FromLink = true }, CancellationToken.None);
 
         response.Output.ShouldBe("Rig: ready");
         await _switcher.Received(1).SwitchAsync(
             Arg.Is<Profile>(p => p.Name == "Rig"),
-            Arg.Is<SwitchRequest>(r => r.SkipConfirmation && r.DryRun),
+            Arg.Is<SwitchRequest>(r => r.SkipConfirmation && r.DryRun && r.FromLink),
             Arg.Any<CancellationToken>());
     }
 

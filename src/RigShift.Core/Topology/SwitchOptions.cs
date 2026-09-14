@@ -4,6 +4,12 @@ namespace RigShift.Core.Topology;
 public sealed record SwitchOptions
 {
     /// <summary>
+    /// Confirmation timeout when nothing else sets one, and the minimum for switches from a <c>rigshift://</c> link,
+    /// which always ask (analysis finding H-02).
+    /// </summary>
+    public static TimeSpan DefaultConfirmTimeout { get; } = TimeSpan.FromSeconds(15);
+
+    /// <summary>
     /// How long to wait for targets that are attached but not ready (sleeping HDMI monitor, error 31).
     /// Observed on real hardware: the same call succeeded about 20 seconds after the first failure.
     /// </summary>
@@ -39,6 +45,12 @@ public sealed record SwitchRequest
     /// <summary>Skip the keep-or-revert confirmation even if the profile asks for it.</summary>
     public bool SkipConfirmation { get; init; }
 
+    /// <summary>
+    /// The switch came from a <c>rigshift://</c> link, i.e. possibly from a web page: it always asks for confirmation,
+    /// regardless of <see cref="SkipConfirmation"/> and a timeout of 0.
+    /// </summary>
+    public bool FromLink { get; init; }
+
     /// <summary>Confirmation timeout for profiles that do not set their own (application setting).</summary>
-    public int DefaultConfirmTimeoutSeconds { get; init; } = 15;
+    public int DefaultConfirmTimeoutSeconds { get; init; } = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
 }

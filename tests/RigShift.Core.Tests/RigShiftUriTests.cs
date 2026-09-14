@@ -13,7 +13,7 @@ public sealed class RigShiftUriTests
     [InlineData("rigshift://apply/Schreibtisch%20%C3%BC", "Schreibtisch ü")]
     public void ToArguments_ApplyLink_BecomesApplyCommand(string uri, string name)
     {
-        RigShiftUri.ToArguments(uri).ShouldBe(["apply", name]);
+        RigShiftUri.ToArguments(uri).ShouldBe(["apply", name, "--from-link"]);
     }
 
     [Theory]
@@ -38,6 +38,7 @@ public sealed class RigShiftUriTests
         request.Command.ShouldBe(CliCommand.Apply);
         request.ProfileName.ShouldBe("Sim Rig");
         request.NoConfirm.ShouldBeFalse();
+        request.FromLink.ShouldBeTrue();
     }
 
     [Theory]

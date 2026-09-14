@@ -130,7 +130,7 @@ public sealed class CommandRunner
             return new CliResponse(CliExitCodes.Failed, "Switching needs the RigShift app, which is not running.");
         }
 
-        var switchRequest = new SwitchRequest { DryRun = request.DryRun, SkipConfirmation = request.NoConfirm };
+        var switchRequest = new SwitchRequest { DryRun = request.DryRun, SkipConfirmation = request.NoConfirm, FromLink = request.FromLink };
         if (await _switcher.SwitchAsync(profile, switchRequest, cancellationToken) is not { } result)
         {
             return new CliResponse(CliExitCodes.Failed, "Another switch is running. Try again when it has finished.");

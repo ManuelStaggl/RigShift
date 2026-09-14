@@ -93,8 +93,8 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(request);
 
         long started = _time.GetTimestamp();
-        _log.Information("Switching to profile {Profile} (dry run: {DryRun}, skip confirmation: {SkipConfirmation})",
-            profile.Name, request.DryRun, request.SkipConfirmation);
+        _log.Information("Switching to profile {Profile} (dry run: {DryRun}, skip confirmation: {SkipConfirmation}, from link: {FromLink})",
+            profile.Name, request.DryRun, request.SkipConfirmation, request.FromLink);
 
         DisplaySnapshot before = await _display.QueryAsync(cancellationToken);
         TopologyPlan plan = _planner.Plan(profile, before);
@@ -114,7 +114,13 @@ public sealed class SwitchOrchestrator
         }
 
         int confirmSeconds = profile.ConfirmTimeoutSeconds ?? request.DefaultConfirmTimeoutSeconds;
-        bool confirm = confirmSeconds > 0 && !request.SkipConfirmation;
+        // A link may come from a web page: it always asks, at least with the default timeout (analysis finding H-02).
+        bool confirm = request.FromLink || (confirmSeconds > 0 && !request.SkipConfirmation);
+        if (request.FromLink && confirmSeconds <= 0)
+        {
+            confirmSeconds = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
+        }
+
         AudioRestore audioRestore = confirm
             ? await CaptureAudioAsync(profile.Audio, cancellationToken)
             : AudioRestore.Nothing;

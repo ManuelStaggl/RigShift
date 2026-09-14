@@ -80,7 +80,8 @@ RigShift is a free hobby project and not code-signed, so Windows SmartScreen may
 Click **More info → Run anyway**.
 
 Updates install themselves the next time RigShift starts; you can turn that off in **Settings**. Profiles, settings
-and logs live in `%AppData%\RigShift` and are kept when you uninstall.
+and logs live in `%AppData%\RigShift` and are kept when you uninstall; uninstalling removes the autostart entry and
+the `rigshift://` link handler.
 
 ## Stream Deck and button boxes
 
@@ -88,7 +89,8 @@ No plugin needed:
 
 - **Hotkey:** give the profile a keyboard shortcut and use the Stream Deck *Hotkey* action or a button box key.
   Fastest option.
-- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig` (always asks for confirmation).
+- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig`. A link always asks for confirmation,
+  even when "Confirm after switching" is off or the profile's timeout is 0, because any web page can open one.
 - **Shortcut:** **⋯ → Create desktop shortcut** on a profile and point a Stream Deck *Open* action at it.
 
 ## Command line

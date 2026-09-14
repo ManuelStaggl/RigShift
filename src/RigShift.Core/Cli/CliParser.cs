@@ -24,6 +24,12 @@ public sealed record CliRequest
 
     public bool DryRun { get; init; }
 
+    /// <summary>
+    /// Set by <see cref="RigShiftUri"/> through the hidden <c>--from-link</c> option, so it survives the pipe to the
+    /// running app: the switch always asks for confirmation.
+    /// </summary>
+    public bool FromLink { get; init; }
+
     /// <summary>Start in the tray without opening the main window (autostart, CLI launch).</summary>
     public bool Minimized { get; init; }
 
@@ -74,7 +80,8 @@ public static class CliParser
         var applyName = new Argument<string>("name") { Description = "Profile name (not case-sensitive)." };
         var noConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new arrangement without asking." };
         var dryRun = new Option<bool>("--dry-run") { Description = "Check the profile against the connected displays without switching." };
-        var apply = new Command("apply", "Switch to a profile.") { applyName, noConfirm, dryRun };
+        var fromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
+        var apply = new Command("apply", "Switch to a profile.") { applyName, noConfirm, dryRun, fromLink };
 
         var saveName = new Argument<string>("name") { Description = "Profile name. An existing profile with this name is updated." };
         var save = new Command("save", "Save the current display arrangement and default audio device as a profile.") { saveName };
@@ -113,6 +120,7 @@ public static class CliParser
                 ProfileName = parsed.GetValue(applyName),
                 NoConfirm = parsed.GetValue(noConfirm),
                 DryRun = parsed.GetValue(dryRun),
+                FromLink = parsed.GetValue(fromLink),
             }
             : chosen == save ? request with { Command = CliCommand.Save, ProfileName = parsed.GetValue(saveName) }
             : chosen == list ? request with { Command = CliCommand.List }

@@ -1,9 +1,12 @@
+using System.IO;
+using System.Security;
 using RigShift.App.Services;
 using RigShift.Core.Cli;
 using RigShift.Core.Settings;
 using Serilog;
 using Serilog.Core;
 using RigShift.Windows.Shell;
+using RigShift.Windows.Startup;
 using Velopack;
 
 namespace RigShift.App;
@@ -41,7 +44,7 @@ public static class Program
             .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically())
             .OnAfterInstallFastCallback(_ => RegisterUriScheme())
             .OnAfterUpdateFastCallback(_ => RegisterUriScheme())
-            .OnBeforeUninstallFastCallback(_ => UriSchemeRegistration.Unregister())
+            .OnBeforeUninstallFastCallback(_ => BeforeUninstall())
             .Run();
 
         if (args.Length > 0 && RigShiftUri.IsUri(args[0]))
@@ -85,6 +88,27 @@ public static class Program
         if (Environment.ProcessPath is { } executable)
         {
             UriSchemeRegistration.Register(executable);
+        }
+    }
+
+    /// <summary>
+    /// Velopack hook: removes the link handler and the autostart entry (analysis finding F-02). User data in
+    /// %AppData%\RigShift stays. Neither step may break the uninstall.
+    /// </summary>
+    private static void BeforeUninstall()
+    {
+        if (!UriSchemeRegistration.Unregister())
+        {
+            Log.Warning("Link handler could not be removed before uninstall");
+        }
+
+        try
+        {
+            RunKeyAutostart.Disable(Log.Logger);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or SecurityException or IOException)
+        {
+            Log.Warning(ex, "Autostart entry could not be removed before uninstall");
         }
     }
 
