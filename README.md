@@ -42,6 +42,8 @@ see no picture after a switch, it simply switches back after a few seconds.
 - **Robust on real hardware:** wakes monitors from standby, asks you to switch on a monitor that is off and waits for
   it, recognizes monitors after reboots and cable swaps, and picks up optional screens (e.g. a spacedesk tablet) as
   soon as they appear.
+- **Notices when Windows switches for you:** if Windows restores a profile's layout by itself – say, after you switch
+  on a monitor – one click on the notification applies the profile's audio and apps too.
 - **Tells you what's wrong** in plain words instead of an error code.
 
 **Getting into the rig**
@@ -51,7 +53,7 @@ see no picture after a switch, it simply switches back after a few seconds.
   and pedals, and you can give each device your own name. Devices are recognised by model (vendor and product id), so
   two identical devices look like one; pick a device that only the rig has.
 - **Apps per profile:** start SimHub or Crew Chief, close what you don't need – optionally only once the wheelbase is
-  detected.
+  detected. Pick them from a searchable list of installed and running programs.
 - **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
 - **Race-ready:** keep the PC awake while you only use the wheel, keep game sound loud during Discord calls, and get a
   warning when Windows may cut power to your USB sim hardware.
@@ -69,7 +71,9 @@ see no picture after a switch, it simply switches back after a few seconds.
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Displays** – every connected monitor, your own names, Identify. | **Settings** – default profile, autostart, confirmation time, language, automatic updates. |
+| **Displays** – every connected monitor with the number Windows gives it, your own names, Identify. | **Settings** – default profile, autostart, confirmation time, language, automatic updates. |
+| <img alt="App picker with installed and running programs and a search box" src="docs/screenshots/app-picker-dark.png" width="400"> | |
+| **App picker** – installed and running programs with search; any other program as a file. | |
 
 ## Getting started
 

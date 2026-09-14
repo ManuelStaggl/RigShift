@@ -49,8 +49,10 @@ Assistant. Das Tool soll klein bleiben. **1.3.1** (2026-09-14): Paket 1 aus `doc
 Analyse). **1.4.0** (2026-09-14): Paket 2 und Nutzerentscheidungen aus demselben Plan (Abhak-Liste am Planende), dazu
 USB-Gerätenamen und Regeln mit mehreren Geräten (U-01/U-02) und die visuelle Prüfung aller Seiten (V-01). **1.4.1**
 (2026-09-14, ohne Hardwaretest): Befunde der Hardware-Testrunde 1.4.0 (HW-01…HW-17, Tabelle „Umsetzung 1.4.1“ am Ende
-von `docs/analysis/umsetzungsplan-1.3.md`), README-Screenshots aus Demo-Daten neu. Als Nächstes: Hardware-Testrunde
-1.4.1 am Gaming-PC, dann HW-04/05, HW-11, HW-15 mit dem Nutzer entscheiden.
+von `docs/analysis/umsetzungsplan-1.3.md`), README-Screenshots aus Demo-Daten neu. **1.5.0** (2026-09-14, ohne Hardwaretest): Bildschirmnummern wie Windows
+(`\\.\DISPLAYn`, HW-04/05), App-Auswahl mit Startmenü- und laufenden Apps (HW-11), Toast „Profil erkannt – Rest
+anwenden“, wenn Windows die Anordnung selbst herstellt (HW-15); Tabelle „Umsetzung 1.5.0“ am Ende von
+`docs/analysis/umsetzungsplan-1.3.md`. Als Nächstes: Hardware-Testrunde 1.4.1 + 1.5.0 am Gaming-PC (Liste dort).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
@@ -80,7 +82,7 @@ Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup 
 für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 
 Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
-`dotnet run --project tools/RigShift.Probe -- snapshot [--raw] | rates | audio | usb | usb-power <geräte-id> | import <ordner> | plan <ordner> <profil>`.
+`dotnet run --project tools/RigShift.Probe -- snapshot [--raw] | rates | audio | apps | usb | usb-power <geräte-id> | import <ordner> | plan <ordner> <profil>`.
 `keep-awake <sekunden>` hält kurz eine Energieanforderung (prüfen mit `powercfg /requests`), `convert <quelle> <ziel>`
 schreibt Profildateien – beide ändern etwas, also nicht zur reinen Prüfung.
 Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffentlichen.

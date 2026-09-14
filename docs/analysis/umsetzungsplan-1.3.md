@@ -321,3 +321,15 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | HW-17 | Diagnose: `ShortTargetPath` (`AUS32F6 · UID4353`), `ShortAdapterPath` (`VEN_10DE&DEV_2702`), Fehlercode nur bei `Failed` | `ShortTargetPath_…`, `ShortAdapterPath_…`, `Build_ErrorCodeOnlyForFailedSwitches` |
 
 In die nächste Hardware-Testrunde: HW-16 (G9 ausgeschaltet → Toast, einschalten, Wechsel), HW-12 nur Log-Reihenfolge ohne HDR-Umschaltung am G9, HW-13 (spacedesk-Raten nach einem Rig-Wechsel im Editor), HW-03-Toast.
+
+### Umsetzung 1.5.0 (2026-09-14, ohne Hardwaretest)
+
+Die drei offenen Nutzerwünsche der Testrunde 1.4.0. Damit ist aus HW-01…HW-17 nur noch HW-10 (beobachten) offen.
+
+| ID | Umsetzung | Beleg |
+|---|---|---|
+| HW-04/05 | Windows bietet keine API für die Nummern der Einstellungsseite (Microsoft Q&A: „never a design goal“). Nummer = `n` aus dem GDI-Namen `\\.\DISPLAYn` der aktiven Quelle (`CcdRawSnapshot.Sources`, `AttachedDisplay.WindowsNumber`); fehlt sie bei einem aktiven Bildschirm, wie bisher links nach rechts (`DisplayNumbers.Assign`). Log „Display numbers: 1 = … (Windows 1)“ | `DisplayNumbersTests`, `Build_ActiveTarget_TakesTheWindowsNumberFromItsSource`, `ParseWindowsNumber_ReadsTheGdiName` |
+| HW-11 | `AppDiscovery`: Startmenü-Verknüpfungen (alle Nutzer + eigener, Ziel `.exe`, ohne Windows-Ordner und Deinstaller) und laufende Apps mit Fenster, pro EXE ein Eintrag, laufende zuerst. `AppPickerWindow` mit Suche (jedes Wort in Name oder Dateiname, bester Treffer vorausgewählt), Icons nachgeladen, „Datei suchen …“ als Rückfall. „App hinzufügen“ öffnet den Picker, Abbrechen fügt nichts hinzu. Probe `apps` | `AppDiscoveryTests`, `AppPickerViewModelTests` |
+| HW-15 | `SwitchCoordinator.NoticeDisplayChange(vorher, nachher)` nach Anzeigeänderung + Nachholen: anderes Profil aktiv, kein Wechsel läuft, Profil hat mehr als Bildschirme → Ereignis `RestoredByWindows` → Toast „Rig erkannt“; Klick wendet mit `SwitchRequest.KeepDisplays` Audio, Wach halten, Anruf-Absenkung, Fensterrettung und Apps an – ohne Anzeige-Änderung und ohne Countdown; nur wenn das Profil beim Klick noch aktiv ist | `NoticeDisplayChange_OffersTheRest_…`, `KeepDisplays_AppliesTheRest_WithoutTouchingDisplaysOrAsking` |
+
+In die nächste Hardware-Testrunde zusätzlich: Nummern der Bildschirme-Seite mit Einstellungen → Anzeige → „Identifizieren“ vergleichen (Log-Zeile „Display numbers“); G9 bei aktivem Desk ausschalten/einschalten bzw. Windows die Rig-Anordnung herstellen lassen → Toast „Rig erkannt“, Klick → Audio/Apps; App-Auswahl mit SimHub/Crew Chief.

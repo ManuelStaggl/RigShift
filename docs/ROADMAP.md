@@ -42,9 +42,9 @@ RigShift is meant to stay small: switch into the rig and back, reliably.
 - 🟢 Diagnostic info without user name and full device paths (1.4.0, 1.4.1)
 - 🟡 Ask to switch on a monitor that is off and wait for it (1.4.1)
 - 🟡 Known USB devices and refresh rates stay selectable while the device or display is off (1.4.1)
-- ⚪ Display numbers as in the Windows settings
-- ⚪ App picker with installed and running programs instead of a file dialog
-- ⚪ Offer to apply audio and apps when Windows itself restores a profile's display layout
+- 🟡 Display numbers as in the Windows settings (1.5.0)
+- 🟡 App picker with installed and running programs instead of a file dialog (1.5.0)
+- 🟡 Offer to apply audio and apps when Windows itself restores a profile's display layout (1.5.0)
 
 Dropped after a scope review (the tool should stay small):
 
