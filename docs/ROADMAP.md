@@ -46,6 +46,6 @@ Dropped after a scope review (the tool should stay small):
 
 - Setup wizard for first-time users
 - Anonymised diagnostics export for issues
-- Code signing and winget
+- winget
 - AMD / Intel validation, per-GPU head-budget presets
 - Dry-run mode in the UI

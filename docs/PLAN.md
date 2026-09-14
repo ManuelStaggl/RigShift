@@ -635,7 +635,8 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 
 13. Einrichtungsassistent (erstes Profil aus aktuellem Zustand, zweites nach Umstecken).
 14. Diagnose-Export ohne persönliche Daten (Pfade gehasht, Namen behalten) für Issues.
-15. Code-Signatur (SignPath.io ist für OSS kostenlos; alternativ Azure Trusted Signing), winget-Manifest.
+15. winget-Manifest. ~~Code-Signatur~~ **gestrichen 2026-09-14** (User: kostet Geld, lohnt sich für ein
+    kostenloses Tool nicht) – README erklärt stattdessen die SmartScreen-Warnung.
 16. AMD/Intel-Validierung durch Community-Tester; Head-Budget-Voreinstellungen je GPU-Familie.
 17. Trockenlauf-Modus in der UI (die CLI hat `--dry-run` schon in v1).
 

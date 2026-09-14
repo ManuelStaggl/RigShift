@@ -73,8 +73,8 @@ Download **`RigShift-win-Setup.exe`** from the [latest release](https://github.c
 and run it. RigShift installs for your user account (no admin rights), adds a Start menu entry and starts in the tray.
 A portable ZIP is attached to every release as well.
 
-RigShift is not code-signed yet, so Windows SmartScreen may say *"Windows protected your PC"*. Click
-**More info → Run anyway**. Signing is planned (see roadmap).
+RigShift is a free hobby project and not code-signed, so Windows SmartScreen may say *"Windows protected your PC"*.
+Click **More info → Run anyway**.
 
 **Updates** install themselves: RigShift checks GitHub at startup and once a day, downloads a new version in the
 background and installs it the next time it starts. **About & help** shows the version and what is new and lets you
@@ -86,7 +86,7 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 ## Planned features
 
 See [docs/ROADMAP.md](docs/ROADMAP.md). RigShift is meant to stay small. Next up: a setup wizard for the first two
-profiles, code signing and winget, and validation on AMD and Intel graphics.
+profiles, winget, and validation on AMD and Intel graphics.
 
 ## Command line
 
