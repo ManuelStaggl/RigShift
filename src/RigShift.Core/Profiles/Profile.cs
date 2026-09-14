@@ -16,7 +16,8 @@ public sealed record Profile
 
     public required IReadOnlyList<DisplayAssignment> Displays { get; init; }
 
-    public AudioAssignment Audio { get; init; } = new();
+    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
+    public AudioAssignment Audio { get; set; } = new();
 
     /// <summary>
     /// Seconds the user has to confirm a switch before the previous profile is restored. 0 disables the safety net

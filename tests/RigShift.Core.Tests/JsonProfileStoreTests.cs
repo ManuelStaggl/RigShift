@@ -96,6 +96,43 @@ public sealed class JsonProfileStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_HandWrittenProfileWithoutOptionalKeys_UsesDefaults()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig();
+        await store.SaveAsync(rig, Ct);
+        string file = Path.Combine(_directory, rig.Id.ToString("D") + ".json");
+        JsonObject profile = JsonNode.Parse(await File.ReadAllTextAsync(file, Ct))!["profile"]!.AsObject();
+        JsonObject display = profile["displays"]![0]!.AsObject();
+        display.Remove("rotation").ShouldBeTrue();
+        display["identity"]!.AsObject().Remove("friendlyName").ShouldBeTrue();
+        profile.Remove("audio").ShouldBeTrue();
+        await File.WriteAllTextAsync(file, profile.Parent!.ToJsonString(), Ct);
+
+        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+
+        loaded.Displays[0].Rotation.ShouldBe(DisplayRotation.Identity);
+        loaded.Displays[0].Identity.FriendlyName.ShouldBe(string.Empty);
+        loaded.Audio.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Load_AudioEndpointWithoutName_HasEmptyName()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig(audio: new AudioAssignment { Playback = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000001}", "Headphones") });
+        await store.SaveAsync(rig, Ct);
+        string file = Path.Combine(_directory, rig.Id.ToString("D") + ".json");
+        JsonNode document = JsonNode.Parse(await File.ReadAllTextAsync(file, Ct))!;
+        document["profile"]!["audio"]!["playback"]!.AsObject().Remove("friendlyName").ShouldBeTrue();
+        await File.WriteAllTextAsync(file, document.ToJsonString(), Ct);
+
+        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+
+        loaded.Audio.Playback!.FriendlyName.ShouldBe(string.Empty);
+    }
+
+    [Fact]
     public async Task Load_MissingDirectory_ReturnsEmpty()
     {
         var store = new JsonProfileStore(_directory, Logger.None);

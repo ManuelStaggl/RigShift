@@ -24,4 +24,6 @@ public sealed record AudioAssignment
     public int? RecordingVolumePercent { get; init; }
 }
 
-public sealed record AudioEndpoint(string EndpointId, string FriendlyName);
+/// <param name="EndpointId">Core Audio endpoint ID.</param>
+/// <param name="FriendlyName">Name for the UI; the default applies when a hand-written profile leaves it out.</param>
+public sealed record AudioEndpoint(string EndpointId, string FriendlyName = "");

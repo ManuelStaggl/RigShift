@@ -19,7 +19,8 @@ public sealed record DisplayAssignment
 
     public required int PositionY { get; init; }
 
-    public DisplayRotation Rotation { get; init; } = DisplayRotation.Identity;
+    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
+    public DisplayRotation Rotation { get; set; } = DisplayRotation.Identity;
 
     public bool IsPrimary { get; init; }
 
