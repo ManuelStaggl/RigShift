@@ -104,8 +104,8 @@ public sealed class UpdateService : IDisposable
 
     public DateTimeOffset? LastChecked { get; private set; }
 
-    /// <summary>Release notes of the newest version found, as plain text; empty when the release has none.</summary>
-    public string ReleaseNotesText { get; private set; } = string.Empty;
+    /// <summary>Release notes of the newest version found, as compact lines; empty when the release has none.</summary>
+    public IReadOnlyList<ReleaseNoteLine> ReleaseNoteLines { get; private set; } = [];
 
     /// <summary>GitHub release page of <see cref="TargetVersion"/>.</summary>
     public string? ReleaseUrl => TargetVersion is null ? null : RepositoryUrl + "/releases/tag/v" + TargetVersion;
@@ -226,13 +226,13 @@ public sealed class UpdateService : IDisposable
         if (update is null)
         {
             _log.Information("No update available, installed version {Version}", CurrentVersion);
-            ReleaseNotesText = string.Empty;
+            ReleaseNoteLines = [];
             SetState(UpdateState.UpToDate, null);
             return;
         }
 
         string version = update.TargetFullRelease.Version.ToString();
-        ReleaseNotesText = ReleaseNotes.ToPlainText(update.TargetFullRelease.NotesMarkdown);
+        ReleaseNoteLines = ReleaseNotes.Parse(update.TargetFullRelease.NotesMarkdown);
         if (version == readyVersion)
         {
             SetState(UpdateState.Ready, version);

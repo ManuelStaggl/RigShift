@@ -84,6 +84,8 @@ All notable changes to this project are documented here. The format follows
 
 - The mouse wheel scrolls the pages and the profile editor wherever the pointer is, not only over the scroll bar at the
   right edge, also over text fields.
+- **About & help** shows the release notes of a new version compactly under a collapsed **What's new**, instead of
+  the whole text with blank lines; the update buttons sit in their own row below the version.
 
 ## [1.3.1] - 2026-09-14
 

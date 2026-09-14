@@ -603,8 +603,9 @@ public sealed partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     public partial bool ShowReleaseNotes { get; set; }
 
+    /// <summary>Shown collapsed under "What's new", so a long changelog section does not blow up the card.</summary>
     [ObservableProperty]
-    public partial string ReleaseNotesText { get; set; } = string.Empty;
+    public partial IReadOnlyList<RigShift.Core.Updates.ReleaseNoteLine> ReleaseNoteLines { get; set; } = [];
 
     public ObservableCollection<SwitchRecord> History => _coordinator.History;
 
@@ -708,7 +709,7 @@ public sealed partial class AboutViewModel : ObservableObject
         };
         IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
         ShowReleaseNotes = _updates.State is UpdateState.Ready or UpdateState.Available or UpdateState.Downloading && _updates.ReleaseUrl is not null;
-        ReleaseNotesText = _updates.ReleaseNotesText;
+        ReleaseNoteLines = _updates.ReleaseNoteLines;
         CheckForUpdatesCommand.NotifyCanExecuteChanged();
         InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
