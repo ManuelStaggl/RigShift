@@ -314,6 +314,16 @@ Releases nützlich)
   settings.json → lädt, nächster Start installiert 1.0.1. **Nicht belegt:** Klick „installieren“ im Zustand
   „verfügbar“ (RDP-Sitzung getrennt, keine Eingabe möglich) – der Download-Pfad ist derselbe wie im Auto-Modus.
 - U4. Release-Notes der neuen Version anzeigen (aus dem Velopack-Paket bzw. Link aufs GitHub-Release).
+  **Umgesetzt 2026-09-14**: `VelopackAsset.NotesMarkdown` (= CHANGELOG-Abschnitt) wird in `RigShift.Core.Updates.
+  ReleaseNotes` zu Klartext (Überschriften, Aufzählung „•“, umbrochene Punkte zusammengefügt, Links/Fett/Code
+  entfernt) und unter dem Update-Status gezeigt, solange eine neuere Version bekannt ist; darunter Link
+  `…/releases/tag/vX.Y.Z` (nur https wird geöffnet). Kein Markdown-Renderer – zusätzliche Abhängigkeit lohnt für
+  wenige Zeilen nicht. Am Server belegt (Build als 1.0.0, nur melden): Einstellungen zeigen „Version 1.0.1 ist
+  verfügbar.“, „Fixed“, den umbrochenen Punkt aus dem 1.0.1-CHANGELOG als eine Zeile und den Link. Link-Klick
+  (Browser) nicht geprüft.
+
+Laufende App und Autostart: Die Prüfung läuft auch im Dauerbetrieb alle 24 h und meldet per Tray-Meldung; seit U2
+muss niemand bis zum nächsten Windows-Start warten.
 - Randbedingung: kein GitHub-Token in der App (wäre aus der EXE auslesbar); Limit 60 API-Abfragen/h pro IP reicht.
 
 **v1.1 – Auslösen und Steuern**

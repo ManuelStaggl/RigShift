@@ -54,7 +54,11 @@ CLI-Prüfung am Server: nur `--help`, `list`, `status`, `save`, `apply <name> --
 
 App-Prüfung am Server ohne Umschalten: App starten, Screenshots per `PrintWindow` (Flag 2) des Fensters –
 `CopyFromScreen` fängt verdeckende Fenster mit ein, und computer-use kennt die Dev-EXE nicht. Navigation per
-UI-Automation-Fokus + Enter. Countdown-Dialog nur in
+UI-Automation-Fokus + Enter; bei getrennter RDP-Sitzung scheitert `SendKeys` („Der Vorgang wurde erfolgreich
+beendet“, kein Eingabedesktop) → Enter per `PostMessage(hwnd, WM_KEYDOWN/WM_KEYUP, VK_RETURN)` ans Fenster schicken.
+Update-Zustände live prüfen: aktuellen Code per `vpk pack --packVersion 1.0.0` packen und installieren, dann findet
+die App das echte GitHub-Release; `onlyNotifyAboutUpdates: true` in `%AppData%\RigShift\settings.json` verhindert den
+Download. Countdown-Dialog nur in
 Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup (mit aktivem Profil) und Tray-Icon-Bögen
 für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 

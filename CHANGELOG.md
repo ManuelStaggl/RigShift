@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows
   notification opens the settings.
 - New setting "Install updates automatically". When it is off, RigShift only reports a new version and downloads and
   installs it when you choose to.
+- The settings show what is new in an available update, with a link to the release on GitHub.
 
 ## [1.0.1] - 2026-09-13
 

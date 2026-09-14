@@ -146,9 +146,28 @@ public static class SwitchMessages
         string.Join(", ", missing.Select(m => NameOf(m.Assignment.Identity)));
 }
 
-/// <summary>Opens folders in Explorer.</summary>
+/// <summary>Opens folders in Explorer and web pages in the default browser.</summary>
 public static class ShellFolders
 {
+    public static void OpenUrl(string? url, ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || uri.Scheme != Uri.UriSchemeHttps)
+        {
+            log.Warning("Not opening {Url}: not an https address", url);
+            return;
+        }
+
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo { FileName = uri.AbsoluteUri, UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            log.Warning(ex, "Could not open {Url}", uri);
+        }
+    }
+
     public static void Open(string path, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);

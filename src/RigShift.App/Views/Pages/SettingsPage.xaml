@@ -68,6 +68,14 @@
               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
               Text="{Binding UpdateStatusText}"
               TextWrapping="Wrap" />
+            <StackPanel Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Margin="0,8,0,0" Text="{Binding ReleaseNotesText}" TextWrapping="Wrap" />
+              <TextBlock Margin="0,4,0,0">
+                <Hyperlink Command="{Binding OpenReleaseNotesCommand}">
+                  <Run Text="{loc:Tr Settings_ReleaseNotesLink}" />
+                </Hyperlink>
+              </TextBlock>
+            </StackPanel>
           </StackPanel>
         </ui:CardControl.Header>
         <StackPanel Orientation="Horizontal">

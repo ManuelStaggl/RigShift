@@ -80,6 +80,7 @@
   <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open the settings to install it.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: RigShift only reports new versions and installs nothing until you choose to.</value></data>
+  <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release notes on GitHub</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Diag_Refresh" xml:space="preserve"><value>Refresh</value></data>
   <data name="Diag_Displays" xml:space="preserve"><value>Displays</value></data>

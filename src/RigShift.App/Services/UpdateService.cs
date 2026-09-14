@@ -1,4 +1,5 @@
 using System.Reflection;
+using RigShift.Core.Updates;
 using Serilog;
 using Velopack;
 using Velopack.Sources;
@@ -102,6 +103,12 @@ public sealed class UpdateService : IDisposable
     public string? TargetVersion { get; private set; }
 
     public DateTimeOffset? LastChecked { get; private set; }
+
+    /// <summary>Release notes of the newest version found, as plain text; empty when the release has none.</summary>
+    public string ReleaseNotesText { get; private set; } = string.Empty;
+
+    /// <summary>GitHub release page of <see cref="TargetVersion"/>.</summary>
+    public string? ReleaseUrl => TargetVersion is null ? null : RepositoryUrl + "/releases/tag/v" + TargetVersion;
 
     public bool CanCheck => IsInstalled && !_busy;
 
@@ -219,11 +226,13 @@ public sealed class UpdateService : IDisposable
         if (update is null)
         {
             _log.Information("No update available, installed version {Version}", CurrentVersion);
+            ReleaseNotesText = string.Empty;
             SetState(UpdateState.UpToDate, null);
             return;
         }
 
         string version = update.TargetFullRelease.Version.ToString();
+        ReleaseNotesText = ReleaseNotes.ToPlainText(update.TargetFullRelease.NotesMarkdown);
         if (version == readyVersion)
         {
             SetState(UpdateState.Ready, version);

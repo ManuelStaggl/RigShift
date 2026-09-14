@@ -361,6 +361,16 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsUpdateInstallable { get; set; }
 
+    /// <summary>Release notes and the link to the release, shown while a newer version is known.</summary>
+    [ObservableProperty]
+    public partial bool ShowReleaseNotes { get; set; }
+
+    [ObservableProperty]
+    public partial string ReleaseNotesText { get; set; } = string.Empty;
+
+    [RelayCommand]
+    private void OpenReleaseNotes() => ShellFolders.OpenUrl(_updates.ReleaseUrl, _log);
+
     [ObservableProperty]
     public partial bool InstallUpdatesAutomatically { get; set; }
 
@@ -387,6 +397,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             _ => Loc.Instance["Update_StatusFailed"],
         };
         IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
+        ShowReleaseNotes = _updates.State is UpdateState.Ready or UpdateState.Available or UpdateState.Downloading && _updates.ReleaseUrl is not null;
+        ReleaseNotesText = _updates.ReleaseNotesText;
         CheckForUpdatesCommand.NotifyCanExecuteChanged();
         InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
