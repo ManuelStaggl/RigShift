@@ -289,7 +289,10 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 Releases nützlich)
 
 - U1. Einstellungen „Über / Updates“: Versionsnummer, Knopf „Nach Updates suchen“, Status (aktuell / wird geladen /
-  bereit / Fehler). Die automatische Prüfung (Start + 24 h) bleibt.
+  bereit / Fehler). Die automatische Prüfung (Start + 24 h) bleibt. **Umgesetzt 2026-09-14**: Dev-Build zeigt
+  „Entwicklungs-Build“ mit gesperrtem Knopf; lokal gepackte, installierte 1.0.1 prüft beim Klick (Log „requested by
+  the user“), Knopf während der Prüfung gesperrt, Status „Aktuell. Zuletzt geprüft …“. Laden/Bereit nur ohne neueres
+  Release nicht live belegt.
 - U2. „Jetzt neu starten und installieren“ in den Einstellungen und aus der Tray-Meldung; gesperrt, solange ein
   Umschaltvorgang läuft.
 - U3. Einstellung „Updates automatisch installieren“ / „nur benachrichtigen“. Grund: Nutzer, die ungefragte

@@ -58,6 +58,20 @@
           <ui:Button Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Settings_OpenLogs}" />
         </StackPanel>
       </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{Binding VersionText}" />
+            <TextBlock
+              AutomationProperties.LiveSetting="Polite"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding UpdateStatusText}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+      </ui:CardControl>
     </StackPanel>
   </ScrollViewer>
 </Page>

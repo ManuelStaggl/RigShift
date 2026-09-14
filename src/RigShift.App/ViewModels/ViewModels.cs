@@ -268,17 +268,27 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly AppPaths _paths;
+    private readonly UpdateService _updates;
     private readonly ILogger _log;
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, UpdateService updates, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(updates);
         ArgumentNullException.ThrowIfNull(log);
         _settings = settings;
         _catalog = catalog;
         _paths = paths;
+        _updates = updates;
         _log = log.ForContext<SettingsViewModel>();
+        _updates.StateChanged += (_, _) => RefreshUpdateStatus();
+        RefreshUpdateStatus();
     }
+
+    public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);
+
+    [ObservableProperty]
+    public partial string UpdateStatusText { get; set; } = string.Empty;
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
 
@@ -336,6 +346,27 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
+
+    [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+    private Task CheckForUpdatesAsync() => _updates.CheckNowAsync();
+
+    private bool CanCheckForUpdates() => _updates.CanCheck;
+
+    private void RefreshUpdateStatus()
+    {
+        string? lastChecked = _updates.LastChecked?.ToString("g", Loc.Instance.Culture);
+        UpdateStatusText = _updates.State switch
+        {
+            UpdateState.NotInstalled => Loc.Instance["Update_StatusNotInstalled"],
+            UpdateState.NotChecked => Loc.Instance["Update_StatusNotChecked"],
+            UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
+            UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
+            UpdateState.UpToDate => Loc.Format("Update_StatusUpToDate", lastChecked ?? "?"),
+            UpdateState.Ready => Loc.Format("Update_Ready", _updates.TargetVersion ?? "?"),
+            _ => Loc.Instance["Update_StatusFailed"],
+        };
+        CheckForUpdatesCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnSelectedDefaultProfileChanged(Choice? value)
     {

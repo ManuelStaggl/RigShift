@@ -213,7 +213,7 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<SwitchCoordinator>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
-        services.AddSingleton(_ => new UpdateService(Log.Logger));
+        services.AddSingleton(_ => new UpdateService(Log.Logger, TimeProvider.System));
 
         // UI
         services.AddSingleton<TrayPopupViewModel>();
