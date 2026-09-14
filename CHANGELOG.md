@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-14
+
 ### Added
 
 - USB device names: name a device once on the **Automation** page; the name shows in the rules, in the profile editor's

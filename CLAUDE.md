@@ -46,7 +46,10 @@ Bildwiederholrate pro Bildschirm**, verlorene Fenster holen (`IWindowRescuer`), 
 USB-Stromsparen (`IUsbPowerCheck`, `docs/usb-power-saving.md`), Anruf-Absenkung pro Profil aus (`IDuckingPreference`).
 Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6): Spiele-Automatik, Energieplan, lokale HTTP-API, Home
 Assistant. Das Tool soll klein bleiben. **1.3.1** (2026-09-14): Paket 1 aus `docs/analysis/umsetzungsplan-1.3.md` (Befunde der
-Analyse). Als Nächstes: Paket 2 und Nutzerentscheidungen aus demselben Plan, Hardware-Testrunde von 1.3.1 am Gaming-PC.
+Analyse). **1.4.0** (2026-09-14): Paket 2 und Nutzerentscheidungen aus demselben Plan (Abhak-Liste am Planende), dazu
+USB-Gerätenamen und Regeln mit mehreren Geräten (U-01/U-02) und die visuelle Prüfung aller Seiten (V-01). Als Nächstes:
+Hardware-Testrunde mit 1.4.0 am Gaming-PC (Plan-Tabelle „In die Hardware-Testrunde aufnehmen“, dazu Tray-Kontextmenü,
+Update-Karte, USB-Kombination), L-04 Rohdaten.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
