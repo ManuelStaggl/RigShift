@@ -18,10 +18,25 @@ All notable changes to this project are documented here. The format follows
   **Identify**, which shows a large number on every active screen.
 - New page **About & help**: version and updates, recent switches, **Copy diagnostic info** for bug reports, the log
   folder and links to GitHub.
-- New page **Automation**: switch profiles when a game starts. Pick Le Mans Ultimate, iRacing, Assetto Corsa
-  Competizione, Assetto Corsa EVO, rFactor 2, Automobilista 2 or F1 24/25 from a list, or choose any program. Each rule
-  decides what happens when the game closes (stay, switch back or switch to another profile) and whether to ask for
-  confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
+- New page **Automation**: switch profiles when a USB device connects, e.g. to the rig when you turn on the wheelbase
+  and back when you turn it off. Pick the device from the connected ones; it keeps matching in another USB port. Each
+  rule decides what happens when the device is gone (stay, switch back or switch to another profile), how long it
+  must stay gone first (10 s by default, so a quick power cycle changes nothing) and whether to ask for confirmation.
+  Pause all rules from the page or the tray menu.
+- Keep the PC awake per profile: no sleep, screen saver or display timeout while racing with only a wheel. If you do
+  not confirm the switch, it is undone.
+- HDR per display: on, off or unchanged. Saving the current arrangement remembers it; if you do not confirm the
+  switch, HDR goes back too.
+- Choose the refresh rate per display in the profile editor from the rates the monitor offers.
+- Lost windows come back: after a switch, windows left on a screen that is now off (Discord, Steam, SimHub …) move
+  to the main screen, keeping their size and minimized or maximized state.
+- Apps can wait for a device: pick a USB device (e.g. the wheelbase) in the profile's apps section, and the apps start
+  once it is connected, after 30 s at most. If it does not show up, the apps start anyway and RigShift tells you.
+- USB power-saving check: the Automation page warns when Windows may turn off a rule's device to save power (pedals or
+  a wheelbase dropping out) and links to a [step-by-step guide](docs/usb-power-saving.md). RigShift never changes
+  these settings itself.
+- Per profile, turn off the Windows setting that lowers other sounds during calls, so the game stays loud while you
+  talk on Discord. A profile without it brings your previous setting back.
 
 ### Changed
 

@@ -38,14 +38,21 @@ Beyond that, RigShift is designed to be boring in the good way:
 - **Safety net:** if you don't confirm the new layout within a few seconds (because there is no picture),
   RigShift rolls back to the previous one.
 - **Audio included:** playback, recording and communications devices plus volume per profile.
-- **Apps per profile:** start SimHub or Crew Chief and close Discord once the switch is confirmed.
-- **Your names for monitors** ("Left · CM27X3") everywhere, and **Identify** shows which screen is which.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
-- **Automation:** start a game and RigShift switches to your rig; quit it and it switches back. Templates for
-  LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2 and F1, or pick any EXE.
 - **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
 - **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
   or shortcut.
+
+Made for getting into the rig:
+
+- **Turn on the wheelbase, RigShift does the rest.** An automation rule switches to your rig profile when a USB
+  device connects and back when it is gone – after a delay you choose, so a quick power cycle changes nothing.
+- **Apps per profile:** start SimHub or Crew Chief and close what you don't need once the switch is confirmed –
+  optionally only after the wheelbase has been detected.
+- **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
+- **HDR and refresh rate per display**, and your own names for monitors ("Left · CM27X3") everywhere.
+- **Race-ready:** keep the PC awake while you drive with only a wheel, keep game sound loud during Discord calls, and
+  get a warning when Windows may power down your USB sim hardware.
 
 ## Screenshots
 
@@ -53,12 +60,10 @@ Beyond that, RigShift is designed to be boring in the good way:
 |---|---|
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
-| <img alt="Profile editor with audio devices, volume and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
+| <img alt="Profile editor with displays, audio devices and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
 | **Profile editor** – displays, audio devices with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
-| <img alt="Automation page with game rules" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> |
-| **Automation** – switch when a game starts, and back when it closes. | **Displays** – every connected monitor, your own names, Identify. |
-| <img alt="About and help page" src="docs/screenshots/about-dark.png" width="400"> | |
-| **About & help** – version, updates, recent switches, diagnostic info for bug reports. | |
+| <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="About and help page" src="docs/screenshots/about-dark.png" width="400"> |
+| **Displays** – every connected monitor, your own names, Identify. | **About & help** – version, updates, recent switches, diagnostic info. |
 
 ## Installation
 
@@ -78,8 +83,8 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 
 ## Planned features
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: USB device triggers (wheelbase, headset dongle), race mode (no notifications,
-no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
+See [docs/ROADMAP.md](docs/ROADMAP.md). RigShift is meant to stay small. Next up: a setup wizard for the first two
+profiles, code signing and winget, and validation on AMD and Intel graphics.
 
 ## Command line
 
@@ -110,6 +115,15 @@ confirmation), e.g. from a browser bookmark, Win+R or a Stream Deck "Website" ac
 RigShift.exe is a Windows GUI program, so shells do not wait for it. To see output and exit code in a console,
 run `start /wait RigShift.exe status` (cmd) or `Start-Process RigShift.exe status -Wait -NoNewWindow`
 (PowerShell).
+
+## Stream Deck and button boxes
+
+No plugin needed:
+
+- **Hotkey:** give the profile a keyboard shortcut in the profile editor and use the Stream Deck *Hotkey* action (or map
+  it to a button box key). Fastest option.
+- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig` (installed version; always asks for confirmation).
+- **Shortcut:** **⋯ → Create desktop shortcut** on a profile and point a Stream Deck *Open* action at it.
 
 ## Requirements
 

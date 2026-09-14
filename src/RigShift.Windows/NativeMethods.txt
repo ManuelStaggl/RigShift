@@ -18,6 +18,18 @@ DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY
 DISPLAYCONFIG_PIXELFORMAT
 DISPLAYCONFIG_PATH_ACTIVE
 DISPLAYCONFIG_PATH_MODE_IDX_INVALID
+// HDR per display (docs/PLAN.md, section 6, item 10). _2 / SET_HDR_STATE from Windows 11 24H2, the others before.
+DisplayConfigSetDeviceInfo
+DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
+DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2
+DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE
+DISPLAYCONFIG_SET_HDR_STATE
+// Refresh rates a display offers (DXGI reports them as exact rationals).
+CreateDXGIFactory1
+IDXGIFactory1
+IDXGIAdapter1
+IDXGIOutput
+DXGI_ERROR_NOT_FOUND
 // Core Audio – endpoint enumeration, state, friendly name, volume.
 MMDeviceEnumerator
 IMMDeviceEnumerator
@@ -37,6 +49,18 @@ WM_DEVICECHANGE
 WM_DISPLAYCHANGE
 DBT_DEVICEARRIVAL
 DBT_DEVICEREMOVECOMPLETE
+// USB device triggers: present devices and their names (polled, docs/PLAN.md section 6, item 7).
+CM_Get_Device_ID_List_SizeW
+CM_Get_Device_ID_ListW
+CM_Locate_DevNodeW
+CM_Get_DevNode_PropertyW
+CONFIGRET
+CM_GETIDLIST_FILTER_ENUMERATOR
+CM_GETIDLIST_FILTER_PRESENT
+CM_LOCATE_DEVNODE_FLAGS
+DEVPKEY_Device_BusReportedDeviceDesc
+DEVPKEY_Device_FriendlyName
+DEVPKEY_Device_DeviceDesc
 // Global hotkeys (v1.1).
 RegisterHotKey
 UnregisterHotKey
@@ -61,6 +85,29 @@ GetStdHandle
 ATTACH_PARENT_PROCESS
 AllowSetForegroundWindow
 ASFW_ANY
+// Keep awake and power plan per profile (docs/PLAN.md, section 6, items 8 + 9).
+PowerCreateRequest
+PowerSetRequest
+PowerClearRequest
+POWER_REQUEST_TYPE
+REASON_CONTEXT
+PowerGetActiveScheme
+// USB power-saving check (read-only): selective suspend in the active scheme (docs/usb-power-saving.md).
+PowerReadACValueIndex
+LocalFree
+// Rescue windows that ended up on a display that is off after a switch.
+EnumWindows
+IsWindowVisible
+GetWindowLong
+WINDOW_EX_STYLE
+DwmGetWindowAttribute
+DWMWINDOWATTRIBUTE
+GetWindowPlacement
+SetWindowPlacement
+WINDOWPLACEMENT
+MonitorFromRect
+GetWindowThreadProcessId
+SHOW_WINDOW_CMD
 // Desktop shortcuts for profiles.
 ShellLink
 IShellLinkW

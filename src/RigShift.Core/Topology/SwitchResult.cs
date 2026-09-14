@@ -32,6 +32,12 @@ public enum AppsOutcome
 
     /// <summary>At least one app could not be started or ended; see the log.</summary>
     Incomplete,
+
+    /// <summary>
+    /// The USB device the apps wait for did not show up in time; the apps were started anyway. Wins over
+    /// <see cref="Incomplete"/>, because a missing device is the likely cause of an app failing then.
+    /// </summary>
+    DeviceMissing,
 }
 
 public enum AudioOutcome

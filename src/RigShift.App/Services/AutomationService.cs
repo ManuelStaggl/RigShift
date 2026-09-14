@@ -9,8 +9,8 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Polls the running programs every 2 seconds and switches when a rule's game starts or closes (docs/PLAN.md,
-/// section 6). Polling needs no administrator rights, unlike WMI process events.
+/// Polls the connected USB devices every 2 seconds and switches when a rule's device connects or disappears
+/// (docs/PLAN.md, section 6). Polling needs no window and no administrator rights.
 /// </summary>
 public sealed class AutomationService : IDisposable
 {
@@ -19,16 +19,21 @@ public sealed class AutomationService : IDisposable
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly IProcessList _processes;
+    private readonly IUsbDeviceList _devices;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
-    private readonly ProcessTrigger _trigger = new();
+    private readonly AutomationTrigger _trigger = new();
     private readonly DispatcherTimer _timer = new() { Interval = PollInterval };
     private bool _polling;
     private bool _idle = true;
 
     public AutomationService(
-        SettingsService settings, ProfileCatalog catalog, SwitchCoordinator coordinator, IProcessList processes, TimeProvider time, ILogger log)
+        SettingsService settings,
+        ProfileCatalog catalog,
+        SwitchCoordinator coordinator,
+        IUsbDeviceList devices,
+        TimeProvider time,
+        ILogger log)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(log);
@@ -36,7 +41,7 @@ public sealed class AutomationService : IDisposable
         _settings = settings;
         _catalog = catalog;
         _coordinator = coordinator;
-        _processes = processes;
+        _devices = devices;
         _time = time;
         _log = log.ForContext<AutomationService>();
         _timer.Tick += OnTick;
@@ -46,7 +51,8 @@ public sealed class AutomationService : IDisposable
     /// <summary>Rules or the paused state may have changed.</summary>
     public event EventHandler? Changed;
 
-    public IReadOnlyList<AutomationRule> Rules => _settings.Current.AutomationRules ?? [];
+    /// <summary>USB rules only; rules without a device (game rules of an unreleased build) are dropped.</summary>
+    public IReadOnlyList<AutomationRule> Rules => _settings.Current.AutomationRules?.Where(r => r.UsbDeviceId is not null).ToList() ?? [];
 
     public bool IsPaused => _settings.Current.AutomationPaused;
 
@@ -74,7 +80,7 @@ public sealed class AutomationService : IDisposable
         IReadOnlyList<AutomationRule> rules = Rules;
         if (IsPaused || rules.Count == 0)
         {
-            // Resuming must not treat a game that started meanwhile as a fresh start.
+            // Resuming must not treat a device that connected meanwhile as a fresh start.
             if (!_idle)
             {
                 _trigger.Reset();
@@ -88,15 +94,15 @@ public sealed class AutomationService : IDisposable
         _polling = true;
         try
         {
-            IReadOnlySet<string> running = await Task.Run(_processes.RunningProcessNames);
+            IReadOnlySet<string> present = await Task.Run(Present);
 
-            // While a switch runs, the active profile is in flux; the next poll sees the same processes again.
+            // While a switch runs, the active profile is in flux; the next poll sees the same devices again.
             if (_coordinator.IsSwitching)
             {
                 return;
             }
 
-            foreach (TriggerAction action in _trigger.Evaluate(rules, running, _catalog.ActiveProfile?.Id, _time.GetUtcNow()))
+            foreach (TriggerAction action in _trigger.Evaluate(rules, present, _catalog.ActiveProfile?.Id, _time.GetUtcNow()))
             {
                 await RunAsync(action);
             }
@@ -111,17 +117,22 @@ public sealed class AutomationService : IDisposable
         }
     }
 
+    private HashSet<string> Present() =>
+        new(_devices.PresentDeviceIds().Select(UsbDeviceIds.Key), StringComparer.OrdinalIgnoreCase);
+
     private async Task RunAsync(TriggerAction action)
     {
-        string game = GameTemplates.Find(action.Rule.TemplateId)?.Name ?? action.Rule.ExecutablePath ?? "?";
+        AutomationRule rule = action.Rule;
+        string subject = rule.UsbDeviceName ?? rule.UsbDeviceId ?? "?";
         if (_catalog.Find(action.ProfileId) is not { } profile)
         {
-            _log.Warning("Rule for {Game} wants profile {ProfileId}, which does not exist", game, action.ProfileId);
+            _log.Warning("Rule for {Subject} wants profile {ProfileId}, which does not exist", subject, action.ProfileId);
             return;
         }
 
-        _log.Information("{Game} {Reason}: switching to {Profile} (skip confirmation: {SkipConfirmation})",
-            game, action.Reason == TriggerReason.GameStarted ? "started" : "closed", profile.Name, action.SkipConfirmation);
+        string reason = action.Reason == TriggerReason.Started ? "connected" : "disconnected";
+        _log.Information("{Subject} {Reason}: switching to {Profile} (skip confirmation: {SkipConfirmation})",
+            subject, reason, profile.Name, action.SkipConfirmation);
         await _coordinator.SwitchAsync(profile, new SwitchRequest { SkipConfirmation = action.SkipConfirmation });
     }
 }

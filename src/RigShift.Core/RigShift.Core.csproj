@@ -11,9 +11,4 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Game templates for the automation, one file per game so pull requests do not collide. -->
-    <EmbeddedResource Include="..\..\templates\games\*.json" LogicalName="RigShift.Templates.Games.%(Filename).json" />
-  </ItemGroup>
-
 </Project>

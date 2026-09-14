@@ -65,6 +65,70 @@ internal static unsafe class CcdNative
         path = error == 0 ? name.adapterDevicePath.ToString() : string.Empty;
         return error == 0;
     }
+
+    /// <summary>GDI name of a source, e.g. <c>\\.\DISPLAY1</c> – the key DXGI outputs are known by.</summary>
+    public static bool TryGetSourceGdiName(LUID adapter, uint sourceId, out string gdiName)
+    {
+        DISPLAYCONFIG_SOURCE_DEVICE_NAME name = default;
+        name.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+        name.header.size = (uint)sizeof(DISPLAYCONFIG_SOURCE_DEVICE_NAME);
+        name.header.adapterId = adapter;
+        name.header.id = sourceId;
+
+        int error = PInvoke.DisplayConfigGetDeviceInfo(&name.header);
+        gdiName = error == 0 ? name.viewGdiDeviceName.ToString() : string.Empty;
+        return error == 0;
+    }
+
+    /// <summary>
+    /// HDR state of a target: <c>true</c>/<c>false</c>, or <c>null</c> when it does not support HDR or cannot be asked.
+    /// Windows 11 24H2 and later answer the _2 request, which tells HDR apart from wide color (auto color management);
+    /// older versions only know "advanced color", which there means HDR.
+    /// </summary>
+    public static bool? TryGetHdr(LUID adapter, uint targetId)
+    {
+        DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2 info2 = default;
+        info2.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2;
+        info2.header.size = (uint)sizeof(DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2);
+        info2.header.adapterId = adapter;
+        info2.header.id = targetId;
+        if (PInvoke.DisplayConfigGetDeviceInfo(&info2.header) == 0)
+        {
+            return info2.highDynamicRangeSupported ? info2.highDynamicRangeUserEnabled : null;
+        }
+
+        DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO info = default;
+        info.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
+        info.header.size = (uint)sizeof(DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO);
+        info.header.adapterId = adapter;
+        info.header.id = targetId;
+        return PInvoke.DisplayConfigGetDeviceInfo(&info.header) == 0 && info.advancedColorSupported
+            ? info.advancedColorEnabled
+            : null;
+    }
+
+    /// <summary>Sets HDR with the 24H2 request, falling back to the older advanced color request. Returns the native error.</summary>
+    public static int SetHdr(LUID adapter, uint targetId, bool enabled)
+    {
+        DISPLAYCONFIG_SET_HDR_STATE state = default;
+        state.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_HDR_STATE;
+        state.header.size = (uint)sizeof(DISPLAYCONFIG_SET_HDR_STATE);
+        state.header.adapterId = adapter;
+        state.header.id = targetId;
+        state.enableHdr = enabled;
+        if (PInvoke.DisplayConfigSetDeviceInfo(&state.header) == 0)
+        {
+            return 0;
+        }
+
+        DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE legacy = default;
+        legacy.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE;
+        legacy.header.size = (uint)sizeof(DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE);
+        legacy.header.adapterId = adapter;
+        legacy.header.id = targetId;
+        legacy.enableAdvancedColor = enabled;
+        return PInvoke.DisplayConfigSetDeviceInfo(&legacy.header);
+    }
 }
 
 /// <summary>Conversions between CCD mode structs and the profile model.</summary>

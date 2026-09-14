@@ -33,6 +33,7 @@ Please include the log from `%AppData%\RigShift\logs`, your GPU and driver versi
 configuration (resolution/refresh per monitor). Device paths in the log are not personal data, but feel free to
 redact them.
 
-## Game templates (v1.1+)
+## Code of conduct and security
 
-Process-trigger templates live in `templates/` as JSON. Adding a sim is a documentation-level PR.
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report security problems privately as described in
+[SECURITY.md](SECURITY.md), not as an issue.

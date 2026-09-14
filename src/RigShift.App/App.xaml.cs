@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -121,6 +122,7 @@ public partial class App : Application, IAppShell
                 ShowMainWindow();
             }
 
+            KeepAwakeForActiveProfile(catalog);
             await ApplyDefaultProfileAsync(catalog);
         }
         catch (Exception ex)
@@ -167,6 +169,25 @@ public partial class App : Application, IAppShell
         BrandTheme.Apply(theme);
     }
 
+    /// <summary>The keep-awake request ends with the process; after a restart it follows the profile that is still active.</summary>
+    private void KeepAwakeForActiveProfile(ProfileCatalog catalog)
+    {
+        if (catalog.ActiveProfile is not { KeepAwake: true } active)
+        {
+            return;
+        }
+
+        try
+        {
+            Log.Information("Active profile {Profile} keeps the PC awake", active.Name);
+            Services.GetRequiredService<IPowerController>().SetKeepAwake(true);
+        }
+        catch (Win32Exception ex)
+        {
+            Log.Warning(ex, "Keep-awake for {Profile} could not be set at startup", active.Name);
+        }
+    }
+
     private async Task ApplyDefaultProfileAsync(ProfileCatalog catalog)
     {
         AppSettings settings = Services.GetRequiredService<SettingsService>().Current;
@@ -194,7 +215,11 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
-        services.AddSingleton<IProcessList, Windows.Apps.ProcessList>();
+        services.AddSingleton<IPowerController, Windows.Power.PowerController>();
+        services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
+        services.AddSingleton<IUsbPowerCheck, Windows.Power.UsbPowerCheck>();
+        services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
+        services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());

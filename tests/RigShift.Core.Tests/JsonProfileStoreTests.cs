@@ -107,6 +107,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         display.Remove("rotation").ShouldBeTrue();
         display["identity"]!.AsObject().Remove("friendlyName").ShouldBeTrue();
         profile.Remove("audio").ShouldBeTrue();
+        profile.Remove("appsWaitSeconds").ShouldBeTrue();
         await File.WriteAllTextAsync(file, profile.Parent!.ToJsonString(), Ct);
 
         Profile loaded = (await store.LoadAllAsync(Ct)).Single();
@@ -114,6 +115,8 @@ public sealed class JsonProfileStoreTests : IDisposable
         loaded.Displays[0].Rotation.ShouldBe(DisplayRotation.Identity);
         loaded.Displays[0].Identity.FriendlyName.ShouldBe(string.Empty);
         loaded.Audio.ShouldNotBeNull();
+        loaded.AppsWaitSeconds.ShouldBe(Profiles.Profile.DefaultAppsWaitSeconds);
+        loaded.DisableCommunicationsDucking.ShouldBeFalse();
     }
 
     [Fact]

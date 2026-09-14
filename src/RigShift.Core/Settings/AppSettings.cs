@@ -40,7 +40,7 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
-    /// <summary>Game rules of the automation page (docs/PLAN.md, section 6).</summary>
+    /// <summary>USB device rules of the automation page (docs/PLAN.md, section 6).</summary>
     public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
 
     /// <summary>All rules paused, e.g. from the tray menu. <c>false</c> is the default for files without the key.</summary>

@@ -2,8 +2,11 @@ namespace RigShift.Core.Automation;
 
 public enum TriggerReason
 {
-    GameStarted,
-    GameExited,
+    /// <summary>The device connected.</summary>
+    Started,
+
+    /// <summary>The device is gone.</summary>
+    Ended,
 }
 
 /// <summary>A switch the automation asks for.</summary>
@@ -13,21 +16,26 @@ public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerR
 }
 
 /// <summary>
-/// Decides from polled process lists when rules switch (docs/PLAN.md, section 6). Pure logic: the caller supplies the
-/// running processes, the active profile and the time.
+/// Decides from polled USB devices when rules switch (docs/PLAN.md, section 6). Pure logic: the caller supplies what is
+/// present, the active profile and the time.
 /// </summary>
 /// <remarks>
-/// Start: a game that appears switches to the rule's profile, unless it is active already. Processes running at the first
-/// poll only set the baseline, so starting RigShift next to a running game changes nothing.
-/// Exit: acted on once the game has been gone for <see cref="ExitDelay"/> (a restart in between is no exit), and only
-/// while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
+/// Start: a device that appears switches to the rule's profile, unless it is active already. Whatever is present at the
+/// first poll only sets the baseline, so starting RigShift with the device already connected changes nothing.
+/// End: acted on once the device has been gone for the rule's <see cref="ExitDelayOf"/> (a restart in between is no end), and
+/// only while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
 /// </remarks>
-public sealed class ProcessTrigger
+public sealed class AutomationTrigger
 {
     private readonly Dictionary<Guid, RuleState> _states = [];
     private bool _hasBaseline;
 
-    public TimeSpan ExitDelay { get; init; } = TimeSpan.FromSeconds(10);
+    /// <summary>The rule's <see cref="AutomationRule.ExitDelaySeconds"/>, kept between 0 and 10 minutes.</summary>
+    public static TimeSpan ExitDelayOf(AutomationRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        return TimeSpan.FromSeconds(Math.Clamp(rule.ExitDelaySeconds, 0, AutomationRule.MaxExitDelaySeconds));
+    }
 
     /// <summary>Forget everything, e.g. after pausing: the next poll sets a new baseline.</summary>
     public void Reset()
@@ -36,11 +44,22 @@ public sealed class ProcessTrigger
         _hasBaseline = false;
     }
 
+    /// <summary>
+    /// What a rule watches in the present set: <see cref="UsbDeviceIds.Key"/> of its device; nothing for a rule without a
+    /// valid device id.
+    /// </summary>
+    public static IReadOnlyList<string> WatchedKeysOf(AutomationRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        return UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id ? [UsbDeviceIds.Key(id)] : [];
+    }
+
+    /// <param name="present"><see cref="UsbDeviceIds.Key"/> of connected devices.</param>
     public IReadOnlyList<TriggerAction> Evaluate(
-        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> runningProcesses, Guid? activeProfileId, DateTimeOffset now)
+        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(runningProcesses);
+        ArgumentNullException.ThrowIfNull(present);
 
         foreach (Guid removed in _states.Keys.Where(id => rules.All(r => r.Id != id)).ToList())
         {
@@ -50,12 +69,18 @@ public sealed class ProcessTrigger
         var actions = new List<TriggerAction>();
         foreach (AutomationRule rule in rules)
         {
-            IReadOnlyList<string> names = GameTemplates.ProcessNamesOf(rule);
-            bool running = names.Any(runningProcesses.Contains);
-            string watched = string.Join('|', names.Order(ProcessNames.Comparer)).ToUpperInvariant();
+            // Rules without a device (game rules of an unreleased build) are ignored.
+            if (rule.UsbDeviceId is null)
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> keys = WatchedKeysOf(rule);
+            bool running = keys.Any(present.Contains);
+            string watched = string.Join('|', keys.Order(StringComparer.OrdinalIgnoreCase)).ToUpperInvariant();
             if (!_states.TryGetValue(rule.Id, out RuleState? state) || state.Watched != watched)
             {
-                // A new rule, or one whose game was changed while that game runs, behaves like the baseline: no switch
+                // A new rule, or one whose device was changed while it is present, behaves like the baseline: no switch
                 // until the next start.
                 _states[rule.Id] = new RuleState { IsRunning = running, Watched = watched };
                 continue;
@@ -86,7 +111,7 @@ public sealed class ProcessTrigger
                 state.GoneSince = now;
             }
 
-            if (!running && state.GoneSince is { } gone && now - gone >= ExitDelay)
+            if (!running && state.GoneSince is { } gone && now - gone >= ExitDelayOf(rule))
             {
                 state.GoneSince = null;
                 OnExited(rule, state, activeProfileId, actions);
@@ -109,7 +134,7 @@ public sealed class ProcessTrigger
         state.PreviousProfileId = activeProfileId == rule.ProfileId ? null : activeProfileId;
         if (activeProfileId != rule.ProfileId)
         {
-            actions.Add(new TriggerAction(rule, rule.ProfileId, TriggerReason.GameStarted));
+            actions.Add(new TriggerAction(rule, rule.ProfileId, TriggerReason.Started));
         }
     }
 
@@ -134,7 +159,7 @@ public sealed class ProcessTrigger
 
         if (target is { } profile && profile != activeProfileId)
         {
-            actions.Add(new TriggerAction(rule, profile, TriggerReason.GameExited));
+            actions.Add(new TriggerAction(rule, profile, TriggerReason.Ended));
         }
     }
 
@@ -142,12 +167,12 @@ public sealed class ProcessTrigger
     {
         public bool IsRunning { get; set; }
 
-        /// <summary>The process names the state was built for.</summary>
+        /// <summary>The device key the state was built for.</summary>
         public required string Watched { get; init; }
 
         public DateTimeOffset? GoneSince { get; set; }
 
-        /// <summary>The game started while the rule was enabled and watched, so its exit may switch.</summary>
+        /// <summary>The device connected while the rule was enabled and watched, so its exit may switch.</summary>
         public bool StartedByRule { get; set; }
 
         public Guid? PreviousProfileId { get; set; }

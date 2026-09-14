@@ -74,31 +74,6 @@ public partial class AutomationPage : Page
         InitializeComponent();
         Loaded += (_, _) => viewModel.Load();
     }
-
-    private void OnBrowseExecutable(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: RuleCard card })
-        {
-            return;
-        }
-
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = Localization.Loc.Instance["App_FileFilter"],
-            Title = Localization.Loc.Instance["App_Browse"],
-        };
-
-        string current = Environment.ExpandEnvironmentVariables(card.ExecutablePath.Trim().Trim('"'));
-        if (System.IO.Path.IsPathFullyQualified(current) && System.IO.Path.GetDirectoryName(current) is { } folder && System.IO.Directory.Exists(folder))
-        {
-            dialog.InitialDirectory = folder;
-        }
-
-        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
-        {
-            card.ExecutablePath = dialog.FileName;
-        }
-    }
 }
 
 public partial class AboutPage : Page

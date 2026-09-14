@@ -1,4 +1,5 @@
 using RigShift.Core.Abstractions;
+using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 
 namespace RigShift.Core.Tests.Fakes;
@@ -45,4 +46,17 @@ internal sealed class FakeDisplayConfigurator : IDisplayConfigurator
         Applied.Add((plan, options));
         return Task.FromResult(_applyResults.Count > 0 ? _applyResults.Dequeue() : 0);
     }
+
+    public List<(string TargetDevicePath, bool Enabled)> HdrSet { get; } = [];
+
+    public int HdrResult { get; set; }
+
+    public Task<int> SetHdrAsync(AttachedDisplay display, bool enabled, CancellationToken cancellationToken)
+    {
+        HdrSet.Add((display.Identity.TargetDevicePath, enabled));
+        return Task.FromResult(HdrResult);
+    }
+
+    public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<RefreshRate>>([]);
 }

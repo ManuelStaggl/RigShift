@@ -32,6 +32,12 @@ public sealed record DisplayAssignment
     public bool IsPrimary { get; init; }
 
     /// <summary>
+    /// HDR on or off after the switch; <c>null</c> leaves it unchanged. In a snapshot: the current state, <c>null</c>
+    /// when the display does not support HDR (docs/PLAN.md, section 6, item 10).
+    /// </summary>
+    public bool? Hdr { get; init; }
+
+    /// <summary>
     /// Optional displays (e.g. a spacedesk tablet) are skipped when absent and picked up later
     /// instead of failing the whole switch.
     /// </summary>

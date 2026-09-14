@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot | audio | import <folder> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -37,6 +37,16 @@ switch (command)
         Print(snapshot.Displays.Select(d => new { d.Identity, d.IsAvailable, d.IsActive, d.ActiveMode, Handle = d.NativeHandle.ToString() }));
         break;
 
+    case "rates":
+        foreach (AttachedDisplay active in (await display.QueryAsync(CancellationToken.None)).Displays.Where(d => d.ActiveMode is not null))
+        {
+            DisplayAssignment mode = active.ActiveMode!;
+            IReadOnlyList<RefreshRate> rates = await display.ListRefreshRatesAsync(active.Identity, mode.Width, mode.Height, CancellationToken.None);
+            Print(new { active.Identity.FriendlyName, mode.Width, mode.Height, mode.Hdr, Rates = rates.Select(r => $"{r.Numerator}/{r.Denominator}") });
+        }
+
+        break;
+
     case "audio":
         var audio = new PolicyConfigAudioController(log);
         Print(new
@@ -44,6 +54,28 @@ switch (command)
             Render = await audio.ListAsync(AudioDirection.Render, CancellationToken.None),
             Capture = await audio.ListAsync(AudioDirection.Capture, CancellationToken.None),
         });
+        break;
+
+    case "usb":
+        var usb = new RigShift.Windows.Apps.UsbDeviceList();
+        Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
+        break;
+
+    case "usb-power" when args.Length >= 2:
+        // Read-only: selective suspend in the active power scheme and the device's power flags in the registry.
+        RigShift.Core.Automation.UsbPowerFindings findings = new RigShift.Windows.Power.UsbPowerCheck(log).Check(args[1]);
+        Print(new { Device = args[1], findings.SelectiveSuspendEnabledOnAc, findings.InstancesFound, findings.InstancesWithPowerSaving, Warn = RigShift.Core.Automation.UsbPowerSaving.ShouldWarn(findings) });
+        break;
+
+    case "keep-awake" when args.Length >= 2:
+        // Holds the request for the given seconds; check it meanwhile with "powercfg /requests" (admin).
+        using (var power = new RigShift.Windows.Power.PowerController(log))
+        {
+            power.SetKeepAwake(true);
+            await Task.Delay(TimeSpan.FromSeconds(int.Parse(args[1], CultureInfo.InvariantCulture)));
+            power.SetKeepAwake(false);
+        }
+
         break;
 
     case "import" when args.Length >= 2:
@@ -86,7 +118,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | audio | import <folder> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>");
         return 2;
 }
 

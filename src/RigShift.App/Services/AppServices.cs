@@ -79,7 +79,9 @@ public sealed record SwitchRecord(
     TimeSpan Duration,
     int? NativeError,
     string? Message,
-    IReadOnlyList<string> MissingDisplays)
+    IReadOnlyList<string> MissingDisplays,
+    string? AppsWaitDevice = null,
+    int AppsWaitSeconds = 0)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -162,6 +164,10 @@ public static class SwitchMessages
         if (record.Apps == AppsOutcome.Incomplete)
         {
             text += Environment.NewLine + Loc.Instance["Result_AppsIncomplete"];
+        }
+        else if (record.Apps == AppsOutcome.DeviceMissing)
+        {
+            text += Environment.NewLine + Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds);
         }
 
         return (title, text, icon);

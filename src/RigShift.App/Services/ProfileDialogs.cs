@@ -20,6 +20,7 @@ public sealed class ProfileDialogs
     private readonly IAudioController _audio;
     private readonly SettingsService _settings;
     private readonly HotkeyService _hotkeys;
+    private readonly IUsbDeviceList _usbDevices;
     private readonly IServiceProvider _services;
     private readonly ILogger _log;
 
@@ -29,6 +30,7 @@ public sealed class ProfileDialogs
         IAudioController audio,
         SettingsService settings,
         HotkeyService hotkeys,
+        IUsbDeviceList usbDevices,
         IServiceProvider services,
         ILogger log)
     {
@@ -38,6 +40,7 @@ public sealed class ProfileDialogs
         _audio = audio;
         _settings = settings;
         _hotkeys = hotkeys;
+        _usbDevices = usbDevices;
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
@@ -84,8 +87,9 @@ public sealed class ProfileDialogs
     private async Task<Profile?> ShowAsync(Profile profile, bool isNew, IReadOnlyList<AudioDeviceInfo> playback)
     {
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
+        IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
+            profile, isNew, playback, recording, usbDevices, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };
@@ -99,6 +103,19 @@ public sealed class ProfileDialogs
         finally
         {
             _hotkeys.Resume();
+        }
+    }
+
+    private async Task<IReadOnlyList<Core.Automation.UsbDevice>> ListUsbDevicesAsync()
+    {
+        try
+        {
+            return await Task.Run(_usbDevices.ConnectedDevices);
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "USB devices could not be listed for the editor");
+            return [];
         }
     }
 

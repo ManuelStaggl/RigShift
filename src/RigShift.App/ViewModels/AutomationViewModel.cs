@@ -1,19 +1,22 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RigShift.App.Localization;
 using RigShift.App.Services;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>Game rules: "when this game starts, switch to that profile" (docs/PLAN.md, section 6). Changes save at once.</summary>
+/// <summary>
+/// Rules: "when this USB device connects, switch to that profile" (docs/PLAN.md, section 6). Changes save at once.
+/// </summary>
 public sealed partial class AutomationViewModel : ObservableObject
 {
-    internal const string CustomGameKey = "custom";
     private const string ExitStayKey = "stay";
     private const string ExitBackKey = "back";
     private const string ExitToPrefix = "to:";
@@ -21,10 +24,17 @@ public sealed partial class AutomationViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly AutomationService _automation;
+    private const string UsbPowerHelpUrl = "https://github.com/ManuelStaggl/RigShift/blob/main/docs/usb-power-saving.md";
+
+    private readonly IUsbDeviceList _devices;
+    private readonly IUsbPowerCheck _powerCheck;
     private readonly ILogger _log;
+    private readonly Dictionary<string, string> _deviceNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, bool> _powerWarnings = new(StringComparer.OrdinalIgnoreCase);
     private bool _loading;
 
-    public AutomationViewModel(SettingsService settings, ProfileCatalog catalog, AutomationService automation, ILogger log)
+    public AutomationViewModel(
+        SettingsService settings, ProfileCatalog catalog, AutomationService automation, IUsbDeviceList devices, IUsbPowerCheck powerCheck, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(automation);
         ArgumentNullException.ThrowIfNull(log);
@@ -32,13 +42,16 @@ public sealed partial class AutomationViewModel : ObservableObject
         _settings = settings;
         _catalog = catalog;
         _automation = automation;
+        _devices = devices;
+        _powerCheck = powerCheck;
         _log = log.ForContext<AutomationViewModel>();
         automation.Changed += (_, _) => Quietly(() => IsPaused = automation.IsPaused);
     }
 
     public ObservableCollection<RuleCard> Rules { get; } = [];
 
-    public ObservableCollection<Choice> GameChoices { get; } = [];
+    /// <summary>Connected USB devices, plus devices of rules that are not connected right now.</summary>
+    public ObservableCollection<Choice> DeviceChoices { get; } = [];
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
 
@@ -63,14 +76,7 @@ public sealed partial class AutomationViewModel : ObservableObject
     public void Load() => Quietly(() =>
     {
         IReadOnlyList<AutomationRule> rules = _automation.Rules;
-
-        GameChoices.Clear();
-        foreach (GameTemplate template in GameTemplates.BuiltIn)
-        {
-            GameChoices.Add(new Choice(template.Id, template.Name));
-        }
-
-        GameChoices.Add(new Choice(CustomGameKey, Loc.Instance["Automation_CustomGame"]));
+        FillDevices(rules);
 
         ProfileChoices.Clear();
         ExitChoices.Clear();
@@ -98,10 +104,56 @@ public sealed partial class AutomationViewModel : ObservableObject
         IsPaused = _automation.IsPaused;
         HasNoProfiles = _catalog.Profiles.Count == 0;
         IsEmpty = Rules.Count == 0;
+        RefreshPowerWarnings();
     });
 
-    internal Choice? GameChoiceFor(AutomationRule rule) =>
-        GameChoices.FirstOrDefault(c => c.Key == (rule.TemplateId ?? CustomGameKey));
+    /// <summary>Whether Windows may power the device down; checked once per device until the next refresh.</summary>
+    internal bool HasPowerWarning(string? deviceId)
+    {
+        if (deviceId is null)
+        {
+            return false;
+        }
+
+        if (!_powerWarnings.TryGetValue(deviceId, out bool warn))
+        {
+            try
+            {
+                warn = UsbPowerSaving.ShouldWarn(_powerCheck.Check(deviceId));
+            }
+            catch (Exception ex) when (ex is Win32Exception or System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            {
+                _log.Debug(ex, "USB power check for {Device} failed", deviceId);
+                warn = false;
+            }
+
+            _powerWarnings[deviceId] = warn;
+            if (warn)
+            {
+                _log.Information("USB power saving may turn off {Device}", DeviceNameFor(deviceId) ?? deviceId);
+            }
+        }
+
+        return warn;
+    }
+
+    private void RefreshPowerWarnings()
+    {
+        _powerWarnings.Clear();
+        foreach (RuleCard card in Rules)
+        {
+            card.UpdatePowerWarning();
+        }
+    }
+
+    [RelayCommand]
+    private void OpenUsbPowerHelp() => ShellFolders.OpenUrl(UsbPowerHelpUrl, _log);
+
+    internal Choice? DeviceChoiceFor(string? deviceId) =>
+        DeviceChoices.FirstOrDefault(c => string.Equals(c.Key, deviceId, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The device's own name, without the "not connected" note.</summary>
+    internal string? DeviceNameFor(string? deviceId) => deviceId is not null && _deviceNames.TryGetValue(deviceId, out string? name) ? name : null;
 
     internal Choice? ProfileChoiceFor(Guid id) => ProfileChoices.FirstOrDefault(c => c.Key == id.ToString("D"));
 
@@ -138,9 +190,12 @@ public sealed partial class AutomationViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddRule))]
     private async Task AddRuleAsync()
     {
+        // The first connected device is preselected, so the rule works without a second click.
+        string? device = DeviceChoices.Count > 0 ? DeviceChoices[0].Key : null;
         var rule = new AutomationRule
         {
-            TemplateId = GameTemplates.BuiltIn.Count > 0 ? GameTemplates.BuiltIn[0].Id : null,
+            UsbDeviceId = device ?? string.Empty,
+            UsbDeviceName = DeviceNameFor(device),
             ProfileId = _catalog.Profiles.FirstOrDefault(p => p.Id == _settings.Current.DefaultProfileId)?.Id ?? _catalog.Profiles[0].Id,
             OnExit = ExitAction.SwitchBack,
         };
@@ -164,6 +219,53 @@ public sealed partial class AutomationViewModel : ObservableObject
         IsEmpty = Rules.Count == 0;
         _log.Information("Automation rule {Rule} deleted", card.Id);
         await SaveAsync();
+    }
+
+    [RelayCommand]
+    private void RefreshDevices() => Quietly(() =>
+    {
+        List<AutomationRule> rules = Rules.Select(r => r.ToRule()).ToList();
+        FillDevices(rules);
+        foreach (RuleCard card in Rules)
+        {
+            card.SelectedDevice = DeviceChoiceFor(card.DeviceId);
+        }
+
+        RefreshPowerWarnings();
+    });
+
+    private void FillDevices(IReadOnlyList<AutomationRule> rules)
+    {
+        IReadOnlyList<UsbDevice> connected;
+        try
+        {
+            connected = _devices.ConnectedDevices();
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "USB devices could not be listed");
+            connected = [];
+        }
+
+        DeviceChoices.Clear();
+        _deviceNames.Clear();
+        foreach (UsbDevice device in connected)
+        {
+            DeviceChoices.Add(new Choice(device.Id, device.Name));
+            _deviceNames[device.Id] = device.Name;
+        }
+
+        foreach (AutomationRule rule in rules)
+        {
+            if (UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id && !_deviceNames.ContainsKey(id))
+            {
+                string name = rule.UsbDeviceName ?? id;
+                DeviceChoices.Add(new Choice(id, Loc.Format("Automation_DeviceNotConnected", name)));
+                _deviceNames[id] = name;
+            }
+        }
+
+        _log.Debug("Automation lists {Count} USB device(s)", connected.Count);
     }
 
     private async Task SaveAsync()
@@ -209,28 +311,24 @@ public sealed partial class RuleCard : ObservableObject
         _owner = owner;
         Id = rule.Id;
         IsEnabled = rule.IsEnabled;
-        SelectedGame = owner.GameChoiceFor(rule);
-        ExecutablePath = rule.ExecutablePath ?? string.Empty;
+        SelectedDevice = owner.DeviceChoiceFor(UsbDeviceIds.Normalize(rule.UsbDeviceId));
         SelectedProfile = owner.ProfileChoiceFor(rule.ProfileId);
         SelectedExit = owner.ExitChoiceFor(rule);
         SkipConfirmation = rule.SkipConfirmation;
+        ExitDelaySeconds = rule.ExitDelaySeconds;
     }
 
     public Guid Id { get; }
 
     public AutomationViewModel Owner => _owner;
 
-    public bool IsCustom => SelectedGame?.Key == AutomationViewModel.CustomGameKey;
+    internal string? DeviceId => SelectedDevice?.Key;
 
     [ObservableProperty]
     public partial bool IsEnabled { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsCustom))]
-    public partial Choice? SelectedGame { get; set; }
-
-    [ObservableProperty]
-    public partial string ExecutablePath { get; set; }
+    public partial Choice? SelectedDevice { get; set; }
 
     [ObservableProperty]
     public partial Choice? SelectedProfile { get; set; }
@@ -241,6 +339,15 @@ public sealed partial class RuleCard : ObservableObject
     [ObservableProperty]
     public partial bool SkipConfirmation { get; set; }
 
+    [ObservableProperty]
+    public partial double? ExitDelaySeconds { get; set; }
+
+    /// <summary>Windows may power the chosen device down (hint only, docs/usb-power-saving.md).</summary>
+    [ObservableProperty]
+    public partial bool HasPowerWarning { get; private set; }
+
+    internal void UpdatePowerWarning() => HasPowerWarning = _owner.HasPowerWarning(DeviceId);
+
     public AutomationRule ToRule()
     {
         (ExitAction onExit, Guid? exitProfile) = AutomationViewModel.ExitFrom(SelectedExit);
@@ -248,24 +355,32 @@ public sealed partial class RuleCard : ObservableObject
         {
             Id = Id,
             IsEnabled = IsEnabled,
-            TemplateId = IsCustom ? null : SelectedGame?.Key,
-            ExecutablePath = IsCustom && !string.IsNullOrWhiteSpace(ExecutablePath) ? ExecutablePath.Trim() : null,
+            // An empty id keeps a rule without a chosen device; it watches nothing until one is picked.
+            UsbDeviceId = DeviceId ?? string.Empty,
+            UsbDeviceName = _owner.DeviceNameFor(DeviceId),
             ProfileId = Guid.TryParse(SelectedProfile?.Key, out Guid profile) ? profile : Guid.Empty,
             OnExit = onExit,
             ExitProfileId = exitProfile,
             SkipConfirmation = SkipConfirmation,
+            ExitDelaySeconds = ExitDelaySeconds is { } seconds
+                ? (int)Math.Clamp(Math.Round(seconds), 0, AutomationRule.MaxExitDelaySeconds)
+                : AutomationRule.DefaultExitDelaySeconds,
         };
     }
 
     partial void OnIsEnabledChanged(bool value) => _owner.OnCardChanged();
 
-    partial void OnSelectedGameChanged(Choice? value) => _owner.OnCardChanged();
-
-    partial void OnExecutablePathChanged(string value) => _owner.OnCardChanged();
+    partial void OnSelectedDeviceChanged(Choice? value)
+    {
+        UpdatePowerWarning();
+        _owner.OnCardChanged();
+    }
 
     partial void OnSelectedProfileChanged(Choice? value) => _owner.OnCardChanged();
 
     partial void OnSelectedExitChanged(Choice? value) => _owner.OnCardChanged();
 
     partial void OnSkipConfirmationChanged(bool value) => _owner.OnCardChanged();
+
+    partial void OnExitDelaySecondsChanged(double? value) => _owner.OnCardChanged();
 }

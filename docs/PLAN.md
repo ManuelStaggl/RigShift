@@ -285,6 +285,60 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 
 ## 6. Roadmap nach v1 (vom Nutzer gewählt, priorisiert)
 
+**Umfangsprüfung 2026-09-14 (läuft):** Der Nutzer hält das Tool für überladen – Ziel ist ein kleines Tool, das
+nebenher läuft und schnell ins Rig wechselt. Home Assistant (Punkt 12) ist gestoppt und nicht committet. Automatik
+per Spiel steht in Frage (man startet Spiele erst im Rig; Umschalten während des Spielstarts ist riskant).
+**Entschieden: der USB-Trigger bleibt** („an das Rig gehen, Wheelbase einschalten, alles Weitere passiert
+automatisch“). Dazu auf Wunsch des Nutzers die **Wartezeit bis zur Ende-Aktion pro Regel einstellbar**
+(`AutomationRule.ExitDelaySeconds`, Standard 10 s, 0–600) – Sim-Hardware muss oft kurz aus- und wieder eingeschaltet
+werden.
+**Entschieden nach Web-Recherche** (Kern laut Belegen: richtiger Primärbildschirm, ein Klick/Hotkey, Audiogerät,
+„erst umschalten, dann Spiel starten“, robuste Wiederherstellung): **gestrichen** werden die Automatik per Spiel samt
+Vorlagen (Punkt 6 – schaltet zu spät und mitten im Spielstart), die lokale HTTP-API (Punkt 11 – keine Nachfrage,
+offener Port) und der Energieplan pro Profil (Punkt 9 – keine Nachfrage); Home Assistant (Punkt 12) verworfen.
+**Behalten:** USB-Trigger, Wach halten, Apps und Lautstärke pro Profil, HDR + Hz pro Bildschirm, Monitornamen,
+Seiten Bildschirme und Über & Hilfe. Die gestrichenen Stände bleiben in der Git-Historie (`f10c971` API,
+`e151728` Energie, `eea7338`/`3fb1fd4` Automatik). Die Abschnitte zu 6, 9, 11 und 12 unten sind damit Historie.
+**Neu für 1.3 gewählt** (zweite Recherche 2026-09-14, Nutzer hat alle vier genommen):
+1. **Verlorene Fenster holen** – nach dem Umschalten Fenster, die auf keinem aktiven Bildschirm mehr liegen, auf den
+   Hauptbildschirm verschieben (Discord/Steam/SimHub landen sonst auf abgeschalteten Bildschirmen). Immer an.
+2. **Apps warten auf Gerät** – pro Profil optional ein USB-Gerät, auf das vor dem App-Start gewartet wird (mit
+   Höchstwartezeit), sonst Hinweis im Tray. Wheel-Software und Spiele wollen das Gerät vor dem Start sehen.
+3. **Rig-Check USB-Stromsparen** – Hinweis, wenn Windows ein Trigger-Gerät schlafen legen darf (Pedal-/Wheelbase-
+   Abbrüche). Nur Hinweis mit Anleitung, keine Änderung ohne Adminrechte.
+4. **Windows-Lautstärkeabsenkung bei Anrufen aus** – Profil-Schalter, beim Zurückschalten alter Wert (HKCU,
+   undokumentiert → Fehler nur im Log).
+**Umgesetzt 2026-09-14**: (1) `IWindowRescuer` / `WindowRescuer` (EnumWindows, sichtbar, nicht gecloakt, kein
+Tool-Fenster; verloren = `MonitorFromRect` mit `MONITOR_DEFAULTTONULL` findet keinen Monitor, bei minimiert/maximiert
+über die Normalposition; Verschieben per `SetWindowPlacement` zentriert in den Arbeitsbereich des Hauptbildschirms,
+Größe begrenzt, Zustand bleibt, kein Fokusklau). Läuft nach **jedem** erfolgreichen Apply (Umschalten, Rollback,
+Wiederherstellung nach Fehler, Nachholen) nach `SwitchOptions.WindowRescueDelay` (1 s); Geometrie in
+`WindowGeometry`. (2) `Profile.AppsWaitForUsbDeviceId`/`…Name`/`AppsWaitSeconds` (30 s, 5–300, `set` wegen
+Source-Generator); der Orchestrator fragt `IUsbDeviceList` sekündlich ab, startet die Apps bei Zeitablauf trotzdem
+und meldet `AppsOutcome.DeviceMissing` (Tray-Meldung mit Gerätename und Sekunden, CLI-Zeile, Verlauf). Editor:
+Auswahl „Nicht warten“ + verbundene Geräte (wie Automatik-Seite, gespeichertes getrenntes Gerät „(nicht
+verbunden)“) und Sekundenfeld. (3) `IUsbPowerCheck` / `UsbPowerCheck` nur lesend (Energieschema AC über
+`PowerReadACValueIndex`, `Device Parameters` unter `HKLM\…\Enum\USB`); Entscheidung in `UsbPowerSaving.ShouldWarn`
+(warnt, wenn eine Geräteinstanz Stromsparen erlaubt und das Schema es nicht ausschließt – Schema allein warnt
+nicht). Hinweis + Link auf `docs/usb-power-saving.md` in jeder USB-Regelkarte, geprüft beim Laden und
+Aktualisieren; Probe `usb-power <VID_xxxx&PID_xxxx>`. (4) `Profile.DisableCommunicationsDucking` +
+`IDuckingPreference` / `RegistryDuckingPreference` (HKCU `UserDuckingPreference`, `null` = Wert löschen): setzt 3,
+merkt den Wert von vor dem ersten solchen Profil im Speicher, das nächste Profil ohne Schalter stellt ihn her,
+Ablehnen stellt den Stand vor dem Wechsel her. Tests (204 → 241) belegen: Rettung nach Umschalten mit 1 s
+Verzögerung, zweimal bei Rollback, nach Wiederherstellung und beim Nachholen, Ausnahme ändert das Ergebnis nicht,
+DryRun/Blocked rufen nichts auf; Gerät schon da (keine Wartezeit), erscheint nach 3 s, erscheint nie (Apps starten,
+`DeviceMissing`, Wartezeit geklemmt), kein Gerät (keine Abfrage), Ablehnen (kein Warten, keine Apps); Ducking
+setzen + Wiederherstellen über ein Zwischenprofil, fehlender Wert kommt als fehlend zurück, Nutzerwert ohne
+Schalter unberührt, Rollback, DryRun/Blocked unberührt, Fehler scheitert nicht; Geometrie, Warnregel und
+Registry-Flag (DWORD/Binär); fehlender `appsWaitSeconds`-Schlüssel lädt 30. Probe `usb-power` läuft am Server.
+**Nicht belegt:** echtes Verschieben von Fenstern nach einem Topologiewechsel, Warten mit echter Wheelbase,
+Wirkung der Absenkung in einem Discord-Anruf, Warnung mit echten Sim-Geräten → Gaming-PC.
+**Am Server angesehen** (Dev-Build, de, dunkel, ohne Umschalten): Automatik-Seite mit USB-Regel, Wartezeit und
+Stromspar-Warnung samt Anleitungsknopf (Gerät mit gesetztem Flag); Editor mit Hz-/HDR-Auswahl je Bildschirm,
+Anruf-Absenkung, Wach halten und „Vor dem App-Start auf Gerät warten“. Abgeschnittenes Ende-Label der Regelkarte
+korrigiert (Umbruch).
+Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, Desktopsymbole, Surround, VR, CEC.
+
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
 Releases nützlich)
 
@@ -372,6 +426,22 @@ belegt: Schalter aus → `confirmTimeoutSeconds: 0`, Hinweistext wechselt, Sekun
 Zuschnitt Punkte 3–5 (vom Nutzer gewählt 2026-09-14): jetzt bauen und am Server mit Unit-Tests belegen, **kein
 Release vor dem Gaming-PC-Test**; der Test deckt dann 1.2.0 und diesen Block zusammen ab, danach 1.3.0.
 
+**Gaming-PC-Test 2026-09-14** (per SSH gesteuert, Programme über eine kurzlebige geplante Aufgabe in der
+Konsolensitzung gestartet, Belege aus dem Log; Release-Build von `e38b8f9`):
+- 1.0.1 → 1.2.0 per Auto-Update beim Neustart installiert; `HKCU\Software\Classes\rigshift` danach vorhanden.
+  `rigshift://apply/Rig` über `explorer.exe` (wie Win+R) schaltet; mit Schalter „Bestätigen“ aus kein Dialog.
+- Automatik: Regel AMS2 → Rig (zurück, ohne Bestätigung). Spielstart per Steam → nach ~1 s Wechsel (G9 nach
+  Fehler‑31‑Wiederholungen aktiv, Ton auf Headset); Spiel beendet → nach 10 s zurück auf Desk.
+- EXE-Namen belegt: `Le Mans Ultimate`, `AssettoCorsaEVO`, `AMS2AVX` (laufende Prozesse).
+- Lautstärke: Rig 40 % gesetzt; nicht bestätigt (eigene 8 s) → Rückfall inkl. 50 %, Apps nicht gestartet.
+- Apps: Start Editor + fensterloses Programm; beim Wechsel zurück Editor per Fenster beendet, fensterloses nach
+  5 s hart beendet; läuft der Editor schon → „already runs, not started“.
+- Seiten Bildschirme, Automatik, Über & Hilfe in echt angesehen (Screenshots im README), Diagnose-Infos mit echten
+  Geräten in der Zwischenablage.
+- **Offen (braucht den Nutzer):** Tastenkürzel an der echten Tastatur (Umschalten, erneutes Drücken bestätigt,
+  belegtes Kürzel, Anzeige im Tray-Menü), Pausieren über Seite und Tray (UIA-Umschalten wirkte nicht, Ursache
+  ungeklärt), Beenden einer Admin-App, Erkennen auf allen Bildschirmen, Umbenennen, Dateiauswahl „eigene EXE“.
+
 3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis). **War schon seit
    M3 umgesetzt** (Editor: vier Audio-Zeilen, Orchestrator setzt Aufnahme/Kommunikation getrennt).
 4. Lautstärke pro Profil (`IAudioEndpointVolume`). Festlegung: **Wiedergabe und Aufnahme** je ein Regler mit
@@ -453,16 +523,113 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
    Auswertung während eines Wechsels), `AutomationPage`. Unit-Tests belegen Start, Ausgangslage, Rückkehr nach
    Verzögerung, Neustart, Nutzerwechsel, alle Ende-Aktionen, deaktivierte Regel, Vorlagen und Settings-Roundtrip.
    **Nicht belegt:** echte Spiele und EXE-Namen (LMU, AC EVO aus Websuche) → Gaming-PC.
+   Nachtrag 2026-09-14: Vorlagen RaceRoom (`RRRE64.exe`, `RRRE.exe`), AC Rally (`acr.exe`) und Forza Horizon 6
+   (`forzahorizon6.exe`), Namen aus den Installationsordnern am Gaming-PC gelesen (nicht gestartet); Issue-Formular
+   „Game template request“. **Pausieren auf der Seite am Server belegt** (Dev-Build, ohne Regeln): Schalter per
+   UIA-`TogglePattern` → `automationPaused` true/false in `settings.json`, Log „Automation paused/resumed“, Infoleiste
+   sichtbar. Der frühere Fehlschlag lag am Testskript: `FindFirst` nach dem Namen trifft zuerst den gleichnamigen
+   `TextBlock` der CardControl – nach `ControlType.Button` filtern. Tray-Menüpunkt (nur mit Regeln) bleibt für den
+   Gaming-PC.
 
 **v1.2 – Automatik und Komfort**
 
-7. USB-Gerät verbunden (`RegisterDeviceNotification`, Wheelbase/Dongle per VID/PID oder Name).
+7. USB-Gerät verbunden (Wheelbase/Dongle per VID/PID).
+   **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+   - **Teil der Automatik**, kein eigenes Konzept: eine Regel hat als Auslöser ein Spiel *oder* ein USB-Gerät.
+     Ende-Aktion (inkl. 10 s Karenz, z. B. Wheelbase-Neustart), „Ohne Bestätigung“, Pausieren und Ausgangslage
+     beim ersten Abfragen gelten unverändert.
+   - **Gerätewahl aus den verbundenen Geräten**; gespeichert wird `VID_xxxx&PID_xxxx` (Port-unabhängig) plus Name zur
+     Anzeige. Ein gespeichertes, gerade nicht verbundenes Gerät bleibt als „nicht verbunden“ auswählbar.
+     Keine manuelle VID/PID-Eingabe.
+   - **Keine Kombination** Spiel + Gerät in einer Regel; genau ein Auslöser pro Regel.
+   - Erkennung (eigene Entscheidung): **Polling im selben 2-s-Takt** über `CM_Get_Device_ID_List` (Filter USB,
+     nur vorhandene Geräte) statt `RegisterDeviceNotification`. Begründung: ein Pfad für beide Auslöser, dieselbe
+     getestete Logik (Anwesenheit eines Schlüssels, Ausgangslage, Karenz) ohne verstecktes Fenster; die Abfrage kostet
+     wenige Millisekunden, und 2 s Verzögerung sind beim Einschalten einer Wheelbase egal.
+   **Umgesetzt 2026-09-14**: `AutomationRule.UsbDeviceId/UsbDeviceName`, `UsbDeviceIds` (VID/PID aus der Instanz-ID,
+   auch mit Suffixen wie `&LAMPARRAY` oder `&MI_00`), `ProcessTrigger` → `AutomationTrigger` (Schlüsselmenge aus
+   Prozessnamen und `usb:`-Schlüsseln; ein Doppelpunkt kommt in Prozessnamen nicht vor), `IUsbDeviceList` +
+   `Windows/Apps/UsbDeviceList` (Hubs ausgefiltert, Name aus BusReportedDeviceDesc → FriendlyName → DeviceDesc),
+   Auswahl „USB-Gerät“ auf der Automatik-Seite mit Geräteliste und Aktualisieren. Probe: `RigShift.Probe usb`.
+   Am Gaming-PC belegt: Geräteliste mit echten Namen, „nicht verbunden“-Eintrag, beim Start angestecktes Gerät schaltet
+   nicht, de + en. **Nicht belegt:** echtes Ein-/Ausschalten eines Geräts (braucht den Nutzer, z. B. Wheelbase).
 8. Rennmodus: Fokus-Assistent an, Spielmodus, Standby/Bildschirmschoner aus; alles beim Zurückwechseln zurück.
 9. Energieplan pro Profil (`powercfg /setactive`).
+   **Entschieden 2026-09-14 für 8 + 9 als ein Block** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+   - Pro Profil **„Wach halten“** (kein Standby, kein Bildschirmschoner, Monitore bleiben an) und **Energieplan**
+     (aus = unverändert). Beides über dokumentierte APIs und verlustfrei umkehrbar.
+   - **Nicht stören und Spielmodus entfallen**: Nicht stören hat keine offizielle API (nur undokumentierte
+     Windows-Interna, die mit einem Update still brechen können), den Spielmodus schaltet Windows für erkannte Spiele
+     selbst. Stattdessen Doku-Hinweis auf die Windows-Automatik für Vollbild-Spiele.
+   - **Gesetzt zusammen mit Audio, beim Zurückrollen zurückgesetzt** – anders als Apps, weil beides ohne Verlust
+     umkehrbar ist und sonst während des Countdowns noch der alte Energieplan gälte.
+   - Eigene Entscheidungen: Wach halten per **Power Request** (`PowerCreateRequest`, DisplayRequired + SystemRequired)
+     statt `SetThreadExecutionState` – an ein Handle gebunden statt an den aufrufenden Thread, in `powercfg /requests`
+     als RigShift sichtbar, endet mit dem Prozess. Energieplan per `PowerSetActiveScheme` statt `powercfg`-Aufruf.
+     Rückkehr: der Plan von vor dem ersten Profil mit eigenem Plan wird gemerkt und vom nächsten Profil **ohne** Plan
+     zurückgesetzt (auch über ein Zwischenprofil hinweg); nur im Speicher, nach einem App-Neustart bleibt der Plan
+     einfach. Wach halten folgt dem Profil und wird beim App-Start für das aktive Profil neu gesetzt. Fehler nur im
+     Log, kein eigener Ausgang im Ergebnis.
+   **Umgesetzt 2026-09-14**: `Profile.KeepAwake/PowerPlan`, `IPowerController` + `Windows/Power/PowerController`,
+   Abschnitt „Energie“ im Profil-Editor, Probe `power` und `keep-awake <s>`. Unit-Tests belegen Wach halten folgt dem
+   Profil, Plan setzen und Rückkehr über ein Zwischenprofil, Plan des Nutzers bleibt unberührt, Zurückrollen, Dry-Run/
+   Blockiert unverändert, Fehler lässt den Wechsel gelingen. **Am Server belegt:** Planliste mit Namen und aktivem Plan,
+   Power Request unter DISPLAY und SYSTEM in `powercfg /requests`, nach Prozessende weg. **Nicht belegt:** Plan wirklich
+   umschalten (Systemeinstellung, am Server bewusst nicht), Bildschirmschoner/Standby bleiben aus, Editor-Optik →
+   Gaming-PC.
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur
     über undokumentierte Registry → als „experimentell" markieren.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+    - **HDR pro Bildschirm** als „Unverändert / An / Aus“. „Aktuellen Zustand speichern“ merkt sich An/Aus für
+      HDR-fähige Bildschirme; bestehende Profile bleiben „Unverändert“. Gesetzt direkt nach der Anordnung über CCD
+      (`DisplayConfigSetDeviceInfo`), beim Zurückrollen zurück.
+    - **Bildwiederholrate im Editor wählbar**: Auswahl der Raten, die der Monitor bei der gespeicherten Auflösung
+      meldet. Gespeichert und gesetzt wurde sie schon seit 1.0.
+    - **Nachtlicht entfällt** – nur über einen undokumentierten Registry-Blob, der mit einem Windows-Update still
+      brechen kann (gleiche Begründung wie „Nicht stören“ in Punkt 8).
+    - Eigene Entscheidungen: HDR lesen/setzen erst mit der 24H2-Anfrage (`GET_ADVANCED_COLOR_INFO_2`/`SET_HDR_STATE`,
+      trennt HDR von Wide Color/Auto-Farbverwaltung), sonst die ältere „Advanced Color“-Anfrage. Gesetzt im
+      Orchestrator nach jedem erfolgreichen `SetDisplayConfig` auf frischem Snapshot (ein gerade eingeschalteter
+      Bildschirm meldet HDR erst aktiv) – dadurch stellen Zurückrollen und Wiederherstellen HDR mit dem gemerkten
+      Vorzustand zurück. Fehler nur im Log. Raten per **DXGI** (`GetDisplayModeList`) statt `EnumDisplaySettings`, weil
+      DXGI exakte Brüche liefert (239761/1000 statt 239) und die Wahl so unverändert durch CCD geht. Raten, die auf
+      zwei Nachkommastellen gleich aussehen, erscheinen einmal; die gespeicherte bleibt immer drin.
+    **Umgesetzt 2026-09-14**: `DisplayAssignment.Hdr`, `RefreshRate`, `IDisplayConfigurator.SetHdrAsync/
+    ListRefreshRatesAsync`, `DxgiModes`, Editor je Bildschirm Auswahl Hz + HDR, Probe `rates`. Unit-Tests belegen
+    HDR setzen nur bei Abweichung, unverändert/nicht unterstützt fasst nichts an, Zurückrollen stellt HDR zurück,
+    Fehler lässt den Wechsel gelingen. **Am Server belegt:** Probe `rates` liest HDR-Zustand und Raten der
+    RDP-Anzeige. **Nicht belegt:** HDR wirklich umschalten, gewählte Rate beim Wechsel, Editor-Optik → Gaming-PC.
 11. Lokale HTTP-API (`http://127.0.0.1:<port>/api/profiles`, Token in settings.json) für Skripte und SimHub.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+    - **Standardmäßig aus**, Schalter in den Einstellungen. Beim Einschalten wird ein Token erzeugt und mit Port,
+      Kopier-Knopf und Beispielaufruf angezeigt. Kein lauschender Port bei Nutzern ohne Bedarf.
+    - **Nur 127.0.0.1, Token Pflicht für alle Aufrufe** (`Authorization: Bearer <token>`). Ohne Token könnte jede
+      geöffnete Webseite per `fetch()` an localhost umschalten oder die Profile auslesen; ein eigener Header erzwingt
+      im Browser einen Preflight, den die API nicht beantwortet. Kein LAN (Firewall, URL-Reservierung, Angriffsfläche).
+    - **Umfang wie die CLI**: `GET /api/status`, `GET /api/profiles`, `POST /api/profiles/{name}/apply`
+      (`?dryRun=true`, `?noConfirm=true`). Pausieren und Bestätigen per API erst bei Bedarf.
+    - **Umschalten wartet auf das Ergebnis** (wie die CLI) und liefert den Ausgang als JSON.
+    - Eigene Entscheidungen: **`TcpListener` auf Loopback mit minimalem HTTP/1.1** statt `HttpListener` (http.sys
+      verlangt für `127.0.0.1` eine URL-Reservierung mit Adminrechten und lehnt abweichende Host-Header ab) und statt
+      Kestrel (zusätzliches Shared Framework, mehrere MB im Paket für drei Endpunkte). Parser und Endpunkte liegen in
+      Core und sind ohne Windows testbar. Standardport **47800**, in `settings.json` änderbar. Ein abgeschlossener
+      Wechsel antwortet 200 mit `outcome` (auch `rolledBack`/`failed` – die Anfrage selbst hat geklappt); 401 ohne
+      gültiges Token, 404 unbekanntes Profil, 409 bei laufendem Wechsel.
+    **Umgesetzt 2026-09-14**: `Core/Api` (`HttpMessages`, `ApiHandler`, `HttpApiServer`), `AppSettings.HttpApiEnabled/
+    HttpApiPort/HttpApiToken`, `HttpApiService` (startet/stoppt bei Einstellungsänderung), Karte in den Einstellungen
+    (Port, Token, Kopieren, Beispiel, Neues Token, Link auf `docs/http-api.md`). JSON ohne `\uXXXX`-Escapes, weil nur
+    als `application/json` ausgeliefert. Unit-Tests belegen Parser, Token, Host-Prüfung, alle Endpunkte und
+    Statuscodes sowie echte Aufrufe per `HttpClient`. **Am Server belegt** (Dev-Build): 200/401/403/405/404 per curl,
+    Dry-Run über den UI-Thread, Lauschen nur auf 127.0.0.1, „Neues Token“ macht das alte ungültig, Ausschalten schließt
+    den Port, Einschalten öffnet ihn wieder, Karte angesehen. **Nicht belegt:** echtes Umschalten per API → Gaming-PC.
 12. Home Assistant: MQTT-Discovery (aktives Profil als Sensor, Wechsel als Select-Entität) auf Basis der API.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User):
+    - **MQTT-Discovery**, RigShift verbindet sich ausgehend zum Broker (z. B. Mosquitto-Add-on). Keine eigene
+      HA-Integration über die HTTP-API: die API bliebe sonst nicht auf 127.0.0.1, und ein zweites Repo wäre zu pflegen.
+    - Entitäten eines Geräts „RigShift (PC-Name)“: **Select „Profil“** (zeigt und schaltet), **ein Knopf pro Profil**,
+      **Schalter „Automatik pausiert“**, **Sensor „Letzter Wechsel“** (Ausgang + Zeitpunkt), Verfügbarkeit per Last Will.
+    - **Wechsel aus HA ohne Countdown** – am PC sitzt dann oft niemand, der bestätigen könnte.
+    - Eigene Entscheidungen: Bibliothek MQTTnet; Passwort per DPAPI (aktueller Nutzer) verschlüsselt in `settings.json`.
 
 **v2 – Community**
 
