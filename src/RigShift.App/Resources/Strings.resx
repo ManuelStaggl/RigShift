@@ -68,11 +68,14 @@
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (development build)</value></data>
   <data name="Settings_CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Restart and install</value></data>
+  <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Restart and install version {0}</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates are only available in the installed version.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Not checked for updates yet.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Checking for updates…</value></data>
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Downloading version {0}…</value></data>
   <data name="Update_StatusUpToDate" xml:space="preserve"><value>Up to date. Last checked: {0}</value></data>
+  <data name="Update_StatusReady" xml:space="preserve"><value>Version {0} is ready. Install it now or it is installed the next time RigShift starts.</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Diag_Refresh" xml:space="preserve"><value>Refresh</value></data>
   <data name="Diag_Displays" xml:space="preserve"><value>Displays</value></data>

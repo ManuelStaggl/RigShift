@@ -70,7 +70,15 @@
               TextWrapping="Wrap" />
           </StackPanel>
         </ui:CardControl.Header>
-        <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+        <StackPanel Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,8,0"
+            Appearance="Primary"
+            Command="{Binding RestartToUpdateCommand}"
+            Content="{loc:Tr Settings_RestartToUpdate}"
+            Visibility="{Binding IsUpdateReady, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+        </StackPanel>
       </ui:CardControl>
     </StackPanel>
   </ScrollViewer>

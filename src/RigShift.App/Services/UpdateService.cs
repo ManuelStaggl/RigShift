@@ -35,15 +35,28 @@ public sealed class UpdateService : IDisposable
     private readonly UpdateManager _manager = new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: false));
     private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(24));
     private readonly CancellationTokenSource _stop = new();
+    private readonly SwitchCoordinator _coordinator;
+    private readonly IAppShell _shell;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
+    private VelopackAsset? _pending;
     private bool _checking;
 
-    public UpdateService(ILogger log, TimeProvider time)
+    public UpdateService(SwitchCoordinator coordinator, IAppShell shell, TimeProvider time, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(log);
+        _coordinator = coordinator;
+        _shell = shell;
         _time = time;
         _log = log.ForContext<UpdateService>();
+        _coordinator.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
+            {
+                StateChanged?.Invoke(this, EventArgs.Empty);
+            }
+        };
         IsInstalled = _manager.IsInstalled;
         State = IsInstalled ? UpdateState.NotChecked : UpdateState.NotInstalled;
         CurrentVersion = IsInstalled && _manager.CurrentVersion is { } installed
@@ -69,6 +82,36 @@ public sealed class UpdateService : IDisposable
     public DateTimeOffset? LastChecked { get; private set; }
 
     public bool CanCheck => IsInstalled && !_checking;
+
+    /// <summary>A downloaded update can be installed now; never in the middle of a switch.</summary>
+    public bool CanRestart => State == UpdateState.Ready && _pending is not null && !_coordinator.IsSwitching;
+
+    /// <summary>
+    /// Hands the downloaded update to the Velopack updater, which waits for RigShift to exit, installs and starts it
+    /// again; then exits cleanly so the tray icon and the log are closed.
+    /// </summary>
+    public void RestartAndInstall()
+    {
+        if (!CanRestart || _pending is null)
+        {
+            _log.Warning("Restart to update refused: state {State}, switching {Switching}", State, _coordinator.IsSwitching);
+            return;
+        }
+
+        try
+        {
+            _log.Information("Restarting to install update {Version}", _pending.Version);
+            _manager.WaitExitThenApplyUpdates(_pending, silent: true, restart: true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Could not start the updater for {Version}", _pending.Version);
+            SetState(UpdateState.Failed, null);
+            return;
+        }
+
+        _shell.Quit();
+    }
 
     public void Start()
     {
@@ -142,6 +185,7 @@ public sealed class UpdateService : IDisposable
             _log.Information("Downloading update {Version}", version);
             SetState(UpdateState.Downloading, version);
             await _manager.DownloadUpdatesAsync(update, cancelToken: _stop.Token);
+            _pending = update.TargetFullRelease;
             _log.Information("Update {Version} downloaded, it is installed on the next start", version);
             SetState(UpdateState.Ready, version);
             UpdateReady?.Invoke(this, version);

@@ -352,6 +352,14 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     private bool CanCheckForUpdates() => _updates.CanCheck;
 
+    [RelayCommand(CanExecute = nameof(CanRestartToUpdate))]
+    private void RestartToUpdate() => _updates.RestartAndInstall();
+
+    private bool CanRestartToUpdate() => _updates.CanRestart;
+
+    [ObservableProperty]
+    public partial bool IsUpdateReady { get; set; }
+
     private void RefreshUpdateStatus()
     {
         string? lastChecked = _updates.LastChecked?.ToString("g", Loc.Instance.Culture);
@@ -362,10 +370,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
             UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
             UpdateState.UpToDate => Loc.Format("Update_StatusUpToDate", lastChecked ?? "?"),
-            UpdateState.Ready => Loc.Format("Update_Ready", _updates.TargetVersion ?? "?"),
+            UpdateState.Ready => Loc.Format("Update_StatusReady", _updates.TargetVersion ?? "?"),
             _ => Loc.Instance["Update_StatusFailed"],
         };
+        IsUpdateReady = _updates.State == UpdateState.Ready;
         CheckForUpdatesCommand.NotifyCanExecuteChanged();
+        RestartToUpdateCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedDefaultProfileChanged(Choice? value)

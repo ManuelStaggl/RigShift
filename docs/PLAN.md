@@ -294,7 +294,13 @@ Releases nützlich)
   the user“), Knopf während der Prüfung gesperrt, Status „Aktuell. Zuletzt geprüft …“. Laden/Bereit nur ohne neueres
   Release nicht live belegt.
 - U2. „Jetzt neu starten und installieren“ in den Einstellungen und aus der Tray-Meldung; gesperrt, solange ein
-  Umschaltvorgang läuft.
+  Umschaltvorgang läuft. **Umgesetzt 2026-09-14** als Knopf in den Einstellungen und Eintrag im Tray-Menü (nur wenn
+  ein Update bereit ist); ein Klick auf die Tray-Meldung öffnet die Einstellungen statt sofort neu zu starten, weil
+  ein ungewollter Neustart per Meldungsklick überraschend wäre. Technik: `WaitExitThenApplyUpdates` + sauberes
+  `Quit()` (Tray-Icon und Log werden geschlossen), nicht `ApplyUpdatesAndRestart` (beendet sofort). Ende-zu-Ende am
+  Server belegt: aktueller Code lokal als 1.0.0 gepackt und installiert → lädt 1.0.1 von GitHub (8 s), Knopf erscheint,
+  Klick → „Restarting to install update 1.0.1“, Exit 0, neuer Prozess nach 2 s, `sq.version` 1.0.1, EXE aus Commit
+  `30182fd` (offizielles Release). Damit sind auch die U1-Zustände Laden/Bereit belegt.
 - U3. Einstellung „Updates automatisch installieren“ / „nur benachrichtigen“. Grund: Nutzer, die ungefragte
   Änderungen nicht wollen; ohne Code-Signatur hängt die Update-Sicherheit allein am GitHub-Konto.
 - U4. Release-Notes der neuen Version anzeigen (aus dem Velopack-Paket bzw. Link aufs GitHub-Release).

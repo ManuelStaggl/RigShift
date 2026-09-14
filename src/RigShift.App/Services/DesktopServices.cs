@@ -83,7 +83,9 @@ public sealed class TrayIconService : IDisposable
     private readonly SwitchCoordinator _coordinator;
     private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
+    private readonly UpdateService _updates;
     private readonly ILogger _log;
+    private bool _updateNotificationShown;
 
     public TrayIconService(
         ProfileCatalog catalog,
@@ -131,7 +133,24 @@ public sealed class TrayIconService : IDisposable
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
         coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
-        updates.UpdateReady += (_, version) => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info));
+        _updates = updates;
+        updates.UpdateReady += (_, version) =>
+        {
+            Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info));
+            _updateNotificationShown = true;
+        };
+        updates.StateChanged += (_, _) => RebuildMenu();
+
+        // The update notification leads to the settings, where the update can be installed right away.
+        _icon.TrayBalloonTipClicked += (_, _) =>
+        {
+            if (_updateNotificationShown)
+            {
+                _updateNotificationShown = false;
+                _shell.ShowMainWindow(typeof(SettingsPage));
+            }
+        };
+        _icon.TrayBalloonTipClosed += (_, _) => _updateNotificationShown = false;
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
@@ -230,8 +249,11 @@ public sealed class TrayIconService : IDisposable
         _log.Debug("Tray icon {Symbol} at {Size} px, light taskbar {LightTaskbar}", key ?? "rigshift", size, lightTaskbar);
     }
 
-    private void Notify((string Title, string Text, NotificationIcon Icon) message) =>
+    private void Notify((string Title, string Text, NotificationIcon Icon) message)
+    {
+        _updateNotificationShown = false;
         _icon.ShowNotification(message.Title, message.Text, message.Icon);
+    }
 
     private void Refresh()
     {
@@ -268,6 +290,13 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
         menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));
         menu.Items.Add(new Separator());
+        if (_updates.State == UpdateState.Ready && _updates.TargetVersion is { } version)
+        {
+            MenuItem restart = Command(Loc.Format("Tray_RestartToUpdate", version), _updates.RestartAndInstall);
+            restart.IsEnabled = _updates.CanRestart;
+            menu.Items.Add(restart);
+        }
+
         menu.Items.Add(Command(Loc.Instance["Tray_Exit"], _shell.Quit));
         _icon.ContextMenu = menu;
     }

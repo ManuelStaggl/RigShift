@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Settings show the installed version, the update status and a "Check for updates" button.
+- A downloaded update can be installed right away from the settings or the tray menu; clicking the update
+  notification opens the settings.
 
 ## [1.0.1] - 2026-09-13
 
