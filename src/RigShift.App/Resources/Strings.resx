@@ -82,6 +82,17 @@
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: RigShift only reports new versions and installs nothing until you choose to.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release notes on GitHub</value></data>
+  <data name="Settings_Api" xml:space="preserve"><value>Local HTTP API</value></data>
+  <data name="Settings_ApiHint" xml:space="preserve"><value>For scripts, SimHub and Stream Deck. Only reachable from this PC, and every call needs the token.</value></data>
+  <data name="Settings_ApiPort" xml:space="preserve"><value>Port</value></data>
+  <data name="Settings_ApiToken" xml:space="preserve"><value>Token</value></data>
+  <data name="Settings_ApiCopyToken" xml:space="preserve"><value>Copy token</value></data>
+  <data name="Settings_ApiRegenerate" xml:space="preserve"><value>New token</value></data>
+  <data name="Settings_ApiCopyExample" xml:space="preserve"><value>Copy example</value></data>
+  <data name="Settings_ApiDocs" xml:space="preserve"><value>API documentation</value></data>
+  <data name="Settings_ApiListening" xml:space="preserve"><value>Listening on {0}</value></data>
+  <data name="Settings_ApiFailed" xml:space="preserve"><value>Port {0} could not be opened: {1}</value></data>
+  <data name="Settings_ApiTokenRegenerated" xml:space="preserve"><value>New token saved. The old one no longer works.</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Save current arrangement</value></data>

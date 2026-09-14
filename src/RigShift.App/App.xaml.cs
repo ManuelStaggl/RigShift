@@ -114,6 +114,7 @@ public partial class App : Application, IAppShell
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
             Services.GetRequiredService<CommandPipeServer>().Start();
+            Services.GetRequiredService<HttpApiService>().Start();
             Services.GetRequiredService<UpdateService>().Start();
 
             if (!_request.Minimized)
@@ -219,6 +220,7 @@ public partial class App : Application, IAppShell
             Log.Logger,
             sp.GetRequiredService<SwitchCoordinator>()));
         services.AddSingleton<CommandPipeServer>();
+        services.AddSingleton<HttpApiService>();
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<UpdateService>();
 

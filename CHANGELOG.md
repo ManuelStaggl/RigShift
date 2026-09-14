@@ -25,6 +25,9 @@ All notable changes to this project are documented here. The format follows
   confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
 - Automation rules can also react to a USB device, e.g. switch to the rig when you turn on the wheelbase and back when
   you turn it off. Pick the device from the connected ones; it keeps matching in another USB port.
+- Local HTTP API for scripts, SimHub and Stream Deck: list profiles, read the status and switch profiles. Off by
+  default; turn it on in the settings. Only reachable from the same PC and protected by a token. See
+  [docs/http-api.md](docs/http-api.md).
 
 ### Changed
 

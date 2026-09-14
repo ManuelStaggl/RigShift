@@ -76,6 +76,69 @@
         </ui:CardControl.Header>
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}" IsChecked="{Binding InstallUpdatesAutomatically}" />
       </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,0" Icon="{ui:SymbolIcon PlugConnected24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Api}" />
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Settings_ApiHint}" TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_Api}" IsChecked="{Binding HttpApiEnabled}" />
+      </ui:CardControl>
+
+      <ui:Card Margin="0,0,0,8" Visibility="{Binding HttpApiEnabled, Converter={StaticResource BoolToVisibility}}">
+        <StackPanel>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Margin="0,0,16,8" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Settings_ApiPort}" />
+            <ui:NumberBox
+              Grid.Column="1"
+              Width="140"
+              Margin="0,0,0,8"
+              HorizontalAlignment="Left"
+              AutomationProperties.Name="{loc:Tr Settings_ApiPort}"
+              MaxDecimalPlaces="0"
+              Maximum="65535"
+              Minimum="1024"
+              SmallChange="1"
+              Value="{Binding HttpApiPort, UpdateSourceTrigger=LostFocus}" />
+            <TextBlock Grid.Row="1" Margin="0,0,16,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Settings_ApiToken}" />
+            <ui:TextBox
+              Grid.Row="1"
+              Grid.Column="1"
+              AutomationProperties.Name="{loc:Tr Settings_ApiToken}"
+              ClearButtonEnabled="False"
+              FontFamily="Consolas"
+              IsReadOnly="True"
+              Text="{Binding HttpApiToken, Mode=OneWay}" />
+          </Grid>
+          <WrapPanel Margin="0,12,0,0">
+            <ui:Button Margin="0,0,8,8" Command="{Binding CopyHttpApiTokenCommand}" Content="{loc:Tr Settings_ApiCopyToken}" Icon="{ui:SymbolIcon Copy24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding CopyHttpApiExampleCommand}" Content="{loc:Tr Settings_ApiCopyExample}" Icon="{ui:SymbolIcon ClipboardCode24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding RegenerateHttpApiTokenCommand}" Content="{loc:Tr Settings_ApiRegenerate}" Icon="{ui:SymbolIcon ArrowSync24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenHttpApiDocsCommand}" Content="{loc:Tr Settings_ApiDocs}" Icon="{ui:SymbolIcon BookOpen24}" />
+          </WrapPanel>
+          <TextBlock
+            AutomationProperties.LiveSetting="Polite"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding HttpApiStatus}"
+            TextWrapping="Wrap" />
+          <TextBlock
+            Margin="0,4,0,0"
+            AutomationProperties.LiveSetting="Polite"
+            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+            Text="{Binding HttpApiCopyStatus}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </ui:Card>
     </StackPanel>
   </ScrollViewer>
 </Page>

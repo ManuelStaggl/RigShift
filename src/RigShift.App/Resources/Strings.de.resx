@@ -82,6 +82,17 @@
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Updates automatisch installieren</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: RigShift meldet neue Versionen nur und installiert erst, wenn du es auswählst.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release-Notes auf GitHub</value></data>
+  <data name="Settings_Api" xml:space="preserve"><value>Lokale HTTP-API</value></data>
+  <data name="Settings_ApiHint" xml:space="preserve"><value>Für Skripte, SimHub und Stream Deck. Nur von diesem PC erreichbar, jeder Aufruf braucht das Token.</value></data>
+  <data name="Settings_ApiPort" xml:space="preserve"><value>Port</value></data>
+  <data name="Settings_ApiToken" xml:space="preserve"><value>Token</value></data>
+  <data name="Settings_ApiCopyToken" xml:space="preserve"><value>Token kopieren</value></data>
+  <data name="Settings_ApiRegenerate" xml:space="preserve"><value>Neues Token</value></data>
+  <data name="Settings_ApiCopyExample" xml:space="preserve"><value>Beispiel kopieren</value></data>
+  <data name="Settings_ApiDocs" xml:space="preserve"><value>API-Dokumentation</value></data>
+  <data name="Settings_ApiListening" xml:space="preserve"><value>Erreichbar unter {0}</value></data>
+  <data name="Settings_ApiFailed" xml:space="preserve"><value>Port {0} konnte nicht geöffnet werden: {1}</value></data>
+  <data name="Settings_ApiTokenRegenerated" xml:space="preserve"><value>Neues Token gespeichert. Das alte gilt nicht mehr.</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung speichern</value></data>

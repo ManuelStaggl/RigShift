@@ -51,6 +51,9 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
   `\\.\pipe\RigShift` and exits with the result code.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | list | save <name> | status`.
   Exit codes: 0 applied, 1 failed, 2 blocked, 3 rolled back, 4 unknown profile.
+- Local HTTP API (opt-in): `HttpApiService` starts `Core.Api.HttpApiServer` (a `TcpListener` on `127.0.0.1`, minimal
+  HTTP/1.1) while the setting is on; `ApiHandler` checks the bearer token and runs requests on the UI thread like
+  pipe commands. See [http-api.md](http-api.md).
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).
 - Data lives in `%AppData%\RigShift` because Velopack installs into `%LocalAppData%\RigShift` and deletes that
   folder on uninstall.

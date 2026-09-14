@@ -504,6 +504,28 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur
     über undokumentierte Registry → als „experimentell" markieren.
 11. Lokale HTTP-API (`http://127.0.0.1:<port>/api/profiles`, Token in settings.json) für Skripte und SimHub.
+    **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+    - **Standardmäßig aus**, Schalter in den Einstellungen. Beim Einschalten wird ein Token erzeugt und mit Port,
+      Kopier-Knopf und Beispielaufruf angezeigt. Kein lauschender Port bei Nutzern ohne Bedarf.
+    - **Nur 127.0.0.1, Token Pflicht für alle Aufrufe** (`Authorization: Bearer <token>`). Ohne Token könnte jede
+      geöffnete Webseite per `fetch()` an localhost umschalten oder die Profile auslesen; ein eigener Header erzwingt
+      im Browser einen Preflight, den die API nicht beantwortet. Kein LAN (Firewall, URL-Reservierung, Angriffsfläche).
+    - **Umfang wie die CLI**: `GET /api/status`, `GET /api/profiles`, `POST /api/profiles/{name}/apply`
+      (`?dryRun=true`, `?noConfirm=true`). Pausieren und Bestätigen per API erst bei Bedarf.
+    - **Umschalten wartet auf das Ergebnis** (wie die CLI) und liefert den Ausgang als JSON.
+    - Eigene Entscheidungen: **`TcpListener` auf Loopback mit minimalem HTTP/1.1** statt `HttpListener` (http.sys
+      verlangt für `127.0.0.1` eine URL-Reservierung mit Adminrechten und lehnt abweichende Host-Header ab) und statt
+      Kestrel (zusätzliches Shared Framework, mehrere MB im Paket für drei Endpunkte). Parser und Endpunkte liegen in
+      Core und sind ohne Windows testbar. Standardport **47800**, in `settings.json` änderbar. Ein abgeschlossener
+      Wechsel antwortet 200 mit `outcome` (auch `rolledBack`/`failed` – die Anfrage selbst hat geklappt); 401 ohne
+      gültiges Token, 404 unbekanntes Profil, 409 bei laufendem Wechsel.
+    **Umgesetzt 2026-09-14**: `Core/Api` (`HttpMessages`, `ApiHandler`, `HttpApiServer`), `AppSettings.HttpApiEnabled/
+    HttpApiPort/HttpApiToken`, `HttpApiService` (startet/stoppt bei Einstellungsänderung), Karte in den Einstellungen
+    (Port, Token, Kopieren, Beispiel, Neues Token, Link auf `docs/http-api.md`). JSON ohne `\uXXXX`-Escapes, weil nur
+    als `application/json` ausgeliefert. Unit-Tests belegen Parser, Token, Host-Prüfung, alle Endpunkte und
+    Statuscodes sowie echte Aufrufe per `HttpClient`. **Am Server belegt** (Dev-Build): 200/401/403/405/404 per curl,
+    Dry-Run über den UI-Thread, Lauschen nur auf 127.0.0.1, „Neues Token“ macht das alte ungültig, Ausschalten schließt
+    den Port, Einschalten öffnet ihn wieder, Karte angesehen. **Nicht belegt:** echtes Umschalten per API → Gaming-PC.
 12. Home Assistant: MQTT-Discovery (aktives Profil als Sensor, Wechsel als Select-Entität) auf Basis der API.
 
 **v2 – Community**

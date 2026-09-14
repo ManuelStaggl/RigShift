@@ -107,6 +107,30 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_FileFromVersion1_2_HasHttpApiOffOnDefaultPort()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1, "automationPaused": true }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        settings.HttpApiEnabled.ShouldBeFalse();
+        settings.HttpApiPort.ShouldBe(AppSettings.DefaultHttpApiPort);
+        settings.HttpApiToken.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SaveThenLoad_RoundTripsHttpApi()
+    {
+        var store = new JsonSettingsStore(File, Logger.None);
+        var settings = new AppSettings { HttpApiEnabled = true, HttpApiPort = 50123, HttpApiToken = "abc" };
+
+        await store.SaveAsync(settings, Ct);
+
+        (await store.LoadAsync(Ct)).ShouldBe(settings);
+    }
+
+    [Fact]
     public async Task Load_BrokenFile_ReturnsDefaults()
     {
         Directory.CreateDirectory(_directory);

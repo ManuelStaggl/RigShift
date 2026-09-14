@@ -30,7 +30,7 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - Race mode: focus assist on, game mode, no sleep/screensaver – restored on switch back
 - Power plan per profile
 - HDR and refresh rate per display; night light (experimental)
-- Local HTTP API for scripts, SimHub, Stream Deck
+- 🟡 Local HTTP API for scripts, SimHub, Stream Deck ([docs](http-api.md))
 - Home Assistant via MQTT discovery
 
 ## v2 – community
