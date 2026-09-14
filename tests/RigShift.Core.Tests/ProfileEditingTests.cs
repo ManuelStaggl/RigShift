@@ -83,6 +83,8 @@ public sealed class ProfileEditingTests
         Profile desk = Profile("Desk", DeskModes);
 
         ProfileEditing.Validate(Rig() with { Name = " " }, []).ShouldBe([ProfileProblem.NameMissing]);
+        ProfileEditing.Validate(Rig() with { Name = new string('x', Profiles.Profile.MaxNameLength) }, []).ShouldBeEmpty();
+        ProfileEditing.Validate(Rig() with { Name = new string('x', Profiles.Profile.MaxNameLength + 1) }, []).ShouldBe([ProfileProblem.NameTooLong]);
         ProfileEditing.Validate(Rig() with { Name = "desk" }, [desk]).ShouldBe([ProfileProblem.NameTaken]);
         ProfileEditing.Validate(Rig() with { Displays = [] }, []).ShouldBe([ProfileProblem.NoDisplays]);
         ProfileEditing.Validate(Rig() with { Displays = [TabletMode] }, []).ShouldBe([ProfileProblem.NoSinglePrimary]);

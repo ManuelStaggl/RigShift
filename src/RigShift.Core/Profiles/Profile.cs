@@ -55,6 +55,9 @@ public sealed record Profile
     /// <summary>Don't lower other sounds during calls while this profile is active (Windows communications setting).</summary>
     public bool DisableCommunicationsDucking { get; init; }
 
+    /// <summary>Longer names push the badges and buttons off the profile card (analysis finding I-06).</summary>
+    public const int MaxNameLength = 60;
+
     public const int DefaultAppsWaitSeconds = 30;
 
     public const int MinAppsWaitSeconds = 5;

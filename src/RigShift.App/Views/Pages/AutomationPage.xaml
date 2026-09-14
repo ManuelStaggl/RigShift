@@ -40,12 +40,9 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="16" />
-                  <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
@@ -54,10 +51,10 @@
 
                 <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
                 <StackPanel
-                  Grid.Row="4"
+                  Grid.Row="3"
                   Grid.Column="1"
-                  Grid.ColumnSpan="4"
-                  Margin="0,12,0,0"
+                  Grid.ColumnSpan="2"
+                  Margin="0,4,0,0"
                   Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
                   <ui:InfoBar
                     Title="{loc:Tr Automation_PowerSavingTitle}"
@@ -82,7 +79,9 @@
                   IsChecked="{Binding IsEnabled}"
                   ToolTip="{loc:Tr Automation_Enabled}" />
 
-                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" />
+                <!-- Line one: the device, full width so its name stays readable. Line two wraps: profile, end action, delay,
+                     confirmation (analysis finding I-03). -->
+                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" TextWrapping="Wrap" />
                 <Grid Grid.Row="1" Grid.Column="1" Margin="0,4,0,0">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -92,7 +91,8 @@
                     AutomationProperties.Name="{loc:Tr Automation_Device}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding Owner.DeviceChoices}"
-                    SelectedItem="{Binding SelectedDevice}" />
+                    SelectedItem="{Binding SelectedDevice}"
+                    ToolTip="{Binding SelectedDevice.Name}" />
                   <ui:Button
                     Grid.Column="1"
                     Margin="8,0,0,0"
@@ -103,20 +103,9 @@
                     ToolTip="{loc:Tr Automation_RefreshDevices}" />
                 </Grid>
 
-                <TextBlock Grid.Column="3" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
-                <ComboBox
-                  Grid.Row="1"
-                  Grid.Column="3"
-                  Margin="0,4,0,0"
-                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
-                  AutomationProperties.Name="{loc:Tr Automation_Profile}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding Owner.ProfileChoices}"
-                  SelectedItem="{Binding SelectedProfile}" />
-
                 <ui:Button
                   Grid.Row="1"
-                  Grid.Column="4"
+                  Grid.Column="2"
                   Margin="16,4,0,0"
                   VerticalAlignment="Stretch"
                   AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
@@ -126,15 +115,28 @@
                   Icon="{ui:SymbolIcon Delete24}"
                   ToolTip="{loc:Tr Automation_Delete}" />
 
-                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" TextWrapping="Wrap" />
-                <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
-                  <ComboBox
-                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
-                    AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding Owner.ExitChoices}"
-                    SelectedItem="{Binding SelectedExit}" />
-                  <StackPanel Margin="0,8,0,0" Orientation="Horizontal" ToolTip="{loc:Tr Automation_ExitDelayHint}">
+                <WrapPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
+                  <StackPanel MinWidth="200" Margin="0,0,24,8">
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
+                    <ComboBox
+                      Margin="0,4,0,0"
+                      AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                      AutomationProperties.Name="{loc:Tr Automation_Profile}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Owner.ProfileChoices}"
+                      SelectedItem="{Binding SelectedProfile}" />
+                  </StackPanel>
+                  <StackPanel MinWidth="240" Margin="0,0,24,8">
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" />
+                    <ComboBox
+                      Margin="0,4,0,0"
+                      AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                      AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Owner.ExitChoices}"
+                      SelectedItem="{Binding SelectedExit}" />
+                  </StackPanel>
+                  <StackPanel Margin="0,0,24,8" VerticalAlignment="Bottom" Orientation="Horizontal" ToolTip="{loc:Tr Automation_ExitDelayHint}">
                     <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Automation_ExitDelay}" />
                     <ui:NumberBox
                       Width="130"
@@ -146,16 +148,13 @@
                       SmallChange="5"
                       Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=LostFocus}" />
                   </StackPanel>
-                </StackPanel>
-                <CheckBox
-                  Grid.Row="3"
-                  Grid.Column="3"
-                  Grid.ColumnSpan="2"
-                  Margin="0,4,0,0"
-                  VerticalAlignment="Center"
-                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
-                  Content="{loc:Tr Automation_SkipConfirmation}"
-                  IsChecked="{Binding SkipConfirmation}" />
+                  <CheckBox
+                    Margin="0,0,0,12"
+                    VerticalAlignment="Bottom"
+                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                    Content="{loc:Tr Automation_SkipConfirmation}"
+                    IsChecked="{Binding SkipConfirmation}" />
+                </WrapPanel>
               </Grid>
             </ui:Card>
           </DataTemplate>

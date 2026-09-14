@@ -229,6 +229,8 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
 
     private void ShowStatus(string message, Wpf.Ui.Controls.InfoBarSeverity severity = Wpf.Ui.Controls.InfoBarSeverity.Success)
     {
+        // Closed first: after the user closed the bar with its X, setting true again must be a change (analysis finding I-02).
+        IsStatusOpen = false;
         StatusMessage = message;
         StatusSeverity = severity;
         IsStatusOpen = true;

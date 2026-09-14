@@ -128,6 +128,10 @@ public static class ProfileEditing
         {
             problems.Add(ProfileProblem.NameMissing);
         }
+        else if (profile.Name.Trim().Length > Profile.MaxNameLength)
+        {
+            problems.Add(ProfileProblem.NameTooLong);
+        }
         else if (others.Any(o => o.Id != profile.Id && NamesEqual(o.Name, profile.Name)))
         {
             problems.Add(ProfileProblem.NameTaken);
@@ -176,6 +180,9 @@ public static class ProfileEditing
 public enum ProfileProblem
 {
     NameMissing,
+
+    /// <summary>Longer than <see cref="Profile.MaxNameLength"/>.</summary>
+    NameTooLong,
     NameTaken,
     NoDisplays,
     NoSinglePrimary,

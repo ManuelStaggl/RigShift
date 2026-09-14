@@ -23,9 +23,15 @@ All notable changes to this project are documented here. The format follows
 - Automation: a device that disappears for a single moment no longer counts as gone, even with a wait time of 0 s, and
   waking the PC from sleep no longer ends a wait time that started before sleep.
 
+- The status message on the Profiles page shows up again after you closed it once.
+- The Profiles page, the automation rules and the profile editor stay usable in a narrow window: titles, names and
+  buttons wrap instead of overlapping or being cut off. Long profile names end with "…"; names can be 60 characters at
+  most.
+
 ### Changed
 
 - The log now records every automation decision (device connected, gone, back, end action skipped and why).
+- The profile editor opens wider, so refresh rate, HDR and the display options fit on one line.
 
 ## [1.3.0] - 2026-09-14
 

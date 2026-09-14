@@ -8,23 +8,21 @@
   Title="Profiles">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
-      <Grid Margin="0,0,0,16">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <ui:TextBlock FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" VerticalAlignment="Center" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal">
-          <ui:Button Margin="0,0,8,0" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
-          <ui:Button Margin="0,0,8,0" Content="{loc:Tr Profiles_Reload}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ReloadCommand}" />
-          <ui:Button Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenFolderCommand}" />
-        </StackPanel>
-      </Grid>
+      <!-- Title and buttons wrap onto two lines in a narrow window instead of overlapping (analysis finding I-01). -->
+      <WrapPanel Margin="0,0,0,8">
+        <ui:TextBlock Margin="0,0,24,8" VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" />
+        <WrapPanel VerticalAlignment="Center">
+          <ui:Button Margin="0,0,8,8" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
+          <ui:Button Margin="0,0,8,8" Content="{loc:Tr Profiles_Reload}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ReloadCommand}" />
+          <ui:Button Margin="0,0,0,8" Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenFolderCommand}" />
+        </WrapPanel>
+      </WrapPanel>
 
+      <!-- TwoWay: InfoBar.IsOpen does not bind two-way by default, and closing with X must reach the view model. -->
       <ui:InfoBar
         Margin="0,0,0,16"
         IsClosable="True"
-        IsOpen="{Binding IsStatusOpen}"
+        IsOpen="{Binding IsStatusOpen, Mode=TwoWay}"
         Message="{Binding StatusMessage}"
         Severity="{Binding StatusSeverity}"
         AutomationProperties.LiveSetting="Polite" />
@@ -41,14 +39,16 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <ui:Card Margin="0,0,0,12">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
+              <!-- Text on top, buttons below: a narrow window squeezes neither into single characters (analysis finding I-01). -->
+              <StackPanel>
                 <StackPanel>
-                  <StackPanel Orientation="Horizontal">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <controls:ProfileIcon
                       Width="28"
                       Height="28"
@@ -57,8 +57,15 @@
                       IconKey="{Binding IconKey}"
                       IsFilled="{Binding IsActive}"
                       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <ui:TextBlock FontTypography="Subtitle" Text="{Binding Name}" />
+                    <ui:TextBlock
+                      Grid.Column="1"
+                      VerticalAlignment="Center"
+                      FontTypography="Subtitle"
+                      Text="{Binding Name}"
+                      TextTrimming="CharacterEllipsis"
+                      ToolTip="{Binding Name}" />
                     <Border
+                      Grid.Column="2"
                       Margin="12,0,0,0"
                       Padding="8,2"
                       VerticalAlignment="Center"
@@ -69,6 +76,7 @@
                       <TextBlock Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="{loc:Tr Profile_Active}" />
                     </Border>
                     <Border
+                      Grid.Column="3"
                       Margin="8,0,0,0"
                       Padding="8,2"
                       VerticalAlignment="Center"
@@ -78,7 +86,7 @@
                       Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibility}}">
                       <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Profile_Default}" />
                     </Border>
-                  </StackPanel>
+                  </Grid>
 
                   <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding DisplayLines}" Focusable="False">
                     <ItemsControl.ItemTemplate>
@@ -88,10 +96,20 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
 
-                  <TextBlock Margin="0,8,0,0" Text="{Binding CheckMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                  <TextBlock Margin="0,8,0,0" Text="{Binding CheckMessage}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding CheckMessage}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+                <WrapPanel Margin="0,12,0,0" HorizontalAlignment="Right">
                   <ui:Button
                     Margin="0,0,8,0"
                     Content="{loc:Tr Profile_Check}"
@@ -144,8 +162,8 @@
                       </ContextMenu>
                     </ui:Button.ContextMenu>
                   </ui:Button>
-                </StackPanel>
-              </Grid>
+                </WrapPanel>
+              </StackPanel>
             </ui:Card>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

@@ -7,7 +7,7 @@
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   Title="{Binding Title}"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
-  Width="760"
+  Width="900"
   Height="720"
   MinWidth="560"
   MinHeight="420"
@@ -41,6 +41,7 @@
           x:Name="NameBox"
           Margin="0,4,0,16"
           AutomationProperties.Name="{loc:Tr Editor_Name}"
+          MaxLength="60"
           Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 
         <!-- Same column grid as the audio rows below: labels/left controls 220, gap 24, rest. -->
@@ -74,11 +75,10 @@
                 </DataTemplate>
               </ComboBox.ItemTemplate>
           </ComboBox>
-          <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,4,0,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <CheckBox VerticalAlignment="Center" Content="{loc:Tr Editor_OwnTimeoutShort}" IsChecked="{Binding UseOwnTimeout}" />
+          <WrapPanel Grid.Row="1" Grid.Column="2" Margin="0,4,0,0" VerticalAlignment="Center">
+            <CheckBox Margin="0,0,12,0" VerticalAlignment="Center" Content="{loc:Tr Editor_OwnTimeoutShort}" IsChecked="{Binding UseOwnTimeout}" />
             <ui:NumberBox
               Width="140"
-              Margin="12,0,0,0"
               VerticalAlignment="Center"
               AutomationProperties.Name="{loc:Tr Editor_OwnTimeout}"
               IsEnabled="{Binding UseOwnTimeout}"
@@ -87,7 +87,7 @@
               Minimum="0"
               SmallChange="1"
               Value="{Binding OwnTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
-          </StackPanel>
+          </WrapPanel>
           <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeoutHint}" TextWrapping="Wrap" />
         </Grid>
 
@@ -154,8 +154,6 @@
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
@@ -182,34 +180,33 @@
                         ToolTip="{loc:Tr Editor_RefreshRateHint}" />
                       <ComboBox
                         MinWidth="150"
+                        Margin="0,0,24,0"
                         AutomationProperties.HelpText="{Binding Name}"
                         AutomationProperties.Name="HDR"
                         DisplayMemberPath="Text"
                         ItemsSource="{Binding HdrChoices}"
                         SelectedItem="{Binding SelectedHdr}"
                         ToolTip="{loc:Tr Editor_HdrHint}" />
+                      <!-- Wrap below the selections in a narrow window instead of cutting them off (analysis finding I-08). -->
+                      <RadioButton
+                        Margin="0,0,16,0"
+                        VerticalAlignment="Center"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        Content="{loc:Tr Editor_Primary}"
+                        GroupName="PrimaryDisplay"
+                        IsChecked="{Binding IsPrimary}" />
+                      <CheckBox
+                        VerticalAlignment="Center"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        Content="{loc:Tr Editor_Optional}"
+                        IsChecked="{Binding IsOptional}"
+                        IsEnabled="{Binding CanBeOptional}" />
                     </WrapPanel>
                   </StackPanel>
-                  <RadioButton
+                  <ui:Button
                     Grid.Column="1"
                     Margin="16,0,0,0"
-                    VerticalAlignment="Center"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    Content="{loc:Tr Editor_Primary}"
-                    GroupName="PrimaryDisplay"
-                    IsChecked="{Binding IsPrimary}" />
-                  <CheckBox
-                    Grid.Column="2"
-                    Margin="16,0,0,0"
-                    VerticalAlignment="Center"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    Content="{loc:Tr Editor_Optional}"
-                    IsChecked="{Binding IsOptional}"
-                    IsEnabled="{Binding CanBeOptional}" />
-                  <ui:Button
-                    Grid.Column="3"
-                    Margin="16,0,0,0"
-                    VerticalAlignment="Center"
+                    VerticalAlignment="Top"
                     AutomationProperties.HelpText="{Binding Name}"
                     AutomationProperties.Name="{loc:Tr Editor_Remove}"
                     Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}"

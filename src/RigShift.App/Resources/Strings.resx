@@ -141,6 +141,7 @@
   <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Audio_Unknown" xml:space="preserve"><value>{0} (not found on this PC)</value></data>
   <data name="Problem_NameMissing" xml:space="preserve"><value>Enter a name.</value></data>
+  <data name="Problem_NameTooLong" xml:space="preserve"><value>The name can be 60 characters at most.</value></data>
   <data name="Problem_NameTaken" xml:space="preserve"><value>A profile with this name already exists.</value></data>
   <data name="Problem_NoDisplays" xml:space="preserve"><value>The profile needs at least one display.</value></data>
   <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Choose a main display.</value></data>
