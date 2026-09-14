@@ -12,7 +12,7 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **1.2** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
+> Status: **1.3** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
 > · [Roadmap](docs/ROADMAP.md)
 
 <p align="center">
@@ -37,11 +37,22 @@ Beyond that, RigShift is designed to be boring in the good way:
   yet; optional displays are picked up as soon as they appear.
 - **Safety net:** if you don't confirm the new layout within a few seconds (because there is no picture),
   RigShift rolls back to the previous one.
-- **Audio included:** default playback and communications devices per profile.
+- **Audio included:** playback, recording and communications devices plus volume per profile.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
 - **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
 - **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
   or shortcut.
+
+Made for getting into the rig:
+
+- **Turn on the wheelbase, RigShift does the rest.** An automation rule switches to your rig profile when a USB
+  device connects and back when it is gone – after a delay you choose, so a quick power cycle changes nothing.
+- **Apps per profile:** start SimHub or Crew Chief and close what you don't need once the switch is confirmed –
+  optionally only after the wheelbase has been detected.
+- **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
+- **HDR and refresh rate per display**, and your own names for monitors ("Left · CM27X3") everywhere.
+- **Race-ready:** keep the PC awake while you drive with only a wheel, keep game sound loud during Discord calls, and
+  get a warning when Windows may power down your USB sim hardware.
 
 ## Screenshots
 
@@ -49,8 +60,10 @@ Beyond that, RigShift is designed to be boring in the good way:
 |---|---|
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
-| <img alt="Profile editor with displays and audio devices" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Profile editor** – main display, optional displays, audio devices. | **Settings** – default profile, autostart, confirmation time, language. |
+| <img alt="Profile editor with displays, audio devices and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
+| **Profile editor** – displays, audio devices with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
+| <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="About and help page" src="docs/screenshots/about-dark.png" width="400"> |
+| **Displays** – every connected monitor, your own names, Identify. | **About & help** – version, updates, recent switches, diagnostic info. |
 
 ## Installation
 
@@ -62,17 +75,16 @@ RigShift is not code-signed yet, so Windows SmartScreen may say *"Windows protec
 **More info → Run anyway**. Signing is planned (see roadmap).
 
 **Updates** install themselves: RigShift checks GitHub at startup and once a day, downloads a new version in the
-background and installs it the next time it starts. **Settings** show the version and what is new, and let you
-check for updates, install one right away, or turn automatic installation off so RigShift only reports new versions.
+background and installs it the next time it starts. **About & help** shows the version and what is new and lets you
+check for updates or install one right away; in **Settings** you can turn automatic installation off so RigShift only
+reports new versions.
 
 Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when you uninstall.
 
 ## Planned features
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: microphone and volume per profile, per-profile apps,
-switching when a USB device such as the wheelbase connects, keep awake per profile, HDR and refresh rate per display,
-windows moved back from screens that are off, apps that wait for the wheelbase, a warning when Windows may power down
-your USB sim hardware, and game sound that stays loud during calls.
+See [docs/ROADMAP.md](docs/ROADMAP.md). RigShift is meant to stay small. Next up: a setup wizard for the first two
+profiles, code signing and winget, and validation on AMD and Intel graphics.
 
 ## Command line
 
@@ -103,6 +115,15 @@ confirmation), e.g. from a browser bookmark, Win+R or a Stream Deck "Website" ac
 RigShift.exe is a Windows GUI program, so shells do not wait for it. To see output and exit code in a console,
 run `start /wait RigShift.exe status` (cmd) or `Start-Process RigShift.exe status -Wait -NoNewWindow`
 (PowerShell).
+
+## Stream Deck and button boxes
+
+No plugin needed:
+
+- **Hotkey:** give the profile a keyboard shortcut in the profile editor and use the Stream Deck *Hotkey* action (or map
+  it to a button box key). Fastest option.
+- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig` (installed version; always asks for confirmation).
+- **Shortcut:** **⋯ → Create desktop shortcut** on a profile and point a Stream Deck *Open* action at it.
 
 ## Requirements
 
@@ -142,8 +163,9 @@ RigShift focuses on the atomic switch, robustness on real hardware and sim-racin
 
 ## Contributing
 
-Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). Please attach the log from
-`%AppData%\RigShift\logs` to bug reports (it contains display device paths, nothing else personal).
+Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md). For bug reports, use
+**About & help → Copy diagnostic info** and attach the log from `%AppData%\RigShift\logs` (both contain display device
+paths, nothing else personal).
 
 ## License
 
