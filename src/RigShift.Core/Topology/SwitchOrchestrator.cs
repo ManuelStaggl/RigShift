@@ -30,18 +30,18 @@ public sealed class SwitchOrchestrator
     private readonly IUsbDeviceList _usbDevices;
     private readonly IPowerController _power;
     private readonly IDuckingPreference _ducking;
+
+    /// <summary>
+    /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
+    /// by the next profile without it. Persisted, so it survives a crash or restart (analysis finding B-01).
+    /// </summary>
+    private readonly IDuckingMemory _duckingMemory;
     private readonly IWindowRescuer _windows;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
-
-    /// <summary>
-    /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
-    /// by the next profile without it. Lives only as long as the process – after a restart the current value stays.
-    /// </summary>
-    private DuckingMemory? _duckingBeforeProfiles;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -50,6 +50,7 @@ public sealed class SwitchOrchestrator
         IUsbDeviceList usbDevices,
         IPowerController power,
         IDuckingPreference ducking,
+        IDuckingMemory duckingMemory,
         IWindowRescuer windows,
         ISwitchConfirmation confirmation,
         TopologyPlanner planner,
@@ -63,6 +64,7 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(usbDevices);
         ArgumentNullException.ThrowIfNull(power);
         ArgumentNullException.ThrowIfNull(ducking);
+        ArgumentNullException.ThrowIfNull(duckingMemory);
         ArgumentNullException.ThrowIfNull(windows);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(planner);
@@ -76,6 +78,7 @@ public sealed class SwitchOrchestrator
         _usbDevices = usbDevices;
         _power = power;
         _ducking = ducking;
+        _duckingMemory = duckingMemory;
         _windows = windows;
         _confirmation = confirmation;
         _planner = planner;
@@ -116,7 +119,7 @@ public sealed class SwitchOrchestrator
             ? await CaptureAudioAsync(profile.Audio, cancellationToken)
             : AudioRestore.Nothing;
         bool? keepAwakeBefore = confirm ? _power.IsKeepingAwake : null;
-        DuckingRestore? duckingRestore = confirm ? CaptureDucking(profile) : null;
+        DuckingRestore? duckingRestore = confirm ? await CaptureDuckingAsync(profile, cancellationToken) : null;
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -138,7 +141,7 @@ public sealed class SwitchOrchestrator
 
         // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
         SwitchKeepAwake(profile);
-        SwitchDucking(profile);
+        await SwitchDuckingAsync(profile, cancellationToken);
 
         if (confirm)
         {
@@ -148,7 +151,7 @@ public sealed class SwitchOrchestrator
             {
                 _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
                 RestoreKeepAwake(keepAwakeBefore);
-                RestoreDucking(duckingRestore);
+                await RestoreDuckingAsync(duckingRestore, cancellationToken);
                 return await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, cancellationToken);
             }
         }
@@ -799,55 +802,92 @@ public sealed class SwitchOrchestrator
     /// before the first such profile is remembered and comes back with the next profile without the flag. Failures are
     /// logged and never fail the switch (the registry value is undocumented).
     /// </summary>
-    private void SwitchDucking(Profile profile)
+    private async Task SwitchDuckingAsync(Profile profile, CancellationToken cancellationToken)
     {
         try
         {
+            RememberedDucking? original = await _duckingMemory.LoadAsync(cancellationToken);
             if (profile.DisableCommunicationsDucking)
             {
                 int? current = _ducking.Read();
-                _duckingBeforeProfiles ??= new DuckingMemory(current);
+                if (original is null)
+                {
+                    // Remembered before the registry changes: a crash right after must still find the old value.
+                    await _duckingMemory.SaveAsync(current, cancellationToken);
+                }
+
                 if (current != CommunicationsDucking.DoNothing)
                 {
                     _ducking.Write(CommunicationsDucking.DoNothing);
                     _log.Information("Communications ducking turned off for {Profile} (was {Preference})", profile.Name, current);
                 }
             }
-            else if (_duckingBeforeProfiles is { } original)
+            else if (original is not null)
             {
-                _duckingBeforeProfiles = null;
-                if (_ducking.Read() != original.Value)
-                {
-                    _ducking.Write(original.Value);
-                    _log.Information("Communications ducking {Preference} from before restored for {Profile}", original.Value, profile.Name);
-                }
+                RestoreRemembered(original, profile.Name);
+                await _duckingMemory.ClearAsync(cancellationToken);
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning(ex, "Communications ducking for {Profile} could not be set", profile.Name);
         }
     }
 
-    private DuckingRestore? CaptureDucking(Profile profile)
+    /// <summary>
+    /// At startup: a remembered value whose profile is no longer active (crash, restart or update in between) comes back
+    /// now instead of waiting for the next switch. With a profile that disables ducking still active, it stays remembered.
+    /// </summary>
+    public async Task RestoreDuckingIfUnusedAsync(Profile? activeProfile, CancellationToken cancellationToken)
     {
-        if (!profile.DisableCommunicationsDucking && _duckingBeforeProfiles is null)
+        if (activeProfile is { DisableCommunicationsDucking: true })
         {
-            return null;
+            return;
         }
 
         try
         {
-            return new DuckingRestore(_ducking.Read(), _duckingBeforeProfiles);
+            if (await _duckingMemory.LoadAsync(cancellationToken) is not { } original)
+            {
+                return;
+            }
+
+            _log.Information("Remembered communications ducking {Preference} found without an active profile that needs it", original.Value);
+            RestoreRemembered(original, activeProfile?.Name ?? "startup");
+            await _duckingMemory.ClearAsync(cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Restoring the remembered communications ducking setting at startup failed");
+        }
+    }
+
+    private void RestoreRemembered(RememberedDucking original, string profileName)
+    {
+        if (_ducking.Read() != original.Value)
+        {
+            _ducking.Write(original.Value);
+            _log.Information("Communications ducking {Preference} from before restored for {Profile}", original.Value, profileName);
+        }
+    }
+
+    private async Task<DuckingRestore?> CaptureDuckingAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        try
+        {
+            RememberedDucking? remembered = await _duckingMemory.LoadAsync(cancellationToken);
+            return !profile.DisableCommunicationsDucking && remembered is null
+                ? null
+                : new DuckingRestore(_ducking.Read(), remembered);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning(ex, "Could not read the communications ducking setting; rollback will leave it unchanged");
             return null;
         }
     }
 
-    private void RestoreDucking(DuckingRestore? restore)
+    private async Task RestoreDuckingAsync(DuckingRestore? restore, CancellationToken cancellationToken)
     {
         if (restore is null)
         {
@@ -861,9 +901,16 @@ public sealed class SwitchOrchestrator
                 _ducking.Write(restore.Value);
             }
 
-            _duckingBeforeProfiles = restore.BeforeProfiles;
+            if (restore.BeforeProfiles is { } remembered)
+            {
+                await _duckingMemory.SaveAsync(remembered.Value, cancellationToken);
+            }
+            else
+            {
+                await _duckingMemory.ClearAsync(cancellationToken);
+            }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning(ex, "Restoring the communications ducking setting failed");
         }
@@ -899,8 +946,5 @@ public sealed class SwitchOrchestrator
 
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
 
-    /// <summary>A remembered ducking value; <c>Value</c> null means the registry value was missing.</summary>
-    private sealed record DuckingMemory(int? Value);
-
-    private sealed record DuckingRestore(int? Value, DuckingMemory? BeforeProfiles);
+    private sealed record DuckingRestore(int? Value, RememberedDucking? BeforeProfiles);
 }

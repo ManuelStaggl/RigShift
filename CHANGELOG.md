@@ -10,6 +10,12 @@ All notable changes to this project are documented here. The format follows
 
 - **About & help** has a "Buy me a coffee" link to Ko-fi for anyone who wants to support RigShift – entirely optional.
 
+### Fixed
+
+- The Windows setting for sounds during calls comes back even if RigShift was closed, crashed or the PC restarted while a
+  profile with "Don't lower game sound during calls" was active. RigShift now remembers the previous value in its settings and
+  restores it at the next start or with the next profile.
+
 ## [1.3.0] - 2026-09-14
 
 ### Added

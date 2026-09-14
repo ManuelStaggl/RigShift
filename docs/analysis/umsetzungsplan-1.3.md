@@ -158,6 +158,11 @@ Enthält alle Kritisch/Hoch mit Aufwand S/M sowie die Mittel-S-Punkte, ohne die 
 
 ## Nicht umsetzen / Nutzer entscheidet
 
+**Antworten des Nutzers (2026-09-14, Umsetzungs-Session):** D-02 → (b) `PublishSingleFile=false`; O-01 → ja, Häkchen
+„Ohne Nachfrage umschalten“; O-02 → ja; O-03 → streichen; O-04 → ja, feste 30 s; O-05 → ja, nur „Bildschirme“;
+O-06 → ja; O-07 → **Schalter „Regel an“ streichen** (entgegen der Empfehlung); O-08 → beide behalten, Standard für neue
+Regeln „Zu Profil X“. Umsetzung nach Paket 1 (nach dem Release 1.3.1), zusammen mit Paket 2.
+
 - **D-02 Paketgröße (Empfehlung: Variante b).** Frage: Bleibt es bei self-contained + Single-File (Setup 98 MB, Delta
   35 MB), oder (b) `PublishSingleFile=false` (gleiche Größe, aber deutlich kleinere Deltas, kein Selbstextrahieren
   beim Start), oder (c) framework-dependent (Setup ~5 MB, Velopack installiert die .NET-10-Desktop-Runtime nach)?

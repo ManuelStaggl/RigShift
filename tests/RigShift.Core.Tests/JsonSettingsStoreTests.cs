@@ -129,6 +129,30 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_FileWithoutDuckingKeys_HasNoMemory()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1, "confirmTimeoutSeconds": 20 }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        settings.HasDuckingMemory.ShouldBeFalse();
+        settings.DuckingBeforeProfiles.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SaveThenLoad_RoundTripsDuckingMemoryWithMissingValue()
+    {
+        var store = new JsonSettingsStore(File, Logger.None);
+
+        await store.SaveAsync(new AppSettings { HasDuckingMemory = true, DuckingBeforeProfiles = null }, Ct);
+        AppSettings loaded = await store.LoadAsync(Ct);
+
+        loaded.HasDuckingMemory.ShouldBeTrue();
+        loaded.DuckingBeforeProfiles.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Load_BrokenFile_ReturnsDefaults()
     {
         Directory.CreateDirectory(_directory);

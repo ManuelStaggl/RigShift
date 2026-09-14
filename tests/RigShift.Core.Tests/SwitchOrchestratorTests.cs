@@ -26,6 +26,7 @@ public sealed class SwitchOrchestratorTests
     private readonly IUsbDeviceList _usbDevices = Substitute.For<IUsbDeviceList>();
     private readonly FakePowerController _power = new();
     private readonly FakeDuckingPreference _ducking = new();
+    private readonly InMemoryDuckingMemory _duckingMemory = new();
     private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
 
@@ -808,6 +809,66 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_DuckingProfile_StoresMemory()
+    {
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+
+        _duckingMemory.Remembered.ShouldBe(new RememberedDucking(CommunicationsDucking.ReduceBy50Percent));
+    }
+
+    [Fact]
+    public async Task NewOrchestrator_WithMemory_RestoresOnProfileWithoutFlag()
+    {
+        // Rig with the flag, then the process ends (crash, restart, update) and a new orchestrator switches to the desk.
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+
+        _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy50Percent);
+        _duckingMemory.Remembered.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task RestoreDuckingIfUnused_ActiveProfileWithoutFlagOrNone_RestoresAndClears()
+    {
+        _duckingMemory.Remembered = new RememberedDucking(CommunicationsDucking.MuteOtherSounds);
+        _ducking.Value = CommunicationsDucking.DoNothing;
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).RestoreDuckingIfUnusedAsync(activeProfile: null, Ct);
+
+        _ducking.Value.ShouldBe(CommunicationsDucking.MuteOtherSounds);
+        _duckingMemory.Remembered.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task RestoreDuckingIfUnused_ActiveProfileWithFlag_KeepsMemoryUntilNextSwitch()
+    {
+        _duckingMemory.Remembered = new RememberedDucking(CommunicationsDucking.ReduceBy80Percent);
+        _ducking.Value = CommunicationsDucking.DoNothing;
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        await orchestrator.RestoreDuckingIfUnusedAsync(Rig() with { DisableCommunicationsDucking = true }, Ct);
+        _ducking.Written.ShouldBeEmpty();
+
+        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+        _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy80Percent);
+    }
+
+    [Fact]
+    public async Task Switch_Rejected_ClearsNothingButRestoresPreviousValue()
+    {
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+        await orchestrator.SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirmSeconds: 15) with { Name = "Desk" }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        _ducking.Value.ShouldBe(CommunicationsDucking.DoNothing);
+        _duckingMemory.Remembered.ShouldBe(new RememberedDucking(CommunicationsDucking.ReduceBy50Percent));
+    }
+
+    [Fact]
     public async Task Switch_DuckingFailure_DoesNotFailTheSwitch()
     {
         _ducking.Fail = true;
@@ -831,6 +892,6 @@ public sealed class SwitchOrchestratorTests
 
     // The rescue delay is zero unless a test sets it, so waits measured elsewhere stay exact.
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _apps, _usbDevices, _power, _ducking, _windows, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()),
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()),
             options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

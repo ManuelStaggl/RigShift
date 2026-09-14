@@ -123,6 +123,7 @@ public partial class App : Application, IAppShell
             }
 
             KeepAwakeForActiveProfile(catalog);
+            await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
             await ApplyDefaultProfileAsync(catalog);
         }
         catch (Exception ex)
@@ -219,6 +220,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
         services.AddSingleton<IUsbPowerCheck, Windows.Power.UsbPowerCheck>();
         services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
+        services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
         services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());

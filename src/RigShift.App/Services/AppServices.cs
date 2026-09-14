@@ -30,9 +30,15 @@ public interface IAppShell
     void Quit();
 }
 
-/// <summary>Current settings plus change notification. Language changes take effect immediately.</summary>
-public sealed class SettingsService(JsonSettingsStore store, IAutostart autostart)
+/// <summary>
+/// Current settings plus change notification. Language changes take effect immediately. Updates are serialized, so the
+/// switch thread (ducking memory) and the UI never overwrite each other's change.
+/// </summary>
+public sealed class SettingsService(JsonSettingsStore store, IAutostart autostart) : IDisposable
 {
+    private readonly SemaphoreSlim _updates = new(1, 1);
+
+    /// <summary>Raised on the thread of the update; only updates with <c>notify</c> raise it (those come from the UI thread).</summary>
     public event EventHandler? Changed;
 
     public AppSettings Current { get; private set; } = new();
@@ -45,27 +51,64 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
         Loc.Instance.SetLanguage(Current.Language);
     }
 
-    public async Task UpdateAsync(Func<AppSettings, AppSettings> change, CancellationToken cancellationToken)
+    /// <param name="notify">
+    /// <c>false</c> for bookkeeping the UI does not show (ducking memory): no <see cref="Changed"/>, so it is safe off the
+    /// UI thread and does not rebuild pages on every switch.
+    /// </param>
+    public async Task UpdateAsync(Func<AppSettings, AppSettings> change, CancellationToken cancellationToken, bool notify = true)
     {
         ArgumentNullException.ThrowIfNull(change);
 
-        AppSettings updated = change(Current);
-        if (updated == Current)
+        await _updates.WaitAsync(cancellationToken);
+        bool languageChanged;
+        try
+        {
+            AppSettings updated = change(Current);
+            if (updated == Current)
+            {
+                return;
+            }
+
+            // Saved first: if writing fails, Current keeps the value that is really on disk (analysis finding F-01).
+            await store.SaveAsync(updated, cancellationToken);
+            languageChanged = !string.Equals(updated.Language, Current.Language, StringComparison.Ordinal);
+            Current = updated;
+        }
+        finally
+        {
+            _updates.Release();
+        }
+
+        if (!notify)
         {
             return;
         }
 
-        bool languageChanged = !string.Equals(updated.Language, Current.Language, StringComparison.Ordinal);
-        Current = updated;
-        await store.SaveAsync(updated, cancellationToken);
-
         if (languageChanged)
         {
-            Loc.Instance.SetLanguage(updated.Language);
+            Loc.Instance.SetLanguage(Current.Language);
         }
 
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    public void Dispose() => _updates.Dispose();
+}
+
+/// <summary>Keeps the communications ducking memory in <c>settings.json</c>.</summary>
+public sealed class SettingsDuckingMemory(SettingsService settings) : IDuckingMemory
+{
+    public Task<RememberedDucking?> LoadAsync(CancellationToken cancellationToken)
+    {
+        AppSettings current = settings.Current;
+        return Task.FromResult(current.HasDuckingMemory ? new RememberedDucking(current.DuckingBeforeProfiles) : null);
+    }
+
+    public Task SaveAsync(int? value, CancellationToken cancellationToken) =>
+        settings.UpdateAsync(s => s with { HasDuckingMemory = true, DuckingBeforeProfiles = value }, cancellationToken, notify: false);
+
+    public Task ClearAsync(CancellationToken cancellationToken) =>
+        settings.UpdateAsync(s => s with { HasDuckingMemory = false, DuckingBeforeProfiles = null }, cancellationToken, notify: false);
 }
 
 /// <summary>One finished switch, for the tray notification and the diagnostics history.</summary>

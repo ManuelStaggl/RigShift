@@ -45,6 +45,16 @@ public sealed record AppSettings
 
     /// <summary>All rules paused, e.g. from the tray menu. <c>false</c> is the default for files without the key.</summary>
     public bool AutomationPaused { get; init; }
+
+    /// <summary>
+    /// A communications ducking value is remembered in <see cref="DuckingBeforeProfiles"/> (analysis finding B-01). Separate
+    /// flag because the remembered value itself may be <c>null</c> (registry value missing). Regular setters on purpose,
+    /// see <see cref="ConfirmTimeoutSeconds"/>.
+    /// </summary>
+    public bool HasDuckingMemory { get; set; }
+
+    /// <summary>The ducking value from before a profile that disables ducking; only meaningful with <see cref="HasDuckingMemory"/>.</summary>
+    public int? DuckingBeforeProfiles { get; set; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>
