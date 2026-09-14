@@ -59,7 +59,7 @@ Enthält alle Kritisch/Hoch mit Aufwand S/M sowie die Mittel-S-Punkte, ohne die 
   verbundenem Gerät löst erneut aus.
 - Tests (`AutomationTriggerTests`): `StartRejected_Unarm_NextPollStartsAgain`, `ExitDelayZero_SinglePollGap_DoesNothing`,
   `TwoRulesSameDevice_BothStart`, `NoActiveProfileAtStart_SwitchBackDoesNothing_Logged`,
-  `RuleDisabledWhileRunning_NoSwitchBack`, `Reset_DuringExitDelay_ClearsGoneSince`.
+  `RuleDisabledWhileRunning_NoSwitchBack` (mit O-07 entfallen), `Reset_DuringExitDelay_ClearsGoneSince`.
 - Risiko: Verhaltensänderung der Frist bei 0 s (ein Poll später) – gewollt.
 
 ### 1.4 Profilseite und Status-Leiste (I-01, I-02, Hoch; I-06, I-03, I-08 Mittel)
@@ -233,12 +233,12 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | erledigt; **Abweichungen:** `FromLink` reist als verstecktes `--from-link` im Argument (Pipe trägt nur Argumente), Link schlägt auch `--no-confirm`; `RunKeyAutostart.Disable()` entfernt den Wert unabhängig vom Pfad (auch Portable-Autostart); Pipe-Retry alle 2 s; kaputte/neuere Dateien zählen auch als nicht lesbar und blockieren `save`; InfoBar nicht schließbar; Retry-Test wartet echte 100 ms (Store hat keinen `TimeProvider`) | ac6d7f9, 69363db, ae46088 |
 | 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | erledigt; „section 10, M4“-Verweise sind korrekt (Abschnitt 10 = „Entschieden in M4“), nur zwei statt vier – unverändert; Probe-Usage-Kommentar nachgezogen | 06eb33d, (Release-Commit) |
 | 1.10 Release 1.3.1 | M-01, M-04 | erledigt (M-04 erlaubt ±1 Tag Abweichung zwischen Überschrift und UTC) | b951d58, Tag v1.3.1 |
-| 2 Apps-Nachlauf außerhalb des Gates | B-03 | offen | |
+| 2 Apps-Nachlauf außerhalb des Gates | B-03 | erledigt; **Abweichungen:** `AppsOutcome.Pending/Cancelled`, `SwitchResult.AppsCompletion` + `SwitchCoordinator.AppsCompleted` (zweiter Toast nur bei unvollständigen Apps/fehlendem Gerät); Abbruch im Orchestrator (`CancelPendingAppsAsync`); CLI `apply` wartet nicht mehr auf Apps; `StopAsync` bricht Apps ab | 571ca3f |
 | 2 Fensterrettung robust | B-04, B-14, B-12 | offen (Testrunde) | |
-| 2 Zeitbudget und Zwillinge | B-09, B-10, B-11 | offen | |
-| 2 Dry-Run ohne Gate | B-13 | offen | |
+| 2 Zeitbudget und Zwillinge | B-09, B-10, B-11 | erledigt; B-10 greift nur innerhalb des Profils (Zwilling außerhalb des Profils ist vom Portwechsel nicht unterscheidbar); B-11: dunkler Bildschirm → `AppliedPartially`, `ModesFromDatabase` nur bei echter Modus-Abweichung (auch beim Nachholen) | aeb7620, 571ca3f |
+| 2 Dry-Run ohne Gate | B-13 | erledigt; gilt auch für CLI `apply --dry-run` | 571ca3f |
 | 2 Stromspar-Prüfung | C-04, N-06 | offen (Testrunde) | |
-| 2 Automatik-Kleinkram | C-05, C-06, A-07 | offen | |
+| 2 Automatik-Kleinkram | C-05, C-06, A-07 | erledigt; `SetPausedAsync` meldet Fehler an die Seite und stellt den Schalter zurück | 6d57df3, 4e8566a, 5e87c42, 571ca3f |
 | 2 Umschalt-Feedback im Fenster | I-04, I-07 | offen | |
 | 2 Tray-Popup, Editor, Dialoge | I-05, I-09, I-10, I-11, I-12, I-15, I-16 | offen | |
 | 2 Sprache und Texte | I-13, I-14, I-17, J-01, J-02, J-03 | offen | |
