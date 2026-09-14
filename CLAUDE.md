@@ -47,9 +47,10 @@ USB-Stromsparen (`IUsbPowerCheck`, `docs/usb-power-saving.md`), Anruf-Absenkung 
 Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6): Spiele-Automatik, Energieplan, lokale HTTP-API, Home
 Assistant. Das Tool soll klein bleiben. **1.3.1** (2026-09-14): Paket 1 aus `docs/analysis/umsetzungsplan-1.3.md` (Befunde der
 Analyse). **1.4.0** (2026-09-14): Paket 2 und Nutzerentscheidungen aus demselben Plan (Abhak-Liste am Planende), dazu
-USB-Gerätenamen und Regeln mit mehreren Geräten (U-01/U-02) und die visuelle Prüfung aller Seiten (V-01). Als Nächstes:
-Hardware-Testrunde mit 1.4.0 am Gaming-PC (Plan-Tabelle „In die Hardware-Testrunde aufnehmen“, dazu Tray-Kontextmenü,
-Update-Karte, USB-Kombination), L-04 Rohdaten.
+USB-Gerätenamen und Regeln mit mehreren Geräten (U-01/U-02) und die visuelle Prüfung aller Seiten (V-01). **1.4.1**
+(2026-09-14, ohne Hardwaretest): Befunde der Hardware-Testrunde 1.4.0 (HW-01…HW-17, Tabelle „Umsetzung 1.4.1“ am Ende
+von `docs/analysis/umsetzungsplan-1.3.md`), README-Screenshots aus Demo-Daten neu. Als Nächstes: Hardware-Testrunde
+1.4.1 am Gaming-PC, dann HW-04/05, HW-11, HW-15 mit dem Nutzer entscheiden.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
