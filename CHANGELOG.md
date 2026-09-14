@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-14
+
 ### Added
 
 - **About & help** has a "Buy me a coffee" link to Ko-fi for anyone who wants to support RigShift – entirely optional.
@@ -22,7 +24,6 @@ All notable changes to this project are documented here. The format follows
   fails, turning the device off and on again starts it again right away – and the rule no longer switches back later.
 - Automation: a device that disappears for a single moment no longer counts as gone, even with a wait time of 0 s, and
   waking the PC from sleep no longer ends a wait time that started before sleep.
-
 - After a failed switch the notification says whether the previous displays are back or could not be restored.
 - If catching up with a display that connected later (e.g. spacedesk) fails, the previous displays are restored like
   after any failed switch, and an unexpected error from Windows during a switch no longer skips that restore.

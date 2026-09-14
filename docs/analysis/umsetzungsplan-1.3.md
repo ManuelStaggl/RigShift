@@ -229,10 +229,10 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 1.4 Profilseite, InfoBar, Regelkarte, Editor-Layout | I-01, I-02, I-03, I-06, I-08 | erledigt, Screenshots 720/784/980 lg de-hell + en-dunkel geprüft, InfoBar erscheint nach X erneut | 8b73ae2 |
 | 1.5 App-Testprojekt, Settings-Reihenfolge, Fixtures, Fake | L-01, F-01, L-02, L-03 | erledigt (11 App-Tests; statt `ITicker` ein internes `PollAsync`) | d74991d |
 | 1.6 Wiederherstellung und Rückmeldung | B-05, B-06, B-07, B-08 | erledigt | 8ab5306 |
-| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | erledigt; Velopack 1.2.0 hat kein `UpdateManager(logger:)` – `VelopackApp.SetLogger` mit früh erzeugtem Serilog-Logger reicht (UpdateManager nutzt den Locator), Start-Log geprüft: Velopack-Zeilen da, keine Hosting-Zeilen. Dry-Run-Log noch nicht angesehen | fdd3053 |
-| 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | offen | |
-| 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | offen | |
-| 1.10 Release 1.3.1 | M-01, M-04 | offen | |
+| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | erledigt; Velopack 1.2.0 hat kein `UpdateManager(logger:)` – `VelopackApp.SetLogger` mit früh erzeugtem Serilog-Logger reicht (UpdateManager nutzt den Locator), Start-Log geprüft: Velopack-Zeilen da, keine Hosting-Zeilen. Dry-Run-Log geprüft: Plan + Dauer (Zeile „Dry run … finished in N ms“ nachgetragen); Automatik-Ereignisse am Server nicht auslösbar, per Tests belegt | fdd3053, 9b5bdbc |
+| 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | erledigt; **Abweichungen:** `FromLink` reist als verstecktes `--from-link` im Argument (Pipe trägt nur Argumente), Link schlägt auch `--no-confirm`; `RunKeyAutostart.Disable()` entfernt den Wert unabhängig vom Pfad (auch Portable-Autostart); Pipe-Retry alle 2 s; kaputte/neuere Dateien zählen auch als nicht lesbar und blockieren `save`; InfoBar nicht schließbar; Retry-Test wartet echte 100 ms (Store hat keinen `TimeProvider`) | ac6d7f9, 69363db, ae46088 |
+| 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | erledigt; „section 10, M4“-Verweise sind korrekt (Abschnitt 10 = „Entschieden in M4“), nur zwei statt vier – unverändert; Probe-Usage-Kommentar nachgezogen | 06eb33d, (Release-Commit) |
+| 1.10 Release 1.3.1 | M-01, M-04 | erledigt (M-04 erlaubt ±1 Tag Abweichung zwischen Überschrift und UTC) | b951d58, Tag v1.3.1 |
 | 2 Apps-Nachlauf außerhalb des Gates | B-03 | offen | |
 | 2 Fensterrettung robust | B-04, B-14, B-12 | offen (Testrunde) | |
 | 2 Zeitbudget und Zwillinge | B-09, B-10, B-11 | offen | |

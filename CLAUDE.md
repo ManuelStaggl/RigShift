@@ -45,7 +45,8 @@ Bildschirme und Über & Hilfe, **Automatik mit USB-Trigger** (Wartezeit pro Rege
 Bildwiederholrate pro Bildschirm**, verlorene Fenster holen (`IWindowRescuer`), Apps warten auf USB-Gerät, Hinweis
 USB-Stromsparen (`IUsbPowerCheck`, `docs/usb-power-saving.md`), Anruf-Absenkung pro Profil aus (`IDuckingPreference`).
 Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6): Spiele-Automatik, Energieplan, lokale HTTP-API, Home
-Assistant. Das Tool soll klein bleiben. Als Nächstes: Hardwaretest von 1.3.0 am Gaming-PC, Fehler als 1.3.x.
+Assistant. Das Tool soll klein bleiben. **1.3.1** (2026-09-14): Paket 1 aus `docs/analysis/umsetzungsplan-1.3.md` (Befunde der
+Analyse). Als Nächstes: Paket 2 und Nutzerentscheidungen aus demselben Plan, Hardware-Testrunde von 1.3.1 am Gaming-PC.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
