@@ -104,6 +104,7 @@
             <ui:Button Margin="0,0,8,8" Command="{Binding OpenRepositoryCommand}" Content="{loc:Tr About_Repository}" Icon="{ui:SymbolIcon Globe24}" />
             <ui:Button Margin="0,0,8,8" Command="{Binding ReportProblemCommand}" Content="{loc:Tr About_ReportProblem}" Icon="{ui:SymbolIcon Bug24}" />
             <ui:Button Margin="0,0,8,8" Command="{Binding OpenLicenseCommand}" Content="{loc:Tr About_License}" Icon="{ui:SymbolIcon Certificate24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenKofiCommand}" Content="{loc:Tr About_Kofi}" Icon="{ui:SymbolIcon DrinkCoffee24}" ToolTip="{loc:Tr About_KofiHint}" />
           </WrapPanel>
           <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr About_Copyright}" TextWrapping="Wrap" />
         </StackPanel>

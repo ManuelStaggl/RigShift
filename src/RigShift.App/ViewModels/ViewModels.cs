@@ -659,6 +659,10 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void OpenLicense() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/LICENSE", _log);
 
+    /// <summary>Voluntary donations; only a link next to the others, never a prompt.</summary>
+    [RelayCommand]
+    private void OpenKofi() => ShellFolders.OpenUrl("https://ko-fi.com/filthyjoker", _log);
+
     [RelayCommand]
     private async Task CopyDiagnosticsAsync()
     {

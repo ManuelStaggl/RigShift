@@ -203,6 +203,8 @@
   <data name="About_Repository" xml:space="preserve"><value>RigShift auf GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
+  <data name="About_Kofi" xml:space="preserve"><value>Spendier mir einen Kaffee</value></data>
+  <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen – ganz freiwillig.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
   <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
