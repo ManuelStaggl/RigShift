@@ -51,6 +51,28 @@ All notable changes to this project are documented here. The format follows
 - When Windows had to choose the display modes, RigShift checks the result: a display that stayed dark makes the switch
   count as partial, and the note about Windows' modes only appears when a mode really differs.
 - The active profile is up to date as soon as a switch reports its result.
+### Fixed
+
+- Stopping an app of a profile only ends programs started from the configured folder; a same-named program elsewhere
+  keeps running (where Windows lets RigShift read the program's path).
+- A desktop shortcut for a profile whose name ends with a backslash now opens the right profile.
+- A program that is not responding no longer holds up a switch while RigShift moves lost windows back; the move
+  takes at most 3 seconds and happens only once the switch is confirmed, so a rejected switch leaves windows where
+  they were.
+- HDR is set even if a display reports its HDR state only a moment after the switch.
+- The USB power-saving warning only looks at the ports the device is connected to right now, also covers devices
+  with their own driver (for example Thrustmaster or Logitech G HUB), and logs when the registry cannot be read.
+- A command-line call or link that connects to RigShift but sends nothing no longer blocks later calls (10-second
+  limit).
+- Audio devices are released right after use, and HDR changes log which Windows request was used and both result
+  codes.
+
+### Changed
+
+- The diagnostic info replaces your user name in paths, and **About & help** and the README say what the log files
+  contain before you attach them to an issue.
+- `SECURITY.md` describes how updates are delivered and verified, that they are not code-signed, and the remaining
+  risk.
 
 ## [1.3.1] - 2026-09-14
 
