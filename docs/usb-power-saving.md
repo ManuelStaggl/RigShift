@@ -23,7 +23,8 @@ powercfg /SETACVALUEINDEX SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48
 powercfg /SETACTIVE SCHEME_CURRENT
 ```
 
-The setting belongs to the power plan: if you switch plans, check it again there.
+The setting belongs to the power plan: if you switch plans, check it again there. RigShift only checks the
+**Plugged in** value; on a laptop running on battery, check **On battery** yourself.
 
 ## 2. Don't let Windows turn off the device
 
@@ -34,9 +35,13 @@ The setting belongs to the power plan: if you switch plans, check it again there
    **Allow the computer to turn off this device to save power**. Click **OK**.
 4. Do the same for the **USB Root Hub** and **Generic USB Hub** entries the device is connected to.
 
-Not every device has a Power Management tab; then there is nothing to change for it.
+Not every device has a Power Management tab; then there is nothing to change for it. Devices with their own driver
+(for example Thrustmaster or Logitech G HUB) store the checkbox in a different place in the registry; RigShift reads
+both places.
 
-The setting is stored per USB port. If you plug the device into another port, check it again.
+For a device without a serial number the setting is stored per USB port, so check it again after plugging the device
+into another port; a device with a serial number keeps its setting on every port. RigShift only looks at the ports
+the device is connected to right now.
 
 ## Checking the result
 

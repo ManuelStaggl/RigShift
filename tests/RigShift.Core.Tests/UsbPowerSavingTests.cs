@@ -27,6 +27,7 @@ public sealed class UsbPowerSavingTests
         { 2, false },
         { new byte[] { 1, 0, 0, 0 }, true },
         { new byte[] { 1 }, true },
+        { new byte[] { 1, 1 }, false },
         { new byte[] { 0, 0, 0, 0 }, false },
         { "1", false },
         { null, false },
@@ -36,4 +37,21 @@ public sealed class UsbPowerSavingTests
     [MemberData(nameof(FlagValues))]
     public void IsFlagEnabled_ReadsDwordAndBinary(object? value, bool enabled) =>
         UsbPowerSaving.IsFlagEnabled(value).ShouldBe(enabled);
+
+    [Theory]
+    [InlineData(null, null, false)]
+    [InlineData("EnhancedPowerManagementEnabled", null, true)]
+    [InlineData("SelectiveSuspendEnabled", null, true)]
+    [InlineData(null, "IdleInWorkingState", true)]
+    [InlineData(null, "UserSetDeviceIdleEnabled", true)]
+    [InlineData("IdleInWorkingState", null, false)]
+    [InlineData(null, "SelectiveSuspendEnabled", false)]
+    public void AllowsPowerSaving_ReadsHubAndWdfFlagsFromTheirOwnKeys(string? deviceParameterSet, string? wdfValueSet, bool allowed) =>
+        UsbPowerSaving.AllowsPowerSaving(
+            name => name == deviceParameterSet ? 1 : 0,
+            name => name == wdfValueSet ? 1 : null).ShouldBe(allowed);
+
+    [Fact]
+    public void AllowsPowerSaving_AllFlagsOff_IsFalse() =>
+        UsbPowerSaving.AllowsPowerSaving(_ => 0, _ => new byte[] { 0, 0, 0, 0 }).ShouldBeFalse();
 }

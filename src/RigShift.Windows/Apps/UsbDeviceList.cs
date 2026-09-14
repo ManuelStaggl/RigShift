@@ -59,7 +59,8 @@ public sealed class UsbDeviceList : IUsbDeviceList
         return devices.Values.OrderBy(d => d.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 
-    private static unsafe List<string> PresentInstanceIds()
+    /// <summary>Instance ids (<c>USB\VID_xxxx&amp;PID_xxxx\&lt;instance&gt;</c>) of the connected USB devices.</summary>
+    internal static unsafe List<string> PresentInstanceIds()
     {
         const uint Flags = PInvoke.CM_GETIDLIST_FILTER_ENUMERATOR | PInvoke.CM_GETIDLIST_FILTER_PRESENT;
 
