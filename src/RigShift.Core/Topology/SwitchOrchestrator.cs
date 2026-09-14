@@ -93,6 +93,11 @@ public sealed class SwitchOrchestrator
             return await CheckAsync(profile, cancellationToken);
         }
 
+        if (request.KeepDisplays)
+        {
+            return await ApplyRestAsync(profile, cancellationToken);
+        }
+
         long started = _time.GetTimestamp();
         _log.Information("Switching to profile {Profile} (skip confirmation: {SkipConfirmation}, from link: {FromLink})",
             profile.Name, request.SkipConfirmation, request.FromLink);
@@ -240,6 +245,28 @@ public sealed class SwitchOrchestrator
             AppsCompletion = appsRun,
             Note = modes.Note,
         }, started);
+    }
+
+    /// <summary>
+    /// Windows restored the profile's display layout on its own, e.g. when a monitor was switched on (finding HW-15): the
+    /// rest of the profile follows without a display change and without asking – the user chose it from the notification.
+    /// </summary>
+    private async Task<SwitchResult> ApplyRestAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        long started = _time.GetTimestamp();
+        _log.Information("Applying the rest of profile {Profile}; Windows already restored its displays", profile.Name);
+        _ = CancelPendingAppsAsync();
+
+        TopologyPlan plan = _planner.Plan(profile, await _display.QueryAsync(cancellationToken));
+        AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
+        SwitchKeepAwake(profile);
+        await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
+        await RescueWindowsAsync(cancellationToken);
+
+        Task<AppsOutcome> appsRun = _appRunner.Start(profile);
+        AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
+        _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
+        return Finish(new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun }, started);
     }
 
     /// <summary>

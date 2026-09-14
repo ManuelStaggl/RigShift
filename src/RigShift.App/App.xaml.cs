@@ -147,12 +147,22 @@ public partial class App : Application, IAppShell
             {
                 BrandingPreview.Show(previewDirectory, Services.GetRequiredService<TrayPopupViewModel>());
             }
+
+            // Developer aid: the app picker with a demo list (JSON array of name, path, isRunning) for README screenshots.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_APPS") is { Length: > 0 } demoApps)
+            {
+                AppPickerWindow.Pick(null, null, () => System.Text.Json.JsonSerializer.Deserialize<List<Windows.Apps.DiscoveredApp>>(
+                    System.IO.File.ReadAllText(demoApps), PreviewJson) ?? []);
+            }
 #endif
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) =>
                 {
+                    Core.Profiles.Profile? before = catalog.ActiveProfile;
+                    SwitchCoordinator coordinator = Services.GetRequiredService<SwitchCoordinator>();
                     await catalog.RefreshActiveAsync(CancellationToken.None);
-                    await Services.GetRequiredService<SwitchCoordinator>().CatchUpAsync();
+                    await coordinator.CatchUpAsync();
+                    coordinator.NoticeDisplayChange(before, catalog.ActiveProfile);
                 };
 
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
@@ -232,6 +242,10 @@ public partial class App : Application, IAppShell
         BrandTheme.Apply(theme);
     }
 
+#if DEBUG
+    private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+
+#endif
     /// <summary>The keep-awake request ends with the process; after a restart it follows the profile that is still active.</summary>
     private void KeepAwakeForActiveProfile(ProfileCatalog catalog)
     {

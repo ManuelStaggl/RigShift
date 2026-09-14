@@ -51,6 +51,37 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
+    public void NoticeDisplayChange_OffersTheRest_OnlyForAnotherProfileWithMoreThanDisplays()
+    {
+        // HW-15: Windows restored the rig layout by itself when the ultrawide was switched on.
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig() with { KeepAwake = true };
+        var offered = new List<Profile>();
+        _host.Coordinator.RestoredByWindows += (_, profile) => offered.Add(profile);
+
+        _host.Coordinator.NoticeDisplayChange(desk, rig).ShouldBeTrue();
+        _host.Coordinator.NoticeDisplayChange(rig, rig).ShouldBeFalse();
+        _host.Coordinator.NoticeDisplayChange(rig, null).ShouldBeFalse();
+        _host.Coordinator.NoticeDisplayChange(rig, desk).ShouldBeFalse();
+
+        offered.ShouldHaveSingleItem().ShouldBe(rig);
+    }
+
+    [Fact]
+    public async Task KeepDisplays_AppliesTheRest_WithoutTouchingDisplaysOrAsking()
+    {
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet, activeMode: TabletMode)));
+        Profile rig = Rig(confirm: true) with { KeepAwake = true };
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(rig, new SwitchRequest { KeepDisplays = true });
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
+        _host.Display.Applied.ShouldBeEmpty();
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default, default);
+        _host.Coordinator.History[0].ProfileName.ShouldBe("Rig");
+    }
+
+    [Fact]
     public async Task History_KeepsTenNewest()
     {
         for (int i = 0; i <= 10; i++)

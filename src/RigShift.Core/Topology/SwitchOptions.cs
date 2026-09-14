@@ -61,6 +61,12 @@ public sealed record SwitchRequest
     public bool SkipConfirmation { get; init; }
 
     /// <summary>
+    /// Windows already restored the profile's displays itself: apply only audio, keep-awake, call ducking and apps, without
+    /// touching the displays and without asking (finding HW-15).
+    /// </summary>
+    public bool KeepDisplays { get; init; }
+
+    /// <summary>
     /// The switch came from a <c>rigshift://</c> link, i.e. possibly from a web page: it always asks for confirmation,
     /// regardless of <see cref="SkipConfirmation"/> and a timeout of 0.
     /// </summary>

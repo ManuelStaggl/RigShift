@@ -91,7 +91,8 @@ public sealed class TrayIconService : IDisposable
     private static readonly TimeSpan ErrorNotificationInterval = TimeSpan.FromSeconds(30);
 
     private readonly ILogger _log;
-    private bool _notificationOpensAbout;
+    /// <summary>What a click on the last notification does; null when it does nothing.</summary>
+    private Action? _notificationClick;
     private long? _lastErrorNotification;
 
     public TrayIconService(
@@ -182,13 +183,25 @@ public sealed class TrayIconService : IDisposable
         // Update notifications and switch problems lead to the about page (install the update, recent switches, log).
         _icon.TrayBalloonTipClicked += (_, _) =>
         {
-            if (_notificationOpensAbout)
-            {
-                _notificationOpensAbout = false;
-                _shell.ShowMainWindow(typeof(AboutPage));
-            }
+            Action? click = _notificationClick;
+            _notificationClick = null;
+            click?.Invoke();
         };
-        _icon.TrayBalloonTipClosed += (_, _) => _notificationOpensAbout = false;
+        _icon.TrayBalloonTipClosed += (_, _) => _notificationClick = null;
+
+        // Windows restored a profile's displays by itself: a click applies audio, apps and the rest (finding HW-15).
+        coordinator.RestoredByWindows += (_, restored) => Notify(
+            (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NotificationIcon.Info),
+            async () =>
+            {
+                if (_catalog.ActiveProfile?.Id != restored.Id)
+                {
+                    _log.Information("Rest of {Profile} not applied: {Active} is active now", restored.Name, _catalog.ActiveProfile?.Name ?? "(none)");
+                    return;
+                }
+
+                await _coordinator.SwitchAsync(restored, new SwitchRequest { KeepDisplays = true });
+            });
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
@@ -312,9 +325,12 @@ public sealed class TrayIconService : IDisposable
         Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
     }
 
-    private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false)
+    private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false) =>
+        Notify(message, opensAbout ? () => _shell.ShowMainWindow(typeof(AboutPage)) : null);
+
+    private void Notify((string Title, string Text, NotificationIcon Icon) message, Action? click)
     {
-        _notificationOpensAbout = opensAbout;
+        _notificationClick = click;
         _icon.ShowNotification(message.Title, message.Text, message.Icon);
     }
 

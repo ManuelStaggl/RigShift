@@ -53,6 +53,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler? BusyRejected;
 
     /// <summary>
+    /// Windows restored a profile's displays by itself and the profile has more than displays (finding HW-15). The tray
+    /// offers to apply the rest with <see cref="SwitchRequest.KeepDisplays"/>.
+    /// </summary>
+    public event EventHandler<Profile>? RestoredByWindows;
+
+    /// <summary>
     /// The apps of a switch ended after its result: the history record, now with the final apps outcome (analysis
     /// finding B-03). Raised on the context that started the switch.
     /// </summary>
@@ -273,6 +279,30 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _gate.Release();
         }
     }
+
+    /// <summary>
+    /// Call after a display change, once the active profile was refreshed and a catch-up ran. A profile that became active
+    /// without RigShift switching – Windows restored its layout – only has its displays; audio, apps and the rest are
+    /// offered via <see cref="RestoredByWindows"/> (finding HW-15). Returns whether it was offered.
+    /// </summary>
+    public bool NoticeDisplayChange(Profile? before, Profile? after)
+    {
+        if (after is null || after.Id == before?.Id || IsSwitching || !HasMoreThanDisplays(after))
+        {
+            return false;
+        }
+
+        _log.Information("Windows restored the displays of {Profile} (before: {Before}); offering the rest", after.Name, before?.Name ?? "(none)");
+        RestoredByWindows?.Invoke(this, after);
+        return true;
+    }
+
+    internal static bool HasMoreThanDisplays(Profile profile) =>
+        profile.Apps.Count > 0
+        || profile.KeepAwake
+        || profile.DisableCommunicationsDucking
+        || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
+            or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };
 
     private void RememberCatchUp(Profile profile, SwitchResult result) =>
         _pendingCatchUp = result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially && result.Plan.ShouldRetryLater
