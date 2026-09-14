@@ -234,11 +234,14 @@ public sealed partial class AutomationViewModel : ObservableObject
         _ => (ExitAction.Stay, null),
     };
 
+    /// <summary>Saves started by card changes, which the UI does not await; tests wait for them before cleaning up.</summary>
+    internal Task PendingSave { get; private set; } = Task.CompletedTask;
+
     internal void OnCardChanged()
     {
         if (!_loading)
         {
-            _ = SaveAsync();
+            PendingSave = Task.WhenAll(PendingSave, SaveAsync());
         }
     }
 

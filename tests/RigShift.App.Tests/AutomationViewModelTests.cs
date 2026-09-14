@@ -36,6 +36,7 @@ public sealed class AutomationViewModelTests : IDisposable
         AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase), RuleFor(Wheelbase));
 
         viewModel.Rules[1].Devices[0].SelectedDevice = viewModel.DeviceChoiceFor(Dongle);
+        await viewModel.PendingSave;
 
         viewModel.Rules.ShouldAllBe(r => !r.HasDuplicateDevice);
     }
@@ -63,6 +64,7 @@ public sealed class AutomationViewModelTests : IDisposable
 
         card.RemoveDeviceCommand.Execute(card.Devices[0]);
         card.RemoveDeviceCommand.Execute(card.Devices[0]);
+        await viewModel.PendingSave;
 
         card.ToRule().Devices.ShouldNotBeNull().ShouldHaveSingleItem().Id.ShouldBe(Dongle);
     }
@@ -96,6 +98,7 @@ public sealed class AutomationViewModelTests : IDisposable
         viewModel.NamedDevices.Select(n => n.WindowsName).ShouldBe(["Wheelbase", "Pedals"]);
 
         viewModel.Rules[0].AddDeviceCommand.Execute(null);
+        await viewModel.PendingSave;
         viewModel.NamedDevices.Select(n => n.Id).ShouldContain(Dongle);
         viewModel.DeviceChoiceFor(Pedals).ShouldNotBeNull().Name.ShouldContain("Pedals");
         viewModel.Rules[0].Devices[0].SelectedDevice.ShouldNotBeNull().Key.ShouldBe(Pedals);
