@@ -14,13 +14,17 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// Editor for one profile: name, icon, confirmation time, which displays take part (primary, optional) and audio.
-/// Resolutions and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10, M4).
-/// Refresh rate and HDR are chosen per display (section 6, item 10).
+/// Editor for one profile: name, icon, whether it asks after switching, which displays take part (primary, optional) and
+/// audio. Resolutions and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10,
+/// M4). Refresh rate and HDR are chosen per display (section 6, item 10); display names only on the Displays page.
 /// </summary>
 public sealed partial class ProfileEditorViewModel : ObservableObject
 {
+    private static readonly IReadOnlyList<DisplayAssignment> NoDisplays = [];
+    private static readonly IReadOnlyList<AppAction> NoApps = [];
+
     private readonly Profile _original;
+    private readonly Profile _initial;
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
     private readonly HotkeyService _hotkeys;
@@ -32,7 +36,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         IReadOnlyList<AudioDeviceInfo> playbackDevices,
         IReadOnlyList<AudioDeviceInfo> recordingDevices,
         IReadOnlyList<UsbDevice> usbDevices,
-        int appConfirmTimeoutSeconds,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         HotkeyService hotkeys,
@@ -50,23 +53,25 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         _log = log.ForContext<ProfileEditorViewModel>();
 
         Title = Loc.Instance[isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
-        TimeoutHint = Loc.Format("Editor_OwnTimeoutHint", appConfirmTimeoutSeconds);
         Name = profile.Name;
         IconChoices = [.. ProfileIcons.All.Select(key => new Choice(key, Loc.Instance["Icon_" + char.ToUpperInvariant(key[0]) + key[1..]]))];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(profile.Icon))
             ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
-        UseOwnTimeout = profile.ConfirmTimeoutSeconds is not null;
-        OwnTimeoutSeconds = profile.ConfirmTimeoutSeconds ?? appConfirmTimeoutSeconds;
+        SwitchWithoutAsking = profile.SwitchWithoutAsking;
         SetDisplays(profile.Displays);
 
         AudioAssignment audio = profile.Audio;
         AudioSlots =
         [
             new AudioSlot(Loc.Instance["Audio_Playback"], Loc.Instance["Audio_Unchanged"], playbackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
-            new AudioSlot(Loc.Instance["Audio_PlaybackComms"], Loc.Instance["Audio_SameAsAbove"], playbackDevices, audio.PlaybackCommunications),
             new AudioSlot(Loc.Instance["Audio_Recording"], Loc.Instance["Audio_Unchanged"], recordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
-            new AudioSlot(Loc.Instance["Audio_RecordingComms"], Loc.Instance["Audio_SameAsAbove"], recordingDevices, audio.RecordingCommunications),
         ];
+        CommunicationsAudioSlots =
+        [
+            new AudioSlot(Loc.Instance["Audio_PlaybackComms"], Loc.Instance["Audio_SameAsPlayback"], playbackDevices, audio.PlaybackCommunications),
+            new AudioSlot(Loc.Instance["Audio_RecordingComms"], Loc.Instance["Audio_SameAsRecording"], recordingDevices, audio.RecordingCommunications),
+        ];
+        ShowCommunicationsAudio = audio.PlaybackCommunications is not null || audio.RecordingCommunications is not null;
 
         foreach (AppAction app in profile.Apps)
         {
@@ -90,10 +95,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
 
         SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId), StringComparison.OrdinalIgnoreCase))
             ?? AppsWaitDeviceChoices[0];
-        AppsWaitSeconds = Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds);
 
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
+
+        // The editor's own reading of the profile, so defaults it fills in do not count as changes.
+        _initial = Build();
     }
 
     /// <summary>True: saved, close the window. False: cancelled.</summary>
@@ -101,13 +108,21 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
 
     public string Title { get; }
 
-    public string TimeoutHint { get; }
-
     public ObservableCollection<Choice> IconChoices { get; }
 
     public ObservableCollection<DisplayEditItem> Displays { get; } = [];
 
+    /// <summary>Playback and recording.</summary>
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
+
+    /// <summary>Call devices, under "Advanced"; by default they follow playback and recording (analysis decision O-02).</summary>
+    public IReadOnlyList<AudioSlot> CommunicationsAudioSlots { get; }
+
+    /// <summary>"Advanced" starts open only when the profile already sets a call device, so nothing set stays hidden.</summary>
+    public bool ShowCommunicationsAudio { get; }
+
+    /// <summary>Anything differs from the profile as opened (analysis finding I-11).</summary>
+    public bool HasChanges => !SameProfile(Build(), _initial);
 
     public ObservableCollection<AppEditItem> Apps { get; } = [];
 
@@ -121,14 +136,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     public ObservableCollection<Choice> AppsWaitDeviceChoices { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasAppsWaitDevice))]
     public partial Choice? SelectedAppsWaitDevice { get; set; }
-
-    /// <summary>The wait time only matters once a device is chosen.</summary>
-    public bool HasAppsWaitDevice => SelectedAppsWaitDevice?.Key is not null;
-
-    [ObservableProperty]
-    public partial double? AppsWaitSeconds { get; set; }
 
     private readonly Dictionary<string, string> _usbDeviceNames = new(StringComparer.OrdinalIgnoreCase);
 
@@ -142,10 +150,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     public partial Choice? SelectedIcon { get; set; }
 
     [ObservableProperty]
-    public partial bool UseOwnTimeout { get; set; }
-
-    [ObservableProperty]
-    public partial double? OwnTimeoutSeconds { get; set; }
+    public partial bool SwitchWithoutAsking { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
@@ -312,25 +317,31 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     {
         Name = Name.Trim(),
         Icon = SelectedIcon?.Key,
-        ConfirmTimeoutSeconds = UseOwnTimeout ? (int)Math.Clamp(Math.Round(OwnTimeoutSeconds ?? 0), 0, 120) : null,
+        SwitchWithoutAsking = SwitchWithoutAsking,
+        ConfirmTimeoutSeconds = null,
         Hotkey = Hotkey,
         Displays = Displays.Select(d => d.Assignment).ToList(),
         Audio = _original.Audio with
         {
             Playback = AudioSlots[0].Endpoint,
-            PlaybackCommunications = AudioSlots[1].Endpoint,
-            Recording = AudioSlots[2].Endpoint,
-            RecordingCommunications = AudioSlots[3].Endpoint,
+            PlaybackCommunications = CommunicationsAudioSlots[0].Endpoint,
+            Recording = AudioSlots[1].Endpoint,
+            RecordingCommunications = CommunicationsAudioSlots[1].Endpoint,
             PlaybackVolumePercent = AudioSlots[0].VolumePercent,
-            RecordingVolumePercent = AudioSlots[2].VolumePercent,
+            RecordingVolumePercent = AudioSlots[1].VolumePercent,
         },
         Apps = Apps.Select(a => a.ToAction()).ToList(),
         AppsWaitForUsbDeviceId = SelectedAppsWaitDevice?.Key,
         AppsWaitForUsbDeviceName = SelectedAppsWaitDevice?.Key is { } waitId && _usbDeviceNames.TryGetValue(waitId, out string? waitName) ? waitName : null,
-        AppsWaitSeconds = AppsWaitSeconds is { } seconds ? Profile.ClampAppsWaitSeconds((int)Math.Round(seconds)) : Profile.DefaultAppsWaitSeconds,
         KeepAwake = KeepAwake,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
     };
+
+    /// <summary>Record equality compares lists by reference, so displays and apps are compared item by item.</summary>
+    private static bool SameProfile(Profile a, Profile b) =>
+        a with { Displays = NoDisplays, Apps = NoApps } == b with { Displays = NoDisplays, Apps = NoApps }
+        && a.Displays.SequenceEqual(b.Displays)
+        && a.Apps.SequenceEqual(b.Apps);
 }
 
 public sealed record RefreshChoice(RefreshRate Rate)
@@ -355,14 +366,8 @@ public sealed partial class DisplayEditItem : ObservableObject
 
     public DisplayAssignment Assignment { get; private set; }
 
+    /// <summary>"Name · Model"; the name is edited on the Displays page only (analysis decision O-05).</summary>
     public string Name => SwitchMessages.NameOf(Assignment);
-
-    /// <summary>The monitor model, shown as placeholder of the name field.</summary>
-    public string ModelName => SwitchMessages.NameOf(null, Assignment.Identity);
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Name))]
-    public partial string CustomName { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string ModeText { get; private set; } = string.Empty;
@@ -399,7 +404,6 @@ public sealed partial class DisplayEditItem : ObservableObject
             Assignment = assignment;
             IsPrimary = assignment.IsPrimary;
             IsOptional = assignment.IsOptional;
-            CustomName = assignment.CustomName ?? string.Empty;
             ModeText = Loc.Format("Editor_Mode", assignment.Width, assignment.Height, assignment.PositionX, assignment.PositionY);
 
             RefreshRate rate = RefreshRate.Of(assignment);
@@ -460,14 +464,6 @@ public sealed partial class DisplayEditItem : ObservableObject
         if (!_syncing && value)
         {
             _owner.MakePrimary(this);
-        }
-    }
-
-    partial void OnCustomNameChanged(string value)
-    {
-        if (!_syncing)
-        {
-            Assignment = Assignment with { CustomName = DisplayNames.Normalize(value) };
         }
     }
 

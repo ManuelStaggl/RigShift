@@ -54,18 +54,19 @@ internal static class TestDisplays
         Mode(DeskRight, 1920, 1080, 100, x: 3840),
     ];
 
-    public static Profile Profile(string name, IEnumerable<DisplayAssignment> displays, int confirmSeconds = 0, AudioAssignment? audio = null) =>
+    /// <param name="confirm">False (default): the profile switches without asking, so most tests need no confirmation fake.</param>
+    public static Profile Profile(string name, IEnumerable<DisplayAssignment> displays, bool confirm = false, AudioAssignment? audio = null) =>
         new()
         {
             Id = Guid.NewGuid(),
             Name = name,
             Displays = displays.ToList(),
-            ConfirmTimeoutSeconds = confirmSeconds,
+            SwitchWithoutAsking = !confirm,
             Audio = audio ?? new AudioAssignment(),
         };
 
-    public static Profile Rig(int confirmSeconds = 0, AudioAssignment? audio = null) =>
-        Profile("Rig", [UltrawideMode, TabletMode], confirmSeconds, audio);
+    public static Profile Rig(bool confirm = false, AudioAssignment? audio = null) =>
+        Profile("Rig", [UltrawideMode, TabletMode], confirm, audio);
 
     public static AttachedDisplay Attached(DisplayIdentity identity, bool available = true, DisplayAssignment? activeMode = null) =>
         new()

@@ -200,7 +200,7 @@ public sealed class SwitchOrchestratorTests
     {
         var display = new FakeDisplayConfigurator(DeskActive());
 
-        SwitchResult? result = await Create(display).CatchUpAsync(Rig(confirmSeconds: 15), appliedDisplays: 1, Ct);
+        SwitchResult? result = await Create(display).CatchUpAsync(Rig(confirm: true), appliedDisplays: 1, Ct);
 
         result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
         display.Applied.Single().Plan.Resolved.Count.ShouldBe(2);
@@ -223,7 +223,7 @@ public sealed class SwitchOrchestratorTests
     {
         var display = new FakeDisplayConfigurator(DeskActive());
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), new SwitchRequest { DryRun = true }, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), new SwitchRequest { DryRun = true }, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.DryRun);
         result.Plan.Resolved.Count.ShouldBe(2);
@@ -238,7 +238,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(Arg.Any<Profile>(), TimeSpan.FromSeconds(15), Arg.Any<CancellationToken>())
             .Returns(ConfirmationResult.TimedOut);
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         result.Attempts.ShouldBe(2);
@@ -257,7 +257,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator([DeskActive(), DeskActive(), deskGone, DeskActive()], applyResults: [0, 31, 1610, 0]);
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         display.Applied.Count.ShouldBe(4);
@@ -270,7 +270,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
     }
@@ -281,7 +281,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [0, 87, 87]);
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.LastNativeError.ShouldBe(87);
@@ -378,7 +378,7 @@ public sealed class SwitchOrchestratorTests
         });
 
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            Create(display).SwitchAsync(Rig(confirmSeconds: 15) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, exit.Token));
+            Create(display).SwitchAsync(Rig(confirm: true) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, exit.Token));
 
         display.Applied.Count.ShouldBe(2);
         display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
@@ -392,21 +392,22 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.Applied.Count.ShouldBe(1);
     }
 
     [Theory]
-    [InlineData(0, false)]
-    [InlineData(15, true)]
-    public async Task Switch_SkipsConfirmation_WhenTimeoutIsZeroOrRequested(int confirmSeconds, bool skipRequested)
+    [InlineData(false, false, 15)]
+    [InlineData(true, true, 15)]
+    [InlineData(true, false, 0)]
+    public async Task Switch_SkipsConfirmation_WhenProfileOrRequestOrSettingSaysSo(bool confirm, bool skipRequested, int appSeconds)
     {
         var display = new FakeDisplayConfigurator(DeskActive());
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirmSeconds), new SwitchRequest { SkipConfirmation = skipRequested }, Ct);
+            Rig(confirm), new SwitchRequest { SkipConfirmation = skipRequested, DefaultConfirmTimeoutSeconds = appSeconds }, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default, default);
@@ -420,7 +421,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirmSeconds: 0),
+            Rig(confirm: false),
             new SwitchRequest { FromLink = true, SkipConfirmation = true, DefaultConfirmTimeoutSeconds = 0 },
             Ct);
 
@@ -462,7 +463,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirmSeconds: 15, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         Received.InOrder(() =>
@@ -510,7 +511,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirmSeconds: 15, audio: new AudioAssignment { Playback = Headphones, PlaybackVolumePercent = 40 }), SwitchRequest.Default, Ct);
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones, PlaybackVolumePercent = 40 }), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         Received.InOrder(() =>
@@ -527,7 +528,7 @@ public sealed class SwitchOrchestratorTests
         _apps.IsRunning("C:\\Tools\\Discord.exe").Returns(true);
         _apps.StopAsync(default!, default, default).ReturnsForAnyArgs(true);
         var display = new FakeDisplayConfigurator(DeskActive());
-        Profile rig = Rig(confirmSeconds: 15) with
+        Profile rig = Rig(confirm: true) with
         {
             Apps =
             [
@@ -592,7 +593,7 @@ public sealed class SwitchOrchestratorTests
     {
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
         var display = new FakeDisplayConfigurator(DeskActive());
-        Profile rig = Rig(confirmSeconds: 15) with { Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }] };
+        Profile rig = Rig(confirm: true) with { Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }] };
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
@@ -619,7 +620,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
         SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
 
-        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirmSeconds: 15) with { KeepAwake = true }, SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirm: true) with { KeepAwake = true }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _power.IsKeepingAwake.ShouldBeFalse();
@@ -687,7 +688,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator([deskHdrOn, rigActive, deskHdrOff]);
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirmSeconds: 15) with { Displays = [UltrawideMode] }, SwitchRequest.Default, Ct);
+            Rig(confirm: true) with { Displays = [UltrawideMode] }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         display.HdrSet.ShouldBe([(Desk4K.TargetDevicePath, true)]);
@@ -746,7 +747,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
         var display = new FakeDisplayConfigurator(DeskActive());
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _windows.Received(2).RescueOffscreenWindows();
@@ -818,28 +819,21 @@ public sealed class SwitchOrchestratorTests
         _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
     }
 
-    [Fact]
-    public async Task Switch_AppsWaitForDevice_NeverAppears_StartsAppsAndReportsIt()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(300)]
+    public async Task Switch_AppsWaitForDevice_NeverAppears_WaitsFixedTimeIgnoringSavedValue(int savedSeconds)
     {
+        // Analysis decision O-04: the wait is fixed; a value saved by 1.3 no longer changes it.
         _usbDevices.PresentDeviceIds().Returns(Present("VID_046D&PID_C547"));
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
-            RigWaitingForWheelbase() with { AppsWaitSeconds = 20 }, SwitchRequest.Default, Ct);
+            RigWaitingForWheelbase() with { AppsWaitSeconds = savedSeconds }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         result.Apps.ShouldBe(AppsOutcome.DeviceMissing);
         _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(20));
-    }
-
-    [Fact]
-    public async Task Switch_AppsWaitSeconds_IsClamped()
-    {
-        _usbDevices.PresentDeviceIds().Returns(Present());
-
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase() with { AppsWaitSeconds = 1 }, SwitchRequest.Default, Ct);
-
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(Profiles.Profile.MinAppsWaitSeconds));
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(Profiles.Profile.AppsDeviceWaitSeconds));
     }
 
     [Fact]
@@ -859,7 +853,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
-            RigWaitingForWheelbase() with { ConfirmTimeoutSeconds = 15 }, SwitchRequest.Default, Ct);
+            RigWaitingForWheelbase() with { SwitchWithoutAsking = false }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _usbDevices.DidNotReceive().PresentDeviceIds();
@@ -916,7 +910,7 @@ public sealed class SwitchOrchestratorTests
         SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
 
         SwitchResult result = await orchestrator.SwitchAsync(
-            Rig(confirmSeconds: 15) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+            Rig(confirm: true) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy50Percent);
@@ -992,7 +986,7 @@ public sealed class SwitchOrchestratorTests
         await orchestrator.SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
-        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirmSeconds: 15) with { Name = "Desk" }, SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirm: true) with { Name = "Desk" }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _ducking.Value.ShouldBe(CommunicationsDucking.DoNothing);

@@ -63,7 +63,14 @@ public sealed class JsonProfileStore : IProfileStore
                 }
                 else
                 {
-                    profiles.Add(document.Profile);
+                    Profile profile = document.Profile.WithMigratedConfirmation();
+                    if (!ReferenceEquals(profile, document.Profile))
+                    {
+                        _log.Information("Profile {Profile}: confirmation time {Seconds} s replaced by \"switch without asking\" = {WithoutAsking}",
+                            profile.Name, document.Profile.ConfirmTimeoutSeconds, profile.SwitchWithoutAsking);
+                    }
+
+                    profiles.Add(profile);
                 }
             }
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)

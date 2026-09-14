@@ -19,7 +19,7 @@ public sealed class JsonProfileStoreTests : IDisposable
     public async Task SaveThenLoad_RoundTripsTheWholeProfile()
     {
         var store = new JsonProfileStore(_directory, Logger.None);
-        Profile rig = Rig(confirmSeconds: 15, audio: new AudioAssignment
+        Profile rig = Rig(confirm: true, audio: new AudioAssignment
         {
             Playback = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000001}", "Headphones"),
             PlaybackVolumePercent = 40,
@@ -157,7 +157,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         loaded.Displays[0].Rotation.ShouldBe(DisplayRotation.Identity);
         loaded.Displays[0].Identity.FriendlyName.ShouldBe(string.Empty);
         loaded.Audio.ShouldNotBeNull();
-        loaded.AppsWaitSeconds.ShouldBe(Profiles.Profile.DefaultAppsWaitSeconds);
+        loaded.AppsWaitSeconds.ShouldBe(Profiles.Profile.AppsDeviceWaitSeconds);
         loaded.DisableCommunicationsDucking.ShouldBeFalse();
     }
 

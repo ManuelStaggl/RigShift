@@ -115,9 +115,9 @@ public sealed class SwitchOrchestrator
             return Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
         }
 
-        int confirmSeconds = profile.ConfirmTimeoutSeconds ?? request.DefaultConfirmTimeoutSeconds;
+        int confirmSeconds = request.DefaultConfirmTimeoutSeconds;
         // A link may come from a web page: it always asks, at least with the default timeout (analysis finding H-02).
-        bool confirm = request.FromLink || (confirmSeconds > 0 && !request.SkipConfirmation);
+        bool confirm = request.FromLink || (confirmSeconds > 0 && !profile.SwitchWithoutAsking && !request.SkipConfirmation);
         if (request.FromLink && confirmSeconds <= 0)
         {
             confirmSeconds = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
@@ -558,7 +558,7 @@ public sealed class SwitchOrchestrator
             Id = Guid.Empty,
             Name = "Previous topology",
             Displays = displays,
-            ConfirmTimeoutSeconds = 0,
+            SwitchWithoutAsking = true,
         };
     }
 
@@ -856,7 +856,7 @@ public sealed class SwitchOrchestrator
             return true;
         }
 
-        int seconds = Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds);
+        const int seconds = Profile.AppsDeviceWaitSeconds;
         string name = profile.AppsWaitForUsbDeviceName ?? deviceId;
         DateTimeOffset deadline = _time.GetUtcNow() + TimeSpan.FromSeconds(seconds);
         long started = _time.GetTimestamp();

@@ -72,6 +72,7 @@ public sealed class ProfileDialogs
     public async Task<Profile?> EditAsync(Profile profile) =>
         await ShowAsync(profile, isNew: false, await ListAudioAsync(AudioDirection.Render));
 
+    /// <summary>Delete is destructive: red button, centred on the window it came from (analysis finding I-15).</summary>
     public static async Task<bool> ConfirmDeleteAsync(string name)
     {
         var box = new MessageBox
@@ -79,9 +80,42 @@ public sealed class ProfileDialogs
             Title = Loc.Instance["Profile_DeleteTitle"],
             Content = Loc.Format("Profile_DeleteText", name),
             PrimaryButtonText = Loc.Instance["Profile_Delete"],
+            PrimaryButtonAppearance = ControlAppearance.Danger,
             CloseButtonText = Loc.Instance["Common_Cancel"],
         };
+        SetOwner(box, ActiveWindow());
         return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+    }
+
+    /// <summary>Asked when the editor closes with unsaved changes (analysis finding I-11). True: discard them.</summary>
+    public static async Task<bool> ConfirmDiscardAsync(System.Windows.Window owner)
+    {
+        var box = new MessageBox
+        {
+            Title = Loc.Instance["Editor_DiscardTitle"],
+            Content = Loc.Instance["Editor_DiscardText"],
+            PrimaryButtonText = Loc.Instance["Editor_Discard"],
+            PrimaryButtonAppearance = ControlAppearance.Danger,
+            CloseButtonText = Loc.Instance["Editor_KeepEditing"],
+        };
+        SetOwner(box, owner);
+        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+    }
+
+    private static System.Windows.Window? ActiveWindow()
+    {
+        System.Windows.Application? app = System.Windows.Application.Current;
+        return app?.Windows.OfType<System.Windows.Window>().FirstOrDefault(w => w.IsActive)
+            ?? (app?.MainWindow is { IsVisible: true } main ? main : null);
+    }
+
+    private static void SetOwner(MessageBox box, System.Windows.Window? owner)
+    {
+        if (owner is { IsVisible: true })
+        {
+            box.Owner = owner;
+            box.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
+        }
     }
 
     private async Task<Profile?> ShowAsync(Profile profile, bool isNew, IReadOnlyList<AudioDeviceInfo> playback)
@@ -89,7 +123,7 @@ public sealed class ProfileDialogs
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
+            profile, isNew, playback, recording, usbDevices, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };

@@ -25,7 +25,9 @@ public sealed class FixtureMigrationTests : IDisposable
         profile.Id.ShouldBe(Guid.Parse("5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11"));
         profile.Name.ShouldBe("Rig");
         profile.Icon.ShouldBe("rig");
-        profile.ConfirmTimeoutSeconds.ShouldBe(15);
+        // Own confirmation time 15 s (analysis decision O-01): the profile asks, with the seconds of the app setting.
+        profile.SwitchWithoutAsking.ShouldBeFalse();
+        profile.ConfirmTimeoutSeconds.ShouldBeNull();
         profile.Displays.Count.ShouldBe(2);
 
         DisplayAssignment ultrawide = profile.Displays[0];
@@ -65,7 +67,7 @@ public sealed class FixtureMigrationTests : IDisposable
         profile.KeepAwake.ShouldBeFalse();
         profile.AppsWaitForUsbDeviceId.ShouldBeNull();
         profile.AppsWaitForUsbDeviceName.ShouldBeNull();
-        profile.AppsWaitSeconds.ShouldBe(Profile.DefaultAppsWaitSeconds);
+        profile.AppsWaitSeconds.ShouldBe(Profile.AppsDeviceWaitSeconds);
         profile.DisableCommunicationsDucking.ShouldBeFalse();
     }
 
@@ -77,6 +79,7 @@ public sealed class FixtureMigrationTests : IDisposable
         profile.Id.ShouldBe(Guid.Parse("8f3a1b2c-4d5e-4f60-8a9b-0c1d2e3f4a5b"));
         profile.Name.ShouldBe("Desk");
         profile.Icon.ShouldBeNull();
+        profile.SwitchWithoutAsking.ShouldBeFalse();
         profile.ConfirmTimeoutSeconds.ShouldBeNull();
         profile.Hotkey.ShouldBe(new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 });
 
@@ -93,8 +96,32 @@ public sealed class FixtureMigrationTests : IDisposable
         profile.Apps.ShouldNotBeNull().ShouldBeEmpty();
         profile.KeepAwake.ShouldBeFalse();
         profile.AppsWaitForUsbDeviceId.ShouldBeNull();
-        profile.AppsWaitSeconds.ShouldBe(Profile.DefaultAppsWaitSeconds);
+        profile.AppsWaitSeconds.ShouldBe(Profile.AppsDeviceWaitSeconds);
         profile.DisableCommunicationsDucking.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("0", true)]
+    [InlineData("30", false)]
+    [InlineData("null", false)]
+    public async Task Load_ProfileWithOwnConfirmTime_MigratesToSwitchWithoutAsking(string seconds, bool withoutAsking)
+    {
+        Directory.CreateDirectory(_directory);
+        string json = (await File.ReadAllTextAsync(Fixture("profile-1.0.json"), Ct))
+            .Replace("\"confirmTimeoutSeconds\": 15", "\"confirmTimeoutSeconds\": " + seconds, StringComparison.Ordinal);
+        await File.WriteAllTextAsync(Path.Combine(_directory, "profile.json"), json, Ct);
+        var store = new JsonProfileStore(_directory, Logger.None);
+
+        Profile profile = (await store.LoadAllAsync(Ct)).Profiles.ShouldHaveSingleItem();
+        profile.SwitchWithoutAsking.ShouldBe(withoutAsking);
+        profile.ConfirmTimeoutSeconds.ShouldBeNull();
+
+        // Saved again, the old key is gone and the flag stays.
+        await store.SaveAsync(profile, Ct);
+        string saved = await File.ReadAllTextAsync(Path.Combine(_directory, profile.Id.ToString("D") + ".json"), Ct);
+        saved.ShouldNotContain("confirmTimeoutSeconds");
+        File.Delete(Path.Combine(_directory, "profile.json"));
+        (await store.LoadAllAsync(Ct)).Profiles.ShouldHaveSingleItem().SwitchWithoutAsking.ShouldBe(withoutAsking);
     }
 
     [Fact]

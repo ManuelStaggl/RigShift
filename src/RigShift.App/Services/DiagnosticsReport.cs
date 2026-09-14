@@ -72,7 +72,7 @@ public static class DiagnosticsReport
             string displays = string.Join(", ", profile.Displays.Select(d =>
                 DisplayNames.Of(d) + (d.IsPrimary ? " (primary)" : string.Empty) + (d.IsOptional ? " (optional)" : string.Empty)));
             text.AppendLine(FormattableString.Invariant(
-                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {profile.ConfirmTimeoutSeconds?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "app setting"}, {profile.Apps.Count} app(s)"));
+                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s)"));
         }
 
         text.AppendLine().AppendLine("## Recent switches");

@@ -25,7 +25,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
         bool busy = false;
         _host.Coordinator.BusyRejected += (_, _) => busy = true;
 
-        Task<SwitchResult?> first = _host.Coordinator.SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default);
+        Task<SwitchResult?> first = _host.Coordinator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default);
         SwitchResult? second = await _host.Coordinator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default);
 
         second.ShouldBeNull();
@@ -92,7 +92,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
             return ConfirmationResult.Confirmed;
         });
 
-        Task<SwitchResult?> running = _host.Coordinator.SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default);
+        Task<SwitchResult?> running = _host.Coordinator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default);
         await reached.Task;
         (await _host.Coordinator.StopAsync(TimeSpan.FromSeconds(10))).ShouldBeTrue();
 

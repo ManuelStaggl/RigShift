@@ -10,6 +10,17 @@ All notable changes to this project are documented here. The format follows
 
 - RigShift is no longer packed into one large EXE: updates download only the files that changed, and the app no longer
   unpacks itself at every start.
+- Profile editor: the own confirmation time per profile is replaced by a "Switch without asking" checkbox; the seconds are
+  set only in the settings. Profiles with an own time of 0 s switch without asking, all others ask with the settings' time.
+- Profile editor: the call devices ("Playback for calls", "Recording for calls") moved into a collapsed "Advanced" section
+  and follow playback and recording unless set.
+- Apps that wait for a USB device wait a fixed 30 seconds; the field for the longest wait is gone.
+- Display names are edited only on the Displays page; the editor still shows name and model.
+
+### Fixed
+
+- Profile editor: Enter saves, and closing with unsaved changes asks before discarding them.
+- Deleting a profile asks with a red delete button, centred on the RigShift window.
 
 ## [1.3.1] - 2026-09-14
 

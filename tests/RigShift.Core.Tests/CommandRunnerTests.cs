@@ -141,7 +141,7 @@ public sealed class CommandRunnerTests
     [Fact]
     public async Task Save_ExistingName_UpdatesArrangementAndKeepsIdentity()
     {
-        Profile rig = _store.Profiles.Single(p => p.Name == "Rig") with { Icon = "rig", ConfirmTimeoutSeconds = 30 };
+        Profile rig = _store.Profiles.Single(p => p.Name == "Rig") with { Icon = "rig", SwitchWithoutAsking = true };
         _store.Profiles[1] = rig;
 
         CliResponse response = await Runner().RunAsync(new CliRequest { Command = CliCommand.Save, ProfileName = "RIG" }, CancellationToken.None);
@@ -149,7 +149,7 @@ public sealed class CommandRunnerTests
         response.Output.ShouldStartWith("Updated profile 'Rig'");
         Profile saved = _store.Profiles.Single(p => p.Id == rig.Id);
         saved.Icon.ShouldBe("rig");
-        saved.ConfirmTimeoutSeconds.ShouldBe(30);
+        saved.SwitchWithoutAsking.ShouldBeTrue();
         saved.Displays.Select(d => d.Identity).ShouldBe([DeskLeft, Desk4K, DeskRight]);
         _store.Profiles.Count.ShouldBe(2);
     }

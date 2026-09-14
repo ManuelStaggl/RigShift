@@ -65,7 +65,7 @@
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung innerhalb dieser Sekunden kommen die vorherigen Einstellungen zurück.</value></data>
-  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt. Profile mit eigener Bestätigungszeit behalten diese.</value></data>
+  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
@@ -117,8 +117,7 @@
   <data name="Icon_Tv" xml:space="preserve"><value>TV / Couch</value></data>
   <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
   <data name="Tray_Header" xml:space="preserve"><value>Profil wechseln</value></data>
-  <data name="Editor_OwnTimeout" xml:space="preserve"><value>Eigene Bestätigungszeit (Sekunden)</value></data>
-  <data name="Editor_OwnTimeoutHint" xml:space="preserve"><value>Sonst gilt die App-Einstellung ({0} s). 0 schaltet ohne Nachfrage.</value></data>
+  <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Ohne Nachfrage umschalten</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Auflösung und Position stellst du in den Windows-Anzeigeeinstellungen ein und übernimmst sie dann hier.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>Aktuelle Anordnung übernehmen</value></data>
@@ -142,7 +141,8 @@
   <data name="Audio_Recording" xml:space="preserve"><value>Aufnahme</value></data>
   <data name="Audio_RecordingComms" xml:space="preserve"><value>Aufnahme für Kommunikation</value></data>
   <data name="Audio_Unchanged" xml:space="preserve"><value>Nicht ändern</value></data>
-  <data name="Audio_SameAsAbove" xml:space="preserve"><value>Wie oben</value></data>
+  <data name="Audio_SameAsPlayback" xml:space="preserve"><value>Wie Wiedergabe</value></data>
+  <data name="Audio_SameAsRecording" xml:space="preserve"><value>Wie Aufnahme</value></data>
   <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Audio_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht gefunden)</value></data>
   <data name="Problem_NameMissing" xml:space="preserve"><value>Bitte einen Namen eingeben.</value></data>
@@ -154,8 +154,6 @@
   <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Bitte ein anderes wählen.</value></data>
-  <data name="Editor_ConfirmTime" xml:space="preserve"><value>Bestätigungszeit</value></data>
-  <data name="Editor_OwnTimeoutShort" xml:space="preserve"><value>Eigener Wert (Sekunden)</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Hier klicken und Tastenkombination drücken</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
@@ -237,10 +235,14 @@
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem App-Start auf Gerät warten</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Nicht warten</value></data>
-  <data name="Editor_AppsWaitSeconds" xml:space="preserve"><value>Höchstens warten (Sekunden)</value></data>
-  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Wheel-Software und Spiele brauchen das Gerät oft schon beim Start. Erscheint es nicht rechtzeitig, starten die Apps trotzdem und RigShift gibt Bescheid.</value></data>
+  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Wheel-Software und Spiele brauchen das Gerät oft schon beim Start. Erscheint es nicht innerhalb von 30 Sekunden, starten die Apps trotzdem und RigShift gibt Bescheid.</value></data>
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Spielton bei Anrufen nicht absenken (Windows-Kommunikationseinstellung)</value></data>
   <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist; ein Profil ohne diese Option stellt deine vorherige Einstellung wieder her. Apps wie Discord müssen dem Anruf eventuell neu beitreten.</value></data>
+  <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Erweitert</value></data>
+  <data name="Editor_DiscardTitle" xml:space="preserve"><value>Änderungen verwerfen?</value></data>
+  <data name="Editor_DiscardText" xml:space="preserve"><value>Dieses Profil hat ungespeicherte Änderungen.</value></data>
+  <data name="Editor_Discard" xml:space="preserve"><value>Verwerfen</value></data>
+  <data name="Editor_KeepEditing" xml:space="preserve"><value>Weiter bearbeiten</value></data>
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows darf dieses Gerät abschalten</value></data>
   <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen – Pedale oder Wheelbase fallen dann während der Fahrt aus.</value></data>
   <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>So schaltest du es ab</value></data>

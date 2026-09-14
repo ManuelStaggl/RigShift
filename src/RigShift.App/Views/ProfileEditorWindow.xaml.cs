@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Input;
 using RigShift.App.Services;
@@ -11,6 +12,8 @@ public partial class ProfileEditorWindow : FluentWindow
     private const ModifierKeys RequiredModifiers = ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows;
 
     private readonly ProfileEditorViewModel _viewModel;
+    private bool _closeConfirmed;
+    private bool _askingToDiscard;
 
     public ProfileEditorWindow(ProfileEditorViewModel viewModel)
     {
@@ -19,12 +22,56 @@ public partial class ProfileEditorWindow : FluentWindow
         DataContext = viewModel;
         InitializeComponent();
 
-        viewModel.CloseRequested += (_, saved) => DialogResult = saved;
+        viewModel.CloseRequested += (_, saved) =>
+        {
+            if (saved)
+            {
+                _closeConfirmed = true;
+                DialogResult = true;
+            }
+            else
+            {
+                Close();
+            }
+        };
+        Closing += OnClosing;
         Loaded += (_, _) =>
         {
             NameBox.Focus();
             NameBox.SelectAll();
         };
+    }
+
+    /// <summary>Cancel, Esc and the title bar's close button ask before unsaved changes are lost (analysis finding I-11).</summary>
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        if (_closeConfirmed || (!_askingToDiscard && !_viewModel.HasChanges))
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        if (!_askingToDiscard)
+        {
+            _ = AskToDiscardAsync();
+        }
+    }
+
+    private async Task AskToDiscardAsync()
+    {
+        _askingToDiscard = true;
+        try
+        {
+            if (await ProfileDialogs.ConfirmDiscardAsync(this))
+            {
+                _closeConfirmed = true;
+                Close();
+            }
+        }
+        finally
+        {
+            _askingToDiscard = false;
+        }
     }
 
     private void OnBrowseApp(object sender, System.Windows.RoutedEventArgs e)
