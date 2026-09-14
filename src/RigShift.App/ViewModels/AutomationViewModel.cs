@@ -32,6 +32,7 @@ public sealed partial class AutomationViewModel : ObservableObject
     private readonly Dictionary<string, string> _deviceNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _powerWarnings = new(StringComparer.OrdinalIgnoreCase);
     private bool _loading;
+    private bool _loaded;
 
     public AutomationViewModel(
         SettingsService settings, ProfileCatalog catalog, AutomationService automation, IUsbDeviceList devices, IUsbPowerCheck powerCheck, ILogger log)
@@ -46,6 +47,16 @@ public sealed partial class AutomationViewModel : ObservableObject
         _powerCheck = powerCheck;
         _log = log.ForContext<AutomationViewModel>();
         automation.Changed += (_, _) => Quietly(() => IsPaused = automation.IsPaused);
+
+        // Choice names ("Stay in the profile", "(not connected)") are built in code; rebuild them from the cards as they
+        // stand on a language change (I-13). Rebuilding runs quietly, so it saves nothing.
+        Loc.Instance.PropertyChanged += (_, _) =>
+        {
+            if (_loaded)
+            {
+                Rebuild(Rules.Select(r => r.ToRule()).ToList());
+            }
+        };
     }
 
     /// <summary>Asks before a rule is deleted (analysis finding I-12); replaceable so tests run without a window.</summary>
@@ -80,6 +91,7 @@ public sealed partial class AutomationViewModel : ObservableObject
 
     private void Rebuild(IReadOnlyList<AutomationRule> rules) => Quietly(() =>
     {
+        _loaded = true;
         FillDevices(rules);
 
         ProfileChoices.Clear();

@@ -18,10 +18,16 @@ namespace RigShift.App.ViewModels;
 /// audio. Resolutions and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10,
 /// M4). Refresh rate and HDR are chosen per display (section 6, item 10); display names only on the Displays page.
 /// </summary>
-public sealed partial class ProfileEditorViewModel : ObservableObject
+public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposable
 {
     private static readonly IReadOnlyList<DisplayAssignment> NoDisplays = [];
     private static readonly IReadOnlyList<AppAction> NoApps = [];
+
+    private readonly bool _isNew;
+    private readonly IReadOnlyList<UsbDevice> _usbDevices;
+    private readonly string? _savedWaitDeviceId;
+    private readonly string? _savedWaitDeviceName;
+    private string _hotkeyHintKey = "Editor_HotkeyHint";
 
     private readonly Profile _original;
     private readonly Profile _initial;
@@ -48,28 +54,30 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         _catalog = catalog;
         _display = display;
         _hotkeys = hotkeys;
+        _isNew = isNew;
+        _usbDevices = usbDevices;
+        _savedWaitDeviceId = UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId);
+        _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
-        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
+        HotkeyHint = Loc.Instance[_hotkeyHintKey];
         _log = log.ForContext<ProfileEditorViewModel>();
 
         Title = Loc.Instance[isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
         Name = profile.Name;
-        IconChoices = [.. ProfileIcons.All.Select(key => new Choice(key, Loc.Instance["Icon_" + char.ToUpperInvariant(key[0]) + key[1..]]))];
-        SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(profile.Icon))
-            ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
+        FillIconChoices(ProfileIcons.Normalize(profile.Icon));
         SwitchWithoutAsking = profile.SwitchWithoutAsking;
         SetDisplays(profile.Displays);
 
         AudioAssignment audio = profile.Audio;
         AudioSlots =
         [
-            new AudioSlot(Loc.Instance["Audio_Playback"], Loc.Instance["Audio_Unchanged"], playbackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
-            new AudioSlot(Loc.Instance["Audio_Recording"], Loc.Instance["Audio_Unchanged"], recordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
+            new AudioSlot("Audio_Playback", "Audio_Unchanged", playbackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
+            new AudioSlot("Audio_Recording", "Audio_Unchanged", recordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
         ];
         CommunicationsAudioSlots =
         [
-            new AudioSlot(Loc.Instance["Audio_PlaybackComms"], Loc.Instance["Audio_SameAsPlayback"], playbackDevices, audio.PlaybackCommunications),
-            new AudioSlot(Loc.Instance["Audio_RecordingComms"], Loc.Instance["Audio_SameAsRecording"], recordingDevices, audio.RecordingCommunications),
+            new AudioSlot("Audio_PlaybackComms", "Audio_SameAsPlayback", playbackDevices, audio.PlaybackCommunications),
+            new AudioSlot("Audio_RecordingComms", "Audio_SameAsRecording", recordingDevices, audio.RecordingCommunications),
         ];
         ShowCommunicationsAudio = audio.PlaybackCommunications is not null || audio.RecordingCommunications is not null;
 
@@ -78,37 +86,25 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             Apps.Add(new AppEditItem(app));
         }
 
-        // Same source and naming as the automation page; a saved device that is not connected stays selectable.
-        AppsWaitDeviceChoices.Add(new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
-        foreach (UsbDevice device in usbDevices)
-        {
-            AppsWaitDeviceChoices.Add(new Choice(device.Id, device.Name));
-            _usbDeviceNames[device.Id] = device.Name;
-        }
-
-        if (UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId) is { } waitId && !_usbDeviceNames.ContainsKey(waitId))
-        {
-            string name = profile.AppsWaitForUsbDeviceName ?? waitId;
-            AppsWaitDeviceChoices.Add(new Choice(waitId, Loc.Format("Automation_DeviceNotConnected", name)));
-            _usbDeviceNames[waitId] = name;
-        }
-
-        SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId), StringComparison.OrdinalIgnoreCase))
-            ?? AppsWaitDeviceChoices[0];
+        FillAppsWaitChoices(_savedWaitDeviceId);
 
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
+
+        // Texts built here follow a language change while the editor is open (I-13); Dispose unsubscribes.
+        Loc.Instance.PropertyChanged += OnLanguageChanged;
     }
 
     /// <summary>True: saved, close the window. False: cancelled.</summary>
     public event EventHandler<bool>? CloseRequested;
 
-    public string Title { get; }
+    [ObservableProperty]
+    public partial string Title { get; private set; }
 
-    public ObservableCollection<Choice> IconChoices { get; }
+    public ObservableCollection<Choice> IconChoices { get; } = [];
 
     public ObservableCollection<DisplayEditItem> Displays { get; } = [];
 
@@ -193,12 +189,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
         if (!hotkey.IsValid)
         {
-            HotkeyHint = Loc.Instance["Editor_HotkeyNeedsModifier"];
+            SetHotkeyHint("Editor_HotkeyNeedsModifier");
             return;
         }
 
         Hotkey = hotkey;
-        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
+        SetHotkeyHint("Editor_HotkeyHint");
         _log.Information("Editor recorded hotkey {Hotkey}", HotkeyText);
     }
 
@@ -206,7 +202,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     private void ClearHotkey()
     {
         Hotkey = null;
-        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
+        SetHotkeyHint("Editor_HotkeyHint");
     }
 
     [RelayCommand]
@@ -313,6 +309,78 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         }
     }
 
+    public void Dispose() => Loc.Instance.PropertyChanged -= OnLanguageChanged;
+
+    private void SetHotkeyHint(string key)
+    {
+        _hotkeyHintKey = key;
+        HotkeyHint = Loc.Instance[key];
+    }
+
+    /// <summary>
+    /// Rebuilds the texts made in code and keeps every selection by key. One-off messages (problems, "took N displays")
+    /// are cleared rather than translated; they come back with the next action.
+    /// </summary>
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        Title = Loc.Instance[_isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
+        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        OnPropertyChanged(nameof(HotkeyText));
+        Problems = null;
+        ArrangementNote = null;
+
+        FillIconChoices(SelectedIcon?.Key);
+        FillAppsWaitChoices(SelectedAppsWaitDevice?.Key);
+        foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
+        {
+            slot.Relabel();
+        }
+
+        foreach (DisplayEditItem display in Displays)
+        {
+            display.Relabel();
+        }
+
+        foreach (AppEditItem app in Apps)
+        {
+            app.Relabel();
+        }
+    }
+
+    private void FillIconChoices(string? selectedKey)
+    {
+        IconChoices.Clear();
+        foreach (string key in ProfileIcons.All)
+        {
+            IconChoices.Add(new Choice(key, Loc.Instance["Icon_" + char.ToUpperInvariant(key[0]) + key[1..]]));
+        }
+
+        SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == selectedKey) ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
+    }
+
+    /// <summary>Same source and naming as the automation page; a saved device that is not connected stays selectable.</summary>
+    private void FillAppsWaitChoices(string? selectedKey)
+    {
+        AppsWaitDeviceChoices.Clear();
+        _usbDeviceNames.Clear();
+        AppsWaitDeviceChoices.Add(new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
+        foreach (UsbDevice device in _usbDevices)
+        {
+            AppsWaitDeviceChoices.Add(new Choice(device.Id, device.Name));
+            _usbDeviceNames[device.Id] = device.Name;
+        }
+
+        if (_savedWaitDeviceId is { } waitId && !_usbDeviceNames.ContainsKey(waitId))
+        {
+            string name = _savedWaitDeviceName ?? waitId;
+            AppsWaitDeviceChoices.Add(new Choice(waitId, Loc.Format("Automation_DeviceNotConnected", name)));
+            _usbDeviceNames[waitId] = name;
+        }
+
+        SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, selectedKey, StringComparison.OrdinalIgnoreCase))
+            ?? AppsWaitDeviceChoices[0];
+    }
+
     private Profile Build() => _original with
     {
         Name = Name.Trim(),
@@ -386,15 +454,37 @@ public sealed partial class DisplayEditItem : ObservableObject
     [ObservableProperty]
     public partial RefreshChoice? SelectedRefresh { get; set; }
 
-    public IReadOnlyList<HdrChoice> HdrChoices { get; } =
+    public ObservableCollection<HdrChoice> HdrChoices { get; } = [.. NewHdrChoices()];
+
+    [ObservableProperty]
+    public partial HdrChoice? SelectedHdr { get; set; }
+
+    /// <summary>New texts after a language change; <see cref="Sync"/> selects the same values again.</summary>
+    internal void Relabel()
+    {
+        _syncing = true;
+        try
+        {
+            HdrChoices.Clear();
+            foreach (HdrChoice choice in NewHdrChoices())
+            {
+                HdrChoices.Add(choice);
+            }
+        }
+        finally
+        {
+            _syncing = false;
+        }
+
+        Sync(Assignment);
+    }
+
+    private static HdrChoice[] NewHdrChoices() =>
     [
         new(null, Loc.Instance["Hdr_Unchanged"]),
         new(true, Loc.Instance["Hdr_On"]),
         new(false, Loc.Instance["Hdr_Off"]),
     ];
-
-    [ObservableProperty]
-    public partial HdrChoice? SelectedHdr { get; set; }
 
     internal void Sync(DisplayAssignment assignment)
     {
@@ -483,21 +573,37 @@ public sealed partial class AppEditItem : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        KindChoices = [new Choice(nameof(AppActionKind.Start), Loc.Instance["App_Start"]), new Choice(nameof(AppActionKind.Stop), Loc.Instance["App_Stop"])];
+        FillKindChoices();
         SelectedKind = KindChoices[action.Kind == AppActionKind.Stop ? 1 : 0];
         Path = action.Path;
         Arguments = action.Arguments ?? string.Empty;
         WaitSeconds = action.WaitSeconds;
     }
 
-    public IReadOnlyList<Choice> KindChoices { get; }
+    public ObservableCollection<Choice> KindChoices { get; } = [];
 
+    /// <summary>Null only for a moment while the list is rebuilt; that counts as "start".</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStart))]
-    public partial Choice SelectedKind { get; set; }
+    public partial Choice? SelectedKind { get; set; }
 
     /// <summary>Arguments only apply when starting.</summary>
-    public bool IsStart => SelectedKind.Key == nameof(AppActionKind.Start);
+    public bool IsStart => SelectedKind?.Key != nameof(AppActionKind.Stop);
+
+    /// <summary>New texts after a language change, same selection.</summary>
+    internal void Relabel()
+    {
+        bool start = IsStart;
+        FillKindChoices();
+        SelectedKind = KindChoices[start ? 0 : 1];
+    }
+
+    private void FillKindChoices()
+    {
+        KindChoices.Clear();
+        KindChoices.Add(new Choice(nameof(AppActionKind.Start), Loc.Instance["App_Start"]));
+        KindChoices.Add(new Choice(nameof(AppActionKind.Stop), Loc.Instance["App_Stop"]));
+    }
 
     [ObservableProperty]
     public partial string Path { get; set; }
@@ -522,32 +628,58 @@ public sealed record AudioChoice(AudioEndpoint? Endpoint, string Name);
 /// <summary>One audio role in the editor: "don't change" or a device of this machine.</summary>
 public sealed partial class AudioSlot : ObservableObject
 {
+    private readonly string _labelKey;
+    private readonly string _noneKey;
+    private readonly IReadOnlyList<AudioDeviceInfo> _devices;
+    private readonly AudioEndpoint? _saved;
+
+    /// <param name="labelKey">Text key of the role, e.g. <c>Audio_Playback</c>.</param>
+    /// <param name="noneKey">Text key of the "don't change" entry.</param>
     public AudioSlot(
-        string label, string noneText, IReadOnlyList<AudioDeviceInfo> devices, AudioEndpoint? current, int? volume = null, bool supportsVolume = false)
+        string labelKey, string noneKey, IReadOnlyList<AudioDeviceInfo> devices, AudioEndpoint? current, int? volume = null, bool supportsVolume = false)
     {
         ArgumentNullException.ThrowIfNull(devices);
 
-        Label = label;
+        _labelKey = labelKey;
+        _noneKey = noneKey;
+        _devices = devices;
+        _saved = current;
+        Label = Loc.Instance[labelKey];
         SupportsVolume = supportsVolume;
         SetVolume = volume is not null;
         Volume = volume ?? 50;
-        Choices.Add(new AudioChoice(null, noneText));
-        foreach (AudioDeviceInfo device in devices.OrderByDescending(d => d.IsActive).ThenBy(d => d.Endpoint.FriendlyName, StringComparer.CurrentCultureIgnoreCase))
+        FillChoices(current);
+    }
+
+    [ObservableProperty]
+    public partial string Label { get; private set; }
+
+    /// <summary>New texts after a language change, same device.</summary>
+    internal void Relabel()
+    {
+        Label = Loc.Instance[_labelKey];
+        FillChoices(Endpoint);
+        OnPropertyChanged(nameof(VolumeText));
+    }
+
+    private void FillChoices(AudioEndpoint? selected)
+    {
+        Choices.Clear();
+        Choices.Add(new AudioChoice(null, Loc.Instance[_noneKey]));
+        foreach (AudioDeviceInfo device in _devices.OrderByDescending(d => d.IsActive).ThenBy(d => d.Endpoint.FriendlyName, StringComparer.CurrentCultureIgnoreCase))
         {
             string name = device.IsActive ? device.Endpoint.FriendlyName : Loc.Format("Audio_NotConnected", device.Endpoint.FriendlyName);
             Choices.Add(new AudioChoice(device.Endpoint, name));
         }
 
-        if (current is not null && !devices.Any(d => SameDevice(d.Endpoint, current)))
+        if (_saved is not null && !_devices.Any(d => SameDevice(d.Endpoint, _saved)))
         {
             // Keep a device this machine does not know (profile copied from another PC) instead of silently dropping it.
-            Choices.Add(new AudioChoice(current, Loc.Format("Audio_Unknown", current.FriendlyName)));
+            Choices.Add(new AudioChoice(_saved, Loc.Format("Audio_Unknown", _saved.FriendlyName)));
         }
 
-        Selected = current is null ? Choices[0] : Choices.First(c => c.Endpoint is { } e && SameDevice(e, current));
+        Selected = selected is null ? Choices[0] : Choices.First(c => c.Endpoint is { } e && SameDevice(e, selected));
     }
-
-    public string Label { get; }
 
     public ObservableCollection<AudioChoice> Choices { get; } = [];
 

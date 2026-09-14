@@ -153,6 +153,7 @@ public sealed class ProfileDialogs
         finally
         {
             _hotkeys.Resume();
+            viewModel.Dispose();
         }
     }
 
