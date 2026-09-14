@@ -49,7 +49,7 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
     {
         double hertz = display.RefreshDenominator == 0 ? 0 : (double)display.RefreshNumerator / display.RefreshDenominator;
         string text = string.Create(Loc.Instance.Culture,
-            $"{SwitchMessages.NameOf(display.Identity)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
+            $"{SwitchMessages.NameOf(display)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
         if (display.IsPrimary)
         {
             text += " · " + Loc.Instance["Profile_Primary"];
@@ -272,27 +272,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly AppPaths _paths;
-    private readonly UpdateService _updates;
     private readonly ILogger _log;
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, UpdateService updates, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, ILogger log)
     {
-        ArgumentNullException.ThrowIfNull(updates);
         ArgumentNullException.ThrowIfNull(log);
         _settings = settings;
         _catalog = catalog;
         _paths = paths;
-        _updates = updates;
         _log = log.ForContext<SettingsViewModel>();
-        _updates.StateChanged += (_, _) => RefreshUpdateStatus();
-        RefreshUpdateStatus();
     }
-
-    public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);
-
-    [ObservableProperty]
-    public partial string UpdateStatusText { get; set; } = string.Empty;
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
 
@@ -360,32 +350,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void OpenProfileFolder() => ShellFolders.Open(_paths.Profiles, _log);
 
-    [RelayCommand]
-    private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
-
-    [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
-    private Task CheckForUpdatesAsync() => _updates.CheckNowAsync();
-
-    private bool CanCheckForUpdates() => _updates.CanCheck;
-
-    [RelayCommand(CanExecute = nameof(CanInstallUpdateNow))]
-    private Task InstallUpdateNowAsync() => _updates.InstallNowAsync();
-
-    private bool CanInstallUpdateNow() => _updates.CanInstallNow;
-
-    [ObservableProperty]
-    public partial bool IsUpdateInstallable { get; set; }
-
-    /// <summary>Release notes and the link to the release, shown while a newer version is known.</summary>
-    [ObservableProperty]
-    public partial bool ShowReleaseNotes { get; set; }
-
-    [ObservableProperty]
-    public partial string ReleaseNotesText { get; set; } = string.Empty;
-
-    [RelayCommand]
-    private void OpenReleaseNotes() => ShellFolders.OpenUrl(_updates.ReleaseUrl, _log);
-
     [ObservableProperty]
     public partial bool InstallUpdatesAutomatically { get; set; }
 
@@ -395,27 +359,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             Persist(s => s with { OnlyNotifyAboutUpdates = !value });
         }
-    }
-
-    private void RefreshUpdateStatus()
-    {
-        string? lastChecked = _updates.LastChecked?.ToString("g", Loc.Instance.Culture);
-        UpdateStatusText = _updates.State switch
-        {
-            UpdateState.NotInstalled => Loc.Instance["Update_StatusNotInstalled"],
-            UpdateState.NotChecked => Loc.Instance["Update_StatusNotChecked"],
-            UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
-            UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
-            UpdateState.UpToDate => Loc.Format("Update_StatusUpToDate", lastChecked ?? "?"),
-            UpdateState.Ready => Loc.Format("Update_StatusReady", _updates.TargetVersion ?? "?"),
-            UpdateState.Available => Loc.Format("Update_StatusAvailable", _updates.TargetVersion ?? "?"),
-            _ => Loc.Instance["Update_StatusFailed"],
-        };
-        IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
-        ShowReleaseNotes = _updates.State is UpdateState.Ready or UpdateState.Available or UpdateState.Downloading && _updates.ReleaseUrl is not null;
-        ReleaseNotesText = _updates.ReleaseNotesText;
-        CheckForUpdatesCommand.NotifyCanExecuteChanged();
-        InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedDefaultProfileChanged(Choice? value)
@@ -495,78 +438,291 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 }
 
-public sealed record DisplayRow(string Name, string State, string Mode, string Edid, string TargetPath, string AdapterPath);
-
-public sealed record AudioRow(string Name, string Direction, string State);
-
-public sealed partial class DiagnosticsViewModel(
-    IDisplayConfigurator display, IAudioController audio, SwitchCoordinator coordinator, AppPaths paths, ILogger log) : ObservableObject
+/// <summary>The monitors attached right now, with their custom names and a way to tell them apart (docs/PLAN.md, section 6).</summary>
+public sealed partial class DisplaysViewModel(IDisplayConfigurator display, ProfileCatalog catalog, ILogger log) : ObservableObject
 {
-    private readonly ILogger _log = log.ForContext<DiagnosticsViewModel>();
+    private readonly ILogger _log = log.ForContext<DisplaysViewModel>();
 
-    public ObservableCollection<DisplayRow> Displays { get; } = [];
-
-    public ObservableCollection<AudioRow> AudioDevices { get; } = [];
-
-    public ObservableCollection<SwitchRecord> History => coordinator.History;
+    public ObservableCollection<DisplayCard> Displays { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorMessage { get; set; }
+
+    public bool HasError => ErrorMessage is not null;
+
+    [ObservableProperty]
+    public partial bool IsEmpty { get; set; }
+
+    internal async Task RenameAsync(DisplayCard card, string? name)
+    {
+        try
+        {
+            await catalog.RenameDisplayAsync(card.TargetDevicePath, name, CancellationToken.None);
+            ErrorMessage = null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error(ex, "Display {Display} could not be renamed", card.ModelName);
+            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+        }
+    }
 
     [RelayCommand]
     private async Task RefreshAsync()
     {
-        ErrorMessage = null;
         try
         {
             DisplaySnapshot snapshot = await Task.Run(() => display.QueryAsync(CancellationToken.None));
+            IReadOnlyDictionary<string, string> names = catalog.KnownDisplayNames;
             Displays.Clear();
-            foreach (AttachedDisplay attached in snapshot.Displays)
+            int number = 0;
+            foreach (AttachedDisplay attached in snapshot.Displays
+                .OrderByDescending(d => d.IsActive)
+                .ThenBy(d => d.ActiveMode?.PositionX ?? int.MaxValue)
+                .ThenBy(d => d.ActiveMode?.PositionY ?? 0))
             {
-                Displays.Add(ToRow(attached));
+                int? shown = attached.IsActive && attached.ActiveMode is not null ? ++number : null;
+                Displays.Add(new DisplayCard(this, attached, shown, names.GetValueOrDefault(attached.Identity.TargetDevicePath), ProfilesWith(attached)));
             }
 
-            IReadOnlyList<AudioDeviceInfo> render = await Task.Run(() => audio.ListAsync(AudioDirection.Render, CancellationToken.None));
-            IReadOnlyList<AudioDeviceInfo> capture = await Task.Run(() => audio.ListAsync(AudioDirection.Capture, CancellationToken.None));
-            AudioDevices.Clear();
-            foreach (AudioDeviceInfo device in render.Concat(capture))
-            {
-                AudioDevices.Add(ToRow(device));
-            }
+            IsEmpty = Displays.Count == 0;
+            ErrorMessage = null;
+            _log.Information("Displays page shows {Count} displays", Displays.Count);
         }
-        catch (Exception ex) when (ex is Win32Exception or COMException or InvalidOperationException)
+        catch (Win32Exception ex)
         {
-            _log.Error(ex, "Diagnostics refresh failed");
+            _log.Error(ex, "Displays could not be read");
             ErrorMessage = ex.Message;
         }
     }
 
     [RelayCommand]
-    private void OpenLogFolder() => ShellFolders.Open(paths.Logs, _log);
-
-    private static DisplayRow ToRow(AttachedDisplay display)
+    private void Identify()
     {
-        string state = display.IsActive ? Loc.Instance["Diag_Active"]
-            : display.IsAvailable ? Loc.Instance["Diag_Connected"]
-            : Loc.Instance["Diag_NotReady"];
-
-        string mode = display.ActiveMode is { } m
-            ? string.Create(Loc.Instance.Culture,
-                $"{m.Width} × {m.Height} @ {(m.RefreshDenominator == 0 ? 0 : (double)m.RefreshNumerator / m.RefreshDenominator):0.##} Hz ({m.PositionX}, {m.PositionY})")
-            : "–";
-
-        string edid = display.Identity.EdidManufacturerId == 0
-            ? "–"
-            : string.Create(CultureInfo.InvariantCulture, $"{display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}");
-
-        return new DisplayRow(SwitchMessages.NameOf(display.Identity), state, mode, edid, display.Identity.TargetDevicePath, display.Identity.AdapterDevicePath);
+        var shown = Displays
+            .Where(d => d.Number is not null && d.Mode is not null)
+            .Select(d => (d.Number!.Value, d.Name, d.Mode!))
+            .ToList();
+        _log.Information("Identifying {Count} displays", shown.Count);
+        Views.IdentifyWindow.ShowAll(shown);
     }
 
-    private static AudioRow ToRow(AudioDeviceInfo device)
+    private string ProfilesWith(AttachedDisplay attached)
     {
-        string state = (device.IsActive ? Loc.Instance["Diag_Active"] : Loc.Instance["Diag_Inactive"])
-            + (device.IsDefault ? " · " + Loc.Instance["Diag_Default"] : string.Empty);
-        string direction = device.Direction == AudioDirection.Render ? Loc.Instance["Diag_Playback"] : Loc.Instance["Diag_Recording"];
-        return new AudioRow(device.Endpoint.FriendlyName, direction, state);
+        List<string> names = catalog.Profiles
+            .Where(p => p.Displays.Any(d => string.Equals(d.Identity.TargetDevicePath, attached.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase)))
+            .Select(p => p.Name)
+            .ToList();
+        return names.Count == 0 ? Loc.Instance["Displays_NotInProfiles"] : Loc.Format("Displays_InProfiles", string.Join(", ", names));
+    }
+}
+
+/// <summary>One attached monitor on the displays page. The name is saved when the field loses focus or on Enter.</summary>
+public sealed partial class DisplayCard : ObservableObject
+{
+    private readonly DisplaysViewModel _owner;
+    private readonly DisplayIdentity _identity;
+    private string? _savedName;
+
+    public DisplayCard(DisplaysViewModel owner, AttachedDisplay display, int? number, string? customName, string profilesText)
+    {
+        ArgumentNullException.ThrowIfNull(display);
+
+        _owner = owner;
+        _identity = display.Identity;
+        _savedName = DisplayNames.Normalize(customName);
+        CustomName = _savedName ?? string.Empty;
+        Number = number;
+        Mode = display.ActiveMode;
+        ProfilesText = profilesText;
+
+        string state = display.IsActive
+            ? Loc.Instance[display.ActiveMode?.IsPrimary == true ? "Displays_StatePrimary" : "Displays_StateActive"]
+            : Loc.Instance[display.IsAvailable ? "Displays_StateOff" : "Displays_StateNotReady"];
+        DetailsText = Mode is { } mode
+            ? state + " · " + Loc.Format("Displays_Mode", mode.Width, mode.Height,
+                (mode.RefreshDenominator == 0 ? 0 : (double)mode.RefreshNumerator / mode.RefreshDenominator).ToString("0.##", Loc.Instance.Culture))
+            : state;
+    }
+
+    public string TargetDevicePath => _identity.TargetDevicePath;
+
+    /// <summary>Left-to-right number of an active display, as shown by "Identify".</summary>
+    public int? Number { get; }
+
+    public string NumberText => Number?.ToString(Loc.Instance.Culture) ?? "–";
+
+    public DisplayAssignment? Mode { get; }
+
+    public string ModelName => SwitchMessages.NameOf(null, _identity);
+
+    public string Name => SwitchMessages.NameOf(DisplayNames.Normalize(CustomName), _identity);
+
+    public string DetailsText { get; }
+
+    public string ProfilesText { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Name))]
+    public partial string CustomName { get; set; }
+
+    internal async Task SaveNameAsync()
+    {
+        string? name = DisplayNames.Normalize(CustomName);
+        if (name == _savedName)
+        {
+            return;
+        }
+
+        _savedName = name;
+        await _owner.RenameAsync(this, name);
+    }
+}
+
+/// <summary>Version and updates, troubleshooting and links (docs/PLAN.md, section 6).</summary>
+public sealed partial class AboutViewModel : ObservableObject
+{
+    private const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";
+
+    private readonly UpdateService _updates;
+    private readonly SwitchCoordinator _coordinator;
+    private readonly ProfileCatalog _catalog;
+    private readonly IDisplayConfigurator _display;
+    private readonly IAudioController _audio;
+    private readonly AppPaths _paths;
+    private readonly ILogger _log;
+
+    public AboutViewModel(
+        UpdateService updates, SwitchCoordinator coordinator, ProfileCatalog catalog, IDisplayConfigurator display, IAudioController audio, AppPaths paths, ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(updates);
+        ArgumentNullException.ThrowIfNull(coordinator);
+        ArgumentNullException.ThrowIfNull(log);
+
+        _updates = updates;
+        _coordinator = coordinator;
+        _catalog = catalog;
+        _display = display;
+        _audio = audio;
+        _paths = paths;
+        _log = log.ForContext<AboutViewModel>();
+        _updates.StateChanged += (_, _) => RefreshUpdateStatus();
+        _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoHistory));
+        RefreshUpdateStatus();
+    }
+
+    public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);
+
+    [ObservableProperty]
+    public partial string UpdateStatusText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsUpdateInstallable { get; set; }
+
+    /// <summary>Release notes and the link to the release, shown while a newer version is known.</summary>
+    [ObservableProperty]
+    public partial bool ShowReleaseNotes { get; set; }
+
+    [ObservableProperty]
+    public partial string ReleaseNotesText { get; set; } = string.Empty;
+
+    public ObservableCollection<SwitchRecord> History => _coordinator.History;
+
+    public bool HasNoHistory => History.Count == 0;
+
+    [ObservableProperty]
+    public partial string? CopyStatus { get; set; }
+
+    [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+    private Task CheckForUpdatesAsync() => _updates.CheckNowAsync();
+
+    private bool CanCheckForUpdates() => _updates.CanCheck;
+
+    [RelayCommand(CanExecute = nameof(CanInstallUpdateNow))]
+    private Task InstallUpdateNowAsync() => _updates.InstallNowAsync();
+
+    private bool CanInstallUpdateNow() => _updates.CanInstallNow;
+
+    [RelayCommand]
+    private void OpenReleaseNotes() => ShellFolders.OpenUrl(_updates.ReleaseUrl, _log);
+
+    [RelayCommand]
+    private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
+
+    [RelayCommand]
+    private void OpenRepository() => ShellFolders.OpenUrl(RepositoryUrl, _log);
+
+    [RelayCommand]
+    private void ReportProblem() => ShellFolders.OpenUrl(RepositoryUrl + "/issues/new", _log);
+
+    [RelayCommand]
+    private void OpenLicense() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/LICENSE", _log);
+
+    [RelayCommand]
+    private async Task CopyDiagnosticsAsync()
+    {
+        DisplaySnapshot? snapshot = null;
+        string? displayError = null;
+        try
+        {
+            snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "Displays could not be read for the diagnostic report");
+            displayError = ex.Message;
+        }
+
+        IReadOnlyList<AudioDeviceInfo> playback = [];
+        IReadOnlyList<AudioDeviceInfo> recording = [];
+        string? audioError = null;
+        try
+        {
+            playback = await Task.Run(() => _audio.ListAsync(AudioDirection.Render, CancellationToken.None));
+            recording = await Task.Run(() => _audio.ListAsync(AudioDirection.Capture, CancellationToken.None));
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException)
+        {
+            _log.Warning(ex, "Audio devices could not be read for the diagnostic report");
+            audioError = ex.Message;
+        }
+
+        string report = DiagnosticsReport.Build(new DiagnosticsInput(
+            _updates.CurrentVersion, _updates.IsInstalled, snapshot, displayError, playback, recording, audioError,
+            _catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.KnownDisplayNames, [.. History]));
+
+        try
+        {
+            System.Windows.Clipboard.SetText(report);
+            CopyStatus = Loc.Instance["About_Copied"];
+            _log.Information("Diagnostic report copied to the clipboard ({Length} characters)", report.Length);
+        }
+        catch (COMException ex)
+        {
+            _log.Warning(ex, "Diagnostic report could not be copied to the clipboard");
+            CopyStatus = Loc.Format("About_CopyFailed", ex.Message);
+        }
+    }
+
+    private void RefreshUpdateStatus()
+    {
+        string? lastChecked = _updates.LastChecked?.ToString("g", Loc.Instance.Culture);
+        UpdateStatusText = _updates.State switch
+        {
+            UpdateState.NotInstalled => Loc.Instance["Update_StatusNotInstalled"],
+            UpdateState.NotChecked => Loc.Instance["Update_StatusNotChecked"],
+            UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
+            UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
+            UpdateState.UpToDate => Loc.Format("Update_StatusUpToDate", lastChecked ?? "?"),
+            UpdateState.Ready => Loc.Format("Update_StatusReady", _updates.TargetVersion ?? "?"),
+            UpdateState.Available => Loc.Format("Update_StatusAvailable", _updates.TargetVersion ?? "?"),
+            _ => Loc.Instance["Update_StatusFailed"],
+        };
+        IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
+        ShowReleaseNotes = _updates.State is UpdateState.Ready or UpdateState.Available or UpdateState.Downloading && _updates.ReleaseUrl is not null;
+        ReleaseNotesText = _updates.ReleaseNotesText;
+        CheckForUpdatesCommand.NotifyCanExecuteChanged();
+        InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
 }

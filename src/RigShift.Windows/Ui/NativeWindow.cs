@@ -54,6 +54,20 @@ public static class NativeWindow
             SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
     }
 
+    /// <summary>Centers the window on a rectangle of the virtual desktop in physical pixels, e.g. a display's position and mode.</summary>
+    public static bool CenterOnRect(nint hwnd, int left, int top, int width, int height)
+    {
+        if (!PInvoke.GetWindowRect(new HWND(hwnd), out RECT window))
+        {
+            return false;
+        }
+
+        int x = left + ((width - (window.right - window.left)) / 2);
+        int y = top + ((height - (window.bottom - window.top)) / 2);
+        return PInvoke.SetWindowPos(new HWND(hwnd), HWND.Null, x, y, 0, 0,
+            SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+    }
+
     /// <summary>
     /// Moves the window next to the cursor – centered above it, clamped to the work area of the cursor's monitor – in
     /// physical pixels. Returns the new top-left corner, or null when a Win32 call failed.

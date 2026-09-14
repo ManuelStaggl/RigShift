@@ -395,6 +395,44 @@ Release vor dem Gaming-PC-Test**; der Test deckt dann 1.2.0 und diesen Block zus
    `SwitchResult.Apps` in Tray-Meldung und CLI. Unit-Tests belegen Reihenfolge nach Bestätigung, Wartezeit, kein
    Doppelstart, Fehler → weiter + unvollständig, keine Apps bei Ablehnung. **Nicht belegt:** echtes Starten/Beenden
    (Schließen per Fenster, harter Abbruch, Admin-Prozess) und Editor-Optik → Gaming-PC.
+
+Zusätzlich in 1.3.0 (Idee und Antworten des Nutzers 2026-09-14): **eigene Monitornamen**. Festlegungen:
+**pro Monitor, überall gültig** statt pro Profil – einmal benennen reicht, und genau das unterscheidet zwei gleiche
+Modelle (zwei CM27X3). Anzeige **„Name · Modell“** (ohne eigenen Namen wie bisher), in Hauptliste, Editor, Diagnose,
+Meldungen und CLI. Vergeben wird der Name **im Profil-Editor** (Feld je Anzeigekarte); keine eigene Oberfläche in der
+Diagnose, weil das mehr Fläche für wenig Nutzen wäre.
+**Umgesetzt 2026-09-14**: `DisplayAssignment.CustomName` – bewusst nicht in `DisplayIdentity`, weil
+`SwitchOrchestrator` Identitäten per Record-Gleichheit mit dem Snapshot vergleicht und ein Name das bräche. Kein
+eigener Namensspeicher: `ProfileCatalog.SaveAsync` überträgt den Namen per `DisplayNames.Propagate` auf alle Profile
+mit demselben `TargetDevicePath` (auch das Löschen); neu erfasste Anordnungen (`CurrentArrangement`, `Capture`,
+CLI `save`/`status`) übernehmen bekannte Namen. So zeigen Kernmeldungen und die CLI den Namen ohne zusätzliche
+Abhängigkeit. Unit-Tests belegen Anzeige, Kürzen, Übertragen, Löschen und Übernehmen; Editor und Hauptliste am
+Server angesehen.
+
+Ebenfalls in 1.3.0 (Wunsch und Wahl des Nutzers 2026-09-14): **Diagnoseseite entfällt**, stattdessen Abschnitt
+**„Fehlersuche“ in den Einstellungen** – letzte Umschaltungen als kurze Liste (Symbol, Uhrzeit, Profil, Ergebnis,
+Dauer), Knopf „Diagnose-Infos kopieren“ (Klartext für ein GitHub-Issue: Version, Windows, Bildschirme mit Pfaden und
+EDID, Audiogeräte, Verlauf) und „Log-Ordner öffnen“. Grund: rohe Tabellen mit Gerätepfaden helfen Endnutzern nicht,
+wer ein Problem meldet, braucht ohnehin einen kopierbaren Text; eine Seite weniger in der Navigation.
+
+Nachgeschärft am selben Tag (Wunsch des Nutzers, die Seitenleiste nicht so leer wirken zu lassen; Auswahl per
+Fragerunde): Seitenleiste **Profile · Bildschirme · Über & Hilfe**, Einstellungen unten.
+- **Über & Hilfe** statt Abschnitt in den Einstellungen: Version, Updates und Neuigkeiten ziehen aus den Einstellungen
+  hierher, dazu die Fehlersuche (letzte Umschaltungen, „Diagnose-Infos kopieren“, „Log-Ordner öffnen“) und Links zu
+  GitHub, „Problem melden“ und Lizenz. In den Einstellungen bleiben nur echte Einstellungen.
+- **Bildschirme**: angeschlossene Monitore als Karten mit Namensfeld und „Erkennen“ (große Nummer kurz auf jedem
+  Bildschirm). Damit lassen sich auch Monitore benennen, die in keinem Profil stehen – deshalb zusätzlich ein
+  Namensregister `AppSettings.DisplayNames` (Gerätepfad → Name); Profile tragen den Namen weiter selbst, damit Kern und
+  CLI ihn ohne Einstellungen kennen.
+- **Automatik** (Regeln wie „Spiel startet → Rig“) erst mit Punkt 6 bzw. 7, kein leerer Platzhalter vorher.
+
+**Umgesetzt 2026-09-14**: `DisplaysPage` (Name wird beim Verlassen des Felds oder mit Enter gespeichert,
+`ProfileCatalog.RenameDisplayAsync` schreibt Register und alle betroffenen Profile), `IdentifyWindow` (je aktivem
+Bildschirm 3 s, per `NativeWindow.CenterOnRect` in physischen Pixeln mittig auf Position und Modus), `AboutPage` mit
+`DiagnosticsReport` (Englisch, invariante Kultur, keine Endpoint-IDs). Die Update-Meldung im Tray führt jetzt auf
+„Über & Hilfe“. Am Server belegt (Dev-Build, RDP): Seiten dunkel/hell und de/en angesehen, Name „Remote“ landet in
+`settings.json` → `displayNames`, Erkennen zeigt die Nummer, Bericht in der Zwischenablage. **Nicht belegt:**
+Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-PC.
 6. Prozess-Trigger (WMI `Win32_ProcessStartTrace` oder ETW; Fallback Polling 2 s) + **Spiele-Vorlagen**
    (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1 – als JSON in `templates/`, per PR erweiterbar).
 

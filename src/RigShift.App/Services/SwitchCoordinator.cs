@@ -173,7 +173,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     private static SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
         new(started, profile.Name, result.Outcome, result.Audio, result.Apps, result.Attempts, result.Duration, result.LastNativeError, result.Message,
-            result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment.Identity)).ToList());
+            result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment)).ToList());
 
     private void Complete(SwitchRecord record)
     {

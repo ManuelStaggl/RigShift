@@ -110,7 +110,7 @@ internal static class CcdPathBuilder
             if (chosen[i] is null)
             {
                 throw new InvalidOperationException(
-                    $"No free display source for target {target} ({DisplayNames.Of(displays[i].Assignment.Identity)}).");
+                    $"No free display source for target {target} ({DisplayNames.Of(displays[i].Assignment)}).");
             }
         }
 

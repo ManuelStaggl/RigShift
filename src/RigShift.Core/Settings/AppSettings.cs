@@ -32,6 +32,12 @@ public sealed record AppSettings
     /// files written by 1.0 must mean automatic installation without the key.
     /// </summary>
     public bool OnlyNotifyAboutUpdates { get; init; }
+
+    /// <summary>
+    /// Custom monitor names by target device path, also for monitors that are in no profile (displays page). Profiles
+    /// carry the name too, so the core and the command line do not need the settings (docs/PLAN.md, section 6).
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>

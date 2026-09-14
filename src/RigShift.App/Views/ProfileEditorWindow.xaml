@@ -160,6 +160,16 @@
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModeText}" TextWrapping="Wrap" />
+                    <ui:TextBox
+                      MaxWidth="280"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Left"
+                      AutomationProperties.HelpText="{Binding ModelName}"
+                      AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                      MaxLength="40"
+                      MinWidth="220"
+                      PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
+                      Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
                   </StackPanel>
                   <RadioButton
                     Grid.Column="1"

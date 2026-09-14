@@ -37,13 +37,39 @@ public partial class SettingsPage : Page
     }
 }
 
-public partial class DiagnosticsPage : Page
+public partial class DisplaysPage : Page
 {
-    public DiagnosticsPage(DiagnosticsViewModel viewModel)
+    public DisplaysPage(DisplaysViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         DataContext = viewModel;
         InitializeComponent();
         Loaded += (_, _) => viewModel.RefreshCommand.Execute(null);
+    }
+
+    private async void OnNameLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: DisplayCard card })
+        {
+            await card.SaveNameAsync();
+        }
+    }
+
+    private async void OnNameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter && sender is FrameworkElement { DataContext: DisplayCard card })
+        {
+            e.Handled = true;
+            await card.SaveNameAsync();
+        }
+    }
+}
+
+public partial class AboutPage : Page
+{
+    public AboutPage(AboutViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
     }
 }

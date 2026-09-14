@@ -186,7 +186,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         try
         {
             DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
-            IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CurrentArrangement(snapshot, Displays.Select(d => d.Assignment));
+            IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CurrentArrangement(snapshot, Displays.Select(d => d.Assignment), _catalog.KnownDisplayNames);
             SetDisplays(arrangement);
             ArrangementNote = Loc.Format("Editor_Taken", arrangement.Count);
             _log.Information("Editor took the current arrangement with {Count} displays", arrangement.Count);
@@ -276,7 +276,14 @@ public sealed partial class DisplayEditItem : ObservableObject
 
     public DisplayAssignment Assignment { get; private set; }
 
-    public string Name => SwitchMessages.NameOf(Assignment.Identity);
+    public string Name => SwitchMessages.NameOf(Assignment);
+
+    /// <summary>The monitor model, shown as placeholder of the name field.</summary>
+    public string ModelName => SwitchMessages.NameOf(null, Assignment.Identity);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Name))]
+    public partial string CustomName { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string ModeText { get; private set; } = string.Empty;
@@ -298,6 +305,7 @@ public sealed partial class DisplayEditItem : ObservableObject
             Assignment = assignment;
             IsPrimary = assignment.IsPrimary;
             IsOptional = assignment.IsOptional;
+            CustomName = assignment.CustomName ?? string.Empty;
             double hertz = assignment.RefreshDenominator == 0 ? 0 : (double)assignment.RefreshNumerator / assignment.RefreshDenominator;
             ModeText = Loc.Format("Editor_Mode", assignment.Width, assignment.Height, hertz.ToString("0.##", Loc.Instance.Culture),
                 assignment.PositionX, assignment.PositionY);
@@ -313,6 +321,14 @@ public sealed partial class DisplayEditItem : ObservableObject
         if (!_syncing && value)
         {
             _owner.MakePrimary(this);
+        }
+    }
+
+    partial void OnCustomNameChanged(string value)
+    {
+        if (!_syncing)
+        {
+            Assignment = Assignment with { CustomName = DisplayNames.Normalize(value) };
         }
     }
 

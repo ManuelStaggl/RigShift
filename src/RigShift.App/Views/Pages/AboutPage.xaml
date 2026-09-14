@@ -1,0 +1,113 @@
+<Page
+  x:Class="RigShift.App.Views.Pages.AboutPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="About">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel Margin="24,8,24,24">
+      <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_About}" />
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{Binding VersionText}" />
+            <TextBlock
+              AutomationProperties.LiveSetting="Polite"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding UpdateStatusText}"
+              TextWrapping="Wrap" />
+            <StackPanel Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Margin="0,8,0,0" Text="{Binding ReleaseNotesText}" TextWrapping="Wrap" />
+              <TextBlock Margin="0,4,0,0">
+                <Hyperlink Command="{Binding OpenReleaseNotesCommand}">
+                  <Run Text="{loc:Tr Settings_ReleaseNotesLink}" />
+                </Hyperlink>
+              </TextBlock>
+            </StackPanel>
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,8,0"
+            Appearance="Primary"
+            Command="{Binding InstallUpdateNowCommand}"
+            Content="{loc:Tr Settings_RestartToUpdate}"
+            Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+        </StackPanel>
+      </ui:CardControl>
+
+      <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_Troubleshooting}" />
+      <ui:Card Margin="0,0,0,8" Padding="16">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_History}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr About_NoHistory}"
+            Visibility="{Binding HasNoHistory, Converter={StaticResource BoolToVisibility}}" />
+          <ItemsControl Margin="0,4,0,0" Focusable="False" ItemsSource="{Binding History}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,6,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" MinWidth="80" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <ui:SymbolIcon
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Top"
+                    FontSize="18"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                    Symbol="{Binding Symbol}" />
+                  <TextBlock Grid.Column="1" Margin="0,0,12,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeText}" />
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap">
+                      <Run FontWeight="SemiBold" Text="{Binding ProfileName, Mode=OneWay}" />
+                      <Run Text="·" />
+                      <Run Text="{Binding OutcomeText, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding Details}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasDetails, Converter={StaticResource BoolToVisibility}}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="3" Margin="12,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DurationText}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <WrapPanel Margin="0,16,0,0">
+            <ui:Button Margin="0,0,8,8" Appearance="Primary" Command="{Binding CopyDiagnosticsCommand}" Content="{loc:Tr About_CopyDiagnostics}" Icon="{ui:SymbolIcon Copy24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Settings_OpenLogs}" Icon="{ui:SymbolIcon FolderOpen24}" />
+          </WrapPanel>
+          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr About_CopyHint}" TextWrapping="Wrap" />
+          <TextBlock
+            Margin="0,4,0,0"
+            AutomationProperties.LiveSetting="Polite"
+            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+            Text="{Binding CopyStatus}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </ui:Card>
+
+      <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_Links}" />
+      <ui:Card Padding="16">
+        <StackPanel>
+          <WrapPanel>
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenRepositoryCommand}" Content="{loc:Tr About_Repository}" Icon="{ui:SymbolIcon Globe24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding ReportProblemCommand}" Content="{loc:Tr About_ReportProblem}" Icon="{ui:SymbolIcon Bug24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenLicenseCommand}" Content="{loc:Tr About_License}" Icon="{ui:SymbolIcon Certificate24}" />
+          </WrapPanel>
+          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr About_Copyright}" TextWrapping="Wrap" />
+        </StackPanel>
+      </ui:Card>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

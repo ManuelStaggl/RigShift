@@ -122,7 +122,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         {
             if (planned.Target.NativeHandle is not CcdTargetHandle handle)
             {
-                _log.Error("Display {Display} has no CCD handle; the plan was not built from a CCD snapshot", DisplayNames.Of(planned.Assignment.Identity));
+                _log.Error("Display {Display} has no CCD handle; the plan was not built from a CCD snapshot", DisplayNames.Of(planned.Assignment));
                 return Task.FromResult((int)WIN32_ERROR.ERROR_INVALID_PARAMETER);
             }
 

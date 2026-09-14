@@ -6,7 +6,6 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profiles</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
-  <data name="Nav_Diagnostics" xml:space="preserve"><value>Diagnostics</value></data>
   <data name="Profiles_Reload" xml:space="preserve"><value>Reload</value></data>
   <data name="Profiles_OpenFolder" xml:space="preserve"><value>Open profile folder</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>No profiles found</value></data>
@@ -79,34 +78,11 @@
   <data name="Update_StatusUpToDate" xml:space="preserve"><value>Up to date. Last checked: {0}</value></data>
   <data name="Update_StatusReady" xml:space="preserve"><value>Version {0} is ready. Install it now or it is installed the next time RigShift starts.</value></data>
   <data name="Update_StatusAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
-  <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open the settings to install it.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open “About &amp; help” to install it.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: RigShift only reports new versions and installs nothing until you choose to.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release notes on GitHub</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
-  <data name="Diag_Refresh" xml:space="preserve"><value>Refresh</value></data>
-  <data name="Diag_Displays" xml:space="preserve"><value>Displays</value></data>
-  <data name="Diag_Audio" xml:space="preserve"><value>Audio devices</value></data>
-  <data name="Diag_History" xml:space="preserve"><value>Recent switches</value></data>
-  <data name="Diag_Name" xml:space="preserve"><value>Name</value></data>
-  <data name="Diag_State" xml:space="preserve"><value>State</value></data>
-  <data name="Diag_Mode" xml:space="preserve"><value>Mode</value></data>
-  <data name="Diag_Edid" xml:space="preserve"><value>EDID</value></data>
-  <data name="Diag_Path" xml:space="preserve"><value>Device path</value></data>
-  <data name="Diag_Adapter" xml:space="preserve"><value>Adapter</value></data>
-  <data name="Diag_Direction" xml:space="preserve"><value>Direction</value></data>
-  <data name="Diag_Time" xml:space="preserve"><value>Time</value></data>
-  <data name="Diag_Profile" xml:space="preserve"><value>Profile</value></data>
-  <data name="Diag_Result" xml:space="preserve"><value>Result</value></data>
-  <data name="Diag_Duration" xml:space="preserve"><value>Duration</value></data>
-  <data name="Diag_Details" xml:space="preserve"><value>Details</value></data>
-  <data name="Diag_Active" xml:space="preserve"><value>active</value></data>
-  <data name="Diag_Connected" xml:space="preserve"><value>connected</value></data>
-  <data name="Diag_NotReady" xml:space="preserve"><value>not ready</value></data>
-  <data name="Diag_Default" xml:space="preserve"><value>default</value></data>
-  <data name="Diag_Inactive" xml:space="preserve"><value>inactive</value></data>
-  <data name="Diag_Playback" xml:space="preserve"><value>Playback</value></data>
-  <data name="Diag_Recording" xml:space="preserve"><value>Recording</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Save current arrangement</value></data>
   <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile…</value></data>
@@ -145,6 +121,8 @@
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · position {3}, {4}</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Main display</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional (may be missing)</value></data>
+  <data name="Editor_CustomName" xml:space="preserve"><value>Own name</value></data>
+  <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>Own name, e.g. Left</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Remove display</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Editor_Save" xml:space="preserve"><value>Save</value></data>
@@ -191,4 +169,30 @@
   <data name="App_FileFilter" xml:space="preserve"><value>Programs (*.exe)|*.exe|All files (*.*)|*.*</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a program for every app.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
+  <data name="Nav_Displays" xml:space="preserve"><value>Displays</value></data>
+  <data name="Nav_About" xml:space="preserve"><value>About &amp; help</value></data>
+  <data name="Displays_Identify" xml:space="preserve"><value>Identify</value></data>
+  <data name="Displays_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Displays_Hint" xml:space="preserve"><value>Name your monitors here or in the profile editor; the name appears everywhere, e.g. “Left · CM27X3”. Identify shows each active display’s number on its screen.</value></data>
+  <data name="Displays_Empty" xml:space="preserve"><value>No displays found.</value></data>
+  <data name="Displays_StateActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Displays_StatePrimary" xml:space="preserve"><value>Active · main display</value></data>
+  <data name="Displays_StateOff" xml:space="preserve"><value>Connected, not in use</value></data>
+  <data name="Displays_StateNotReady" xml:space="preserve"><value>Not ready</value></data>
+  <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz</value></data>
+  <data name="Displays_InProfiles" xml:space="preserve"><value>In profiles: {0}</value></data>
+  <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
+  <data name="About_Troubleshooting" xml:space="preserve"><value>Troubleshooting</value></data>
+  <data name="About_History" xml:space="preserve"><value>Recent switches</value></data>
+  <data name="About_NoHistory" xml:space="preserve"><value>No switches since RigShift started.</value></data>
+  <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
+  <data name="About_CopyDiagnostics" xml:space="preserve"><value>Copy diagnostic info</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. It lists version, displays with their device paths, audio devices, profiles and recent switches – nothing else personal.</value></data>
+  <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
+  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="About_Repository" xml:space="preserve"><value>RigShift on GitHub</value></data>
+  <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
+  <data name="About_License" xml:space="preserve"><value>License</value></data>
+  <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
 </root>

@@ -150,13 +150,13 @@ public sealed class TrayIconService : IDisposable
         hotkeys.RegistrationFailed += (_, names) =>
             Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning));
 
-        // The update notification leads to the settings, where the update can be installed right away.
+        // The update notification leads to the about page, where the update can be installed right away.
         _icon.TrayBalloonTipClicked += (_, _) =>
         {
             if (_updateNotificationShown)
             {
                 _updateNotificationShown = false;
-                _shell.ShowMainWindow(typeof(SettingsPage));
+                _shell.ShowMainWindow(typeof(AboutPage));
             }
         };
         _icon.TrayBalloonTipClosed += (_, _) => _updateNotificationShown = false;

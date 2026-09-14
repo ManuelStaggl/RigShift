@@ -89,7 +89,7 @@ public sealed class TopologyPlanner
                     warnings.Add(new PlanWarning(
                         PlanWarningKind.MatchedByEdidFallback,
                         string.Create(CultureInfo.InvariantCulture,
-                            $"{DisplayNames.Of(assignment.Identity)} was matched by EDID at {match.Identity.TargetDevicePath} (port or cable changed).")));
+                            $"{DisplayNames.Of(assignment)} was matched by EDID at {match.Identity.TargetDevicePath} (port or cable changed).")));
                 }
             }
         }
@@ -160,7 +160,7 @@ public sealed class TopologyPlanner
             if (heads > budget)
             {
                 string displays = string.Join(", ", adapter.Select(r => string.Create(CultureInfo.InvariantCulture,
-                    $"{DisplayNames.Of(r.Assignment.Identity)} {r.Assignment.Width}x{r.Assignment.Height} ({EstimateHeads(r.Assignment)})")));
+                    $"{DisplayNames.Of(r.Assignment)} {r.Assignment.Width}x{r.Assignment.Height} ({EstimateHeads(r.Assignment)})")));
                 warnings.Add(new PlanWarning(
                     PlanWarningKind.HeadBudgetExceeded,
                     string.Create(CultureInfo.InvariantCulture,
