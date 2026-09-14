@@ -80,6 +80,8 @@ public sealed class TrayIconService : IDisposable
 
     private readonly TaskbarIcon _icon;
     private System.Drawing.Icon? _trayIcon;
+    private (string? Key, int Size, bool LightTaskbar, Color Color) _iconState;
+    private ApplicationTheme? _popupTheme;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
     private readonly ProfilesViewModel _profiles;
@@ -135,6 +137,13 @@ public sealed class TrayIconService : IDisposable
         // makes WPF re-resolve every DynamicResource below it.
         ApplicationThemeManager.Changed += (theme, _) => popup.Dispatcher.InvokeAsync(() =>
         {
+            // Each window reports the same change once (finding R-01); high contrast colors can change within the theme.
+            if (theme == _popupTheme && theme != ApplicationTheme.HighContrast)
+            {
+                return;
+            }
+
+            _popupTheme = theme;
             var nudge = new ResourceDictionary();
             popup.Resources.MergedDictionaries.Add(nudge);
             popup.Resources.MergedDictionaries.Remove(nudge);
@@ -253,6 +262,15 @@ public sealed class TrayIconService : IDisposable
 
         System.Drawing.Icon icon;
         Color color = highContrast ? SystemColors.WindowTextColor : lightTaskbar ? LightTaskbarStroke : Colors.White;
+
+        // Windows raises preference and display events in bursts (seven redraws after an RDP reconnect, finding R-01).
+        var state = (key, size, lightTaskbar, color);
+        if (_trayIcon is not null && state == _iconState)
+        {
+            return;
+        }
+
+        _iconState = state;
         if (ProfileIconRenderer.Render(key, size, color) is { } bitmap)
         {
             icon = ProfileIconRenderer.ToIcon(bitmap);

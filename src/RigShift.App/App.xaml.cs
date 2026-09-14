@@ -203,9 +203,20 @@ public partial class App : Application, IAppShell
 #endif
             _ => theme,
         };
-        // The brand accent replaces the Windows accent, so theme changes must not bring the system accent back.
+        // The brand accent replaces the Windows accent, so theme changes must not bring the system accent back. Every open
+        // window's theme watcher reports the same change (after an RDP reconnect twice in the log, finding R-01); the brand
+        // resources depend only on the theme, so a repeat is skipped. High contrast is always applied: its colors can
+        // change without the theme changing.
+        ApplicationTheme applied = theme;
         ApplicationThemeManager.Changed += (current, _) =>
         {
+            if (current == applied && current != ApplicationTheme.HighContrast)
+            {
+                Log.Debug("App theme {Theme} reported again, nothing to do", current);
+                return;
+            }
+
+            applied = current;
             Log.Information("App theme changed to {Theme} (Windows reports {SystemTheme})", current, ApplicationThemeManager.GetSystemTheme());
             BrandTheme.Apply(current);
         };
