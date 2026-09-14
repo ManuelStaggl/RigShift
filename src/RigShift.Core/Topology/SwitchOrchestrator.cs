@@ -1,6 +1,5 @@
 using System.Globalization;
 using RigShift.Core.Abstractions;
-using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using Serilog;
 
@@ -25,28 +24,16 @@ public sealed class SwitchOrchestrator
     private static readonly bool[] ModeSources = [false, true];
 
     private readonly IDisplayConfigurator _display;
-    private readonly IAudioController _audio;
-    private readonly IAppLauncher _apps;
-    private readonly IUsbDeviceList _usbDevices;
     private readonly IPowerController _power;
-    private readonly IDuckingPreference _ducking;
-
-    /// <summary>
-    /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
-    /// by the next profile without it. Persisted, so it survives a crash or restart (analysis finding B-01).
-    /// </summary>
-    private readonly IDuckingMemory _duckingMemory;
     private readonly IWindowRescuer _windows;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
-
-    private readonly Lock _appsLock = new();
-
-    /// <summary>The apps of the last switch, running after its result until done or cancelled (analysis finding B-03).</summary>
-    private PendingApps? _pendingApps;
+    private readonly AudioSwitcher _audioSwitcher;
+    private readonly AppRunner _appRunner;
+    private readonly DuckingSwitcher _duckingSwitcher;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -78,18 +65,16 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(log);
 
         _display = display;
-        _audio = audio;
-        _apps = apps;
-        _usbDevices = usbDevices;
         _power = power;
-        _ducking = ducking;
-        _duckingMemory = duckingMemory;
         _windows = windows;
         _confirmation = confirmation;
         _planner = planner;
         _options = options;
         _time = time;
         _log = log.ForContext<SwitchOrchestrator>();
+        _audioSwitcher = new AudioSwitcher(audio, _log);
+        _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
+        _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
     }
 
     public async Task<SwitchResult> SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
@@ -133,11 +118,11 @@ public sealed class SwitchOrchestrator
             confirmSeconds = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
         }
 
-        AudioRestore audioRestore = confirm
-            ? await CaptureAudioAsync(profile.Audio, cancellationToken)
-            : AudioRestore.Nothing;
+        AudioSwitcher.AudioRestore audioRestore = confirm
+            ? await _audioSwitcher.CaptureAsync(profile.Audio, cancellationToken)
+            : AudioSwitcher.AudioRestore.Nothing;
         bool? keepAwakeBefore = confirm ? _power.IsKeepingAwake : null;
-        DuckingRestore? duckingRestore = confirm ? await CaptureDuckingAsync(profile, cancellationToken) : null;
+        DuckingSwitcher.DuckingRestore? duckingRestore = confirm ? await _duckingSwitcher.CaptureAsync(profile, cancellationToken) : null;
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -159,7 +144,7 @@ public sealed class SwitchOrchestrator
         ModeCheck modes = applied.UsedDatabaseModes ? await CheckDatabaseModesAsync(plan, cancellationToken) : ModeCheck.AsPlanned(plan);
         plan = modes.Plan;
         long audioStarted = _time.GetTimestamp();
-        AudioOutcome audio = await SwitchAudioAsync(profile.Audio, cancellationToken);
+        AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
         if (audio != AudioOutcome.NotConfigured)
         {
             _log.Information("Audio for {Profile}: {Audio} after {Milliseconds:0} ms", profile.Name, audio, _time.GetElapsedTime(audioStarted).TotalMilliseconds);
@@ -167,7 +152,7 @@ public sealed class SwitchOrchestrator
 
         // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
         SwitchKeepAwake(profile);
-        await SwitchDuckingAsync(profile, cancellationToken);
+        await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
 
         if (confirm)
         {
@@ -203,7 +188,7 @@ public sealed class SwitchOrchestrator
                 }
 
                 RestoreKeepAwake(keepAwakeBefore);
-                await RestoreDuckingAsync(duckingRestore, rollbackToken);
+                await _duckingSwitcher.RestoreAsync(duckingRestore, rollbackToken);
                 SwitchResult rolledBack = await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, rollbackToken);
                 if (cancelled)
                 {
@@ -220,7 +205,7 @@ public sealed class SwitchOrchestrator
 
         // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
         // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
-        Task<AppsOutcome> appsRun = StartApps(profile);
+        Task<AppsOutcome> appsRun = _appRunner.Start(profile);
         AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
 
         SwitchOutcome outcome = plan.ShouldRetryLater || modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
@@ -260,60 +245,7 @@ public sealed class SwitchOrchestrator
     /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
     /// The cancellation is requested before this method first yields.
     /// </summary>
-    public Task CancelPendingAppsAsync()
-    {
-        PendingApps? pending;
-        lock (_appsLock)
-        {
-            pending = _pendingApps;
-            _pendingApps = null;
-        }
-
-        return pending is null ? Task.CompletedTask : EndAppsAsync(pending);
-    }
-
-    private async Task EndAppsAsync(PendingApps pending)
-    {
-        try
-        {
-            if (!pending.Run.IsCompleted)
-            {
-                _log.Information("Cancelling the apps of {Profile}", pending.ProfileName);
-                await pending.Cancellation.CancelAsync();
-            }
-
-            await pending.Run;
-        }
-        finally
-        {
-            pending.Cancellation.Dispose();
-        }
-    }
-
-    private Task<AppsOutcome> StartApps(Profile profile)
-    {
-        if (profile.Apps.Count == 0)
-        {
-            return SwitchResult.NoApps;
-        }
-
-        var cancellation = new CancellationTokenSource();
-        CancellationToken token = cancellation.Token;
-        Task<AppsOutcome> run = Task.Run(() => RunAppsAsync(profile, token), CancellationToken.None);
-        PendingApps? previous;
-        lock (_appsLock)
-        {
-            previous = _pendingApps;
-            _pendingApps = new PendingApps(profile.Name, run, cancellation);
-        }
-
-        if (previous is not null)
-        {
-            _ = EndAppsAsync(previous);
-        }
-
-        return run;
-    }
+    public Task CancelPendingAppsAsync() => _appRunner.CancelPendingAsync();
 
     /// <summary>
     /// With database modes Windows decides the modes and may even leave a display dark; the stored plan says nothing
@@ -420,7 +352,7 @@ public sealed class SwitchOrchestrator
 
     private async Task<SwitchResult> RollBackAsync(
         DisplaySnapshot before,
-        AudioRestore audioRestore,
+        AudioSwitcher.AudioRestore audioRestore,
         TopologyPlan plan,
         ApplyOutcome applied,
         AudioOutcome audio,
@@ -437,7 +369,7 @@ public sealed class SwitchOrchestrator
             ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.", false)
             : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
 
-        await RestoreAudioAsync(audioRestore, cancellationToken);
+        await _audioSwitcher.RestoreAsync(audioRestore, cancellationToken);
 
         if (!rolledBack.Succeeded)
         {
@@ -733,241 +665,6 @@ public sealed class SwitchOrchestrator
         };
     }
 
-    private async Task<AudioOutcome> SwitchAudioAsync(AudioAssignment audio, CancellationToken cancellationToken)
-    {
-        List<AudioStep> steps = AudioSteps(audio);
-        if (steps.Count == 0)
-        {
-            return AudioOutcome.NotConfigured;
-        }
-
-        bool complete = true;
-        foreach (AudioStep step in steps)
-        {
-            complete &= await TrySetDefaultAsync(step.Endpoint, step.Roles, cancellationToken);
-        }
-
-        foreach ((AudioEndpoint endpoint, int percent) in VolumeSteps(audio))
-        {
-            complete &= await TrySetVolumeAsync(endpoint, percent, cancellationToken);
-        }
-
-        return complete ? AudioOutcome.Applied : AudioOutcome.Incomplete;
-    }
-
-    /// <summary>A volume belongs to the chosen device, so it is only set together with one.</summary>
-    private static List<(AudioEndpoint Endpoint, int Percent)> VolumeSteps(AudioAssignment audio)
-    {
-        var steps = new List<(AudioEndpoint, int)>();
-        if (audio.Playback is { } playback && audio.PlaybackVolumePercent is { } playbackVolume)
-        {
-            steps.Add((playback, playbackVolume));
-        }
-
-        if (audio.Recording is { } recording && audio.RecordingVolumePercent is { } recordingVolume)
-        {
-            steps.Add((recording, recordingVolume));
-        }
-
-        return steps;
-    }
-
-    private async Task<bool> TrySetVolumeAsync(AudioEndpoint endpoint, int percent, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _audio.SetVolumeAsync(endpoint, percent, cancellationToken);
-            return true;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Setting volume of {Device} to {Volume} % failed", endpoint.FriendlyName, percent);
-            return false;
-        }
-    }
-
-    /// <summary>Runs after the switch result on its own cancellation; never throws.</summary>
-    private async Task<AppsOutcome> RunAppsAsync(Profile profile, CancellationToken cancellationToken)
-    {
-        long startedAt = _time.GetTimestamp();
-        try
-        {
-            // Wheel software and games want to see the device when they start; without it they start anyway.
-            bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
-            AppsOutcome started = await RunAppActionsAsync(profile.Apps, cancellationToken);
-            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
-            _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", profile.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
-            return outcome;
-        }
-        catch (OperationCanceledException)
-        {
-            _log.Information("Apps for {Profile} cancelled after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(startedAt).TotalSeconds);
-            return AppsOutcome.Cancelled;
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Apps for {Profile} failed", profile.Name);
-            return AppsOutcome.Incomplete;
-        }
-    }
-
-    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
-    {
-        bool complete = true;
-        foreach (AppAction app in apps)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            try
-            {
-                bool running = _apps.IsRunning(app.Path);
-                if (app.Kind == AppActionKind.Start && running)
-                {
-                    _log.Information("App {App} already runs, not started", app.Path);
-                    continue;
-                }
-
-                if (app.Kind == AppActionKind.Stop && !running)
-                {
-                    _log.Information("App {App} does not run, nothing to end", app.Path);
-                    continue;
-                }
-
-                if (app.Kind == AppActionKind.Start)
-                {
-                    _apps.Start(app.Path, app.Arguments);
-                    _log.Information("App {App} started", app.Path);
-                }
-                else if (await _apps.StopAsync(app.Path, _options.AppStopGrace, cancellationToken))
-                {
-                    _log.Information("App {App} ended", app.Path);
-                }
-                else
-                {
-                    _log.Warning("App {App} could not be ended", app.Path);
-                    complete = false;
-                }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _log.Warning(ex, "{Action} of app {App} failed", app.Kind, app.Path);
-                complete = false;
-                continue;
-            }
-
-            if (app.WaitSeconds > 0)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(app.WaitSeconds), _time, cancellationToken);
-            }
-        }
-
-        return complete ? AppsOutcome.Applied : AppsOutcome.Incomplete;
-    }
-
-    private static List<AudioStep> AudioSteps(AudioAssignment audio)
-    {
-        const AudioRoleMask Standard = AudioRoleMask.Console | AudioRoleMask.Multimedia;
-        var steps = new List<AudioStep>();
-
-        if (audio.Playback is { } playback)
-        {
-            steps.Add(new AudioStep(playback, audio.PlaybackCommunications is null ? AudioRoleMask.All : Standard, AudioDirection.Render));
-        }
-
-        if (audio.PlaybackCommunications is { } playbackCommunications)
-        {
-            steps.Add(new AudioStep(playbackCommunications, AudioRoleMask.Communications, AudioDirection.Render));
-        }
-
-        if (audio.Recording is { } recording)
-        {
-            steps.Add(new AudioStep(recording, audio.RecordingCommunications is null ? AudioRoleMask.All : Standard, AudioDirection.Capture));
-        }
-
-        if (audio.RecordingCommunications is { } recordingCommunications)
-        {
-            steps.Add(new AudioStep(recordingCommunications, AudioRoleMask.Communications, AudioDirection.Capture));
-        }
-
-        return steps;
-    }
-
-    private async Task<bool> TrySetDefaultAsync(AudioEndpoint endpoint, AudioRoleMask roles, CancellationToken cancellationToken)
-    {
-        try
-        {
-            bool set = await _audio.SetDefaultAsync(endpoint, roles, cancellationToken);
-            if (set)
-            {
-                _log.Information("Audio default for {Roles} set to {Device}", roles, endpoint.FriendlyName);
-            }
-            else
-            {
-                _log.Warning("Audio device {Device} is not active, default for {Roles} unchanged", endpoint.FriendlyName, roles);
-            }
-
-            return set;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Setting audio default for {Roles} to {Device} failed", roles, endpoint.FriendlyName);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Remembers the current default device per direction the profile changes, and the volume of every device whose
-    /// volume it sets, so a rollback can restore them. The OS reports one default per direction; it is restored for
-    /// every role the switch touched.
-    /// </summary>
-    private async Task<AudioRestore> CaptureAudioAsync(AudioAssignment audio, CancellationToken cancellationToken)
-    {
-        var defaults = new List<DefaultRestore>();
-        foreach (IGrouping<AudioDirection, AudioStep> direction in AudioSteps(audio).GroupBy(s => s.Direction))
-        {
-            try
-            {
-                IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(direction.Key, cancellationToken);
-                if (devices.FirstOrDefault(d => d.IsDefault) is { } current)
-                {
-                    AudioRoleMask roles = direction.Aggregate(AudioRoleMask.None, (mask, step) => mask | step.Roles);
-                    defaults.Add(new DefaultRestore(current.Endpoint, roles));
-                }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _log.Warning(ex, "Could not read current {Direction} default; rollback will leave audio unchanged", direction.Key);
-            }
-        }
-
-        var volumes = new List<(AudioEndpoint, int)>();
-        foreach ((AudioEndpoint endpoint, _) in VolumeSteps(audio))
-        {
-            try
-            {
-                volumes.Add((endpoint, await _audio.GetVolumeAsync(endpoint, cancellationToken)));
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _log.Warning(ex, "Could not read volume of {Device}; rollback will leave it unchanged", endpoint.FriendlyName);
-            }
-        }
-
-        return new AudioRestore(defaults, volumes);
-    }
-
-    private async Task RestoreAudioAsync(AudioRestore restore, CancellationToken cancellationToken)
-    {
-        foreach (DefaultRestore item in restore.Defaults)
-        {
-            await TrySetDefaultAsync(item.Endpoint, item.Roles, cancellationToken);
-        }
-
-        foreach ((AudioEndpoint endpoint, int percent) in restore.Volumes)
-        {
-            await TrySetVolumeAsync(endpoint, percent, cancellationToken);
-        }
-    }
-
     /// <summary>
     /// Keep-awake follows the profile (docs/PLAN.md, section 6, item 8). Failures are logged and never fail the switch.
     /// </summary>
@@ -1027,177 +724,11 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Polls for the device the profile's apps wait for, up to its wait time. True when it is there or none is set.
-    /// </summary>
-    private async Task<bool> WaitForAppsDeviceAsync(Profile profile, CancellationToken cancellationToken)
-    {
-        if (UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId) is not { } deviceId)
-        {
-            return true;
-        }
-
-        const int seconds = Profile.AppsDeviceWaitSeconds;
-        string name = profile.AppsWaitForUsbDeviceName ?? deviceId;
-        DateTimeOffset deadline = _time.GetUtcNow() + TimeSpan.FromSeconds(seconds);
-        long started = _time.GetTimestamp();
-        bool waited = false;
-
-        while (!IsUsbDevicePresent(deviceId))
-        {
-            if (_time.GetUtcNow() >= deadline)
-            {
-                _log.Warning("Device {Device} did not show up within {Seconds} s, starting apps anyway", name, seconds);
-                return false;
-            }
-
-            if (!waited)
-            {
-                _log.Information("Waiting up to {Seconds} s for device {Device} before starting apps", seconds, name);
-                waited = true;
-            }
-
-            await Task.Delay(_options.DevicePollInterval, _time, cancellationToken);
-        }
-
-        if (waited)
-        {
-            _log.Information("Device {Device} showed up after {Elapsed:0.0} s", name, _time.GetElapsedTime(started).TotalSeconds);
-        }
-
-        return true;
-    }
-
-    private bool IsUsbDevicePresent(string deviceId)
-    {
-        try
-        {
-            return _usbDevices.PresentDeviceIds().Contains(deviceId);
-        }
-        catch (Exception ex)
-        {
-            _log.Warning(ex, "USB devices could not be listed while waiting for {Device}", deviceId);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// A profile with <see cref="Profile.DisableCommunicationsDucking"/> sets "do nothing" during calls; the value from
-    /// before the first such profile is remembered and comes back with the next profile without the flag. Failures are
-    /// logged and never fail the switch (the registry value is undocumented).
-    /// </summary>
-    private async Task SwitchDuckingAsync(Profile profile, CancellationToken cancellationToken)
-    {
-        try
-        {
-            RememberedDucking? original = await _duckingMemory.LoadAsync(cancellationToken);
-            if (profile.DisableCommunicationsDucking)
-            {
-                int? current = _ducking.Read();
-                if (original is null)
-                {
-                    // Remembered before the registry changes: a crash right after must still find the old value.
-                    await _duckingMemory.SaveAsync(current, cancellationToken);
-                }
-
-                if (current != CommunicationsDucking.DoNothing)
-                {
-                    _ducking.Write(CommunicationsDucking.DoNothing);
-                    _log.Information("Communications ducking turned off for {Profile} (was {Preference})", profile.Name, current);
-                }
-            }
-            else if (original is not null)
-            {
-                RestoreRemembered(original, profile.Name);
-                await _duckingMemory.ClearAsync(cancellationToken);
-            }
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Communications ducking for {Profile} could not be set", profile.Name);
-        }
-    }
-
-    /// <summary>
     /// At startup: a remembered value whose profile is no longer active (crash, restart or update in between) comes back
     /// now instead of waiting for the next switch. With a profile that disables ducking still active, it stays remembered.
     /// </summary>
-    public async Task RestoreDuckingIfUnusedAsync(Profile? activeProfile, CancellationToken cancellationToken)
-    {
-        if (activeProfile is { DisableCommunicationsDucking: true })
-        {
-            return;
-        }
-
-        try
-        {
-            if (await _duckingMemory.LoadAsync(cancellationToken) is not { } original)
-            {
-                return;
-            }
-
-            _log.Information("Remembered communications ducking {Preference} found without an active profile that needs it", original.Value);
-            RestoreRemembered(original, activeProfile?.Name ?? "startup");
-            await _duckingMemory.ClearAsync(cancellationToken);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Restoring the remembered communications ducking setting at startup failed");
-        }
-    }
-
-    private void RestoreRemembered(RememberedDucking original, string profileName)
-    {
-        if (_ducking.Read() != original.Value)
-        {
-            _ducking.Write(original.Value);
-            _log.Information("Communications ducking {Preference} from before restored for {Profile}", original.Value, profileName);
-        }
-    }
-
-    private async Task<DuckingRestore?> CaptureDuckingAsync(Profile profile, CancellationToken cancellationToken)
-    {
-        try
-        {
-            RememberedDucking? remembered = await _duckingMemory.LoadAsync(cancellationToken);
-            return !profile.DisableCommunicationsDucking && remembered is null
-                ? null
-                : new DuckingRestore(_ducking.Read(), remembered);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Could not read the communications ducking setting; rollback will leave it unchanged");
-            return null;
-        }
-    }
-
-    private async Task RestoreDuckingAsync(DuckingRestore? restore, CancellationToken cancellationToken)
-    {
-        if (restore is null)
-        {
-            return;
-        }
-
-        try
-        {
-            if (_ducking.Read() != restore.Value)
-            {
-                _ducking.Write(restore.Value);
-            }
-
-            if (restore.BeforeProfiles is { } remembered)
-            {
-                await _duckingMemory.SaveAsync(remembered.Value, cancellationToken);
-            }
-            else
-            {
-                await _duckingMemory.ClearAsync(cancellationToken);
-            }
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _log.Warning(ex, "Restoring the communications ducking setting failed");
-        }
-    }
+    public Task RestoreDuckingIfUnusedAsync(Profile? activeProfile, CancellationToken cancellationToken) =>
+        _duckingSwitcher.RestoreIfUnusedAsync(activeProfile, cancellationToken);
 
     private void LogPlan(TopologyPlan plan)
     {
@@ -1219,19 +750,6 @@ public sealed class SwitchOrchestrator
         result with { Duration = _time.GetElapsedTime(started) };
 
     private sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message, bool UsedDatabaseModes);
-
-    private sealed record DefaultRestore(AudioEndpoint Endpoint, AudioRoleMask Roles);
-
-    private sealed record AudioRestore(IReadOnlyList<DefaultRestore> Defaults, IReadOnlyList<(AudioEndpoint Endpoint, int Percent)> Volumes)
-    {
-        public static AudioRestore Nothing { get; } = new([], []);
-    }
-
-    private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
-
-    private sealed record DuckingRestore(int? Value, RememberedDucking? BeforeProfiles);
-
-    private sealed record PendingApps(string ProfileName, Task<AppsOutcome> Run, CancellationTokenSource Cancellation);
 
     private sealed record ModeCheck(TopologyPlan Plan, SwitchNote Note, bool DisplaysDark)
     {
