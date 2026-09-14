@@ -52,7 +52,7 @@
             Minimum="1"
             SmallChange="1"
             ToolTip="{loc:Tr Settings_ConfirmSeconds}"
-            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}"
+            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}"
             Visibility="{Binding ConfirmEnabled, Converter={StaticResource BoolToVisibility}}" />
           <ui:ToggleSwitch VerticalAlignment="Center" AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" />
         </StackPanel>
