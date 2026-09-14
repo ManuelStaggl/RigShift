@@ -88,12 +88,15 @@ public sealed class AutomationViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task NamedDevices_IncludeRuleDeviceThatIsNotConnected()
+    public async Task NamedDevices_OnlyUsedDevices_ConnectedFirst()
     {
         const string Pedals = "VID_0EB7&PID_0030";
-        AutomationViewModel viewModel = await CreateAsync(new AutomationRule { Devices = [new RuleDevice { Id = Pedals, Name = "Pedals" }], ProfileId = _rig.Id });
+        AutomationViewModel viewModel = await CreateAsync(RuleFor(Pedals, Wheelbase) with { Devices = [new RuleDevice { Id = Pedals, Name = "Pedals" }, new RuleDevice { Id = Wheelbase }] });
 
-        viewModel.NamedDevices.Select(n => n.WindowsName).ShouldBe(["Dongle", "Wheelbase", "Pedals"]);
+        viewModel.NamedDevices.Select(n => n.WindowsName).ShouldBe(["Wheelbase", "Pedals"]);
+
+        viewModel.Rules[0].AddDeviceCommand.Execute(null);
+        viewModel.NamedDevices.Select(n => n.Id).ShouldContain(Dongle);
         viewModel.DeviceChoiceFor(Pedals).ShouldNotBeNull().Name.ShouldContain("Pedals");
         viewModel.Rules[0].Devices[0].SelectedDevice.ShouldNotBeNull().Key.ShouldBe(Pedals);
     }

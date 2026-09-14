@@ -254,8 +254,8 @@
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>With several devices the rule switches once all of them are connected, and its end action runs once one of them is gone.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Remove device</value></data>
   <data name="Automation_NamesTitle" xml:space="preserve"><value>USB device names</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Name a device once – the name shows in rules, when apps wait for a device and in notifications.</value></data>
-  <data name="Automation_NamesEmpty" xml:space="preserve"><value>No USB devices found.</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>The devices of your rules and profiles. Name a device once – the name shows in rules, when apps wait for a device and in notifications.</value></data>
+  <data name="Automation_NamesEmpty" xml:space="preserve"><value>As soon as a rule or profile uses a USB device, you can name it here.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Not connected</value></data>
 </root>

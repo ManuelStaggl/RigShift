@@ -254,8 +254,8 @@
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Gerät entfernen</value></data>
   <data name="Automation_NamesTitle" xml:space="preserve"><value>USB-Gerätenamen</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Einmal benennen – der Name erscheint in Regeln, beim Warten auf ein Gerät und in Meldungen.</value></data>
-  <data name="Automation_NamesEmpty" xml:space="preserve"><value>Keine USB-Geräte gefunden.</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Die Geräte deiner Regeln und Profile. Einmal benennen – der Name erscheint in Regeln, beim Warten auf ein Gerät und in Meldungen.</value></data>
+  <data name="Automation_NamesEmpty" xml:space="preserve"><value>Sobald eine Regel oder ein Profil ein USB-Gerät nutzt, kannst du es hier benennen.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
 </root>

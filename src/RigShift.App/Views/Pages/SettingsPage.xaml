@@ -44,7 +44,7 @@
         </ui:CardControl.Header>
         <StackPanel Orientation="Horizontal">
           <ui:NumberBox
-            Width="140"
+            Width="120"
             Margin="0,0,16,0"
             VerticalAlignment="Center"
             AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"

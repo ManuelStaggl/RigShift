@@ -14,7 +14,17 @@
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Automation}" />
-        <ui:Button Grid.Column="1" Appearance="Primary" Command="{Binding AddRuleCommand}" Content="{loc:Tr Automation_Add}" Icon="{ui:SymbolIcon Add24}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <!-- One refresh for all rules and the name list; icon only so the header fits at the narrowest width. -->
+          <ui:Button
+            Margin="0,0,8,0"
+            VerticalAlignment="Stretch"
+            AutomationProperties.Name="{loc:Tr Automation_RefreshDevices}"
+            Command="{Binding RefreshDevicesCommand}"
+            Icon="{ui:SymbolIcon ArrowClockwise24}"
+            ToolTip="{loc:Tr Automation_RefreshDevices}" />
+          <ui:Button Appearance="Primary" Command="{Binding AddRuleCommand}" Content="{loc:Tr Automation_Add}" Icon="{ui:SymbolIcon Add24}" />
+        </StackPanel>
       </Grid>
       <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Hint}" TextWrapping="Wrap" />
 
@@ -115,19 +125,12 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-                  <WrapPanel>
-                    <ui:Button
-                      Margin="0,0,8,0"
-                      AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
-                      Command="{Binding AddDeviceCommand}"
-                      Content="{loc:Tr Automation_AddDevice}"
-                      Icon="{ui:SymbolIcon Add24}"
-                      ToolTip="{loc:Tr Automation_AddDeviceHint}" />
-                    <ui:Button
-                      Command="{Binding Owner.RefreshDevicesCommand}"
-                      Content="{loc:Tr Automation_RefreshDevices}"
-                      Icon="{ui:SymbolIcon ArrowClockwise24}" />
-                  </WrapPanel>
+                  <ui:Button
+                    AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
+                    Command="{Binding AddDeviceCommand}"
+                    Content="{loc:Tr Automation_AddDevice}"
+                    Icon="{ui:SymbolIcon Add24}"
+                    ToolTip="{loc:Tr Automation_AddDeviceHint}" />
                 </StackPanel>
 
                 <ui:Button
@@ -212,20 +215,14 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <ui:Card Margin="0,0,0,8" Padding="16,12">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                  <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding WindowsName}" TextWrapping="Wrap" />
-                  <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
-                </StackPanel>
+              <!-- Same layout as the Displays page: the name field below the text. -->
+              <StackPanel>
+                <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding WindowsName}" TextWrapping="Wrap" />
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
                 <ui:TextBox
-                  Grid.Column="1"
-                  Width="240"
-                  Margin="16,0,0,0"
-                  VerticalAlignment="Center"
+                  Width="320"
+                  Margin="0,8,0,0"
+                  HorizontalAlignment="Left"
                   AutomationProperties.HelpText="{Binding WindowsName}"
                   AutomationProperties.Name="{loc:Tr Editor_CustomName}"
                   KeyDown="OnNameKeyDown"
@@ -233,7 +230,7 @@
                   MaxLength="40"
                   PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
                   Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
-              </Grid>
+              </StackPanel>
             </ui:Card>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

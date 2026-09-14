@@ -45,13 +45,12 @@
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Border
                   Width="44"
                   Height="44"
                   Margin="0,0,16,0"
-                  VerticalAlignment="Center"
+                  VerticalAlignment="Top"
                   Background="{DynamicResource ControlFillColorSecondaryBrush}"
                   CornerRadius="22">
                   <TextBlock
@@ -63,16 +62,15 @@
                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                     Text="{Binding NumberText}" />
                 </Border>
+                <!-- The name field sits below the text, so a narrow window does not squeeze the details into a column. -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                   <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextWrapping="Wrap" />
                   <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
                   <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ProfilesText}" TextWrapping="Wrap" />
-                </StackPanel>
                 <ui:TextBox
-                  Grid.Column="2"
-                  Width="240"
-                  Margin="16,0,0,0"
-                  VerticalAlignment="Center"
+                  Width="320"
+                  Margin="0,8,0,0"
+                  HorizontalAlignment="Left"
                   AutomationProperties.HelpText="{Binding ModelName}"
                   AutomationProperties.Name="{loc:Tr Editor_CustomName}"
                   KeyDown="OnNameKeyDown"
@@ -80,6 +78,7 @@
                   MaxLength="40"
                   PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
                   Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
               </Grid>
             </ui:Card>
           </DataTemplate>

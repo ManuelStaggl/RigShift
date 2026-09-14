@@ -210,6 +210,14 @@ public partial class App : Application, IAppShell
         ApplicationTheme applied = theme;
         ApplicationThemeManager.Changed += (current, _) =>
         {
+#if DEBUG
+            // Each window's theme watcher applies the Windows theme when it attaches; a forced preview theme wins.
+            if (_request.PreviewTheme is "light" or "dark" && current != theme)
+            {
+                ApplicationThemeManager.Apply(theme, updateAccent: false);
+                return;
+            }
+#endif
             if (current == applied && current != ApplicationTheme.HighContrast)
             {
                 Log.Debug("App theme {Theme} reported again, nothing to do", current);

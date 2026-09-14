@@ -76,6 +76,7 @@
                       Width="28"
                       Height="28"
                       Margin="0,0,12,0"
+                      Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}"
                       VerticalAlignment="Center"
                       IconKey="{Binding IconKey}"
                       IsFilled="{Binding IsActive}"

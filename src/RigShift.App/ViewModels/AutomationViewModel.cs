@@ -75,7 +75,10 @@ public sealed partial class AutomationViewModel : ObservableObject
 
     public ObservableCollection<Choice> ExitChoices { get; } = [];
 
-    /// <summary>Devices that can be named: connected ones, the ones rules and profiles use, and named ones.</summary>
+    /// <summary>
+    /// Devices that can be named: the ones rules and profiles use, and named ones. Not every connected device – a PC lists
+    /// hubs, receivers and keyboards the automation never needs.
+    /// </summary>
     public ObservableCollection<UsbNameCard> NamedDevices { get; } = [];
 
     [ObservableProperty]
@@ -276,6 +279,7 @@ public sealed partial class AutomationViewModel : ObservableObject
         Quietly(() => Rules.Add(new RuleCard(this, rule)));
         IsEmpty = false;
         UpdateDuplicates();
+        OnRuleDevicesChanged();
         _log.Information("Automation rule {Rule} added", rule.Id);
         await SaveAsync();
     }
@@ -308,6 +312,7 @@ public sealed partial class AutomationViewModel : ObservableObject
         Rules.Remove(card);
         IsEmpty = Rules.Count == 0;
         UpdateDuplicates();
+        OnRuleDevicesChanged();
         _log.Information("Automation rule {Rule} deleted", card.Id);
         await SaveAsync();
     }
@@ -370,27 +375,34 @@ public sealed partial class AutomationViewModel : ObservableObject
     private void FillDevices(IReadOnlyList<AutomationRule> rules) =>
         UsbDeviceChoices.Fill(DeviceChoices, _windowsNames, _connected, rules.SelectMany(r => r.Devices ?? []), CustomNames);
 
+    /// <summary>Called when a rule's devices change: a newly picked device can be named at once.</summary>
+    internal void OnRuleDevicesChanged()
+    {
+        if (!_loading)
+        {
+            FillNamedDevices(Rules.Select(r => r.ToRule()).ToList());
+        }
+    }
+
     private void FillNamedDevices(IReadOnlyList<AutomationRule> rules)
     {
+        Dictionary<string, string> windowsNames = _connected
+            .GroupBy(d => d.Id, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First().Name, StringComparer.OrdinalIgnoreCase);
         var known = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-        foreach (UsbDevice device in _connected)
-        {
-            known.TryAdd(device.Id, device.Name);
-        }
-
-        IEnumerable<RuleDevice> saved = rules
+        IEnumerable<RuleDevice> used = rules
             .SelectMany(r => r.Devices ?? [])
             .Concat(_catalog.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }))
             .Concat((CustomNames ?? new Dictionary<string, string>()).Keys.Select(id => new RuleDevice { Id = id }));
-        foreach (RuleDevice device in saved)
+        foreach (RuleDevice device in used)
         {
             if (UsbDeviceIds.Normalize(device.Id) is { } id && (!known.TryGetValue(id, out string? name) || name is null))
             {
-                known[id] = string.IsNullOrWhiteSpace(device.Name) ? null : device.Name;
+                known[id] = windowsNames.GetValueOrDefault(id) ?? (string.IsNullOrWhiteSpace(device.Name) ? null : device.Name);
             }
         }
 
-        HashSet<string> connected = _connected.Select(d => d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> connected = windowsNames.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
         NamedDevices.Clear();
         foreach ((string id, string? name) in known.OrderByDescending(p => connected.Contains(p.Key)).ThenBy(p => p.Value ?? p.Key, StringComparer.CurrentCultureIgnoreCase))
         {
@@ -560,6 +572,7 @@ public sealed partial class RuleCard : ObservableObject
         UpdatePowerWarning();
         OnPropertyChanged(nameof(DevicesText));
         _owner.UpdateDuplicates();
+        _owner.OnRuleDevicesChanged();
         _owner.OnCardChanged();
     }
 
