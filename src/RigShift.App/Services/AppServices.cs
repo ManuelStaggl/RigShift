@@ -218,17 +218,29 @@ public static class SwitchMessages
             text += Environment.NewLine + Loc.Instance["Result_AudioIncomplete"];
         }
 
-        if (record.Apps == AppsOutcome.Incomplete)
+        if (AppsProblem(record) is { } apps)
         {
-            text += Environment.NewLine + Loc.Instance["Result_AppsIncomplete"];
-        }
-        else if (record.Apps == AppsOutcome.DeviceMissing)
-        {
-            text += Environment.NewLine + Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds);
+            text += Environment.NewLine + apps;
         }
 
         return (title, text, icon);
     }
+
+    /// <summary>Apps run after the switch result (B-03): a second notification only when something went wrong with them.</summary>
+    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForAppsNotification(SwitchRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        return AppsProblem(record) is { } text
+            ? (Loc.Format("Result_AppliedTitle", record.ProfileName), text, H.NotifyIcon.Core.NotificationIcon.Warning)
+            : null;
+    }
+
+    private static string? AppsProblem(SwitchRecord record) => record.Apps switch
+    {
+        AppsOutcome.Incomplete => Loc.Instance["Result_AppsIncomplete"],
+        AppsOutcome.DeviceMissing => Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds),
+        _ => null,
+    };
 
     private static string Names(IEnumerable<MissingDisplay> missing) =>
         string.Join(", ", missing.Select(m => NameOf(m.Assignment)));

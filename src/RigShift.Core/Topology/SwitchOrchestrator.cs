@@ -43,6 +43,11 @@ public sealed class SwitchOrchestrator
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
+    private readonly Lock _appsLock = new();
+
+    /// <summary>The apps of the last switch, running after its result until done or cancelled (analysis finding B-03).</summary>
+    private PendingApps? _pendingApps;
+
     public SwitchOrchestrator(
         IDisplayConfigurator display,
         IAudioController audio,
@@ -92,20 +97,21 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(request);
 
+        if (request.DryRun)
+        {
+            return await CheckAsync(profile, cancellationToken);
+        }
+
         long started = _time.GetTimestamp();
-        _log.Information("Switching to profile {Profile} (dry run: {DryRun}, skip confirmation: {SkipConfirmation}, from link: {FromLink})",
-            profile.Name, request.DryRun, request.SkipConfirmation, request.FromLink);
+        _log.Information("Switching to profile {Profile} (skip confirmation: {SkipConfirmation}, from link: {FromLink})",
+            profile.Name, request.SkipConfirmation, request.FromLink);
+
+        // A new switch ends the apps of the previous one, e.g. still waiting for their device (analysis finding B-03).
+        _ = CancelPendingAppsAsync();
 
         DisplaySnapshot before = await _display.QueryAsync(cancellationToken);
         TopologyPlan plan = _planner.Plan(profile, before);
         LogPlan(plan);
-
-        if (request.DryRun)
-        {
-            _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms",
-                profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
-            return Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
-        }
 
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
         plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: false, cancellationToken);
@@ -114,6 +120,10 @@ public sealed class SwitchOrchestrator
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
             return Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
         }
+
+        // Waiting for a sleeping display may have used up most of the budget; a display that wakes late and then answers
+        // 31 still needs time for its retries (analysis finding B-09).
+        deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
 
         int confirmSeconds = request.DefaultConfirmTimeoutSeconds;
         // A link may come from a web page: it always asks, at least with the default timeout (analysis finding H-02).
@@ -146,6 +156,8 @@ public sealed class SwitchOrchestrator
         }
 
         plan = applied.Plan;
+        ModeCheck modes = applied.UsedDatabaseModes ? await CheckDatabaseModesAsync(plan, cancellationToken) : ModeCheck.AsPlanned(plan);
+        plan = modes.Plan;
         long audioStarted = _time.GetTimestamp();
         AudioOutcome audio = await SwitchAudioAsync(profile.Audio, cancellationToken);
         if (audio != AudioOutcome.NotConfigured)
@@ -203,10 +215,12 @@ public sealed class SwitchOrchestrator
             }
         }
 
-        // Only now: a rejected switch must not have started programs or closed someone's work.
-        AppsOutcome apps = await RunAppsAsync(profile, cancellationToken);
+        // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
+        // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
+        Task<AppsOutcome> appsRun = StartApps(profile);
+        AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
 
-        SwitchOutcome outcome = plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
+        SwitchOutcome outcome = plan.ShouldRetryLater || modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
         return Finish(new SwitchResult
@@ -217,9 +231,141 @@ public sealed class SwitchOrchestrator
             LastNativeError = applied.LastNativeError,
             Audio = audio,
             Apps = apps,
-            Note = applied.UsedDatabaseModes ? SwitchNote.ModesFromDatabase : SwitchNote.None,
+            AppsCompletion = appsRun,
+            Note = modes.Note,
         }, started);
     }
+
+    /// <summary>
+    /// Dry run: plans against the live topology without touching anything. Needs no exclusive access, so it may run while
+    /// a switch runs (analysis finding B-13).
+    /// </summary>
+    public async Task<SwitchResult> CheckAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        long started = _time.GetTimestamp();
+        _log.Information("Checking profile {Profile} (dry run)", profile.Name);
+        DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+        TopologyPlan plan = _planner.Plan(profile, snapshot);
+        LogPlan(plan);
+        _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
+        return Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
+    }
+
+    /// <summary>
+    /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
+    /// The cancellation is requested before this method first yields.
+    /// </summary>
+    public Task CancelPendingAppsAsync()
+    {
+        PendingApps? pending;
+        lock (_appsLock)
+        {
+            pending = _pendingApps;
+            _pendingApps = null;
+        }
+
+        return pending is null ? Task.CompletedTask : EndAppsAsync(pending);
+    }
+
+    private async Task EndAppsAsync(PendingApps pending)
+    {
+        try
+        {
+            if (!pending.Run.IsCompleted)
+            {
+                _log.Information("Cancelling the apps of {Profile}", pending.ProfileName);
+                await pending.Cancellation.CancelAsync();
+            }
+
+            await pending.Run;
+        }
+        finally
+        {
+            pending.Cancellation.Dispose();
+        }
+    }
+
+    private Task<AppsOutcome> StartApps(Profile profile)
+    {
+        if (profile.Apps.Count == 0)
+        {
+            return SwitchResult.NoApps;
+        }
+
+        var cancellation = new CancellationTokenSource();
+        CancellationToken token = cancellation.Token;
+        Task<AppsOutcome> run = Task.Run(() => RunAppsAsync(profile, token), CancellationToken.None);
+        PendingApps? previous;
+        lock (_appsLock)
+        {
+            previous = _pendingApps;
+            _pendingApps = new PendingApps(profile.Name, run, cancellation);
+        }
+
+        if (previous is not null)
+        {
+            _ = EndAppsAsync(previous);
+        }
+
+        return run;
+    }
+
+    /// <summary>
+    /// With database modes Windows decides the modes and may even leave a display dark; the stored plan says nothing
+    /// about that. Compares a fresh snapshot with the plan (analysis finding B-11): dark displays count as missing,
+    /// the note only stays when a mode differs.
+    /// </summary>
+    private async Task<ModeCheck> CheckDatabaseModesAsync(TopologyPlan plan, CancellationToken cancellationToken)
+    {
+        DisplaySnapshot now;
+        try
+        {
+            now = await _display.QueryAsync(cancellationToken);
+        }
+        catch (Exception ex) when (IsDisplayApiFailure(ex))
+        {
+            _log.Warning(ex, "Displays could not be queried to check the database modes");
+            return new ModeCheck(plan, SwitchNote.ModesFromDatabase, DisplaysDark: false);
+        }
+
+        var dark = new List<PlannedDisplay>();
+        bool modesDiffer = false;
+        foreach (PlannedDisplay planned in plan.Resolved)
+        {
+            AttachedDisplay? live = now.Displays.FirstOrDefault(d => d.IsActive
+                && string.Equals(d.Identity.TargetDevicePath, planned.Target.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+            DisplayAssignment wanted = planned.Assignment;
+            if (live?.ActiveMode is not { } mode)
+            {
+                _log.Warning("Display {Display} stayed dark after applying with database modes", DisplayNames.Of(wanted));
+                dark.Add(planned);
+            }
+            else if (mode.Width != wanted.Width || mode.Height != wanted.Height || Math.Abs(Hertz(mode) - Hertz(wanted)) >= 0.5)
+            {
+                _log.Warning("Display {Display} runs {Width}x{Height} at {Hertz:0.##} Hz instead of {WantedWidth}x{WantedHeight} at {WantedHertz:0.##} Hz",
+                    DisplayNames.Of(wanted), mode.Width, mode.Height, Hertz(mode), wanted.Width, wanted.Height, Hertz(wanted));
+                modesDiffer = true;
+            }
+        }
+
+        if (dark.Count == 0)
+        {
+            _log.Information("Database modes checked: {Result}", modesDiffer ? "modes differ from the profile" : "as planned");
+            return new ModeCheck(plan, modesDiffer ? SwitchNote.ModesFromDatabase : SwitchNote.None, DisplaysDark: false);
+        }
+
+        TopologyPlan partial = plan with
+        {
+            Resolved = plan.Resolved.Except(dark).ToList(),
+            Missing = [.. plan.Missing, .. dark.Select(d => new MissingDisplay(d.Assignment, MissingReason.AttachedButUnavailable))],
+        };
+        return new ModeCheck(partial, SwitchNote.ModesFromDatabase, DisplaysDark: true);
+    }
+
+    private static double Hertz(DisplayAssignment mode) =>
+        mode.RefreshDenominator == 0 ? 0d : (double)mode.RefreshNumerator / mode.RefreshDenominator;
 
     /// <summary>
     /// FollowUp (PLAN 4.3): after a partial switch, a skipped optional display (spacedesk viewer) may appear later.
@@ -242,21 +388,22 @@ public sealed class SwitchOrchestrator
         LogPlan(plan);
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        ModeCheck modes = applied.Succeeded && applied.UsedDatabaseModes
+            ? await CheckDatabaseModesAsync(applied.Plan, cancellationToken)
+            : ModeCheck.AsPlanned(applied.Plan);
         SwitchOutcome outcome = !applied.Succeeded ? SwitchOutcome.Failed
-            : applied.Plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially
+            : modes.Plan.ShouldRetryLater || modes.DisplaysDark ? SwitchOutcome.AppliedPartially
             : SwitchOutcome.Applied;
         _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
 
         // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
-        SwitchNote note = applied.Succeeded
-            ? applied.UsedDatabaseModes ? SwitchNote.ModesFromDatabase : SwitchNote.None
-            : await RestoreAfterFailureAsync(snapshot, cancellationToken);
+        SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, cancellationToken);
 
         return Finish(new SwitchResult
         {
             Outcome = outcome,
-            Plan = applied.Plan,
+            Plan = modes.Plan,
             Attempts = applied.Attempts,
             LastNativeError = applied.LastNativeError,
             Message = applied.Message,
@@ -615,21 +762,29 @@ public sealed class SwitchOrchestrator
         }
     }
 
+    /// <summary>Runs after the switch result on its own cancellation; never throws.</summary>
     private async Task<AppsOutcome> RunAppsAsync(Profile profile, CancellationToken cancellationToken)
     {
-        IReadOnlyList<AppAction> apps = profile.Apps;
-        if (apps.Count == 0)
-        {
-            return AppsOutcome.NotConfigured;
-        }
-
-        // Wheel software and games want to see the device when they start; without it they start anyway.
         long startedAt = _time.GetTimestamp();
-        bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
-        AppsOutcome started = await RunAppActionsAsync(apps, cancellationToken);
-        AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
-        _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", profile.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
-        return outcome;
+        try
+        {
+            // Wheel software and games want to see the device when they start; without it they start anyway.
+            bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
+            AppsOutcome started = await RunAppActionsAsync(profile.Apps, cancellationToken);
+            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
+            _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", profile.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
+            return outcome;
+        }
+        catch (OperationCanceledException)
+        {
+            _log.Information("Apps for {Profile} cancelled after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(startedAt).TotalSeconds);
+            return AppsOutcome.Cancelled;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Apps for {Profile} failed", profile.Name);
+            return AppsOutcome.Incomplete;
+        }
     }
 
     private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
@@ -637,6 +792,7 @@ public sealed class SwitchOrchestrator
         bool complete = true;
         foreach (AppAction app in apps)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
                 bool running = _apps.IsRunning(app.Path);
@@ -1050,4 +1206,11 @@ public sealed class SwitchOrchestrator
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
 
     private sealed record DuckingRestore(int? Value, RememberedDucking? BeforeProfiles);
+
+    private sealed record PendingApps(string ProfileName, Task<AppsOutcome> Run, CancellationTokenSource Cancellation);
+
+    private sealed record ModeCheck(TopologyPlan Plan, SwitchNote Note, bool DisplaysDark)
+    {
+        public static ModeCheck AsPlanned(TopologyPlan plan) => new(plan, SwitchNote.None, DisplaysDark: false);
+    }
 }

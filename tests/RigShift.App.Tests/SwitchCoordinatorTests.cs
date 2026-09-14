@@ -101,5 +101,61 @@ public sealed class SwitchCoordinatorTests : IDisposable
         (await _host.Coordinator.SwitchAsync(Rig(), SwitchRequest.Default)).ShouldBeNull();
     }
 
+    [Fact]
+    public async Task Switch_WhileAppsWaitForDevice_IsNotBusy_AndCancelsTheWait()
+    {
+        var polling = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        _host.Usb.PresentDeviceIds().Returns(call =>
+        {
+            polling.TrySetResult();
+            _ = release.Wait(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+            return new HashSet<string>();
+        });
+        var appsCompleted = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _host.Coordinator.AppsCompleted += (_, record) => appsCompleted.TrySetResult(record);
+        bool busy = false;
+        _host.Coordinator.BusyRejected += (_, _) => busy = true;
+        Profile rig = Rig() with
+        {
+            Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }],
+            AppsWaitForUsbDeviceId = "vid_0eb7&pid_0020",
+            AppsWaitSeconds = 300,
+        };
+
+        SwitchResult? first = await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default);
+        first.ShouldNotBeNull().Apps.ShouldBe(AppsOutcome.Pending);
+        _host.Coordinator.IsSwitching.ShouldBeFalse();
+        await polling.Task;
+
+        SwitchResult? second = await _host.Coordinator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default);
+        release.Set();
+
+        second.ShouldNotBeNull();
+        busy.ShouldBeFalse();
+        SwitchRecord apps = await appsCompleted.Task;
+        apps.Apps.ShouldBe(AppsOutcome.Cancelled);
+        _host.Coordinator.History.Single(r => r.ProfileName == "Rig").Apps.ShouldBe(AppsOutcome.Cancelled);
+    }
+
+    [Fact]
+    public async Task Check_WhileSwitchRuns_IsNotBusy()
+    {
+        var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _host.Confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(answer.Task);
+        bool busy = false;
+        _host.Coordinator.BusyRejected += (_, _) => busy = true;
+
+        Task<SwitchResult?> running = _host.Coordinator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default);
+        SwitchResult? check = await _host.Coordinator.CheckAsync(Profile("Desk", DeskModes));
+
+        check.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.DryRun);
+        busy.ShouldBeFalse();
+        _host.Coordinator.IsSwitching.ShouldBeTrue();
+        answer.SetResult(ConfirmationResult.Confirmed);
+        (await running).ShouldNotBeNull();
+        _host.Coordinator.History.Count.ShouldBe(1);
+    }
+
     public void Dispose() => _host.Dispose();
 }

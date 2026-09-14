@@ -22,8 +22,16 @@ public sealed record SwitchResult
     /// <summary>Audio is judged separately: an audio problem never fails the display switch.</summary>
     public AudioOutcome Audio { get; init; } = AudioOutcome.NotConfigured;
 
-    /// <summary>Apps are judged separately too; they only run after a confirmed switch.</summary>
+    /// <summary>
+    /// Apps are judged separately too; they only run after a confirmed switch. <see cref="AppsOutcome.Pending"/> when they
+    /// run after the result – their outcome then comes with <see cref="AppsCompletion"/> (analysis finding B-03).
+    /// </summary>
     public AppsOutcome Apps { get; init; } = AppsOutcome.NotConfigured;
+
+    /// <summary>Completes with the final apps outcome; never faults. Already complete when no apps run.</summary>
+    public Task<AppsOutcome> AppsCompletion { get; init; } = NoApps;
+
+    internal static Task<AppsOutcome> NoApps { get; } = Task.FromResult(AppsOutcome.NotConfigured);
 }
 
 /// <summary>
@@ -59,6 +67,12 @@ public enum AppsOutcome
     /// <see cref="Incomplete"/>, because a missing device is the likely cause of an app failing then.
     /// </summary>
     DeviceMissing,
+
+    /// <summary>The apps still run (or wait for their device) after the switch result; the outcome follows.</summary>
+    Pending,
+
+    /// <summary>A newer switch or the app exiting cancelled the apps before they were done.</summary>
+    Cancelled,
 }
 
 public enum AudioOutcome

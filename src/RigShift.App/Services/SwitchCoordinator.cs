@@ -44,6 +44,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     public event EventHandler? BusyRejected;
 
+    /// <summary>
+    /// The apps of a switch ended after its result: the history record, now with the final apps outcome (analysis
+    /// finding B-03). Raised on the context that started the switch.
+    /// </summary>
+    public event EventHandler<SwitchRecord>? AppsCompleted;
+
     public ObservableCollection<SwitchRecord> History { get; } = [];
 
     [ObservableProperty]
@@ -65,12 +71,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public async Task<bool> StopAsync(TimeSpan timeout)
     {
         await _stopping.CancelAsync();
-        if (_current is not { IsCompleted: false } current)
+        Task apps = _orchestrator.CancelPendingAppsAsync();
+        Task current = _current is { IsCompleted: false } running ? Task.WhenAll(running, apps) : apps;
+        if (current.IsCompleted)
         {
             return true;
         }
 
-        _log.Information("Waiting up to {Seconds} s for the running switch to end", timeout.TotalSeconds);
+        _log.Information("Waiting up to {Seconds} s for the running switch or apps to end", timeout.TotalSeconds);
         Task finished = await Task.WhenAny(current, Task.Delay(timeout, _time));
         return finished == current;
     }
@@ -94,7 +102,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public Task<SwitchResult?> CheckAsync(Profile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        return RunAsync(profile, new SwitchRequest { DryRun = true }, rethrow: false);
+        return CheckCoreAsync(profile, rethrow: false, CancellationToken.None);
     }
 
     /// <summary>Command line: the caller needs the exception to report a failure instead of "busy".</summary>
@@ -105,9 +113,46 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         return RunAsync(profile, request, rethrow: true, cancellationToken);
     }
 
+    /// <summary>
+    /// A dry run only reads: it takes neither the gate nor <see cref="IsSwitching"/>, so a hotkey during "Check" still
+    /// switches (analysis finding B-13).
+    /// </summary>
+    private async Task<SwitchResult?> CheckCoreAsync(Profile profile, bool rethrow, CancellationToken cancellationToken)
+    {
+        if (_stopping.IsCancellationRequested)
+        {
+            return null;
+        }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Token, cancellationToken);
+        try
+        {
+            return await Task.Run(() => _orchestrator.CheckAsync(profile, linked.Token), CancellationToken.None);
+        }
+        catch (OperationCanceledException) when (linked.IsCancellationRequested)
+        {
+            _log.Information("Check of {Profile} cancelled", profile.Name);
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "Check of {Profile} threw", profile.Name);
+            if (rethrow)
+            {
+                throw;
+            }
+
+            return null;
+        }
+    }
+
     private async Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken = default)
     {
-        bool dryRun = request.DryRun;
+        if (request.DryRun)
+        {
+            return await CheckCoreAsync(profile, rethrow, cancellationToken);
+        }
+
         if (_stopping.IsCancellationRequested)
         {
             _log.Information("Switch to {Profile} ignored, RigShift is exiting", profile.Name);
@@ -131,10 +176,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _current = running;
             SwitchResult result = await running;
 
-            if (!dryRun)
+            RememberCatchUp(profile, result);
+            SwitchRecord record = ToRecord(started, profile, result);
+            await CompleteAsync(record);
+            if (result.Apps == AppsOutcome.Pending)
             {
-                RememberCatchUp(profile, result);
-                Complete(ToRecord(started, profile, result));
+                _ = FollowAppsAsync(record, result.AppsCompletion);
             }
 
             return result;
@@ -148,11 +195,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         {
             // The orchestrator reports expected failures as results; anything thrown is a bug or an OS surprise.
             _log.Error(ex, "Switch to {Profile} threw", profile.Name);
-            if (!dryRun)
-            {
-                Complete(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 0,
-                    _time.GetLocalNow() - started, null, ex.Message, []));
-            }
+            await CompleteAsync(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 0,
+                _time.GetLocalNow() - started, null, ex.Message, []));
 
             if (rethrow)
             {
@@ -197,7 +241,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             if (result is not null)
             {
                 RememberCatchUp(pending.Profile, result);
-                Complete(ToRecord(started, pending.Profile, result));
+                await CompleteAsync(ToRecord(started, pending.Profile, result));
             }
             else if (_catalog.ActiveProfile is { } active && active.Id != pending.Profile.Id)
             {
@@ -232,7 +276,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment)).ToList(),
             profile.AppsWaitForUsbDeviceName ?? profile.AppsWaitForUsbDeviceId, Profile.AppsDeviceWaitSeconds, result.Note);
 
-    private void Complete(SwitchRecord record)
+    private async Task CompleteAsync(SwitchRecord record)
     {
         History.Insert(0, record);
         while (History.Count > HistoryLength)
@@ -240,7 +284,36 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             History.RemoveAt(History.Count - 1);
         }
 
+        // Awaited: whoever gets the result next (automation, tray) must see the profile that is active now (C-06, A-07).
+        try
+        {
+            await _catalog.RefreshActiveAsync(CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "The active profile could not be refreshed after the switch to {Profile}", record.ProfileName);
+        }
+
         SwitchCompleted?.Invoke(this, record);
-        _ = _catalog.RefreshActiveAsync(CancellationToken.None);
+    }
+
+    private async Task FollowAppsAsync(SwitchRecord record, Task<AppsOutcome> apps)
+    {
+        try
+        {
+            AppsOutcome outcome = await apps;
+            SwitchRecord updated = record with { Apps = outcome };
+            int index = History.IndexOf(record);
+            if (index >= 0)
+            {
+                History[index] = updated;
+            }
+
+            AppsCompleted?.Invoke(this, updated);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "Reporting the apps of {Profile} failed", record.ProfileName);
+        }
     }
 }

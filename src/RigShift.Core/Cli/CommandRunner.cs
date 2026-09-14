@@ -211,7 +211,11 @@ public sealed class CommandRunner
                 text.Append(CultureInfo.InvariantCulture, $", audio {result.Audio}");
             }
 
-            if (result.Apps != AppsOutcome.NotConfigured)
+            if (result.Apps == AppsOutcome.Pending)
+            {
+                text.Append(", apps start in the background");
+            }
+            else if (result.Apps != AppsOutcome.NotConfigured)
             {
                 text.Append(CultureInfo.InvariantCulture, $", apps {result.Apps}");
             }

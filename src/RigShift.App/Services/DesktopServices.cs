@@ -139,6 +139,13 @@ public sealed class TrayIconService : IDisposable
         catalog.Changed += (_, _) => Refresh();
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
         coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));
+        coordinator.AppsCompleted += (_, record) =>
+        {
+            if (SwitchMessages.ForAppsNotification(record) is { } apps)
+            {
+                Notify(apps);
+            }
+        };
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
         _updates = updates;
         updates.UpdateReady += (_, version) =>

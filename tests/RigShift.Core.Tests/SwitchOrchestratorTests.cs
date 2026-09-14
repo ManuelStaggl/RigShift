@@ -48,7 +48,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_StoredModesFail_FallsBackToDatabaseModes()
     {
-        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [87, 0]);
+        var display = new FakeDisplayConfigurator([DeskActive(), RigActive()], applyResults: [87, 0]);
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
@@ -130,6 +130,20 @@ public sealed class SwitchOrchestratorTests
         result.LastNativeError.ShouldBe(31);
         _time.Elapsed.ShouldBe(options.TargetWaitBudget);
         result.Attempts.ShouldBe(42);
+    }
+
+    [Fact]
+    public async Task Switch_DisplayWakesLate_ThenError31_HasFreshRetryBudget()
+    {
+        // The ultrawide sleeps for 19 of the 20 s, then answers 31 twice more: the retries need their own budget.
+        var display = new FakeDisplayConfigurator(
+            [.. Enumerable.Repeat(DeskActive(ultrawideAvailable: false), 19), DeskActive()], applyResults: [31, 31, 31, 31, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Attempts.ShouldBe(5);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(21));
     }
 
     [Fact]
@@ -302,13 +316,40 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_DatabaseModesWork_ReportsIt()
+    public async Task Switch_DatabaseModesDiffer_ReportsIt()
     {
-        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [87, 0]);
+        var display = new FakeDisplayConfigurator([DeskActive(), RigActive(Mode(Ultrawide, 5120, 1440, 120, primary: true))], applyResults: [87, 0]);
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
         result.Note.ShouldBe(SwitchNote.ModesFromDatabase);
+    }
+
+    [Fact]
+    public async Task Switch_DatabaseModesAsPlanned_HasNoNote()
+    {
+        var display = new FakeDisplayConfigurator([DeskActive(), RigActive()], applyResults: [87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Note.ShouldBe(SwitchNote.None);
+    }
+
+    [Fact]
+    public async Task Switch_DatabaseModesLeaveDisplayDark_ReportsAppliedPartially()
+    {
+        DisplaySnapshot tabletDark = Snapshot(
+            Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), tabletDark], applyResults: [87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.AppliedPartially);
+        result.Note.ShouldBe(SwitchNote.ModesFromDatabase);
+        result.Plan.Resolved.Single().Target.Identity.ShouldBe(Ultrawide);
+        result.Plan.Missing.Single().Assignment.Identity.ShouldBe(Tablet);
     }
 
     [Fact]
@@ -539,7 +580,7 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         Received.InOrder(() =>
         {
             _confirmation.ConfirmAsync(rig, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
@@ -565,7 +606,7 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
         await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
         _time.Elapsed.ShouldBe(TimeSpan.Zero);
@@ -584,7 +625,8 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        result.Apps.ShouldBe(AppsOutcome.Incomplete);
+        result.Apps.ShouldBe(AppsOutcome.Pending);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Incomplete);
         _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
     }
 
@@ -783,7 +825,7 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
     }
 
     [Fact]
@@ -802,7 +844,7 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase(), SwitchRequest.Default, Ct);
 
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
         _time.Elapsed.ShouldBe(TimeSpan.Zero);
     }
@@ -814,7 +856,7 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase(), SwitchRequest.Default, Ct);
 
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
         _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
     }
@@ -831,7 +873,7 @@ public sealed class SwitchOrchestratorTests
             RigWaitingForWheelbase() with { AppsWaitSeconds = savedSeconds }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        result.Apps.ShouldBe(AppsOutcome.DeviceMissing);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.DeviceMissing);
         _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
         _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(Profiles.Profile.AppsDeviceWaitSeconds));
     }
@@ -843,8 +885,33 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
-        result.Apps.ShouldBe(AppsOutcome.Applied);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         _usbDevices.DidNotReceive().PresentDeviceIds();
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitForDevice_NewSwitchCancelsWait()
+    {
+        var polling = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        _usbDevices.PresentDeviceIds().Returns(call =>
+        {
+            polling.TrySetResult();
+            _ = release.Wait(TimeSpan.FromSeconds(30), Ct);
+            return Present();
+        });
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        SwitchResult first = await orchestrator.SwitchAsync(RigWaitingForWheelbase() with { AppsWaitSeconds = 300 }, SwitchRequest.Default, Ct);
+        first.Apps.ShouldBe(AppsOutcome.Pending);
+        await polling.Task;
+
+        SwitchResult second = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        release.Set();
+
+        second.Outcome.ShouldBe(SwitchOutcome.Applied);
+        (await first.AppsCompletion).ShouldBe(AppsOutcome.Cancelled);
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
     }
 
     [Fact]
@@ -1007,6 +1074,11 @@ public sealed class SwitchOrchestratorTests
     private const string Wheelbase = "VID_0EB7&PID_0020";
 
     private static HashSet<string> Present(params string[] ids) => new(ids, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The rig as Windows reports it after the switch, optionally with another ultrawide mode.</summary>
+    private static DisplaySnapshot RigActive(DisplayAssignment? ultrawideMode = null) => Snapshot(
+        Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight),
+        Attached(Ultrawide, activeMode: ultrawideMode ?? UltrawideMode), Attached(Tablet, activeMode: TabletMode));
 
     private static Profile RigWaitingForWheelbase() => Rig() with
     {

@@ -35,6 +35,22 @@ All notable changes to this project are documented here. The format follows
 
 - If the settings cannot be saved while pausing or resuming the automation, the automation page shows an error and the
   switch returns to the saved state instead of silently showing the wrong one.
+### Changed
+
+- Apps of a profile now start after the switch has finished. While they wait for their USB device, hotkeys, automation
+  and other switches work, and a new switch cancels the wait. If something goes wrong with the apps, a separate
+  notification says so.
+- "Check" on a profile no longer blocks switching while it runs.
+
+### Fixed
+
+- A display that wakes up late and then answers "not ready" gets the full retry time again instead of failing.
+- Two identical monitors: if one is unplugged and the other moved to a different port, RigShift no longer guesses which
+  one it is; the switch is blocked with a hint.
+- A monitor that Windows lists twice (an old and a current entry) is matched to the entry that is ready.
+- When Windows had to choose the display modes, RigShift checks the result: a display that stayed dark makes the switch
+  count as partial, and the note about Windows' modes only appears when a mode really differs.
+- The active profile is up to date as soon as a switch reports its result.
 
 ## [1.3.1] - 2026-09-14
 
