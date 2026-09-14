@@ -6,6 +6,34 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-09-14
+
+### Changed
+
+- A required display that is not connected (switched off, or logged off from the graphics card in standby) no longer
+  blocks the switch at once: RigShift asks you to switch it on and waits up to 30 seconds for it.
+  [Monitors in standby](docs/monitor-standby.md) explains how to keep a monitor connected while it sleeps.
+- HDR is switched only once the displays have settled after the switch, and RigShift no longer waits forever for a
+  graphics driver that does not answer: after 10 seconds the switch goes on without HDR. The profile editor recommends
+  trying HDR in the Windows settings first – on a test PC, switching HDR over HDMI froze the graphics driver, also
+  without RigShift.
+- A switch where only an optional display (for example a spacedesk tablet) is missing counts as switched, not as
+  "partially switched"; the notification says the display follows once it is connected.
+- The profile editor's "Wait for device" list and the **Automation** page offer every device RigShift knows – from
+  rules, profiles and device names – also while it is not connected.
+- The **Profiles** page shows which apps a profile starts or closes and which device they wait for.
+- The profile editor offers the refresh rates a display reported when it was last on, also while it is off.
+- With "Confirm after switching" off, the seconds stay visible (greyed out) in **Settings**, and the profile editor
+  explains why "Switch without asking" is greyed out.
+- The diagnostic info shows displays by model and a short id instead of full device paths, and error codes only for
+  switches that failed.
+
+### Fixed
+
+- Number fields (wait times, confirmation seconds) were too narrow: their buttons covered the number.
+- A "not possible" notification named optional displays too; it now names only the displays that blocked the switch.
+- Exiting RigShift during the countdown is logged as cancelled instead of timed out.
+
 ## [1.4.0] - 2026-09-14
 
 ### Added
