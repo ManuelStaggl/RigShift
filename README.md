@@ -169,6 +169,11 @@ Issues and pull requests are welcome – see [CONTRIBUTING.md](CONTRIBUTING.md).
 **About & help → Copy diagnostic info** and attach the log from `%AppData%\RigShift\logs` (both contain display device
 paths, nothing else personal).
 
+## Support
+
+RigShift is free and stays free. If it saves you time on the way into the rig and you'd like to say thanks, you can
+[buy me a coffee on Ko-fi](https://ko-fi.com/filthyjoker) – entirely optional.
+
 ## License
 
 Code: [MIT](LICENSE) © 2026 Manuel Staggl.
