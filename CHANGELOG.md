@@ -28,6 +28,7 @@ All notable changes to this project are documented here. The format follows
 - Deleting an automation rule asks first, in the same way; "Switch without confirmation" on a rule explains that nothing
   is reverted automatically if a display stays dark.
 - Changing the language also updates the automation page's lists and an open profile editor without a restart.
+- "Refresh devices" on an automation rule no longer empties the chosen device of every rule.
 - The main buttons have access keys (Alt + underlined letter), e.g. Save in the profile editor and Keep/Revert after a
   switch.
 - Automation rules no longer have their own on/off switch – pause the automation or delete the rule instead. A rule that

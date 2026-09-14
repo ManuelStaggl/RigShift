@@ -290,11 +290,12 @@ public sealed partial class AutomationViewModel : ObservableObject
     [RelayCommand]
     private void RefreshDevices() => Quietly(() =>
     {
+        // Ids are read before the list is refilled: clearing it makes each ComboBox write null into its card's device.
         List<AutomationRule> rules = Rules.Select(r => r.ToRule()).ToList();
         FillDevices(rules);
-        foreach (RuleCard card in Rules)
+        for (int i = 0; i < Rules.Count; i++)
         {
-            card.SelectedDevice = DeviceChoiceFor(card.DeviceId);
+            Rules[i].SelectedDevice = DeviceChoiceFor(UsbDeviceIds.Normalize(rules[i].UsbDeviceId));
         }
 
         RefreshPowerWarnings();
