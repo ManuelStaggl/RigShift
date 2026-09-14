@@ -30,17 +30,28 @@
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" />
-            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Settings_ConfirmTimeoutHint}" TextWrapping="Wrap" />
+            <TextBlock
+              AutomationProperties.LiveSetting="Polite"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding ConfirmHint}"
+              TextWrapping="Wrap" />
           </StackPanel>
         </ui:CardControl.Header>
-        <ui:NumberBox
-          Width="140"
-          AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}"
-          MaxDecimalPlaces="0"
-          Maximum="120"
-          Minimum="0"
-          SmallChange="1"
-          Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
+        <StackPanel Orientation="Horizontal">
+          <ui:NumberBox
+            Width="140"
+            Margin="0,0,16,0"
+            VerticalAlignment="Center"
+            AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"
+            MaxDecimalPlaces="0"
+            Maximum="120"
+            Minimum="1"
+            SmallChange="1"
+            ToolTip="{loc:Tr Settings_ConfirmSeconds}"
+            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}"
+            Visibility="{Binding ConfirmEnabled, Converter={StaticResource BoolToVisibility}}" />
+          <ui:ToggleSwitch VerticalAlignment="Center" AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" />
+        </StackPanel>
       </ui:CardControl>
 
       <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Language}" Icon="{ui:SymbolIcon Info24}">

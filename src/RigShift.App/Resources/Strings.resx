@@ -59,8 +59,10 @@
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
   <data name="Settings_ApplyOnStartup" xml:space="preserve"><value>Switch to the default profile when RigShift starts</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
-  <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Time to confirm a switch (seconds)</value></data>
-  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation the previous settings come back. 0 switches without asking.</value></data>
+  <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
+  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation within these seconds, the previous settings come back.</value></data>
+  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Switches without asking. If a display stays dark, nothing is reverted automatically. Profiles with their own confirmation time keep it.</value></data>
+  <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Same as Windows</value></data>
   <data name="Settings_Folders" xml:space="preserve"><value>Folders</value></data>

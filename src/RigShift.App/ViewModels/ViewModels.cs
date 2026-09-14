@@ -265,6 +265,8 @@ public sealed record Choice(string? Key, string Name)
 
 public sealed partial class SettingsViewModel : ObservableObject
 {
+    private const int DefaultConfirmSeconds = 15;
+
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly AppPaths _paths;
@@ -303,8 +305,18 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool StartWithWindows { get; set; }
 
+    /// <summary>
+    /// Switch "confirm after switching". Stored only as <see cref="AppSettings.ConfirmTimeoutSeconds"/>: off is 0, on
+    /// writes the seconds shown below, so there is no second value that could contradict it.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ConfirmHint))]
+    public partial bool ConfirmEnabled { get; set; }
+
     [ObservableProperty]
     public partial double? ConfirmTimeoutSeconds { get; set; }
+
+    public string ConfirmHint => Loc.Instance[ConfirmEnabled ? "Settings_ConfirmTimeoutHint" : "Settings_ConfirmOffHint"];
 
     [ObservableProperty]
     public partial Choice? SelectedLanguage { get; set; }
@@ -332,7 +344,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             SelectedLanguage = LanguageChoices.FirstOrDefault(c => c.Key == current.Language) ?? LanguageChoices[0];
 
             ApplyDefaultOnStartup = current.ApplyDefaultProfileOnStartup;
-            ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds;
+            ConfirmEnabled = current.ConfirmTimeoutSeconds > 0;
+            ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             StartWithWindows = _settings.Autostart.IsEnabled;
         }
@@ -420,13 +433,25 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
-    partial void OnConfirmTimeoutSecondsChanged(double? value)
+    partial void OnConfirmEnabledChanged(bool value)
     {
-        if (!_loading && value is { } seconds)
+        if (!_loading)
         {
-            Persist(s => s with { ConfirmTimeoutSeconds = (int)Math.Clamp(Math.Round(seconds), 0, 120) });
+            _log.Information("Confirmation after switching turned {State}", value ? "on" : "off");
+            Persist(s => s with { ConfirmTimeoutSeconds = value ? EnabledConfirmSeconds() : 0 });
         }
     }
+
+    partial void OnConfirmTimeoutSecondsChanged(double? value)
+    {
+        if (!_loading && ConfirmEnabled && value is not null)
+        {
+            Persist(s => s with { ConfirmTimeoutSeconds = EnabledConfirmSeconds() });
+        }
+    }
+
+    /// <summary>While switched on, 0 would silently mean "off" again, so at least one second.</summary>
+    private int EnabledConfirmSeconds() => (int)Math.Clamp(Math.Round(ConfirmTimeoutSeconds ?? DefaultConfirmSeconds), 1, 120);
 
     partial void OnSelectedLanguageChanged(Choice? value)
     {
