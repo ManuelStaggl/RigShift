@@ -41,6 +41,8 @@ Beyond that, RigShift is designed to be boring in the good way:
 - **Apps per profile:** start SimHub or Crew Chief and close Discord once the switch is confirmed.
 - **Your names for monitors** ("Left · CM27X3") everywhere, and **Identify** shows which screen is which.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
+- **Automation:** start a game and RigShift switches to your rig; quit it and it switches back. Templates for
+  LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2 and F1, or pick any EXE.
 - **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
 - **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
   or shortcut.
@@ -72,7 +74,7 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 
 ## Planned features
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
+See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: USB device triggers (wheelbase, headset dongle), race mode (no notifications,
 no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
 
 ## Command line

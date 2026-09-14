@@ -21,7 +21,7 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - 🟢 Recording device and separate communications role per profile (1.0)
 - 🟢 Volume per profile (playback and recording) (1.3.0)
 - 🟢 Launch / stop apps per profile (SimHub, Crew Chief, …) (1.3.0)
-- ⚪ Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1)
+- 🟢 Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1) (1.3.0)
 
 ## v1.2 – automation and comfort
 
