@@ -13,6 +13,11 @@ All notable changes to this project are documented here. The format follows
 - Apps per profile: start or stop programs (for example SimHub or Crew Chief) in a fixed order once the switch is
   confirmed, with an optional wait after each one. Programs that already run are not started twice.
 
+### Fixed
+
+- Long display positions in the profile editor are no longer cut off.
+- A hand-written profile without rotation, audio section or device names now loads with sensible defaults.
+
 ## [1.2.0] - 2026-09-14
 
 ### Added

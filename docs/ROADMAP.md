@@ -1,6 +1,6 @@
 # Roadmap
 
-Status legend: 🟢 done · 🟡 in progress · ⚪ planned
+Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 
 ## v1.0 – replace the script, small and stable
 
@@ -18,10 +18,10 @@ Status legend: 🟢 done · 🟡 in progress · ⚪ planned
 
 - 🟢 Global hotkeys per profile (1.2.0)
 - 🟢 `rigshift://apply/<name>` URI scheme (1.2.0)
-- Recording device and separate communications role per profile
-- Volume per profile
-- Launch / stop apps per profile (SimHub, Crew Chief, …)
-- Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1)
+- 🟢 Recording device and separate communications role per profile (1.0)
+- 🟡 Volume per profile (playback and recording)
+- 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …)
+- ⚪ Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1)
 
 ## v1.2 – automation and comfort
 

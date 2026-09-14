@@ -159,7 +159,7 @@
                   </Grid.ColumnDefinitions>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
-                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModeText}" />
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModeText}" TextWrapping="Wrap" />
                   </StackPanel>
                   <RadioButton
                     Grid.Column="1"
@@ -220,6 +220,16 @@
                   Margin="0,6,0,4"
                   IsEnabled="{Binding HasDevice}"
                   Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
+                  <Grid.Resources>
+                    <!-- WPF-UI draws a disabled slider like an enabled one; dim it so "off" is visible. -->
+                    <Style BasedOn="{StaticResource {x:Type Slider}}" TargetType="Slider">
+                      <Style.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                          <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Grid.Resources>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -231,6 +241,7 @@
                     Content="{loc:Tr Audio_SetVolume}"
                     IsChecked="{Binding SetVolume}" />
                   <Slider
+                    x:Name="VolumeSlider"
                     Grid.Column="1"
                     Margin="12,0,0,0"
                     VerticalAlignment="Center"
@@ -249,7 +260,17 @@
                     VerticalAlignment="Center"
                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                     Text="{Binding VolumeText}"
-                    TextAlignment="Right" />
+                    TextAlignment="Right">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsEnabled, ElementName=VolumeSlider}" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
                 </Grid>
               </Grid>
             </DataTemplate>
