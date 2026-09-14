@@ -38,7 +38,6 @@
             <ui:Card Margin="0,0,0,8" Padding="16,12">
               <Grid>
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -52,7 +51,6 @@
                 <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
                 <StackPanel
                   Grid.Row="3"
-                  Grid.Column="1"
                   Grid.ColumnSpan="2"
                   Margin="0,4,0,0"
                   Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
@@ -70,19 +68,10 @@
                     Icon="{ui:SymbolIcon Open24}" />
                 </StackPanel>
 
-                <ui:ToggleSwitch
-                  Grid.Row="1"
-                  Margin="0,0,16,0"
-                  VerticalAlignment="Center"
-                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
-                  AutomationProperties.Name="{loc:Tr Automation_Enabled}"
-                  IsChecked="{Binding IsEnabled}"
-                  ToolTip="{loc:Tr Automation_Enabled}" />
-
                 <!-- Line one: the device, full width so its name stays readable. Line two wraps: profile, end action, delay,
                      confirmation (analysis finding I-03). -->
-                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" TextWrapping="Wrap" />
-                <Grid Grid.Row="1" Grid.Column="1" Margin="0,4,0,0">
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" TextWrapping="Wrap" />
+                <Grid Grid.Row="1" Margin="0,4,0,0">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -105,7 +94,7 @@
 
                 <ui:Button
                   Grid.Row="1"
-                  Grid.Column="2"
+                  Grid.Column="1"
                   Margin="16,4,0,0"
                   VerticalAlignment="Stretch"
                   AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
@@ -115,7 +104,7 @@
                   Icon="{ui:SymbolIcon Delete24}"
                   ToolTip="{loc:Tr Automation_Delete}" />
 
-                <WrapPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
+                <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0">
                   <StackPanel MinWidth="200" Margin="0,0,24,8">
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
                     <ComboBox

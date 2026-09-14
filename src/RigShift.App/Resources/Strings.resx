@@ -217,7 +217,6 @@
   <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>No rules yet. Add a rule, pick a USB device and the profile it should switch to.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Create a profile first – rules switch to profiles.</value></data>
-  <data name="Automation_Enabled" xml:space="preserve"><value>Rule on</value></data>
   <data name="Automation_Profile" xml:space="preserve"><value>switch to</value></data>
   <data name="Automation_ExitStay" xml:space="preserve"><value>Stay in the profile</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Switch back to the previous profile</value></data>

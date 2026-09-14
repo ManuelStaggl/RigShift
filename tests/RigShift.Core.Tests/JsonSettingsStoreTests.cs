@@ -45,7 +45,6 @@ public sealed class JsonSettingsStoreTests : IDisposable
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = Guid.NewGuid(),
             SkipConfirmation = true,
-            IsEnabled = false,
             ExitDelaySeconds = 30,
         };
 
@@ -54,7 +53,9 @@ public sealed class JsonSettingsStoreTests : IDisposable
 
         loaded.AutomationPaused.ShouldBeTrue();
         loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(rule);
-        (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldContain("\"switchTo\"", Case.Insensitive);
+        string json = await System.IO.File.ReadAllTextAsync(File, Ct);
+        json.ShouldContain("\"switchTo\"", Case.Insensitive);
+        json.ShouldNotContain("isEnabled", Case.Insensitive);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task Load_RuleWithoutEnabledKey_IsEnabled()
+    public async Task Load_RuleWithoutEnabledKey_IsKept()
     {
         Directory.CreateDirectory(_directory);
         await System.IO.File.WriteAllTextAsync(File, """{ "automationRules": [ { "usbDeviceId": "VID_0EB7&PID_0020", "onExit": "SwitchBack" } ] }""", Ct);
@@ -78,9 +79,34 @@ public sealed class JsonSettingsStoreTests : IDisposable
         AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
 
         AutomationRule rule = settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
-        rule.IsEnabled.ShouldBeTrue();
         rule.OnExit.ShouldBe(ExitAction.SwitchBack);
+        rule.LegacyIsEnabled.ShouldBeNull();
         settings.AutomationPaused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Load_DisabledRuleFromOldVersion_IsDroppedAndEnabledRuleKept()
+    {
+        // 1.3.x wrote "isEnabled"; a rule switched off there must not come back on and switch unexpectedly (finding O-07).
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """
+            {
+              "automationRules": [
+                { "usbDeviceId": "VID_0EB7&PID_0020", "isEnabled": false },
+                { "usbDeviceId": "VID_046D&PID_C24F", "isEnabled": true }
+              ]
+            }
+            """, Ct);
+        var store = new JsonSettingsStore(File, Logger.None);
+
+        AppSettings settings = await store.LoadAsync(Ct);
+
+        AutomationRule kept = settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
+        kept.UsbDeviceId.ShouldBe("VID_046D&PID_C24F");
+        kept.LegacyIsEnabled.ShouldBeNull();
+
+        await store.SaveAsync(settings, Ct);
+        (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldNotContain("isEnabled", Case.Insensitive);
     }
 
     [Fact]

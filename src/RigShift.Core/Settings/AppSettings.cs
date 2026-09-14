@@ -82,13 +82,42 @@ public sealed class JsonSettingsStore
         {
             await using FileStream stream = File.OpenRead(_file);
             AppSettings? settings = await JsonSerializer.DeserializeAsync(stream, SettingsJsonContext.Default.AppSettings, cancellationToken);
-            return settings ?? new AppSettings();
+            return settings is null ? new AppSettings() : DropDisabledRules(settings);
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
             _log.Warning(ex, "Settings file {File} could not be read, using defaults", _file);
             return new AppSettings();
         }
+    }
+
+    /// <summary>
+    /// Rules have no switch of their own any more (analysis finding O-07). A rule switched off in 1.3.x would start switching
+    /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file.
+    /// </summary>
+    private AppSettings DropDisabledRules(AppSettings settings)
+    {
+        if (settings.AutomationRules is not { } rules || rules.All(r => r.LegacyIsEnabled is null))
+        {
+            return settings;
+        }
+
+        var kept = new List<AutomationRule>(rules.Count);
+        foreach (AutomationRule rule in rules)
+        {
+            if (rule.LegacyIsEnabled == false)
+            {
+                _log.Warning(
+                    "Automation rule {Rule} for {Device} was switched off in an earlier version and is removed, because rules no longer have their own switch",
+                    rule.Id,
+                    rule.UsbDeviceName ?? rule.UsbDeviceId);
+                continue;
+            }
+
+            kept.Add(rule with { LegacyIsEnabled = null });
+        }
+
+        return settings with { AutomationRules = kept };
     }
 
     public async Task SaveAsync(AppSettings settings, CancellationToken cancellationToken)

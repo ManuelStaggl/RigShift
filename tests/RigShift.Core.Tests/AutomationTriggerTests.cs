@@ -15,13 +15,12 @@ public sealed class AutomationTriggerTests
     private readonly AutomationTrigger _trigger = new();
     private TimeSpan _now = TimeSpan.FromMinutes(5);
 
-    private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool enabled = true, bool skip = false) => new()
+    private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool skip = false) => new()
     {
         UsbDeviceId = Wheelbase,
         ProfileId = Rig,
         OnExit = onExit,
         ExitProfileId = exitProfile,
-        IsEnabled = enabled,
         SkipConfirmation = skip,
     };
 
@@ -123,22 +122,6 @@ public sealed class AutomationTriggerTests
 
         evaluation.Actions.ShouldBeEmpty();
         evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.NoPreviousProfile);
-    }
-
-    [Fact]
-    public void RuleDisabledWhileRunning_NoSwitchBack()
-    {
-        AutomationRule rule = WheelbaseRule();
-        Poll(rule, Desk);
-        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
-        AutomationRule disabled = rule with { IsEnabled = false };
-
-        Poll(disabled, Rig).ShouldBeEmpty();
-        _now += AutomationTrigger.ExitDelayOf(rule);
-        TriggerEvaluation evaluation = Evaluate([disabled], Rig);
-
-        evaluation.Actions.ShouldBeEmpty();
-        evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.RuleDisabled);
     }
 
     [Fact]
@@ -259,16 +242,6 @@ public sealed class AutomationTriggerTests
         Poll(rule, Desk);
         Poll(rule, Desk, Wheelbase);
 
-        GoneLongEnough(rule, Rig).ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void DisabledRule_DoesNothing()
-    {
-        AutomationRule rule = WheelbaseRule(enabled: false);
-        Poll(rule, Desk);
-
-        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
         GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
 

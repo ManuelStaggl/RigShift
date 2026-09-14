@@ -217,7 +217,6 @@
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>
-  <data name="Automation_Enabled" xml:space="preserve"><value>Regel ein</value></data>
   <data name="Automation_Profile" xml:space="preserve"><value>umschalten auf</value></data>
   <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>

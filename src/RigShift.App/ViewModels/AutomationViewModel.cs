@@ -310,7 +310,6 @@ public sealed partial class RuleCard : ObservableObject
 
         _owner = owner;
         Id = rule.Id;
-        IsEnabled = rule.IsEnabled;
         SelectedDevice = owner.DeviceChoiceFor(UsbDeviceIds.Normalize(rule.UsbDeviceId));
         SelectedProfile = owner.ProfileChoiceFor(rule.ProfileId);
         SelectedExit = owner.ExitChoiceFor(rule);
@@ -323,9 +322,6 @@ public sealed partial class RuleCard : ObservableObject
     public AutomationViewModel Owner => _owner;
 
     internal string? DeviceId => SelectedDevice?.Key;
-
-    [ObservableProperty]
-    public partial bool IsEnabled { get; set; }
 
     [ObservableProperty]
     public partial Choice? SelectedDevice { get; set; }
@@ -354,7 +350,6 @@ public sealed partial class RuleCard : ObservableObject
         return new AutomationRule
         {
             Id = Id,
-            IsEnabled = IsEnabled,
             // An empty id keeps a rule without a chosen device; it watches nothing until one is picked.
             UsbDeviceId = DeviceId ?? string.Empty,
             UsbDeviceName = _owner.DeviceNameFor(DeviceId),
@@ -367,8 +362,6 @@ public sealed partial class RuleCard : ObservableObject
                 : AutomationRule.DefaultExitDelaySeconds,
         };
     }
-
-    partial void OnIsEnabledChanged(bool value) => _owner.OnCardChanged();
 
     partial void OnSelectedDeviceChanged(Choice? value)
     {

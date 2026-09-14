@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RigShift.Core.Automation;
 
 /// <summary>What a rule does once its device is gone (docs/PLAN.md, section 6).</summary>
@@ -22,10 +24,12 @@ public sealed record AutomationRule
     public Guid Id { get; init; } = Guid.NewGuid();
 
     /// <summary>
-    /// A regular setter on purpose: the JSON source generator keeps the initializer only for settable properties, and a
-    /// rule written without the key must stay on.
+    /// The per-rule switch of 1.3.x, read only so that a rule switched off there is dropped on load instead of coming back
+    /// on (analysis finding O-07); never written.
     /// </summary>
-    public bool IsEnabled { get; set; } = true;
+    [JsonPropertyName("isEnabled")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? LegacyIsEnabled { get; init; }
 
     /// <summary>USB device as <c>VID_xxxx&amp;PID_xxxx</c>; empty until a device is picked.</summary>
     public string? UsbDeviceId { get; init; }

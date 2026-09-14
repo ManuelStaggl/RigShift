@@ -21,6 +21,9 @@ All notable changes to this project are documented here. The format follows
 
 - Profile editor: Enter saves, and closing with unsaved changes asks before discarding them.
 - Deleting a profile asks with a red delete button, centred on the RigShift window.
+- Automation rules no longer have their own on/off switch – pause the automation or delete the rule instead. A rule that
+  was switched off in an earlier version is removed when RigShift starts (noted in the log), so it cannot suddenly start
+  switching.
 
 ## [1.3.1] - 2026-09-14
 

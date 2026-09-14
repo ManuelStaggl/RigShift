@@ -39,9 +39,8 @@ public enum ExitSkipReason
 {
     None,
 
-    /// <summary>The rule did not start the current session (device present at baseline, disabled, or the start failed).</summary>
+    /// <summary>The rule did not start the current session (device present at baseline, or the start failed).</summary>
     NotStartedByRule,
-    RuleDisabled,
 
     /// <summary>A profile other than the rule's is active – the user picked it.</summary>
     OtherProfileActive,
@@ -252,12 +251,6 @@ public sealed class AutomationTrigger
 
     private static void OnStarted(AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions)
     {
-        if (!rule.IsEnabled)
-        {
-            state.StartedByRule = false;
-            return;
-        }
-
         state.StartedByRule = true;
         state.PreviousProfileId = activeProfileId == rule.ProfileId ? null : activeProfileId;
         if (activeProfileId != rule.ProfileId)
@@ -276,11 +269,6 @@ public sealed class AutomationTrigger
         if (!startedByRule)
         {
             return ExitSkipReason.NotStartedByRule;
-        }
-
-        if (!rule.IsEnabled)
-        {
-            return ExitSkipReason.RuleDisabled;
         }
 
         if (activeProfileId != rule.ProfileId)
