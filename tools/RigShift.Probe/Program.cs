@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot [--raw] | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot [--raw] | rates | audio | apps | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -39,7 +39,12 @@ switch (command)
 
     case "snapshot":
         DisplaySnapshot snapshot = await display.QueryAsync(CancellationToken.None);
-        Print(snapshot.Displays.Select(d => new { d.Identity, d.IsAvailable, d.IsActive, d.ActiveMode, Handle = d.NativeHandle.ToString() }));
+        Print(snapshot.Displays.Select(d => new { d.Identity, d.IsAvailable, d.IsActive, d.WindowsNumber, d.ActiveMode, Handle = d.NativeHandle.ToString() }));
+        break;
+
+    case "apps":
+        // What the app picker offers: Start menu programs and running apps (finding HW-11).
+        Print(RigShift.Windows.Apps.AppDiscovery.Find(log));
         break;
 
     case "rates":

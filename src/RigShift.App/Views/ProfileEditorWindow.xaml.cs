@@ -81,21 +81,18 @@ public partial class ProfileEditorWindow : FluentWindow
             return;
         }
 
-        var dialog = new Microsoft.Win32.OpenFileDialog
+        if (AppPickerWindow.Pick(this, item.Path) is { } path)
         {
-            Filter = Localization.Loc.Instance["App_FileFilter"],
-            Title = Localization.Loc.Instance["App_Browse"],
-        };
-
-        string current = Environment.ExpandEnvironmentVariables(item.Path.Trim().Trim('"'));
-        if (Path.IsPathFullyQualified(current) && Path.GetDirectoryName(current) is { } folder && Directory.Exists(folder))
-        {
-            dialog.InitialDirectory = folder;
+            item.Path = path;
         }
+    }
 
-        if (dialog.ShowDialog(this) == true)
+    /// <summary>A new app entry starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
+    private void OnAddApp(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (AppPickerWindow.Pick(this, null) is { } path)
         {
-            item.Path = dialog.FileName;
+            _viewModel.AddApp(path);
         }
     }
 

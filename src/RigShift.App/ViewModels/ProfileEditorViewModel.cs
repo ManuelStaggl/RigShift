@@ -221,8 +221,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         SetHotkeyHint("Editor_HotkeyHint");
     }
 
-    [RelayCommand]
-    private void AddApp() => Apps.Add(new AppEditItem(new AppAction { Path = string.Empty }));
+    internal void AddApp(string path) => Apps.Add(new AppEditItem(new AppAction { Path = path }));
 
     [RelayCommand]
     private void RemoveApp(AppEditItem? item)

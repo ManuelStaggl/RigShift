@@ -40,6 +40,8 @@
   <data name="Result_AppliedText" xml:space="preserve"><value>Displays switched.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Switched without: {0}</value></data>
   <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Displays switched. {0} follows once it is connected.</value></data>
+  <data name="Restored_Title" xml:space="preserve"><value>{0} recognized</value></data>
+  <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to apply its audio, apps and other settings too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Switch on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not connected: {0}. RigShift waits up to {1} seconds for it.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>"Confirm after switching" is off in the settings, so every profile switches without asking.</value></data>
@@ -186,6 +188,11 @@
   <data name="App_Arguments" xml:space="preserve"><value>Arguments (optional)</value></data>
   <data name="App_Wait" xml:space="preserve"><value>Wait afterwards (seconds)</value></data>
   <data name="App_Remove" xml:space="preserve"><value>Remove app</value></data>
+  <data name="AppPicker_Search" xml:space="preserve"><value>Search installed and running apps</value></data>
+  <data name="AppPicker_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="AppPicker_Empty" xml:space="preserve"><value>No app found. Programs without a Start menu entry can be picked with “Browse for file”.</value></data>
+  <data name="AppPicker_BrowseFile" xml:space="preserve"><value>_Browse for file…</value></data>
+  <data name="AppPicker_Choose" xml:space="preserve"><value>C_hoose</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programs (*.exe)|*.exe|All files (*.*)|*.*</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a program for every app.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
@@ -193,7 +200,7 @@
   <data name="Nav_About" xml:space="preserve"><value>About &amp; help</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Identify</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Refresh</value></data>
-  <data name="Displays_Hint" xml:space="preserve"><value>Name your monitors here or in the profile editor; the name appears everywhere, e.g. “Left · CM27X3”. Identify shows each active display’s number on its screen.</value></data>
+  <data name="Displays_Hint" xml:space="preserve"><value>Name your monitors here or in the profile editor; the name appears everywhere, e.g. “Left · CM27X3”. The numbers are the ones Windows counts displays with; Identify shows each active display’s number on its screen.</value></data>
   <data name="Displays_Empty" xml:space="preserve"><value>No displays found.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Active</value></data>
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Active · main display</value></data>

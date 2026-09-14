@@ -333,7 +333,7 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Apps}" />
-          <ui:Button Grid.Column="1" Command="{Binding AddAppCommand}" Content="{loc:Tr Editor_AddApp}" Icon="{ui:SymbolIcon Add24}" />
+          <ui:Button Grid.Column="1" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" Icon="{ui:SymbolIcon Add24}" />
         </Grid>
         <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsHint}" TextWrapping="Wrap" />
 
