@@ -23,6 +23,9 @@ internal static class CommandLineClient
     /// <summary>A freshly started app first loads profiles and queries the displays.</summary>
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(30);
 
+    /// <summary>A property, not a field: <see cref="Log.Logger"/> is replaced once the command line is parsed.</summary>
+    private static ILogger Logger => Log.ForContext(typeof(CommandLineClient));
+
     public static int Run(IReadOnlyList<string> args, CliRequest request) =>
         Task.Run(() => RunAsync(args, request)).GetAwaiter().GetResult();
 
@@ -99,7 +102,7 @@ internal static class CommandLineClient
         string? executable = Environment.ProcessPath;
         if (executable is null)
         {
-            Log.Error("Own executable path is unknown, cannot start the tray app");
+            Logger.Error("Own executable path is unknown, cannot start the tray app");
             return false;
         }
 
@@ -108,12 +111,12 @@ internal static class CommandLineClient
             // Shell execute: the long-lived tray app must not inherit our stdout, or a caller reading it to the end
             // (a pipe, a script) would wait until the tray app exits.
             using Process? process = Process.Start(new ProcessStartInfo(executable, "--minimized") { UseShellExecute = true });
-            Log.Information("Started tray app {Executable} for a command line request", executable);
+            Logger.Information("Started tray app {Executable} for a command line request", executable);
             return process is not null;
         }
         catch (Win32Exception ex)
         {
-            Log.Error(ex, "Tray app {Executable} could not be started", executable);
+            Logger.Error(ex, "Tray app {Executable} could not be started", executable);
             return false;
         }
     }
@@ -135,7 +138,7 @@ internal static class CommandLineClient
         }
         catch (Exception ex) when (ex is OperationCanceledException or TimeoutException or IOException or InvalidDataException or UnauthorizedAccessException)
         {
-            Log.Error(ex, "Command pipe request {Arguments} failed", args);
+            Logger.Error(ex, "Command pipe request {Arguments} failed", args);
             return null;
         }
     }

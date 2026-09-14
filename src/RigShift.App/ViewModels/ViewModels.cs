@@ -129,6 +129,8 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
 public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoordinator coordinator, ProfileDialogs dialogs, ILogger log) : ObservableObject
 {
+    private readonly ILogger _log = log.ForContext<ProfilesViewModel>();
+
     public ProfileCatalog Catalog => catalog;
 
     public SwitchCoordinator Coordinator => coordinator;
@@ -201,12 +203,12 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
         {
             RigShift.Windows.Shell.ShortcutWriter.Create(
                 file, executable, $"apply \"{item.Name.Replace("\"", "\\\"", StringComparison.Ordinal)}\"", Loc.Format("Shortcut_Description", item.Name));
-            log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
+            _log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
             ShowStatus(Loc.Format("Status_ShortcutCreated", title));
         }
         catch (Exception ex) when (ex is COMException or UnauthorizedAccessException or IOException)
         {
-            log.Error(ex, "Shortcut {File} could not be created", file);
+            _log.Error(ex, "Shortcut {File} could not be created", file);
             ShowStatus(Loc.Format("Status_Error", ex.Message), Wpf.Ui.Controls.InfoBarSeverity.Error);
         }
     }
@@ -220,7 +222,7 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            log.Error(ex, "Profile store action failed");
+            _log.Error(ex, "Profile store action failed");
             ShowStatus(Loc.Format("Status_Error", ex.Message), Wpf.Ui.Controls.InfoBarSeverity.Error);
         }
     }
@@ -254,7 +256,7 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
     private Task ReloadAsync() => catalog.ReloadAsync(CancellationToken.None);
 
     [RelayCommand]
-    private void OpenFolder() => ShellFolders.Open(catalog.ProfileDirectory, log);
+    private void OpenFolder() => ShellFolders.Open(catalog.ProfileDirectory, _log);
 }
 
 public sealed record Choice(string? Key, string Name)
@@ -500,6 +502,8 @@ public sealed record AudioRow(string Name, string Direction, string State);
 public sealed partial class DiagnosticsViewModel(
     IDisplayConfigurator display, IAudioController audio, SwitchCoordinator coordinator, AppPaths paths, ILogger log) : ObservableObject
 {
+    private readonly ILogger _log = log.ForContext<DiagnosticsViewModel>();
+
     public ObservableCollection<DisplayRow> Displays { get; } = [];
 
     public ObservableCollection<AudioRow> AudioDevices { get; } = [];
@@ -532,13 +536,13 @@ public sealed partial class DiagnosticsViewModel(
         }
         catch (Exception ex) when (ex is Win32Exception or COMException or InvalidOperationException)
         {
-            log.Error(ex, "Diagnostics refresh failed");
+            _log.Error(ex, "Diagnostics refresh failed");
             ErrorMessage = ex.Message;
         }
     }
 
     [RelayCommand]
-    private void OpenLogFolder() => ShellFolders.Open(paths.Logs, log);
+    private void OpenLogFolder() => ShellFolders.Open(paths.Logs, _log);
 
     private static DisplayRow ToRow(AttachedDisplay display)
     {
