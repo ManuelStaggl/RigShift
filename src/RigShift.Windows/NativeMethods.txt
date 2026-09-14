@@ -9,12 +9,10 @@ DISPLAYCONFIG_MODE_INFO
 DISPLAYCONFIG_TARGET_DEVICE_NAME
 DISPLAYCONFIG_ADAPTER_NAME
 DISPLAYCONFIG_SOURCE_DEVICE_NAME
-DISPLAYCONFIG_TOPOLOGY_ID
 QUERY_DISPLAY_CONFIG_FLAGS
 SET_DISPLAY_CONFIG_FLAGS
 DISPLAYCONFIG_DEVICE_INFO_TYPE
 DISPLAYCONFIG_MODE_INFO_TYPE
-DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY
 DISPLAYCONFIG_PIXELFORMAT
 DISPLAYCONFIG_PATH_ACTIVE
 DISPLAYCONFIG_PATH_MODE_IDX_INVALID
@@ -29,7 +27,6 @@ CreateDXGIFactory1
 IDXGIFactory1
 IDXGIAdapter1
 IDXGIOutput
-DXGI_ERROR_NOT_FOUND
 // Core Audio – endpoint enumeration, state, friendly name, volume.
 MMDeviceEnumerator
 IMMDeviceEnumerator
@@ -40,15 +37,6 @@ IAudioEndpointVolume
 PKEY_Device_FriendlyName
 DEVICE_STATE
 PropVariantClear
-// Device arrival / removal notifications (USB, monitors).
-RegisterDeviceNotification
-UnregisterDeviceNotification
-DEV_BROADCAST_DEVICEINTERFACE_W
-DEV_BROADCAST_HDR
-WM_DEVICECHANGE
-WM_DISPLAYCHANGE
-DBT_DEVICEARRIVAL
-DBT_DEVICEREMOVECOMPLETE
 // USB device triggers: present devices and their names (polled, docs/PLAN.md section 6, item 7).
 CM_Get_Device_ID_List_SizeW
 CM_Get_Device_ID_ListW
@@ -64,7 +52,6 @@ DEVPKEY_Device_DeviceDesc
 // Global hotkeys (v1.1).
 RegisterHotKey
 UnregisterHotKey
-WM_HOTKEY
 // Hotkey names as the keyboard layout calls the keys (analysis finding I-14).
 MapVirtualKey
 GetKeyNameText
@@ -88,7 +75,7 @@ GetStdHandle
 ATTACH_PARENT_PROCESS
 AllowSetForegroundWindow
 ASFW_ANY
-// Keep awake and power plan per profile (docs/PLAN.md, section 6, items 8 + 9).
+// Keep awake per profile (docs/PLAN.md, section 6, item 8).
 PowerCreateRequest
 PowerSetRequest
 PowerClearRequest
