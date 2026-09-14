@@ -111,6 +111,7 @@ public partial class App : Application, IAppShell
 
         // Log.Logger was created in Program.Main, before Velopack ran.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
+        Controls.WheelScrolling.Register();
         Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, Paths.DataDirectory);
 
         try

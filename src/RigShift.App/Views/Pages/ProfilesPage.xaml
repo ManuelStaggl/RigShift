@@ -5,7 +5,8 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="{loc:Tr Nav_Profiles}">
+  Title="{loc:Tr Nav_Profiles}"
+  ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
       <!-- Title and buttons wrap onto two lines in a narrow window instead of overlapping (analysis finding I-01). -->

@@ -80,6 +80,11 @@ All notable changes to this project are documented here. The format follows
 - The **Reload** button on the Profiles page: profiles are reloaded after every save, also from the command line.
   **Open profile folder** moved next to **Open log folder** on **About & help**, so Settings holds only settings.
 
+### Fixed
+
+- The mouse wheel scrolls the pages and the profile editor wherever the pointer is, not only over the scroll bar at the
+  right edge, also over text fields.
+
 ## [1.3.1] - 2026-09-14
 
 ### Added

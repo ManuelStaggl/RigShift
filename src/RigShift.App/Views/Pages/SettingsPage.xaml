@@ -5,7 +5,8 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="{loc:Tr Nav_Settings}">
+  Title="{loc:Tr Nav_Settings}"
+  ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
       <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Settings}" />
