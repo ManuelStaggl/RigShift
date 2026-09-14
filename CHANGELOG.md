@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-14
+
+### Added
+
+- App picker: **Add app** and the folder button in the profile editor open a searchable list of installed programs (Start
+  menu) and running apps, with their icons. Programs without a Start menu entry can still be picked as a file.
+- When Windows restores a profile's display layout by itself – for example after you switch on a monitor – RigShift
+  says so in a notification. A click applies the rest of the profile (audio, apps, keep awake, call ducking) without
+  touching the displays.
+
+### Changed
+
+- The **Displays** page and **Identify** number the displays the way Windows counts them (`\\.\DISPLAY1`, `2`, …)
+  instead of left to right, so the numbers usually match the Windows display settings.
+
 ## [1.4.1] - 2026-09-14
 
 ### Changed
