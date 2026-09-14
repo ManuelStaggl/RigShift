@@ -324,6 +324,9 @@ Releases nützlich)
 
 Laufende App und Autostart: Die Prüfung läuft auch im Dauerbetrieb alle 24 h und meldet per Tray-Meldung; seit U2
 muss niemand bis zum nächsten Windows-Start warten.
+
+**Veröffentlicht als 1.1.0 (2026-09-14)**, Workflow-Run 34806008712 success, Delta-Paket 32 MB. Abnahme am Server:
+installiertes offizielles 1.0.1 lädt 1.1.0 in 10 s, nächster Start „RigShift 1.1.0.0 starting“, `sq.version` 1.1.0.
 - Randbedingung: kein GitHub-Token in der App (wäre aus der EXE auslesbar); Limit 60 API-Abfragen/h pro IP reicht.
 
 **v1.1 – Auslösen und Steuern**
