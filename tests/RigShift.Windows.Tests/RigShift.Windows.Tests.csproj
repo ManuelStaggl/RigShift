@@ -22,4 +22,9 @@
     <PackageReference Include="Shouldly" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Recorded CCD input for CcdSnapshotBuilderTests: synthetic or anonymised, never raw device paths of a real PC. -->
+    <None Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

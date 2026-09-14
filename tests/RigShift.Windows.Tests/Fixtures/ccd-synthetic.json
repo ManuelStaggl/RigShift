@@ -1,0 +1,23 @@
+{
+  "paths": [
+    { "sourceAdapter": "0000000000001234", "sourceId": 0, "sourceModeIndex": 0, "targetAdapter": "0000000000001234", "targetId": 10, "targetModeIndex": 1, "targetAvailable": true, "active": true, "refreshNumerator": 60000, "refreshDenominator": 1000, "rotation": 1 },
+    { "sourceAdapter": "0000000000001234", "sourceId": 1, "sourceModeIndex": 4294967295, "targetAdapter": "0000000000001234", "targetId": 10, "targetModeIndex": 4294967295, "targetAvailable": true, "active": false, "refreshNumerator": 0, "refreshDenominator": 0, "rotation": 1 },
+    { "sourceAdapter": "0000000000001234", "sourceId": 0, "sourceModeIndex": 4294967295, "targetAdapter": "0000000000001234", "targetId": 11, "targetModeIndex": 4294967295, "targetAvailable": false, "active": false, "refreshNumerator": 0, "refreshDenominator": 0, "rotation": 1 },
+    { "sourceAdapter": "0000000000001234", "sourceId": 1, "sourceModeIndex": 4294967295, "targetAdapter": "0000000000001234", "targetId": 11, "targetModeIndex": 4294967295, "targetAvailable": false, "active": false, "refreshNumerator": 0, "refreshDenominator": 0, "rotation": 1 },
+    { "sourceAdapter": "0000000000001234", "sourceId": 0, "sourceModeIndex": 4294967295, "targetAdapter": "0000000000001234", "targetId": 12, "targetModeIndex": 4294967295, "targetAvailable": true, "active": false, "refreshNumerator": 0, "refreshDenominator": 0, "rotation": 1 },
+    { "sourceAdapter": "0000000000001234", "sourceId": 0, "sourceModeIndex": 4294967295, "targetAdapter": "0000000000001234", "targetId": 13, "targetModeIndex": 4294967295, "targetAvailable": true, "active": false, "refreshNumerator": 0, "refreshDenominator": 0, "rotation": 1 }
+  ],
+  "modes": [
+    { "kind": "Source", "width": 5120, "height": 1440, "positionX": 0, "positionY": 0, "vSyncNumerator": 0, "vSyncDenominator": 0 },
+    { "kind": "Target", "width": 5120, "height": 1440, "positionX": 0, "positionY": 0, "vSyncNumerator": 239760, "vSyncDenominator": 1000 }
+  ],
+  "targets": [
+    { "adapter": "0000000000001234", "targetId": 10, "nameError": 0, "monitorDevicePath": "\\\\?\\DISPLAY#FIX0001#1&fixture&0&UID10#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}", "friendlyName": "Fixture Ultrawide", "edidIdsValid": true, "edidManufacturerId": 4660, "edidProductCodeId": 22136, "hdr": true },
+    { "adapter": "0000000000001234", "targetId": 11, "nameError": 0, "monitorDevicePath": "\\\\?\\DISPLAY#FIX0002#1&fixture&0&UID11#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}", "friendlyName": "Fixture Sleeper", "edidIdsValid": false, "edidManufacturerId": 999, "edidProductCodeId": 999, "hdr": null },
+    { "adapter": "0000000000001234", "targetId": 12, "nameError": 31, "monitorDevicePath": "", "friendlyName": "", "edidIdsValid": false, "edidManufacturerId": 0, "edidProductCodeId": 0, "hdr": null },
+    { "adapter": "0000000000001234", "targetId": 13, "nameError": 0, "monitorDevicePath": "", "friendlyName": "", "edidIdsValid": false, "edidManufacturerId": 0, "edidProductCodeId": 0, "hdr": null }
+  ],
+  "adapters": [
+    { "adapter": "0000000000001234", "error": 0, "devicePath": "\\\\?\\PCI#VEN_0000&DEV_0000&SUBSYS_00000000&REV_00#fixture#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}" }
+  ]
+}

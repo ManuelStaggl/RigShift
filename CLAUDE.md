@@ -76,7 +76,7 @@ Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup 
 für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 
 Manuelle Prüfung der Windows-Schicht (nur lesend, ändert nichts):
-`dotnet run --project tools/RigShift.Probe -- snapshot | rates | audio | usb | usb-power <geräte-id> | import <ordner> | plan <ordner> <profil>`.
+`dotnet run --project tools/RigShift.Probe -- snapshot [--raw] | rates | audio | usb | usb-power <geräte-id> | import <ordner> | plan <ordner> <profil>`.
 `keep-awake <sekunden>` hält kurz eine Energieanforderung (prüfen mit `powercfg /requests`), `convert <quelle> <ziel>`
 schreibt Profildateien – beide ändern etwas, also nicht zur reinen Prüfung.
 Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffentlichen.

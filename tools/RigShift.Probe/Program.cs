@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot [--raw] | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -32,6 +32,11 @@ string command = args.Length > 0 ? args[0] : "snapshot";
 
 switch (command)
 {
+    case "snapshot" when args.Length >= 2 && args[1] == "--raw":
+        // The CCD input the snapshot is built from, for test fixtures (analysis finding L-04). Anonymise before committing.
+        Print(CcdDisplayConfigurator.QueryRaw());
+        break;
+
     case "snapshot":
         DisplaySnapshot snapshot = await display.QueryAsync(CancellationToken.None);
         Print(snapshot.Displays.Select(d => new { d.Identity, d.IsAvailable, d.IsActive, d.ActiveMode, Handle = d.NativeHandle.ToString() }));
@@ -118,7 +123,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 

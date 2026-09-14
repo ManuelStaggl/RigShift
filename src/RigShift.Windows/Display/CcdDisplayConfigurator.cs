@@ -28,93 +28,105 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
 
     public Task<DisplaySnapshot> QueryAsync(CancellationToken cancellationToken)
     {
-        (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdNative.QueryAllPaths();
-        var adapterPaths = new Dictionary<AdapterLuid, string>();
-        var targets = new Dictionary<(AdapterLuid, uint), TargetAccumulator>();
+        CcdRawSnapshot raw = QueryRaw();
+        List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
+        _log.Information("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
+            raw.Paths.Count, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
 
+        return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
+    }
+
+    /// <summary>
+    /// Read-only: queries the CCD paths and modes and asks for the names (and HDR state) that <see cref="CcdSnapshotBuilder"/>
+    /// needs. Contains device paths of this machine.
+    /// </summary>
+    public static CcdRawSnapshot QueryRaw()
+    {
+        (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdNative.QueryAllPaths();
+
+        var rawPaths = new List<CcdRawPath>(paths.Length);
+        var targetKeys = new List<(AdapterLuid Adapter, uint TargetId)>();
+        var activeTargets = new HashSet<(AdapterLuid, uint)>();
         foreach (DISPLAYCONFIG_PATH_INFO path in paths)
         {
-            var adapter = AdapterLuid.From(path.targetInfo.adapterId);
-            if (!targets.TryGetValue((adapter, path.targetInfo.id), out TargetAccumulator? target))
+            var targetAdapter = AdapterLuid.From(path.targetInfo.adapterId);
+            bool active = (path.flags & PInvoke.DISPLAYCONFIG_PATH_ACTIVE) != 0;
+            rawPaths.Add(new CcdRawPath(
+                AdapterLuid.From(path.sourceInfo.adapterId).ToString(),
+                path.sourceInfo.id,
+                path.sourceInfo.modeInfoIdx,
+                targetAdapter.ToString(),
+                path.targetInfo.id,
+                path.targetInfo.modeInfoIdx,
+                path.targetInfo.targetAvailable,
+                active,
+                path.targetInfo.refreshRate.Numerator,
+                path.targetInfo.refreshRate.Denominator,
+                (int)path.targetInfo.rotation));
+
+            if (!targetKeys.Contains((targetAdapter, path.targetInfo.id)))
             {
-                target = new TargetAccumulator(adapter, path.targetInfo.id);
-                targets.Add((adapter, path.targetInfo.id), target);
+                targetKeys.Add((targetAdapter, path.targetInfo.id));
             }
 
-            var source = new CcdSource(AdapterLuid.From(path.sourceInfo.adapterId), path.sourceInfo.id);
-            if (!target.Sources.Contains(source))
+            if (active)
             {
-                target.Sources.Add(source);
-            }
-
-            target.Available |= path.targetInfo.targetAvailable;
-            if ((path.flags & PInvoke.DISPLAYCONFIG_PATH_ACTIVE) != 0)
-            {
-                target.ActivePath = path;
+                activeTargets.Add((targetAdapter, path.targetInfo.id));
             }
         }
 
-        var displays = new List<AttachedDisplay>();
-        foreach (TargetAccumulator target in targets.Values)
+        var rawTargets = new List<CcdRawTarget>(targetKeys.Count);
+        var monitorAdapters = new List<AdapterLuid>();
+        foreach ((AdapterLuid adapter, uint targetId) in targetKeys)
         {
-            if (!CcdNative.TryGetTargetName(target.Adapter.ToLuid(), target.TargetId, out DISPLAYCONFIG_TARGET_DEVICE_NAME name, out int error))
+            if (!CcdNative.TryGetTargetName(adapter.ToLuid(), targetId, out DISPLAYCONFIG_TARGET_DEVICE_NAME name, out int error))
             {
-                _log.Debug("Target {Adapter}:{TargetId} has no device name (error {Error}), skipped", target.Adapter, target.TargetId, error);
+                rawTargets.Add(new CcdRawTarget(adapter.ToString(), targetId, error, string.Empty, string.Empty, false, 0, 0, null));
                 continue;
             }
 
             string monitorPath = name.monitorDevicePath.ToString();
-            if (monitorPath.Length == 0)
+            bool hasMonitor = monitorPath.Length > 0;
+            if (hasMonitor && !monitorAdapters.Contains(adapter))
             {
-                // Connector without a known monitor – nothing a profile could refer to.
-                continue;
+                monitorAdapters.Add(adapter);
             }
 
-            if (!adapterPaths.TryGetValue(target.Adapter, out string? adapterPath))
-            {
-                adapterPath = CcdNative.TryGetAdapterPath(target.Adapter.ToLuid(), out string path, out int adapterError) ? path : string.Empty;
-                if (adapterPath.Length == 0)
-                {
-                    _log.Warning("Adapter {Adapter} has no device path (error {Error})", target.Adapter, adapterError);
-                }
-
-                adapterPaths.Add(target.Adapter, adapterPath);
-            }
-
-            var identity = new DisplayIdentity
-            {
-                AdapterDevicePath = adapterPath,
-                TargetDevicePath = monitorPath,
-                EdidManufacturerId = name.flags.edidIdsValid ? name.edidManufactureId : (ushort)0,
-                EdidProductCodeId = name.flags.edidIdsValid ? name.edidProductCodeId : (ushort)0,
-                FriendlyName = name.monitorFriendlyDeviceName.ToString(),
-            };
-
-            CcdSource? activeSource = target.ActivePath is { } active
-                ? new CcdSource(AdapterLuid.From(active.sourceInfo.adapterId), active.sourceInfo.id)
-                : null;
-
-            displays.Add(new AttachedDisplay
-            {
-                Identity = identity,
-                IsAvailable = target.Available,
-                IsActive = target.ActivePath is not null,
-                ActiveMode = target.ActivePath is { } activePath
-                    ? DecodeActiveMode(identity, activePath, modes) is { } mode
-                        ? mode with { Hdr = CcdNative.TryGetHdr(target.Adapter.ToLuid(), target.TargetId) }
-                        : null
-                    : null,
-                NativeHandle = new CcdTargetHandle(target.Adapter, target.TargetId, target.Sources, activeSource),
-            });
+            rawTargets.Add(new CcdRawTarget(
+                adapter.ToString(),
+                targetId,
+                0,
+                monitorPath,
+                name.monitorFriendlyDeviceName.ToString(),
+                name.flags.edidIdsValid,
+                name.edidManufactureId,
+                name.edidProductCodeId,
+                hasMonitor && activeTargets.Contains((adapter, targetId)) ? CcdNative.TryGetHdr(adapter.ToLuid(), targetId) : null));
         }
 
-        // Available targets first: if a monitor shows up on two targets, the planner takes the usable one.
-        List<AttachedDisplay> ordered = displays.OrderByDescending(d => d.IsAvailable).ThenByDescending(d => d.IsActive).ToList();
-        _log.Information("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
-            paths.Length, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
+        var rawAdapters = monitorAdapters
+            .Select(adapter => CcdNative.TryGetAdapterPath(adapter.ToLuid(), out string devicePath, out int error)
+                ? new CcdRawAdapter(adapter.ToString(), 0, devicePath)
+                : new CcdRawAdapter(adapter.ToString(), error, string.Empty))
+            .ToList();
 
-        return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
+        return new CcdRawSnapshot
+        {
+            Paths = rawPaths,
+            Modes = modes.Select(ToRawMode).ToList(),
+            Targets = rawTargets,
+            Adapters = rawAdapters,
+        };
     }
+
+    private static CcdRawMode ToRawMode(DISPLAYCONFIG_MODE_INFO mode) => mode.infoType switch
+    {
+        DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE => new CcdRawMode(
+            CcdModeKind.Source, mode.sourceMode.width, mode.sourceMode.height, mode.sourceMode.position.x, mode.sourceMode.position.y, 0, 0),
+        DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_TARGET => new CcdRawMode(
+            CcdModeKind.Target, 0, 0, 0, 0, mode.targetMode.targetVideoSignalInfo.vSyncFreq.Numerator, mode.targetMode.targetVideoSignalInfo.vSyncFreq.Denominator),
+        _ => new CcdRawMode(CcdModeKind.Other, 0, 0, 0, 0, 0, 0),
+    };
 
     public Task<int> ApplyAsync(TopologyPlan plan, ApplyOptions options, CancellationToken cancellationToken)
     {
@@ -203,35 +215,4 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         return Task.FromResult<IReadOnlyList<RefreshRate>>([]);
     }
 
-    private static DisplayAssignment? DecodeActiveMode(DisplayIdentity identity, DISPLAYCONFIG_PATH_INFO path, DISPLAYCONFIG_MODE_INFO[] modes)
-    {
-        uint sourceIndex = path.sourceInfo.modeInfoIdx;
-        if (sourceIndex >= modes.Length || modes[sourceIndex].infoType != DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
-        {
-            return null;
-        }
-
-        DISPLAYCONFIG_SOURCE_MODE source = modes[sourceIndex].sourceMode;
-        DISPLAYCONFIG_RATIONAL refresh = path.targetInfo.refreshRate;
-        uint targetIndex = path.targetInfo.modeInfoIdx;
-        if (targetIndex < modes.Length && modes[targetIndex].infoType == DISPLAYCONFIG_MODE_INFO_TYPE.DISPLAYCONFIG_MODE_INFO_TYPE_TARGET)
-        {
-            refresh = modes[targetIndex].targetMode.targetVideoSignalInfo.vSyncFreq;
-        }
-
-        return CcdModes.ToAssignment(identity, source, refresh, path.targetInfo.rotation);
-    }
-
-    private sealed class TargetAccumulator(AdapterLuid adapter, uint targetId)
-    {
-        public AdapterLuid Adapter { get; } = adapter;
-
-        public uint TargetId { get; } = targetId;
-
-        public List<CcdSource> Sources { get; } = [];
-
-        public bool Available { get; set; }
-
-        public DISPLAYCONFIG_PATH_INFO? ActivePath { get; set; }
-    }
 }
