@@ -108,6 +108,10 @@ WINDOWPLACEMENT
 MonitorFromRect
 GetWindowThreadProcessId
 SHOW_WINDOW_CMD
+// Skip windows of hung programs: SetWindowPlacement would wait for them (analysis finding B-04).
+IsHungAppWindow
+SendMessageTimeout
+WM_NULL
 // Desktop shortcuts for profiles.
 ShellLink
 IShellLinkW

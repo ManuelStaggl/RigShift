@@ -19,6 +19,11 @@ namespace RigShift.Windows.Ui;
 public sealed class WindowRescuer : IWindowRescuer
 {
     private const int ErrorAccessDenied = 5;
+    private const int ErrorTimeout = 1460;
+    private const uint ResponseTimeoutMilliseconds = 250;
+
+    /// <summary>The whole rescue must not hold up a switch for longer than this (analysis finding B-04).</summary>
+    private static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(3);
 
     private readonly ILogger _log;
 
@@ -51,8 +56,17 @@ public sealed class WindowRescuer : IWindowRescuer
         PixelRect workArea = ToPixel(info.rcWork);
 
         int moved = 0;
-        foreach (HWND hwnd in windows)
+        long started = Stopwatch.GetTimestamp();
+        for (int index = 0; index < windows.Count; index++)
         {
+            HWND hwnd = windows[index];
+            if (Stopwatch.GetElapsedTime(started) > TimeLimit)
+            {
+                _log.Warning("Moving lost windows stopped after {Seconds:0.0} s, {Remaining} window(s) not checked",
+                    Stopwatch.GetElapsedTime(started).TotalSeconds, windows.Count - index);
+                break;
+            }
+
             if (!IsCandidate(hwnd))
             {
                 continue;
@@ -83,6 +97,13 @@ public sealed class WindowRescuer : IWindowRescuer
                 continue;
             }
 
+            // SetWindowPlacement waits for the window's thread; a hung program (shader compile) would stall the switch.
+            if (IsHung(hwnd))
+            {
+                _log.Warning("Lost window of {Process} not moved: the program is not responding", ProcessName(hwnd));
+                continue;
+            }
+
             if (Move(hwnd, placement, normalOnScreen, workArea, offsetX, offsetY))
             {
                 moved++;
@@ -108,6 +129,22 @@ public sealed class WindowRescuer : IWindowRescuer
         // Cloaked: on another virtual desktop, a suspended UWP frame – visible to EnumWindows, not to the user.
         uint cloaked = 0;
         return !(PInvoke.DwmGetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, &cloaked, sizeof(uint)).Succeeded && cloaked != 0);
+    }
+
+    /// <summary>
+    /// Hung as Windows sees it (no message processed for 5 s), or no answer to <c>WM_NULL</c> within 250 ms. A refused
+    /// message (elevated window) is not "hung" – <c>SetWindowPlacement</c> reports that itself.
+    /// </summary>
+    private static bool IsHung(HWND hwnd)
+    {
+        if (PInvoke.IsHungAppWindow(hwnd))
+        {
+            return true;
+        }
+
+        LRESULT answered = PInvoke.SendMessageTimeout(hwnd, PInvoke.WM_NULL, default, default,
+            SEND_MESSAGE_TIMEOUT_FLAGS.SMTO_ABORTIFHUNG | SEND_MESSAGE_TIMEOUT_FLAGS.SMTO_BLOCK, ResponseTimeoutMilliseconds);
+        return answered.Value == 0 && Marshal.GetLastPInvokeError() == ErrorTimeout;
     }
 
     private bool Move(HWND hwnd, WINDOWPLACEMENT placement, PixelRect normalOnScreen, PixelRect workArea, int offsetX, int offsetY)
