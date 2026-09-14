@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-14
+
 ### Added
 
 - Volume per profile for the playback and the recording device. If you do not confirm the switch, the previous
