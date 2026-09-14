@@ -23,4 +23,7 @@ public sealed record Profile
     /// for this profile; <c>null</c> uses the application-wide setting.
     /// </summary>
     public int? ConfirmTimeoutSeconds { get; init; }
+
+    /// <summary>System-wide key combination that switches to this profile while the tray app runs; <c>null</c> for none.</summary>
+    public Hotkey? Hotkey { get; init; }
 }

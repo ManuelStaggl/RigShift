@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -19,6 +20,17 @@ public static class NativeWindow
     /// <summary>Global Esc for the confirmation window: reverts from any screen, even if the window has no picture.</summary>
     public static bool RegisterEscapeHotkey(nint hwnd, int id) =>
         PInvoke.RegisterHotKey(new HWND(hwnd), id, HOT_KEY_MODIFIERS.MOD_NOREPEAT, VkEscape);
+
+    /// <summary>
+    /// A profile hotkey. <paramref name="modifiers"/> are <c>MOD_*</c> flags; auto-repeat is suppressed.
+    /// <paramref name="error"/> is the Win32 error on failure (1409 = taken by another application).
+    /// </summary>
+    public static bool RegisterHotkey(nint hwnd, int id, int modifiers, int virtualKey, out int error)
+    {
+        bool registered = PInvoke.RegisterHotKey(new HWND(hwnd), id, (HOT_KEY_MODIFIERS)modifiers | HOT_KEY_MODIFIERS.MOD_NOREPEAT, (uint)virtualKey);
+        error = registered ? 0 : Marshal.GetLastPInvokeError();
+        return registered;
+    }
 
     public static void UnregisterHotkey(nint hwnd, int id) => PInvoke.UnregisterHotKey(new HWND(hwnd), id);
 

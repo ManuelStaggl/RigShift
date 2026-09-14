@@ -21,6 +21,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     private readonly Profile _original;
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
+    private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
 
     public ProfileEditorViewModel(
@@ -31,6 +32,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         int appConfirmTimeoutSeconds,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
+        HotkeyService hotkeys,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(profile);
@@ -39,6 +41,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         _original = profile;
         _catalog = catalog;
         _display = display;
+        _hotkeys = hotkeys;
+        Hotkey = profile.Hotkey;
+        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
         _log = log.ForContext<ProfileEditorViewModel>();
 
         Title = Loc.Instance[isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
@@ -90,6 +95,17 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     public partial double? OwnTimeoutSeconds { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
+    public partial Hotkey? Hotkey { get; set; }
+
+    public string HotkeyText => Hotkey is null ? string.Empty : HotkeyFormat.Format(Hotkey);
+
+    public bool HasHotkey => Hotkey is not null;
+
+    [ObservableProperty]
+    public partial string HotkeyHint { get; set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProblems))]
     public partial string? Problems { get; set; }
 
@@ -111,6 +127,28 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         {
             Displays[i].Sync(updated[i]);
         }
+    }
+
+    /// <summary>A key combination pressed in the hotkey field; without Ctrl, Alt or Win it only shows a hint.</summary>
+    internal void RecordHotkey(HotkeyModifiers modifiers, int virtualKey)
+    {
+        var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
+        if (!hotkey.IsValid)
+        {
+            HotkeyHint = Loc.Instance["Editor_HotkeyNeedsModifier"];
+            return;
+        }
+
+        Hotkey = hotkey;
+        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
+        _log.Information("Editor recorded hotkey {Hotkey}", HotkeyText);
+    }
+
+    [RelayCommand]
+    private void ClearHotkey()
+    {
+        Hotkey = null;
+        HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
     }
 
     [RelayCommand]
@@ -152,6 +190,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             return;
         }
 
+        // Hotkeys are suspended while the editor is open, so this sees only other applications.
+        if (profile.Hotkey is { } hotkey && !_hotkeys.IsAvailable(hotkey))
+        {
+            Problems = Loc.Instance["Problem_HotkeyInUse"];
+            return;
+        }
+
         try
         {
             await _catalog.SaveAsync(profile, CancellationToken.None);
@@ -182,6 +227,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         Name = Name.Trim(),
         Icon = SelectedIcon?.Key,
         ConfirmTimeoutSeconds = UseOwnTimeout ? (int)Math.Clamp(Math.Round(OwnTimeoutSeconds ?? 0), 0, 120) : null,
+        Hotkey = Hotkey,
         Displays = Displays.Select(d => d.Assignment).ToList(),
         Audio = _original.Audio with
         {

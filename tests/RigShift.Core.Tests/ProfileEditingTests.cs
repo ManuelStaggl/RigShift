@@ -89,4 +89,30 @@ public sealed class ProfileEditingTests
         ProfileEditing.Validate(Rig() with { Displays = [UltrawideMode with { IsOptional = true }] }, [])
             .ShouldBe([ProfileProblem.PrimaryIsOptional]);
     }
+
+    [Fact]
+    public void Validate_ReportsHotkeyProblems()
+    {
+        var ctrlAltF1 = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 };
+        Profile desk = Profile("Desk", DeskModes) with { Hotkey = ctrlAltF1 };
+
+        ProfileEditing.Validate(Rig() with { Hotkey = ctrlAltF1 with { } }, [desk]).ShouldBe([ProfileProblem.HotkeyTaken]);
+        ProfileEditing.Validate(desk, [desk]).ShouldBeEmpty();
+        ProfileEditing.Validate(Rig() with { Hotkey = ctrlAltF1 with { Modifiers = HotkeyModifiers.None } }, [])
+            .ShouldBe([ProfileProblem.HotkeyInvalid]);
+    }
+
+    [Theory]
+    [InlineData(HotkeyModifiers.Control, 0x70, true)]
+    [InlineData(HotkeyModifiers.Windows | HotkeyModifiers.Shift, 0x31, true)]
+    [InlineData(HotkeyModifiers.None, 0x70, false)]
+    [InlineData(HotkeyModifiers.Shift, 0x41, false)]
+    [InlineData(HotkeyModifiers.Control, 0x11, false)]
+    [InlineData(HotkeyModifiers.Alt, 0xA4, false)]
+    [InlineData(HotkeyModifiers.Alt, 0, false)]
+    [InlineData((HotkeyModifiers)0x4000, 0x70, false)]
+    public void Hotkey_IsValid_NeedsAModifierAndAnOrdinaryKey(HotkeyModifiers modifiers, int virtualKey, bool expected)
+    {
+        new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey }.IsValid.ShouldBe(expected);
+    }
 }

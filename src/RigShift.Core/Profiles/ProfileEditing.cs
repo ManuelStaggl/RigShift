@@ -119,6 +119,18 @@ public static class ProfileEditing
             problems.Add(ProfileProblem.NameTaken);
         }
 
+        if (profile.Hotkey is { } hotkey)
+        {
+            if (!hotkey.IsValid)
+            {
+                problems.Add(ProfileProblem.HotkeyInvalid);
+            }
+            else if (others.Any(o => o.Id != profile.Id && o.Hotkey == hotkey))
+            {
+                problems.Add(ProfileProblem.HotkeyTaken);
+            }
+        }
+
         if (profile.Displays.Count == 0)
         {
             problems.Add(ProfileProblem.NoDisplays);
@@ -149,4 +161,10 @@ public enum ProfileProblem
     NoDisplays,
     NoSinglePrimary,
     PrimaryIsOptional,
+
+    /// <summary>No modifier key, or only modifiers.</summary>
+    HotkeyInvalid,
+
+    /// <summary>Another profile uses the same key combination.</summary>
+    HotkeyTaken,
 }

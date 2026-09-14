@@ -19,17 +19,25 @@ public sealed class ProfileDialogs
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
     private readonly SettingsService _settings;
+    private readonly HotkeyService _hotkeys;
     private readonly IServiceProvider _services;
     private readonly ILogger _log;
 
     public ProfileDialogs(
-        ProfileCatalog catalog, IDisplayConfigurator display, IAudioController audio, SettingsService settings, IServiceProvider services, ILogger log)
+        ProfileCatalog catalog,
+        IDisplayConfigurator display,
+        IAudioController audio,
+        SettingsService settings,
+        HotkeyService hotkeys,
+        IServiceProvider services,
+        ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
         _catalog = catalog;
         _display = display;
         _audio = audio;
         _settings = settings;
+        _hotkeys = hotkeys;
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
@@ -77,11 +85,21 @@ public sealed class ProfileDialogs
     {
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _log);
+            profile, isNew, playback, recording, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };
-        return window.ShowDialog() == true ? viewModel.Saved : null;
+
+        // Recording a hotkey RigShift holds would switch right away, and the "taken" check would see our own.
+        _hotkeys.Suspend();
+        try
+        {
+            return window.ShowDialog() == true ? viewModel.Saved : null;
+        }
+        finally
+        {
+            _hotkeys.Resume();
+        }
     }
 
     private async Task<IReadOnlyList<AudioDeviceInfo>> ListAudioAsync(AudioDirection direction)

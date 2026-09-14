@@ -95,8 +95,10 @@ public sealed class TrayIconService : IDisposable
         ProfilesViewModel profiles,
         IAppShell shell,
         UpdateService updates,
+        HotkeyService hotkeys,
         ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(hotkeys);
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(popupViewModel);
@@ -145,6 +147,8 @@ public sealed class TrayIconService : IDisposable
             _updateNotificationShown = true;
         };
         updates.StateChanged += (_, _) => RebuildMenu();
+        hotkeys.RegistrationFailed += (_, names) =>
+            Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning));
 
         // The update notification leads to the settings, where the update can be installed right away.
         _icon.TrayBalloonTipClicked += (_, _) =>
@@ -275,7 +279,12 @@ public sealed class TrayIconService : IDisposable
 
         foreach (ProfileItem item in _catalog.Items)
         {
-            var entry = new MenuItem { Header = item.Name, IsChecked = item.IsActive };
+            var entry = new MenuItem
+            {
+                Header = item.Name,
+                IsChecked = item.IsActive,
+                InputGestureText = item.Profile.Hotkey is { } hotkey ? HotkeyFormat.Format(hotkey) : string.Empty,
+            };
             Profile profile = item.Profile;
             entry.Click += async (_, _) => await _coordinator.SwitchAsync(profile);
             menu.Items.Add(entry);

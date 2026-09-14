@@ -159,4 +159,15 @@
   <data name="Problem_NoDisplays" xml:space="preserve"><value>Das Profil braucht mindestens einen Bildschirm.</value></data>
   <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Bitte eine Hauptanzeige wählen.</value></data>
   <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>Die Hauptanzeige kann nicht optional sein.</value></data>
+  <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
+  <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
+  <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Bitte ein anderes wählen.</value></data>
+  <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Hier klicken und Tastenkombination drücken</value></data>
+  <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
+  <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft. Strg, Alt oder Win zusammen mit einer weiteren Taste.</value></data>
+  <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Zusätzlich Strg, Alt oder Win halten.</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>Eine andere App belegt das Tastenkürzel dieser Profile, es funktioniert daher nicht: {0}</value></data>
+  <data name="Key_Ctrl" xml:space="preserve"><value>Strg</value></data>
+  <data name="Key_Shift" xml:space="preserve"><value>Umschalt</value></data>
 </root>

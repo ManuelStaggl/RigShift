@@ -84,6 +84,40 @@
           </StackPanel>
         </Grid>
 
+        <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Hotkey}" />
+        <Grid Margin="0,4,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <ui:TextBox
+            x:Name="HotkeyBox"
+            AutomationProperties.HelpText="{Binding HotkeyHint}"
+            AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
+            ClearButtonEnabled="False"
+            IsReadOnly="True"
+            IsReadOnlyCaretVisible="False"
+            PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
+            PreviewKeyDown="OnHotkeyKeyDown"
+            Text="{Binding HotkeyText, Mode=OneWay}" />
+          <ui:Button
+            Grid.Column="1"
+            Margin="8,0,0,0"
+            VerticalAlignment="Stretch"
+            AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
+            Command="{Binding ClearHotkeyCommand}"
+            Icon="{ui:SymbolIcon Dismiss24}"
+            IsEnabled="{Binding HasHotkey}"
+            ToolTip="{loc:Tr Editor_HotkeyClear}" />
+        </Grid>
+        <TextBlock
+          Margin="0,4,0,0"
+          AutomationProperties.LiveSetting="Polite"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding HotkeyHint}"
+          TextWrapping="Wrap" />
+
         <Grid Margin="0,24,0,4">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

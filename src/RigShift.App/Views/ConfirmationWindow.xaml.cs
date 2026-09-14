@@ -25,6 +25,11 @@ public partial class ConfirmationWindow : FluentWindow
     private readonly TaskCompletionSource<ConfirmationResult> _result = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly CancellationTokenRegistration _cancellation;
+    private readonly Guid _profileId;
+
+    /// <summary>The countdown on screen, if any. UI thread only.</summary>
+    private static ConfirmationWindow? s_open;
+
     private HwndSource? _source;
     private nint _hwnd;
     private int _remaining;
@@ -34,6 +39,7 @@ public partial class ConfirmationWindow : FluentWindow
     {
         InitializeComponent();
         ProfileText.Text = profile.Name;
+        _profileId = profile.Id;
         _remaining = Math.Max(1, (int)Math.Ceiling(timeout.TotalSeconds));
         UpdateCountdown();
 
@@ -46,8 +52,21 @@ public partial class ConfirmationWindow : FluentWindow
     public static Task<ConfirmationResult> ShowAsync(Profile profile, TimeSpan timeout, CancellationToken cancellationToken)
     {
         var window = new ConfirmationWindow(profile, timeout, cancellationToken);
+        s_open = window;
         window.Show();
         return window._result.Task;
+    }
+
+    /// <summary>Confirms the open countdown if it belongs to <paramref name="profileId"/> (its hotkey was pressed again).</summary>
+    public static bool TryConfirm(Guid profileId)
+    {
+        if (s_open is not { } window || window._profileId != profileId)
+        {
+            return false;
+        }
+
+        window.Finish(ConfirmationResult.Confirmed);
+        return true;
     }
 
     protected override void OnClosing(CancelEventArgs e)
@@ -126,6 +145,11 @@ public partial class ConfirmationWindow : FluentWindow
         }
 
         Log.Information("Confirmation finished: {Result}", result);
+        if (s_open == this)
+        {
+            s_open = null;
+        }
+
         _timer.Stop();
         _cancellation.Dispose();
         if (_hwnd != 0)

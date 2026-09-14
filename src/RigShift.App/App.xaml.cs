@@ -86,6 +86,7 @@ public partial class App : Application, IAppShell
             await catalog.ReloadAsync(CancellationToken.None);
 
             Services.GetRequiredService<TrayIconService>().Start();
+            Services.GetRequiredService<HotkeyService>().Start();
 
 #if DEBUG
             // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
@@ -203,6 +204,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<ProfileCatalog>();
         services.AddSingleton<SwitchCoordinator>();
         services.AddSingleton<DisplayChangeWatcher>();
+        services.AddSingleton<HotkeyService>();
         services.AddSingleton<TrayIconService>();
         services.AddSingleton(sp => new CommandRunner(
             sp.GetRequiredService<IProfileStore>(),

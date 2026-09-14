@@ -21,7 +21,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         {
             Playback = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000001}", "Headphones"),
             PlaybackVolumePercent = 40,
-        }) with { Icon = "rig" };
+        }) with { Icon = "rig", Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 } };
 
         await store.SaveAsync(rig, Ct);
         IReadOnlyList<Profile> loaded = await store.LoadAllAsync(Ct);
