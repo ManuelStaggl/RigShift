@@ -18,6 +18,11 @@ public sealed class CommandPipeServer : IDisposable
     private const int MaxConnections = 4;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
+    /// <summary>A client that connects but sends no complete request must not hold one of the few instances (analysis finding H-04).</summary>
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
+
+    private readonly TimeSpan _requestTimeout;
+
     private readonly CommandRunner _runner;
     private readonly IAppShell _shell;
     private readonly ILogger _log;
@@ -30,9 +35,14 @@ public sealed class CommandPipeServer : IDisposable
     {
     }
 
-    /// <summary>Tests: an own pipe name and no WPF dispatcher.</summary>
+    /// <summary>Tests: an own pipe name, no WPF dispatcher and optionally a shorter request timeout.</summary>
     internal CommandPipeServer(
-        CommandRunner runner, IAppShell shell, ILogger log, string pipeName, Func<Func<Task<PipeResponse>>, Task<PipeResponse>> onUiThread)
+        CommandRunner runner,
+        IAppShell shell,
+        ILogger log,
+        string pipeName,
+        Func<Func<Task<PipeResponse>>, Task<PipeResponse>> onUiThread,
+        TimeSpan? requestTimeout = null)
     {
         ArgumentNullException.ThrowIfNull(log);
         _runner = runner;
@@ -40,6 +50,7 @@ public sealed class CommandPipeServer : IDisposable
         _log = log.ForContext<CommandPipeServer>();
         _pipeName = pipeName;
         _onUiThread = onUiThread;
+        _requestTimeout = requestTimeout ?? RequestTimeout;
     }
 
     public void Start()
@@ -108,7 +119,21 @@ public sealed class CommandPipeServer : IDisposable
         {
             try
             {
-                PipeRequest request = await PipeProtocol.ReadRequestAsync(server, cancellationToken);
+                PipeRequest request;
+                using (var readTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                {
+                    readTimeout.CancelAfter(_requestTimeout);
+                    try
+                    {
+                        request = await PipeProtocol.ReadRequestAsync(server, readTimeout.Token);
+                    }
+                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                    {
+                        _log.Warning("Command pipe client sent no complete request within {Timeout}, connection closed", _requestTimeout);
+                        return;
+                    }
+                }
+
                 PipeResponse response = await _onUiThread(() => ExecuteAsync(request.Arguments));
                 await PipeProtocol.WriteResponseAsync(server, response, cancellationToken);
             }

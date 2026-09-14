@@ -76,6 +76,39 @@ public sealed class CommandPipeServerTests
         response.ExitCode.ShouldBe(CliExitCodes.Applied);
     }
 
+    [Fact]
+    public async Task SilentClient_IsDisconnectedAfterTheRequestTimeout()
+    {
+        string pipeName = "RigShift.Tests." + Guid.NewGuid().ToString("N");
+        var sink = new CollectingSink();
+        using Logger log = new LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Sink(sink).CreateLogger();
+        var store = new InMemoryProfileStore();
+        store.Profiles.Add(Rig());
+        var runner = new CommandRunner(store, new FakeDisplayConfigurator(DeskActive()), Substitute.For<IAudioController>(),
+            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), Logger.None);
+        using var server = new CommandPipeServer(
+            runner, Substitute.For<IAppShell>(), log, pipeName, work => work(), requestTimeout: TimeSpan.FromMilliseconds(300));
+        server.Start();
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        await using var silent = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await silent.ConnectAsync(timeout.Token);
+
+        // The server closes its end: the read ends without data instead of waiting for the test's timeout.
+        int read = await silent.ReadAsync(new byte[1], timeout.Token);
+
+        read.ShouldBe(0);
+        sink.Events.ShouldContain(e => e.Level == LogEventLevel.Warning && e.MessageTemplate.Text.Contains("no complete request", StringComparison.Ordinal));
+
+        await using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await client.ConnectAsync(timeout.Token);
+        await PipeProtocol.WriteRequestAsync(client, new PipeRequest(["list"]), timeout.Token);
+        PipeResponse response = await PipeProtocol.ReadResponseAsync(client, timeout.Token);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+    }
+
     private sealed class CollectingSink : ILogEventSink
     {
         private readonly ConcurrentQueue<LogEvent> _events = new();
