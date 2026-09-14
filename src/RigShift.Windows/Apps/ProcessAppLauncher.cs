@@ -7,7 +7,8 @@ namespace RigShift.Windows.Apps;
 
 /// <summary>
 /// <see cref="IAppLauncher"/> over <see cref="Process"/>. Programs are matched by file name, like Task Manager shows
-/// them, because the full path of an elevated process cannot be read without elevation.
+/// them; where the executable path of a running process can be read, it must match a configured full path as well.
+/// The path of an elevated process cannot be read without elevation, so for those the name alone decides.
 /// </summary>
 public sealed class ProcessAppLauncher : IAppLauncher
 {
@@ -106,8 +107,68 @@ public sealed class ProcessAppLauncher : IAppLauncher
         }
     }
 
-    private static Process[] Find(string path) =>
-        Process.GetProcessesByName(Path.GetFileNameWithoutExtension(Expand(path)));
+    /// <summary>
+    /// Processes by file name; with a full path configured, those whose executable path is readable and different are
+    /// left out, so stopping "C:\SimHub\SimHubWPF.exe" does not end a same-named program elsewhere (analysis finding G-03).
+    /// </summary>
+    private Process[] Find(string path)
+    {
+        string file = Expand(path);
+        Process[] byName = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(file));
+        if (!Path.IsPathFullyQualified(file))
+        {
+            return byName;
+        }
+
+        var matching = new List<Process>(byName.Length);
+        foreach (Process process in byName)
+        {
+            string? executable = ExecutablePath(process);
+            if (IsSameExecutable(file, executable))
+            {
+                matching.Add(process);
+            }
+            else
+            {
+                _log.Debug("Process {ProcessId} ({Name}) runs from {Executable}, not {File}: left alone", process.Id, process.ProcessName, executable, file);
+                process.Dispose();
+            }
+        }
+
+        return [.. matching];
+    }
+
+    /// <summary>True when the paths name the same file, or the running path is unknown (e.g. an elevated process).</summary>
+    public static bool IsSameExecutable(string configuredPath, string? runningPath)
+    {
+        ArgumentNullException.ThrowIfNull(configuredPath);
+        if (string.IsNullOrEmpty(runningPath))
+        {
+            return true;
+        }
+
+        try
+        {
+            return string.Equals(Path.GetFullPath(configuredPath), Path.GetFullPath(runningPath), StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return true;
+        }
+    }
+
+    private static string? ExecutablePath(Process process)
+    {
+        try
+        {
+            return process.MainModule?.FileName;
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or NotSupportedException)
+        {
+            // Elevated or already exited: cannot tell, so the name decides as before.
+            return null;
+        }
+    }
 
     private static string Expand(string path) => Environment.ExpandEnvironmentVariables(path.Trim().Trim('"'));
 
