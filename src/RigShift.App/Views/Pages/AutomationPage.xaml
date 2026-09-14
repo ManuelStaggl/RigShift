@@ -4,7 +4,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="Automation">
+  Title="{loc:Tr Nav_Automation}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
       <Grid Margin="0,0,0,8">

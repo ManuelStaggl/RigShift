@@ -51,6 +51,8 @@
         TextWrapping="Wrap"
         Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
 
+      <!-- Scrolls instead of growing past the screen with many profiles (analysis finding I-05); MaxHeight set in code. -->
+      <ScrollViewer x:Name="ProfileList" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
@@ -99,10 +101,11 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </ScrollViewer>
 
       <TextBlock
         Margin="12,6,12,0"
-        AutomationProperties.LiveSetting="Polite"
+        controls:LiveRegion.IsLive="True"
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{loc:Tr Tray_Switching}"
         Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />

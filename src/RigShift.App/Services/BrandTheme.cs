@@ -14,7 +14,7 @@ public static class BrandTheme
     /// <summary>Key that exists only in a theme token dictionary, never in Shared or Profiles.</summary>
     private const string ThemeKey = "RigShift.Brush.selected";
 
-    private static readonly Color BrandBlue = Color.FromRgb(0x00, 0x78, 0xD4);
+    private const string PrimaryColorKey = "RigShift.Color.primary";
     private static readonly Dictionary<string, BitmapImage> Images = [];
 
     /// <summary>Whether text and symbols should be light, i.e. the background is dark.</summary>
@@ -43,9 +43,11 @@ public static class BrandTheme
 
         resources["RigShift.Image.symbol"] = Image($"rigshift-symbol-color-{(IsDark ? "dark" : "light")}-128w.png");
 
-        if (!highContrast)
+        // docs/PLAN.md 4.8: the WPF-UI accent is the brand primary of the theme (#0067B8 light, #79B8FF dark). Letting WPF-UI
+        // derive its shades from one blue gave other colors than the plan (analysis finding I-17).
+        if (!highContrast && tokens[PrimaryColorKey] is Color primary)
         {
-            ApplicationAccentColorManager.Apply(BrandBlue, theme);
+            ApplicationAccentColorManager.Apply(primary, primary, primary, primary);
         }
     }
 

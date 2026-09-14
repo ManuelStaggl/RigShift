@@ -17,11 +17,10 @@ public partial class MainWindow : FluentWindow
         _shell = shell;
         InitializeComponent();
         RootNavigation.SetServiceProvider(services);
-        Loaded += (_, _) =>
-        {
-            SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: false);
-            RootNavigation.Navigate(_page);
-        };
+
+        // In the constructor as WPF-UI documents it; the watcher attaches to the window handle once it exists.
+        SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: false);
+        Loaded += (_, _) => RootNavigation.Navigate(_page);
     }
 
     public void ShowPage(Type? page)

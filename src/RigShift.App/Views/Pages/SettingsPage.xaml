@@ -3,13 +3,18 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="Settings">
+  Title="{loc:Tr Nav_Settings}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
       <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Settings}" />
 
-      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_DefaultProfile}" Icon="{ui:SymbolIcon Star24}">
+      <!-- Headers as wrapping TextBlocks: a plain string header is cut off in a narrow window (analysis finding I-09). -->
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Star24}">
+        <ui:CardControl.Header>
+          <TextBlock Text="{loc:Tr Settings_DefaultProfile}" TextWrapping="Wrap" />
+        </ui:CardControl.Header>
         <ComboBox
           MinWidth="220"
           AutomationProperties.Name="{loc:Tr Settings_DefaultProfile}"
@@ -22,16 +27,19 @@
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_ApplyOnStartup}" IsChecked="{Binding ApplyDefaultOnStartup}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Autostart}" Icon="{ui:SymbolIcon Power24}">
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Power24}">
+        <ui:CardControl.Header>
+          <TextBlock Text="{loc:Tr Settings_Autostart}" TextWrapping="Wrap" />
+        </ui:CardControl.Header>
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_Autostart}" IsChecked="{Binding StartWithWindows}" />
       </ui:CardControl>
 
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Window24}">
         <ui:CardControl.Header>
           <StackPanel>
-            <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" />
+            <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" TextWrapping="Wrap" />
             <TextBlock
-              AutomationProperties.LiveSetting="Polite"
+              controls:LiveRegion.IsLive="True"
               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
               Text="{Binding ConfirmHint}"
               TextWrapping="Wrap" />
@@ -54,7 +62,10 @@
         </StackPanel>
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Language}" Icon="{ui:SymbolIcon Info24}">
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon LocalLanguage24}">
+        <ui:CardControl.Header>
+          <TextBlock Text="{loc:Tr Settings_Language}" TextWrapping="Wrap" />
+        </ui:CardControl.Header>
         <ComboBox
           MinWidth="220"
           AutomationProperties.Name="{loc:Tr Settings_Language}"
@@ -70,7 +81,7 @@
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowDownload24}">
         <ui:CardControl.Header>
           <StackPanel>
-            <TextBlock Text="{loc:Tr Settings_AutoUpdate}" />
+            <TextBlock Text="{loc:Tr Settings_AutoUpdate}" TextWrapping="Wrap" />
             <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Settings_AutoUpdateHint}" TextWrapping="Wrap" />
           </StackPanel>
         </ui:CardControl.Header>
