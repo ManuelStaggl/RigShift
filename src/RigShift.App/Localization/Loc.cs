@@ -6,15 +6,17 @@ namespace RigShift.App.Localization;
 
 /// <summary>
 /// String lookup for XAML (<c>{loc:Tr Key}</c>) and code. Switching the language raises a change for every
-/// indexer binding, so open windows update without a restart.
+/// indexer binding and <see cref="PropertyChanged"/>, so open windows and view models update without a restart.
 /// </summary>
 /// <remarks>
-/// The chosen culture is kept here instead of relying on <see cref="CultureInfo.CurrentUICulture"/>: a change made
+/// The chosen language is kept here instead of relying on <see cref="CultureInfo.CurrentUICulture"/>: a change made
 /// inside an async method is undone for the caller when the await returns (culture flows with the execution context).
+/// Only the text language follows the setting; numbers, dates and times keep the Windows regional format
+/// (analysis finding J-02: choosing "Deutsch" must not turn de-AT formats into neutral de ones).
 /// </remarks>
 public sealed class Loc : INotifyPropertyChanged
 {
-    private static readonly CultureInfo SystemCulture = CultureInfo.CurrentUICulture;
+    private static readonly CultureInfo SystemUICulture = CultureInfo.CurrentUICulture;
 
     private readonly ResourceManager _resources = new("RigShift.App.Resources.Strings", typeof(Loc).Assembly);
 
@@ -26,9 +28,13 @@ public sealed class Loc : INotifyPropertyChanged
 
     public static Loc Instance { get; } = new();
 
-    public CultureInfo Culture { get; private set; } = SystemCulture;
+    /// <summary>Format culture for numbers, dates and times: the Windows regional format, independent of the language.</summary>
+    public CultureInfo Culture { get; } = CultureInfo.CurrentCulture;
 
-    public string this[string key] => _resources.GetString(key, Culture) ?? key;
+    /// <summary>Language of the texts.</summary>
+    public CultureInfo UICulture { get; private set; } = SystemUICulture;
+
+    public string this[string key] => _resources.GetString(key, UICulture) ?? key;
 
     public static string Format(string key, params object?[] args) =>
         string.Format(Instance.Culture, Instance[key], args);
@@ -36,9 +42,8 @@ public sealed class Loc : INotifyPropertyChanged
     /// <param name="language"><c>null</c> follows Windows, otherwise a culture name such as <c>de</c>.</param>
     public void SetLanguage(string? language)
     {
-        Culture = string.IsNullOrWhiteSpace(language) ? SystemCulture : CultureInfo.GetCultureInfo(language);
-        CultureInfo.DefaultThreadCurrentUICulture = Culture;
-        CultureInfo.DefaultThreadCurrentCulture = Culture;
+        UICulture = string.IsNullOrWhiteSpace(language) ? SystemUICulture : CultureInfo.GetCultureInfo(language);
+        CultureInfo.DefaultThreadCurrentUICulture = UICulture;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
     }
 }
