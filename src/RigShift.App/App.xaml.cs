@@ -166,7 +166,6 @@ public partial class App : Application, IAppShell
 
             KeepAwakeForActiveProfile(catalog);
             await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
-            await ApplyDefaultProfileAsync(catalog);
         }
         catch (Exception ex)
         {
@@ -228,19 +227,6 @@ public partial class App : Application, IAppShell
         catch (Win32Exception ex)
         {
             Log.Warning(ex, "Keep-awake for {Profile} could not be set at startup", active.Name);
-        }
-    }
-
-    private async Task ApplyDefaultProfileAsync(ProfileCatalog catalog)
-    {
-        AppSettings settings = Services.GetRequiredService<SettingsService>().Current;
-        if (settings.ApplyDefaultProfileOnStartup
-            && settings.DefaultProfileId is { } id
-            && catalog.Find(id) is { } profile
-            && catalog.ActiveProfile?.Id != id)
-        {
-            Log.Information("Applying default profile {Profile} at startup", profile.Name);
-            await Services.GetRequiredService<SwitchCoordinator>().SwitchAsync(profile);
         }
     }
 

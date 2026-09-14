@@ -12,10 +12,11 @@ public sealed record AppSettings
 
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 
-    /// <summary>Profile shown first and optionally applied at startup.</summary>
+    /// <summary>
+    /// Profile marked as default. Applying it at startup was removed (user decision O-03, it competed with the USB
+    /// automation); older files with <c>applyDefaultProfileOnStartup</c> still load, the key is ignored.
+    /// </summary>
     public Guid? DefaultProfileId { get; init; }
-
-    public bool ApplyDefaultProfileOnStartup { get; init; }
 
     /// <summary>
     /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on

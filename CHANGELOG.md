@@ -73,6 +73,10 @@ All notable changes to this project are documented here. The format follows
   contain before you attach them to an issue.
 - `SECURITY.md` describes how updates are delivered and verified, that they are not code-signed, and the remaining
   risk.
+### Removed
+
+- The setting "Switch to the default profile when RigShift starts". It could compete with an automation rule at sign-in,
+  and Windows restores the last display arrangement after a restart by itself. Existing settings files still load.
 
 ## [1.3.1] - 2026-09-14
 

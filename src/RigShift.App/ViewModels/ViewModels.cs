@@ -294,9 +294,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial Choice? SelectedDefaultProfile { get; set; }
 
     [ObservableProperty]
-    public partial bool ApplyDefaultOnStartup { get; set; }
-
-    [ObservableProperty]
     public partial bool StartWithWindows { get; set; }
 
     /// <summary>
@@ -337,7 +334,6 @@ public sealed partial class SettingsViewModel : ObservableObject
             LanguageChoices.Add(new Choice("de", "Deutsch"));
             SelectedLanguage = LanguageChoices.FirstOrDefault(c => c.Key == current.Language) ?? LanguageChoices[0];
 
-            ApplyDefaultOnStartup = current.ApplyDefaultProfileOnStartup;
             ConfirmEnabled = current.ConfirmTimeoutSeconds > 0;
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
@@ -369,14 +365,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             Guid? id = value.Key is { } key ? Guid.Parse(key) : null;
             Persist(s => s with { DefaultProfileId = id });
-        }
-    }
-
-    partial void OnApplyDefaultOnStartupChanged(bool value)
-    {
-        if (!_loading)
-        {
-            Persist(s => s with { ApplyDefaultProfileOnStartup = value });
         }
     }
 

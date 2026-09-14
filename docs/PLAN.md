@@ -175,7 +175,8 @@ Ergebnis `Failed` mit klarer Meldung und Log-Verweis.
   Befehl aus.
 - **Tray:** Linksklick → Popup mit Profilen (aktives markiert), Rechtsklick → Kontextmenü (Öffnen, Aktuelle
   Anordnung als Profil speichern, Einstellungen, Beenden). Ergebnis als Balloon-Toast und Snackbar.
-- **Autostart:** HKCU `Run` mit `--minimized`; Standardprofil beim Start optional anwenden.
+- **Autostart:** HKCU `Run` mit `--minimized`. Standardprofil beim Start anwenden wurde gestrichen (Nutzerentscheidung
+  O-03, 2026-09-14): zweiter Automatik-Pfad neben der USB-Regel; Windows stellt die Anordnung nach dem Neustart selbst her.
 - **Aktives Profil erkennen:** Nach jedem `WM_DISPLAYCHANGE` Snapshot gegen alle Profile matchen
   (gleiche Displays, Positionen, Primär) → Tray-Icon und Häkchen aktualisieren, auch wenn der Nutzer in den
   Windows-Einstellungen umgeschaltet hat.

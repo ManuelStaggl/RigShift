@@ -23,10 +23,6 @@
           SelectedItem="{Binding SelectedDefaultProfile}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_ApplyOnStartup}" Icon="{ui:SymbolIcon Play24}">
-        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_ApplyOnStartup}" IsChecked="{Binding ApplyDefaultOnStartup}" />
-      </ui:CardControl>
-
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Power24}">
         <ui:CardControl.Header>
           <TextBlock Text="{loc:Tr Settings_Autostart}" TextWrapping="Wrap" />
