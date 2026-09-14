@@ -338,6 +338,9 @@ Stromspar-Warnung samt Anleitungsknopf (Gerät mit gesetztem Flag); Editor mit H
 Anruf-Absenkung, Wach halten und „Vor dem App-Start auf Gerät warten“. Abgeschnittenes Ende-Label der Regelkarte
 korrigiert (Umbruch).
 Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, Desktopsymbole, Surround, VR, CEC.
+**Reihenfolge nach 1.3.0 (entschieden 2026-09-14):** erst Hardware-Testrunde am Gaming-PC (Befunde → 1.3.x), dann
+eine vollständige Performance-, Last- und Zuverlässigkeitsanalyse (vom Nutzer gewünscht), dann v2. Begründung: die
+Analyse prüft den Stand, der wirklich läuft, mit echten Logs als Grundlage, und v2 baut auf einer geprüften Basis auf.
 
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
 Releases nützlich)
