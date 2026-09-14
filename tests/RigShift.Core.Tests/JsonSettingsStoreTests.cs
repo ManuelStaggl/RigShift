@@ -40,13 +40,13 @@ public sealed class JsonSettingsStoreTests : IDisposable
         var store = new JsonSettingsStore(File, Logger.None);
         var rule = new AutomationRule
         {
-            TemplateId = null,
-            ExecutablePath = @"C:\Games\MySim.exe",
+            UsbDeviceId = "VID_046D&PID_C24F",
             ProfileId = Guid.NewGuid(),
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = Guid.NewGuid(),
             SkipConfirmation = true,
             IsEnabled = false,
+            ExitDelaySeconds = 30,
         };
 
         await store.SaveAsync(new AppSettings { AutomationRules = new List<AutomationRule> { rule }, AutomationPaused = true }, Ct);
@@ -73,7 +73,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
     public async Task Load_RuleWithoutEnabledKey_IsEnabled()
     {
         Directory.CreateDirectory(_directory);
-        await System.IO.File.WriteAllTextAsync(File, """{ "automationRules": [ { "templateId": "iracing", "onExit": "SwitchBack" } ] }""", Ct);
+        await System.IO.File.WriteAllTextAsync(File, """{ "automationRules": [ { "usbDeviceId": "VID_0EB7&PID_0020", "onExit": "SwitchBack" } ] }""", Ct);
 
         AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
 
@@ -107,27 +107,25 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task Load_FileFromVersion1_2_HasHttpApiOffOnDefaultPort()
+    public async Task Load_FileWithKeysOfDroppedFeatures_IgnoresThem()
     {
+        // Unreleased builds wrote game rules and HTTP API settings; such files must still load.
         Directory.CreateDirectory(_directory);
-        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1, "automationPaused": true }""", Ct);
+        await System.IO.File.WriteAllTextAsync(File, """
+            {
+              "schemaVersion": 1,
+              "confirmTimeoutSeconds": 20,
+              "httpApiEnabled": true,
+              "httpApiPort": 47800,
+              "httpApiToken": "abc",
+              "automationRules": [ { "templateId": "iracing", "executablePath": "C:\\Games\\MySim.exe", "onExit": "Stay" } ]
+            }
+            """, Ct);
 
         AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
 
-        settings.HttpApiEnabled.ShouldBeFalse();
-        settings.HttpApiPort.ShouldBe(AppSettings.DefaultHttpApiPort);
-        settings.HttpApiToken.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task SaveThenLoad_RoundTripsHttpApi()
-    {
-        var store = new JsonSettingsStore(File, Logger.None);
-        var settings = new AppSettings { HttpApiEnabled = true, HttpApiPort = 50123, HttpApiToken = "abc" };
-
-        await store.SaveAsync(settings, Ct);
-
-        (await store.LoadAsync(Ct)).ShouldBe(settings);
+        settings.ConfirmTimeoutSeconds.ShouldBe(20);
+        settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().UsbDeviceId.ShouldBeNull();
     }
 
     [Fact]

@@ -291,7 +291,24 @@ per Spiel steht in Frage (man startet Spiele erst im Rig; Umschalten während de
 **Entschieden: der USB-Trigger bleibt** („an das Rig gehen, Wheelbase einschalten, alles Weitere passiert
 automatisch“). Dazu auf Wunsch des Nutzers die **Wartezeit bis zur Ende-Aktion pro Regel einstellbar**
 (`AutomationRule.ExitDelaySeconds`, Standard 10 s, 0–600) – Sim-Hardware muss oft kurz aus- und wieder eingeschaltet
-werden. Über die übrigen 1.3-Funktionen wird nach einer Web-Recherche zu Nutzerwünschen entschieden.
+werden.
+**Entschieden nach Web-Recherche** (Kern laut Belegen: richtiger Primärbildschirm, ein Klick/Hotkey, Audiogerät,
+„erst umschalten, dann Spiel starten“, robuste Wiederherstellung): **gestrichen** werden die Automatik per Spiel samt
+Vorlagen (Punkt 6 – schaltet zu spät und mitten im Spielstart), die lokale HTTP-API (Punkt 11 – keine Nachfrage,
+offener Port) und der Energieplan pro Profil (Punkt 9 – keine Nachfrage); Home Assistant (Punkt 12) verworfen.
+**Behalten:** USB-Trigger, Wach halten, Apps und Lautstärke pro Profil, HDR + Hz pro Bildschirm, Monitornamen,
+Seiten Bildschirme und Über & Hilfe. Die gestrichenen Stände bleiben in der Git-Historie (`f10c971` API,
+`e151728` Energie, `eea7338`/`3fb1fd4` Automatik). Die Abschnitte zu 6, 9, 11 und 12 unten sind damit Historie.
+**Neu für 1.3 gewählt** (zweite Recherche 2026-09-14, Nutzer hat alle vier genommen):
+1. **Verlorene Fenster holen** – nach dem Umschalten Fenster, die auf keinem aktiven Bildschirm mehr liegen, auf den
+   Hauptbildschirm verschieben (Discord/Steam/SimHub landen sonst auf abgeschalteten Bildschirmen). Immer an.
+2. **Apps warten auf Gerät** – pro Profil optional ein USB-Gerät, auf das vor dem App-Start gewartet wird (mit
+   Höchstwartezeit), sonst Hinweis im Tray. Wheel-Software und Spiele wollen das Gerät vor dem Start sehen.
+3. **Rig-Check USB-Stromsparen** – Hinweis, wenn Windows ein Trigger-Gerät schlafen legen darf (Pedal-/Wheelbase-
+   Abbrüche). Nur Hinweis mit Anleitung, keine Änderung ohne Adminrechte.
+4. **Windows-Lautstärkeabsenkung bei Anrufen aus** – Profil-Schalter, beim Zurückschalten alter Wert (HKCU,
+   undokumentiert → Fehler nur im Log).
+Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, Desktopsymbole, Surround, VR, CEC.
 
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
 Releases nützlich)

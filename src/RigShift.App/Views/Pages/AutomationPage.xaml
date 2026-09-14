@@ -49,81 +49,19 @@
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <ui:ToggleSwitch
                   Grid.Row="1"
                   Margin="0,0,16,0"
                   VerticalAlignment="Center"
-                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
                   AutomationProperties.Name="{loc:Tr Automation_Enabled}"
                   IsChecked="{Binding IsEnabled}"
                   ToolTip="{loc:Tr Automation_Enabled}" />
 
-                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TriggerLabel}" />
-                <ComboBox
-                  Grid.Row="1"
-                  Grid.Column="1"
-                  Margin="0,4,0,0"
-                  AutomationProperties.Name="{loc:Tr Automation_Game}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding Owner.GameChoices}"
-                  SelectedItem="{Binding SelectedGame}" />
-
-                <TextBlock Grid.Column="3" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
-                <ComboBox
-                  Grid.Row="1"
-                  Grid.Column="3"
-                  Margin="0,4,0,0"
-                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
-                  AutomationProperties.Name="{loc:Tr Automation_Profile}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding Owner.ProfileChoices}"
-                  SelectedItem="{Binding SelectedProfile}" />
-
-                <ui:Button
-                  Grid.Row="1"
-                  Grid.Column="4"
-                  Margin="16,4,0,0"
-                  VerticalAlignment="Stretch"
-                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
-                  AutomationProperties.Name="{loc:Tr Automation_Delete}"
-                  Command="{Binding Owner.DeleteRuleCommand}"
-                  CommandParameter="{Binding}"
-                  Icon="{ui:SymbolIcon Delete24}"
-                  ToolTip="{loc:Tr Automation_Delete}" />
-
-                <Grid
-                  Grid.Row="2"
-                  Grid.Column="1"
-                  Grid.ColumnSpan="4"
-                  Margin="0,8,0,0"
-                  Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <ui:TextBox
-                    AutomationProperties.Name="{loc:Tr Automation_Executable}"
-                    PlaceholderText="{loc:Tr Automation_ExecutablePlaceholder}"
-                    Text="{Binding ExecutablePath}" />
-                  <ui:Button
-                    Grid.Column="1"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Stretch"
-                    AutomationProperties.Name="{loc:Tr App_Browse}"
-                    Click="OnBrowseExecutable"
-                    Icon="{ui:SymbolIcon FolderOpen24}"
-                    ToolTip="{loc:Tr App_Browse}" />
-                </Grid>
-
-                <Grid
-                  Grid.Row="2"
-                  Grid.Column="1"
-                  Grid.ColumnSpan="4"
-                  Margin="0,8,0,0"
-                  Visibility="{Binding IsUsb, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" />
+                <Grid Grid.Row="1" Grid.Column="1" Margin="0,4,0,0">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -143,11 +81,34 @@
                     ToolTip="{loc:Tr Automation_RefreshDevices}" />
                 </Grid>
 
-                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding EndLabel}" />
-                <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,4,0,0">
+                <TextBlock Grid.Column="3" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
+                <ComboBox
+                  Grid.Row="1"
+                  Grid.Column="3"
+                  Margin="0,4,0,0"
+                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_Profile}"
+                  DisplayMemberPath="Name"
+                  ItemsSource="{Binding Owner.ProfileChoices}"
+                  SelectedItem="{Binding SelectedProfile}" />
+
+                <ui:Button
+                  Grid.Row="1"
+                  Grid.Column="4"
+                  Margin="16,4,0,0"
+                  VerticalAlignment="Stretch"
+                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_Delete}"
+                  Command="{Binding Owner.DeleteRuleCommand}"
+                  CommandParameter="{Binding}"
+                  Icon="{ui:SymbolIcon Delete24}"
+                  ToolTip="{loc:Tr Automation_Delete}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" />
+                <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
                   <ComboBox
-                    AutomationProperties.HelpText="{Binding SelectedGame.Name}"
-                    AutomationProperties.Name="{loc:Tr Automation_OnExit}"
+                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                    AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding Owner.ExitChoices}"
                     SelectedItem="{Binding SelectedExit}" />
@@ -165,12 +126,12 @@
                   </StackPanel>
                 </StackPanel>
                 <CheckBox
-                  Grid.Row="4"
+                  Grid.Row="3"
                   Grid.Column="3"
                   Grid.ColumnSpan="2"
                   Margin="0,4,0,0"
                   VerticalAlignment="Center"
-                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
                   Content="{loc:Tr Automation_SkipConfirmation}"
                   IsChecked="{Binding SkipConfirmation}" />
               </Grid>

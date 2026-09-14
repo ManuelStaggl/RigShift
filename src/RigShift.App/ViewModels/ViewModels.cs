@@ -275,18 +275,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly ILogger _log;
     private bool _loading;
 
-    private readonly HttpApiService _api;
-
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, HttpApiService api, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
-        ArgumentNullException.ThrowIfNull(api);
         _settings = settings;
         _catalog = catalog;
         _paths = paths;
-        _api = api;
         _log = log.ForContext<SettingsViewModel>();
-        _api.StateChanged += (_, _) => OnPropertyChanged(nameof(HttpApiStatus));
     }
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
@@ -345,96 +340,10 @@ public sealed partial class SettingsViewModel : ObservableObject
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             StartWithWindows = _settings.Autostart.IsEnabled;
-            HttpApiEnabled = current.HttpApiEnabled;
-            HttpApiPort = current.HttpApiPort;
-            HttpApiToken = current.HttpApiToken ?? string.Empty;
-            HttpApiCopyStatus = null;
         }
         finally
         {
             _loading = false;
-        }
-    }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HttpApiStatus))]
-    public partial bool HttpApiEnabled { get; set; }
-
-    [ObservableProperty]
-    public partial double? HttpApiPort { get; set; }
-
-    [ObservableProperty]
-    public partial string HttpApiToken { get; set; } = string.Empty;
-
-    /// <summary>Feedback of the copy buttons.</summary>
-    [ObservableProperty]
-    public partial string? HttpApiCopyStatus { get; set; }
-
-    public string HttpApiStatus =>
-        _api.ListeningPort is { } port ? Loc.Format("Settings_ApiListening", BaseUrl(port))
-        : _api.Error is { } error ? Loc.Format("Settings_ApiFailed", _settings.Current.HttpApiPort, error)
-        : string.Empty;
-
-    partial void OnHttpApiEnabledChanged(bool value)
-    {
-        if (_loading)
-        {
-            return;
-        }
-
-        _log.Information("HTTP API turned {State}", value ? "on" : "off");
-        if (value && string.IsNullOrEmpty(_settings.Current.HttpApiToken))
-        {
-            HttpApiToken = Core.Api.ApiHandler.CreateToken();
-        }
-
-        Persist(s => s with { HttpApiEnabled = value, HttpApiToken = HttpApiToken.Length > 0 ? HttpApiToken : s.HttpApiToken });
-    }
-
-    partial void OnHttpApiPortChanged(double? value)
-    {
-        if (!_loading && value is not null)
-        {
-            int port = (int)Math.Clamp(Math.Round(value.Value), 1024, 65535);
-            Persist(s => s with { HttpApiPort = port });
-        }
-    }
-
-    [RelayCommand]
-    private void RegenerateHttpApiToken()
-    {
-        HttpApiToken = Core.Api.ApiHandler.CreateToken();
-        _log.Information("HTTP API token regenerated");
-        Persist(s => s with { HttpApiToken = HttpApiToken });
-        HttpApiCopyStatus = Loc.Instance["Settings_ApiTokenRegenerated"];
-    }
-
-    [RelayCommand]
-    private void CopyHttpApiToken() => Copy(HttpApiToken);
-
-    [RelayCommand]
-    private void OpenHttpApiDocs() => ShellFolders.OpenUrl("https://github.com/ManuelStaggl/RigShift/blob/main/docs/http-api.md", _log);
-
-    [RelayCommand]
-    private void CopyHttpApiExample()
-    {
-        string profile = Uri.EscapeDataString(_catalog.Items.FirstOrDefault()?.Name ?? "Rig");
-        Copy($"curl.exe -X POST -H \"Authorization: Bearer {HttpApiToken}\" {BaseUrl(_settings.Current.HttpApiPort)}profiles/{profile}/apply");
-    }
-
-    private static string BaseUrl(int port) => string.Create(CultureInfo.InvariantCulture, $"http://127.0.0.1:{port}/api/");
-
-    private void Copy(string text)
-    {
-        try
-        {
-            System.Windows.Clipboard.SetText(text);
-            HttpApiCopyStatus = Loc.Instance["About_Copied"];
-        }
-        catch (COMException ex)
-        {
-            _log.Warning(ex, "HTTP API text could not be copied to the clipboard");
-            HttpApiCopyStatus = Loc.Format("About_CopyFailed", ex.Message);
         }
     }
 

@@ -18,21 +18,13 @@ All notable changes to this project are documented here. The format follows
   **Identify**, which shows a large number on every active screen.
 - New page **About & help**: version and updates, recent switches, **Copy diagnostic info** for bug reports, the log
   folder and links to GitHub.
-- New page **Automation**: switch profiles when a game starts. Pick Le Mans Ultimate, iRacing, Assetto Corsa
-  Competizione, Assetto Corsa EVO, Assetto Corsa Rally, rFactor 2, Automobilista 2, RaceRoom, F1 24/25 or Forza
-  Horizon 6 from a list, or choose any program. Each rule
-  decides what happens when the game closes (stay, switch back or switch to another profile) and whether to ask for
-  confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
-- Automation rules can also react to a USB device, e.g. switch to the rig when you turn on the wheelbase and back when
-  you turn it off. Pick the device from the connected ones; it keeps matching in another USB port. Each rule sets how
-  long the device or game must stay gone before it switches back (10 s by default), so a quick power cycle of the
-  wheelbase changes nothing.
-- Local HTTP API for scripts, SimHub and Stream Deck: list profiles, read the status and switch profiles. Off by
-  default; turn it on in the settings. Only reachable from the same PC and protected by a token. See
-  [docs/http-api.md](docs/http-api.md).
-- Power settings per profile: keep the PC awake (no sleep, screen saver or display timeout while racing with only a
-  wheel) and a power plan such as High performance. Switching to a profile without a plan brings back the previous
-  plan; if you do not confirm the switch, both are undone.
+- New page **Automation**: switch profiles when a USB device connects, e.g. to the rig when you turn on the wheelbase
+  and back when you turn it off. Pick the device from the connected ones; it keeps matching in another USB port. Each
+  rule decides what happens when the device is gone (stay, switch back or switch to another profile), how long it
+  must stay gone first (10 s by default, so a quick power cycle changes nothing) and whether to ask for confirmation.
+  Pause all rules from the page or the tray menu.
+- Keep the PC awake per profile: no sleep, screen saver or display timeout while racing with only a wheel. If you do
+  not confirm the switch, it is undone.
 - HDR per display: on, off or unchanged. Saving the current arrangement remembers it; if you do not confirm the
   switch, HDR goes back too.
 - Choose the refresh rate per display in the profile editor from the rates the monitor offers.

@@ -1,12 +1,12 @@
 namespace RigShift.Core.Automation;
 
-/// <summary>What a rule does once its game has closed or its device is gone (docs/PLAN.md, section 6).</summary>
+/// <summary>What a rule does once its device is gone (docs/PLAN.md, section 6).</summary>
 public enum ExitAction
 {
     /// <summary>Stay in the rule's profile.</summary>
     Stay,
 
-    /// <summary>Switch back to the profile that was active when the game started or the device connected.</summary>
+    /// <summary>Switch back to the profile that was active when the device connected.</summary>
     SwitchBack,
 
     /// <summary>Switch to <see cref="AutomationRule.ExitProfileId"/>.</summary>
@@ -14,8 +14,8 @@ public enum ExitAction
 }
 
 /// <summary>
-/// "When this game starts (or this USB device connects), switch to that profile." Stored in the application settings.
-/// A rule has exactly one trigger: <see cref="UsbDeviceId"/> when set, otherwise the game.
+/// "When this USB device connects, switch to that profile." Stored in the application settings. A rule without
+/// <see cref="UsbDeviceId"/> (e.g. a game rule from an unreleased build) is ignored.
 /// </summary>
 public sealed record AutomationRule
 {
@@ -27,13 +27,7 @@ public sealed record AutomationRule
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
-    /// <summary>Built-in game template, or <c>null</c> for a custom program in <see cref="ExecutablePath"/>.</summary>
-    public string? TemplateId { get; init; }
-
-    /// <summary>Program of a custom game; only its file name is matched, like Task Manager shows processes.</summary>
-    public string? ExecutablePath { get; init; }
-
-    /// <summary>USB device as <c>VID_xxxx&amp;PID_xxxx</c>; set, the rule watches this device instead of a game.</summary>
+    /// <summary>USB device as <c>VID_xxxx&amp;PID_xxxx</c>; empty until a device is picked.</summary>
     public string? UsbDeviceId { get; init; }
 
     /// <summary>Name of the device when it was picked, shown while it is not connected.</summary>
@@ -49,7 +43,7 @@ public sealed record AutomationRule
     public bool SkipConfirmation { get; init; }
 
     /// <summary>
-    /// Seconds the game or device must stay gone before the end action runs, so turning a wheelbase off and on again is
+    /// Seconds the device must stay gone before the end action runs, so turning a wheelbase off and on again is
     /// no end. <c>set</c>: a rule written without the key keeps the initializer value.
     /// </summary>
     public int ExitDelaySeconds { get; set; } = DefaultExitDelaySeconds;

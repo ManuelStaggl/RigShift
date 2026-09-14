@@ -36,10 +36,4 @@ public sealed record Profile
 
     /// <summary>No standby, screen saver or display timeout while this profile is active (docs/PLAN.md, section 6, item 8).</summary>
     public bool KeepAwake { get; init; }
-
-    /// <summary>
-    /// Power plan to activate; <c>null</c> leaves it unchanged. Switching from such a profile to one without a plan
-    /// restores the plan that was active before.
-    /// </summary>
-    public PowerPlan? PowerPlan { get; init; }
 }

@@ -1,17 +1,8 @@
-using RigShift.Core.Profiles;
-
 namespace RigShift.Core.Abstractions;
 
-/// <summary>OS boundary for power plans and the keep-awake request (docs/PLAN.md, section 6, items 8 + 9).</summary>
+/// <summary>OS boundary for the keep-awake request (docs/PLAN.md, section 6, item 8).</summary>
 public interface IPowerController
 {
-    /// <summary>The power plans of this machine with their display names.</summary>
-    IReadOnlyList<PowerPlan> ListPlans();
-
-    Guid GetActivePlan();
-
-    void SetActivePlan(Guid planId);
-
     /// <summary>True while RigShift holds a request that keeps the system and the displays on.</summary>
     bool IsKeepingAwake { get; }
 

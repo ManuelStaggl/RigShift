@@ -40,22 +40,11 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
-    /// <summary>Game rules of the automation page (docs/PLAN.md, section 6).</summary>
+    /// <summary>USB device rules of the automation page (docs/PLAN.md, section 6).</summary>
     public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
 
     /// <summary>All rules paused, e.g. from the tray menu. <c>false</c> is the default for files without the key.</summary>
     public bool AutomationPaused { get; init; }
-
-    /// <summary>Local HTTP API on 127.0.0.1 (docs/PLAN.md, section 6, item 11). Off by default.</summary>
-    public bool HttpApiEnabled { get; init; }
-
-    /// <summary>Port of the HTTP API. <c>set</c> so that a file without the key keeps the initializer value.</summary>
-    public int HttpApiPort { get; set; } = DefaultHttpApiPort;
-
-    /// <summary>Bearer token for every API call; created when the API is switched on.</summary>
-    public string? HttpApiToken { get; init; }
-
-    public const int DefaultHttpApiPort = 47800;
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>

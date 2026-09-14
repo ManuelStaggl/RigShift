@@ -7,6 +7,8 @@ namespace RigShift.Core.Tests;
 public sealed class AutomationTriggerTests
 {
     private const string Wheelbase = "VID_0EB7&PID_0020";
+    private const string Dongle = "VID_046D&PID_C547";
+    private static readonly string WheelbaseKey = UsbDeviceIds.Key(Wheelbase);
     private static readonly Guid Desk = Guid.NewGuid();
     private static readonly Guid Rig = Guid.NewGuid();
     private static readonly Guid Tv = Guid.NewGuid();
@@ -15,9 +17,9 @@ public sealed class AutomationTriggerTests
     private readonly AutomationTrigger _trigger = new();
     private DateTimeOffset _now = Start;
 
-    private static AutomationRule IRacingRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool enabled = true, bool skip = false) => new()
+    private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool enabled = true, bool skip = false) => new()
     {
-        TemplateId = "iracing",
+        UsbDeviceId = Wheelbase,
         ProfileId = Rig,
         OnExit = onExit,
         ExitProfileId = exitProfile,
@@ -25,55 +27,55 @@ public sealed class AutomationTriggerTests
         SkipConfirmation = skip,
     };
 
-    private static HashSet<string> Running(params string[] names) => new(names, ProcessNames.Comparer);
+    private static HashSet<string> Present(params string[] keys) => new(keys, StringComparer.OrdinalIgnoreCase);
 
-    private IReadOnlyList<TriggerAction> Poll(AutomationRule rule, Guid? active, params string[] running) =>
-        Poll([rule], active, running);
+    private IReadOnlyList<TriggerAction> Poll(AutomationRule rule, Guid? active, params string[] present) =>
+        Poll([rule], active, present);
 
-    private IReadOnlyList<TriggerAction> Poll(IReadOnlyList<AutomationRule> rules, Guid? active, params string[] running)
+    private IReadOnlyList<TriggerAction> Poll(IReadOnlyList<AutomationRule> rules, Guid? active, params string[] present)
     {
-        IReadOnlyList<TriggerAction> actions = _trigger.Evaluate(rules, Running(running), active, _now);
+        IReadOnlyList<TriggerAction> actions = _trigger.Evaluate(rules, Present(present), active, _now);
         _now += TimeSpan.FromSeconds(2);
         return actions;
     }
 
     [Fact]
-    public void GameStarts_SwitchesToRuleProfile()
+    public void DeviceConnects_SwitchesToRuleProfile()
     {
-        AutomationRule rule = IRacingRule(skip: true);
+        AutomationRule rule = WheelbaseRule(skip: true);
         Poll(rule, Desk).ShouldBeEmpty();
 
-        IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, "iRacingSim64DX11");
+        IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, WheelbaseKey);
 
         actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
         actions[0].SkipConfirmation.ShouldBeTrue();
     }
 
     [Fact]
-    public void GameRunningAtFirstPoll_DoesNotSwitch()
+    public void DeviceConnectedAtFirstPoll_DoesNotSwitch()
     {
-        AutomationRule rule = IRacingRule();
+        AutomationRule rule = WheelbaseRule();
 
-        Poll(rule, Desk, "iRacingSim64DX11").ShouldBeEmpty();
-        Poll(rule, Desk, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
     }
 
     [Fact]
     public void ProfileAlreadyActive_DoesNotSwitchAndNotBackOnExit()
     {
-        AutomationRule rule = IRacingRule();
+        AutomationRule rule = WheelbaseRule();
         Poll(rule, Rig).ShouldBeEmpty();
-        Poll(rule, Rig, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
 
-        GameGoneLongEnough(rule, Rig).ShouldBeEmpty();
+        GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
 
     [Fact]
-    public void GameCloses_SwitchesBackAfterDelay()
+    public void DeviceGone_SwitchesBackAfterDelay()
     {
-        AutomationRule rule = IRacingRule();
+        AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, "iRacingSim64DX11");
+        Poll(rule, Desk, WheelbaseKey);
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += TimeSpan.FromSeconds(5);
@@ -81,161 +83,126 @@ public sealed class AutomationTriggerTests
         _now += TimeSpan.FromSeconds(5);
 
         Poll(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
-        GameGoneLongEnough(rule, Desk).ShouldBeEmpty();
+        GoneLongEnough(rule, Desk).ShouldBeEmpty();
     }
 
     [Fact]
-    public void GameRestartsWithinDelay_NeitherSwitchesBackNorAgain()
+    public void DeviceBackWithinDelay_NeitherSwitchesBackNorAgain()
     {
-        AutomationRule rule = IRacingRule();
+        AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, "iRacingSim64DX11");
+        Poll(rule, Desk, WheelbaseKey);
         Poll(rule, Rig);
 
-        Poll(rule, Rig, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
         _now += TimeSpan.FromMinutes(1);
-        Poll(rule, Rig, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
 
-        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Desk);
+        GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Desk);
     }
 
     [Fact]
-    public void UserPickedAnotherProfileDuringGame_ExitDoesNothing()
+    public void UserPickedAnotherProfileMeanwhile_ExitDoesNothing()
     {
-        AutomationRule rule = IRacingRule(ExitAction.SwitchTo, Desk);
+        AutomationRule rule = WheelbaseRule(ExitAction.SwitchTo, Desk);
         Poll(rule, Desk);
-        Poll(rule, Desk, "iRacingSim64DX11");
+        Poll(rule, Desk, WheelbaseKey);
 
-        GameGoneLongEnough(rule, Tv).ShouldBeEmpty();
+        GoneLongEnough(rule, Tv).ShouldBeEmpty();
     }
 
     [Fact]
     public void ExitSwitchTo_SwitchesToChosenProfile()
     {
-        AutomationRule rule = IRacingRule(ExitAction.SwitchTo, Tv);
+        AutomationRule rule = WheelbaseRule(ExitAction.SwitchTo, Tv);
         Poll(rule, Desk);
-        Poll(rule, Desk, "iRacingSim64DX11");
+        Poll(rule, Desk, WheelbaseKey);
 
-        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Tv);
+        GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Tv);
     }
 
     [Fact]
     public void ExitStay_DoesNothing()
     {
-        AutomationRule rule = IRacingRule(ExitAction.Stay);
+        AutomationRule rule = WheelbaseRule(ExitAction.Stay);
         Poll(rule, Desk);
-        Poll(rule, Desk, "iRacingSim64DX11");
+        Poll(rule, Desk, WheelbaseKey);
 
-        GameGoneLongEnough(rule, Rig).ShouldBeEmpty();
+        GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
 
     [Fact]
     public void DisabledRule_DoesNothing()
     {
-        AutomationRule rule = IRacingRule(enabled: false);
+        AutomationRule rule = WheelbaseRule(enabled: false);
         Poll(rule, Desk);
 
-        Poll(rule, Desk, "iRacingSim64DX11").ShouldBeEmpty();
-        GameGoneLongEnough(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
 
     [Fact]
-    public void AnyExecutableOfTemplate_CountsAsRunning()
+    public void DeviceMatchedByVendorAndProductIdOnly()
     {
-        var rule = new AutomationRule { TemplateId = "ams2", ProfileId = Rig };
+        var rule = new AutomationRule { UsbDeviceId = @"USB\VID_0eb7&PID_0020\5&1a2b", ProfileId = Rig };
         Poll(rule, Desk);
 
-        Poll(rule, Desk, "ams2").ShouldHaveSingleItem();
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
     }
 
     [Fact]
-    public void CustomProgram_MatchedByFileName()
+    public void DeviceOfRuleChangedWhileNewDeviceIsConnected_DoesNotSwitch()
     {
-        var rule = new AutomationRule { ExecutablePath = @"""C:\Games\My Sim\MySim.EXE""", ProfileId = Rig };
-        Poll(rule, Desk);
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk, UsbDeviceIds.Key(Dongle));
 
-        Poll(rule, Desk, "mysim").ShouldHaveSingleItem();
+        Poll(rule with { UsbDeviceId = Dongle }, Desk, UsbDeviceIds.Key(Dongle)).ShouldBeEmpty();
     }
 
     [Fact]
-    public void GameOfRuleChangedWhileNewGameRuns_DoesNotSwitch()
+    public void RuleAddedWhileDeviceIsConnected_DoesNotSwitch()
     {
-        AutomationRule rule = IRacingRule();
-        Poll(rule, Desk, "AC2-Win64-Shipping");
-
-        Poll(rule with { TemplateId = "acc" }, Desk, "AC2-Win64-Shipping").ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RuleAddedWhileGameRuns_DoesNotSwitch()
-    {
-        AutomationRule other = IRacingRule() with { TemplateId = "acc" };
+        AutomationRule other = WheelbaseRule() with { Id = Guid.NewGuid(), UsbDeviceId = Dongle };
         Poll(other, Desk);
 
-        Poll([other, IRacingRule()], Desk, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll([other, WheelbaseRule()], Desk, WheelbaseKey).ShouldBeEmpty();
     }
 
     [Fact]
     public void Reset_NextPollIsBaseline()
     {
-        AutomationRule rule = IRacingRule();
+        AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
         _trigger.Reset();
 
-        Poll(rule, Desk, "iRacingSim64DX11").ShouldBeEmpty();
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
     }
 
     [Fact]
-    public void UsbDeviceConnects_SwitchesToRuleProfile()
+    public void RuleWithoutDevice_IsIgnored()
     {
-        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig };
-        Poll(rule, Desk).ShouldBeEmpty();
+        // Game rules written by an unreleased build have no device id.
+        var rule = new AutomationRule { ProfileId = Rig };
+        var empty = new AutomationRule { UsbDeviceId = string.Empty, ProfileId = Rig };
+        Poll([rule, empty], Desk);
 
-        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase)).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
-    }
-
-    [Fact]
-    public void UsbDeviceGone_SwitchesBackAfterDelay()
-    {
-        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig, OnExit = ExitAction.SwitchBack };
-        Poll(rule, Desk);
-        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase));
-
-        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
-    }
-
-    [Fact]
-    public void UsbRule_IgnoresGameOfSameRuleAndProcessNamedLikeDevice()
-    {
-        var rule = new AutomationRule { UsbDeviceId = Wheelbase, TemplateId = "iracing", ProfileId = Rig };
-        Poll(rule, Desk);
-
-        Poll(rule, Desk, "iRacingSim64DX11", Wheelbase).ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RuleChangedFromGameToConnectedDevice_DoesNotSwitch()
-    {
-        AutomationRule rule = IRacingRule();
-        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase));
-
-        Poll(rule with { TemplateId = null, UsbDeviceId = Wheelbase }, Desk, UsbDeviceIds.Key(Wheelbase)).ShouldBeEmpty();
+        Poll([rule, empty], Desk, WheelbaseKey, "iRacingSim64DX11").ShouldBeEmpty();
+        AutomationTrigger.WatchedKeysOf(rule).ShouldBeEmpty();
     }
 
     [Fact]
     public void DeviceOffForLessThanTheRuleDelay_DoesNotSwitchBack()
     {
-        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig, OnExit = ExitAction.SwitchBack, ExitDelaySeconds = 60 };
-        string wheelbase = UsbDeviceIds.Key(Wheelbase);
+        AutomationRule rule = WheelbaseRule() with { ExitDelaySeconds = 60 };
         Poll(rule, Desk);
-        Poll(rule, Desk, wheelbase).ShouldHaveSingleItem();
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += TimeSpan.FromSeconds(30);
         Poll(rule, Rig).ShouldBeEmpty();
-        Poll(rule, Rig, wheelbase).ShouldBeEmpty();
+        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
 
-        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+        GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
     }
 
     [Fact]
@@ -246,7 +213,7 @@ public sealed class AutomationTriggerTests
         AutomationTrigger.ExitDelayOf(new AutomationRule()).ShouldBe(TimeSpan.FromSeconds(10));
     }
 
-    private IReadOnlyList<TriggerAction> GameGoneLongEnough(AutomationRule rule, Guid active)
+    private IReadOnlyList<TriggerAction> GoneLongEnough(AutomationRule rule, Guid active)
     {
         Poll(rule, active).ShouldBeEmpty();
         _now += AutomationTrigger.ExitDelayOf(rule);

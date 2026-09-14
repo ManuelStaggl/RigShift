@@ -82,17 +82,6 @@
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Updates automatisch installieren</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: RigShift meldet neue Versionen nur und installiert erst, wenn du es auswählst.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release-Notes auf GitHub</value></data>
-  <data name="Settings_Api" xml:space="preserve"><value>Lokale HTTP-API</value></data>
-  <data name="Settings_ApiHint" xml:space="preserve"><value>Für Skripte, SimHub und Stream Deck. Nur von diesem PC erreichbar, jeder Aufruf braucht das Token.</value></data>
-  <data name="Settings_ApiPort" xml:space="preserve"><value>Port</value></data>
-  <data name="Settings_ApiToken" xml:space="preserve"><value>Token</value></data>
-  <data name="Settings_ApiCopyToken" xml:space="preserve"><value>Token kopieren</value></data>
-  <data name="Settings_ApiRegenerate" xml:space="preserve"><value>Neues Token</value></data>
-  <data name="Settings_ApiCopyExample" xml:space="preserve"><value>Beispiel kopieren</value></data>
-  <data name="Settings_ApiDocs" xml:space="preserve"><value>API-Dokumentation</value></data>
-  <data name="Settings_ApiListening" xml:space="preserve"><value>Erreichbar unter {0}</value></data>
-  <data name="Settings_ApiFailed" xml:space="preserve"><value>Port {0} konnte nicht geöffnet werden: {1}</value></data>
-  <data name="Settings_ApiTokenRegenerated" xml:space="preserve"><value>Neues Token gespeichert. Das alte gilt nicht mehr.</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung speichern</value></data>
@@ -175,11 +164,8 @@
   <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist. Starten überspringt Apps, die schon laufen. Beenden schließt die App und beendet sie, falls sie nach 5 Sekunden noch läuft.</value></data>
   <data name="Editor_AddApp" xml:space="preserve"><value>App hinzufügen</value></data>
   <data name="Editor_Power" xml:space="preserve"><value>Energie</value></data>
-  <data name="Editor_PowerPlan" xml:space="preserve"><value>Energieplan</value></data>
   <data name="Editor_KeepAwake" xml:space="preserve"><value>PC wach halten (kein Standby, Bildschirmschoner oder Bildschirm-Aus)</value></data>
-  <data name="Editor_PowerHint" xml:space="preserve"><value>Beides gilt, solange dieses Profil aktiv ist. Ein Wechsel auf ein Profil ohne Energieplan stellt den vorherigen Plan wieder her. Benachrichtigungen schaltet Windows bei Vollbild-Spielen selbst stumm.</value></data>
-  <data name="Power_Unchanged" xml:space="preserve"><value>Nicht ändern</value></data>
-  <data name="Power_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht vorhanden)</value></data>
+  <data name="Editor_PowerHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist. Benachrichtigungen schaltet Windows bei Vollbild-Spielen selbst stumm.</value></data>
   <data name="App_Start" xml:space="preserve"><value>Starten</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Beenden</value></data>
   <data name="App_Action" xml:space="preserve"><value>Aktion</value></data>
@@ -219,28 +205,22 @@
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein Spiel startet oder ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Wird das Spiel beendet oder ist das Gerät weg, wartet es 10 Sekunden, damit ein Neustart nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
-  <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein Spiel oder USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
+  <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>
   <data name="Automation_Enabled" xml:space="preserve"><value>Regel ein</value></data>
-  <data name="Automation_Game" xml:space="preserve"><value>Wenn dieses Spiel startet</value></data>
-  <data name="Automation_CustomGame" xml:space="preserve"><value>Anderes Spiel (Programm wählen)…</value></data>
-  <data name="Automation_Executable" xml:space="preserve"><value>Programm des Spiels</value></data>
-  <data name="Automation_ExecutablePlaceholder" xml:space="preserve"><value>z. B. C:\Spiele\MeineSim\MeineSim.exe</value></data>
   <data name="Automation_Profile" xml:space="preserve"><value>umschalten auf</value></data>
-  <data name="Automation_OnExit" xml:space="preserve"><value>Wenn das Spiel beendet wird</value></data>
   <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
   <data name="Automation_ExitDelay" xml:space="preserve"><value>Warten (Sekunden)</value></data>
-  <data name="Automation_ExitDelayHint" xml:space="preserve"><value>So lange muss das Spiel oder Gerät weg sein, bevor das passiert. Aus- und wieder Einschalten innerhalb dieser Zeit ändert nichts.</value></data>
+  <data name="Automation_ExitDelayHint" xml:space="preserve"><value>So lange muss das Gerät weg sein, bevor das passiert. Aus- und wieder Einschalten innerhalb dieser Zeit ändert nichts.</value></data>
   <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Ohne Bestätigung umschalten</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Regel löschen</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(gelöschtes Profil)</value></data>
-  <data name="Automation_UsbDevice" xml:space="preserve"><value>USB-Gerät (Wheelbase, Dongle …)</value></data>
   <data name="Automation_Device" xml:space="preserve"><value>USB-Gerät</value></data>
   <data name="Automation_DeviceConnects" xml:space="preserve"><value>Wenn ein USB-Gerät verbunden wird</value></data>
   <data name="Automation_DeviceGone" xml:space="preserve"><value>Wenn das Gerät getrennt oder ausgeschaltet wird</value></data>

@@ -1,6 +1,6 @@
 # Roadmap
 
-Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
+Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned · ❌ dropped
 
 ## v1.0 – replace the script, small and stable
 
@@ -21,18 +21,17 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - 🟢 Recording device and separate communications role per profile (1.0)
 - 🟡 Volume per profile (playback and recording)
 - 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …)
-- 🟡 Process triggers with game templates (LMU, iRacing, ACC, AC EVO, AC Rally, rFactor 2, AMS2, RaceRoom, F1,
-  Forza Horizon 6)
+- ❌ Process triggers with game templates – dropped: the switch comes too late, while the game is already starting
 
 ## v1.2 – automation and comfort
 
 - 🟡 USB device triggers (wheelbase, headset dongle)
 - 🟡 Keep awake per profile: no sleep, screen saver or display timeout (focus assist and game mode dropped: no
   official API, and Windows handles both for full-screen games)
-- 🟡 Power plan per profile, the previous plan comes back on switch back
+- ❌ Power plan per profile – dropped: no demand
 - 🟡 HDR and refresh rate per display (night light dropped: only an undocumented registry value)
-- 🟡 Local HTTP API for scripts, SimHub, Stream Deck ([docs](http-api.md))
-- Home Assistant via MQTT discovery
+- ❌ Local HTTP API for scripts, SimHub, Stream Deck – dropped: no demand; the CLI and `rigshift://` links cover scripts
+- ❌ Home Assistant via MQTT discovery – dropped: no demand
 
 ## v2 – community
 

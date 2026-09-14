@@ -496,70 +496,26 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_PowerPlan_IsSetAndRestoredByProfileWithoutPlan()
-    {
-        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
-        var highPerformance = new PowerPlan(FakePowerController.HighPerformance, "High performance");
-        var ultimate = new PowerPlan(FakePowerController.Ultimate, "Ultimate");
-
-        await orchestrator.SwitchAsync(Rig() with { PowerPlan = highPerformance }, SwitchRequest.Default, Ct);
-        _power.ActivePlan.ShouldBe(FakePowerController.HighPerformance);
-
-        await orchestrator.SwitchAsync(Rig() with { Name = "VR", PowerPlan = ultimate }, SwitchRequest.Default, Ct);
-        _power.ActivePlan.ShouldBe(FakePowerController.Ultimate);
-
-        // The plan from before the first profile comes back, not the one in between.
-        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
-        _power.ActivePlan.ShouldBe(FakePowerController.Balanced);
-
-        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
-        _power.PlansSet.ShouldBe([FakePowerController.HighPerformance, FakePowerController.Ultimate, FakePowerController.Balanced]);
-    }
-
-    [Fact]
-    public async Task Switch_ProfileWithoutPlan_LeavesAUserChosenPlanAlone()
-    {
-        _power.ActivePlan = FakePowerController.HighPerformance;
-
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
-
-        _power.PlansSet.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task Switch_NotConfirmed_RestoresKeepAwakeAndPlan()
+    public async Task Switch_NotConfirmed_RestoresKeepAwake()
     {
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
         SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
-        Profile rig = Rig(confirmSeconds: 15) with
-        {
-            KeepAwake = true,
-            PowerPlan = new PowerPlan(FakePowerController.HighPerformance, "High performance"),
-        };
 
-        SwitchResult result = await orchestrator.SwitchAsync(rig, SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(confirmSeconds: 15) with { KeepAwake = true }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _power.IsKeepingAwake.ShouldBeFalse();
-        _power.ActivePlan.ShouldBe(FakePowerController.Balanced);
-        _power.PlansSet.ShouldBe([FakePowerController.HighPerformance, FakePowerController.Balanced]);
-
-        // Nothing is remembered from the rejected switch: a later profile without a plan changes nothing.
-        _power.ActivePlan = FakePowerController.Ultimate;
-        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
-        _power.ActivePlan.ShouldBe(FakePowerController.Ultimate);
     }
 
     [Fact]
-    public async Task Switch_DryRunOrBlocked_LeavesPowerAlone()
+    public async Task Switch_DryRunOrBlocked_LeavesKeepAwakeAlone()
     {
-        Profile rig = Rig() with { KeepAwake = true, PowerPlan = new PowerPlan(FakePowerController.HighPerformance, "High performance") };
+        Profile rig = Rig() with { KeepAwake = true };
 
         await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, new SwitchRequest { DryRun = true }, Ct);
         await Create(new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false))).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         _power.IsKeepingAwake.ShouldBeFalse();
-        _power.PlansSet.ShouldBeEmpty();
     }
 
     [Fact]
@@ -568,7 +524,7 @@ public sealed class SwitchOrchestratorTests
         _power.Fail = true;
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
-            Rig() with { KeepAwake = true, PowerPlan = new PowerPlan(FakePowerController.HighPerformance, "High performance") }, SwitchRequest.Default, Ct);
+            Rig() with { KeepAwake = true }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
     }

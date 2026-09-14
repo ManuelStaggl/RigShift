@@ -40,7 +40,8 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 |---|---|---|
 | `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. HDR via `DisplayConfigGet/SetDeviceInfo` (24H2 `_2`/`SET_HDR_STATE`, older advanced color as fallback); refresh rates offered via DXGI output mode lists (exact rationals). |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
-| `IPowerController` | `PowerController` | Power plans via `PowerEnumerate`/`PowerSetActiveScheme`; keep-awake is a power request (display + system required) that Windows drops when the process ends. |
+| `IPowerController` | `PowerController` | Keep-awake is a power request (display + system required) that Windows drops when the process ends. |
+| `IUsbDeviceList` | `UsbDeviceList` | Present USB devices via `CM_Get_Device_ID_List`, polled every 2 s by `AutomationService` for USB rules. |
 | `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |
 | `IDeviceEvents` (M2/M4) | `DeviceNotificationListener` | `WM_DISPLAYCHANGE`, `WM_DEVICECHANGE` from a hidden message window. |
 | `IAutostart` (M4) | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
@@ -52,9 +53,6 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
   `\\.\pipe\RigShift` and exits with the result code.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | list | save <name> | status`.
   Exit codes: 0 applied, 1 failed, 2 blocked, 3 rolled back, 4 unknown profile.
-- Local HTTP API (opt-in): `HttpApiService` starts `Core.Api.HttpApiServer` (a `TcpListener` on `127.0.0.1`, minimal
-  HTTP/1.1) while the setting is on; `ApiHandler` checks the bearer token and runs requests on the UI thread like
-  pipe commands. See [http-api.md](http-api.md).
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).
 - Data lives in `%AppData%\RigShift` because Velopack installs into `%LocalAppData%\RigShift` and deletes that
   folder on uninstall.

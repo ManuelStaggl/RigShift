@@ -1,9 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Win32.SafeHandles;
 using RigShift.Core.Abstractions;
-using RigShift.Core.Profiles;
 using Serilog;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -44,44 +42,6 @@ public sealed class PowerController : IPowerController, IDisposable
                 return _keepingAwake;
             }
         }
-    }
-
-    public unsafe IReadOnlyList<PowerPlan> ListPlans()
-    {
-        var plans = new List<PowerPlan>();
-        Span<byte> buffer = stackalloc byte[sizeof(Guid)];
-        for (uint index = 0; ; index++)
-        {
-            uint size = (uint)buffer.Length;
-            WIN32_ERROR result = PInvoke.PowerEnumerate(null, null, null, POWER_DATA_ACCESSOR.ACCESS_SCHEME, index, buffer, ref size);
-            if (result == WIN32_ERROR.ERROR_NO_MORE_ITEMS)
-            {
-                return plans;
-            }
-
-            ThrowOnError(result, "PowerEnumerate");
-            var id = new Guid(buffer);
-            plans.Add(new PowerPlan(id, FriendlyName(id)));
-        }
-    }
-
-    public unsafe Guid GetActivePlan()
-    {
-        ThrowOnError(PInvoke.PowerGetActiveScheme(null, out Guid* active), "PowerGetActiveScheme");
-        try
-        {
-            return *active;
-        }
-        finally
-        {
-            PInvoke.LocalFree(new HLOCAL(active));
-        }
-    }
-
-    public void SetActivePlan(Guid planId)
-    {
-        ThrowOnError(PInvoke.PowerSetActiveScheme(null, planId), "PowerSetActiveScheme");
-        _log.Information("Power plan {Plan} activated", planId);
     }
 
     public void SetKeepAwake(bool keepAwake)
@@ -141,29 +101,4 @@ public sealed class PowerController : IPowerController, IDisposable
         }
     }
 
-    private static string FriendlyName(Guid planId)
-    {
-        uint size = 0;
-        if (PInvoke.PowerReadFriendlyName(null, planId, null, null, [], ref size) != WIN32_ERROR.ERROR_SUCCESS || size == 0)
-        {
-            return planId.ToString("D");
-        }
-
-        byte[] buffer = new byte[size];
-        if (PInvoke.PowerReadFriendlyName(null, planId, null, null, buffer, ref size) != WIN32_ERROR.ERROR_SUCCESS)
-        {
-            return planId.ToString("D");
-        }
-
-        string name = Encoding.Unicode.GetString(buffer, 0, (int)size).TrimEnd('\0');
-        return name.Length > 0 ? name : planId.ToString("D");
-    }
-
-    private static void ThrowOnError(WIN32_ERROR result, string function)
-    {
-        if (result != WIN32_ERROR.ERROR_SUCCESS)
-        {
-            throw new Win32Exception((int)result, $"{function} failed with {result}.");
-        }
-    }
 }

@@ -307,20 +307,6 @@
         </ItemsControl>
 
         <TextBlock Margin="0,16,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Power}" />
-        <Grid Margin="0,0,0,8">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
-            <ColumnDefinition Width="24" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_PowerPlan}" TextWrapping="Wrap" />
-          <ComboBox
-            Grid.Column="2"
-            AutomationProperties.Name="{loc:Tr Editor_PowerPlan}"
-            DisplayMemberPath="Name"
-            ItemsSource="{Binding PowerPlanChoices}"
-            SelectedItem="{Binding SelectedPowerPlan}" />
-        </Grid>
         <CheckBox Content="{loc:Tr Editor_KeepAwake}" IsChecked="{Binding KeepAwake}" />
         <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_PowerHint}" TextWrapping="Wrap" />
 

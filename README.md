@@ -70,8 +70,7 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 ## Planned features
 
 See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: microphone and volume per profile, per-profile apps,
-process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
-no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
+switching when a USB device such as the wheelbase connects, keep awake per profile, HDR and refresh rate per display.
 
 ## Command line
 

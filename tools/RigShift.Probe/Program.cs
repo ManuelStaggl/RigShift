@@ -61,14 +61,6 @@ switch (command)
         Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
         break;
 
-    case "power":
-        using (var power = new RigShift.Windows.Power.PowerController(log))
-        {
-            Print(new { Active = power.GetActivePlan(), Plans = power.ListPlans() });
-        }
-
-        break;
-
     case "keep-awake" when args.Length >= 2:
         // Holds the request for the given seconds; check it meanwhile with "powercfg /requests" (admin).
         using (var power = new RigShift.Windows.Power.PowerController(log))

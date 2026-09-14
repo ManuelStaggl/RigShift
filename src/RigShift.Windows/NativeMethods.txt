@@ -92,11 +92,6 @@ PowerClearRequest
 POWER_REQUEST_TYPE
 REASON_CONTEXT
 PowerGetActiveScheme
-PowerSetActiveScheme
-PowerEnumerate
-PowerReadFriendlyName
-POWER_DATA_ACCESSOR
-LocalFree
 // Desktop shortcuts for profiles.
 ShellLink
 IShellLinkW
