@@ -11,35 +11,46 @@
     <StackPanel Margin="24,8,24,24">
       <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_About}" />
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{Binding VersionText}" TextWrapping="Wrap" />
+      <!-- Buttons in their own row below the text, like the other cards: centred next to long text they looked adrift. -->
+      <ui:Card Margin="0,0,0,8" Padding="16">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <ui:SymbolIcon
+            Margin="0,0,16,0"
+            VerticalAlignment="Top"
+            FontSize="24"
+            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+            Symbol="ArrowSync24" />
+          <StackPanel Grid.Column="1">
+            <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding VersionText}" TextWrapping="Wrap" />
             <TextBlock
               controls:LiveRegion.IsLive="True"
               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
               Text="{Binding UpdateStatusText}"
               TextWrapping="Wrap" />
             <StackPanel Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Margin="0,8,0,0" Text="{Binding ReleaseNotesText}" TextWrapping="Wrap" />
+              <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ReleaseNotesText}" TextWrapping="Wrap" />
               <TextBlock Margin="0,4,0,0">
                 <Hyperlink Command="{Binding OpenReleaseNotesCommand}">
                   <Run Text="{loc:Tr Settings_ReleaseNotesLink}" />
                 </Hyperlink>
               </TextBlock>
             </StackPanel>
+            <WrapPanel Margin="0,12,0,0">
+              <ui:Button
+                Margin="0,0,8,0"
+                Appearance="Primary"
+                Command="{Binding InstallUpdateNowCommand}"
+                Content="{loc:Tr Settings_RestartToUpdate}"
+                Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
+              <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+            </WrapPanel>
           </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:Button
-            Margin="0,0,8,0"
-            Appearance="Primary"
-            Command="{Binding InstallUpdateNowCommand}"
-            Content="{loc:Tr Settings_RestartToUpdate}"
-            Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
-          <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
-        </StackPanel>
-      </ui:CardControl>
+        </Grid>
+      </ui:Card>
 
       <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_Troubleshooting}" />
       <ui:Card Margin="0,0,0,8" Padding="16">
