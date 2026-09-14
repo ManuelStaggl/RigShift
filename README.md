@@ -18,7 +18,7 @@ admin rights · [What's new](CHANGELOG.md)
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/profiles-light.png">
-    <img alt="RigShift main window with a Desk and a Rig profile" src="docs/screenshots/profiles-dark.png" width="820">
+    <img alt="RigShift main window with a Desk and a Sim Rig profile, the rig starting SimHub and Crew Chief once the wheel is on" src="docs/screenshots/profiles-dark.png" width="820">
   </picture>
 </p>
 
@@ -39,8 +39,9 @@ see no picture after a switch, it simply switches back after a few seconds.
 - **One profile per setup** – which monitors are on, where they sit, which is the main display, resolution, refresh
   rate and HDR, plus playback and microphone device with volume.
 - **Safety net:** keep the new layout or it reverts on its own.
-- **Robust on real hardware:** waits for monitors that are still waking up, recognizes them after reboots and cable
-  swaps, and picks up optional screens (e.g. a spacedesk tablet) as soon as they appear.
+- **Robust on real hardware:** wakes monitors from standby, asks you to switch on a monitor that is off and waits for
+  it, recognizes monitors after reboots and cable swaps, and picks up optional screens (e.g. a spacedesk tablet) as
+  soon as they appear.
 - **Tells you what's wrong** in plain words instead of an error code.
 
 **Getting into the rig**
@@ -64,11 +65,11 @@ see no picture after a switch, it simply switches back after a few seconds.
 | | |
 |---|---|
 | <img alt="Automation page with a wheelbase rule" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Profile editor with displays, refresh rate and HDR" src="docs/screenshots/profile-editor-dark.png" width="400"> |
-| **Automation** – to the rig when the wheelbase (and pedals) turn on, back when they are off. | **Profile editor** – displays with refresh rate and HDR, audio, apps. |
+| **Automation** – to the rig when the wheelbase and pedals turn on, back to the desk when they are off, with your own device names. | **Profile editor** – displays with refresh rate, HDR and optional screens, keyboard shortcut, audio, apps. |
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Displays** – every connected monitor, your own names, Identify. | **Settings** – default profile, autostart, confirmation, language. |
+| **Displays** – every connected monitor, your own names, Identify. | **Settings** – default profile, autostart, confirmation time, language, automatic updates. |
 
 ## Getting started
 
