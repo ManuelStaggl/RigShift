@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
+using RigShift.Core.Tests.Fakes;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -84,7 +85,8 @@ public sealed class JsonProfileStoreTests : IDisposable
     [Fact]
     public async Task Load_LockedFile_IsReportedNotSkippedSilently()
     {
-        var store = new JsonProfileStore(_directory, Logger.None);
+        var time = new AutoAdvanceTimeProvider();
+        var store = new JsonProfileStore(_directory, Logger.None, time);
         Profile rig = Rig();
         Profile desk = Profile("Desk", DeskModes);
         await store.SaveAsync(rig, Ct);
@@ -99,6 +101,7 @@ public sealed class JsonProfileStoreTests : IDisposable
 
         loaded.Profiles.Single().Name.ShouldBe("Rig");
         loaded.Unreadable.ShouldHaveSingleItem().FileName.ShouldBe(desk.Id.ToString("D") + ".json");
+        time.Elapsed.ShouldBe(TimeSpan.FromMilliseconds(100));
         (await store.LoadAllAsync(Ct)).IsComplete.ShouldBeTrue();
     }
 

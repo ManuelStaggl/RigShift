@@ -240,7 +240,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IAppShell>(this);
 
         // Core and OS boundary
-        services.AddSingleton<IProfileStore>(_ => new JsonProfileStore(Paths.Profiles, Log.Logger));
+        services.AddSingleton<IProfileStore>(sp => new JsonProfileStore(Paths.Profiles, Log.Logger, sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton(_ => new JsonSettingsStore(Paths.SettingsFile, Log.Logger));
         services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", Log.Logger));
         services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();

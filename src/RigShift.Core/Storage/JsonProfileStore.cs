@@ -20,13 +20,16 @@ public sealed class JsonProfileStore : IProfileStore
 
     private readonly string _directory;
     private readonly ILogger _log;
+    private readonly TimeProvider _time;
 
-    public JsonProfileStore(string directory, ILogger log)
+    /// <param name="time">Clock for the retry pause; <see cref="TimeProvider.System"/> when omitted.</param>
+    public JsonProfileStore(string directory, ILogger log, TimeProvider? time = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         ArgumentNullException.ThrowIfNull(log);
         _directory = Path.GetFullPath(directory);
         _log = log.ForContext<JsonProfileStore>();
+        _time = time ?? TimeProvider.System;
     }
 
     /// <summary><c>%AppData%\RigShift\profiles</c> – outside the Velopack install folder, which uninstall deletes.</summary>
@@ -98,7 +101,7 @@ public sealed class JsonProfileStore : IProfileStore
         catch (IOException ex)
         {
             _log.Information(ex, "Profile file {File} is not readable right now, retrying in {Delay} ms", file, RetryDelay.TotalMilliseconds);
-            await Task.Delay(RetryDelay, cancellationToken);
+            await Task.Delay(RetryDelay, _time, cancellationToken);
             return await ReadAsync(file, cancellationToken);
         }
     }
