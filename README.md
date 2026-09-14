@@ -12,7 +12,7 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **1.0** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
+> Status: **1.1** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
 > · [Roadmap](docs/ROADMAP.md)
 
 <p align="center">
@@ -60,7 +60,8 @@ RigShift is not code-signed yet, so Windows SmartScreen may say *"Windows protec
 **More info → Run anyway**. Signing is planned (see roadmap).
 
 **Updates** install themselves: RigShift checks GitHub at startup and once a day, downloads a new version in the
-background and installs it the next time it starts.
+background and installs it the next time it starts. **Settings** show the version and what is new, and let you
+check for updates, install one right away, or turn automatic installation off so RigShift only reports new versions.
 
 Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when you uninstall.
 
