@@ -223,12 +223,14 @@ public sealed partial class AutomationViewModel : ObservableObject
     {
         // The first connected device is preselected, so the rule works without a second click.
         string? device = DeviceChoices.Count > 0 ? DeviceChoices[0].Key : null;
+        (Guid profile, Guid exitProfile) = NewRuleProfiles(_catalog.Profiles, _settings.Current.DefaultProfileId);
         var rule = new AutomationRule
         {
             UsbDeviceId = device ?? string.Empty,
             UsbDeviceName = DeviceNameFor(device),
-            ProfileId = _catalog.Profiles.FirstOrDefault(p => p.Id == _settings.Current.DefaultProfileId)?.Id ?? _catalog.Profiles[0].Id,
-            OnExit = ExitAction.SwitchBack,
+            ProfileId = profile,
+            OnExit = ExitAction.SwitchTo,
+            ExitProfileId = exitProfile,
         };
         Quietly(() => Rules.Add(new RuleCard(this, rule)));
         IsEmpty = false;
@@ -238,6 +240,21 @@ public sealed partial class AutomationViewModel : ObservableObject
     }
 
     private bool CanAddRule() => !HasNoProfiles;
+
+    /// <summary>
+    /// Profiles a new rule starts with: its end action switches to the default profile (the desk), or to the first profile
+    /// without a default – deterministic, unlike "switch back" (user decision O-08). The rule itself switches to the first
+    /// other profile.
+    /// </summary>
+    internal static (Guid Profile, Guid ExitProfile) NewRuleProfiles(IReadOnlyList<Profile> profiles, Guid? defaultProfileId)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentOutOfRangeException.ThrowIfZero(profiles.Count);
+
+        Profile exit = profiles.FirstOrDefault(p => p.Id == defaultProfileId) ?? profiles[0];
+        Profile start = profiles.FirstOrDefault(p => p.Id != exit.Id) ?? exit;
+        return (start.Id, exit.Id);
+    }
 
     [RelayCommand]
     private async Task DeleteRuleAsync(RuleCard? card)

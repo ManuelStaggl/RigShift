@@ -50,6 +50,36 @@ public sealed class AutomationViewModelTests : IDisposable
         viewModel.Rules.ShouldHaveSingleItem().HasDuplicateDevice.ShouldBeFalse();
     }
 
+    [Fact]
+    public void NewRuleProfiles_WithDefaultProfile_EndsThereAndStartsWithAnother()
+    {
+        Profile desk = Profile("Desk", []);
+        Profile tv = Profile("TV", []);
+
+        AutomationViewModel.NewRuleProfiles([tv, desk, _rig], desk.Id).ShouldBe((tv.Id, desk.Id));
+    }
+
+    [Fact]
+    public void NewRuleProfiles_WithoutDefaultProfile_EndsAtFirstProfile()
+    {
+        Profile desk = Profile("Desk", []);
+
+        AutomationViewModel.NewRuleProfiles([desk, _rig], null).ShouldBe((_rig.Id, desk.Id));
+        AutomationViewModel.NewRuleProfiles([_rig], Guid.NewGuid()).ShouldBe((_rig.Id, _rig.Id));
+    }
+
+    [Fact]
+    public async Task AddRule_EndActionSwitchesToProfile()
+    {
+        AutomationViewModel viewModel = await CreateAsync();
+
+        await viewModel.AddRuleCommand.ExecuteAsync(null);
+
+        AutomationRule rule = _host.Settings.Current.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
+        rule.OnExit.ShouldBe(ExitAction.SwitchTo);
+        rule.ExitProfileId.ShouldBe(_rig.Id);
+    }
+
     public void Dispose() => _host.Dispose();
 
     private AutomationRule RuleFor(string device) => new() { UsbDeviceId = device, ProfileId = _rig.Id };

@@ -28,6 +28,8 @@ All notable changes to this project are documented here. The format follows
 - Automation rules no longer have their own on/off switch – pause the automation or delete the rule instead. A rule that
   was switched off in an earlier version is removed when RigShift starts (noted in the log), so it cannot suddenly start
   switching.
+- A new automation rule now switches to the default profile (or the first profile) when its device is gone, instead of
+  back to the previous profile. "Switch back to the previous profile" is still available for each rule.
 
 ### Fixed
 
