@@ -360,6 +360,14 @@ einen Hardwaretest am Gaming-PC brauchen. Festlegungen zu Punkt 1:
    Deinstallation; portable Kopien registrieren nicht (Pfad wäre instabil). Am Server belegt: ungültige Links
    (`save`, Query) → Exit 5 + Log-Warnung. **Nicht belegt:** Registry-Eintrag aus dem Hook (erst mit installiertem
    Paket) und Aufruf aus Browser/Win+R.
+Zusätzlich vor 1.2.0 (vom Nutzer gewählt 2026-09-14): Schalter „Nach dem Umschalten bestätigen“ in den Einstellungen
+statt nur „0 Sekunden“, weil 0 schwer zu finden ist. Gespeichert wird weiter nur `ConfirmTimeoutSeconds` (aus = 0, an
+= angezeigter Wert, mind. 1) – kein zweiter Wert, der widersprechen könnte; alte Dateien bleiben gültig. Beim
+Ausschalten Hinweis auf den fehlenden Rückweg. Profil-Editor unverändert (eigener Wert 0 = ohne Nachfrage). Am Server
+belegt: Schalter aus → `confirmTimeoutSeconds: 0`, Hinweistext wechselt, Sekundenfeld verschwindet; wieder an → 15.
+
+**Veröffentlicht als 1.2.0 (2026-09-14).**
+
 3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis).
 4. Lautstärke pro Profil (`IAudioEndpointVolume`).
 5. Apps pro Profil starten/beenden (Reihenfolge, Wartezeit, „nur wenn nicht läuft").

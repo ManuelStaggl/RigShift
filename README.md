@@ -12,7 +12,7 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **1.1** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
+> Status: **1.2** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
 > · [Roadmap](docs/ROADMAP.md)
 
 <p align="center">
@@ -39,7 +39,9 @@ Beyond that, RigShift is designed to be boring in the good way:
   RigShift rolls back to the previous one.
 - **Audio included:** default playback and communications devices per profile.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
-- **Scriptable:** `RigShift.exe apply Rig` from a Stream Deck, button box, SimHub or shortcut.
+- **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
+- **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
+  or shortcut.
 
 ## Screenshots
 
@@ -67,7 +69,7 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 
 ## Planned features
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights after 1.0: hotkeys, `rigshift://` links, per-profile apps,
+See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: microphone and volume per profile, per-profile apps,
 process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
 no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
 
@@ -84,6 +86,9 @@ Names are not case-sensitive. `save` stores the current display arrangement and 
 existing profile with that name is updated. `apply` and `save` start RigShift in the tray if it is not running and
 wait for the result; the easiest way to get a ready-made shortcut (also for a Stream Deck "Open" action) is
 **⋯ → Create desktop shortcut** on a profile.
+
+The installed version also handles links: `rigshift://apply/Sim%20Rig` switches like `apply` (always with
+confirmation), e.g. from a browser bookmark, Win+R or a Stream Deck "Website" action.
 
 | Exit code | Meaning |
 |---|---|

@@ -36,8 +36,9 @@ dotnet test --solution RigShift.slnx
 Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSON-Store), **M3** (Tray-App) und
 **M4** (CLI, Einzelinstanz + Pipe, Profil speichern/bearbeiten), **M4.5** (Markenauftritt, Plan Abschnitt 4.8) und
 **M5** (Hardwaretest am Gaming-PC) und **M6** (Release 1.0, Velopack, Auto-Update 1.0.0 → 1.0.1 belegt) fertig,
-alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. Als Nächstes Roadmap v1.1 „Auslösen
-und Steuern“ (`docs/PLAN.md`, Abschnitt 6).
+alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
+`rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Als Nächstes Hardwaretest dieser Punkte am
+Gaming-PC, dann Roadmap Punkte 3–5 (Mikrofon, Lautstärke, Apps; `docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach
