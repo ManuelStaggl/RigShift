@@ -202,7 +202,7 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
         try
         {
             RigShift.Windows.Shell.ShortcutWriter.Create(
-                file, executable, $"apply \"{item.Name.Replace("\"", "\\\"", StringComparison.Ordinal)}\"", Loc.Format("Shortcut_Description", item.Name));
+                file, executable, "apply " + RigShift.Core.Cli.CommandLineArguments.Quote(item.Name), Loc.Format("Shortcut_Description", item.Name));
             _log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
             ShowStatus(Loc.Format("Status_ShortcutCreated", title));
         }
