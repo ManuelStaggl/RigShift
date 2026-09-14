@@ -1,0 +1,5 @@
+{
+  "id": "raceroom",
+  "name": "RaceRoom Racing Experience",
+  "executables": ["RRRE64.exe", "RRRE.exe"]
+}

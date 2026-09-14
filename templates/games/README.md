@@ -15,4 +15,5 @@ processes every 2 seconds; when one of `executables` appears, the rule switches.
 - `name`: shown in the app.
 - `executables`: file names of the game's own process as Task Manager shows them under *Details* – not the launcher.
 
-To add a game, add a file here and open a pull request. The tests check every template.
+To add a game, add a file here and open a pull request. The tests check every template. If you cannot, open a
+[Game template request](https://github.com/ManuelStaggl/RigShift/issues/new?template=game_template.yml).

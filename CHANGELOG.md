@@ -19,7 +19,8 @@ All notable changes to this project are documented here. The format follows
 - New page **About & help**: version and updates, recent switches, **Copy diagnostic info** for bug reports, the log
   folder and links to GitHub.
 - New page **Automation**: switch profiles when a game starts. Pick Le Mans Ultimate, iRacing, Assetto Corsa
-  Competizione, Assetto Corsa EVO, rFactor 2, Automobilista 2 or F1 24/25 from a list, or choose any program. Each rule
+  Competizione, Assetto Corsa EVO, Assetto Corsa Rally, rFactor 2, Automobilista 2, RaceRoom, F1 24/25 or Forza
+  Horizon 6 from a list, or choose any program. Each rule
   decides what happens when the game closes (stay, switch back or switch to another profile) and whether to ask for
   confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
 - Automation rules can also react to a USB device, e.g. switch to the rig when you turn on the wheelbase and back when
