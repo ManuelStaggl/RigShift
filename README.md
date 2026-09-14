@@ -55,6 +55,10 @@ Beyond that, RigShift is designed to be boring in the good way:
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Profile editor with audio devices, volume and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
 | **Profile editor** – displays, audio devices with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
+| <img alt="Automation page with game rules" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> |
+| **Automation** – switch when a game starts, and back when it closes. | **Displays** – every connected monitor, your own names, Identify. |
+| <img alt="About and help page" src="docs/screenshots/about-dark.png" width="400"> | |
+| **About & help** – version, updates, recent switches, diagnostic info for bug reports. | |
 
 ## Installation
 
