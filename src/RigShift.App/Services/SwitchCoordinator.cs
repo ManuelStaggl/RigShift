@@ -271,10 +271,13 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             : result.Outcome == SwitchOutcome.Failed && _pendingCatchUp?.Profile.Id == profile.Id ? _pendingCatchUp
             : null;
 
-    private static SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
+    private SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
         new(started, profile.Name, result.Outcome, result.Audio, result.Apps, result.Attempts, result.Duration, result.LastNativeError, result.Message,
             result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment)).ToList(),
-            profile.AppsWaitForUsbDeviceName ?? profile.AppsWaitForUsbDeviceId, Profile.AppsDeviceWaitSeconds, result.Note);
+            profile.AppsWaitForUsbDeviceId is null && profile.AppsWaitForUsbDeviceName is null
+                ? null
+                : Core.Automation.UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, _settings.Current.UsbDeviceNames),
+            Profile.AppsDeviceWaitSeconds, result.Note);
 
     private async Task CompleteAsync(SwitchRecord record)
     {

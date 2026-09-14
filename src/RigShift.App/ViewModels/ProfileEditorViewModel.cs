@@ -25,6 +25,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     private readonly bool _isNew;
     private readonly IReadOnlyList<UsbDevice> _usbDevices;
+    private readonly IReadOnlyDictionary<string, string>? _customUsbNames;
     private readonly string? _savedWaitDeviceId;
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
@@ -42,6 +43,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         IReadOnlyList<AudioDeviceInfo> playbackDevices,
         IReadOnlyList<AudioDeviceInfo> recordingDevices,
         IReadOnlyList<UsbDevice> usbDevices,
+        IReadOnlyDictionary<string, string>? usbDeviceNames,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         HotkeyService hotkeys,
@@ -56,6 +58,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _hotkeys = hotkeys;
         _isNew = isNew;
         _usbDevices = usbDevices;
+        _customUsbNames = usbDeviceNames;
         _savedWaitDeviceId = UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId);
         _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
@@ -361,21 +364,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     /// <summary>Same source and naming as the automation page; a saved device that is not connected stays selectable.</summary>
     private void FillAppsWaitChoices(string? selectedKey)
     {
-        AppsWaitDeviceChoices.Clear();
-        _usbDeviceNames.Clear();
-        AppsWaitDeviceChoices.Add(new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
-        foreach (UsbDevice device in _usbDevices)
-        {
-            AppsWaitDeviceChoices.Add(new Choice(device.Id, device.Name));
-            _usbDeviceNames[device.Id] = device.Name;
-        }
-
-        if (_savedWaitDeviceId is { } waitId && !_usbDeviceNames.ContainsKey(waitId))
-        {
-            string name = _savedWaitDeviceName ?? waitId;
-            AppsWaitDeviceChoices.Add(new Choice(waitId, Loc.Format("Automation_DeviceNotConnected", name)));
-            _usbDeviceNames[waitId] = name;
-        }
+        RuleDevice[] saved = _savedWaitDeviceId is null ? [] : [new RuleDevice { Id = _savedWaitDeviceId, Name = _savedWaitDeviceName }];
+        UsbDeviceChoices.Fill(AppsWaitDeviceChoices, _usbDeviceNames, _usbDevices, saved, _customUsbNames);
+        AppsWaitDeviceChoices.Insert(0, new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
 
         SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, selectedKey, StringComparison.OrdinalIgnoreCase))
             ?? AppsWaitDeviceChoices[0];

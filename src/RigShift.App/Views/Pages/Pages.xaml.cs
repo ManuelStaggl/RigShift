@@ -83,6 +83,23 @@ public partial class AutomationPage : Page
         InitializeComponent();
         Loaded += (_, _) => viewModel.Load();
     }
+
+    private async void OnNameLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: UsbNameCard card })
+        {
+            await card.SaveNameAsync();
+        }
+    }
+
+    private async void OnNameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == System.Windows.Input.Key.Enter && sender is FrameworkElement { DataContext: UsbNameCard card })
+        {
+            e.Handled = true;
+            await card.SaveNameAsync();
+        }
+    }
 }
 
 public partial class AboutPage : Page

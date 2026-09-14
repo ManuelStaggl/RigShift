@@ -121,11 +121,26 @@ public sealed class AutomationTrigger
         _hasBaseline = false;
     }
 
-    /// <summary>The device a rule watches as <c>VID_xxxx&amp;PID_xxxx</c>; <c>null</c> for a rule without a valid device id.</summary>
-    public static string? WatchedDeviceOf(AutomationRule rule)
+    /// <summary>
+    /// The devices a rule watches as <c>VID_xxxx&amp;PID_xxxx</c>, sorted and without repeats; empty for a rule without a
+    /// valid device id.
+    /// </summary>
+    public static IReadOnlyList<string> WatchedDevicesOf(AutomationRule rule)
     {
         ArgumentNullException.ThrowIfNull(rule);
-        return UsbDeviceIds.Normalize(rule.UsbDeviceId);
+        return (rule.Migrated().Devices ?? [])
+            .Select(d => UsbDeviceIds.Normalize(d.Id))
+            .OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>A rule with neither devices nor the 1.3 device key was written by an unreleased build and is ignored.</summary>
+    public static bool IsIgnored(AutomationRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        return rule.Devices is null && rule.LegacyUsbDeviceId is null;
     }
 
     /// <summary>
@@ -175,18 +190,19 @@ public sealed class AutomationTrigger
         var events = new List<TriggerEvent>();
         foreach (AutomationRule rule in rules)
         {
-            // A rule without a device key (written by an unreleased build) is ignored.
-            if (rule.UsbDeviceId is null)
+            if (IsIgnored(rule))
             {
                 continue;
             }
 
-            string watched = WatchedDeviceOf(rule) ?? string.Empty;
-            bool running = watched.Length > 0 && present.Contains(watched);
+            // A combination runs while all of its devices are present (user decision U-02).
+            IReadOnlyList<string> devices = WatchedDevicesOf(rule);
+            string watched = string.Join('+', devices);
+            bool running = devices.Count > 0 && devices.All(present.Contains);
             if (!_states.TryGetValue(rule.Id, out RuleState? state) || state.Watched != watched)
             {
-                // A new rule, or one whose device was changed while it is present, behaves like the baseline: no switch
-                // until the next start.
+                // A new rule, or one whose devices were changed while they are present, behaves like the baseline: no
+                // switch until the next start.
                 _states[rule.Id] = new RuleState { IsRunning = running, Watched = watched };
                 events.Add(new TriggerEvent(rule, TriggerEventKind.Baseline) { DevicePresent = running });
                 continue;

@@ -8,7 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- The automation page warns when two rules use the same USB device – both of them switch when it connects.
+- USB device names: name a device once on the automation page; the name shows in the rules, in the profile editor's
+  "Wait for device" list and in notifications.
+- Automation rules with several USB devices: the rule switches once all of them are connected, and its end action runs
+  once one of them has been gone for the rule's wait time. Rules from earlier versions keep their device.
+- The automation page warns when two rules use the same USB devices – both of them switch when they connect.
 
 ### Changed
 
@@ -29,6 +33,8 @@ All notable changes to this project are documented here. The format follows
   is reverted automatically if a display stays dark.
 - Changing the language also updates the automation page's lists and an open profile editor without a restart.
 - "Refresh devices" on an automation rule no longer empties the chosen device of every rule.
+- After reconnecting to the PC (for example over Remote Desktop), the tray icon and the theme are no longer redrawn
+  several times in a row.
 - The main buttons have access keys (Alt + underlined letter), e.g. Save in the profile editor and Keep/Revert after a
   switch.
 - Automation rules no longer have their own on/off switch – pause the automation or delete the rule instead. A rule that

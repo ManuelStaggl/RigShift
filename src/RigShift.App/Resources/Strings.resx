@@ -226,10 +226,10 @@
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(deleted profile)</value></data>
   <data name="Automation_Device" xml:space="preserve"><value>USB device</value></data>
   <data name="Automation_DeviceConnects" xml:space="preserve"><value>When a USB device connects</value></data>
-  <data name="Automation_DeviceGone" xml:space="preserve"><value>When the device is unplugged or turned off</value></data>
+  <data name="Automation_DeviceGone" xml:space="preserve"><value>When a device is unplugged or turned off</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Refresh devices</value></data>
-  <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Another rule uses this device too. When it connects, both rules switch, one after the other.</value></data>
+  <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Another rule uses the same devices. When they connect, both rules switch, one after the other.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>The automation could not be paused or resumed because the settings could not be saved. Details are in the log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s – apps started anyway.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for device before starting apps</value></data>
@@ -249,4 +249,13 @@
   <data name="Automation_DeleteText" xml:space="preserve"><value>The rule for “{0}” will be deleted. This cannot be undone.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>This rule will be deleted. This cannot be undone.</value></data>
   <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>The rule switches without asking. If a display stays dark, nothing is reverted automatically.</value></data>
+  <data name="Automation_DevicesConnect" xml:space="preserve"><value>When all of these USB devices are connected</value></data>
+  <data name="Automation_AddDevice" xml:space="preserve"><value>Add device</value></data>
+  <data name="Automation_AddDeviceHint" xml:space="preserve"><value>With several devices the rule switches once all of them are connected, and its end action runs once one of them is gone.</value></data>
+  <data name="Automation_RemoveDevice" xml:space="preserve"><value>Remove device</value></data>
+  <data name="Automation_NamesTitle" xml:space="preserve"><value>USB device names</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Name a device once – the name shows in rules, when apps wait for a device and in notifications.</value></data>
+  <data name="Automation_NamesEmpty" xml:space="preserve"><value>No USB devices found.</value></data>
+  <data name="Automation_NameConnected" xml:space="preserve"><value>Connected</value></data>
+  <data name="Automation_NameNotConnected" xml:space="preserve"><value>Not connected</value></data>
 </root>

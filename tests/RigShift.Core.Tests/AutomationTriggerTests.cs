@@ -15,9 +15,13 @@ public sealed class AutomationTriggerTests
     private readonly AutomationTrigger _trigger = new();
     private TimeSpan _now = TimeSpan.FromMinutes(5);
 
+    private const string Pedals = "VID_0EB7&PID_0030";
+
+    private static RuleDevice[] On(params string[] ids) => [.. ids.Select(id => new RuleDevice { Id = id })];
+
     private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool skip = false) => new()
     {
-        UsbDeviceId = Wheelbase,
+        Devices = On(Wheelbase),
         ProfileId = Rig,
         OnExit = onExit,
         ExitProfileId = exitProfile,
@@ -250,7 +254,7 @@ public sealed class AutomationTriggerTests
     [Fact]
     public void DeviceMatchedByVendorAndProductIdOnly()
     {
-        var rule = new AutomationRule { UsbDeviceId = @"USB\VID_0eb7&PID_0020\5&1a2b", ProfileId = Rig };
+        var rule = new AutomationRule { Devices = On(@"USB\VID_0eb7&PID_0020\5&1a2b"), ProfileId = Rig };
         Poll(rule, Desk);
 
         Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
@@ -262,13 +266,73 @@ public sealed class AutomationTriggerTests
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk, Dongle);
 
-        Poll(rule with { UsbDeviceId = Dongle }, Desk, Dongle).ShouldBeEmpty();
+        Poll(rule with { Devices = On(Dongle) }, Desk, Dongle).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Combination_StartsOnlyOnceAllDevicesAreConnected()
+    {
+        AutomationRule rule = WheelbaseRule() with { Devices = On(Wheelbase, Pedals) };
+        Poll(rule, Desk);
+
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase, Dongle).ShouldBeEmpty();
+        Poll(rule, Desk, Pedals, Wheelbase).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
+    }
+
+    [Fact]
+    public void Combination_OneDeviceGone_EndsAfterTheDelay()
+    {
+        AutomationRule rule = WheelbaseRule() with { Devices = On(Wheelbase, Pedals) };
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase, Pedals).ShouldHaveSingleItem();
+
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+
+        Poll(rule, Rig, Wheelbase).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+    }
+
+    [Fact]
+    public void Combination_DeviceBackWithinDelay_DoesNothing()
+    {
+        AutomationRule rule = WheelbaseRule() with { Devices = On(Wheelbase, Pedals) };
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase, Pedals);
+
+        Poll(rule, Rig, Pedals).ShouldBeEmpty();
+        Poll(rule, Rig, Pedals, Wheelbase).ShouldBeEmpty();
+        _now += TimeSpan.FromMinutes(1);
+
+        Poll(rule, Rig, Pedals, Wheelbase).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Combination_SameDevicesInAnotherOrder_IsNoChange()
+    {
+        AutomationRule rule = WheelbaseRule() with { Devices = On(Wheelbase, Pedals) };
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase, Pedals).ShouldHaveSingleItem();
+
+        // Reordering does not reset the rule: its end action still switches back.
+        AutomationRule reordered = rule with { Devices = On(Pedals, Wheelbase, Wheelbase) };
+        GoneLongEnough(reordered, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Desk);
+    }
+
+    [Fact]
+    public void RuleFromVersion1_3_WatchesItsSingleDevice()
+    {
+        var rule = new AutomationRule { LegacyUsbDeviceId = Wheelbase, ProfileId = Rig };
+        Poll(rule, Desk);
+
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        AutomationTrigger.WatchedDevicesOf(rule).ShouldBe([Wheelbase]);
     }
 
     [Fact]
     public void RuleAddedWhileDeviceIsConnected_DoesNotSwitch()
     {
-        AutomationRule other = WheelbaseRule() with { Id = Guid.NewGuid(), UsbDeviceId = Dongle };
+        AutomationRule other = WheelbaseRule() with { Id = Guid.NewGuid(), Devices = On(Dongle) };
         Poll(other, Desk);
 
         Poll([other, WheelbaseRule()], Desk, Wheelbase).ShouldBeEmpty();
@@ -289,11 +353,12 @@ public sealed class AutomationTriggerTests
     {
         // An unreleased build wrote rules without a device key.
         var rule = new AutomationRule { ProfileId = Rig };
-        var empty = new AutomationRule { UsbDeviceId = string.Empty, ProfileId = Rig };
+        var empty = new AutomationRule { Devices = On(string.Empty), ProfileId = Rig };
         Poll([rule, empty], Desk);
 
         Poll([rule, empty], Desk, Wheelbase).ShouldBeEmpty();
-        AutomationTrigger.WatchedDeviceOf(empty).ShouldBeNull();
+        AutomationTrigger.IsIgnored(rule).ShouldBeTrue();
+        AutomationTrigger.WatchedDevicesOf(empty).ShouldBeEmpty();
     }
 
     [Fact]

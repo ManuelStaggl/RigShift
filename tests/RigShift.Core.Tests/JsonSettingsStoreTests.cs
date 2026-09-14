@@ -54,7 +54,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
         var store = new JsonSettingsStore(File, Logger.None);
         var rule = new AutomationRule
         {
-            UsbDeviceId = "VID_046D&PID_C24F",
+            Devices = [new RuleDevice { Id = "VID_046D&PID_C24F" }],
             ProfileId = Guid.NewGuid(),
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = Guid.NewGuid(),
@@ -66,22 +66,50 @@ public sealed class JsonSettingsStoreTests : IDisposable
         AppSettings loaded = await store.LoadAsync(Ct);
 
         loaded.AutomationPaused.ShouldBeTrue();
-        loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(rule);
+        ShouldBeSameRule(loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem(), rule);
         string json = await System.IO.File.ReadAllTextAsync(File, Ct);
         json.ShouldContain("\"switchTo\"", Case.Insensitive);
         json.ShouldNotContain("isEnabled", Case.Insensitive);
+        json.ShouldNotContain("usbDeviceId", Case.Insensitive);
     }
 
     [Fact]
-    public async Task SaveThenLoad_RoundTripsUsbRule()
+    public async Task SaveThenLoad_RoundTripsCombinationAndDeviceNames()
     {
         var store = new JsonSettingsStore(File, Logger.None);
-        var rule = new AutomationRule { UsbDeviceId = "VID_0EB7&PID_0020", UsbDeviceName = "CSL DD", ProfileId = Guid.NewGuid() };
+        var rule = new AutomationRule
+        {
+            Devices = [new RuleDevice { Id = "VID_0EB7&PID_0020", Name = "CSL DD" }, new RuleDevice { Id = "VID_0EB7&PID_0030", Name = "Pedals" }],
+            ProfileId = Guid.NewGuid(),
+        };
+        var names = new Dictionary<string, string> { ["VID_0EB7&PID_0020"] = "Wheel" };
 
-        await store.SaveAsync(new AppSettings { AutomationRules = new List<AutomationRule> { rule } }, Ct);
+        await store.SaveAsync(new AppSettings { AutomationRules = [rule], UsbDeviceNames = names }, Ct);
         AppSettings loaded = await store.LoadAsync(Ct);
 
-        loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(rule);
+        ShouldBeSameRule(loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem(), rule);
+        loaded.UsbDeviceNames.ShouldNotBeNull()["VID_0EB7&PID_0020"].ShouldBe("Wheel");
+    }
+
+    [Fact]
+    public async Task Load_RuleFromVersion1_3_MovesItsDeviceIntoTheList()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """
+            { "automationRules": [ { "usbDeviceId": "VID_0EB7&PID_0020", "usbDeviceName": "CSL DD" }, { "usbDeviceId": "" } ] }
+            """, Ct);
+        var store = new JsonSettingsStore(File, Logger.None);
+
+        AppSettings settings = await store.LoadAsync(Ct);
+
+        IReadOnlyList<AutomationRule> rules = settings.AutomationRules.ShouldNotBeNull();
+        rules[0].Devices.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(new RuleDevice { Id = "VID_0EB7&PID_0020", Name = "CSL DD" });
+        rules[0].LegacyUsbDeviceId.ShouldBeNull();
+        rules[1].Devices.ShouldNotBeNull().ShouldBeEmpty();
+        AutomationTrigger.IsIgnored(rules[1]).ShouldBeFalse();
+
+        await store.SaveAsync(settings, Ct);
+        (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldNotContain("usbDeviceId", Case.Insensitive);
     }
 
     [Fact]
@@ -116,7 +144,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
         AppSettings settings = await store.LoadAsync(Ct);
 
         AutomationRule kept = settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem();
-        kept.UsbDeviceId.ShouldBe("VID_046D&PID_C24F");
+        kept.Devices.ShouldNotBeNull().ShouldHaveSingleItem().Id.ShouldBe("VID_046D&PID_C24F");
         kept.LegacyIsEnabled.ShouldBeNull();
 
         await store.SaveAsync(settings, Ct);
@@ -177,7 +205,14 @@ public sealed class JsonSettingsStoreTests : IDisposable
         AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
 
         settings.ConfirmTimeoutSeconds.ShouldBe(20);
-        settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().UsbDeviceId.ShouldBeNull();
+        AutomationTrigger.IsIgnored(settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem()).ShouldBeTrue();
+    }
+
+    /// <summary>Record equality compares the device list by reference.</summary>
+    private static void ShouldBeSameRule(AutomationRule actual, AutomationRule expected)
+    {
+        (actual with { Devices = null }).ShouldBe(expected with { Devices = null });
+        actual.Devices.ShouldNotBeNull().ShouldBe(expected.Devices.ShouldNotBeNull());
     }
 
     [Fact]

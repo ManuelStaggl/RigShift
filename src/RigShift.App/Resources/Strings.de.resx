@@ -226,10 +226,10 @@
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(gelöschtes Profil)</value></data>
   <data name="Automation_Device" xml:space="preserve"><value>USB-Gerät</value></data>
   <data name="Automation_DeviceConnects" xml:space="preserve"><value>Wenn ein USB-Gerät verbunden wird</value></data>
-  <data name="Automation_DeviceGone" xml:space="preserve"><value>Wenn das Gerät getrennt oder ausgeschaltet wird</value></data>
+  <data name="Automation_DeviceGone" xml:space="preserve"><value>Wenn ein Gerät getrennt oder ausgeschaltet wird</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Geräte aktualisieren</value></data>
-  <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Eine andere Regel nutzt dieses Gerät auch. Wird es verbunden, schalten beide Regeln um, nacheinander.</value></data>
+  <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Eine andere Regel nutzt dieselben Geräte. Werden sie verbunden, schalten beide Regeln um, nacheinander.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>Die Automatik ließ sich nicht pausieren oder fortsetzen, weil die Einstellungen nicht gespeichert werden konnten. Details stehen im Log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem App-Start auf Gerät warten</value></data>
@@ -249,4 +249,13 @@
   <data name="Automation_DeleteText" xml:space="preserve"><value>Die Regel für „{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>Diese Regel wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>Die Regel schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt.</value></data>
+  <data name="Automation_DevicesConnect" xml:space="preserve"><value>Wenn alle diese USB-Geräte verbunden sind</value></data>
+  <data name="Automation_AddDevice" xml:space="preserve"><value>Gerät hinzufügen</value></data>
+  <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
+  <data name="Automation_RemoveDevice" xml:space="preserve"><value>Gerät entfernen</value></data>
+  <data name="Automation_NamesTitle" xml:space="preserve"><value>USB-Gerätenamen</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Einmal benennen – der Name erscheint in Regeln, beim Warten auf ein Gerät und in Meldungen.</value></data>
+  <data name="Automation_NamesEmpty" xml:space="preserve"><value>Keine USB-Geräte gefunden.</value></data>
+  <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
+  <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
 </root>

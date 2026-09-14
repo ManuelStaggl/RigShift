@@ -59,8 +59,9 @@ public sealed class AutomationService : IDisposable
     /// <summary>Rules or the paused state may have changed.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>Rules with a device key; a rule without one (written by an unreleased build) is dropped.</summary>
-    public IReadOnlyList<AutomationRule> Rules => _settings.Current.AutomationRules?.Where(r => r.UsbDeviceId is not null).ToList() ?? [];
+    /// <summary>Rules with a device list; a rule without one (written by an unreleased build) is dropped.</summary>
+    public IReadOnlyList<AutomationRule> Rules =>
+        _settings.Current.AutomationRules?.Where(r => !AutomationTrigger.IsIgnored(r)).Select(r => r.Migrated()).ToList() ?? [];
 
     public bool IsPaused => _settings.Current.AutomationPaused;
 
@@ -244,5 +245,5 @@ public sealed class AutomationService : IDisposable
         }
     }
 
-    private static string SubjectOf(AutomationRule rule) => rule.UsbDeviceName ?? rule.UsbDeviceId ?? "?";
+    private string SubjectOf(AutomationRule rule) => UsbDeviceNames.Describe(rule, _settings.Current.UsbDeviceNames) ?? "?";
 }

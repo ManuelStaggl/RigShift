@@ -13,7 +13,8 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// Rules: "when this USB device connects, switch to that profile" (docs/PLAN.md, section 6). Changes save at once.
+/// Rules: "when these USB devices are connected, switch to that profile" (docs/PLAN.md, section 6), and the custom USB
+/// device names (user decision U-01). Changes save at once.
 /// </summary>
 public sealed partial class AutomationViewModel : ObservableObject
 {
@@ -29,8 +30,11 @@ public sealed partial class AutomationViewModel : ObservableObject
     private readonly IUsbDeviceList _devices;
     private readonly IUsbPowerCheck _powerCheck;
     private readonly ILogger _log;
-    private readonly Dictionary<string, string> _deviceNames = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Windows' name per device id: connected devices and saved devices that are not connected.</summary>
+    private readonly Dictionary<string, string> _windowsNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _powerWarnings = new(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyList<UsbDevice> _connected = [];
     private bool _loading;
     private bool _loaded;
 
@@ -71,6 +75,9 @@ public sealed partial class AutomationViewModel : ObservableObject
 
     public ObservableCollection<Choice> ExitChoices { get; } = [];
 
+    /// <summary>Devices that can be named: connected ones, the ones rules and profiles use, and named ones.</summary>
+    public ObservableCollection<UsbNameCard> NamedDevices { get; } = [];
+
     [ObservableProperty]
     public partial bool IsPaused { get; set; }
 
@@ -82,16 +89,22 @@ public sealed partial class AutomationViewModel : ObservableObject
     public partial bool IsEmpty { get; set; }
 
     [ObservableProperty]
+    public partial bool HasNoNamedDevices { get; set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorMessage { get; set; }
 
     public bool HasError => ErrorMessage is not null;
+
+    private IReadOnlyDictionary<string, string>? CustomNames => _settings.Current.UsbDeviceNames;
 
     public void Load() => Rebuild(_automation.Rules);
 
     private void Rebuild(IReadOnlyList<AutomationRule> rules) => Quietly(() =>
     {
         _loaded = true;
+        _connected = ListConnected();
         FillDevices(rules);
 
         ProfileChoices.Clear();
@@ -120,24 +133,28 @@ public sealed partial class AutomationViewModel : ObservableObject
         IsPaused = _automation.IsPaused;
         HasNoProfiles = _catalog.Profiles.Count == 0;
         IsEmpty = Rules.Count == 0;
+        FillNamedDevices(rules);
         RefreshPowerWarnings();
         UpdateDuplicates();
     });
 
-    /// <summary>Marks cards whose device another rule watches too: both switch when it connects (analysis finding C-05).</summary>
+    /// <summary>
+    /// Marks cards whose devices another rule watches too: both switch when they connect (analysis finding C-05). Only the
+    /// same set counts; a rule for the wheel and one for the wheel with a headset are a deliberate pair.
+    /// </summary>
     internal void UpdateDuplicates()
     {
         HashSet<string> shared = Rules
-            .Select(r => r.DeviceId)
+            .Select(r => r.DeviceKey)
             .OfType<string>()
-            .GroupBy(id => id, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(key => key, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() > 1)
             .Select(g => g.Key)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (RuleCard card in Rules)
         {
-            card.HasDuplicateDevice = card.DeviceId is { } id && shared.Contains(id);
+            card.HasDuplicateDevice = card.DeviceKey is { } key && shared.Contains(key);
         }
     }
 
@@ -186,8 +203,17 @@ public sealed partial class AutomationViewModel : ObservableObject
     internal Choice? DeviceChoiceFor(string? deviceId) =>
         DeviceChoices.FirstOrDefault(c => string.Equals(c.Key, deviceId, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>The device's own name, without the "not connected" note.</summary>
-    internal string? DeviceNameFor(string? deviceId) => deviceId is not null && _deviceNames.TryGetValue(deviceId, out string? name) ? name : null;
+    /// <summary>The device's name for messages – its custom name, else Windows' name – without the "not connected" note.</summary>
+    internal string? DeviceNameFor(string? deviceId) =>
+        deviceId is not null && _windowsNames.TryGetValue(deviceId, out string? name) ? UsbDeviceNames.NameOf(deviceId, name, CustomNames) : null;
+
+    /// <summary>Windows' name, stored with the rule so a device that is not connected still has one.</summary>
+    internal string? WindowsNameFor(string? deviceId) =>
+        deviceId is not null && _windowsNames.TryGetValue(deviceId, out string? name) ? name : null;
+
+    /// <summary>"Wheel + Pedals"; <c>null</c> without devices.</summary>
+    internal string? DescribeDevices(IReadOnlyList<string> deviceIds) =>
+        deviceIds.Count == 0 ? null : string.Join(" + ", deviceIds.Select(id => DeviceNameFor(id) ?? id));
 
     internal Choice? ProfileChoiceFor(Guid id) => ProfileChoices.FirstOrDefault(c => c.Key == id.ToString("D"));
 
@@ -242,8 +268,7 @@ public sealed partial class AutomationViewModel : ObservableObject
         (Guid profile, Guid exitProfile) = NewRuleProfiles(_catalog.Profiles, _settings.Current.DefaultProfileId);
         var rule = new AutomationRule
         {
-            UsbDeviceId = device ?? string.Empty,
-            UsbDeviceName = DeviceNameFor(device),
+            Devices = device is null ? [] : [new RuleDevice { Id = device, Name = WindowsNameFor(device) }],
             ProfileId = profile,
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = exitProfile,
@@ -275,7 +300,7 @@ public sealed partial class AutomationViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteRuleAsync(RuleCard? card)
     {
-        if (card is null || !await ConfirmDeleteRule(DeviceNameFor(card.DeviceId)))
+        if (card is null || !await ConfirmDeleteRule(DescribeDevices(card.DeviceIds)))
         {
             return;
         }
@@ -290,49 +315,89 @@ public sealed partial class AutomationViewModel : ObservableObject
     [RelayCommand]
     private void RefreshDevices() => Quietly(() =>
     {
-        // Ids are read before the list is refilled: clearing it makes each ComboBox write null into its card's device.
+        _connected = ListConnected();
+        Relabel();
+        FillNamedDevices(Rules.Select(r => r.ToRule()).ToList());
+        RefreshPowerWarnings();
+    });
+
+    /// <summary>Saves a custom name and shows it in every device list at once.</summary>
+    internal async Task RenameDeviceAsync(UsbNameCard card, string? name)
+    {
+        try
+        {
+            await _settings.UpdateAsync(s => s with { UsbDeviceNames = UsbDeviceNames.WithName(s.UsbDeviceNames, card.Id, name) }, CancellationToken.None);
+            ErrorMessage = null;
+            _log.Information("USB device {Device} named {Name}", card.Id, name ?? "(none)");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error(ex, "USB device {Device} could not be renamed", card.Id);
+            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            return;
+        }
+
+        Quietly(Relabel);
+    }
+
+    /// <summary>Refills the device list from <see cref="_connected"/> and puts each rule's devices back.</summary>
+    private void Relabel()
+    {
+        // Rules are read before the list is refilled: clearing it makes each ComboBox write null into its device.
         List<AutomationRule> rules = Rules.Select(r => r.ToRule()).ToList();
         FillDevices(rules);
         for (int i = 0; i < Rules.Count; i++)
         {
-            Rules[i].SelectedDevice = DeviceChoiceFor(UsbDeviceIds.Normalize(rules[i].UsbDeviceId));
+            Rules[i].SetDevices(rules[i]);
         }
+    }
 
-        RefreshPowerWarnings();
-    });
-
-    private void FillDevices(IReadOnlyList<AutomationRule> rules)
+    private IReadOnlyList<UsbDevice> ListConnected()
     {
-        IReadOnlyList<UsbDevice> connected;
         try
         {
-            connected = _devices.ConnectedDevices();
+            IReadOnlyList<UsbDevice> connected = _devices.ConnectedDevices();
+            _log.Debug("Automation lists {Count} USB device(s)", connected.Count);
+            return connected;
         }
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "USB devices could not be listed");
-            connected = [];
+            return [];
+        }
+    }
+
+    private void FillDevices(IReadOnlyList<AutomationRule> rules) =>
+        UsbDeviceChoices.Fill(DeviceChoices, _windowsNames, _connected, rules.SelectMany(r => r.Devices ?? []), CustomNames);
+
+    private void FillNamedDevices(IReadOnlyList<AutomationRule> rules)
+    {
+        var known = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (UsbDevice device in _connected)
+        {
+            known.TryAdd(device.Id, device.Name);
         }
 
-        DeviceChoices.Clear();
-        _deviceNames.Clear();
-        foreach (UsbDevice device in connected)
+        IEnumerable<RuleDevice> saved = rules
+            .SelectMany(r => r.Devices ?? [])
+            .Concat(_catalog.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }))
+            .Concat((CustomNames ?? new Dictionary<string, string>()).Keys.Select(id => new RuleDevice { Id = id }));
+        foreach (RuleDevice device in saved)
         {
-            DeviceChoices.Add(new Choice(device.Id, device.Name));
-            _deviceNames[device.Id] = device.Name;
-        }
-
-        foreach (AutomationRule rule in rules)
-        {
-            if (UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id && !_deviceNames.ContainsKey(id))
+            if (UsbDeviceIds.Normalize(device.Id) is { } id && (!known.TryGetValue(id, out string? name) || name is null))
             {
-                string name = rule.UsbDeviceName ?? id;
-                DeviceChoices.Add(new Choice(id, Loc.Format("Automation_DeviceNotConnected", name)));
-                _deviceNames[id] = name;
+                known[id] = string.IsNullOrWhiteSpace(device.Name) ? null : device.Name;
             }
         }
 
-        _log.Debug("Automation lists {Count} USB device(s)", connected.Count);
+        HashSet<string> connected = _connected.Select(d => d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        NamedDevices.Clear();
+        foreach ((string id, string? name) in known.OrderByDescending(p => connected.Contains(p.Key)).ThenBy(p => p.Value ?? p.Key, StringComparer.CurrentCultureIgnoreCase))
+        {
+            NamedDevices.Add(new UsbNameCard(this, id, name ?? id, connected.Contains(id), UsbDeviceNames.CustomNameOf(id, CustomNames)));
+        }
+
+        HasNoNamedDevices = NamedDevices.Count == 0;
     }
 
     private async Task SaveAsync()
@@ -377,7 +442,7 @@ public sealed partial class RuleCard : ObservableObject
 
         _owner = owner;
         Id = rule.Id;
-        SelectedDevice = owner.DeviceChoiceFor(UsbDeviceIds.Normalize(rule.UsbDeviceId));
+        SetDevices(rule);
         SelectedProfile = owner.ProfileChoiceFor(rule.ProfileId);
         SelectedExit = owner.ExitChoiceFor(rule);
         SkipConfirmation = rule.SkipConfirmation;
@@ -388,10 +453,24 @@ public sealed partial class RuleCard : ObservableObject
 
     public AutomationViewModel Owner => _owner;
 
-    internal string? DeviceId => SelectedDevice?.Key;
+    /// <summary>One entry per device; a combination switches once all of them are connected (user decision U-02).</summary>
+    public ObservableCollection<RuleDeviceSlot> Devices { get; } = [];
 
-    [ObservableProperty]
-    public partial Choice? SelectedDevice { get; set; }
+    public bool IsCombination => Devices.Count > 1;
+
+    public string DevicesHeader => Loc.Instance[IsCombination ? "Automation_DevicesConnect" : "Automation_DeviceConnects"];
+
+    /// <summary>"Wheel + Pedals", for screen readers and the delete question.</summary>
+    public string? DevicesText => _owner.DescribeDevices(DeviceIds);
+
+    internal IReadOnlyList<string> DeviceIds => Devices
+        .Select(s => s.SelectedDevice?.Key)
+        .OfType<string>()
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    /// <summary>The device set, independent of order; <c>null</c> without devices.</summary>
+    internal string? DeviceKey => DeviceIds.Count == 0 ? null : string.Join('+', DeviceIds.Order(StringComparer.OrdinalIgnoreCase));
 
     [ObservableProperty]
     public partial Choice? SelectedProfile { get; set; }
@@ -405,15 +484,58 @@ public sealed partial class RuleCard : ObservableObject
     [ObservableProperty]
     public partial double? ExitDelaySeconds { get; set; }
 
-    /// <summary>Windows may power the chosen device down (hint only, docs/usb-power-saving.md).</summary>
+    /// <summary>Windows may power one of the chosen devices down (hint only, docs/usb-power-saving.md).</summary>
     [ObservableProperty]
     public partial bool HasPowerWarning { get; private set; }
 
-    internal void UpdatePowerWarning() => HasPowerWarning = _owner.HasPowerWarning(DeviceId);
+    internal void UpdatePowerWarning() => HasPowerWarning = DeviceIds.Any(_owner.HasPowerWarning);
 
-    /// <summary>Another rule watches the same device (analysis finding C-05).</summary>
+    /// <summary>Another rule watches the same devices (analysis finding C-05).</summary>
     [ObservableProperty]
     public partial bool HasDuplicateDevice { get; internal set; }
+
+    /// <summary>Shows the rule's devices from the current device list; a rule without any gets one empty entry.</summary>
+    internal void SetDevices(AutomationRule rule)
+    {
+        Devices.Clear();
+        IEnumerable<string> ids = (rule.Devices ?? [])
+            .Select(d => UsbDeviceIds.Normalize(d.Id))
+            .OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        foreach (string id in ids)
+        {
+            Devices.Add(new RuleDeviceSlot(this, _owner.DeviceChoiceFor(id)));
+        }
+
+        if (Devices.Count == 0)
+        {
+            Devices.Add(new RuleDeviceSlot(this, null));
+        }
+
+        OnDevicesShapeChanged();
+    }
+
+    [RelayCommand]
+    private void AddDevice()
+    {
+        IReadOnlyList<string> taken = DeviceIds;
+        Choice? next = _owner.DeviceChoices.FirstOrDefault(c => c.Key is { } key && !taken.Contains(key, StringComparer.OrdinalIgnoreCase));
+        Devices.Add(new RuleDeviceSlot(this, next));
+        OnDevicesShapeChanged();
+        OnDevicesChanged();
+    }
+
+    [RelayCommand]
+    private void RemoveDevice(RuleDeviceSlot? slot)
+    {
+        if (slot is null || Devices.Count <= 1 || !Devices.Remove(slot))
+        {
+            return;
+        }
+
+        OnDevicesShapeChanged();
+        OnDevicesChanged();
+    }
 
     public AutomationRule ToRule()
     {
@@ -421,9 +543,8 @@ public sealed partial class RuleCard : ObservableObject
         return new AutomationRule
         {
             Id = Id,
-            // An empty id keeps a rule without a chosen device; it watches nothing until one is picked.
-            UsbDeviceId = DeviceId ?? string.Empty,
-            UsbDeviceName = _owner.DeviceNameFor(DeviceId),
+            // An empty list keeps a rule without a chosen device; it watches nothing until one is picked.
+            Devices = DeviceIds.Select(id => new RuleDevice { Id = id, Name = _owner.WindowsNameFor(id) }).ToList(),
             ProfileId = Guid.TryParse(SelectedProfile?.Key, out Guid profile) ? profile : Guid.Empty,
             OnExit = onExit,
             ExitProfileId = exitProfile,
@@ -434,11 +555,19 @@ public sealed partial class RuleCard : ObservableObject
         };
     }
 
-    partial void OnSelectedDeviceChanged(Choice? value)
+    internal void OnDevicesChanged()
     {
         UpdatePowerWarning();
+        OnPropertyChanged(nameof(DevicesText));
         _owner.UpdateDuplicates();
         _owner.OnCardChanged();
+    }
+
+    private void OnDevicesShapeChanged()
+    {
+        OnPropertyChanged(nameof(IsCombination));
+        OnPropertyChanged(nameof(DevicesHeader));
+        OnPropertyChanged(nameof(DevicesText));
     }
 
     partial void OnSelectedProfileChanged(Choice? value) => _owner.OnCardChanged();
@@ -448,4 +577,68 @@ public sealed partial class RuleCard : ObservableObject
     partial void OnSkipConfirmationChanged(bool value) => _owner.OnCardChanged();
 
     partial void OnExitDelaySecondsChanged(double? value) => _owner.OnCardChanged();
+}
+
+/// <summary>One device of a rule.</summary>
+public sealed partial class RuleDeviceSlot : ObservableObject
+{
+    private readonly bool _ready;
+
+    public RuleDeviceSlot(RuleCard card, Choice? device)
+    {
+        Card = card;
+        SelectedDevice = device;
+        _ready = true;
+    }
+
+    public RuleCard Card { get; }
+
+    [ObservableProperty]
+    public partial Choice? SelectedDevice { get; set; }
+
+    partial void OnSelectedDeviceChanged(Choice? value)
+    {
+        if (_ready)
+        {
+            Card.OnDevicesChanged();
+        }
+    }
+}
+
+/// <summary>A USB device and its custom name. The name is saved when the field loses focus or on Enter.</summary>
+public sealed partial class UsbNameCard : ObservableObject
+{
+    private readonly AutomationViewModel _owner;
+    private string? _savedName;
+
+    public UsbNameCard(AutomationViewModel owner, string id, string windowsName, bool isConnected, string? customName)
+    {
+        _owner = owner;
+        Id = id;
+        WindowsName = windowsName;
+        _savedName = UsbDeviceNames.Normalize(customName);
+        CustomName = _savedName ?? string.Empty;
+        DetailsText = Loc.Instance[isConnected ? "Automation_NameConnected" : "Automation_NameNotConnected"] + " · " + id;
+    }
+
+    public string Id { get; }
+
+    public string WindowsName { get; }
+
+    public string DetailsText { get; }
+
+    [ObservableProperty]
+    public partial string CustomName { get; set; }
+
+    internal async Task SaveNameAsync()
+    {
+        string? name = UsbDeviceNames.Normalize(CustomName);
+        if (name == _savedName)
+        {
+            return;
+        }
+
+        _savedName = name;
+        await _owner.RenameDeviceAsync(this, name);
+    }
 }

@@ -76,42 +76,66 @@
                     Severity="Warning" />
                   <ui:Button
                     Margin="0,8,0,0"
-                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                    AutomationProperties.HelpText="{Binding DevicesText}"
                     Command="{Binding Owner.OpenUsbPowerHelpCommand}"
                     Content="{loc:Tr Automation_PowerSavingHelp}"
                     Icon="{ui:SymbolIcon Open24}" />
                 </StackPanel>
 
-                <!-- Line one: the device, full width so its name stays readable. Line two wraps: profile, end action, delay,
-                     confirmation (analysis finding I-03). -->
-                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceConnects}" TextWrapping="Wrap" />
-                <Grid Grid.Row="1" Margin="0,4,0,0">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <ComboBox
-                    AutomationProperties.Name="{loc:Tr Automation_Device}"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding Owner.DeviceChoices}"
-                    SelectedItem="{Binding SelectedDevice}"
-                    ToolTip="{Binding SelectedDevice.Name}" />
-                  <ui:Button
-                    Grid.Column="1"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Stretch"
-                    AutomationProperties.Name="{loc:Tr Automation_RefreshDevices}"
-                    Command="{Binding Owner.RefreshDevicesCommand}"
-                    Icon="{ui:SymbolIcon ArrowClockwise24}"
-                    ToolTip="{loc:Tr Automation_RefreshDevices}" />
-                </Grid>
+                <!-- Lines one and two: the devices, full width so their names stay readable; a combination switches once all
+                     are connected (U-02). Line three wraps: profile, end action, delay, confirmation (analysis finding I-03). -->
+                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DevicesHeader}" TextWrapping="Wrap" />
+                <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                  <ItemsControl Focusable="False" ItemsSource="{Binding Devices}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid Margin="0,0,0,8">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+                          <ComboBox
+                            AutomationProperties.Name="{loc:Tr Automation_Device}"
+                            DisplayMemberPath="Name"
+                            ItemsSource="{Binding Card.Owner.DeviceChoices}"
+                            SelectedItem="{Binding SelectedDevice}"
+                            ToolTip="{Binding SelectedDevice.Name}" />
+                          <ui:Button
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Stretch"
+                            AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                            AutomationProperties.Name="{loc:Tr Automation_RemoveDevice}"
+                            Command="{Binding Card.RemoveDeviceCommand}"
+                            CommandParameter="{Binding}"
+                            Icon="{ui:SymbolIcon Dismiss24}"
+                            ToolTip="{loc:Tr Automation_RemoveDevice}"
+                            Visibility="{Binding Card.IsCombination, Converter={StaticResource BoolToVisibility}}" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <WrapPanel>
+                    <ui:Button
+                      Margin="0,0,8,0"
+                      AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
+                      Command="{Binding AddDeviceCommand}"
+                      Content="{loc:Tr Automation_AddDevice}"
+                      Icon="{ui:SymbolIcon Add24}"
+                      ToolTip="{loc:Tr Automation_AddDeviceHint}" />
+                    <ui:Button
+                      Command="{Binding Owner.RefreshDevicesCommand}"
+                      Content="{loc:Tr Automation_RefreshDevices}"
+                      Icon="{ui:SymbolIcon ArrowClockwise24}" />
+                  </WrapPanel>
+                </StackPanel>
 
                 <ui:Button
                   Grid.Row="1"
                   Grid.Column="1"
                   Margin="16,4,0,0"
-                  VerticalAlignment="Stretch"
-                  AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                  VerticalAlignment="Top"
+                  AutomationProperties.HelpText="{Binding DevicesText}"
                   AutomationProperties.Name="{loc:Tr Automation_Delete}"
                   Command="{Binding Owner.DeleteRuleCommand}"
                   CommandParameter="{Binding}"
@@ -123,7 +147,7 @@
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
                     <ComboBox
                       Margin="0,4,0,0"
-                      AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                      AutomationProperties.HelpText="{Binding DevicesText}"
                       AutomationProperties.Name="{loc:Tr Automation_Profile}"
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding Owner.ProfileChoices}"
@@ -133,7 +157,7 @@
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" />
                     <ComboBox
                       Margin="0,4,0,0"
-                      AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                      AutomationProperties.HelpText="{Binding DevicesText}"
                       AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding Owner.ExitChoices}"
@@ -169,6 +193,46 @@
                   Text="{loc:Tr Automation_SkipConfirmationHint}"
                   TextWrapping="Wrap"
                   Visibility="{Binding SkipConfirmation, Converter={StaticResource BoolToVisibility}}" />
+              </Grid>
+            </ui:Card>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Custom USB device names: given once, shown in rules, the editor and notifications (U-01). -->
+      <ui:TextBlock
+        Margin="0,24,0,4"
+        FontTypography="Subtitle"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+        Text="{loc:Tr Automation_NamesTitle}"
+        TextWrapping="Wrap" />
+      <TextBlock Margin="0,0,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_NamesHint}" TextWrapping="Wrap" />
+      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding HasNoNamedDevices, Mode=OneWay}" Message="{loc:Tr Automation_NamesEmpty}" Severity="Informational" />
+      <ItemsControl Focusable="False" ItemsSource="{Binding NamedDevices}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:Card Margin="0,0,0,8" Padding="16,12">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding WindowsName}" TextWrapping="Wrap" />
+                  <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
+                </StackPanel>
+                <ui:TextBox
+                  Grid.Column="1"
+                  Width="240"
+                  Margin="16,0,0,0"
+                  VerticalAlignment="Center"
+                  AutomationProperties.HelpText="{Binding WindowsName}"
+                  AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                  KeyDown="OnNameKeyDown"
+                  LostFocus="OnNameLostFocus"
+                  MaxLength="40"
+                  PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
+                  Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
               </Grid>
             </ui:Card>
           </DataTemplate>

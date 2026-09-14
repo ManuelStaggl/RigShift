@@ -41,6 +41,9 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
+    /// <summary>Custom USB device names by <c>VID_xxxx&amp;PID_xxxx</c> (user decision U-01, <see cref="Automation.UsbDeviceNames"/>).</summary>
+    public IReadOnlyDictionary<string, string>? UsbDeviceNames { get; init; }
+
     /// <summary>USB device rules of the automation page (docs/PLAN.md, section 6).</summary>
     public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
 
@@ -83,7 +86,7 @@ public sealed class JsonSettingsStore
         {
             await using FileStream stream = File.OpenRead(_file);
             AppSettings? settings = await JsonSerializer.DeserializeAsync(stream, SettingsJsonContext.Default.AppSettings, cancellationToken);
-            return settings is null ? new AppSettings() : DropDisabledRules(settings);
+            return settings is null ? new AppSettings() : MigrateRules(settings);
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
@@ -94,11 +97,13 @@ public sealed class JsonSettingsStore
 
     /// <summary>
     /// Rules have no switch of their own any more (analysis finding O-07). A rule switched off in 1.3.x would start switching
-    /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file.
+    /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file. The single device
+    /// of 1.3.x becomes the rule's device list (U-02).
     /// </summary>
-    private AppSettings DropDisabledRules(AppSettings settings)
+    private AppSettings MigrateRules(AppSettings settings)
     {
-        if (settings.AutomationRules is not { } rules || rules.All(r => r.LegacyIsEnabled is null))
+        if (settings.AutomationRules is not { } rules
+            || rules.All(r => r.LegacyIsEnabled is null && r.LegacyUsbDeviceId is null && r.LegacyUsbDeviceName is null))
         {
             return settings;
         }
@@ -111,11 +116,11 @@ public sealed class JsonSettingsStore
                 _log.Warning(
                     "Automation rule {Rule} for {Device} was switched off in an earlier version and is removed, because rules no longer have their own switch",
                     rule.Id,
-                    rule.UsbDeviceName ?? rule.UsbDeviceId);
+                    Automation.UsbDeviceNames.Describe(rule, settings.UsbDeviceNames));
                 continue;
             }
 
-            kept.Add(rule with { LegacyIsEnabled = null });
+            kept.Add(rule.Migrated() with { LegacyIsEnabled = null });
         }
 
         return settings with { AutomationRules = kept };

@@ -15,9 +15,19 @@ public enum ExitAction
     SwitchTo,
 }
 
+/// <summary>A USB device a rule watches.</summary>
+public sealed record RuleDevice
+{
+    /// <summary>The device as <c>VID_xxxx&amp;PID_xxxx</c>.</summary>
+    public string? Id { get; init; }
+
+    /// <summary>Windows' name of the device when it was picked, shown while it is not connected.</summary>
+    public string? Name { get; init; }
+}
+
 /// <summary>
-/// "When this USB device connects, switch to that profile." Stored in the application settings. A rule without the
-/// <see cref="UsbDeviceId"/> key (written by an unreleased build) is ignored.
+/// "When these USB devices are connected, switch to that profile." Stored in the application settings. A rule without
+/// devices and without the 1.3 key <c>usbDeviceId</c> (written by an unreleased build) is ignored.
 /// </summary>
 public sealed record AutomationRule
 {
@@ -31,11 +41,21 @@ public sealed record AutomationRule
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? LegacyIsEnabled { get; init; }
 
-    /// <summary>USB device as <c>VID_xxxx&amp;PID_xxxx</c>; empty until a device is picked.</summary>
-    public string? UsbDeviceId { get; init; }
+    /// <summary>
+    /// The devices that must all be connected for the rule to start; the end action runs once one of them has been gone
+    /// for the delay (user decision U-02). Empty until a device is picked.
+    /// </summary>
+    public IReadOnlyList<RuleDevice>? Devices { get; init; }
 
-    /// <summary>Name of the device when it was picked, shown while it is not connected.</summary>
-    public string? UsbDeviceName { get; init; }
+    /// <summary>The single device of 1.3.x, read only and moved to <see cref="Devices"/> on load; never written.</summary>
+    [JsonPropertyName("usbDeviceId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyUsbDeviceId { get; init; }
+
+    /// <summary>Name of <see cref="LegacyUsbDeviceId"/>, moved with it.</summary>
+    [JsonPropertyName("usbDeviceName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyUsbDeviceName { get; init; }
 
     public Guid ProfileId { get; init; }
 
@@ -55,4 +75,14 @@ public sealed record AutomationRule
     public const int DefaultExitDelaySeconds = 10;
 
     public const int MaxExitDelaySeconds = 600;
+
+    /// <summary>The rule in the current shape: the device of 1.3.x becomes the only entry of <see cref="Devices"/>.</summary>
+    public AutomationRule Migrated() => LegacyUsbDeviceId is null && LegacyUsbDeviceName is null
+        ? this
+        : this with
+        {
+            Devices = Devices ?? (UsbDeviceIds.Normalize(LegacyUsbDeviceId) is { } id ? [new RuleDevice { Id = id, Name = LegacyUsbDeviceName }] : []),
+            LegacyUsbDeviceId = null,
+            LegacyUsbDeviceName = null,
+        };
 }

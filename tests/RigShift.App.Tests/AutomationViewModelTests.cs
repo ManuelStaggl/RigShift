@@ -35,9 +35,67 @@ public sealed class AutomationViewModelTests : IDisposable
     {
         AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase), RuleFor(Wheelbase));
 
-        viewModel.Rules[1].SelectedDevice = viewModel.DeviceChoiceFor(Dongle);
+        viewModel.Rules[1].Devices[0].SelectedDevice = viewModel.DeviceChoiceFor(Dongle);
 
         viewModel.Rules.ShouldAllBe(r => !r.HasDuplicateDevice);
+    }
+
+    [Fact]
+    public async Task Load_SameDeviceSetWarns_SingleDeviceOfACombinationDoesNot()
+    {
+        AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase), RuleFor(Wheelbase, Dongle), RuleFor(Dongle, Wheelbase));
+
+        viewModel.Rules.Select(r => r.HasDuplicateDevice).ShouldBe([false, true, true]);
+        viewModel.Rules[1].IsCombination.ShouldBeTrue();
+        viewModel.Rules[0].IsCombination.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AddDevice_PicksAnotherDevice_RemoveGoesBackToOne()
+    {
+        AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase));
+        RuleCard card = viewModel.Rules[0];
+
+        card.AddDeviceCommand.Execute(null);
+
+        card.ToRule().Devices.ShouldNotBeNull().Select(d => d.Id).ShouldBe([Wheelbase, Dongle]);
+        card.DevicesText.ShouldBe("Wheelbase + Dongle");
+
+        card.RemoveDeviceCommand.Execute(card.Devices[0]);
+        card.RemoveDeviceCommand.Execute(card.Devices[0]);
+
+        card.ToRule().Devices.ShouldNotBeNull().ShouldHaveSingleItem().Id.ShouldBe(Dongle);
+    }
+
+    [Fact]
+    public async Task RenameDevice_RelabelsListsAndKeepsEachRulesDevice()
+    {
+        AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase), RuleFor(Dongle));
+        string? askedFor = null;
+        viewModel.ConfirmDeleteRule = name =>
+        {
+            askedFor = name;
+            return Task.FromResult(false);
+        };
+
+        await viewModel.RenameDeviceAsync(viewModel.NamedDevices.First(n => n.Id == Wheelbase), "Wheel");
+
+        viewModel.DeviceChoiceFor(Wheelbase).ShouldNotBeNull().Name.ShouldBe("Wheel · Wheelbase");
+        viewModel.Rules.Select(r => r.Devices[0].SelectedDevice?.Key).ShouldBe([Wheelbase, Dongle]);
+        _host.Settings.Current.UsbDeviceNames.ShouldNotBeNull()[Wheelbase].ShouldBe("Wheel");
+        await viewModel.DeleteRuleCommand.ExecuteAsync(viewModel.Rules[0]);
+        askedFor.ShouldBe("Wheel");
+    }
+
+    [Fact]
+    public async Task NamedDevices_IncludeRuleDeviceThatIsNotConnected()
+    {
+        const string Pedals = "VID_0EB7&PID_0030";
+        AutomationViewModel viewModel = await CreateAsync(new AutomationRule { Devices = [new RuleDevice { Id = Pedals, Name = "Pedals" }], ProfileId = _rig.Id });
+
+        viewModel.NamedDevices.Select(n => n.WindowsName).ShouldBe(["Dongle", "Wheelbase", "Pedals"]);
+        viewModel.DeviceChoiceFor(Pedals).ShouldNotBeNull().Name.ShouldContain("Pedals");
+        viewModel.Rules[0].Devices[0].SelectedDevice.ShouldNotBeNull().Key.ShouldBe(Pedals);
     }
 
     [Fact]
@@ -100,7 +158,8 @@ public sealed class AutomationViewModelTests : IDisposable
 
     public void Dispose() => _host.Dispose();
 
-    private AutomationRule RuleFor(string device) => new() { UsbDeviceId = device, ProfileId = _rig.Id };
+    private AutomationRule RuleFor(params string[] devices) =>
+        new() { Devices = [.. devices.Select(id => new RuleDevice { Id = id })], ProfileId = _rig.Id };
 
     private async Task<AutomationViewModel> CreateAsync(params AutomationRule[] rules)
     {

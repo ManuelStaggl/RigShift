@@ -139,7 +139,7 @@ public sealed class ProfileDialogs
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, _catalog, _display, _hotkeys, _log);
+            profile, isNew, playback, recording, usbDevices, _settings.Current.UsbDeviceNames, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };
