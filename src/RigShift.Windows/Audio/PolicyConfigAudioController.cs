@@ -41,23 +41,37 @@ public sealed class PolicyConfigAudioController : IAudioController
                 flow,
                 DEVICE_STATE.DEVICE_STATE_ACTIVE | DEVICE_STATE.DEVICE_STATE_DISABLED | DEVICE_STATE.DEVICE_STATE_UNPLUGGED,
                 out IMMDeviceCollection collection);
-            collection.GetCount(out uint count);
-
-            var devices = new List<AudioDeviceInfo>((int)count);
-            for (uint i = 0; i < count; i++)
+            try
             {
-                collection.Item(i, out IMMDevice device);
-                string id = GetId(device);
-                device.GetState(out DEVICE_STATE state);
-                devices.Add(new AudioDeviceInfo(
-                    new AudioEndpoint(id, GetFriendlyName(device)),
-                    direction,
-                    IsActive: state == DEVICE_STATE.DEVICE_STATE_ACTIVE,
-                    IsDefault: string.Equals(id, defaultId, StringComparison.OrdinalIgnoreCase)));
-            }
+                collection.GetCount(out uint count);
 
-            _log.Debug("Listed {Count} {Direction} endpoints", devices.Count, direction);
-            return Task.FromResult<IReadOnlyList<AudioDeviceInfo>>(devices);
+                var devices = new List<AudioDeviceInfo>((int)count);
+                for (uint i = 0; i < count; i++)
+                {
+                    collection.Item(i, out IMMDevice device);
+                    try
+                    {
+                        string id = GetId(device);
+                        device.GetState(out DEVICE_STATE state);
+                        devices.Add(new AudioDeviceInfo(
+                            new AudioEndpoint(id, GetFriendlyName(device)),
+                            direction,
+                            IsActive: state == DEVICE_STATE.DEVICE_STATE_ACTIVE,
+                            IsDefault: string.Equals(id, defaultId, StringComparison.OrdinalIgnoreCase)));
+                    }
+                    finally
+                    {
+                        Release(device);
+                    }
+                }
+
+                _log.Debug("Listed {Count} {Direction} endpoints", devices.Count, direction);
+                return Task.FromResult<IReadOnlyList<AudioDeviceInfo>>(devices);
+            }
+            finally
+            {
+                Release(collection);
+            }
         }
         finally
         {
@@ -105,7 +119,15 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             IAudioEndpointVolume volume = ActivateVolume(enumerator, endpoint);
-            volume.SetMasterVolumeLevelScalar(Math.Clamp(percent, 0, 100) / 100f, Guid.Empty);
+            try
+            {
+                volume.SetMasterVolumeLevelScalar(Math.Clamp(percent, 0, 100) / 100f, Guid.Empty);
+            }
+            finally
+            {
+                Release(volume);
+            }
+
             _log.Information("Volume of {Device} set to {Volume} %", endpoint.FriendlyName, percent);
         }
         finally
@@ -124,7 +146,16 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             IAudioEndpointVolume volume = ActivateVolume(enumerator, endpoint);
-            volume.GetMasterVolumeLevelScalar(out float level);
+            float level;
+            try
+            {
+                volume.GetMasterVolumeLevelScalar(out level);
+            }
+            finally
+            {
+                Release(volume);
+            }
+
             int percent = (int)Math.Round(level * 100);
             _log.Debug("Volume of {Device} is {Volume} %", endpoint.FriendlyName, percent);
             return Task.FromResult(percent);
@@ -138,8 +169,15 @@ public sealed class PolicyConfigAudioController : IAudioController
     private static IAudioEndpointVolume ActivateVolume(IMMDeviceEnumerator enumerator, AudioEndpoint endpoint)
     {
         enumerator.GetDevice(endpoint.EndpointId, out IMMDevice device);
-        device.Activate(typeof(IAudioEndpointVolume).GUID, CLSCTX.CLSCTX_ALL, null, out object activated);
-        return (IAudioEndpointVolume)activated;
+        try
+        {
+            device.Activate(typeof(IAudioEndpointVolume).GUID, CLSCTX.CLSCTX_ALL, null, out object activated);
+            return (IAudioEndpointVolume)activated;
+        }
+        finally
+        {
+            Release(device);
+        }
     }
 
     private bool IsActive(AudioEndpoint endpoint)
@@ -148,7 +186,16 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             enumerator.GetDevice(endpoint.EndpointId, out IMMDevice device);
-            device.GetState(out DEVICE_STATE state);
+            DEVICE_STATE state;
+            try
+            {
+                device.GetState(out state);
+            }
+            finally
+            {
+                Release(device);
+            }
+
             if (state != DEVICE_STATE.DEVICE_STATE_ACTIVE)
             {
                 _log.Warning("Audio device {Device} is in state {State}, not setting it as default", endpoint.FriendlyName, state);
@@ -173,7 +220,14 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             enumerator.GetDefaultAudioEndpoint(flow, ERole.eConsole, out IMMDevice device);
-            return GetId(device);
+            try
+            {
+                return GetId(device);
+            }
+            finally
+            {
+                Release(device);
+            }
         }
         catch (COMException ex) when (ex.HResult == ElementNotFound)
         {
@@ -198,14 +252,30 @@ public sealed class PolicyConfigAudioController : IAudioController
     private static string GetFriendlyName(IMMDevice device)
     {
         device.OpenPropertyStore(STGM.STGM_READ, out IPropertyStore store);
-        store.GetValue(in PInvoke.PKEY_Device_FriendlyName, out PROPVARIANT value);
         try
         {
-            return value.vt == VARENUM.VT_LPWSTR ? value.pwszVal.ToString() : string.Empty;
+            store.GetValue(in PInvoke.PKEY_Device_FriendlyName, out PROPVARIANT value);
+            try
+            {
+                return value.vt == VARENUM.VT_LPWSTR ? value.pwszVal.ToString() : string.Empty;
+            }
+            finally
+            {
+                PInvoke.PropVariantClear(ref value);
+            }
         }
         finally
         {
-            PInvoke.PropVariantClear(ref value);
+            Release(store);
+        }
+    }
+
+    /// <summary>Releases the RCW now instead of at the next GC (analysis finding G-01).</summary>
+    private static void Release(object? comObject)
+    {
+        if (comObject is not null && Marshal.IsComObject(comObject))
+        {
+            Marshal.ReleaseComObject(comObject);
         }
     }
 
