@@ -53,7 +53,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 ## Process model
 
 - Single instance via named mutex; a second instance forwards its CLI arguments over the named pipe
-  `\\.\pipe\RigShift` and exits with the result code.
+  `\\.\pipe\RigShift.<SessionId>` (one per Windows session, current user only) and exits with the result code.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | list | save <name> | status`.
   Exit codes: 0 applied, 1 failed, 2 blocked, 3 rolled back, 4 unknown profile.
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).

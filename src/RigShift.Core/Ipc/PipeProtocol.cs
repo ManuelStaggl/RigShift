@@ -1,4 +1,6 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -11,12 +13,25 @@ public sealed record PipeRequest(IReadOnlyList<string> Arguments);
 public sealed record PipeResponse(int ExitCode, string Output);
 
 /// <summary>
-/// Framing on <c>\\.\pipe\RigShift</c>: a 4-byte little-endian length, then UTF-8 JSON. One request, one response per
-/// connection. Transport-agnostic (any <see cref="Stream"/>) so it is testable without pipes.
+/// Framing on <c>\\.\pipe\RigShift.&lt;SessionId&gt;</c>: a 4-byte little-endian length, then UTF-8 JSON. One request, one
+/// response per connection. Transport-agnostic (any <see cref="Stream"/>) so it is testable without pipes.
 /// </summary>
 public static class PipeProtocol
 {
-    public const string PipeName = "RigShift";
+    /// <summary>
+    /// Pipe name of the current Windows session. Pipe names are machine-wide while the single-instance mutex is
+    /// session-local, so a second signed-in user needs an own name; server and client both use this.
+    /// </summary>
+    public static string PipeName { get; } = CreatePipeName();
+
+    public static string PipeNameForSession(int sessionId) =>
+        string.Create(CultureInfo.InvariantCulture, $"RigShift.{sessionId}");
+
+    private static string CreatePipeName()
+    {
+        using Process current = Process.GetCurrentProcess();
+        return PipeNameForSession(current.SessionId);
+    }
 
     /// <summary>Guards against a garbage length from a foreign client; real messages are a few hundred bytes.</summary>
     private const int MaxMessageBytes = 1024 * 1024;

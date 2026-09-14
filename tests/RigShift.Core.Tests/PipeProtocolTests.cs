@@ -7,6 +7,15 @@ namespace RigShift.Core.Tests;
 public sealed class PipeProtocolTests
 {
     [Fact]
+    public void PipeName_ContainsCurrentSessionId()
+    {
+        using var current = System.Diagnostics.Process.GetCurrentProcess();
+
+        PipeProtocol.PipeName.ShouldBe("RigShift." + current.SessionId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        PipeProtocol.PipeNameForSession(2).ShouldBe("RigShift.2");
+    }
+
+    [Fact]
     public async Task RequestAndResponse_RoundTrip()
     {
         using var stream = new MemoryStream();

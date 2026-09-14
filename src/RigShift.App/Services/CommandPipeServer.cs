@@ -9,13 +9,14 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Listens on <c>\\.\pipe\RigShift</c> (current user only) for command lines of further <c>RigShift.exe</c> processes.
+/// Listens on <c>\\.\pipe\RigShift.&lt;SessionId&gt;</c> (current user only) for command lines of further <c>RigShift.exe</c> processes.
 /// Each connection is served on its own, so <c>status</c> still answers while an <c>apply</c> waits for confirmation.
 /// Commands run on the UI thread, like clicks in the window.
 /// </summary>
 public sealed class CommandPipeServer : IDisposable
 {
     private const int MaxConnections = 4;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
     private readonly CommandRunner _runner;
     private readonly IAppShell _shell;
@@ -43,7 +44,9 @@ public sealed class CommandPipeServer : IDisposable
 
     public void Start()
     {
-        _ = Task.Run(() => ListenAsync(_stop.Token));
+        _ = Task.Run(() => ListenAsync(_stop.Token)).ContinueWith(
+            task => _log.Error(task.Exception, "Command pipe {Pipe} listener stopped unexpectedly", _pipeName),
+            CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
         _log.Information("Command pipe {Pipe} listening", _pipeName);
     }
 
@@ -63,11 +66,20 @@ public sealed class CommandPipeServer : IDisposable
                 server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, MaxConnections,
                     PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // All instances busy or the name is taken by something else: wait instead of spinning.
-                _log.Warning(ex, "Command pipe could not be created, retrying");
-                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+                // All instances busy, or the name is owned by another user or program (access denied):
+                // log and wait instead of spinning or letting the listener die.
+                _log.Warning(ex, "Command pipe {Pipe} could not be created, retrying in {Delay}", _pipeName, RetryDelay);
+                try
+                {
+                    await Task.Delay(RetryDelay, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
                 continue;
             }
 
