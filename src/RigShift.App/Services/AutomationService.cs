@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using RigShift.Core.Abstractions;
@@ -72,10 +73,21 @@ public sealed class AutomationService : IDisposable
         _log.Information("Automation started with {Count} rule(s), paused {Paused}", Rules.Count, IsPaused);
     }
 
-    public async Task SetPausedAsync(bool paused)
+    /// <returns><c>false</c> if the settings could not be saved; the paused state stays as it was (analysis finding A-07).</returns>
+    public async Task<bool> SetPausedAsync(bool paused)
     {
-        await _settings.UpdateAsync(s => s with { AutomationPaused = paused }, CancellationToken.None);
+        try
+        {
+            await _settings.UpdateAsync(s => s with { AutomationPaused = paused }, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error(ex, "Automation could not be {State}", paused ? "paused" : "resumed");
+            return false;
+        }
+
         _log.Information("Automation {State}", paused ? "paused" : "resumed");
+        return true;
     }
 
     public void Dispose()

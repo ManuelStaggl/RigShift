@@ -1,3 +1,4 @@
+using System.IO;
 using NSubstitute;
 using RigShift.App.Services;
 using RigShift.Core.Automation;
@@ -68,6 +69,18 @@ public sealed class AutomationServiceTests : IDisposable
         _host.Display.SetSnapshot(DeskActive());
         await automation.PollAsync();
         _host.Coordinator.History.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task SetPaused_SettingsNotWritable_ReturnsFalseAndStaysResumed()
+    {
+        using AutomationService automation = await CreateAsync();
+
+        // A directory where the temporary settings file goes makes the save fail.
+        Directory.CreateDirectory(_host.Paths.SettingsFile + ".tmp");
+
+        (await automation.SetPausedAsync(true)).ShouldBeFalse();
+        automation.IsPaused.ShouldBeFalse();
     }
 
     public void Dispose() => _host.Dispose();

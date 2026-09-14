@@ -25,6 +25,11 @@ All notable changes to this project are documented here. The format follows
   was switched off in an earlier version is removed when RigShift starts (noted in the log), so it cannot suddenly start
   switching.
 
+### Fixed
+
+- If the settings cannot be saved while pausing or resuming the automation, the automation page shows an error and the
+  switch returns to the saved state instead of silently showing the wrong one.
+
 ## [1.3.1] - 2026-09-14
 
 ### Added

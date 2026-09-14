@@ -183,8 +183,21 @@ public sealed partial class AutomationViewModel : ObservableObject
     {
         if (!_loading)
         {
-            _ = _automation.SetPausedAsync(value);
+            _ = SetPausedAsync(value);
         }
+    }
+
+    /// <summary>A failed save shows an error and puts the switch back to the state on disk (analysis finding A-07).</summary>
+    private async Task SetPausedAsync(bool paused)
+    {
+        if (await _automation.SetPausedAsync(paused))
+        {
+            ErrorMessage = null;
+            return;
+        }
+
+        Quietly(() => IsPaused = _automation.IsPaused);
+        ErrorMessage = Loc.Instance["Automation_PauseFailed"];
     }
 
     [RelayCommand(CanExecute = nameof(CanAddRule))]

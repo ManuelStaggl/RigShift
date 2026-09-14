@@ -231,6 +231,7 @@
   <data name="Automation_DeviceGone" xml:space="preserve"><value>When the device is unplugged or turned off</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Refresh devices</value></data>
+  <data name="Automation_PauseFailed" xml:space="preserve"><value>The automation could not be paused or resumed because the settings could not be saved. Details are in the log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s – apps started anyway.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for device before starting apps</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
