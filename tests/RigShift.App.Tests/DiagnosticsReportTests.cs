@@ -1,3 +1,4 @@
+using System.IO;
 using RigShift.App.Services;
 using RigShift.Core.Topology;
 using Shouldly;
@@ -27,4 +28,27 @@ public sealed class DiagnosticsReportTests
         report.ShouldContain("A display did not become ready.");
         report.ShouldContain("- Rig: Ultrawide 49 (primary)");
     }
+
+    [Fact]
+    public void Build_ReplacesTheUserNameInPaths()
+    {
+        string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var switched = new SwitchRecord(DateTimeOffset.UnixEpoch, "Rig", SwitchOutcome.Applied, AudioOutcome.NotConfigured,
+            AppsOutcome.NotConfigured, 1, TimeSpan.FromSeconds(1), null, $"Could not start {Path.Combine(profile, "SimHub", "SimHubWPF.exe")}", []);
+        var input = new DiagnosticsInput("1.3.1", IsInstalled: true, Snapshot: null, DisplayError: null,
+            Playback: [], Recording: [], AudioError: null, Profiles: [], ActiveProfileId: null,
+            DisplayNames: new Dictionary<string, string>(), History: [switched]);
+
+        string report = DiagnosticsReport.Build(input);
+
+        report.ShouldNotContain(profile, Case.Insensitive);
+        report.ShouldContain(@"%USERPROFILE%\SimHub\SimHubWPF.exe");
+    }
+
+    [Theory]
+    [InlineData(@"D:\Users\manue\Games\x.exe", @"D:\Users\<user>\Games\x.exe")]
+    [InlineData(@"c:\users\Someone Else", @"c:\users\<user> Else")]
+    [InlineData(@"C:\Program Files\SimHub", @"C:\Program Files\SimHub")]
+    public void Anonymize_ReplacesUserFolderSegments(string text, string expected) =>
+        DiagnosticsReport.Anonymize(text, userProfile: null).ShouldBe(expected);
 }

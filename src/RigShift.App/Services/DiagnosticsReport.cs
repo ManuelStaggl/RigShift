@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
@@ -22,9 +23,10 @@ public sealed record DiagnosticsInput(
 
 /// <summary>
 /// Plain-text report to paste into a GitHub issue ("Copy diagnostic info"). English and invariant culture on purpose:
-/// maintainers read it. Contains display device paths and device names, no audio endpoint IDs.
+/// maintainers read it. Contains display device paths and device names, no audio endpoint IDs; the user name in paths
+/// is replaced (analysis finding H-05).
 /// </summary>
-public static class DiagnosticsReport
+public static partial class DiagnosticsReport
 {
     public static string Build(DiagnosticsInput input)
     {
@@ -87,8 +89,26 @@ public static class DiagnosticsReport
                 $"- {record.At:yyyy-MM-dd HH:mm:ss} {record.ProfileName}: {record.Outcome}, {record.Attempts} attempt(s), {record.Duration.TotalSeconds:0.0} s, audio {record.Audio}, apps {record.Apps}{(record.NativeError is { } error ? $", error {error}" : string.Empty)}{(record.HasDetails ? $" – {record.Details}" : string.Empty)}"));
         }
 
-        return text.ToString();
+        return Anonymize(text.ToString(), Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
     }
+
+    /// <summary>
+    /// Replaces the user's profile folder with <c>%USERPROFILE%</c> and any other <c>\Users\&lt;name&gt;</c> segment
+    /// with <c>\Users\&lt;user&gt;</c> – messages can carry app paths, and the report is meant for a public issue.
+    /// </summary>
+    internal static string Anonymize(string report, string? userProfile)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        if (!string.IsNullOrEmpty(userProfile))
+        {
+            report = report.Replace(userProfile.TrimEnd('\\'), "%USERPROFILE%", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return UsersSegment().Replace(report, "<user>");
+    }
+
+    [GeneratedRegex(@"(?<=\\Users\\)[^\\/\s""<>]+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex UsersSegment();
 
     private static void AppendDisplay(StringBuilder text, AttachedDisplay display, string? customName)
     {

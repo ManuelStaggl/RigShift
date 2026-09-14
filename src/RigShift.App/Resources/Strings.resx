@@ -201,7 +201,7 @@
   <data name="About_NoHistory" xml:space="preserve"><value>No switches since RigShift started.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Copy diagnostic info</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. It lists version, displays with their device paths, audio devices, profiles and recent switches – nothing else personal.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. It lists version, displays with their device paths, audio device names, profiles and recent switches – no audio device IDs, and your user name in paths is replaced. Log files are not anonymized: they contain paths with your user name and audio device IDs, so look through them before attaching one.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>

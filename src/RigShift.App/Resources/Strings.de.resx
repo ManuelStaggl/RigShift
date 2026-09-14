@@ -201,7 +201,7 @@
   <data name="About_NoHistory" xml:space="preserve"><value>Seit dem Start von RigShift noch keine Umschaltung.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Diagnose-Infos kopieren</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Er enthält Version, Bildschirme mit Gerätepfaden, Audiogeräte, Profile und die letzten Umschaltungen – sonst nichts Persönliches.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Er enthält Version, Bildschirme mit Gerätepfaden, Namen der Audiogeräte, Profile und die letzten Umschaltungen – keine Audio-Geräte-IDs, und dein Benutzername in Pfaden wird ersetzt. Die Protokolldateien sind nicht anonymisiert: Sie enthalten Pfade mit deinem Benutzernamen und Audio-Geräte-IDs – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>

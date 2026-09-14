@@ -126,8 +126,9 @@ RigShift.exe is a Windows GUI program, so shells do not wait for it. To see outp
 ## Help and feedback
 
 Something not working? Use **About & help → Copy diagnostic info** and open an
-[issue](https://github.com/ManuelStaggl/RigShift/issues/new) – the log from `%AppData%\RigShift\logs` helps too (both
-contain display device paths, nothing else personal). Ideas and pull requests are welcome, see
+[issue](https://github.com/ManuelStaggl/RigShift/issues/new) – the log from `%AppData%\RigShift\logs` helps too. The
+diagnostic info contains display device paths but no audio device IDs, and your user name is replaced; the log files
+are not anonymized (paths with your user name, audio device IDs), so look through them before attaching one. Ideas and pull requests are welcome, see
 [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/ROADMAP.md). RigShift is meant to stay small.
 
 ## For developers
