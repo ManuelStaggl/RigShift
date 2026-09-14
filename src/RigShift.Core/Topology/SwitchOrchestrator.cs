@@ -215,6 +215,9 @@ public sealed class SwitchOrchestrator
             }
         }
 
+        // Windows move only once the switch stays: a rejected one would leave them moved without a way back (B-14).
+        await RescueWindowsAsync(cancellationToken);
+
         // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
         // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
         Task<AppsOutcome> appsRun = StartApps(profile);
@@ -388,6 +391,11 @@ public sealed class SwitchOrchestrator
         LogPlan(plan);
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        if (applied.Succeeded)
+        {
+            await RescueWindowsAsync(cancellationToken);
+        }
+
         ModeCheck modes = applied.Succeeded && applied.UsedDatabaseModes
             ? await CheckDatabaseModesAsync(applied.Plan, cancellationToken)
             : ModeCheck.AsPlanned(applied.Plan);
@@ -506,6 +514,7 @@ public sealed class SwitchOrchestrator
         }
 
         _log.Information("Previous topology restored after failed switch ({Attempts} attempts)", restored.Attempts);
+        await RescueWindowsAsync(cancellationToken);
         return SwitchNote.RestoredPrevious;
     }
 
@@ -555,7 +564,6 @@ public sealed class SwitchOrchestrator
                     _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays, {Milliseconds:0} ms)",
                         attempts, modeSource, plan.Resolved.Count, milliseconds);
                     await SwitchHdrAsync(profile, cancellationToken);
-                    await RescueWindowsAsync(cancellationToken);
                     return new ApplyOutcome(true, plan, attempts, lastError, null, databaseModes);
                 }
 
@@ -652,31 +660,16 @@ public sealed class SwitchOrchestrator
         try
         {
             DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
-            foreach (DisplayAssignment wanted in profile.Displays)
+            List<DisplayAssignment> unknown = await SetHdrAsync([.. profile.Displays.Where(d => d.Hdr is not null)], now, cancellationToken);
+            if (unknown.Count > 0)
             {
-                if (wanted.Hdr is not { } enabled)
-                {
-                    continue;
-                }
-
-                AttachedDisplay? target = now.Displays.FirstOrDefault(d => d.IsActive
-                    && string.Equals(d.Identity.TargetDevicePath, wanted.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
-                if (target?.ActiveMode is not { } mode)
-                {
-                    continue;
-                }
-
-                if (mode.Hdr is null)
+                // Right after an apply the driver may not report HDR yet (analysis finding B-12): ask once more.
+                _log.Information("HDR state of {Count} display(s) not reported yet, asking again in {Delay}", unknown.Count, HdrRetryDelay);
+                await Task.Delay(HdrRetryDelay, _time, cancellationToken);
+                now = await _display.QueryAsync(cancellationToken);
+                foreach (DisplayAssignment wanted in await SetHdrAsync(unknown, now, cancellationToken))
                 {
                     _log.Warning("Display {Display} does not support HDR, left unchanged", DisplayNames.Of(wanted));
-                }
-                else if (mode.Hdr != enabled)
-                {
-                    int code = await _display.SetHdrAsync(target, enabled, cancellationToken);
-                    if (code != 0)
-                    {
-                        _log.Warning("HDR of {Display} could not be set to {Enabled} (native error {Error})", DisplayNames.Of(wanted), enabled, code);
-                    }
                 }
             }
 
@@ -686,6 +679,38 @@ public sealed class SwitchOrchestrator
         {
             _log.Warning(ex, "HDR for {Profile} could not be set", profile.Name);
         }
+    }
+
+    private static readonly TimeSpan HdrRetryDelay = TimeSpan.FromSeconds(1);
+
+    /// <summary>Sets HDR where the state differs. Returns the active displays that reported no HDR state.</summary>
+    private async Task<List<DisplayAssignment>> SetHdrAsync(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now, CancellationToken cancellationToken)
+    {
+        var unknown = new List<DisplayAssignment>();
+        foreach (DisplayAssignment wanted in wantedDisplays)
+        {
+            AttachedDisplay? target = now.Displays.FirstOrDefault(d => d.IsActive
+                && string.Equals(d.Identity.TargetDevicePath, wanted.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+            if (wanted.Hdr is not { } enabled || target?.ActiveMode is not { } mode)
+            {
+                continue;
+            }
+
+            if (mode.Hdr is null)
+            {
+                unknown.Add(wanted);
+            }
+            else if (mode.Hdr != enabled)
+            {
+                int code = await _display.SetHdrAsync(target, enabled, cancellationToken);
+                if (code != 0)
+                {
+                    _log.Warning("HDR of {Display} could not be set to {Enabled} (native error {Error})", DisplayNames.Of(wanted), enabled, code);
+                }
+            }
+        }
+
+        return unknown;
     }
 
     /// <summary>The topology before the switch, as a throwaway profile. All displays optional: a partial restore beats none.</summary>

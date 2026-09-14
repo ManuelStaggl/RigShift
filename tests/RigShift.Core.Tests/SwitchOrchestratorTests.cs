@@ -737,6 +737,24 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_HdrNotReportedRightAfterApply_AsksAgainAfterOneSecond()
+    {
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = null })),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false })),
+        ]);
+        var options = new SwitchOptions { WindowRescueDelay = TimeSpan.Zero };
+
+        SwitchResult result = await Create(display, options).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
     public async Task Switch_HdrFailure_DoesNotFailTheSwitch()
     {
         var display = new FakeDisplayConfigurator([
@@ -784,7 +802,7 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_RolledBack_RescuesAfterBothApplies()
+    public async Task Switch_RolledBack_MovesNoWindows()
     {
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
         var display = new FakeDisplayConfigurator(DeskActive());
@@ -792,7 +810,22 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
-        _windows.Received(2).RescueOffscreenWindows();
+        _windows.DidNotReceive().RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_Confirmed_RescuesWindowsOnlyAfterTheConfirmation()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        Received.InOrder(() =>
+        {
+            _confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            _windows.RescueOffscreenWindows();
+        });
     }
 
     [Fact]
