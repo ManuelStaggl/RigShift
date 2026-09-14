@@ -16,8 +16,12 @@ public sealed record AppSettings
 
     public bool ApplyDefaultProfileOnStartup { get; init; }
 
-    /// <summary>Confirmation timeout for profiles without their own value. 0 disables the safety net.</summary>
-    public int ConfirmTimeoutSeconds { get; init; } = 15;
+    /// <summary>
+    /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on
+    /// purpose: the JSON source generator sets init-only properties through an object initializer and turns a missing
+    /// key into 0, which would silently switch the safety net off. With <c>set</c> it keeps the initializer value.
+    /// </summary>
+    public int ConfirmTimeoutSeconds { get; set; } = 15;
 
     /// <summary>UI language: <c>null</c> follows Windows, otherwise a culture name such as <c>en</c> or <c>de</c>.</summary>
     public string? Language { get; init; }

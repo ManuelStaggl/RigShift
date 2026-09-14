@@ -46,6 +46,17 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_FileWithoutConfirmTimeout_KeepsDefaultTimeout()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1 }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        settings.ConfirmTimeoutSeconds.ShouldBe(15);
+    }
+
+    [Fact]
     public async Task Load_BrokenFile_ReturnsDefaults()
     {
         Directory.CreateDirectory(_directory);

@@ -80,7 +80,8 @@ Die Ausgabe enthält Gerätepfade und Endpoint-IDs – nicht ungekürzt veröffe
   nie in Fixtures ohne Anonymisierung.
 - Settings-JSON (Source-Generator, `init`-Properties): Property-Initialisierer wie `= true` greifen bei **fehlendem
   Schlüssel nicht** – der Wert wird `default`. Neue Einstellungen so benennen, dass `false`/`null` der gewünschte
-  Standard ist (Test `Load_FileFromVersion1_0_…`).
+  Standard ist (Test `Load_FileFromVersion1_0_…`) – oder die Property mit `set` statt `init` deklarieren, dann greift
+  der Initialisierer (so bei `ConfirmTimeoutSeconds`, Test `Load_FileWithoutConfirmTimeout_…`).
 - CsWin32: Konstanten wie `ERROR_GEN_FAILURE` nicht einzeln in `NativeMethods.txt` eintragen, sondern das
   Enum `WIN32_ERROR` (sonst PInvoke004).
 - Analyzer laufen mit Warnungen als Fehler: Serilog-Sinks brauchen `formatProvider: CultureInfo.InvariantCulture`
