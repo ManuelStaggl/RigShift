@@ -6,12 +6,11 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profile</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="Profiles_Reload" xml:space="preserve"><value>Neu laden</value></data>
   <data name="Profiles_OpenFolder" xml:space="preserve"><value>Profilordner öffnen</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
-  <data name="Profiles_EmptyText" xml:space="preserve"><value>RigShift liest Profile aus {0}. Profildateien dorthin kopieren und „Neu laden" wählen.</value></data>
+  <data name="Profiles_EmptyText" xml:space="preserve"><value>RigShift liest Profile aus {0}. Speichere die aktuelle Anordnung als Profil oder kopiere Profildateien dorthin und starte RigShift neu.</value></data>
   <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Einige Profile konnten nicht geladen werden</value></data>
-  <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) nicht lesbar: {1}. Eine Datei ist vielleicht in einem anderen Programm geöffnet, beschädigt oder von einer neueren RigShift-Version. Details stehen im Protokoll; „Neu laden“ versucht es erneut.</value></data>
+  <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) nicht lesbar: {1}. Eine Datei ist vielleicht in einem anderen Programm geöffnet, beschädigt oder von einer neueren RigShift-Version. Details stehen im Log; RigShift versucht es beim Speichern eines Profils oder beim nächsten Start erneut.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>
@@ -69,7 +68,6 @@
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
-  <data name="Settings_Folders" xml:space="preserve"><value>Ordner</value></data>
   <data name="Settings_OpenLogs" xml:space="preserve"><value>Log-Ordner öffnen</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (Entwicklungs-Build)</value></data>

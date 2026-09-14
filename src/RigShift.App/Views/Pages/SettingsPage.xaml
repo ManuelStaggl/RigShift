@@ -70,10 +70,6 @@
           SelectedItem="{Binding SelectedLanguage}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Folders}" Icon="{ui:SymbolIcon FolderOpen24}">
-        <ui:Button Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr Profiles_OpenFolder}" />
-      </ui:CardControl>
-
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowDownload24}">
         <ui:CardControl.Header>
           <StackPanel>

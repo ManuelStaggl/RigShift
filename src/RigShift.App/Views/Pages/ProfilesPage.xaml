@@ -12,9 +12,7 @@
       <WrapPanel Margin="0,0,0,8">
         <ui:TextBlock Margin="0,0,24,8" VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" />
         <WrapPanel VerticalAlignment="Center">
-          <ui:Button Margin="0,0,8,8" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
-          <ui:Button Margin="0,0,8,8" Content="{loc:Tr Profiles_Reload}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding ReloadCommand}" />
-          <ui:Button Margin="0,0,0,8" Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding OpenFolderCommand}" />
+          <ui:Button Margin="0,0,0,8" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
         </WrapPanel>
       </WrapPanel>
 

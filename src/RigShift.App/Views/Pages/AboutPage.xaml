@@ -87,6 +87,7 @@
           <WrapPanel Margin="0,16,0,0">
             <ui:Button Margin="0,0,8,8" Appearance="Primary" Command="{Binding CopyDiagnosticsCommand}" Content="{loc:Tr About_CopyDiagnostics}" Icon="{ui:SymbolIcon Copy24}" />
             <ui:Button Margin="0,0,8,8" Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Settings_OpenLogs}" Icon="{ui:SymbolIcon FolderOpen24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr Profiles_OpenFolder}" Icon="{ui:SymbolIcon FolderOpen24}" />
           </WrapPanel>
           <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr About_CopyHint}" TextWrapping="Wrap" />
           <TextBlock

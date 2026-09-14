@@ -253,12 +253,6 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
             item.CheckMessage = SwitchMessages.DescribePlan(result.Plan);
         }
     }
-
-    [RelayCommand]
-    private Task ReloadAsync() => catalog.ReloadAsync(CancellationToken.None);
-
-    [RelayCommand]
-    private void OpenFolder() => ShellFolders.Open(catalog.ProfileDirectory, _log);
 }
 
 public sealed record Choice(string? Key, string Name)
@@ -273,16 +267,14 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
-    private readonly AppPaths _paths;
     private readonly ILogger _log;
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, AppPaths paths, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
         _settings = settings;
         _catalog = catalog;
-        _paths = paths;
         _log = log.ForContext<SettingsViewModel>();
     }
 
@@ -344,9 +336,6 @@ public sealed partial class SettingsViewModel : ObservableObject
             _loading = false;
         }
     }
-
-    [RelayCommand]
-    private void OpenProfileFolder() => ShellFolders.Open(_paths.Profiles, _log);
 
     [ObservableProperty]
     public partial bool InstallUpdatesAutomatically { get; set; }
@@ -639,6 +628,10 @@ public sealed partial class AboutViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
+
+    /// <summary>Next to the log folder: the settings page holds only settings (user decision O-06).</summary>
+    [RelayCommand]
+    private void OpenProfileFolder() => ShellFolders.Open(_paths.Profiles, _log);
 
     [RelayCommand]
     private void OpenRepository() => ShellFolders.OpenUrl(RepositoryUrl, _log);
