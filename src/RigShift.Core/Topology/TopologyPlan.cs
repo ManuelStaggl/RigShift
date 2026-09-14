@@ -48,4 +48,10 @@ public enum PlanWarningKind
 
     /// <summary>No display in the plan is marked primary; the OS will pick one.</summary>
     NoPrimary,
+
+    /// <summary>
+    /// Identical monitors (same EDID) in the profile lost their ports; the model alone cannot tell which is which, so none
+    /// is matched by EDID (analysis finding B-10).
+    /// </summary>
+    AmbiguousTwin,
 }

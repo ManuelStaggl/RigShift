@@ -33,19 +33,24 @@ public sealed class TopologyPlanner
 
         // Pass 1: device paths. Runs for all assignments first so that an EDID match can never steal
         // a display that another assignment identifies exactly (two identical desk monitors).
+        // The same monitor can be listed on a stale and a live target; the available entry wins.
         for (int i = 0; i < assignments.Count; i++)
         {
             DisplayIdentity wanted = assignments[i].Identity;
-            AttachedDisplay? hit = snapshot.Displays.FirstOrDefault(d =>
-                !claimed.Contains(d)
-                && string.Equals(d.Identity.TargetDevicePath, wanted.TargetDevicePath, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(d.Identity.AdapterDevicePath, wanted.AdapterDevicePath, StringComparison.OrdinalIgnoreCase));
+            AttachedDisplay? hit = snapshot.Displays
+                .Where(d => !claimed.Contains(d)
+                    && string.Equals(d.Identity.TargetDevicePath, wanted.TargetDevicePath, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(d.Identity.AdapterDevicePath, wanted.AdapterDevicePath, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(d => d.IsAvailable)
+                .FirstOrDefault();
             if (hit is not null)
             {
                 matches[i] = hit;
-                claimed.Add(hit);
+                Claim(hit, snapshot, claimed);
             }
         }
+
+        var warnings = new List<PlanWarning>();
 
         // Pass 2: EDID fallback (port or cable changed). Only unambiguous candidates are accepted.
         for (int i = 0; i < assignments.Count; i++)
@@ -55,18 +60,35 @@ public sealed class TopologyPlanner
                 continue;
             }
 
-            AttachedDisplay? hit = FindByEdid(assignments[i].Identity, snapshot, claimed);
+            DisplayIdentity wanted = assignments[i].Identity;
+            List<AttachedDisplay> candidates = EdidCandidates(wanted, snapshot, claimed);
+
+            // Identical monitors in the profile without their ports: one candidate could be either of them (B-10).
+            int unmatchedTwins = Enumerable.Range(0, assignments.Count).Count(j => matches[j] is null && SameEdid(assignments[j].Identity, wanted));
+            if (unmatchedTwins > 1)
+            {
+                if (candidates.Count > 0)
+                {
+                    warnings.Add(new PlanWarning(
+                        PlanWarningKind.AmbiguousTwin,
+                        string.Create(CultureInfo.InvariantCulture,
+                            $"{DisplayNames.Of(assignments[i])} was not matched by EDID: {unmatchedTwins} identical displays of the profile are not on their ports, {candidates.Count} candidate(s).")));
+                }
+
+                continue;
+            }
+
+            AttachedDisplay? hit = candidates.Count == 1 ? candidates[0] : null;
             if (hit is not null)
             {
                 matches[i] = hit;
                 matchedByEdid[i] = true;
-                claimed.Add(hit);
+                Claim(hit, snapshot, claimed);
             }
         }
 
         var resolved = new List<PlannedDisplay>();
         var missing = new List<MissingDisplay>();
-        var warnings = new List<PlanWarning>();
 
         for (int i = 0; i < assignments.Count; i++)
         {
@@ -122,17 +144,18 @@ public sealed class TopologyPlanner
         return pixelRate > _options.DualHeadPixelRateThreshold ? 2 : 1;
     }
 
-    private static AttachedDisplay? FindByEdid(DisplayIdentity wanted, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+    /// <summary>Unclaimed displays with the wanted EDID, one per target path (the available entry of a duplicate).</summary>
+    private static List<AttachedDisplay> EdidCandidates(DisplayIdentity wanted, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
     {
         if (wanted.EdidManufacturerId == 0 && wanted.EdidProductCodeId == 0)
         {
-            return null;
+            return [];
         }
 
         List<AttachedDisplay> candidates = snapshot.Displays
-            .Where(d => !claimed.Contains(d)
-                && d.Identity.EdidManufacturerId == wanted.EdidManufacturerId
-                && d.Identity.EdidProductCodeId == wanted.EdidProductCodeId)
+            .Where(d => !claimed.Contains(d) && SameEdid(d.Identity, wanted))
+            .GroupBy(d => d.Identity.TargetDevicePath, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.OrderByDescending(d => d.IsAvailable).First())
             .ToList();
 
         if (candidates.Count > 1)
@@ -142,7 +165,24 @@ public sealed class TopologyPlanner
                 .ToList();
         }
 
-        return candidates.Count == 1 ? candidates[0] : null;
+        return candidates;
+    }
+
+    private static bool SameEdid(DisplayIdentity a, DisplayIdentity b) =>
+        (a.EdidManufacturerId != 0 || a.EdidProductCodeId != 0)
+        && a.EdidManufacturerId == b.EdidManufacturerId
+        && a.EdidProductCodeId == b.EdidProductCodeId;
+
+    /// <summary>Claims the display and every other entry of the same target, so no other assignment gets a duplicate of it.</summary>
+    private static void Claim(AttachedDisplay display, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+    {
+        foreach (AttachedDisplay entry in snapshot.Displays)
+        {
+            if (string.Equals(entry.Identity.TargetDevicePath, display.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase))
+            {
+                claimed.Add(entry);
+            }
+        }
     }
 
     private List<PlanWarning> CheckHeadBudget(IEnumerable<PlannedDisplay> resolved)

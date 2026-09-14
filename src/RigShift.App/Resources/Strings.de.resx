@@ -24,6 +24,7 @@
   <data name="Check_Blocked" xml:space="preserve"><value>Gerade nicht möglich. Fehlende Bildschirme: {0}</value></data>
   <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>Die Grafikkarte kann bei diesen Auflösungen und Bildraten eventuell nicht alle Bildschirme gleichzeitig ansteuern. RigShift versucht es trotzdem.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>Ein Bildschirm wurde an einem anderen Anschluss oder Kabel erkannt.</value></data>
+  <data name="Warning_AmbiguousTwin" xml:space="preserve"><value>Zwei baugleiche Bildschirme hängen nicht mehr an ihren gespeicherten Anschlüssen; RigShift kann sie nicht unterscheiden und rät nicht.</value></data>
   <data name="Warning_NoPrimary" xml:space="preserve"><value>Kein Bildschirm ist als Hauptanzeige markiert; Windows wählt einen aus.</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>RigShift öffnen</value></data>
   <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>

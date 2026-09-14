@@ -73,6 +73,31 @@ public sealed class TopologyPlannerTests
     }
 
     [Fact]
+    public void Plan_TwinMonitors_OneMissingOneMoved_DoesNotGuess()
+    {
+        // Two identical desk monitors: the left one is unplugged, the right one moved to another port.
+        DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#OTHERPORT&9" };
+        Profile desk = Profile("Desk", [DeskModes[1], DeskModes[2]]);
+
+        TopologyPlan plan = _planner.Plan(desk, Snapshot(Attached(rightMoved)));
+
+        plan.Resolved.ShouldBeEmpty();
+        plan.Missing.Select(m => m.Reason).ShouldBe([MissingReason.NotAttached, MissingReason.NotAttached]);
+        plan.IsBlocked.ShouldBeTrue();
+        plan.Warnings.ShouldContain(w => w.Kind == PlanWarningKind.AmbiguousTwin);
+    }
+
+    [Fact]
+    public void Plan_SameMonitorOnStaleAndLiveTarget_PrefersAvailable()
+    {
+        TopologyPlan plan = _planner.Plan(Profile("Rig", [UltrawideMode]), Snapshot(Attached(Ultrawide, available: false), Attached(Ultrawide)));
+
+        plan.Resolved.Single().Target.IsAvailable.ShouldBeTrue();
+        plan.Missing.ShouldBeEmpty();
+        plan.Warnings.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Plan_OptionalDisplayMissing_ShouldRetryLater()
     {
         TopologyPlan plan = _planner.Plan(Rig(), DeskActive(tabletAttached: false));
