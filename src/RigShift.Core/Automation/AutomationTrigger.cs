@@ -2,8 +2,11 @@ namespace RigShift.Core.Automation;
 
 public enum TriggerReason
 {
-    GameStarted,
-    GameExited,
+    /// <summary>The game started or the device connected.</summary>
+    Started,
+
+    /// <summary>The game closed or the device is gone.</summary>
+    Ended,
 }
 
 /// <summary>A switch the automation asks for.</summary>
@@ -13,16 +16,16 @@ public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerR
 }
 
 /// <summary>
-/// Decides from polled process lists when rules switch (docs/PLAN.md, section 6). Pure logic: the caller supplies the
-/// running processes, the active profile and the time.
+/// Decides from polled processes and USB devices when rules switch (docs/PLAN.md, section 6). Pure logic: the caller
+/// supplies what is present, the active profile and the time.
 /// </summary>
 /// <remarks>
-/// Start: a game that appears switches to the rule's profile, unless it is active already. Processes running at the first
-/// poll only set the baseline, so starting RigShift next to a running game changes nothing.
-/// Exit: acted on once the game has been gone for <see cref="ExitDelay"/> (a restart in between is no exit), and only
-/// while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
+/// Start: a game or device that appears switches to the rule's profile, unless it is active already. Whatever is present
+/// at the first poll only sets the baseline, so starting RigShift next to a running game changes nothing.
+/// End: acted on once the game or device has been gone for <see cref="ExitDelay"/> (a restart in between is no end), and
+/// only while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
 /// </remarks>
-public sealed class ProcessTrigger
+public sealed class AutomationTrigger
 {
     private readonly Dictionary<Guid, RuleState> _states = [];
     private bool _hasBaseline;
@@ -36,11 +39,27 @@ public sealed class ProcessTrigger
         _hasBaseline = false;
     }
 
+    /// <summary>
+    /// What a rule watches in the present set: <see cref="UsbDeviceIds.Key"/> of its device, or the process names of its
+    /// game.
+    /// </summary>
+    public static IReadOnlyList<string> WatchedKeysOf(AutomationRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        if (rule.UsbDeviceId is not null)
+        {
+            return UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id ? [UsbDeviceIds.Key(id)] : [];
+        }
+
+        return GameTemplates.ProcessNamesOf(rule);
+    }
+
+    /// <param name="present">Running process names (<see cref="ProcessNames"/>) and <see cref="UsbDeviceIds.Key"/> of connected devices.</param>
     public IReadOnlyList<TriggerAction> Evaluate(
-        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> runningProcesses, Guid? activeProfileId, DateTimeOffset now)
+        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(runningProcesses);
+        ArgumentNullException.ThrowIfNull(present);
 
         foreach (Guid removed in _states.Keys.Where(id => rules.All(r => r.Id != id)).ToList())
         {
@@ -50,13 +69,13 @@ public sealed class ProcessTrigger
         var actions = new List<TriggerAction>();
         foreach (AutomationRule rule in rules)
         {
-            IReadOnlyList<string> names = GameTemplates.ProcessNamesOf(rule);
-            bool running = names.Any(runningProcesses.Contains);
-            string watched = string.Join('|', names.Order(ProcessNames.Comparer)).ToUpperInvariant();
+            IReadOnlyList<string> keys = WatchedKeysOf(rule);
+            bool running = keys.Any(present.Contains);
+            string watched = string.Join('|', keys.Order(ProcessNames.Comparer)).ToUpperInvariant();
             if (!_states.TryGetValue(rule.Id, out RuleState? state) || state.Watched != watched)
             {
-                // A new rule, or one whose game was changed while that game runs, behaves like the baseline: no switch
-                // until the next start.
+                // A new rule, or one whose game or device was changed while it is present, behaves like the baseline: no
+                // switch until the next start.
                 _states[rule.Id] = new RuleState { IsRunning = running, Watched = watched };
                 continue;
             }
@@ -109,7 +128,7 @@ public sealed class ProcessTrigger
         state.PreviousProfileId = activeProfileId == rule.ProfileId ? null : activeProfileId;
         if (activeProfileId != rule.ProfileId)
         {
-            actions.Add(new TriggerAction(rule, rule.ProfileId, TriggerReason.GameStarted));
+            actions.Add(new TriggerAction(rule, rule.ProfileId, TriggerReason.Started));
         }
     }
 
@@ -134,7 +153,7 @@ public sealed class ProcessTrigger
 
         if (target is { } profile && profile != activeProfileId)
         {
-            actions.Add(new TriggerAction(rule, profile, TriggerReason.GameExited));
+            actions.Add(new TriggerAction(rule, profile, TriggerReason.Ended));
         }
     }
 

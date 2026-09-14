@@ -37,6 +37,18 @@ WM_DEVICECHANGE
 WM_DISPLAYCHANGE
 DBT_DEVICEARRIVAL
 DBT_DEVICEREMOVECOMPLETE
+// USB device triggers: present devices and their names (polled, docs/PLAN.md section 6, item 7).
+CM_Get_Device_ID_List_SizeW
+CM_Get_Device_ID_ListW
+CM_Locate_DevNodeW
+CM_Get_DevNode_PropertyW
+CONFIGRET
+CM_GETIDLIST_FILTER_ENUMERATOR
+CM_GETIDLIST_FILTER_PRESENT
+CM_LOCATE_DEVNODE_FLAGS
+DEVPKEY_Device_BusReportedDeviceDesc
+DEVPKEY_Device_FriendlyName
+DEVPKEY_Device_DeviceDesc
 // Global hotkeys (v1.1).
 RegisterHotKey
 UnregisterHotKey

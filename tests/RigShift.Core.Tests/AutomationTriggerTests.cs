@@ -4,14 +4,15 @@ using Xunit;
 
 namespace RigShift.Core.Tests;
 
-public sealed class ProcessTriggerTests
+public sealed class AutomationTriggerTests
 {
+    private const string Wheelbase = "VID_0EB7&PID_0020";
     private static readonly Guid Desk = Guid.NewGuid();
     private static readonly Guid Rig = Guid.NewGuid();
     private static readonly Guid Tv = Guid.NewGuid();
     private static readonly DateTimeOffset Start = new(2026, 9, 14, 20, 0, 0, TimeSpan.Zero);
 
-    private readonly ProcessTrigger _trigger = new();
+    private readonly AutomationTrigger _trigger = new();
     private DateTimeOffset _now = Start;
 
     private static AutomationRule IRacingRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool enabled = true, bool skip = false) => new()
@@ -44,7 +45,7 @@ public sealed class ProcessTriggerTests
 
         IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, "iRacingSim64DX11");
 
-        actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.GameStarted));
+        actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
         actions[0].SkipConfirmation.ShouldBeTrue();
     }
 
@@ -79,7 +80,7 @@ public sealed class ProcessTriggerTests
         Poll(rule, Rig).ShouldBeEmpty();
         _now += TimeSpan.FromSeconds(5);
 
-        Poll(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.GameExited));
+        Poll(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
         GameGoneLongEnough(rule, Desk).ShouldBeEmpty();
     }
 
@@ -182,6 +183,43 @@ public sealed class ProcessTriggerTests
         _trigger.Reset();
 
         Poll(rule, Desk, "iRacingSim64DX11").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void UsbDeviceConnects_SwitchesToRuleProfile()
+    {
+        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig };
+        Poll(rule, Desk).ShouldBeEmpty();
+
+        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase)).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
+    }
+
+    [Fact]
+    public void UsbDeviceGone_SwitchesBackAfterDelay()
+    {
+        var rule = new AutomationRule { UsbDeviceId = Wheelbase, ProfileId = Rig, OnExit = ExitAction.SwitchBack };
+        Poll(rule, Desk);
+        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase));
+
+        GameGoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+    }
+
+    [Fact]
+    public void UsbRule_IgnoresGameOfSameRuleAndProcessNamedLikeDevice()
+    {
+        var rule = new AutomationRule { UsbDeviceId = Wheelbase, TemplateId = "iracing", ProfileId = Rig };
+        Poll(rule, Desk);
+
+        Poll(rule, Desk, "iRacingSim64DX11", Wheelbase).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void RuleChangedFromGameToConnectedDevice_DoesNotSwitch()
+    {
+        AutomationRule rule = IRacingRule();
+        Poll(rule, Desk, UsbDeviceIds.Key(Wheelbase));
+
+        Poll(rule with { TemplateId = null, UsbDeviceId = Wheelbase }, Desk, UsbDeviceIds.Key(Wheelbase)).ShouldBeEmpty();
     }
 
     private IReadOnlyList<TriggerAction> GameGoneLongEnough(AutomationRule rule, Guid active)

@@ -39,7 +39,8 @@ Meilensteine **M0** (Skelett), **M1** (Core-Logik), **M2** (Windows-Schicht, JSO
 alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. **1.2.0** (2026-09-14): Tastenkürzel pro Profil,
 `rigshift://apply/<name>`, Schalter „Nach dem Umschalten bestätigen“. Unveröffentlicht auf `main`: Lautstärke
 (Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da), Monitornamen, Seiten Bildschirme und
-Über & Hilfe, **Automatik** (Roadmap 6: Prozess-Trigger per Polling, Spiele-Vorlagen in `templates/games`). Als Nächstes Hardwaretest von 1.2.0 und
+Über & Hilfe, **Automatik** (Roadmap 6: Prozess-Trigger per Polling, Spiele-Vorlagen in `templates/games`) und **USB-Trigger**
+(Roadmap 7, im selben Polling). Als Nächstes Hardwaretest von 1.2.0 und
 diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 

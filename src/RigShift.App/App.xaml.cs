@@ -195,6 +195,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
         services.AddSingleton<IProcessList, Windows.Apps.ProcessList>();
+        services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());

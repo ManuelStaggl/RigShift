@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot | audio | import <folder> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot | audio | usb | import <folder> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -44,6 +44,11 @@ switch (command)
             Render = await audio.ListAsync(AudioDirection.Render, CancellationToken.None),
             Capture = await audio.ListAsync(AudioDirection.Capture, CancellationToken.None),
         });
+        break;
+
+    case "usb":
+        var usb = new RigShift.Windows.Apps.UsbDeviceList();
+        Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
         break;
 
     case "import" when args.Length >= 2:

@@ -22,6 +22,8 @@ All notable changes to this project are documented here. The format follows
   Competizione, Assetto Corsa EVO, rFactor 2, Automobilista 2 or F1 24/25 from a list, or choose any program. Each rule
   decides what happens when the game closes (stay, switch back or switch to another profile) and whether to ask for
   confirmation. Pause all rules from the page or the tray menu. More games can be added in `templates/games`.
+- Automation rules can also react to a USB device, e.g. switch to the rig when you turn on the wheelbase and back when
+  you turn it off. Pick the device from the connected ones; it keeps matching in another USB port.
 
 ### Changed
 

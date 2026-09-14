@@ -485,6 +485,13 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
      nur vorhandene Geräte) statt `RegisterDeviceNotification`. Begründung: ein Pfad für beide Auslöser, dieselbe
      getestete Logik (Anwesenheit eines Schlüssels, Ausgangslage, Karenz) ohne verstecktes Fenster; die Abfrage kostet
      wenige Millisekunden, und 2 s Verzögerung sind beim Einschalten einer Wheelbase egal.
+   **Umgesetzt 2026-09-14**: `AutomationRule.UsbDeviceId/UsbDeviceName`, `UsbDeviceIds` (VID/PID aus der Instanz-ID,
+   auch mit Suffixen wie `&LAMPARRAY` oder `&MI_00`), `ProcessTrigger` → `AutomationTrigger` (Schlüsselmenge aus
+   Prozessnamen und `usb:`-Schlüsseln; ein Doppelpunkt kommt in Prozessnamen nicht vor), `IUsbDeviceList` +
+   `Windows/Apps/UsbDeviceList` (Hubs ausgefiltert, Name aus BusReportedDeviceDesc → FriendlyName → DeviceDesc),
+   Auswahl „USB-Gerät“ auf der Automatik-Seite mit Geräteliste und Aktualisieren. Probe: `RigShift.Probe usb`.
+   Am Gaming-PC belegt: Geräteliste mit echten Namen, „nicht verbunden“-Eintrag, beim Start angestecktes Gerät schaltet
+   nicht, de + en. **Nicht belegt:** echtes Ein-/Ausschalten eines Geräts (braucht den Nutzer, z. B. Wheelbase).
 8. Rennmodus: Fokus-Assistent an, Spielmodus, Standby/Bildschirmschoner aus; alles beim Zurückwechseln zurück.
 9. Energieplan pro Profil (`powercfg /setactive`).
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur

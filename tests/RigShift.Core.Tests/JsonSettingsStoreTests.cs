@@ -58,6 +58,18 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveThenLoad_RoundTripsUsbRule()
+    {
+        var store = new JsonSettingsStore(File, Logger.None);
+        var rule = new AutomationRule { UsbDeviceId = "VID_0EB7&PID_0020", UsbDeviceName = "CSL DD", ProfileId = Guid.NewGuid() };
+
+        await store.SaveAsync(new AppSettings { AutomationRules = new List<AutomationRule> { rule } }, Ct);
+        AppSettings loaded = await store.LoadAsync(Ct);
+
+        loaded.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(rule);
+    }
+
+    [Fact]
     public async Task Load_RuleWithoutEnabledKey_IsEnabled()
     {
         Directory.CreateDirectory(_directory);

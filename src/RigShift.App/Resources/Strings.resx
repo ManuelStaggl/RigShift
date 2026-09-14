@@ -196,11 +196,11 @@
   <data name="About_License" xml:space="preserve"><value>License</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automation</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a game starts. RigShift looks at the running programs every 2 seconds. When the game closes, it waits 10 seconds so a restart does not switch back and forth, and it only acts while the rule’s profile is still active.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a game starts or a USB device connects, e.g. your wheelbase. RigShift checks every 2 seconds. When the game closes or the device is gone, it waits 10 seconds so a restart does not switch back and forth, and it only acts while the rule’s profile is still active.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Add rule</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Pause automation</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>
-  <data name="Automation_Empty" xml:space="preserve"><value>No rules yet. Add a rule, pick a game and the profile it should switch to.</value></data>
+  <data name="Automation_Empty" xml:space="preserve"><value>No rules yet. Add a rule, pick a game or USB device and the profile it should switch to.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Create a profile first – rules switch to profiles.</value></data>
   <data name="Automation_Enabled" xml:space="preserve"><value>Rule on</value></data>
   <data name="Automation_Game" xml:space="preserve"><value>When this game starts</value></data>
@@ -215,4 +215,10 @@
   <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Switch without confirmation</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Delete rule</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(deleted profile)</value></data>
+  <data name="Automation_UsbDevice" xml:space="preserve"><value>USB device (wheelbase, dongle …)</value></data>
+  <data name="Automation_Device" xml:space="preserve"><value>USB device</value></data>
+  <data name="Automation_DeviceConnects" xml:space="preserve"><value>When a USB device connects</value></data>
+  <data name="Automation_DeviceGone" xml:space="preserve"><value>When the device is unplugged or turned off</value></data>
+  <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
+  <data name="Automation_RefreshDevices" xml:space="preserve"><value>Refresh devices</value></data>
 </root>

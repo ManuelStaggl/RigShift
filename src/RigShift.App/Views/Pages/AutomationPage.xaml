@@ -61,7 +61,7 @@
                   IsChecked="{Binding IsEnabled}"
                   ToolTip="{loc:Tr Automation_Enabled}" />
 
-                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Game}" />
+                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TriggerLabel}" />
                 <ComboBox
                   Grid.Row="1"
                   Grid.Column="1"
@@ -118,7 +118,32 @@
                     ToolTip="{loc:Tr App_Browse}" />
                 </Grid>
 
-                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_OnExit}" />
+                <Grid
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="4"
+                  Margin="0,8,0,0"
+                  Visibility="{Binding IsUsb, Converter={StaticResource BoolToVisibility}}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <ComboBox
+                    AutomationProperties.Name="{loc:Tr Automation_Device}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding Owner.DeviceChoices}"
+                    SelectedItem="{Binding SelectedDevice}" />
+                  <ui:Button
+                    Grid.Column="1"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Stretch"
+                    AutomationProperties.Name="{loc:Tr Automation_RefreshDevices}"
+                    Command="{Binding Owner.RefreshDevicesCommand}"
+                    Icon="{ui:SymbolIcon ArrowClockwise24}"
+                    ToolTip="{loc:Tr Automation_RefreshDevices}" />
+                </Grid>
+
+                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding EndLabel}" />
                 <ComboBox
                   Grid.Row="4"
                   Grid.Column="1"
