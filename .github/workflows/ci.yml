@@ -27,3 +27,7 @@ jobs:
 
       - name: Test
         run: dotnet test --solution RigShift.slnx --no-build -c Release
+
+      # Same publish as release.yml, so single-file or ReadyToRun errors show up before a tag.
+      - name: Publish
+        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish

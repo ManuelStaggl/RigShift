@@ -31,6 +31,13 @@ jobs:
           $changelog = Get-Content CHANGELOG.md -Raw
           $section = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## \[|\z)")
           if (-not $section.Success) { throw "CHANGELOG.md has no section for $v" }
+          $unreleased = [regex]::Match($changelog, "(?ms)^## \[Unreleased\][^\n]*\n(.*?)(?=^## \[|\z)")
+          if ($unreleased.Success -and $unreleased.Groups[1].Value.Trim()) { throw "CHANGELOG.md [Unreleased] is not empty" }
+          $date = [regex]::Match($changelog, "(?m)^## \[$([regex]::Escape($v))\] - (\d{4}-\d{2}-\d{2})")
+          if (-not $date.Success) { throw "CHANGELOG.md section $v has no date" }
+          # The heading uses the author's local date, which may be one day ahead of or behind UTC.
+          $days = ([datetime]::ParseExact($date.Groups[1].Value, 'yyyy-MM-dd', $null) - [datetime]::UtcNow.Date).TotalDays
+          if ([math]::Abs($days) -gt 1) { throw "CHANGELOG.md section $v is dated $($date.Groups[1].Value)" }
           $section.Groups[1].Value.Trim() | Set-Content release-notes.md
           "version=$v" >> $env:GITHUB_OUTPUT
 
