@@ -195,4 +195,24 @@
   <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
   <data name="About_License" xml:space="preserve"><value>License</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
+  <data name="Nav_Automation" xml:space="preserve"><value>Automation</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a game starts. RigShift looks at the running programs every 2 seconds. When the game closes, it waits 10 seconds so a restart does not switch back and forth, and it only acts while the rule’s profile is still active.</value></data>
+  <data name="Automation_Add" xml:space="preserve"><value>Add rule</value></data>
+  <data name="Automation_Pause" xml:space="preserve"><value>Pause automation</value></data>
+  <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>
+  <data name="Automation_Empty" xml:space="preserve"><value>No rules yet. Add a rule, pick a game and the profile it should switch to.</value></data>
+  <data name="Automation_NoProfiles" xml:space="preserve"><value>Create a profile first – rules switch to profiles.</value></data>
+  <data name="Automation_Enabled" xml:space="preserve"><value>Rule on</value></data>
+  <data name="Automation_Game" xml:space="preserve"><value>When this game starts</value></data>
+  <data name="Automation_CustomGame" xml:space="preserve"><value>Other game (choose program)…</value></data>
+  <data name="Automation_Executable" xml:space="preserve"><value>Program of the game</value></data>
+  <data name="Automation_ExecutablePlaceholder" xml:space="preserve"><value>e.g. C:\Games\MySim\MySim.exe</value></data>
+  <data name="Automation_Profile" xml:space="preserve"><value>switch to</value></data>
+  <data name="Automation_OnExit" xml:space="preserve"><value>When the game closes</value></data>
+  <data name="Automation_ExitStay" xml:space="preserve"><value>Stay in the profile</value></data>
+  <data name="Automation_ExitBack" xml:space="preserve"><value>Switch back to the previous profile</value></data>
+  <data name="Automation_ExitTo" xml:space="preserve"><value>Switch to {0}</value></data>
+  <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Switch without confirmation</value></data>
+  <data name="Automation_Delete" xml:space="preserve"><value>Delete rule</value></data>
+  <data name="Automation_MissingProfile" xml:space="preserve"><value>(deleted profile)</value></data>
 </root>

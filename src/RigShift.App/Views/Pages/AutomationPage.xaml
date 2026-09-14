@@ -1,0 +1,147 @@
+<Page
+  x:Class="RigShift.App.Views.Pages.AutomationPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="Automation">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel Margin="24,8,24,24">
+      <Grid Margin="0,0,0,8">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Automation}" />
+        <ui:Button Grid.Column="1" Appearance="Primary" Command="{Binding AddRuleCommand}" Content="{loc:Tr Automation_Add}" Icon="{ui:SymbolIcon Add24}" />
+      </Grid>
+      <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Hint}" TextWrapping="Wrap" />
+
+      <ui:CardControl Margin="0,0,0,16" Header="{loc:Tr Automation_Pause}" Icon="{ui:SymbolIcon Pause24}">
+        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Automation_Pause}" IsChecked="{Binding IsPaused}" />
+      </ui:CardControl>
+
+      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding IsPaused, Mode=OneWay}" Message="{loc:Tr Automation_Paused}" Severity="Warning" />
+      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding HasNoProfiles, Mode=OneWay}" Message="{loc:Tr Automation_NoProfiles}" Severity="Informational" />
+      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding IsEmpty, Mode=OneWay}" Message="{loc:Tr Automation_Empty}" Severity="Informational" />
+      <ui:InfoBar
+        Margin="0,0,0,16"
+        IsClosable="False"
+        IsOpen="{Binding HasError, Mode=OneWay}"
+        Message="{Binding ErrorMessage}"
+        Severity="Error"
+        AutomationProperties.LiveSetting="Polite" />
+
+      <ItemsControl Focusable="False" ItemsSource="{Binding Rules}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:Card Margin="0,0,0,8" Padding="16,12">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="16" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ui:ToggleSwitch
+                  Grid.Row="1"
+                  Margin="0,0,16,0"
+                  VerticalAlignment="Center"
+                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_Enabled}"
+                  IsChecked="{Binding IsEnabled}"
+                  ToolTip="{loc:Tr Automation_Enabled}" />
+
+                <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Game}" />
+                <ComboBox
+                  Grid.Row="1"
+                  Grid.Column="1"
+                  Margin="0,4,0,0"
+                  AutomationProperties.Name="{loc:Tr Automation_Game}"
+                  DisplayMemberPath="Name"
+                  ItemsSource="{Binding Owner.GameChoices}"
+                  SelectedItem="{Binding SelectedGame}" />
+
+                <TextBlock Grid.Column="3" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
+                <ComboBox
+                  Grid.Row="1"
+                  Grid.Column="3"
+                  Margin="0,4,0,0"
+                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_Profile}"
+                  DisplayMemberPath="Name"
+                  ItemsSource="{Binding Owner.ProfileChoices}"
+                  SelectedItem="{Binding SelectedProfile}" />
+
+                <ui:Button
+                  Grid.Row="1"
+                  Grid.Column="4"
+                  Margin="16,4,0,0"
+                  VerticalAlignment="Stretch"
+                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_Delete}"
+                  Command="{Binding Owner.DeleteRuleCommand}"
+                  CommandParameter="{Binding}"
+                  Icon="{ui:SymbolIcon Delete24}"
+                  ToolTip="{loc:Tr Automation_Delete}" />
+
+                <Grid
+                  Grid.Row="2"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="4"
+                  Margin="0,8,0,0"
+                  Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <ui:TextBox
+                    AutomationProperties.Name="{loc:Tr Automation_Executable}"
+                    PlaceholderText="{loc:Tr Automation_ExecutablePlaceholder}"
+                    Text="{Binding ExecutablePath}" />
+                  <ui:Button
+                    Grid.Column="1"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Stretch"
+                    AutomationProperties.Name="{loc:Tr App_Browse}"
+                    Click="OnBrowseExecutable"
+                    Icon="{ui:SymbolIcon FolderOpen24}"
+                    ToolTip="{loc:Tr App_Browse}" />
+                </Grid>
+
+                <TextBlock Grid.Row="3" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_OnExit}" />
+                <ComboBox
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  Margin="0,4,0,0"
+                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  AutomationProperties.Name="{loc:Tr Automation_OnExit}"
+                  DisplayMemberPath="Name"
+                  ItemsSource="{Binding Owner.ExitChoices}"
+                  SelectedItem="{Binding SelectedExit}" />
+                <CheckBox
+                  Grid.Row="4"
+                  Grid.Column="3"
+                  Grid.ColumnSpan="2"
+                  Margin="0,4,0,0"
+                  VerticalAlignment="Center"
+                  AutomationProperties.HelpText="{Binding SelectedGame.Name}"
+                  Content="{loc:Tr Automation_SkipConfirmation}"
+                  IsChecked="{Binding SkipConfirmation}" />
+              </Grid>
+            </ui:Card>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</Page>
