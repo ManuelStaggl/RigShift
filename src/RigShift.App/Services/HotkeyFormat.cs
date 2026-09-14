@@ -47,8 +47,22 @@ public static class HotkeyFormat
         {
             >= Key.D0 and <= Key.D9 => ((int)(key - Key.D0)).ToString(CultureInfo.InvariantCulture),
             >= Key.NumPad0 and <= Key.NumPad9 => "Num " + ((int)(key - Key.NumPad0)).ToString(CultureInfo.InvariantCulture),
-            Key.None => "0x" + virtualKey.ToString("X2", CultureInfo.InvariantCulture),
-            _ => key.ToString(),
+            >= Key.A and <= Key.Z or >= Key.F1 and <= Key.F24 => key.ToString(),
+            // Everything else as the keyboard layout names it: "," instead of OemComma, "Page Up" instead of Prior (I-14).
+            _ => LayoutName(virtualKey) ?? (key == Key.None ? "0x" + virtualKey.ToString("X2", CultureInfo.InvariantCulture) : key.ToString()),
         };
+    }
+
+    /// <summary>Some layouts name keys in capitals ("BILD-AUF"); shown like the other key names ("Bild-Auf").</summary>
+    private static string? LayoutName(int virtualKey)
+    {
+        string? name = RigShift.Windows.Ui.NativeWindow.KeyName(virtualKey);
+        if (name is null || name.Length < 2 || name.Any(char.IsLower))
+        {
+            return name;
+        }
+
+        CultureInfo culture = Loc.Instance.Culture;
+        return culture.TextInfo.ToTitleCase(name.ToLower(culture));
     }
 }

@@ -34,6 +34,28 @@ public static class NativeWindow
 
     public static void UnregisterHotkey(nint hwnd, int id) => PInvoke.UnregisterHotKey(new HWND(hwnd), id);
 
+    /// <summary>
+    /// The name the current keyboard layout gives a key, e.g. "," or "Page Up"; <c>null</c> if Windows has none.
+    /// </summary>
+    public static string? KeyName(int virtualKey)
+    {
+        uint scanCode = PInvoke.MapVirtualKey((uint)virtualKey, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC);
+        if (scanCode == 0)
+        {
+            return null;
+        }
+
+        // Bit 24 marks the extended keys; without it Page Up reads as the number pad's 9.
+        int lParam = (int)(scanCode << 16) | (IsExtendedKey(virtualKey) ? 1 << 24 : 0);
+        Span<char> buffer = stackalloc char[64];
+        int length = PInvoke.GetKeyNameText(lParam, buffer);
+        return length > 0 ? new string(buffer[..length]) : null;
+    }
+
+    /// <summary>Page Up/Down, End, Home, arrows, Insert, Delete, Print, Windows and menu keys, Num Lock, number pad divide.</summary>
+    private static bool IsExtendedKey(int virtualKey) =>
+        virtualKey is (>= 0x21 and <= 0x28) or 0x2C or 0x2D or 0x2E or 0x5B or 0x5C or 0x5D or 0x6F or 0x90;
+
     /// <summary>Centers the window on the primary monitor's work area, in physical pixels (per-monitor DPI aware).</summary>
     public static unsafe bool CenterOnPrimaryMonitor(nint hwnd)
     {

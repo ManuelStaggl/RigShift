@@ -65,6 +65,9 @@ DEVPKEY_Device_DeviceDesc
 RegisterHotKey
 UnregisterHotKey
 WM_HOTKEY
+// Hotkey names as the keyboard layout calls the keys (analysis finding I-14).
+MapVirtualKey
+GetKeyNameText
 // Error codes we branch on (all live in the WIN32_ERROR enum).
 WIN32_ERROR
 CoTaskMemFree

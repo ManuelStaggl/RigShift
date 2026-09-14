@@ -91,6 +91,8 @@ All notable changes to this project are documented here. The format follows
   blocked switch opens **About & help**.
 - An unexpected error in the window now shows a notification instead of only being logged, so a button no longer seems
   to do nothing.
+- Keyboard shortcuts show key names as your keyboard layout calls them, e.g. "Alt+," or "Ctrl+Alt+Page Up" instead of
+  "OemComma" or "Prior".
 
 ## [1.3.1] - 2026-09-14
 
