@@ -86,6 +86,11 @@ All notable changes to this project are documented here. The format follows
   right edge, also over text fields.
 - **About & help** shows the release notes of a new version compactly under a collapsed **What's new**, instead of
   the whole text with blank lines; the update buttons sit in their own row below the version.
+- The result of a switch also shows on the Profiles page, not only as a tray notification (Windows hides those during
+  full-screen games), and the page says "Switching…" while a switch runs. Clicking the notification of a failed or
+  blocked switch opens **About & help**.
+- An unexpected error in the window now shows a notification instead of only being logged, so a button no longer seems
+  to do nothing.
 
 ## [1.3.1] - 2026-09-14
 

@@ -227,6 +227,23 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
         }
     }
 
+    /// <summary>
+    /// Every switch result also on the profile page: Windows suppresses tray balloons while a full-screen game runs,
+    /// which is exactly when RigShift switches (analysis finding I-04).
+    /// </summary>
+    public void ShowSwitchResult(SwitchRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+
+        (string title, string text, _) = SwitchMessages.ForNotification(record);
+        ShowStatus(title + Environment.NewLine + text, record.Outcome switch
+        {
+            SwitchOutcome.Applied => Wpf.Ui.Controls.InfoBarSeverity.Success,
+            SwitchOutcome.Failed => Wpf.Ui.Controls.InfoBarSeverity.Error,
+            _ => Wpf.Ui.Controls.InfoBarSeverity.Warning,
+        });
+    }
+
     private void ShowStatus(string message, Wpf.Ui.Controls.InfoBarSeverity severity = Wpf.Ui.Controls.InfoBarSeverity.Success)
     {
         // Closed first: after the user closed the bar with its X, setting true again must be a change (analysis finding I-02).

@@ -25,6 +25,7 @@ public partial class App : Application, IAppShell
 {
     private readonly CliRequest _request;
     private IHost? _host;
+    private TrayIconService? _tray;
 
     public App(CliRequest request)
     {
@@ -129,7 +130,8 @@ public partial class App : Application, IAppShell
             ProfileCatalog catalog = Services.GetRequiredService<ProfileCatalog>();
             await catalog.ReloadAsync(CancellationToken.None);
 
-            Services.GetRequiredService<TrayIconService>().Start();
+            _tray = Services.GetRequiredService<TrayIconService>();
+            _tray.Start();
             Services.GetRequiredService<HotkeyService>().Start();
             Services.GetRequiredService<AutomationService>().Start();
 
@@ -297,5 +299,8 @@ public partial class App : Application, IAppShell
     {
         Log.Error(e.Exception, "Unhandled UI exception");
         e.Handled = true;
+
+        // Only once the tray exists: resolving it here during a failed startup could throw again.
+        _tray?.ShowUnexpectedError(e.Exception.Message);
     }
 }

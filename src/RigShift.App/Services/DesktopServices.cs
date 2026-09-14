@@ -14,6 +14,7 @@ using RigShift.App.Views;
 using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Topology;
 using RigShift.Windows.Ui;
 using Serilog;
 using Wpf.Ui.Appearance;
@@ -85,8 +86,11 @@ public sealed class TrayIconService : IDisposable
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
     private readonly AutomationService _automation;
+    private static readonly TimeSpan ErrorNotificationInterval = TimeSpan.FromSeconds(30);
+
     private readonly ILogger _log;
-    private bool _updateNotificationShown;
+    private bool _notificationOpensAbout;
+    private long? _lastErrorNotification;
 
     public TrayIconService(
         ProfileCatalog catalog,
@@ -138,7 +142,13 @@ public sealed class TrayIconService : IDisposable
         });
         catalog.Changed += (_, _) => Refresh();
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
-        coordinator.SwitchCompleted += (_, record) => Notify(SwitchMessages.ForNotification(record));
+        coordinator.SwitchCompleted += (_, record) =>
+        {
+            profiles.ShowSwitchResult(record);
+
+            // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
+            Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked);
+        };
         coordinator.AppsCompleted += (_, record) =>
         {
             if (SwitchMessages.ForAppsNotification(record) is { } apps)
@@ -148,30 +158,22 @@ public sealed class TrayIconService : IDisposable
         };
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
         _updates = updates;
-        updates.UpdateReady += (_, version) =>
-        {
-            Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info));
-            _updateNotificationShown = true;
-        };
-        updates.UpdateAvailable += (_, version) =>
-        {
-            Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info));
-            _updateNotificationShown = true;
-        };
+        updates.UpdateReady += (_, version) => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true);
+        updates.UpdateAvailable += (_, version) => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true);
         updates.StateChanged += (_, _) => RebuildMenu();
         hotkeys.RegistrationFailed += (_, names) =>
             Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning));
 
-        // The update notification leads to the about page, where the update can be installed right away.
+        // Update notifications and switch problems lead to the about page (install the update, recent switches, log).
         _icon.TrayBalloonTipClicked += (_, _) =>
         {
-            if (_updateNotificationShown)
+            if (_notificationOpensAbout)
             {
-                _updateNotificationShown = false;
+                _notificationOpensAbout = false;
                 _shell.ShowMainWindow(typeof(AboutPage));
             }
         };
-        _icon.TrayBalloonTipClosed += (_, _) => _updateNotificationShown = false;
+        _icon.TrayBalloonTipClosed += (_, _) => _notificationOpensAbout = false;
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
@@ -270,9 +272,25 @@ public sealed class TrayIconService : IDisposable
         _log.Debug("Tray icon {Symbol} at {Size} px, light taskbar {LightTaskbar}", key ?? "rigshift", size, lightTaskbar);
     }
 
-    private void Notify((string Title, string Text, NotificationIcon Icon) message)
+    /// <summary>
+    /// An unexpected error in the UI, once per <see cref="ErrorNotificationInterval"/> so a failing timer cannot flood the
+    /// tray. Before, such errors only reached the log and a button simply seemed to do nothing (analysis finding I-07).
+    /// </summary>
+    public void ShowUnexpectedError(string message)
     {
-        _updateNotificationShown = false;
+        long now = Environment.TickCount64;
+        if (_lastErrorNotification is { } last && now - last < (long)ErrorNotificationInterval.TotalMilliseconds)
+        {
+            return;
+        }
+
+        _lastErrorNotification = now;
+        Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
+    }
+
+    private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false)
+    {
+        _notificationOpensAbout = opensAbout;
         _icon.ShowNotification(message.Title, message.Text, message.Icon);
     }
 

@@ -17,6 +17,22 @@
         </WrapPanel>
       </WrapPanel>
 
+      <!-- Visible while any switch runs, from the page, the tray, a hotkey or an automation rule (analysis finding I-04). -->
+      <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">
+        <ui:ProgressRing
+          Width="16"
+          Height="16"
+          IsIndeterminate="True"
+          Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+        <TextBlock
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          controls:LiveRegion.IsLive="True"
+          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+          Text="{loc:Tr Tray_Switching}"
+          Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+      </StackPanel>
+
       <!-- TwoWay: InfoBar.IsOpen does not bind two-way by default, and closing with X must reach the view model. -->
       <ui:InfoBar
         Margin="0,0,0,16"
