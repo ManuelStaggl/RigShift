@@ -372,6 +372,22 @@ belegt: Schalter aus → `confirmTimeoutSeconds: 0`, Hinweistext wechselt, Sekun
 Zuschnitt Punkte 3–5 (vom Nutzer gewählt 2026-09-14): jetzt bauen und am Server mit Unit-Tests belegen, **kein
 Release vor dem Gaming-PC-Test**; der Test deckt dann 1.2.0 und diesen Block zusammen ab, danach 1.3.0.
 
+**Gaming-PC-Test 2026-09-14** (per SSH gesteuert, Programme über eine kurzlebige geplante Aufgabe in der
+Konsolensitzung gestartet, Belege aus dem Log; Release-Build von `e38b8f9`):
+- 1.0.1 → 1.2.0 per Auto-Update beim Neustart installiert; `HKCU\Software\Classes\rigshift` danach vorhanden.
+  `rigshift://apply/Rig` über `explorer.exe` (wie Win+R) schaltet; mit Schalter „Bestätigen“ aus kein Dialog.
+- Automatik: Regel AMS2 → Rig (zurück, ohne Bestätigung). Spielstart per Steam → nach ~1 s Wechsel (G9 nach
+  Fehler‑31‑Wiederholungen aktiv, Ton auf Headset); Spiel beendet → nach 10 s zurück auf Desk.
+- EXE-Namen belegt: `Le Mans Ultimate`, `AssettoCorsaEVO`, `AMS2AVX` (laufende Prozesse).
+- Lautstärke: Rig 40 % gesetzt; nicht bestätigt (eigene 8 s) → Rückfall inkl. 50 %, Apps nicht gestartet.
+- Apps: Start Editor + fensterloses Programm; beim Wechsel zurück Editor per Fenster beendet, fensterloses nach
+  5 s hart beendet; läuft der Editor schon → „already runs, not started“.
+- Seiten Bildschirme, Automatik, Über & Hilfe in echt angesehen (Screenshots im README), Diagnose-Infos mit echten
+  Geräten in der Zwischenablage.
+- **Offen (braucht den Nutzer):** Tastenkürzel an der echten Tastatur (Umschalten, erneutes Drücken bestätigt,
+  belegtes Kürzel, Anzeige im Tray-Menü), Pausieren über Seite und Tray (UIA-Umschalten wirkte nicht, Ursache
+  ungeklärt), Beenden einer Admin-App, Erkennen auf allen Bildschirmen, Umbenennen, Dateiauswahl „eigene EXE“.
+
 3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis). **War schon seit
    M3 umgesetzt** (Editor: vier Audio-Zeilen, Orchestrator setzt Aufnahme/Kommunikation getrennt).
 4. Lautstärke pro Profil (`IAudioEndpointVolume`). Festlegung: **Wiedergabe und Aufnahme** je ein Regler mit
@@ -456,7 +472,19 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 
 **v1.2 – Automatik und Komfort**
 
-7. USB-Gerät verbunden (`RegisterDeviceNotification`, Wheelbase/Dongle per VID/PID oder Name).
+7. USB-Gerät verbunden (Wheelbase/Dongle per VID/PID).
+   **Entschieden 2026-09-14** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+   - **Teil der Automatik**, kein eigenes Konzept: eine Regel hat als Auslöser ein Spiel *oder* ein USB-Gerät.
+     Ende-Aktion (inkl. 10 s Karenz, z. B. Wheelbase-Neustart), „Ohne Bestätigung“, Pausieren und Ausgangslage
+     beim ersten Abfragen gelten unverändert.
+   - **Gerätewahl aus den verbundenen Geräten**; gespeichert wird `VID_xxxx&PID_xxxx` (Port-unabhängig) plus Name zur
+     Anzeige. Ein gespeichertes, gerade nicht verbundenes Gerät bleibt als „nicht verbunden“ auswählbar.
+     Keine manuelle VID/PID-Eingabe.
+   - **Keine Kombination** Spiel + Gerät in einer Regel; genau ein Auslöser pro Regel.
+   - Erkennung (eigene Entscheidung): **Polling im selben 2-s-Takt** über `CM_Get_Device_ID_List` (Filter USB,
+     nur vorhandene Geräte) statt `RegisterDeviceNotification`. Begründung: ein Pfad für beide Auslöser, dieselbe
+     getestete Logik (Anwesenheit eines Schlüssels, Ausgangslage, Karenz) ohne verstecktes Fenster; die Abfrage kostet
+     wenige Millisekunden, und 2 s Verzögerung sind beim Einschalten einer Wheelbase egal.
 8. Rennmodus: Fokus-Assistent an, Spielmodus, Standby/Bildschirmschoner aus; alles beim Zurückwechseln zurück.
 9. Energieplan pro Profil (`powercfg /setactive`).
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur
