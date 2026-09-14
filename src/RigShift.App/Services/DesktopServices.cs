@@ -139,6 +139,11 @@ public sealed class TrayIconService : IDisposable
             Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info));
             _updateNotificationShown = true;
         };
+        updates.UpdateAvailable += (_, version) =>
+        {
+            Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info));
+            _updateNotificationShown = true;
+        };
         updates.StateChanged += (_, _) => RebuildMenu();
 
         // The update notification leads to the settings, where the update can be installed right away.
@@ -290,10 +295,10 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
         menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));
         menu.Items.Add(new Separator());
-        if (_updates.State == UpdateState.Ready && _updates.TargetVersion is { } version)
+        if (_updates.State is UpdateState.Ready or UpdateState.Available && _updates.TargetVersion is { } version)
         {
-            MenuItem restart = Command(Loc.Format("Tray_RestartToUpdate", version), _updates.RestartAndInstall);
-            restart.IsEnabled = _updates.CanRestart;
+            MenuItem restart = Command(Loc.Format("Tray_RestartToUpdate", version), async () => await _updates.InstallNowAsync());
+            restart.IsEnabled = _updates.CanInstallNow;
             menu.Items.Add(restart);
         }
 

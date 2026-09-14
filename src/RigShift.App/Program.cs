@@ -1,5 +1,7 @@
 using RigShift.App.Services;
 using RigShift.Core.Cli;
+using RigShift.Core.Settings;
+using Serilog.Core;
 using RigShift.Windows.Shell;
 using Velopack;
 
@@ -15,9 +17,10 @@ public static class Program
     {
         // Velopack must run first: it handles install/update/uninstall hooks and may exit the process.
         // A pending update restarts the process to install itself. Only the tray app may do that: a CLI call would lose
-        // its exit code. Commands are verbs; tray and Velopack hook arguments start with a dash.
+        // its exit code. Commands are verbs; tray and Velopack hook arguments start with a dash. With automatic
+        // installation off, only an explicit "install now" installs (Velopack's updater, see UpdateService).
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
-        VelopackApp.Build().SetAutoApplyOnStartup(!isCommand).Run();
+        VelopackApp.Build().SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically()).Run();
 
         CliParseResult parsed = CliParser.Parse(args);
         if (parsed.Request is not { } request)
@@ -42,4 +45,12 @@ public static class Program
         app.InitializeComponent();
         return app.Run();
     }
+
+    /// <summary>Runs before logging is set up; an unreadable file means defaults, and the app logs that later.</summary>
+    private static bool InstallUpdatesAutomatically() =>
+        new JsonSettingsStore(App.Paths.SettingsFile, Logger.None)
+            .LoadAsync(CancellationToken.None)
+            .GetAwaiter()
+            .GetResult()
+            .OnlyNotifyAboutUpdates is false;
 }

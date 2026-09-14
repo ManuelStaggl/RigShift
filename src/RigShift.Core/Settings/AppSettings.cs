@@ -21,6 +21,13 @@ public sealed record AppSettings
 
     /// <summary>UI language: <c>null</c> follows Windows, otherwise a culture name such as <c>en</c> or <c>de</c>.</summary>
     public string? Language { get; init; }
+
+    /// <summary>
+    /// Only report newer versions instead of downloading them and installing on the next start. Phrased so that
+    /// <c>false</c> is the default: the JSON source generator does not apply property initializers to missing keys, so
+    /// files written by 1.0 must mean automatic installation without the key.
+    /// </summary>
+    public bool OnlyNotifyAboutUpdates { get; init; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>

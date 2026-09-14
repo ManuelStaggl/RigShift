@@ -26,11 +26,23 @@ public sealed class JsonSettingsStoreTests : IDisposable
     public async Task SaveThenLoad_RoundTrips()
     {
         var store = new JsonSettingsStore(File, Logger.None);
-        var settings = new AppSettings { DefaultProfileId = Guid.NewGuid(), ApplyDefaultProfileOnStartup = true, ConfirmTimeoutSeconds = 20, Language = "de" };
+        var settings = new AppSettings { DefaultProfileId = Guid.NewGuid(), ApplyDefaultProfileOnStartup = true, ConfirmTimeoutSeconds = 20, Language = "de", OnlyNotifyAboutUpdates = true };
 
         await store.SaveAsync(settings, Ct);
 
         (await store.LoadAsync(Ct)).ShouldBe(settings);
+    }
+
+    [Fact]
+    public async Task Load_FileFromVersion1_0_InstallsUpdatesAutomatically()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1, "confirmTimeoutSeconds": 20 }""", Ct);
+
+        AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
+
+        settings.OnlyNotifyAboutUpdates.ShouldBeFalse();
+        settings.ConfirmTimeoutSeconds.ShouldBe(20);
     }
 
     [Fact]

@@ -333,6 +333,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
             ApplyDefaultOnStartup = current.ApplyDefaultProfileOnStartup;
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds;
+            InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             StartWithWindows = _settings.Autostart.IsEnabled;
         }
         finally
@@ -352,13 +353,24 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     private bool CanCheckForUpdates() => _updates.CanCheck;
 
-    [RelayCommand(CanExecute = nameof(CanRestartToUpdate))]
-    private void RestartToUpdate() => _updates.RestartAndInstall();
+    [RelayCommand(CanExecute = nameof(CanInstallUpdateNow))]
+    private Task InstallUpdateNowAsync() => _updates.InstallNowAsync();
 
-    private bool CanRestartToUpdate() => _updates.CanRestart;
+    private bool CanInstallUpdateNow() => _updates.CanInstallNow;
 
     [ObservableProperty]
-    public partial bool IsUpdateReady { get; set; }
+    public partial bool IsUpdateInstallable { get; set; }
+
+    [ObservableProperty]
+    public partial bool InstallUpdatesAutomatically { get; set; }
+
+    partial void OnInstallUpdatesAutomaticallyChanged(bool value)
+    {
+        if (!_loading)
+        {
+            Persist(s => s with { OnlyNotifyAboutUpdates = !value });
+        }
+    }
 
     private void RefreshUpdateStatus()
     {
@@ -371,11 +383,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
             UpdateState.UpToDate => Loc.Format("Update_StatusUpToDate", lastChecked ?? "?"),
             UpdateState.Ready => Loc.Format("Update_StatusReady", _updates.TargetVersion ?? "?"),
+            UpdateState.Available => Loc.Format("Update_StatusAvailable", _updates.TargetVersion ?? "?"),
             _ => Loc.Instance["Update_StatusFailed"],
         };
-        IsUpdateReady = _updates.State == UpdateState.Ready;
+        IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
         CheckForUpdatesCommand.NotifyCanExecuteChanged();
-        RestartToUpdateCommand.NotifyCanExecuteChanged();
+        InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedDefaultProfileChanged(Choice? value)

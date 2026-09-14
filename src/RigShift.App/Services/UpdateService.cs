@@ -14,6 +14,10 @@ public enum UpdateState
     NotChecked,
 
     Checking,
+
+    /// <summary>A newer version exists; automatic installation is off, so nothing is downloaded yet.</summary>
+    Available,
+
     Downloading,
     UpToDate,
 
@@ -24,9 +28,10 @@ public enum UpdateState
 }
 
 /// <summary>
-/// Checks GitHub Releases at startup, every 24 hours and on request, and downloads a newer version; Velopack installs
-/// it the next time the tray app starts (docs/PLAN.md, sections 6 and 8). Does nothing when RigShift was not installed
-/// by Velopack (development builds). All members are used on the UI thread; events are raised there.
+/// Checks GitHub Releases at startup, every 24 hours and on request (docs/PLAN.md, sections 6 and 8). With automatic
+/// installation a newer version is downloaded and Velopack installs it the next time the tray app starts; otherwise
+/// RigShift only reports it until the user installs it. Does nothing when RigShift was not installed by Velopack
+/// (development builds). All members are used on the UI thread; events are raised there.
 /// </summary>
 public sealed class UpdateService : IDisposable
 {
@@ -36,17 +41,21 @@ public sealed class UpdateService : IDisposable
     private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(24));
     private readonly CancellationTokenSource _stop = new();
     private readonly SwitchCoordinator _coordinator;
+    private readonly SettingsService _settings;
     private readonly IAppShell _shell;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
+    private UpdateInfo? _available;
     private VelopackAsset? _pending;
-    private bool _checking;
+    private bool _busy;
 
-    public UpdateService(SwitchCoordinator coordinator, IAppShell shell, TimeProvider time, ILogger log)
+    public UpdateService(SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(coordinator);
+        ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(log);
         _coordinator = coordinator;
+        _settings = settings;
         _shell = shell;
         _time = time;
         _log = log.ForContext<UpdateService>();
@@ -57,6 +66,16 @@ public sealed class UpdateService : IDisposable
                 StateChanged?.Invoke(this, EventArgs.Empty);
             }
         };
+
+        // Turning automatic installation on while a version is only reported downloads it right away.
+        _settings.Changed += async (_, _) =>
+        {
+            if (!_settings.Current.OnlyNotifyAboutUpdates && State == UpdateState.Available)
+            {
+                await CheckAsync();
+            }
+        };
+
         IsInstalled = _manager.IsInstalled;
         State = IsInstalled ? UpdateState.NotChecked : UpdateState.NotInstalled;
         CurrentVersion = IsInstalled && _manager.CurrentVersion is { } installed
@@ -64,8 +83,11 @@ public sealed class UpdateService : IDisposable
             : Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?";
     }
 
-    /// <summary>Raised on the UI thread with the version that is ready to install.</summary>
+    /// <summary>Raised on the UI thread with the version that is downloaded and ready to install.</summary>
     public event EventHandler<string>? UpdateReady;
+
+    /// <summary>Raised on the UI thread with a newer version that is not downloaded (automatic installation off).</summary>
+    public event EventHandler<string>? UpdateAvailable;
 
     /// <summary>Raised on the UI thread whenever <see cref="State"/> or its details change.</summary>
     public event EventHandler? StateChanged;
@@ -76,42 +98,15 @@ public sealed class UpdateService : IDisposable
 
     public UpdateState State { get; private set; }
 
-    /// <summary>Version being downloaded or ready to install.</summary>
+    /// <summary>Version that is available, being downloaded or ready to install.</summary>
     public string? TargetVersion { get; private set; }
 
     public DateTimeOffset? LastChecked { get; private set; }
 
-    public bool CanCheck => IsInstalled && !_checking;
+    public bool CanCheck => IsInstalled && !_busy;
 
-    /// <summary>A downloaded update can be installed now; never in the middle of a switch.</summary>
-    public bool CanRestart => State == UpdateState.Ready && _pending is not null && !_coordinator.IsSwitching;
-
-    /// <summary>
-    /// Hands the downloaded update to the Velopack updater, which waits for RigShift to exit, installs and starts it
-    /// again; then exits cleanly so the tray icon and the log are closed.
-    /// </summary>
-    public void RestartAndInstall()
-    {
-        if (!CanRestart || _pending is null)
-        {
-            _log.Warning("Restart to update refused: state {State}, switching {Switching}", State, _coordinator.IsSwitching);
-            return;
-        }
-
-        try
-        {
-            _log.Information("Restarting to install update {Version}", _pending.Version);
-            _manager.WaitExitThenApplyUpdates(_pending, silent: true, restart: true);
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Could not start the updater for {Version}", _pending.Version);
-            SetState(UpdateState.Failed, null);
-            return;
-        }
-
-        _shell.Quit();
-    }
+    /// <summary>An update can be installed now; never while checking, downloading or switching.</summary>
+    public bool CanInstallNow => State is UpdateState.Ready or UpdateState.Available && !_busy && !_coordinator.IsSwitching;
 
     public void Start()
     {
@@ -129,6 +124,47 @@ public sealed class UpdateService : IDisposable
     {
         _log.Information("Update check requested by the user");
         return CheckAsync();
+    }
+
+    /// <summary>
+    /// Downloads the update if needed, hands it to the Velopack updater, which waits for RigShift to exit, installs and
+    /// starts it again, and exits cleanly so the tray icon and the log are closed.
+    /// </summary>
+    public async Task InstallNowAsync()
+    {
+        if (!CanInstallNow)
+        {
+            _log.Warning("Install now refused: state {State}, busy {Busy}, switching {Switching}", State, _busy, _coordinator.IsSwitching);
+            return;
+        }
+
+        if (State == UpdateState.Available && _available is { } update)
+        {
+            _log.Information("Installing reported update {Version} on request", TargetVersion);
+            if (!await DownloadAsync(update))
+            {
+                return;
+            }
+        }
+
+        if (_pending is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _log.Information("Restarting to install update {Version}", _pending.Version);
+            _manager.WaitExitThenApplyUpdates(_pending, silent: true, restart: true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Could not start the updater for {Version}", _pending.Version);
+            SetState(UpdateState.Failed, null);
+            return;
+        }
+
+        _shell.Quit();
     }
 
     public void Dispose()
@@ -161,44 +197,81 @@ public sealed class UpdateService : IDisposable
             return;
         }
 
-        _checking = true;
+        _busy = true;
         string? readyVersion = State == UpdateState.Ready ? TargetVersion : null;
         SetState(readyVersion is null ? UpdateState.Checking : UpdateState.Ready, readyVersion);
+        UpdateInfo? update;
         try
         {
-            UpdateInfo? update = await _manager.CheckForUpdatesAsync();
+            update = await _manager.CheckForUpdatesAsync();
             LastChecked = _time.GetLocalNow();
-            if (update is null)
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Update check failed");
+            SetState(readyVersion is null ? UpdateState.Failed : UpdateState.Ready, readyVersion);
+            _busy = false;
+            StateChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        _busy = false;
+        if (update is null)
+        {
+            _log.Information("No update available, installed version {Version}", CurrentVersion);
+            SetState(UpdateState.UpToDate, null);
+            return;
+        }
+
+        string version = update.TargetFullRelease.Version.ToString();
+        if (version == readyVersion)
+        {
+            SetState(UpdateState.Ready, version);
+            return;
+        }
+
+        if (_settings.Current.OnlyNotifyAboutUpdates)
+        {
+            bool isNew = !(State == UpdateState.Available && TargetVersion == version) && version != readyVersion;
+            _available = update;
+            _log.Information("Update {Version} available, automatic installation is off", version);
+            SetState(UpdateState.Available, version);
+            if (isNew)
             {
-                _log.Information("No update available, installed version {Version}", CurrentVersion);
-                SetState(UpdateState.UpToDate, null);
-                return;
+                UpdateAvailable?.Invoke(this, version);
             }
 
-            string version = update.TargetFullRelease.Version.ToString();
-            if (version == readyVersion)
-            {
-                SetState(UpdateState.Ready, version);
-                return;
-            }
+            return;
+        }
 
+        if (await DownloadAsync(update))
+        {
+            UpdateReady?.Invoke(this, version);
+        }
+    }
+
+    private async Task<bool> DownloadAsync(UpdateInfo update)
+    {
+        string version = update.TargetFullRelease.Version.ToString();
+        _busy = true;
+        try
+        {
             _log.Information("Downloading update {Version}", version);
             SetState(UpdateState.Downloading, version);
             await _manager.DownloadUpdatesAsync(update, cancelToken: _stop.Token);
             _pending = update.TargetFullRelease;
+            _available = null;
             _log.Information("Update {Version} downloaded, it is installed on the next start", version);
+            _busy = false;
             SetState(UpdateState.Ready, version);
-            UpdateReady?.Invoke(this, version);
+            return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _log.Warning(ex, "Update check failed");
-            SetState(readyVersion is null ? UpdateState.Failed : UpdateState.Ready, readyVersion);
-        }
-        finally
-        {
-            _checking = false;
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            _log.Warning(ex, "Downloading update {Version} failed", version);
+            _busy = false;
+            SetState(UpdateState.Failed, null);
+            return false;
         }
     }
 

@@ -76,6 +76,10 @@
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Downloading version {0}…</value></data>
   <data name="Update_StatusUpToDate" xml:space="preserve"><value>Up to date. Last checked: {0}</value></data>
   <data name="Update_StatusReady" xml:space="preserve"><value>Version {0} is ready. Install it now or it is installed the next time RigShift starts.</value></data>
+  <data name="Update_StatusAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open the settings to install it.</value></data>
+  <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
+  <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: RigShift only reports new versions and installs nothing until you choose to.</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Diag_Refresh" xml:space="preserve"><value>Refresh</value></data>
   <data name="Diag_Displays" xml:space="preserve"><value>Displays</value></data>

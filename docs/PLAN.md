@@ -302,7 +302,17 @@ Releases nützlich)
   Klick → „Restarting to install update 1.0.1“, Exit 0, neuer Prozess nach 2 s, `sq.version` 1.0.1, EXE aus Commit
   `30182fd` (offizielles Release). Damit sind auch die U1-Zustände Laden/Bereit belegt.
 - U3. Einstellung „Updates automatisch installieren“ / „nur benachrichtigen“. Grund: Nutzer, die ungefragte
-  Änderungen nicht wollen; ohne Code-Signatur hängt die Update-Sicherheit allein am GitHub-Konto.
+  Änderungen nicht wollen; ohne Code-Signatur hängt die Update-Sicherheit allein am GitHub-Konto. **Umgesetzt
+  2026-09-14**: `AppSettings.OnlyNotifyAboutUpdates` (Standard `false` = automatisch; bewusst so herum, weil der
+  JSON-Source-Generator Property-Initialisierer bei fehlendem Schlüssel nicht anwendet – `InstallUpdatesAutomatically
+  = true` hätte 1.0-Nutzer still auf „nur melden“ gestellt, per Test belegt). Aus = prüfen und
+  melden (Balloon „verfügbar“, Status, Knopf), **nichts herunterladen**; „Neu starten und installieren“ lädt dann und
+  startet sofort neu. Zusätzlich liest `Program.cs` die Einstellung vor `VelopackApp.Run()` und schaltet Auto-Apply
+  beim Start ab – sonst würde ein früher im Auto-Modus geladenes Paket trotz „aus“ installiert. Einschalten bei
+  gemeldeter Version lädt sofort. Am Server belegt (Build als 1.0.0 installiert): mit `onlyNotifyAboutUpdates: true`
+  zweimal gestartet → je „Update 1.0.1 available, automatic installation is off“, kein Download, bleibt 1.0.0; ohne
+  settings.json → lädt, nächster Start installiert 1.0.1. **Nicht belegt:** Klick „installieren“ im Zustand
+  „verfügbar“ (RDP-Sitzung getrennt, keine Eingabe möglich) – der Download-Pfad ist derselbe wie im Auto-Modus.
 - U4. Release-Notes der neuen Version anzeigen (aus dem Velopack-Paket bzw. Link aufs GitHub-Release).
 - Randbedingung: kein GitHub-Token in der App (wäre aus der EXE auslesbar); Limit 60 API-Abfragen/h pro IP reicht.
 
