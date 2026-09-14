@@ -34,8 +34,8 @@
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anzeigeeinstellungen beibehalten?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
   <data name="Confirm_Hint" xml:space="preserve"><value>Enter behält die neuen Einstellungen. Esc setzt zurück – von jedem Bildschirm aus.</value></data>
-  <data name="Confirm_Keep" xml:space="preserve"><value>Beibehalten</value></data>
-  <data name="Confirm_Revert" xml:space="preserve"><value>Zurücksetzen</value></data>
+  <data name="Confirm_Keep" xml:space="preserve"><value>_Beibehalten</value></data>
+  <data name="Confirm_Revert" xml:space="preserve"><value>_Zurücksetzen</value></data>
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} aktiv</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Bildschirme umgeschaltet.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
@@ -87,7 +87,7 @@
   <data name="About_WhatsNew" xml:space="preserve"><value>Was ist neu</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
-  <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung speichern</value></data>
+  <data name="Profiles_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung _speichern</value></data>
   <data name="Tray_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern …</value></data>
   <data name="Profile_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="Profile_More" xml:space="preserve"><value>Weitere Aktionen</value></data>
@@ -118,7 +118,7 @@
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Ohne Nachfrage umschalten</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Auflösung und Position stellst du in den Windows-Anzeigeeinstellungen ein und übernimmst sie dann hier.</value></data>
-  <data name="Editor_TakeCurrent" xml:space="preserve"><value>Aktuelle Anordnung übernehmen</value></data>
+  <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Aktuelle Anordnung übernehmen</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Aktuelle Anordnung übernommen: {0} Bildschirm(e).</value></data>
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · Position {2}, {3}</value></data>
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Bildwiederholrate</value></data>
@@ -133,7 +133,7 @@
   <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>Eigener Name, z. B. Links</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Bildschirm entfernen</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
-  <data name="Editor_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="Editor_Save" xml:space="preserve"><value>_Speichern</value></data>
   <data name="Audio_Playback" xml:space="preserve"><value>Wiedergabe</value></data>
   <data name="Audio_PlaybackComms" xml:space="preserve"><value>Wiedergabe für Kommunikation</value></data>
   <data name="Audio_Recording" xml:space="preserve"><value>Aufnahme</value></data>
@@ -164,7 +164,7 @@
   <data name="Audio_VolumeValue" xml:space="preserve"><value>{0} %</value></data>
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist. Starten überspringt Apps, die schon laufen. Beenden schließt die App und beendet sie, falls sie nach 5 Sekunden noch läuft.</value></data>
-  <data name="Editor_AddApp" xml:space="preserve"><value>App hinzufügen</value></data>
+  <data name="Editor_AddApp" xml:space="preserve"><value>App _hinzufügen</value></data>
   <data name="Editor_Power" xml:space="preserve"><value>Energie</value></data>
   <data name="Editor_KeepAwake" xml:space="preserve"><value>PC wach halten (kein Standby, Bildschirmschoner oder Bildschirm-Aus)</value></data>
   <data name="Editor_PowerHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist. Benachrichtigungen schaltet Windows bei Vollbild-Spielen selbst stumm.</value></data>
@@ -182,8 +182,8 @@
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
   <data name="Nav_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Über &amp; Hilfe</value></data>
-  <data name="Displays_Identify" xml:space="preserve"><value>Erkennen</value></data>
-  <data name="Displays_Refresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="Displays_Identify" xml:space="preserve"><value>_Erkennen</value></data>
+  <data name="Displays_Refresh" xml:space="preserve"><value>_Aktualisieren</value></data>
   <data name="Displays_Hint" xml:space="preserve"><value>Benenne deine Monitore hier oder im Profil-Editor; der Name erscheint überall, z. B. „Links · CM27X3“. Erkennen zeigt die Nummer jedes aktiven Bildschirms direkt auf ihm an.</value></data>
   <data name="Displays_Empty" xml:space="preserve"><value>Keine Bildschirme gefunden.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Aktiv</value></data>
@@ -210,7 +210,7 @@
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
   <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
-  <data name="Automation_Add" xml:space="preserve"><value>Regel hinzufügen</value></data>
+  <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
