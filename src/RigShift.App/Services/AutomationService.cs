@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
@@ -24,8 +25,12 @@ public sealed class AutomationService : IDisposable
     private readonly ILogger _log;
     private readonly AutomationTrigger _trigger = new();
     private readonly DispatcherTimer _timer = new() { Interval = PollInterval };
+
+    /// <summary>Origin of the monotonic time handed to the trigger: wall-clock jumps and sleep must not end a delay.</summary>
+    private readonly long _started;
     private bool _polling;
     private bool _idle = true;
+    private bool _skipLogged;
 
     public AutomationService(
         SettingsService settings,
@@ -36,6 +41,7 @@ public sealed class AutomationService : IDisposable
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(time);
         ArgumentNullException.ThrowIfNull(log);
 
         _settings = settings;
@@ -43,6 +49,7 @@ public sealed class AutomationService : IDisposable
         _coordinator = coordinator;
         _devices = devices;
         _time = time;
+        _started = time.GetTimestamp();
         _log = log.ForContext<AutomationService>();
         _timer.Tick += OnTick;
         settings.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
@@ -56,9 +63,12 @@ public sealed class AutomationService : IDisposable
 
     public bool IsPaused => _settings.Current.AutomationPaused;
 
+    private TimeSpan Now => _time.GetElapsedTime(_started);
+
     public void Start()
     {
         _timer.Start();
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
         _log.Information("Automation started with {Count} rule(s), paused {Paused}", Rules.Count, IsPaused);
     }
 
@@ -68,7 +78,29 @@ public sealed class AutomationService : IDisposable
         _log.Information("Automation {State}", paused ? "paused" : "resumed");
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+    }
+
+    /// <summary>
+    /// After sleep the devices are re-enumerated and the timer did not tick: a device turned off before sleeping must not
+    /// switch back on the first poll, so the next poll sets a new baseline (analysis finding C-03).
+    /// </summary>
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode != PowerModes.Resume)
+        {
+            return;
+        }
+
+        _timer.Dispatcher.InvokeAsync(() =>
+        {
+            _trigger.Reset();
+            _log.Information("Resumed from sleep, automation takes a new baseline");
+        });
+    }
 
     private async void OnTick(object? sender, EventArgs e)
     {
@@ -85,6 +117,7 @@ public sealed class AutomationService : IDisposable
             {
                 _trigger.Reset();
                 _idle = true;
+                _log.Information("Automation idle ({Reason}), baseline reset", IsPaused ? "paused" : "no rules");
             }
 
             return;
@@ -99,10 +132,23 @@ public sealed class AutomationService : IDisposable
             // While a switch runs, the active profile is in flux; the next poll sees the same devices again.
             if (_coordinator.IsSwitching)
             {
+                if (!_skipLogged)
+                {
+                    _log.Information("Automation poll skipped while a switch is running");
+                    _skipLogged = true;
+                }
+
                 return;
             }
 
-            foreach (TriggerAction action in _trigger.Evaluate(rules, present, _catalog.ActiveProfile?.Id, _time.GetUtcNow()))
+            _skipLogged = false;
+            TriggerEvaluation evaluation = _trigger.Evaluate(rules, present, _catalog.ActiveProfile?.Id, Now);
+            foreach (TriggerEvent triggerEvent in evaluation.Events)
+            {
+                LogEvent(triggerEvent);
+            }
+
+            foreach (TriggerAction action in evaluation.Actions)
             {
                 await RunAsync(action);
             }
@@ -123,7 +169,7 @@ public sealed class AutomationService : IDisposable
     private async Task RunAsync(TriggerAction action)
     {
         AutomationRule rule = action.Rule;
-        string subject = rule.UsbDeviceName ?? rule.UsbDeviceId ?? "?";
+        string subject = SubjectOf(rule);
         if (_catalog.Find(action.ProfileId) is not { } profile)
         {
             _log.Warning("Rule for {Subject} wants profile {ProfileId}, which does not exist", subject, action.ProfileId);
@@ -133,6 +179,55 @@ public sealed class AutomationService : IDisposable
         string reason = action.Reason == TriggerReason.Started ? "connected" : "disconnected";
         _log.Information("{Subject} {Reason}: switching to {Profile} (skip confirmation: {SkipConfirmation})",
             subject, reason, profile.Name, action.SkipConfirmation);
-        await _coordinator.SwitchAsync(profile, new SwitchRequest { SkipConfirmation = action.SkipConfirmation });
+        SwitchResult? result = await _coordinator.SwitchAsync(profile, new SwitchRequest { SkipConfirmation = action.SkipConfirmation });
+        if (action.Reason != TriggerReason.Started)
+        {
+            return;
+        }
+
+        // A start that did not succeed must not count as started (analysis finding C-01).
+        RetryMode? retry = result?.Outcome switch
+        {
+            null or SwitchOutcome.Blocked => RetryMode.Later,
+            SwitchOutcome.Failed or SwitchOutcome.RolledBack => RetryMode.AfterReconnect,
+            _ => null,
+        };
+
+        if (retry is { } mode && _trigger.Disarm(rule, mode, Now) is { } disarmed)
+        {
+            _log.Information("Rule for {Subject} disarmed after {Outcome}", subject, result?.Outcome.ToString() ?? "no switch");
+            LogEvent(disarmed);
+        }
     }
+
+    private void LogEvent(TriggerEvent triggerEvent)
+    {
+        string subject = SubjectOf(triggerEvent.Rule);
+        switch (triggerEvent.Kind)
+        {
+            case TriggerEventKind.Baseline:
+                _log.Information("Automation baseline for {Subject}: {State}", subject, triggerEvent.DevicePresent == true ? "connected" : "not connected");
+                break;
+            case TriggerEventKind.DeviceConnected:
+                _log.Information("{Subject} connected", subject);
+                break;
+            case TriggerEventKind.DeviceGone:
+                _log.Information("{Subject} gone, end action in {Seconds} s unless it comes back", subject, triggerEvent.Delay?.TotalSeconds ?? 0);
+                break;
+            case TriggerEventKind.DeviceBack:
+                _log.Information("{Subject} back within its delay, nothing to do", subject);
+                break;
+            case TriggerEventKind.ExitSkipped:
+                _log.Information("{Subject} stayed gone, end action skipped: {Reason}", subject, triggerEvent.SkipReason);
+                break;
+            case TriggerEventKind.Disarmed when triggerEvent.Retry == RetryMode.Later:
+                _log.Information("Rule for {Subject} retries in {Seconds} s if the device is still connected", subject, triggerEvent.Delay?.TotalSeconds ?? 0);
+                break;
+            case TriggerEventKind.Disarmed:
+                _log.Information("Rule for {Subject} starts again once the device reconnects", subject);
+                break;
+        }
+    }
+
+    private static string SubjectOf(AutomationRule rule) => rule.UsbDeviceName ?? rule.UsbDeviceId ?? "?";
 }

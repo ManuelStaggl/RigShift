@@ -12,10 +12,9 @@ public sealed class AutomationTriggerTests
     private static readonly Guid Desk = Guid.NewGuid();
     private static readonly Guid Rig = Guid.NewGuid();
     private static readonly Guid Tv = Guid.NewGuid();
-    private static readonly DateTimeOffset Start = new(2026, 9, 14, 20, 0, 0, TimeSpan.Zero);
 
     private readonly AutomationTrigger _trigger = new();
-    private DateTimeOffset _now = Start;
+    private TimeSpan _now = TimeSpan.FromMinutes(5);
 
     private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool enabled = true, bool skip = false) => new()
     {
@@ -32,11 +31,144 @@ public sealed class AutomationTriggerTests
     private IReadOnlyList<TriggerAction> Poll(AutomationRule rule, Guid? active, params string[] present) =>
         Poll([rule], active, present);
 
-    private IReadOnlyList<TriggerAction> Poll(IReadOnlyList<AutomationRule> rules, Guid? active, params string[] present)
+    private IReadOnlyList<TriggerAction> Poll(IReadOnlyList<AutomationRule> rules, Guid? active, params string[] present) =>
+        Evaluate(rules, active, present).Actions;
+
+    private TriggerEvaluation Evaluate(IReadOnlyList<AutomationRule> rules, Guid? active, params string[] present)
     {
-        IReadOnlyList<TriggerAction> actions = _trigger.Evaluate(rules, Present(present), active, _now);
+        TriggerEvaluation evaluation = _trigger.Evaluate(rules, Present(present), active, _now);
         _now += TimeSpan.FromSeconds(2);
-        return actions;
+        return evaluation;
+    }
+
+    [Fact]
+    public void StartBlocked_Disarm_RetriesOnceTheWaitIsOver()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+
+        TriggerEvent disarmed = _trigger.Disarm(rule, RetryMode.Later, _now).ShouldNotBeNull();
+
+        disarmed.Delay.ShouldBe(AutomationTrigger.MinimumRetryDelay);
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        _now += AutomationTrigger.MinimumRetryDelay;
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
+    }
+
+    [Fact]
+    public void StartRejected_Disarm_NoLoopButReconnectWithinDelayStartsAgain()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+
+        _trigger.Disarm(rule, RetryMode.AfterReconnect, _now);
+
+        _now += TimeSpan.FromMinutes(1);
+        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk).ShouldBeEmpty();
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
+    }
+
+    [Fact]
+    public void StartFailed_Disarm_DeviceGoneDoesNotSwitchBack()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey);
+        _trigger.Disarm(rule, RetryMode.AfterReconnect, _now);
+
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+        TriggerEvaluation evaluation = Evaluate([rule], Rig);
+
+        evaluation.Actions.ShouldBeEmpty();
+        evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.NotStartedByRule);
+    }
+
+    [Fact]
+    public void ExitDelayZero_SinglePollGap_DoesNothing()
+    {
+        AutomationRule rule = WheelbaseRule() with { ExitDelaySeconds = 0 };
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+
+        Poll(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+
+        Poll(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+    }
+
+    [Fact]
+    public void TwoRulesSameDevice_BothStart()
+    {
+        AutomationRule rig = WheelbaseRule();
+        AutomationRule tv = WheelbaseRule() with { Id = Guid.NewGuid(), ProfileId = Tv };
+        Poll([rig, tv], Desk);
+
+        Poll([rig, tv], Desk, WheelbaseKey).Select(a => a.ProfileId).ShouldBe([Rig, Tv]);
+    }
+
+    [Fact]
+    public void NoActiveProfileAtStart_SwitchBackDoesNothing_Logged()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, null);
+        Poll(rule, null, WheelbaseKey).ShouldHaveSingleItem();
+
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+        TriggerEvaluation evaluation = Evaluate([rule], Rig);
+
+        evaluation.Actions.ShouldBeEmpty();
+        evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.NoPreviousProfile);
+    }
+
+    [Fact]
+    public void RuleDisabledWhileRunning_NoSwitchBack()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        AutomationRule disabled = rule with { IsEnabled = false };
+
+        Poll(disabled, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+        TriggerEvaluation evaluation = Evaluate([disabled], Rig);
+
+        evaluation.Actions.ShouldBeEmpty();
+        evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.RuleDisabled);
+    }
+
+    [Fact]
+    public void Reset_DuringExitDelay_ClearsGoneSince()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Rig).ShouldBeEmpty();
+
+        _trigger.Reset();
+        _now += TimeSpan.FromMinutes(5);
+
+        Evaluate([rule], Rig).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.Baseline);
+        Poll(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Rig).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Events_DescribeGoneAndBack()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Evaluate([rule], Desk, WheelbaseKey).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceConnected);
+
+        TriggerEvent gone = Evaluate([rule], Rig).Events.ShouldHaveSingleItem();
+        gone.Kind.ShouldBe(TriggerEventKind.DeviceGone);
+        gone.Delay.ShouldBe(TimeSpan.FromSeconds(10));
+        Evaluate([rule], Rig, WheelbaseKey).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceBack);
     }
 
     [Fact]

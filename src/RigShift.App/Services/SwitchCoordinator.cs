@@ -82,11 +82,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     }
 
     /// <summary>Switch with per-call options, e.g. an automation rule that skips the confirmation.</summary>
-    public async Task SwitchAsync(Profile profile, SwitchRequest request)
+    /// <returns>The result, or <c>null</c> when another switch was running, it was cancelled or it threw.</returns>
+    public Task<SwitchResult?> SwitchAsync(Profile profile, SwitchRequest request)
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(request);
-        await RunAsync(profile, request, rethrow: false);
+        return RunAsync(profile, request, rethrow: false);
     }
 
     /// <summary>Dry run: plans against the live topology without touching anything.</summary>

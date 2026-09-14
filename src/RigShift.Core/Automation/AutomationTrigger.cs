@@ -15,18 +15,90 @@ public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerR
     public bool SkipConfirmation => Rule.SkipConfirmation;
 }
 
+public enum TriggerEventKind
+{
+    /// <summary>First poll after start, reset or a rule change: the device state is taken as it is.</summary>
+    Baseline,
+
+    DeviceConnected,
+
+    /// <summary>The device is gone; the end action waits for <see cref="TriggerEvent.Delay"/>.</summary>
+    DeviceGone,
+
+    /// <summary>The device came back before its end action ran.</summary>
+    DeviceBack,
+
+    /// <summary>The device stayed gone long enough, but the end action does nothing (<see cref="TriggerEvent.SkipReason"/>).</summary>
+    ExitSkipped,
+
+    /// <summary>The start switch did not succeed; the rule waits as told by <see cref="TriggerEvent.Retry"/>.</summary>
+    Disarmed,
+}
+
+public enum ExitSkipReason
+{
+    None,
+
+    /// <summary>The rule did not start the current session (device present at baseline, disabled, or the start failed).</summary>
+    NotStartedByRule,
+    RuleDisabled,
+
+    /// <summary>A profile other than the rule's is active – the user picked it.</summary>
+    OtherProfileActive,
+
+    /// <summary>End action "stay".</summary>
+    Stay,
+
+    /// <summary>"Switch back", but no profile was active when the device connected.</summary>
+    NoPreviousProfile,
+
+    /// <summary>The target profile is active already.</summary>
+    TargetActive,
+}
+
+/// <summary>How a rule behaves after its start switch did not succeed.</summary>
+public enum RetryMode
+{
+    /// <summary>Another switch was running or the displays were not ready: try again once the delay has passed.</summary>
+    Later,
+
+    /// <summary>The user rejected the switch or it failed: only a reconnect starts it again, never a loop.</summary>
+    AfterReconnect,
+}
+
+/// <summary>A decision of the trigger, for the log (analysis finding K-02).</summary>
+public sealed record TriggerEvent(AutomationRule Rule, TriggerEventKind Kind)
+{
+    public TimeSpan? Delay { get; init; }
+
+    public bool? DevicePresent { get; init; }
+
+    public ExitSkipReason SkipReason { get; init; }
+
+    public RetryMode? Retry { get; init; }
+}
+
+public sealed record TriggerEvaluation(IReadOnlyList<TriggerAction> Actions, IReadOnlyList<TriggerEvent> Events);
+
 /// <summary>
 /// Decides from polled USB devices when rules switch (docs/PLAN.md, section 6). Pure logic: the caller supplies what is
-/// present, the active profile and the time.
+/// present, the active profile and a monotonic time.
 /// </summary>
 /// <remarks>
 /// Start: a device that appears switches to the rule's profile, unless it is active already. Whatever is present at the
 /// first poll only sets the baseline, so starting RigShift with the device already connected changes nothing.
-/// End: acted on once the device has been gone for the rule's <see cref="ExitDelayOf"/> (a restart in between is no end), and
-/// only while the rule's profile is still active – a profile the user picked in the meantime is not overridden.
+/// End: acted on once the device has been gone for the rule's <see cref="ExitDelayOf"/> and for at least two polls in a
+/// row (a single missed poll is no end, even with a delay of 0), and only while the rule's profile is still active – a
+/// profile the user picked in the meantime is not overridden. A start switch that did not succeed is reported back with
+/// <see cref="Disarm"/>, so the rule does not count as started (analysis finding C-01).
 /// </remarks>
 public sealed class AutomationTrigger
 {
+    /// <summary>The shortest wait before a rule retries a start that could not run.</summary>
+    public static readonly TimeSpan MinimumRetryDelay = TimeSpan.FromSeconds(10);
+
+    private const int PollsGoneForExit = 2;
+
     private readonly Dictionary<Guid, RuleState> _states = [];
     private bool _hasBaseline;
 
@@ -37,7 +109,7 @@ public sealed class AutomationTrigger
         return TimeSpan.FromSeconds(Math.Clamp(rule.ExitDelaySeconds, 0, AutomationRule.MaxExitDelaySeconds));
     }
 
-    /// <summary>Forget everything, e.g. after pausing: the next poll sets a new baseline.</summary>
+    /// <summary>Forget everything, e.g. after pausing or waking from sleep: the next poll sets a new baseline.</summary>
     public void Reset()
     {
         _states.Clear();
@@ -54,9 +126,40 @@ public sealed class AutomationTrigger
         return UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id ? [UsbDeviceIds.Key(id)] : [];
     }
 
+    /// <summary>
+    /// The start switch of <paramref name="rule"/> did not succeed (busy, blocked, failed or rejected): the rule no longer
+    /// counts as started, so neither a later end action nor a missed start depends on it.
+    /// </summary>
+    public TriggerEvent? Disarm(AutomationRule rule, RetryMode retry, TimeSpan now)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        if (!_states.TryGetValue(rule.Id, out RuleState? state))
+        {
+            return null;
+        }
+
+        state.StartedByRule = false;
+        state.PreviousProfileId = null;
+        state.GoneSince = null;
+        state.PollsGone = 0;
+        if (retry == RetryMode.Later)
+        {
+            // Not running: the next poll with the device present is a start again, once the wait is over.
+            TimeSpan delay = ExitDelayOf(rule) > MinimumRetryDelay ? ExitDelayOf(rule) : MinimumRetryDelay;
+            state.IsRunning = false;
+            state.RetryAt = now + delay;
+            return new TriggerEvent(rule, TriggerEventKind.Disarmed) { Retry = retry, Delay = delay };
+        }
+
+        // Running stays as it is: only disconnecting and connecting the device starts again.
+        state.RetryAt = null;
+        return new TriggerEvent(rule, TriggerEventKind.Disarmed) { Retry = retry };
+    }
+
     /// <param name="present"><see cref="UsbDeviceIds.Key"/> of connected devices.</param>
-    public IReadOnlyList<TriggerAction> Evaluate(
-        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, DateTimeOffset now)
+    /// <param name="now">Monotonic time, e.g. <see cref="TimeProvider.GetElapsedTime(long)"/> since the service started.</param>
+    public TriggerEvaluation Evaluate(
+        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, TimeSpan now)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(present);
@@ -67,6 +170,7 @@ public sealed class AutomationTrigger
         }
 
         var actions = new List<TriggerAction>();
+        var events = new List<TriggerEvent>();
         foreach (AutomationRule rule in rules)
         {
             // Rules without a device (game rules of an unreleased build) are ignored.
@@ -83,12 +187,14 @@ public sealed class AutomationTrigger
                 // A new rule, or one whose device was changed while it is present, behaves like the baseline: no switch
                 // until the next start.
                 _states[rule.Id] = new RuleState { IsRunning = running, Watched = watched };
+                events.Add(new TriggerEvent(rule, TriggerEventKind.Baseline) { DevicePresent = running });
                 continue;
             }
 
             if (!_hasBaseline)
             {
                 state.IsRunning = running;
+                events.Add(new TriggerEvent(rule, TriggerEventKind.Baseline) { DevicePresent = running });
                 continue;
             }
 
@@ -96,11 +202,21 @@ public sealed class AutomationTrigger
             {
                 bool restarted = state.GoneSince is not null;
                 state.GoneSince = null;
-                if (!state.IsRunning)
+                state.PollsGone = 0;
+                if (restarted)
+                {
+                    events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceBack));
+                }
+
+                if (!state.IsRunning && !(state.RetryAt is { } retryAt && now < retryAt))
                 {
                     state.IsRunning = true;
-                    if (!restarted)
+                    state.RetryAt = null;
+
+                    // Back within the delay continues the session the rule started; otherwise it is a new start.
+                    if (!restarted || !state.StartedByRule)
                     {
+                        events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceConnected));
                         OnStarted(rule, state, activeProfileId, actions);
                     }
                 }
@@ -109,17 +225,33 @@ public sealed class AutomationTrigger
             {
                 state.IsRunning = false;
                 state.GoneSince = now;
+                state.PollsGone = 1;
+                events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceGone) { Delay = ExitDelayOf(rule) });
+            }
+            else if (state.GoneSince is not null)
+            {
+                state.PollsGone++;
+            }
+            else
+            {
+                // Gone and waiting for a retry that no longer applies.
+                state.RetryAt = null;
             }
 
-            if (!running && state.GoneSince is { } gone && now - gone >= ExitDelayOf(rule))
+            if (!running && state.GoneSince is { } gone && state.PollsGone >= PollsGoneForExit && now - gone >= ExitDelayOf(rule))
             {
                 state.GoneSince = null;
-                OnExited(rule, state, activeProfileId, actions);
+                state.PollsGone = 0;
+                ExitSkipReason skipped = OnExited(rule, state, activeProfileId, actions);
+                if (skipped != ExitSkipReason.None)
+                {
+                    events.Add(new TriggerEvent(rule, TriggerEventKind.ExitSkipped) { SkipReason = skipped });
+                }
             }
         }
 
         _hasBaseline = true;
-        return actions;
+        return new TriggerEvaluation(actions, events);
     }
 
     private static void OnStarted(AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions)
@@ -138,16 +270,26 @@ public sealed class AutomationTrigger
         }
     }
 
-    private static void OnExited(AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions)
+    private static ExitSkipReason OnExited(AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions)
     {
         bool startedByRule = state.StartedByRule;
         Guid? previous = state.PreviousProfileId;
         state.StartedByRule = false;
         state.PreviousProfileId = null;
 
-        if (!startedByRule || !rule.IsEnabled || activeProfileId != rule.ProfileId)
+        if (!startedByRule)
         {
-            return;
+            return ExitSkipReason.NotStartedByRule;
+        }
+
+        if (!rule.IsEnabled)
+        {
+            return ExitSkipReason.RuleDisabled;
+        }
+
+        if (activeProfileId != rule.ProfileId)
+        {
+            return ExitSkipReason.OtherProfileActive;
         }
 
         Guid? target = rule.OnExit switch
@@ -157,10 +299,18 @@ public sealed class AutomationTrigger
             _ => null,
         };
 
-        if (target is { } profile && profile != activeProfileId)
+        if (target is not { } profile)
         {
-            actions.Add(new TriggerAction(rule, profile, TriggerReason.Ended));
+            return rule.OnExit == ExitAction.SwitchBack ? ExitSkipReason.NoPreviousProfile : ExitSkipReason.Stay;
         }
+
+        if (profile == activeProfileId)
+        {
+            return ExitSkipReason.TargetActive;
+        }
+
+        actions.Add(new TriggerAction(rule, profile, TriggerReason.Ended));
+        return ExitSkipReason.None;
     }
 
     private sealed class RuleState
@@ -170,7 +320,14 @@ public sealed class AutomationTrigger
         /// <summary>The device key the state was built for.</summary>
         public required string Watched { get; init; }
 
-        public DateTimeOffset? GoneSince { get; set; }
+        /// <summary>Monotonic time the device was first missed.</summary>
+        public TimeSpan? GoneSince { get; set; }
+
+        /// <summary>Polls in a row without the device since <see cref="GoneSince"/>.</summary>
+        public int PollsGone { get; set; }
+
+        /// <summary>A start that could not run is not retried before this time.</summary>
+        public TimeSpan? RetryAt { get; set; }
 
         /// <summary>The device connected while the rule was enabled and watched, so its exit may switch.</summary>
         public bool StartedByRule { get; set; }

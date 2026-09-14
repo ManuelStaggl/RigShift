@@ -17,6 +17,15 @@ All notable changes to this project are documented here. The format follows
   restores it at the next start or with the next profile.
 - Quitting RigShift or signing out of Windows during the confirmation countdown no longer leaves displays and audio
   half-switched: the switch is rolled back first (at most 30 s), then RigShift exits.
+- Automation: if the switch after connecting a device does not happen (another switch is running or a display is not
+  ready yet), the rule tries again after its wait time while the device stays connected. If you reject the switch or it
+  fails, turning the device off and on again starts it again right away – and the rule no longer switches back later.
+- Automation: a device that disappears for a single moment no longer counts as gone, even with a wait time of 0 s, and
+  waking the PC from sleep no longer ends a wait time that started before sleep.
+
+### Changed
+
+- The log now records every automation decision (device connected, gone, back, end action skipped and why).
 
 ## [1.3.0] - 2026-09-14
 
