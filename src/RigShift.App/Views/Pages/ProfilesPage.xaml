@@ -35,6 +35,14 @@
         IsClosable="False"
         Severity="Informational" />
 
+      <ui:InfoBar
+        Margin="0,0,0,16"
+        Title="{loc:Tr Profiles_UnreadableTitle}"
+        Message="{Binding Catalog.UnreadableFilesMessage}"
+        IsOpen="{Binding Catalog.HasUnreadableFiles}"
+        IsClosable="False"
+        Severity="Warning" />
+
       <ItemsControl ItemsSource="{Binding Catalog.Items}" Focusable="False">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

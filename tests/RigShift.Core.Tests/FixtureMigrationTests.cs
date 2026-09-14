@@ -133,6 +133,6 @@ public sealed class FixtureMigrationTests : IDisposable
     {
         Directory.CreateDirectory(_directory);
         File.Copy(Fixture(fixture), Path.Combine(_directory, fixture));
-        return (await new JsonProfileStore(_directory, Logger.None).LoadAllAsync(Ct)).ShouldHaveSingleItem();
+        return (await new JsonProfileStore(_directory, Logger.None).LoadAllAsync(Ct)).Profiles.ShouldHaveSingleItem();
     }
 }

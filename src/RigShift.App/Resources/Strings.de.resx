@@ -10,6 +10,8 @@
   <data name="Profiles_OpenFolder" xml:space="preserve"><value>Profilordner öffnen</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
   <data name="Profiles_EmptyText" xml:space="preserve"><value>RigShift liest Profile aus {0}. Profildateien dorthin kopieren und „Neu laden" wählen.</value></data>
+  <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Einige Profile konnten nicht geladen werden</value></data>
+  <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) nicht lesbar: {1}. Eine Datei ist vielleicht in einem anderen Programm geöffnet, beschädigt oder von einer neueren RigShift-Version. Details stehen im Protokoll; „Neu laden“ versucht es erneut.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>

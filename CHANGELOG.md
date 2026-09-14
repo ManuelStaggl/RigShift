@@ -33,6 +33,10 @@ All notable changes to this project are documented here. The format follows
 - The Profiles page, the automation rules and the profile editor stay usable in a narrow window: titles, names and
   buttons wrap instead of overlapping or being cut off. Long profile names end with "…"; names can be 60 characters at
   most.
+- A profile file that is locked by another program (e.g. an editor or a virus scanner) no longer goes missing silently:
+  RigShift reads it even while another program has it open, tries again after a moment, and the Profiles page names
+  every file it could not read. `rigshift save` refuses to create a new profile while a file is unreadable, so it
+  cannot create a second profile with the same name.
 
 ### Security
 

@@ -22,6 +22,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     private readonly SettingsService _settings;
     private readonly ILogger _log;
     private IReadOnlyList<Profile> _profiles = [];
+    private IReadOnlyList<UnreadableProfileFile> _unreadable = [];
 
     public ProfileCatalog(
         IProfileStore store, IDisplayConfigurator display, ActiveProfileMatcher matcher, SettingsService settings, AppPaths paths, ILogger log)
@@ -54,6 +55,13 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     [ObservableProperty]
     public partial bool IsEmpty { get; set; }
+
+    /// <summary><c>true</c> if the last load skipped profile files (locked, broken or from a newer version).</summary>
+    [ObservableProperty]
+    public partial bool HasUnreadableFiles { get; set; }
+
+    [ObservableProperty]
+    public partial string? UnreadableFilesMessage { get; set; }
 
     public IReadOnlyList<Profile> Profiles => _profiles;
 
@@ -122,12 +130,15 @@ public sealed partial class ProfileCatalog : ObservableObject
     {
         try
         {
-            _profiles = await _store.LoadAllAsync(cancellationToken);
+            LoadResult result = await _store.LoadAllAsync(cancellationToken);
+            _profiles = result.Profiles;
+            _unreadable = result.Unreadable;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Profiles could not be loaded from {Directory}", ProfileDirectory);
             _profiles = [];
+            _unreadable = [];
         }
 
         Rebuild();
@@ -164,6 +175,10 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
 
         IsEmpty = Items.Count == 0;
+        HasUnreadableFiles = _unreadable.Count > 0;
+        UnreadableFilesMessage = HasUnreadableFiles
+            ? Loc.Format("Profiles_UnreadableFiles", _unreadable.Count, string.Join(", ", _unreadable.Select(f => f.FileName)))
+            : null;
         UpdateFlags();
         Changed?.Invoke(this, EventArgs.Empty);
     }

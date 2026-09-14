@@ -7,8 +7,11 @@ internal sealed class InMemoryProfileStore : IProfileStore
 {
     public List<Profile> Profiles { get; } = [];
 
-    public Task<IReadOnlyList<Profile>> LoadAllAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<Profile>>(Profiles.ToList());
+    /// <summary>Files the fake reports as unreadable, e.g. to simulate a locked profile file.</summary>
+    public List<UnreadableProfileFile> Unreadable { get; } = [];
+
+    public Task<LoadResult> LoadAllAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(new LoadResult(Profiles.ToList(), Unreadable.ToList()));
 
     public Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {

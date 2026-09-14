@@ -79,7 +79,7 @@ public sealed class CommandRunner
 
     private async Task<CliResponse> ListAsync(CancellationToken cancellationToken)
     {
-        IReadOnlyList<Profile> profiles = await _store.LoadAllAsync(cancellationToken);
+        IReadOnlyList<Profile> profiles = (await _store.LoadAllAsync(cancellationToken)).Profiles;
         if (profiles.Count == 0)
         {
             return new CliResponse(CliExitCodes.Applied, "No profiles.");
@@ -102,7 +102,7 @@ public sealed class CommandRunner
 
     private async Task<CliResponse> StatusAsync(CancellationToken cancellationToken)
     {
-        IReadOnlyList<Profile> profiles = await _store.LoadAllAsync(cancellationToken);
+        IReadOnlyList<Profile> profiles = (await _store.LoadAllAsync(cancellationToken)).Profiles;
         DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
         Profile? active = _matcher.FindActive(profiles, snapshot);
 
@@ -119,7 +119,7 @@ public sealed class CommandRunner
 
     private async Task<CliResponse> ApplyAsync(CliRequest request, CancellationToken cancellationToken)
     {
-        IReadOnlyList<Profile> profiles = await _store.LoadAllAsync(cancellationToken);
+        IReadOnlyList<Profile> profiles = (await _store.LoadAllAsync(cancellationToken)).Profiles;
         if (ProfileEditing.FindByName(profiles, request.ProfileName ?? string.Empty) is not { } profile)
         {
             return NotFound(request.ProfileName, profiles);
@@ -146,11 +146,21 @@ public sealed class CommandRunner
             return new CliResponse(CliExitCodes.InvalidArguments, "A profile name is required.");
         }
 
-        IReadOnlyList<Profile> profiles = await _store.LoadAllAsync(cancellationToken);
+        LoadResult loaded = await _store.LoadAllAsync(cancellationToken);
+        IReadOnlyList<Profile> profiles = loaded.Profiles;
+        Profile? existing = ProfileEditing.FindByName(profiles, name);
+        if (existing is null && !loaded.IsComplete)
+        {
+            // The profile may live in one of the unreadable files; saving now would create a second one with the same name.
+            string files = string.Join(", ", loaded.Unreadable.Select(f => f.FileName));
+            _log.Warning("Profile {Profile} not saved: not found and {Count} profile file(s) unreadable ({Files})", name, loaded.Unreadable.Count, files);
+            return new CliResponse(CliExitCodes.Failed, string.Create(CultureInfo.InvariantCulture,
+                $"Profile '{name}' not saved: {loaded.Unreadable.Count} profile file(s) could not be read ({files}). One of them may already contain this profile. Close the program using the file or fix it, then try again."));
+        }
+
         DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
         AudioEndpoint? playback = await DefaultPlaybackAsync(cancellationToken);
 
-        Profile? existing = ProfileEditing.FindByName(profiles, name);
         Profile profile = existing is null
             ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
             : existing with

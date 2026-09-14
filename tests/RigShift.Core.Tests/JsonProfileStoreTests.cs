@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
 using Serilog.Core;
@@ -32,7 +33,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         };
 
         await store.SaveAsync(rig, Ct);
-        IReadOnlyList<Profile> loaded = await store.LoadAllAsync(Ct);
+        IReadOnlyList<Profile> loaded = (await store.LoadAllAsync(Ct)).Profiles;
 
         Profile result = loaded.Single();
         result.ShouldBeEquivalentTo(rig);
@@ -62,7 +63,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         await store.SaveAsync(rig, Ct);
         await store.SaveAsync(rig with { Name = "Rig renamed" }, Ct);
 
-        (await store.LoadAllAsync(Ct)).Single().Name.ShouldBe("Rig renamed");
+        (await store.LoadAllAsync(Ct)).Profiles.Single().Name.ShouldBe("Rig renamed");
     }
 
     [Fact]
@@ -73,9 +74,50 @@ public sealed class JsonProfileStoreTests : IDisposable
         await File.WriteAllTextAsync(Path.Combine(_directory, "broken.json"), "{ not json", Ct);
         await File.WriteAllTextAsync(Path.Combine(_directory, "future.json"), "{\"schemaVersion\": 99, \"profile\": null}", Ct);
 
-        IReadOnlyList<Profile> loaded = await store.LoadAllAsync(Ct);
+        LoadResult loaded = await store.LoadAllAsync(Ct);
 
-        loaded.Single().Name.ShouldBe("Rig");
+        loaded.Profiles.Single().Name.ShouldBe("Rig");
+        loaded.Unreadable.Select(f => f.FileName).Order(StringComparer.Ordinal).ShouldBe(["broken.json", "future.json"]);
+        loaded.IsComplete.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Load_LockedFile_IsReportedNotSkippedSilently()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig();
+        Profile desk = Profile("Desk", DeskModes);
+        await store.SaveAsync(rig, Ct);
+        await store.SaveAsync(desk, Ct);
+        string lockedFile = Path.Combine(_directory, desk.Id.ToString("D") + ".json");
+
+        LoadResult loaded;
+        await using (new FileStream(lockedFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            loaded = await store.LoadAllAsync(Ct);
+        }
+
+        loaded.Profiles.Single().Name.ShouldBe("Rig");
+        loaded.Unreadable.ShouldHaveSingleItem().FileName.ShouldBe(desk.Id.ToString("D") + ".json");
+        (await store.LoadAllAsync(Ct)).IsComplete.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Load_FileOpenedByAnotherWriter_IsStillRead()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig();
+        await store.SaveAsync(rig, Ct);
+        string file = Path.Combine(_directory, rig.Id.ToString("D") + ".json");
+
+        LoadResult loaded;
+        await using (new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+        {
+            loaded = await store.LoadAllAsync(Ct);
+        }
+
+        loaded.Profiles.Single().Id.ShouldBe(rig.Id);
+        loaded.IsComplete.ShouldBeTrue();
     }
 
     [Fact]
@@ -89,7 +131,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         document["profile"]!.AsObject().Remove("apps").ShouldBeTrue();
         await File.WriteAllTextAsync(file, document.ToJsonString(), Ct);
 
-        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+        Profile loaded = (await store.LoadAllAsync(Ct)).Profiles.Single();
 
         loaded.Apps.ShouldNotBeNull();
         loaded.Apps.ShouldBeEmpty();
@@ -110,7 +152,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         profile.Remove("appsWaitSeconds").ShouldBeTrue();
         await File.WriteAllTextAsync(file, profile.Parent!.ToJsonString(), Ct);
 
-        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+        Profile loaded = (await store.LoadAllAsync(Ct)).Profiles.Single();
 
         loaded.Displays[0].Rotation.ShouldBe(DisplayRotation.Identity);
         loaded.Displays[0].Identity.FriendlyName.ShouldBe(string.Empty);
@@ -130,7 +172,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         document["profile"]!["audio"]!["playback"]!.AsObject().Remove("friendlyName").ShouldBeTrue();
         await File.WriteAllTextAsync(file, document.ToJsonString(), Ct);
 
-        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+        Profile loaded = (await store.LoadAllAsync(Ct)).Profiles.Single();
 
         loaded.Audio.Playback!.FriendlyName.ShouldBe(string.Empty);
     }
@@ -140,7 +182,7 @@ public sealed class JsonProfileStoreTests : IDisposable
     {
         var store = new JsonProfileStore(_directory, Logger.None);
 
-        (await store.LoadAllAsync(Ct)).ShouldBeEmpty();
+        (await store.LoadAllAsync(Ct)).Profiles.ShouldBeEmpty();
     }
 
     [Fact]
@@ -153,7 +195,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         await store.DeleteAsync(rig.Id, Ct);
         await store.DeleteAsync(Guid.NewGuid(), Ct);
 
-        (await store.LoadAllAsync(Ct)).ShouldBeEmpty();
+        (await store.LoadAllAsync(Ct)).Profiles.ShouldBeEmpty();
     }
 
     public void Dispose()

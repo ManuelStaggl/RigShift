@@ -9,11 +9,14 @@ namespace RigShift.Core.Storage;
 /// <summary>
 /// Profiles as one JSON file per profile: <c>&lt;directory&gt;\&lt;guid&gt;.json</c>, wrapped with a schema version.
 /// Plain .NET file I/O, therefore in Core and testable against a temp directory.
-/// A broken or newer-schema file is skipped with a warning instead of hiding every other profile.
+/// A broken, locked or newer-schema file is skipped with a warning instead of hiding every other profile, and reported in
+/// <see cref="LoadResult.Unreadable"/>.
 /// </summary>
 public sealed class JsonProfileStore : IProfileStore
 {
     public const int CurrentSchemaVersion = 1;
+
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(100);
 
     private readonly string _directory;
     private readonly ILogger _log;
@@ -30,31 +33,33 @@ public sealed class JsonProfileStore : IProfileStore
     public static string DefaultDirectory => Path.GetFullPath(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift", "profiles"));
 
-    public async Task<IReadOnlyList<Profile>> LoadAllAsync(CancellationToken cancellationToken)
+    public async Task<LoadResult> LoadAllAsync(CancellationToken cancellationToken)
     {
         if (!Directory.Exists(_directory))
         {
             _log.Information("Profile directory {Directory} does not exist yet", _directory);
-            return [];
+            return LoadResult.Empty;
         }
 
         var profiles = new List<Profile>();
+        var unreadable = new List<UnreadableProfileFile>();
         foreach (string file in Directory.EnumerateFiles(_directory, "*.json"))
         {
+            string name = Path.GetFileName(file);
             try
             {
-                await using FileStream stream = File.OpenRead(file);
-                ProfileDocument? document = await JsonSerializer.DeserializeAsync(
-                    stream, ProfileJsonContext.Default.ProfileDocument, cancellationToken);
+                ProfileDocument? document = await ReadWithRetryAsync(file, cancellationToken);
 
                 if (document?.Profile is null)
                 {
                     _log.Warning("Profile file {File} is empty, skipped", file);
+                    unreadable.Add(new UnreadableProfileFile(name, "The file contains no profile."));
                 }
                 else if (document.SchemaVersion > CurrentSchemaVersion)
                 {
                     _log.Warning("Profile file {File} has schema version {SchemaVersion} (supported: {Supported}), skipped",
                         file, document.SchemaVersion, CurrentSchemaVersion);
+                    unreadable.Add(new UnreadableProfileFile(name, "The file is from a newer RigShift version."));
                 }
                 else
                 {
@@ -64,11 +69,38 @@ public sealed class JsonProfileStore : IProfileStore
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
             {
                 _log.Warning(ex, "Profile file {File} could not be read, skipped", file);
+                unreadable.Add(new UnreadableProfileFile(name, ex.Message));
             }
         }
 
-        _log.Information("Loaded {Count} profiles from {Directory}", profiles.Count, _directory);
-        return profiles.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+        _log.Information("Loaded {Count} profiles from {Directory}, {Unreadable} file(s) unreadable",
+            profiles.Count, _directory, unreadable.Count);
+        return new LoadResult(profiles.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList(), unreadable);
+    }
+
+    /// <summary>
+    /// Opens without blocking writers or deleters (an editor or antivirus holding the file must not hide it) and tries a
+    /// second time after <see cref="RetryDelay"/>, because such locks are usually brief.
+    /// </summary>
+    private async Task<ProfileDocument?> ReadWithRetryAsync(string file, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ReadAsync(file, cancellationToken);
+        }
+        catch (IOException ex)
+        {
+            _log.Information(ex, "Profile file {File} is not readable right now, retrying in {Delay} ms", file, RetryDelay.TotalMilliseconds);
+            await Task.Delay(RetryDelay, cancellationToken);
+            return await ReadAsync(file, cancellationToken);
+        }
+    }
+
+    private static async Task<ProfileDocument?> ReadAsync(string file, CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(
+            file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, bufferSize: 4096, useAsync: true);
+        return await JsonSerializer.DeserializeAsync(stream, ProfileJsonContext.Default.ProfileDocument, cancellationToken);
     }
 
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)

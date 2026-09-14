@@ -165,6 +165,33 @@ public sealed class CommandRunnerTests
         _store.Profiles.Count.ShouldBe(2);
     }
 
+    [Fact]
+    public async Task Save_WhenLoadIncomplete_DoesNotCreateDuplicate()
+    {
+        _store.Unreadable.Add(new UnreadableProfileFile("locked.json", "The process cannot access the file."));
+        CommandRunner runner = Runner();
+        bool changed = false;
+        runner.ProfilesChanged += (_, _) => changed = true;
+
+        CliResponse response = await runner.RunAsync(new CliRequest { Command = CliCommand.Save, ProfileName = "Wheel" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("locked.json");
+        changed.ShouldBeFalse();
+        _store.Profiles.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Save_WhenLoadIncomplete_StillUpdatesAFoundProfile()
+    {
+        _store.Unreadable.Add(new UnreadableProfileFile("locked.json", "The process cannot access the file."));
+
+        CliResponse response = await Runner().RunAsync(new CliRequest { Command = CliCommand.Save, ProfileName = "Rig" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        _store.Profiles.Count.ShouldBe(2);
+    }
+
     private static CliRequest Apply(string name) => new() { Command = CliCommand.Apply, ProfileName = name };
 
     private static TopologyPlan EmptyPlan(Profile profile) => new() { Profile = profile, Resolved = [], Missing = [], Warnings = [] };
