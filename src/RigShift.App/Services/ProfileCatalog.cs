@@ -59,6 +59,26 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     public Profile? Find(Guid id) => _profiles.FirstOrDefault(p => p.Id == id);
 
+    /// <summary>Custom monitor names from the settings registry and the profiles.</summary>
+    public IReadOnlyDictionary<string, string> KnownDisplayNames => DisplayNames.Known(_profiles, _settings.Current.DisplayNames);
+
+    /// <summary>Names a monitor everywhere: in the settings registry and in every profile that contains it.</summary>
+    public async Task RenameDisplayAsync(string targetDevicePath, string? name, CancellationToken cancellationToken)
+    {
+        await _settings.UpdateAsync(s => s with { DisplayNames = DisplayNames.WithName(s.DisplayNames, targetDevicePath, name) }, cancellationToken);
+        IReadOnlyList<Profile> changed = DisplayNames.Rename(_profiles, targetDevicePath, name);
+        foreach (Profile profile in changed)
+        {
+            await _store.SaveAsync(profile, cancellationToken);
+        }
+
+        _log.Information("Display {Display} named {Name}; {Count} profile(s) updated", targetDevicePath, DisplayNames.Normalize(name) ?? "(none)", changed.Count);
+        if (changed.Count > 0)
+        {
+            await ReloadAsync(cancellationToken);
+        }
+    }
+
     /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -67,6 +87,18 @@ public sealed partial class ProfileCatalog : ObservableObject
         {
             await _store.SaveAsync(other, cancellationToken);
             _log.Information("Display names of profile {Profile} updated from {Source}", other.Name, profile.Name);
+        }
+
+        IReadOnlyDictionary<string, string>? registry = _settings.Current.DisplayNames;
+        IReadOnlyDictionary<string, string>? updated = registry;
+        foreach (DisplayAssignment display in profile.Displays)
+        {
+            updated = DisplayNames.WithName(updated, display.Identity.TargetDevicePath, display.CustomName);
+        }
+
+        if (!SameNames(registry, updated))
+        {
+            await _settings.UpdateAsync(s => s with { DisplayNames = updated }, cancellationToken);
         }
 
         await ReloadAsync(cancellationToken);
@@ -118,6 +150,10 @@ public sealed partial class ProfileCatalog : ObservableObject
         UpdateFlags();
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    private static bool SameNames(IReadOnlyDictionary<string, string>? a, IReadOnlyDictionary<string, string>? b) =>
+        (a?.Count ?? 0) == (b?.Count ?? 0)
+        && (a ?? new Dictionary<string, string>()).All(pair => b is not null && b.TryGetValue(pair.Key, out string? value) && value == pair.Value);
 
     private void Rebuild()
     {

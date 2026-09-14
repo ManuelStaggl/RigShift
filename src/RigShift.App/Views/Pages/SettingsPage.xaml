@@ -64,40 +64,7 @@
       </ui:CardControl>
 
       <ui:CardControl Margin="0,0,0,8" Header="{loc:Tr Settings_Folders}" Icon="{ui:SymbolIcon FolderOpen24}">
-        <StackPanel Orientation="Horizontal">
-          <ui:Button Margin="0,0,8,0" Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr Profiles_OpenFolder}" />
-          <ui:Button Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Settings_OpenLogs}" />
-        </StackPanel>
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{Binding VersionText}" />
-            <TextBlock
-              AutomationProperties.LiveSetting="Polite"
-              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-              Text="{Binding UpdateStatusText}"
-              TextWrapping="Wrap" />
-            <StackPanel Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Margin="0,8,0,0" Text="{Binding ReleaseNotesText}" TextWrapping="Wrap" />
-              <TextBlock Margin="0,4,0,0">
-                <Hyperlink Command="{Binding OpenReleaseNotesCommand}">
-                  <Run Text="{loc:Tr Settings_ReleaseNotesLink}" />
-                </Hyperlink>
-              </TextBlock>
-            </StackPanel>
-          </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:Button
-            Margin="0,0,8,0"
-            Appearance="Primary"
-            Command="{Binding InstallUpdateNowCommand}"
-            Content="{loc:Tr Settings_RestartToUpdate}"
-            Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
-          <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
-        </StackPanel>
+        <ui:Button Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr Profiles_OpenFolder}" />
       </ui:CardControl>
 
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowDownload24}">

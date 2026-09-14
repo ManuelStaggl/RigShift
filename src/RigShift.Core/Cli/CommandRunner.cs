@@ -109,7 +109,7 @@ public sealed class CommandRunner
         var text = new StringBuilder();
         text.AppendLine(CultureInfo.InvariantCulture, $"Active profile: {active?.Name ?? "none"}");
         text.Append("Active displays:");
-        foreach (DisplayAssignment display in ProfileEditing.CurrentArrangement(snapshot, [], profiles))
+        foreach (DisplayAssignment display in ProfileEditing.CurrentArrangement(snapshot, [], DisplayNames.Known(profiles)))
         {
             text.AppendLine().Append("  ").Append(Describe(display));
         }
@@ -152,10 +152,10 @@ public sealed class CommandRunner
 
         Profile? existing = ProfileEditing.FindByName(profiles, name);
         Profile profile = existing is null
-            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, profiles)
+            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
             : existing with
             {
-                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays, profiles),
+                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
                 Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
             };
 

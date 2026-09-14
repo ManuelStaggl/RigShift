@@ -36,12 +36,23 @@ public static class DisplayNames
         return string.IsNullOrEmpty(trimmed) ? null : trimmed[..Math.Min(trimmed.Length, MaxCustomNameLength)].TrimEnd();
     }
 
-    /// <summary>Custom names by target device path, collected from all profiles.</summary>
-    public static IReadOnlyDictionary<string, string> Known(IEnumerable<Profile> profiles)
+    /// <summary>
+    /// Custom names by target device path: from the <paramref name="registry"/> of the settings first, then from the
+    /// profiles.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> Known(IEnumerable<Profile> profiles, IReadOnlyDictionary<string, string>? registry = null)
     {
         ArgumentNullException.ThrowIfNull(profiles);
 
         var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach ((string path, string value) in registry ?? new Dictionary<string, string>())
+        {
+            if (Normalize(value) is { } name)
+            {
+                names.TryAdd(path, name);
+            }
+        }
+
         foreach (DisplayAssignment display in profiles.SelectMany(p => p.Displays))
         {
             if (Normalize(display.CustomName) is { } name)
@@ -51,6 +62,41 @@ public static class DisplayNames
         }
 
         return names;
+    }
+
+    /// <summary>The registry with <paramref name="name"/> set for <paramref name="targetDevicePath"/>, or removed when blank.</summary>
+    public static IReadOnlyDictionary<string, string> WithName(
+        IReadOnlyDictionary<string, string>? registry, string targetDevicePath, string? name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetDevicePath);
+
+        var names = new Dictionary<string, string>(registry ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase);
+        if (Normalize(name) is { } normalized)
+        {
+            names[targetDevicePath] = normalized;
+        }
+        else
+        {
+            names.Remove(targetDevicePath);
+        }
+
+        return names;
+    }
+
+    /// <summary>The profiles that contain the monitor under another name, with <paramref name="name"/> adopted.</summary>
+    public static IReadOnlyList<Profile> Rename(IEnumerable<Profile> profiles, string targetDevicePath, string? name)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetDevicePath);
+
+        string? normalized = Normalize(name);
+        return profiles
+            .Where(p => p.Displays.Any(d => IsSame(d, targetDevicePath) && Normalize(d.CustomName) != normalized))
+            .Select(p => p with
+            {
+                Displays = p.Displays.Select(d => IsSame(d, targetDevicePath) ? d with { CustomName = normalized } : d).ToList(),
+            })
+            .ToList();
     }
 
     /// <summary>
@@ -93,4 +139,7 @@ public static class DisplayNames
 
         return changed;
     }
+
+    private static bool IsSame(DisplayAssignment display, string targetDevicePath) =>
+        string.Equals(display.Identity.TargetDevicePath, targetDevicePath, StringComparison.OrdinalIgnoreCase);
 }

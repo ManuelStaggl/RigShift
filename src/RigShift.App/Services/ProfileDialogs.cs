@@ -60,7 +60,7 @@ public sealed class ProfileDialogs
         IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
         string name = ProfileEditing.UniqueName(Loc.Instance["Editor_NewName"], _catalog.Profiles.Select(p => p.Name));
         AudioEndpoint? defaultPlayback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
-        Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, _catalog.Profiles);
+        Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, _catalog.KnownDisplayNames);
 
         return await ShowAsync(profile, isNew: true, playback);
     }

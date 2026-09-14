@@ -55,11 +55,37 @@ public sealed class DisplayNamesTests
         Profile named = Profile("Named", [DeskModes[0] with { CustomName = "Main" }, DeskModes[1] with { CustomName = "Left" }]);
 
         IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CurrentArrangement(
-            DeskActive(), [DeskModes[1] with { CustomName = "Links" }], [named]);
+            DeskActive(), [DeskModes[1] with { CustomName = "Links" }], DisplayNames.Known([named]));
 
         arrangement.Single(d => d.Identity == Desk4K).CustomName.ShouldBe("Main");
         arrangement.Single(d => d.Identity == DeskLeft).CustomName.ShouldBe("Links");
         arrangement.Single(d => d.Identity == DeskRight).CustomName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Known_PrefersTheRegistry_AndCoversMonitorsInNoProfile()
+    {
+        Profile profile = Profile("P", [DeskModes[1] with { CustomName = "Left" }]);
+        IReadOnlyDictionary<string, string> registry = DisplayNames.WithName(
+            DisplayNames.WithName(null, DeskLeft.TargetDevicePath, "Links"), Ultrawide.TargetDevicePath, "Rig");
+
+        IReadOnlyDictionary<string, string> known = DisplayNames.Known([profile], registry);
+
+        known[DeskLeft.TargetDevicePath].ShouldBe("Links");
+        known[Ultrawide.TargetDevicePath].ShouldBe("Rig");
+        DisplayNames.WithName(registry, Ultrawide.TargetDevicePath, " ").ContainsKey(Ultrawide.TargetDevicePath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Rename_ChangesOnlyProfilesWithTheMonitor()
+    {
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+
+        IReadOnlyList<Profile> changed = DisplayNames.Rename([desk, rig], DeskLeft.TargetDevicePath, " Left ");
+
+        changed.ShouldHaveSingleItem().Displays.Single(d => d.Identity == DeskLeft).CustomName.ShouldBe("Left");
+        DisplayNames.Rename(changed, DeskLeft.TargetDevicePath, "Left").ShouldBeEmpty();
     }
 
     [Fact]

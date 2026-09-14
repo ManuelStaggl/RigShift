@@ -8,8 +8,9 @@ namespace RigShift.Core.Profiles;
 /// </summary>
 public static class ProfileEditing
 {
-    /// <summary>A new profile from the displays that are active right now, with names known from <paramref name="known"/>.</summary>
-    public static Profile Capture(string name, DisplaySnapshot snapshot, AudioAssignment? audio = null, IEnumerable<Profile>? known = null)
+    /// <summary>A new profile from the displays that are active right now, with the custom names in <paramref name="knownNames"/>.</summary>
+    public static Profile Capture(
+        string name, DisplaySnapshot snapshot, AudioAssignment? audio = null, IReadOnlyDictionary<string, string>? knownNames = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
@@ -17,7 +18,7 @@ public static class ProfileEditing
         {
             Id = Guid.NewGuid(),
             Name = name.Trim(),
-            Displays = CurrentArrangement(snapshot, [], known),
+            Displays = CurrentArrangement(snapshot, [], knownNames),
             Audio = audio ?? new AudioAssignment(),
         };
     }
@@ -25,16 +26,16 @@ public static class ProfileEditing
     /// <summary>
     /// The active displays with their current mode and position, left to right. Displays that were optional in
     /// <paramref name="previous"/> stay optional, unless they are the primary one. Custom names come from
-    /// <paramref name="previous"/> or, for displays not in it, from the profiles in <paramref name="known"/>.
+    /// <paramref name="previous"/> or, for displays not in it, from <paramref name="knownNames"/> (<see cref="DisplayNames.Known"/>).
     /// </summary>
     public static IReadOnlyList<DisplayAssignment> CurrentArrangement(
-        DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous, IEnumerable<Profile>? known = null)
+        DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous, IReadOnlyDictionary<string, string>? knownNames = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(previous);
 
         List<DisplayAssignment> before = previous.ToList();
-        var names = new Dictionary<string, string>(DisplayNames.Known(known ?? []), StringComparer.OrdinalIgnoreCase);
+        var names = new Dictionary<string, string>(knownNames ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase);
         foreach (DisplayAssignment display in before)
         {
             if (DisplayNames.Normalize(display.CustomName) is { } name)

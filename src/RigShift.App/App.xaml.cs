@@ -223,10 +223,12 @@ public partial class App : Application, IAppShell
         services.AddSingleton<TrayPopupView>();
         services.AddSingleton<ProfilesViewModel>();
         services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<DiagnosticsViewModel>();
+        services.AddSingleton<DisplaysViewModel>();
+        services.AddSingleton<AboutViewModel>();
         services.AddSingleton<ProfilesPage>();
         services.AddSingleton<SettingsPage>();
-        services.AddSingleton<DiagnosticsPage>();
+        services.AddSingleton<DisplaysPage>();
+        services.AddSingleton<AboutPage>();
         services.AddSingleton<MainWindow>();
     }
 

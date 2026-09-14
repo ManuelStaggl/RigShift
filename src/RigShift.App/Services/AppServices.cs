@@ -84,6 +84,21 @@ public sealed record SwitchRecord(
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
     public string Details => Message ?? string.Join(", ", MissingDisplays);
+
+    public bool HasDetails => !string.IsNullOrEmpty(Details);
+
+    public string TimeText => At.ToLocalTime().ToString("T", Loc.Instance.Culture);
+
+    public string DurationText => Loc.Format("About_Duration", Duration.TotalSeconds.ToString("0.0", Loc.Instance.Culture));
+
+    public Wpf.Ui.Controls.SymbolRegular Symbol => Outcome switch
+    {
+        SwitchOutcome.Applied or SwitchOutcome.AppliedPartially => Wpf.Ui.Controls.SymbolRegular.CheckmarkCircle24,
+        SwitchOutcome.RolledBack => Wpf.Ui.Controls.SymbolRegular.ArrowUndo24,
+        SwitchOutcome.Blocked => Wpf.Ui.Controls.SymbolRegular.Warning24,
+        SwitchOutcome.DryRun => Wpf.Ui.Controls.SymbolRegular.Eye24,
+        _ => Wpf.Ui.Controls.SymbolRegular.ErrorCircle24,
+    };
 }
 
 /// <summary>User-facing texts for switch results and plans.</summary>

@@ -37,12 +37,16 @@
       <ui:NavigationView.MenuItems>
         <ui:NavigationViewItem
           Content="{loc:Tr Nav_Profiles}"
-          Icon="{ui:SymbolIcon Desktop24}"
+          Icon="{ui:SymbolIcon Layer24}"
           TargetPageType="{x:Type pages:ProfilesPage}" />
         <ui:NavigationViewItem
-          Content="{loc:Tr Nav_Diagnostics}"
-          Icon="{ui:SymbolIcon Pulse24}"
-          TargetPageType="{x:Type pages:DiagnosticsPage}" />
+          Content="{loc:Tr Nav_Displays}"
+          Icon="{ui:SymbolIcon DesktopMac24}"
+          TargetPageType="{x:Type pages:DisplaysPage}" />
+        <ui:NavigationViewItem
+          Content="{loc:Tr Nav_About}"
+          Icon="{ui:SymbolIcon Info24}"
+          TargetPageType="{x:Type pages:AboutPage}" />
       </ui:NavigationView.MenuItems>
       <ui:NavigationView.FooterMenuItems>
         <ui:NavigationViewItem
