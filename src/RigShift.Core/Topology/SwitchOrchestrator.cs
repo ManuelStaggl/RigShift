@@ -102,6 +102,8 @@ public sealed class SwitchOrchestrator
 
         if (request.DryRun)
         {
+            _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms",
+                profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
             return Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
         }
 
