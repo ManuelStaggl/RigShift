@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows.Input;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
@@ -24,6 +25,31 @@ public partial class ProfileEditorWindow : FluentWindow
             NameBox.Focus();
             NameBox.SelectAll();
         };
+    }
+
+    private void OnBrowseApp(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.FrameworkElement { DataContext: AppEditItem item })
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = Localization.Loc.Instance["App_FileFilter"],
+            Title = Localization.Loc.Instance["App_Browse"],
+        };
+
+        string current = Environment.ExpandEnvironmentVariables(item.Path.Trim().Trim('"'));
+        if (Path.IsPathFullyQualified(current) && Path.GetDirectoryName(current) is { } folder && Directory.Exists(folder))
+        {
+            dialog.InitialDirectory = folder;
+        }
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            item.Path = dialog.FileName;
+        }
     }
 
     /// <summary>

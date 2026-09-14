@@ -14,6 +14,9 @@ public sealed record SwitchOptions
 
     /// <summary>Hard cap on SetDisplayConfig calls per apply phase (each cycle uses two: stored modes, database modes).</summary>
     public int MaxApplyAttempts { get; init; } = 40;
+
+    /// <summary>How long an app may take to close after its windows were asked to, before it is ended.</summary>
+    public TimeSpan AppStopGrace { get; init; } = TimeSpan.FromSeconds(5);
 }
 
 /// <summary>Per-call switches, e.g. from the CLI (<c>--dry-run</c>, <c>--no-confirm</c>).</summary>

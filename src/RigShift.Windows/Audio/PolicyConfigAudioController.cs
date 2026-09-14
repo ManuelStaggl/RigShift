@@ -104,9 +104,7 @@ public sealed class PolicyConfigAudioController : IAudioController
         var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
         try
         {
-            enumerator.GetDevice(endpoint.EndpointId, out IMMDevice device);
-            device.Activate(typeof(IAudioEndpointVolume).GUID, CLSCTX.CLSCTX_ALL, null, out object activated);
-            var volume = (IAudioEndpointVolume)activated;
+            IAudioEndpointVolume volume = ActivateVolume(enumerator, endpoint);
             volume.SetMasterVolumeLevelScalar(Math.Clamp(percent, 0, 100) / 100f, Guid.Empty);
             _log.Information("Volume of {Device} set to {Volume} %", endpoint.FriendlyName, percent);
         }
@@ -116,6 +114,32 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
 
         return Task.CompletedTask;
+    }
+
+    public Task<int> GetVolumeAsync(AudioEndpoint endpoint, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+        try
+        {
+            IAudioEndpointVolume volume = ActivateVolume(enumerator, endpoint);
+            volume.GetMasterVolumeLevelScalar(out float level);
+            int percent = (int)Math.Round(level * 100);
+            _log.Debug("Volume of {Device} is {Volume} %", endpoint.FriendlyName, percent);
+            return Task.FromResult(percent);
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(enumerator);
+        }
+    }
+
+    private static IAudioEndpointVolume ActivateVolume(IMMDeviceEnumerator enumerator, AudioEndpoint endpoint)
+    {
+        enumerator.GetDevice(endpoint.EndpointId, out IMMDevice device);
+        device.Activate(typeof(IAudioEndpointVolume).GUID, CLSCTX.CLSCTX_ALL, null, out object activated);
+        return (IAudioEndpointVolume)activated;
     }
 
     private bool IsActive(AudioEndpoint endpoint)

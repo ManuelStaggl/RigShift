@@ -18,9 +18,11 @@ public sealed class SwitchOrchestratorTests
 {
     private static readonly AudioEndpoint Headphones = new("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000001}", "Headphones");
     private static readonly AudioEndpoint Speakers = new("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000002}", "Speakers");
+    private static readonly AudioEndpoint Microphone = new("{0.0.1.00000000}.{00000000-0000-0000-0000-000000000003}", "Microphone");
 
     private readonly AutoAdvanceTimeProvider _time = new();
     private readonly IAudioController _audio = Substitute.For<IAudioController>();
+    private readonly IAppLauncher _apps = Substitute.For<IAppLauncher>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -351,6 +353,135 @@ public sealed class SwitchOrchestratorTests
         });
     }
 
+    [Fact]
+    public async Task Switch_SetsPlaybackAndRecordingVolume()
+    {
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment
+        {
+            Playback = Headphones,
+            PlaybackVolumePercent = 40,
+            Recording = Microphone,
+            RecordingVolumePercent = 80,
+        }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(1).SetVolumeAsync(Headphones, 40, Arg.Any<CancellationToken>());
+        await _audio.Received(1).SetVolumeAsync(Microphone, 80, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_VolumeWithoutDevice_IsIgnored()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { RecordingVolumePercent = 80 }), SwitchRequest.Default, Ct);
+
+        await _audio.DidNotReceiveWithAnyArgs().SetVolumeAsync(default!, default, default);
+    }
+
+    [Fact]
+    public async Task Switch_Rollback_RestoresPreviousVolume()
+    {
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _audio.GetVolumeAsync(Headphones, Arg.Any<CancellationToken>()).Returns(65);
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirmSeconds: 15, audio: new AudioAssignment { Playback = Headphones, PlaybackVolumePercent = 40 }), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        Received.InOrder(() =>
+        {
+            _audio.SetVolumeAsync(Headphones, 40, Arg.Any<CancellationToken>());
+            _audio.SetVolumeAsync(Headphones, 65, Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public async Task Switch_RunsAppsInOrder_AfterConfirmation_AndWaits()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+        _apps.IsRunning("C:\\Tools\\Discord.exe").Returns(true);
+        _apps.StopAsync(default!, default, default).ReturnsForAnyArgs(true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig(confirmSeconds: 15) with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe", Arguments = "--minimized", WaitSeconds = 3 },
+                new AppAction { Kind = AppActionKind.Stop, Path = "C:\\Tools\\Discord.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        Received.InOrder(() =>
+        {
+            _confirmation.ConfirmAsync(rig, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            _apps.Start("C:\\SimHub\\SimHubWPF.exe", "--minimized");
+            _apps.StopAsync("C:\\Tools\\Discord.exe", TimeSpan.FromSeconds(5), Arg.Any<CancellationToken>());
+        });
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task Switch_DoesNotStartRunningApp_OrStopMissingOne()
+    {
+        _apps.IsRunning("C:\\SimHub\\SimHubWPF.exe").Returns(true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe", WaitSeconds = 10 },
+                new AppAction { Kind = AppActionKind.Stop, Path = "C:\\Tools\\Discord.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
+        await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task Switch_AppFailure_ContinuesAndReportsIncomplete()
+    {
+        _apps.When(a => a.Start("C:\\Missing\\Tool.exe", Arg.Any<string?>())).Throw(new InvalidOperationException("not found"));
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps = [new AppAction { Path = "C:\\Missing\\Tool.exe" }, new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Apps.ShouldBe(AppsOutcome.Incomplete);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+    }
+
+    [Fact]
+    public async Task Switch_NotConfirmed_RunsNoApps()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig(confirmSeconds: 15) with { Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }] };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        result.Apps.ShouldBe(AppsOutcome.NotConfigured);
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
+    }
+
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()), options ?? new SwitchOptions(), _time, Logger.None);
+        new(display, _audio, _apps, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()), options ?? new SwitchOptions(), _time, Logger.None);
 }

@@ -174,4 +174,21 @@
   <data name="Hotkey_Failed" xml:space="preserve"><value>Another app uses the keyboard shortcut of these profiles, so it does not work: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Ctrl</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Shift</value></data>
+  <data name="Audio_SetVolume" xml:space="preserve"><value>Set volume</value></data>
+  <data name="Audio_VolumeValue" xml:space="preserve"><value>{0} %</value></data>
+  <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
+  <data name="Editor_AppsHint" xml:space="preserve"><value>Run in this order once the switch is confirmed. Start skips apps that are already running. Stop closes the app and ends it if it is still running after 5 seconds.</value></data>
+  <data name="Editor_AddApp" xml:space="preserve"><value>Add app</value></data>
+  <data name="App_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="App_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="App_Action" xml:space="preserve"><value>Action</value></data>
+  <data name="App_Path" xml:space="preserve"><value>Program</value></data>
+  <data name="App_PathPlaceholder" xml:space="preserve"><value>Path to the .exe file</value></data>
+  <data name="App_Browse" xml:space="preserve"><value>Choose program</value></data>
+  <data name="App_Arguments" xml:space="preserve"><value>Arguments (optional)</value></data>
+  <data name="App_Wait" xml:space="preserve"><value>Wait afterwards (seconds)</value></data>
+  <data name="App_Remove" xml:space="preserve"><value>Remove app</value></data>
+  <data name="App_FileFilter" xml:space="preserve"><value>Programs (*.exe)|*.exe|All files (*.*)|*.*</value></data>
+  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a program for every app.</value></data>
+  <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
 </root>

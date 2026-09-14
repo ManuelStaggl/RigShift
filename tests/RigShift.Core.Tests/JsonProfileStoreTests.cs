@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
 using Serilog.Core;
@@ -21,7 +22,14 @@ public sealed class JsonProfileStoreTests : IDisposable
         {
             Playback = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000001}", "Headphones"),
             PlaybackVolumePercent = 40,
-        }) with { Icon = "rig", Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 } };
+            RecordingVolumePercent = 75,
+        }) with
+        {
+            Icon = "rig",
+            Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 },
+            // A List, like the deserializer creates: Shouldly compares the collection type too.
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Stop, Path = "%ProgramFiles%\\SimHub\\SimHubWPF.exe", Arguments = "-x", WaitSeconds = 2 } },
+        };
 
         await store.SaveAsync(rig, Ct);
         IReadOnlyList<Profile> loaded = await store.LoadAllAsync(Ct);
@@ -68,6 +76,23 @@ public sealed class JsonProfileStoreTests : IDisposable
         IReadOnlyList<Profile> loaded = await store.LoadAllAsync(Ct);
 
         loaded.Single().Name.ShouldBe("Rig");
+    }
+
+    [Fact]
+    public async Task Load_ProfileFromVersion1_2_HasNoApps()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig();
+        await store.SaveAsync(rig, Ct);
+        string file = Path.Combine(_directory, rig.Id.ToString("D") + ".json");
+        JsonNode document = JsonNode.Parse(await File.ReadAllTextAsync(file, Ct))!;
+        document["profile"]!.AsObject().Remove("apps").ShouldBeTrue();
+        await File.WriteAllTextAsync(file, document.ToJsonString(), Ct);
+
+        Profile loaded = (await store.LoadAllAsync(Ct)).Single();
+
+        loaded.Apps.ShouldNotBeNull();
+        loaded.Apps.ShouldBeEmpty();
     }
 
     [Fact]

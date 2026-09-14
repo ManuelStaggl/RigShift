@@ -18,6 +18,20 @@ public sealed record SwitchResult
 
     /// <summary>Audio is judged separately: an audio problem never fails the display switch.</summary>
     public AudioOutcome Audio { get; init; } = AudioOutcome.NotConfigured;
+
+    /// <summary>Apps are judged separately too; they only run after a confirmed switch.</summary>
+    public AppsOutcome Apps { get; init; } = AppsOutcome.NotConfigured;
+}
+
+public enum AppsOutcome
+{
+    /// <summary>The profile has no apps, or they were not reached (rollback, failure, dry run).</summary>
+    NotConfigured,
+
+    Applied,
+
+    /// <summary>At least one app could not be started or ended; see the log.</summary>
+    Incomplete,
 }
 
 public enum AudioOutcome

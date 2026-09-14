@@ -192,6 +192,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", Log.Logger));
         services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
+        services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());

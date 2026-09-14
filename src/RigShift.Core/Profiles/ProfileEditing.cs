@@ -131,6 +131,11 @@ public static class ProfileEditing
             }
         }
 
+        if (profile.Apps.Any(a => string.IsNullOrWhiteSpace(a.Path)))
+        {
+            problems.Add(ProfileProblem.AppPathMissing);
+        }
+
         if (profile.Displays.Count == 0)
         {
             problems.Add(ProfileProblem.NoDisplays);
@@ -167,4 +172,7 @@ public enum ProfileProblem
 
     /// <summary>Another profile uses the same key combination.</summary>
     HotkeyTaken,
+
+    /// <summary>An app entry has no program.</summary>
+    AppPathMissing,
 }

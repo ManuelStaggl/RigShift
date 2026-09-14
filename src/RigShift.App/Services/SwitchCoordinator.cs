@@ -100,7 +100,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _log.Error(ex, "Switch to {Profile} threw", profile.Name);
             if (!dryRun)
             {
-                Complete(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, 0,
+                Complete(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 0,
                     _time.GetLocalNow() - started, null, ex.Message, []));
             }
 
@@ -172,7 +172,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             : null;
 
     private static SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
-        new(started, profile.Name, result.Outcome, result.Audio, result.Attempts, result.Duration, result.LastNativeError, result.Message,
+        new(started, profile.Name, result.Outcome, result.Audio, result.Apps, result.Attempts, result.Duration, result.LastNativeError, result.Message,
             result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment.Identity)).ToList());
 
     private void Complete(SwitchRecord record)

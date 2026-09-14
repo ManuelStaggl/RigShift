@@ -17,8 +17,11 @@ public sealed record AudioAssignment
 
     public AudioEndpoint? RecordingCommunications { get; init; }
 
-    /// <summary>Target volume in percent for the playback device (v1.1). <c>null</c> leaves volume unchanged.</summary>
+    /// <summary>Target volume in percent for the playback device. <c>null</c> leaves volume unchanged.</summary>
     public int? PlaybackVolumePercent { get; init; }
+
+    /// <summary>Target level in percent for the recording device. <c>null</c> leaves it unchanged.</summary>
+    public int? RecordingVolumePercent { get; init; }
 }
 
 public sealed record AudioEndpoint(string EndpointId, string FriendlyName);

@@ -26,4 +26,10 @@ public sealed record Profile
 
     /// <summary>System-wide key combination that switches to this profile while the tray app runs; <c>null</c> for none.</summary>
     public Hotkey? Hotkey { get; init; }
+
+    /// <summary>
+    /// Programs to start or end, in order, after the switch is confirmed. <c>set</c> instead of <c>init</c>: the JSON
+    /// source generator skips the initializer of an <c>init</c> property when the key is missing (profiles before 1.3).
+    /// </summary>
+    public IReadOnlyList<AppAction> Apps { get; set; } = [];
 }

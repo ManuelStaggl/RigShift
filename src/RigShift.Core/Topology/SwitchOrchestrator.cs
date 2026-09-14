@@ -6,7 +6,7 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// Runs one profile switch: plan → wait for sleeping targets → apply with retry → audio → confirm → rollback.
+/// Runs one profile switch: plan → wait for sleeping targets → apply with retry → audio → confirm → rollback or apps.
 /// State machine and rationale: docs/PLAN.md section 4.3; hard rules: docs/display-topology.md.
 /// </summary>
 public sealed class SwitchOrchestrator
@@ -25,6 +25,7 @@ public sealed class SwitchOrchestrator
 
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
+    private readonly IAppLauncher _apps;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
@@ -34,6 +35,7 @@ public sealed class SwitchOrchestrator
     public SwitchOrchestrator(
         IDisplayConfigurator display,
         IAudioController audio,
+        IAppLauncher apps,
         ISwitchConfirmation confirmation,
         TopologyPlanner planner,
         SwitchOptions options,
@@ -42,6 +44,7 @@ public sealed class SwitchOrchestrator
     {
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
+        ArgumentNullException.ThrowIfNull(apps);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(options);
@@ -50,6 +53,7 @@ public sealed class SwitchOrchestrator
 
         _display = display;
         _audio = audio;
+        _apps = apps;
         _confirmation = confirmation;
         _planner = planner;
         _options = options;
@@ -85,9 +89,9 @@ public sealed class SwitchOrchestrator
 
         int confirmSeconds = profile.ConfirmTimeoutSeconds ?? request.DefaultConfirmTimeoutSeconds;
         bool confirm = confirmSeconds > 0 && !request.SkipConfirmation;
-        IReadOnlyList<AudioRestore> audioRestore = confirm
-            ? await CaptureAudioDefaultsAsync(profile.Audio, cancellationToken)
-            : [];
+        AudioRestore audioRestore = confirm
+            ? await CaptureAudioAsync(profile.Audio, cancellationToken)
+            : AudioRestore.Nothing;
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -118,9 +122,12 @@ public sealed class SwitchOrchestrator
             }
         }
 
+        // Only now: a rejected switch must not have started programs or closed someone's work.
+        AppsOutcome apps = await RunAppsAsync(profile.Apps, cancellationToken);
+
         SwitchOutcome outcome = plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
-        _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, {Attempts} attempts",
-            profile.Name, outcome, audio, applied.Attempts);
+        _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts",
+            profile.Name, outcome, audio, apps, applied.Attempts);
         return Finish(new SwitchResult
         {
             Outcome = outcome,
@@ -128,6 +135,7 @@ public sealed class SwitchOrchestrator
             Attempts = applied.Attempts,
             LastNativeError = applied.LastNativeError,
             Audio = audio,
+            Apps = apps,
         }, started);
     }
 
@@ -169,7 +177,7 @@ public sealed class SwitchOrchestrator
 
     private async Task<SwitchResult> RollBackAsync(
         DisplaySnapshot before,
-        IReadOnlyList<AudioRestore> audioRestore,
+        AudioRestore audioRestore,
         TopologyPlan plan,
         ApplyOutcome applied,
         AudioOutcome audio,
@@ -382,20 +390,99 @@ public sealed class SwitchOrchestrator
             complete &= await TrySetDefaultAsync(step.Endpoint, step.Roles, cancellationToken);
         }
 
-        if (audio.Playback is { } playback && audio.PlaybackVolumePercent is { } volume)
+        foreach ((AudioEndpoint endpoint, int percent) in VolumeSteps(audio))
         {
-            try
-            {
-                await _audio.SetVolumeAsync(playback, volume, cancellationToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _log.Warning(ex, "Setting volume of {Device} to {Volume} % failed", playback.FriendlyName, volume);
-                complete = false;
-            }
+            complete &= await TrySetVolumeAsync(endpoint, percent, cancellationToken);
         }
 
         return complete ? AudioOutcome.Applied : AudioOutcome.Incomplete;
+    }
+
+    /// <summary>A volume belongs to the chosen device, so it is only set together with one.</summary>
+    private static List<(AudioEndpoint Endpoint, int Percent)> VolumeSteps(AudioAssignment audio)
+    {
+        var steps = new List<(AudioEndpoint, int)>();
+        if (audio.Playback is { } playback && audio.PlaybackVolumePercent is { } playbackVolume)
+        {
+            steps.Add((playback, playbackVolume));
+        }
+
+        if (audio.Recording is { } recording && audio.RecordingVolumePercent is { } recordingVolume)
+        {
+            steps.Add((recording, recordingVolume));
+        }
+
+        return steps;
+    }
+
+    private async Task<bool> TrySetVolumeAsync(AudioEndpoint endpoint, int percent, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _audio.SetVolumeAsync(endpoint, percent, cancellationToken);
+            return true;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Setting volume of {Device} to {Volume} % failed", endpoint.FriendlyName, percent);
+            return false;
+        }
+    }
+
+    private async Task<AppsOutcome> RunAppsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
+    {
+        if (apps.Count == 0)
+        {
+            return AppsOutcome.NotConfigured;
+        }
+
+        bool complete = true;
+        foreach (AppAction app in apps)
+        {
+            try
+            {
+                bool running = _apps.IsRunning(app.Path);
+                if (app.Kind == AppActionKind.Start && running)
+                {
+                    _log.Information("App {App} already runs, not started", app.Path);
+                    continue;
+                }
+
+                if (app.Kind == AppActionKind.Stop && !running)
+                {
+                    _log.Information("App {App} does not run, nothing to end", app.Path);
+                    continue;
+                }
+
+                if (app.Kind == AppActionKind.Start)
+                {
+                    _apps.Start(app.Path, app.Arguments);
+                    _log.Information("App {App} started", app.Path);
+                }
+                else if (await _apps.StopAsync(app.Path, _options.AppStopGrace, cancellationToken))
+                {
+                    _log.Information("App {App} ended", app.Path);
+                }
+                else
+                {
+                    _log.Warning("App {App} could not be ended", app.Path);
+                    complete = false;
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.Warning(ex, "{Action} of app {App} failed", app.Kind, app.Path);
+                complete = false;
+                continue;
+            }
+
+            if (app.WaitSeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(app.WaitSeconds), _time, cancellationToken);
+            }
+        }
+
+        return complete ? AppsOutcome.Applied : AppsOutcome.Incomplete;
     }
 
     private static List<AudioStep> AudioSteps(AudioAssignment audio)
@@ -450,12 +537,13 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Remembers the current default device per direction the profile changes, so a rollback can restore it.
-    /// The OS reports one default per direction; it is restored for every role the switch touched.
+    /// Remembers the current default device per direction the profile changes, and the volume of every device whose
+    /// volume it sets, so a rollback can restore them. The OS reports one default per direction; it is restored for
+    /// every role the switch touched.
     /// </summary>
-    private async Task<IReadOnlyList<AudioRestore>> CaptureAudioDefaultsAsync(AudioAssignment audio, CancellationToken cancellationToken)
+    private async Task<AudioRestore> CaptureAudioAsync(AudioAssignment audio, CancellationToken cancellationToken)
     {
-        var restore = new List<AudioRestore>();
+        var defaults = new List<DefaultRestore>();
         foreach (IGrouping<AudioDirection, AudioStep> direction in AudioSteps(audio).GroupBy(s => s.Direction))
         {
             try
@@ -464,7 +552,7 @@ public sealed class SwitchOrchestrator
                 if (devices.FirstOrDefault(d => d.IsDefault) is { } current)
                 {
                     AudioRoleMask roles = direction.Aggregate(AudioRoleMask.None, (mask, step) => mask | step.Roles);
-                    restore.Add(new AudioRestore(current.Endpoint, roles));
+                    defaults.Add(new DefaultRestore(current.Endpoint, roles));
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -473,14 +561,32 @@ public sealed class SwitchOrchestrator
             }
         }
 
-        return restore;
+        var volumes = new List<(AudioEndpoint, int)>();
+        foreach ((AudioEndpoint endpoint, _) in VolumeSteps(audio))
+        {
+            try
+            {
+                volumes.Add((endpoint, await _audio.GetVolumeAsync(endpoint, cancellationToken)));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.Warning(ex, "Could not read volume of {Device}; rollback will leave it unchanged", endpoint.FriendlyName);
+            }
+        }
+
+        return new AudioRestore(defaults, volumes);
     }
 
-    private async Task RestoreAudioAsync(IReadOnlyList<AudioRestore> restore, CancellationToken cancellationToken)
+    private async Task RestoreAudioAsync(AudioRestore restore, CancellationToken cancellationToken)
     {
-        foreach (AudioRestore item in restore)
+        foreach (DefaultRestore item in restore.Defaults)
         {
             await TrySetDefaultAsync(item.Endpoint, item.Roles, cancellationToken);
+        }
+
+        foreach ((AudioEndpoint endpoint, int percent) in restore.Volumes)
+        {
+            await TrySetVolumeAsync(endpoint, percent, cancellationToken);
         }
     }
 
@@ -505,7 +611,12 @@ public sealed class SwitchOrchestrator
 
     private sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message);
 
-    private sealed record AudioRestore(AudioEndpoint Endpoint, AudioRoleMask Roles);
+    private sealed record DefaultRestore(AudioEndpoint Endpoint, AudioRoleMask Roles);
+
+    private sealed record AudioRestore(IReadOnlyList<DefaultRestore> Defaults, IReadOnlyList<(AudioEndpoint Endpoint, int Percent)> Volumes)
+    {
+        public static AudioRestore Nothing { get; } = new([], []);
+    }
 
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
 }

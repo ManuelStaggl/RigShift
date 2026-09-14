@@ -200,6 +200,11 @@ public sealed class CommandRunner
             {
                 text.Append(CultureInfo.InvariantCulture, $", audio {result.Audio}");
             }
+
+            if (result.Apps != AppsOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", apps {result.Apps}");
+            }
         }
 
         foreach (MissingDisplay missing in result.Plan.Missing)

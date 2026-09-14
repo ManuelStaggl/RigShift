@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Volume per profile for the playback and the recording device. If you do not confirm the switch, the previous
+  volume comes back too.
+- Apps per profile: start or stop programs (for example SimHub or Crew Chief) in a fixed order once the switch is
+  confirmed, with an optional wait after each one. Programs that already run are not started twice.
+
 ## [1.2.0] - 2026-09-14
 
 ### Added

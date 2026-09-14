@@ -74,6 +74,7 @@ public sealed record SwitchRecord(
     string ProfileName,
     SwitchOutcome Outcome,
     AudioOutcome Audio,
+    AppsOutcome Apps,
     int Attempts,
     TimeSpan Duration,
     int? NativeError,
@@ -137,6 +138,11 @@ public static class SwitchMessages
         if (record.Audio == AudioOutcome.Incomplete && record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
         {
             text += Environment.NewLine + Loc.Instance["Result_AudioIncomplete"];
+        }
+
+        if (record.Apps == AppsOutcome.Incomplete)
+        {
+            text += Environment.NewLine + Loc.Instance["Result_AppsIncomplete"];
         }
 
         return (title, text, icon);

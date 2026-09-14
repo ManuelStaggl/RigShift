@@ -11,6 +11,9 @@ public interface IAudioController
     Task<bool> SetDefaultAsync(AudioEndpoint endpoint, AudioRoleMask roles, CancellationToken cancellationToken);
 
     Task SetVolumeAsync(AudioEndpoint endpoint, int percent, CancellationToken cancellationToken);
+
+    /// <summary>Current volume in percent, 0–100.</summary>
+    Task<int> GetVolumeAsync(AudioEndpoint endpoint, CancellationToken cancellationToken);
 }
 
 public sealed record AudioDeviceInfo(AudioEndpoint Endpoint, AudioDirection Direction, bool IsActive, bool IsDefault);

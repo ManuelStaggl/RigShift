@@ -203,6 +203,10 @@
                   <ColumnDefinition Width="24" />
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Label}" TextWrapping="Wrap" />
                 <ComboBox
                   Grid.Column="2"
@@ -210,7 +214,130 @@
                   DisplayMemberPath="Name"
                   ItemsSource="{Binding Choices}"
                   SelectedItem="{Binding Selected}" />
+                <Grid
+                  Grid.Row="1"
+                  Grid.Column="2"
+                  Margin="0,6,0,4"
+                  IsEnabled="{Binding HasDevice}"
+                  Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="56" />
+                  </Grid.ColumnDefinitions>
+                  <CheckBox
+                    VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{Binding Label}"
+                    Content="{loc:Tr Audio_SetVolume}"
+                    IsChecked="{Binding SetVolume}" />
+                  <Slider
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{Binding Label}"
+                    AutomationProperties.Name="{loc:Tr Audio_SetVolume}"
+                    IsEnabled="{Binding SetVolume}"
+                    IsSnapToTickEnabled="True"
+                    LargeChange="10"
+                    Maximum="100"
+                    Minimum="0"
+                    SmallChange="1"
+                    TickFrequency="1"
+                    Value="{Binding Volume}" />
+                  <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                    Text="{Binding VolumeText}"
+                    TextAlignment="Right" />
+                </Grid>
               </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Margin="0,24,0,4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Apps}" />
+          <ui:Button Grid.Column="1" Command="{Binding AddAppCommand}" Content="{loc:Tr Editor_AddApp}" Icon="{ui:SymbolIcon Add24}" />
+        </Grid>
+        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsHint}" TextWrapping="Wrap" />
+
+        <ItemsControl Margin="0,12,0,0" Focusable="False" ItemsSource="{Binding Apps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ui:Card Margin="0,0,0,8" Padding="16,12">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
+                  <ComboBox
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="{loc:Tr App_Action}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding KindChoices}"
+                    SelectedItem="{Binding SelectedKind}" />
+                  <ui:TextBox
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="{loc:Tr App_Path}"
+                    PlaceholderText="{loc:Tr App_PathPlaceholder}"
+                    Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
+                  <ui:Button
+                    Grid.Column="3"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Stretch"
+                    AutomationProperties.Name="{loc:Tr App_Browse}"
+                    Click="OnBrowseApp"
+                    Icon="{ui:SymbolIcon FolderOpen24}"
+                    ToolTip="{loc:Tr App_Browse}" />
+                  <ui:Button
+                    Grid.Column="4"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Stretch"
+                    AutomationProperties.Name="{loc:Tr App_Remove}"
+                    Command="{Binding DataContext.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                    Icon="{ui:SymbolIcon Delete24}"
+                    ToolTip="{loc:Tr App_Remove}" />
+                  <Grid Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="12" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="{loc:Tr App_Arguments}"
+                      IsEnabled="{Binding IsStart}"
+                      PlaceholderText="{loc:Tr App_Arguments}"
+                      Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                      <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr App_Wait}" />
+                      <ui:NumberBox
+                        Width="120"
+                        Margin="8,0,0,0"
+                        AutomationProperties.Name="{loc:Tr App_Wait}"
+                        MaxDecimalPlaces="0"
+                        Maximum="300"
+                        Minimum="0"
+                        SmallChange="1"
+                        Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                  </Grid>
+                </Grid>
+              </ui:Card>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

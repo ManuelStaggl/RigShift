@@ -102,6 +102,14 @@ public sealed class ProfileEditingTests
             .ShouldBe([ProfileProblem.HotkeyInvalid]);
     }
 
+    [Fact]
+    public void Validate_ReportsAppWithoutProgram()
+    {
+        Profile rig = Rig() with { Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }, new AppAction { Path = "  " }] };
+
+        ProfileEditing.Validate(rig, []).ShouldBe([ProfileProblem.AppPathMissing]);
+    }
+
     [Theory]
     [InlineData(HotkeyModifiers.Control, 0x70, true)]
     [InlineData(HotkeyModifiers.Windows | HotkeyModifiers.Shift, 0x31, true)]

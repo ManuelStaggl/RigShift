@@ -59,11 +59,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         AudioAssignment audio = profile.Audio;
         AudioSlots =
         [
-            new AudioSlot(Loc.Instance["Audio_Playback"], Loc.Instance["Audio_Unchanged"], playbackDevices, audio.Playback),
+            new AudioSlot(Loc.Instance["Audio_Playback"], Loc.Instance["Audio_Unchanged"], playbackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
             new AudioSlot(Loc.Instance["Audio_PlaybackComms"], Loc.Instance["Audio_SameAsAbove"], playbackDevices, audio.PlaybackCommunications),
-            new AudioSlot(Loc.Instance["Audio_Recording"], Loc.Instance["Audio_Unchanged"], recordingDevices, audio.Recording),
+            new AudioSlot(Loc.Instance["Audio_Recording"], Loc.Instance["Audio_Unchanged"], recordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
             new AudioSlot(Loc.Instance["Audio_RecordingComms"], Loc.Instance["Audio_SameAsAbove"], recordingDevices, audio.RecordingCommunications),
         ];
+
+        foreach (AppAction app in profile.Apps)
+        {
+            Apps.Add(new AppEditItem(app));
+        }
     }
 
     /// <summary>True: saved, close the window. False: cancelled.</summary>
@@ -78,6 +83,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     public ObservableCollection<DisplayEditItem> Displays { get; } = [];
 
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
+
+    public ObservableCollection<AppEditItem> Apps { get; } = [];
 
     /// <summary>The profile as saved, after <see cref="CloseRequested"/> with <c>true</c>.</summary>
     public Profile? Saved { get; private set; }
@@ -149,6 +156,18 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     {
         Hotkey = null;
         HotkeyHint = Loc.Instance["Editor_HotkeyHint"];
+    }
+
+    [RelayCommand]
+    private void AddApp() => Apps.Add(new AppEditItem(new AppAction { Path = string.Empty }));
+
+    [RelayCommand]
+    private void RemoveApp(AppEditItem? item)
+    {
+        if (item is not null)
+        {
+            Apps.Remove(item);
+        }
     }
 
     [RelayCommand]
@@ -235,7 +254,10 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             PlaybackCommunications = AudioSlots[1].Endpoint,
             Recording = AudioSlots[2].Endpoint,
             RecordingCommunications = AudioSlots[3].Endpoint,
+            PlaybackVolumePercent = AudioSlots[0].VolumePercent,
+            RecordingVolumePercent = AudioSlots[2].VolumePercent,
         },
+        Apps = Apps.Select(a => a.ToAction()).ToList(),
     };
 }
 
@@ -303,16 +325,61 @@ public sealed partial class DisplayEditItem : ObservableObject
     }
 }
 
+/// <summary>One app entry in the editor.</summary>
+public sealed partial class AppEditItem : ObservableObject
+{
+    public AppEditItem(AppAction action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        KindChoices = [new Choice(nameof(AppActionKind.Start), Loc.Instance["App_Start"]), new Choice(nameof(AppActionKind.Stop), Loc.Instance["App_Stop"])];
+        SelectedKind = KindChoices[action.Kind == AppActionKind.Stop ? 1 : 0];
+        Path = action.Path;
+        Arguments = action.Arguments ?? string.Empty;
+        WaitSeconds = action.WaitSeconds;
+    }
+
+    public IReadOnlyList<Choice> KindChoices { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStart))]
+    public partial Choice SelectedKind { get; set; }
+
+    /// <summary>Arguments only apply when starting.</summary>
+    public bool IsStart => SelectedKind.Key == nameof(AppActionKind.Start);
+
+    [ObservableProperty]
+    public partial string Path { get; set; }
+
+    [ObservableProperty]
+    public partial string Arguments { get; set; }
+
+    [ObservableProperty]
+    public partial double? WaitSeconds { get; set; }
+
+    public AppAction ToAction() => new()
+    {
+        Kind = IsStart ? AppActionKind.Start : AppActionKind.Stop,
+        Path = Path.Trim(),
+        Arguments = IsStart && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
+        WaitSeconds = (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
+    };
+}
+
 public sealed record AudioChoice(AudioEndpoint? Endpoint, string Name);
 
 /// <summary>One audio role in the editor: "don't change" or a device of this machine.</summary>
 public sealed partial class AudioSlot : ObservableObject
 {
-    public AudioSlot(string label, string noneText, IReadOnlyList<AudioDeviceInfo> devices, AudioEndpoint? current)
+    public AudioSlot(
+        string label, string noneText, IReadOnlyList<AudioDeviceInfo> devices, AudioEndpoint? current, int? volume = null, bool supportsVolume = false)
     {
         ArgumentNullException.ThrowIfNull(devices);
 
         Label = label;
+        SupportsVolume = supportsVolume;
+        SetVolume = volume is not null;
+        Volume = volume ?? 50;
         Choices.Add(new AudioChoice(null, noneText));
         foreach (AudioDeviceInfo device in devices.OrderByDescending(d => d.IsActive).ThenBy(d => d.Endpoint.FriendlyName, StringComparer.CurrentCultureIgnoreCase))
         {
@@ -334,9 +401,27 @@ public sealed partial class AudioSlot : ObservableObject
     public ObservableCollection<AudioChoice> Choices { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDevice))]
     public partial AudioChoice? Selected { get; set; }
 
     public AudioEndpoint? Endpoint => Selected?.Endpoint;
+
+    /// <summary>Only playback and recording get a volume; the call roles usually share their device.</summary>
+    public bool SupportsVolume { get; }
+
+    /// <summary>A volume belongs to a device, so it can only be set once one is chosen.</summary>
+    public bool HasDevice => Endpoint is not null;
+
+    [ObservableProperty]
+    public partial bool SetVolume { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VolumeText))]
+    public partial double Volume { get; set; }
+
+    public string VolumeText => Loc.Format("Audio_VolumeValue", (int)Math.Round(Volume));
+
+    public int? VolumePercent => SupportsVolume && SetVolume && HasDevice ? (int)Math.Clamp(Math.Round(Volume), 0, 100) : null;
 
     private static bool SameDevice(AudioEndpoint a, AudioEndpoint b) =>
         string.Equals(a.EndpointId, b.EndpointId, StringComparison.OrdinalIgnoreCase);

@@ -174,4 +174,21 @@
   <data name="Hotkey_Failed" xml:space="preserve"><value>Eine andere App belegt das Tastenkürzel dieser Profile, es funktioniert daher nicht: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Strg</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Umschalt</value></data>
+  <data name="Audio_SetVolume" xml:space="preserve"><value>Lautstärke festlegen</value></data>
+  <data name="Audio_VolumeValue" xml:space="preserve"><value>{0} %</value></data>
+  <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
+  <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist. Starten überspringt Apps, die schon laufen. Beenden schließt die App und beendet sie, falls sie nach 5 Sekunden noch läuft.</value></data>
+  <data name="Editor_AddApp" xml:space="preserve"><value>App hinzufügen</value></data>
+  <data name="App_Start" xml:space="preserve"><value>Starten</value></data>
+  <data name="App_Stop" xml:space="preserve"><value>Beenden</value></data>
+  <data name="App_Action" xml:space="preserve"><value>Aktion</value></data>
+  <data name="App_Path" xml:space="preserve"><value>Programm</value></data>
+  <data name="App_PathPlaceholder" xml:space="preserve"><value>Pfad zur .exe-Datei</value></data>
+  <data name="App_Browse" xml:space="preserve"><value>Programm auswählen</value></data>
+  <data name="App_Arguments" xml:space="preserve"><value>Argumente (optional)</value></data>
+  <data name="App_Wait" xml:space="preserve"><value>Danach warten (Sekunden)</value></data>
+  <data name="App_Remove" xml:space="preserve"><value>App entfernen</value></data>
+  <data name="App_FileFilter" xml:space="preserve"><value>Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*</value></data>
+  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Bitte für jede App ein Programm wählen.</value></data>
+  <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
 </root>
