@@ -229,7 +229,7 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 1.4 Profilseite, InfoBar, Regelkarte, Editor-Layout | I-01, I-02, I-03, I-06, I-08 | erledigt, Screenshots 720/784/980 lg de-hell + en-dunkel geprüft, InfoBar erscheint nach X erneut | 8b73ae2 |
 | 1.5 App-Testprojekt, Settings-Reihenfolge, Fixtures, Fake | L-01, F-01, L-02, L-03 | erledigt (11 App-Tests; statt `ITicker` ein internes `PollAsync`) | d74991d |
 | 1.6 Wiederherstellung und Rückmeldung | B-05, B-06, B-07, B-08 | erledigt | 8ab5306 |
-| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | erledigt; Velopack 1.2.0 hat kein `UpdateManager(logger:)` – `VelopackApp.SetLogger` mit früh erzeugtem Serilog-Logger reicht (UpdateManager nutzt den Locator), Start-Log geprüft: Velopack-Zeilen da, keine Hosting-Zeilen. Dry-Run-Log noch nicht angesehen | (dieser Commit) |
+| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | erledigt; Velopack 1.2.0 hat kein `UpdateManager(logger:)` – `VelopackApp.SetLogger` mit früh erzeugtem Serilog-Logger reicht (UpdateManager nutzt den Locator), Start-Log geprüft: Velopack-Zeilen da, keine Hosting-Zeilen. Dry-Run-Log noch nicht angesehen | fdd3053 |
 | 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | offen | |
 | 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | offen | |
 | 1.10 Release 1.3.1 | M-01, M-04 | offen | |
