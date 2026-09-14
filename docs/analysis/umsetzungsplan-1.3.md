@@ -239,13 +239,13 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 2 Dry-Run ohne Gate | B-13 | erledigt; gilt auch für CLI `apply --dry-run` | 571ca3f |
 | 2 Stromspar-Prüfung | C-04, N-06 | Code erledigt, Beleg in der Testrunde (Test 7): welches WDF-Flag beim Häkchen kippt, ist offen; `byte[]{1,1}` gilt als „aus“ (Zahl 257); Liste nicht lesbar → alle Instanzen mit Warning | 80f204a |
 | 2 Automatik-Kleinkram | C-05, C-06, A-07 | erledigt; `SetPausedAsync` meldet Fehler an die Seite und stellt den Schalter zurück | 6d57df3, 4e8566a, 5e87c42, 571ca3f |
-| 2 Umschalt-Feedback im Fenster | I-04, I-07 | offen | |
-| 2 Tray-Popup, Editor, Dialoge | I-05, I-09, I-10, I-11, I-12, I-15, I-16 | offen | |
-| 2 Sprache und Texte | I-13, I-14, I-17, J-01, J-02, J-03 | offen | |
+| 2 Umschalt-Feedback im Fenster | I-04, I-07 | erledigt; „Wechsle …“-Zeile ohne Profilname; UI-Fehler-Ballon höchstens alle 30 s | 101530d |
+| 2 Tray-Popup, Editor, Dialoge | I-05, I-09, I-10, I-11, I-12, I-15, I-16 | I-05, I-09, I-10, I-11, I-15, I-16 erledigt; „Erweitert“ startet offen, wenn ein Anruf-Gerät gesetzt ist; I-12 in Welle 2 | 9e47c07, ec16d2a, f52cfc0 |
+| 2 Sprache und Texte | I-13, I-14, I-17, J-01, J-02, J-03 | I-14, J-01, J-02, J-03 erledigt, I-13/I-17 teilweise (Editor/Automatik-VMs, Zugriffstasten in Welle 2); Akzentfarbe exakt nach Plan 4.8 | 9e47c07, 6fe3b57, a02d360, 3219739 |
 | 2 Interop-Kleinkram | G-01, G-02, G-03, G-04, H-04, H-05 | erledigt (G-02, H-05, G-03 mit Admin-App: Beleg in der Testrunde); G-02: Fehler von `SET_HDR_STATE` wird zurückgegeben statt still auszuweichen; G-03 gilt auch für `IsRunning`; H-05: Hinweis stand schon auf der Seite, Text ergänzt, Benutzerordner in Pfaden des Berichts ersetzt | e02387a, bd1ff9e, be32930, 5c3f88d, ab7454e, d39e4db |
 | 2 Aufräumen | A-01, A-02, A-04, A-05, A-08, K-05, L-05, M-02, M-03 | offen | |
 | 2 Struktur | A-03 | offen | |
 | 2 Windows-Schicht-Fixture | L-04 | offen (Rohdaten aus Testrunde) | |
 | 2 SECURITY.md | H-03 | erledigt (Datei gab es schon, Abschnitt Update-Kette ergänzt) | 785c5c1 |
-| 2 Nutzerbefund Testrunde 2026-09-14: Mausrad scrollt nur am rechten Rand, Release-Notes unförmig, Update-Knöpfe mittig neben dem Text | T-01, T-02, T-03 | offen | |
-| Nutzerfragen beantwortet und umgesetzt | D-02, O-01…O-08, A-09, C-07, C-08, F-06, F-07, D-03, I-18 | offen | |
+| 2 Nutzerbefund Testrunde 2026-09-14: Mausrad scrollt nur am rechten Rand, Release-Notes unförmig, Update-Knöpfe mittig neben dem Text | T-01, T-02, T-03 | erledigt; Ursache T-01: WPF-UI setzt `CanContentScroll=True` je Page und legt einen eigenen ScrollViewer darum – Seiten setzen `CanContentScroll=False`, `Controls/WheelScrolling` reicht das Rad an den äußeren ScrollViewer weiter; Release-Notes über `ReleaseNotes.Parse` in zugeklapptem „Was ist neu“ (max. 200 px); Knöpfe in eigener Zeile. Screenshot-Beleg in Welle 2 | 02ca755, 6e88ecf, b10b22d |
+| Nutzerfragen beantwortet und umgesetzt | D-02, O-01…O-08, A-09, C-07, C-08, F-06, F-07, D-03, I-18 | erledigt: D-02 (Ordner statt Single-File, Publish 203 MB/304 Dateien, `--help` ok), O-01/O-02/O-04/O-05 (Editor; O-01 migriert alte Zeit 0 → „ohne Nachfrage“), O-03, O-06, O-07 (ausgeschaltete alte Regeln werden beim Laden mit Warning verworfen), O-08; A-09, C-07, C-08, D-03, F-06, F-07, I-18 als „Known limitations“ in `docs/ARCHITECTURE.md`, C-07 zusätzlich README | 366048a, ec16d2a, 448b80e, 89ac95f, dc62609, 471eef6, a45aa62 |
