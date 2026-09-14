@@ -74,6 +74,19 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
 - Updates: `UpdateService` checks GitHub Releases at startup and every 24 h and downloads a newer version; Velopack
   installs it the next time the tray app starts (never during a CLI call, which would lose its exit code).
 
+## Known limitations (accepted)
+
+Found in the 1.3 analysis and deliberately left as they are:
+
+- Windows calls behind `Task.FromResult` are synchronous; callers that must not block wrap them in `Task.Run` (A-09).
+- USB devices are matched by VID/PID only: identical devices count as one, and hubs are filtered by name only (C-07). Polling does some duplicate work per poll; measured, it does not matter (C-08).
+- Every save reloads all profiles and rebuilds history and tray menu; the working set grew by 19 MB after 50 saves
+  (D-03, watch only).
+- `rigshift save` while the profile editor is open: whoever saves last wins, without a warning (F-06).
+- Downgrading to an older version drops fields the older version does not know, without a warning (F-07).
+- The combo boxes on automation rule cards may not be found by UI Automation; check with `inspect.exe` if screen reader
+  support becomes a topic (I-18).
+
 ## Coding rules
 
 See `.editorconfig` and `Directory.Build.props`: warnings are errors, analyzers at `latest-recommended`,

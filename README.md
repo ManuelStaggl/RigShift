@@ -46,7 +46,8 @@ see no picture after a switch, it simply switches back after a few seconds.
 **Getting into the rig**
 
 - **Wheelbase on = rig.** An automation rule switches when a USB device connects and back when it is gone – after a
-  delay you choose, so a quick power cycle changes nothing.
+  delay you choose, so a quick power cycle changes nothing. Devices are recognised by model (vendor and product
+  id), so two identical devices look like one; pick a device that only the rig has.
 - **Apps per profile:** start SimHub or Crew Chief, close what you don't need – optionally only once the wheelbase is
   detected.
 - **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
