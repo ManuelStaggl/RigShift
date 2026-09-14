@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- RigShift is no longer packed into one large EXE: updates download only the files that changed, and the app no longer
+  unpacks itself at every start.
+
 ## [1.3.1] - 2026-09-14
 
 ### Added
