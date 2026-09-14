@@ -162,6 +162,8 @@
   <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>The keyboard shortcut needs Ctrl, Alt or Win.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Another profile already uses this keyboard shortcut.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this keyboard shortcut. Choose a different one.</value></data>
+  <data name="Editor_ConfirmTime" xml:space="preserve"><value>Confirmation time</value></data>
+  <data name="Editor_OwnTimeoutShort" xml:space="preserve"><value>Own value (seconds)</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Click here and press a key combination</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>

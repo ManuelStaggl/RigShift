@@ -162,6 +162,8 @@
   <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Bitte ein anderes wählen.</value></data>
+  <data name="Editor_ConfirmTime" xml:space="preserve"><value>Bestätigungszeit</value></data>
+  <data name="Editor_OwnTimeoutShort" xml:space="preserve"><value>Eigener Wert (Sekunden)</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Hier klicken und Tastenkombination drücken</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>

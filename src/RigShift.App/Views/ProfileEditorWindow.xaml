@@ -43,16 +43,24 @@
           AutomationProperties.Name="{loc:Tr Editor_Name}"
           Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 
-        <Grid Margin="0,0,0,4">
+        <!-- Same column grid as the audio rows below: labels/left controls 220, gap 24, rest. -->
+        <Grid Margin="0,0,0,16">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220" />
             <ColumnDefinition Width="24" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
-          <StackPanel>
-            <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Icon}" />
-            <ComboBox
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Icon}" />
+          <TextBlock Grid.Column="2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_ConfirmTime}" />
+          <ComboBox
+              Grid.Row="1"
               Margin="0,4,0,0"
+              VerticalAlignment="Center"
               AutomationProperties.Name="{loc:Tr Editor_Icon}"
               ItemsSource="{Binding IconChoices}"
               SelectedItem="{Binding SelectedIcon}"
@@ -65,14 +73,13 @@
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
-            </ComboBox>
-          </StackPanel>
-          <StackPanel Grid.Column="2">
-            <CheckBox Content="{loc:Tr Editor_OwnTimeout}" IsChecked="{Binding UseOwnTimeout}" />
+          </ComboBox>
+          <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,4,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+            <CheckBox VerticalAlignment="Center" Content="{loc:Tr Editor_OwnTimeoutShort}" IsChecked="{Binding UseOwnTimeout}" />
             <ui:NumberBox
               Width="140"
-              Margin="0,4,0,0"
-              HorizontalAlignment="Left"
+              Margin="12,0,0,0"
+              VerticalAlignment="Center"
               AutomationProperties.Name="{loc:Tr Editor_OwnTimeout}"
               IsEnabled="{Binding UseOwnTimeout}"
               MaxDecimalPlaces="0"
@@ -80,16 +87,15 @@
               Minimum="0"
               SmallChange="1"
               Value="{Binding OwnTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeoutHint}" TextWrapping="Wrap" />
           </StackPanel>
+          <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeoutHint}" TextWrapping="Wrap" />
         </Grid>
 
-        <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Hotkey}" />
+        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Hotkey}" />
         <Grid Margin="0,4,0,0">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320" />
-            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <ui:TextBox
             x:Name="HotkeyBox"
@@ -127,9 +133,20 @@
           <ui:Button Grid.Column="1" Command="{Binding TakeCurrentCommand}" Content="{loc:Tr Editor_TakeCurrent}" Icon="{ui:SymbolIcon ArrowSync24}" />
         </Grid>
         <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisplaysHint}" TextWrapping="Wrap" />
-        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ArrangementNote}" AutomationProperties.LiveSetting="Polite" />
+        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ArrangementNote}" AutomationProperties.LiveSetting="Polite">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Style.Triggers>
+                <!-- No empty line between the hint and the list while there is no note. -->
+                <DataTrigger Binding="{Binding ArrangementNote}" Value="{x:Null}">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
 
-        <ItemsControl Margin="0,8,0,0" Focusable="False" ItemsSource="{Binding Displays}">
+        <ItemsControl Margin="0,12,0,0" Focusable="False" ItemsSource="{Binding Displays}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <ui:Card Margin="0,0,0,8" Padding="16,12">
@@ -176,18 +193,19 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <TextBlock Margin="0,24,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
+        <TextBlock Margin="0,16,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
         <ItemsControl Focusable="False" ItemsSource="{Binding AudioSlots}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Grid Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="220" />
+                  <ColumnDefinition Width="24" />
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Label}" />
+                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Label}" TextWrapping="Wrap" />
                 <ComboBox
-                  Grid.Column="1"
+                  Grid.Column="2"
                   AutomationProperties.Name="{Binding Label}"
                   DisplayMemberPath="Name"
                   ItemsSource="{Binding Choices}"
