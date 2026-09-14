@@ -8,7 +8,6 @@ public sealed class AutomationTriggerTests
 {
     private const string Wheelbase = "VID_0EB7&PID_0020";
     private const string Dongle = "VID_046D&PID_C547";
-    private static readonly string WheelbaseKey = UsbDeviceIds.Key(Wheelbase);
     private static readonly Guid Desk = Guid.NewGuid();
     private static readonly Guid Rig = Guid.NewGuid();
     private static readonly Guid Tv = Guid.NewGuid();
@@ -46,14 +45,14 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
 
         TriggerEvent disarmed = _trigger.Disarm(rule, RetryMode.Later, _now).ShouldNotBeNull();
 
         disarmed.Delay.ShouldBe(AutomationTrigger.MinimumRetryDelay);
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
         _now += AutomationTrigger.MinimumRetryDelay;
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
     }
 
     [Fact]
@@ -61,14 +60,14 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
 
         _trigger.Disarm(rule, RetryMode.AfterReconnect, _now);
 
         _now += TimeSpan.FromMinutes(1);
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
         Poll(rule, Desk).ShouldBeEmpty();
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
     }
 
     [Fact]
@@ -76,7 +75,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
         _trigger.Disarm(rule, RetryMode.AfterReconnect, _now);
 
         Poll(rule, Rig).ShouldBeEmpty();
@@ -92,10 +91,10 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule() with { ExitDelaySeconds = 0 };
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
 
         Poll(rule, Rig).ShouldBeEmpty();
-        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
 
         Poll(rule, Rig).ShouldBeEmpty();
         Poll(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
@@ -108,7 +107,7 @@ public sealed class AutomationTriggerTests
         AutomationRule tv = WheelbaseRule() with { Id = Guid.NewGuid(), ProfileId = Tv };
         Poll([rig, tv], Desk);
 
-        Poll([rig, tv], Desk, WheelbaseKey).Select(a => a.ProfileId).ShouldBe([Rig, Tv]);
+        Poll([rig, tv], Desk, Wheelbase).Select(a => a.ProfileId).ShouldBe([Rig, Tv]);
     }
 
     [Fact]
@@ -116,7 +115,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, null);
-        Poll(rule, null, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, null, Wheelbase).ShouldHaveSingleItem();
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += AutomationTrigger.ExitDelayOf(rule);
@@ -131,7 +130,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
         AutomationRule disabled = rule with { IsEnabled = false };
 
         Poll(disabled, Rig).ShouldBeEmpty();
@@ -147,7 +146,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
         Poll(rule, Rig).ShouldBeEmpty();
 
         _trigger.Reset();
@@ -163,12 +162,12 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Evaluate([rule], Desk, WheelbaseKey).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceConnected);
+        Evaluate([rule], Desk, Wheelbase).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceConnected);
 
         TriggerEvent gone = Evaluate([rule], Rig).Events.ShouldHaveSingleItem();
         gone.Kind.ShouldBe(TriggerEventKind.DeviceGone);
         gone.Delay.ShouldBe(TimeSpan.FromSeconds(10));
-        Evaluate([rule], Rig, WheelbaseKey).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceBack);
+        Evaluate([rule], Rig, Wheelbase).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceBack);
     }
 
     [Fact]
@@ -177,7 +176,7 @@ public sealed class AutomationTriggerTests
         AutomationRule rule = WheelbaseRule(skip: true);
         Poll(rule, Desk).ShouldBeEmpty();
 
-        IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, WheelbaseKey);
+        IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, Wheelbase);
 
         actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
         actions[0].SkipConfirmation.ShouldBeTrue();
@@ -188,8 +187,8 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
 
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
     }
 
     [Fact]
@@ -197,7 +196,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Rig).ShouldBeEmpty();
-        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
 
         GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
@@ -207,7 +206,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += TimeSpan.FromSeconds(5);
@@ -223,12 +222,12 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
         Poll(rule, Rig);
 
-        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
         _now += TimeSpan.FromMinutes(1);
-        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
 
         GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Desk);
     }
@@ -238,7 +237,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule(ExitAction.SwitchTo, Desk);
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
 
         GoneLongEnough(rule, Tv).ShouldBeEmpty();
     }
@@ -248,7 +247,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule(ExitAction.SwitchTo, Tv);
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
 
         GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ProfileId.ShouldBe(Tv);
     }
@@ -258,7 +257,7 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule(ExitAction.Stay);
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey);
+        Poll(rule, Desk, Wheelbase);
 
         GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
@@ -269,7 +268,7 @@ public sealed class AutomationTriggerTests
         AutomationRule rule = WheelbaseRule(enabled: false);
         Poll(rule, Desk);
 
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
         GoneLongEnough(rule, Rig).ShouldBeEmpty();
     }
 
@@ -279,16 +278,16 @@ public sealed class AutomationTriggerTests
         var rule = new AutomationRule { UsbDeviceId = @"USB\VID_0eb7&PID_0020\5&1a2b", ProfileId = Rig };
         Poll(rule, Desk);
 
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
     }
 
     [Fact]
     public void DeviceOfRuleChangedWhileNewDeviceIsConnected_DoesNotSwitch()
     {
         AutomationRule rule = WheelbaseRule();
-        Poll(rule, Desk, UsbDeviceIds.Key(Dongle));
+        Poll(rule, Desk, Dongle);
 
-        Poll(rule with { UsbDeviceId = Dongle }, Desk, UsbDeviceIds.Key(Dongle)).ShouldBeEmpty();
+        Poll(rule with { UsbDeviceId = Dongle }, Desk, Dongle).ShouldBeEmpty();
     }
 
     [Fact]
@@ -297,7 +296,7 @@ public sealed class AutomationTriggerTests
         AutomationRule other = WheelbaseRule() with { Id = Guid.NewGuid(), UsbDeviceId = Dongle };
         Poll(other, Desk);
 
-        Poll([other, WheelbaseRule()], Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll([other, WheelbaseRule()], Desk, Wheelbase).ShouldBeEmpty();
     }
 
     [Fact]
@@ -307,19 +306,19 @@ public sealed class AutomationTriggerTests
         Poll(rule, Desk);
         _trigger.Reset();
 
-        Poll(rule, Desk, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
     }
 
     [Fact]
     public void RuleWithoutDevice_IsIgnored()
     {
-        // Game rules written by an unreleased build have no device id.
+        // An unreleased build wrote rules without a device key.
         var rule = new AutomationRule { ProfileId = Rig };
         var empty = new AutomationRule { UsbDeviceId = string.Empty, ProfileId = Rig };
         Poll([rule, empty], Desk);
 
-        Poll([rule, empty], Desk, WheelbaseKey, "iRacingSim64DX11").ShouldBeEmpty();
-        AutomationTrigger.WatchedKeysOf(rule).ShouldBeEmpty();
+        Poll([rule, empty], Desk, Wheelbase).ShouldBeEmpty();
+        AutomationTrigger.WatchedDeviceOf(empty).ShouldBeNull();
     }
 
     [Fact]
@@ -327,12 +326,12 @@ public sealed class AutomationTriggerTests
     {
         AutomationRule rule = WheelbaseRule() with { ExitDelaySeconds = 60 };
         Poll(rule, Desk);
-        Poll(rule, Desk, WheelbaseKey).ShouldHaveSingleItem();
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
 
         Poll(rule, Rig).ShouldBeEmpty();
         _now += TimeSpan.FromSeconds(30);
         Poll(rule, Rig).ShouldBeEmpty();
-        Poll(rule, Rig, WheelbaseKey).ShouldBeEmpty();
+        Poll(rule, Rig, Wheelbase).ShouldBeEmpty();
 
         GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
     }

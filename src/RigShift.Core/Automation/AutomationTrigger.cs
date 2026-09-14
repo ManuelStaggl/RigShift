@@ -116,14 +116,11 @@ public sealed class AutomationTrigger
         _hasBaseline = false;
     }
 
-    /// <summary>
-    /// What a rule watches in the present set: <see cref="UsbDeviceIds.Key"/> of its device; nothing for a rule without a
-    /// valid device id.
-    /// </summary>
-    public static IReadOnlyList<string> WatchedKeysOf(AutomationRule rule)
+    /// <summary>The device a rule watches as <c>VID_xxxx&amp;PID_xxxx</c>; <c>null</c> for a rule without a valid device id.</summary>
+    public static string? WatchedDeviceOf(AutomationRule rule)
     {
         ArgumentNullException.ThrowIfNull(rule);
-        return UsbDeviceIds.Normalize(rule.UsbDeviceId) is { } id ? [UsbDeviceIds.Key(id)] : [];
+        return UsbDeviceIds.Normalize(rule.UsbDeviceId);
     }
 
     /// <summary>
@@ -156,7 +153,7 @@ public sealed class AutomationTrigger
         return new TriggerEvent(rule, TriggerEventKind.Disarmed) { Retry = retry };
     }
 
-    /// <param name="present"><see cref="UsbDeviceIds.Key"/> of connected devices.</param>
+    /// <param name="present">Connected devices as <c>VID_xxxx&amp;PID_xxxx</c>, compared without case.</param>
     /// <param name="now">Monotonic time, e.g. <see cref="TimeProvider.GetElapsedTime(long)"/> since the service started.</param>
     public TriggerEvaluation Evaluate(
         IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, TimeSpan now)
@@ -173,15 +170,14 @@ public sealed class AutomationTrigger
         var events = new List<TriggerEvent>();
         foreach (AutomationRule rule in rules)
         {
-            // Rules without a device (game rules of an unreleased build) are ignored.
+            // A rule without a device key (written by an unreleased build) is ignored.
             if (rule.UsbDeviceId is null)
             {
                 continue;
             }
 
-            IReadOnlyList<string> keys = WatchedKeysOf(rule);
-            bool running = keys.Any(present.Contains);
-            string watched = string.Join('|', keys.Order(StringComparer.OrdinalIgnoreCase)).ToUpperInvariant();
+            string watched = WatchedDeviceOf(rule) ?? string.Empty;
+            bool running = watched.Length > 0 && present.Contains(watched);
             if (!_states.TryGetValue(rule.Id, out RuleState? state) || state.Watched != watched)
             {
                 // A new rule, or one whose device was changed while it is present, behaves like the baseline: no switch

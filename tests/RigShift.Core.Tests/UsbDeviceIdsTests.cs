@@ -21,8 +21,4 @@ public sealed class UsbDeviceIdsTests
     [InlineData("VID_12&PID_34")]
     public void Normalize_WithoutVendorAndProduct_IsNull(string? input) =>
         UsbDeviceIds.Normalize(input).ShouldBeNull();
-
-    [Fact]
-    public void Key_CannotCollideWithProcessName() =>
-        UsbDeviceIds.Key("vid_0eb7&pid_0020").ShouldBe("usb:VID_0EB7&PID_0020");
 }

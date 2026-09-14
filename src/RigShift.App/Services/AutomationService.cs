@@ -58,7 +58,7 @@ public sealed class AutomationService : IDisposable
     /// <summary>Rules or the paused state may have changed.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>USB rules only; rules without a device (game rules of an unreleased build) are dropped.</summary>
+    /// <summary>Rules with a device key; a rule without one (written by an unreleased build) is dropped.</summary>
     public IReadOnlyList<AutomationRule> Rules => _settings.Current.AutomationRules?.Where(r => r.UsbDeviceId is not null).ToList() ?? [];
 
     public bool IsPaused => _settings.Current.AutomationPaused;
@@ -130,7 +130,7 @@ public sealed class AutomationService : IDisposable
         _polling = true;
         try
         {
-            IReadOnlySet<string> present = await Task.Run(Present);
+            IReadOnlySet<string> present = await Task.Run(_devices.PresentDeviceIds);
 
             // While a switch runs, the active profile is in flux; the next poll sees the same devices again.
             if (_coordinator.IsSwitching)
@@ -165,9 +165,6 @@ public sealed class AutomationService : IDisposable
             _polling = false;
         }
     }
-
-    private HashSet<string> Present() =>
-        new(_devices.PresentDeviceIds().Select(UsbDeviceIds.Key), StringComparer.OrdinalIgnoreCase);
 
     private async Task RunAsync(TriggerAction action)
     {

@@ -14,8 +14,8 @@ public enum ExitAction
 }
 
 /// <summary>
-/// "When this USB device connects, switch to that profile." Stored in the application settings. A rule without
-/// <see cref="UsbDeviceId"/> (e.g. a game rule from an unreleased build) is ignored.
+/// "When this USB device connects, switch to that profile." Stored in the application settings. A rule without the
+/// <see cref="UsbDeviceId"/> key (written by an unreleased build) is ignored.
 /// </summary>
 public sealed record AutomationRule
 {
