@@ -285,6 +285,18 @@ M5 getestet – vorher gibt es nichts, das Monitore anfasst.
 
 ## 6. Roadmap nach v1 (vom Nutzer gewählt, priorisiert)
 
+**v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
+Releases nützlich)
+
+- U1. Einstellungen „Über / Updates“: Versionsnummer, Knopf „Nach Updates suchen“, Status (aktuell / wird geladen /
+  bereit / Fehler). Die automatische Prüfung (Start + 24 h) bleibt.
+- U2. „Jetzt neu starten und installieren“ in den Einstellungen und aus der Tray-Meldung; gesperrt, solange ein
+  Umschaltvorgang läuft.
+- U3. Einstellung „Updates automatisch installieren“ / „nur benachrichtigen“. Grund: Nutzer, die ungefragte
+  Änderungen nicht wollen; ohne Code-Signatur hängt die Update-Sicherheit allein am GitHub-Konto.
+- U4. Release-Notes der neuen Version anzeigen (aus dem Velopack-Paket bzw. Link aufs GitHub-Release).
+- Randbedingung: kein GitHub-Token in der App (wäre aus der EXE auslesbar); Limit 60 API-Abfragen/h pro IP reicht.
+
 **v1.1 – Auslösen und Steuern**
 
 1. Globale Tastenkürzel pro Profil (`RegisterHotKey`).
