@@ -19,8 +19,8 @@ Status legend: 🟢 released · 🟡 built, hardware test pending · ⚪ planned
 - 🟢 Global hotkeys per profile (1.2.0)
 - 🟢 `rigshift://apply/<name>` URI scheme (1.2.0)
 - 🟢 Recording device and separate communications role per profile (1.0)
-- 🟡 Volume per profile (playback and recording)
-- 🟡 Launch / stop apps per profile (SimHub, Crew Chief, …)
+- 🟢 Volume per profile (playback and recording) (1.3.0)
+- 🟢 Launch / stop apps per profile (SimHub, Crew Chief, …) (1.3.0)
 - ⚪ Process triggers with game templates (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1)
 
 ## v1.2 – automation and comfort

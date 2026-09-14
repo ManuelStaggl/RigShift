@@ -12,7 +12,7 @@
 display topology *and* audio devices atomically – built for sim racers who share one PC between a multi-monitor
 desk and an ultrawide / triple-screen / VR cockpit.
 
-> Status: **1.2** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
+> Status: **1.3** – tested on a real desk ↔ sim rig setup. [Download](https://github.com/ManuelStaggl/RigShift/releases/latest)
 > · [Roadmap](docs/ROADMAP.md)
 
 <p align="center">
@@ -37,7 +37,8 @@ Beyond that, RigShift is designed to be boring in the good way:
   yet; optional displays are picked up as soon as they appear.
 - **Safety net:** if you don't confirm the new layout within a few seconds (because there is no picture),
   RigShift rolls back to the previous one.
-- **Audio included:** default playback and communications devices per profile.
+- **Audio included:** playback, recording and communications devices plus volume per profile.
+- **Apps per profile:** start SimHub or Crew Chief and close Discord once the switch is confirmed.
 - **Explains problems** ("this combination exceeds your GPU's display heads") instead of showing error 31.
 - **Keyboard shortcut per profile**, e.g. Ctrl+Alt+F1, works from anywhere while RigShift runs.
 - **Scriptable:** `RigShift.exe apply Rig` or a `rigshift://apply/Rig` link from a Stream Deck, button box, SimHub
@@ -49,8 +50,8 @@ Beyond that, RigShift is designed to be boring in the good way:
 |---|---|
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
-| <img alt="Profile editor with displays and audio devices" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Profile editor** – main display, optional displays, audio devices. | **Settings** – default profile, autostart, confirmation time, language. |
+| <img alt="Profile editor with audio devices, volume and apps" src="docs/screenshots/profile-editor-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
+| **Profile editor** – displays, audio devices with volume, apps to start or stop. | **Settings** – default profile, autostart, confirmation time, language. |
 
 ## Installation
 
@@ -69,8 +70,7 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 
 ## Planned features
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: microphone and volume per profile, per-profile apps,
-process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
+See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: process and USB triggers with game templates (LMU, iRacing, ACC, AC EVO, …), race mode (no notifications,
 no sleep), power plan, HDR, local HTTP API and Home Assistant integration.
 
 ## Command line
