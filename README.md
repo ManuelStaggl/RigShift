@@ -70,7 +70,9 @@ Profiles, settings and logs are stored in `%AppData%\RigShift` and are kept when
 ## Planned features
 
 See [docs/ROADMAP.md](docs/ROADMAP.md). Highlights: microphone and volume per profile, per-profile apps,
-switching when a USB device such as the wheelbase connects, keep awake per profile, HDR and refresh rate per display.
+switching when a USB device such as the wheelbase connects, keep awake per profile, HDR and refresh rate per display,
+windows moved back from screens that are off, apps that wait for the wheelbase, a warning when Windows may power down
+your USB sim hardware, and game sound that stays loud during calls.
 
 ## Command line
 

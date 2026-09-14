@@ -218,6 +218,12 @@ public sealed class CommandRunner
             text.AppendLine().Append("  warning: ").Append(warning.Message);
         }
 
+        if (result.Apps == AppsOutcome.DeviceMissing)
+        {
+            text.AppendLine().Append(CultureInfo.InvariantCulture,
+                $"  {profile.AppsWaitForUsbDeviceName ?? profile.AppsWaitForUsbDeviceId} was not detected within {Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds)} s, apps started anyway");
+        }
+
         if (result.Message is { Length: > 0 } message)
         {
             text.AppendLine().Append("  ").Append(message);

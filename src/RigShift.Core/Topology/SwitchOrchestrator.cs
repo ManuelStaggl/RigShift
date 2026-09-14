@@ -1,5 +1,6 @@
 using System.Globalization;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using Serilog;
 
@@ -26,18 +27,30 @@ public sealed class SwitchOrchestrator
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
     private readonly IAppLauncher _apps;
+    private readonly IUsbDeviceList _usbDevices;
     private readonly IPowerController _power;
+    private readonly IDuckingPreference _ducking;
+    private readonly IWindowRescuer _windows;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
+    /// <summary>
+    /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
+    /// by the next profile without it. Lives only as long as the process – after a restart the current value stays.
+    /// </summary>
+    private DuckingMemory? _duckingBeforeProfiles;
+
     public SwitchOrchestrator(
         IDisplayConfigurator display,
         IAudioController audio,
         IAppLauncher apps,
+        IUsbDeviceList usbDevices,
         IPowerController power,
+        IDuckingPreference ducking,
+        IWindowRescuer windows,
         ISwitchConfirmation confirmation,
         TopologyPlanner planner,
         SwitchOptions options,
@@ -47,7 +60,10 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
         ArgumentNullException.ThrowIfNull(apps);
+        ArgumentNullException.ThrowIfNull(usbDevices);
         ArgumentNullException.ThrowIfNull(power);
+        ArgumentNullException.ThrowIfNull(ducking);
+        ArgumentNullException.ThrowIfNull(windows);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(options);
@@ -57,7 +73,10 @@ public sealed class SwitchOrchestrator
         _display = display;
         _audio = audio;
         _apps = apps;
+        _usbDevices = usbDevices;
         _power = power;
+        _ducking = ducking;
+        _windows = windows;
         _confirmation = confirmation;
         _planner = planner;
         _options = options;
@@ -97,6 +116,7 @@ public sealed class SwitchOrchestrator
             ? await CaptureAudioAsync(profile.Audio, cancellationToken)
             : AudioRestore.Nothing;
         bool? keepAwakeBefore = confirm ? _power.IsKeepingAwake : null;
+        DuckingRestore? duckingRestore = confirm ? CaptureDucking(profile) : null;
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -118,6 +138,7 @@ public sealed class SwitchOrchestrator
 
         // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
         SwitchKeepAwake(profile);
+        SwitchDucking(profile);
 
         if (confirm)
         {
@@ -127,12 +148,13 @@ public sealed class SwitchOrchestrator
             {
                 _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
                 RestoreKeepAwake(keepAwakeBefore);
+                RestoreDucking(duckingRestore);
                 return await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, cancellationToken);
             }
         }
 
         // Only now: a rejected switch must not have started programs or closed someone's work.
-        AppsOutcome apps = await RunAppsAsync(profile.Apps, cancellationToken);
+        AppsOutcome apps = await RunAppsAsync(profile, cancellationToken);
 
         SwitchOutcome outcome = plan.ShouldRetryLater ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts",
@@ -295,6 +317,7 @@ public sealed class SwitchOrchestrator
                     _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays)",
                         attempts, databaseModes ? "database" : "stored", plan.Resolved.Count);
                     await SwitchHdrAsync(profile, cancellationToken);
+                    await RescueWindowsAsync(cancellationToken);
                     return new ApplyOutcome(true, plan, attempts, lastError, null);
                 }
 
@@ -488,13 +511,22 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    private async Task<AppsOutcome> RunAppsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
+    private async Task<AppsOutcome> RunAppsAsync(Profile profile, CancellationToken cancellationToken)
     {
+        IReadOnlyList<AppAction> apps = profile.Apps;
         if (apps.Count == 0)
         {
             return AppsOutcome.NotConfigured;
         }
 
+        // Wheel software and games want to see the device when they start; without it they start anyway.
+        bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
+        AppsOutcome started = await RunAppActionsAsync(apps, cancellationToken);
+        return deviceMissing ? AppsOutcome.DeviceMissing : started;
+    }
+
+    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
+    {
         bool complete = true;
         foreach (AppAction app in apps)
         {
@@ -687,6 +719,156 @@ public sealed class SwitchOrchestrator
         }
     }
 
+    /// <summary>
+    /// After every successful apply (switch, rollback, restore, catch-up): windows left on a display that is off now
+    /// move to the primary display. Failures are logged and never fail the switch.
+    /// </summary>
+    private async Task RescueWindowsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(_options.WindowRescueDelay, _time, cancellationToken);
+            int moved = _windows.RescueOffscreenWindows();
+            if (moved > 0)
+            {
+                _log.Information("Moved {Count} window(s) from displays that are off to the primary display", moved);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Moving windows from displays that are off failed");
+        }
+    }
+
+    /// <summary>
+    /// Polls for the device the profile's apps wait for, up to its wait time. True when it is there or none is set.
+    /// </summary>
+    private async Task<bool> WaitForAppsDeviceAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        if (UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId) is not { } deviceId)
+        {
+            return true;
+        }
+
+        int seconds = Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds);
+        string name = profile.AppsWaitForUsbDeviceName ?? deviceId;
+        DateTimeOffset deadline = _time.GetUtcNow() + TimeSpan.FromSeconds(seconds);
+        long started = _time.GetTimestamp();
+        bool waited = false;
+
+        while (!IsUsbDevicePresent(deviceId))
+        {
+            if (_time.GetUtcNow() >= deadline)
+            {
+                _log.Warning("Device {Device} did not show up within {Seconds} s, starting apps anyway", name, seconds);
+                return false;
+            }
+
+            if (!waited)
+            {
+                _log.Information("Waiting up to {Seconds} s for device {Device} before starting apps", seconds, name);
+                waited = true;
+            }
+
+            await Task.Delay(_options.DevicePollInterval, _time, cancellationToken);
+        }
+
+        if (waited)
+        {
+            _log.Information("Device {Device} showed up after {Elapsed:0.0} s", name, _time.GetElapsedTime(started).TotalSeconds);
+        }
+
+        return true;
+    }
+
+    private bool IsUsbDevicePresent(string deviceId)
+    {
+        try
+        {
+            return _usbDevices.PresentDeviceIds().Contains(deviceId);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "USB devices could not be listed while waiting for {Device}", deviceId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A profile with <see cref="Profile.DisableCommunicationsDucking"/> sets "do nothing" during calls; the value from
+    /// before the first such profile is remembered and comes back with the next profile without the flag. Failures are
+    /// logged and never fail the switch (the registry value is undocumented).
+    /// </summary>
+    private void SwitchDucking(Profile profile)
+    {
+        try
+        {
+            if (profile.DisableCommunicationsDucking)
+            {
+                int? current = _ducking.Read();
+                _duckingBeforeProfiles ??= new DuckingMemory(current);
+                if (current != CommunicationsDucking.DoNothing)
+                {
+                    _ducking.Write(CommunicationsDucking.DoNothing);
+                    _log.Information("Communications ducking turned off for {Profile} (was {Preference})", profile.Name, current);
+                }
+            }
+            else if (_duckingBeforeProfiles is { } original)
+            {
+                _duckingBeforeProfiles = null;
+                if (_ducking.Read() != original.Value)
+                {
+                    _ducking.Write(original.Value);
+                    _log.Information("Communications ducking {Preference} from before restored for {Profile}", original.Value, profile.Name);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Communications ducking for {Profile} could not be set", profile.Name);
+        }
+    }
+
+    private DuckingRestore? CaptureDucking(Profile profile)
+    {
+        if (!profile.DisableCommunicationsDucking && _duckingBeforeProfiles is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new DuckingRestore(_ducking.Read(), _duckingBeforeProfiles);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Could not read the communications ducking setting; rollback will leave it unchanged");
+            return null;
+        }
+    }
+
+    private void RestoreDucking(DuckingRestore? restore)
+    {
+        if (restore is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_ducking.Read() != restore.Value)
+            {
+                _ducking.Write(restore.Value);
+            }
+
+            _duckingBeforeProfiles = restore.BeforeProfiles;
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Restoring the communications ducking setting failed");
+        }
+    }
+
     private void LogPlan(TopologyPlan plan)
     {
         _log.Information("Plan for {Profile}: {Resolved} resolved, {Missing} missing, {Warnings} warnings",
@@ -716,4 +898,9 @@ public sealed class SwitchOrchestrator
     }
 
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
+
+    /// <summary>A remembered ducking value; <c>Value</c> null means the registry value was missing.</summary>
+    private sealed record DuckingMemory(int? Value);
+
+    private sealed record DuckingRestore(int? Value, DuckingMemory? BeforeProfiles);
 }

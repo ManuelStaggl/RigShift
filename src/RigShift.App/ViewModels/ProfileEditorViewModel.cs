@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using Serilog;
@@ -30,6 +31,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         bool isNew,
         IReadOnlyList<AudioDeviceInfo> playbackDevices,
         IReadOnlyList<AudioDeviceInfo> recordingDevices,
+        IReadOnlyList<UsbDevice> usbDevices,
         int appConfirmTimeoutSeconds,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
@@ -71,7 +73,27 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             Apps.Add(new AppEditItem(app));
         }
 
+        // Same source and naming as the automation page; a saved device that is not connected stays selectable.
+        AppsWaitDeviceChoices.Add(new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
+        foreach (UsbDevice device in usbDevices)
+        {
+            AppsWaitDeviceChoices.Add(new Choice(device.Id, device.Name));
+            _usbDeviceNames[device.Id] = device.Name;
+        }
+
+        if (UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId) is { } waitId && !_usbDeviceNames.ContainsKey(waitId))
+        {
+            string name = profile.AppsWaitForUsbDeviceName ?? waitId;
+            AppsWaitDeviceChoices.Add(new Choice(waitId, Loc.Format("Automation_DeviceNotConnected", name)));
+            _usbDeviceNames[waitId] = name;
+        }
+
+        SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId), StringComparison.OrdinalIgnoreCase))
+            ?? AppsWaitDeviceChoices[0];
+        AppsWaitSeconds = Profile.ClampAppsWaitSeconds(profile.AppsWaitSeconds);
+
         KeepAwake = profile.KeepAwake;
+        DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
     }
 
     /// <summary>True: saved, close the window. False: cancelled.</summary>
@@ -91,6 +113,24 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool KeepAwake { get; set; }
+
+    [ObservableProperty]
+    public partial bool DisableCommunicationsDucking { get; set; }
+
+    /// <summary>"Don't wait", the connected USB devices, and the saved device when it is not connected.</summary>
+    public ObservableCollection<Choice> AppsWaitDeviceChoices { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAppsWaitDevice))]
+    public partial Choice? SelectedAppsWaitDevice { get; set; }
+
+    /// <summary>The wait time only matters once a device is chosen.</summary>
+    public bool HasAppsWaitDevice => SelectedAppsWaitDevice?.Key is not null;
+
+    [ObservableProperty]
+    public partial double? AppsWaitSeconds { get; set; }
+
+    private readonly Dictionary<string, string> _usbDeviceNames = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>The profile as saved, after <see cref="CloseRequested"/> with <c>true</c>.</summary>
     public Profile? Saved { get; private set; }
@@ -285,7 +325,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             RecordingVolumePercent = AudioSlots[2].VolumePercent,
         },
         Apps = Apps.Select(a => a.ToAction()).ToList(),
+        AppsWaitForUsbDeviceId = SelectedAppsWaitDevice?.Key,
+        AppsWaitForUsbDeviceName = SelectedAppsWaitDevice?.Key is { } waitId && _usbDeviceNames.TryGetValue(waitId, out string? waitName) ? waitName : null,
+        AppsWaitSeconds = AppsWaitSeconds is { } seconds ? Profile.ClampAppsWaitSeconds((int)Math.Round(seconds)) : Profile.DefaultAppsWaitSeconds,
         KeepAwake = KeepAwake,
+        DisableCommunicationsDucking = DisableCommunicationsDucking,
     };
 }
 

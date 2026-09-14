@@ -61,6 +61,12 @@ switch (command)
         Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
         break;
 
+    case "usb-power" when args.Length >= 2:
+        // Read-only: selective suspend in the active power scheme and the device's power flags in the registry.
+        RigShift.Core.Automation.UsbPowerFindings findings = new RigShift.Windows.Power.UsbPowerCheck(log).Check(args[1]);
+        Print(new { Device = args[1], findings.SelectiveSuspendEnabledOnAc, findings.InstancesFound, findings.InstancesWithPowerSaving, Warn = RigShift.Core.Automation.UsbPowerSaving.ShouldWarn(findings) });
+        break;
+
     case "keep-awake" when args.Length >= 2:
         // Holds the request for the given seconds; check it meanwhile with "powercfg /requests" (admin).
         using (var power = new RigShift.Windows.Power.PowerController(log))

@@ -17,6 +17,15 @@ public sealed record SwitchOptions
 
     /// <summary>How long an app may take to close after its windows were asked to, before it is ended.</summary>
     public TimeSpan AppStopGrace { get; init; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Pause between a successful apply and moving lost windows: Windows and the apps rearrange windows themselves
+    /// right after a topology change, and a move before that would be undone.
+    /// </summary>
+    public TimeSpan WindowRescueDelay { get; init; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>Interval for checking whether the device the apps wait for is connected.</summary>
+    public TimeSpan DevicePollInterval { get; init; } = TimeSpan.FromSeconds(1);
 }
 
 /// <summary>Per-call switches, e.g. from the CLI (<c>--dry-run</c>, <c>--no-confirm</c>).</summary>

@@ -217,6 +217,9 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
         services.AddSingleton<IPowerController, Windows.Power.PowerController>();
         services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
+        services.AddSingleton<IUsbPowerCheck, Windows.Power.UsbPowerCheck>();
+        services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
+        services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());

@@ -226,4 +226,14 @@
   <data name="Automation_DeviceGone" xml:space="preserve"><value>When the device is unplugged or turned off</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Refresh devices</value></data>
+  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s – apps started anyway.</value></data>
+  <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for device before starting apps</value></data>
+  <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
+  <data name="Editor_AppsWaitSeconds" xml:space="preserve"><value>Wait at most (seconds)</value></data>
+  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Wheel software and games often need the device when they start. If it does not show up in time, the apps start anyway and RigShift tells you.</value></data>
+  <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls (Windows communications setting)</value></data>
+  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Applies while this profile is active; a profile without it brings your previous setting back. Apps like Discord may need to rejoin the call.</value></data>
+  <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows may turn this device off</value></data>
+  <data name="Automation_PowerSavingText" xml:space="preserve"><value>USB power saving is on for this device. Windows may cut its power to save energy, and pedals or a wheelbase can then drop out while driving.</value></data>
+  <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>How to turn it off</value></data>
 </root>

@@ -92,6 +92,22 @@ PowerClearRequest
 POWER_REQUEST_TYPE
 REASON_CONTEXT
 PowerGetActiveScheme
+// USB power-saving check (read-only): selective suspend in the active scheme (docs/usb-power-saving.md).
+PowerReadACValueIndex
+LocalFree
+// Rescue windows that ended up on a display that is off after a switch.
+EnumWindows
+IsWindowVisible
+GetWindowLong
+WINDOW_EX_STYLE
+DwmGetWindowAttribute
+DWMWINDOWATTRIBUTE
+GetWindowPlacement
+SetWindowPlacement
+WINDOWPLACEMENT
+MonitorFromRect
+GetWindowThreadProcessId
+SHOW_WINDOW_CMD
 // Desktop shortcuts for profiles.
 ShellLink
 IShellLinkW

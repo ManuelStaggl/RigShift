@@ -226,4 +226,14 @@
   <data name="Automation_DeviceGone" xml:space="preserve"><value>Wenn das Gerät getrennt oder ausgeschaltet wird</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Geräte aktualisieren</value></data>
+  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
+  <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem App-Start auf Gerät warten</value></data>
+  <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Nicht warten</value></data>
+  <data name="Editor_AppsWaitSeconds" xml:space="preserve"><value>Höchstens warten (Sekunden)</value></data>
+  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Wheel-Software und Spiele brauchen das Gerät oft schon beim Start. Erscheint es nicht rechtzeitig, starten die Apps trotzdem und RigShift gibt Bescheid.</value></data>
+  <data name="Editor_DisableDucking" xml:space="preserve"><value>Spielton bei Anrufen nicht absenken (Windows-Kommunikationseinstellung)</value></data>
+  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist; ein Profil ohne diese Option stellt deine vorherige Einstellung wieder her. Apps wie Discord müssen dem Anruf eventuell neu beitreten.</value></data>
+  <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows darf dieses Gerät abschalten</value></data>
+  <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen – Pedale oder Wheelbase fallen dann während der Fahrt aus.</value></data>
+  <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>So schaltest du es ab</value></data>
 </root>

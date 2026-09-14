@@ -308,6 +308,32 @@ Seiten Bildschirme und Über & Hilfe. Die gestrichenen Stände bleiben in der Gi
    Abbrüche). Nur Hinweis mit Anleitung, keine Änderung ohne Adminrechte.
 4. **Windows-Lautstärkeabsenkung bei Anrufen aus** – Profil-Schalter, beim Zurückschalten alter Wert (HKCU,
    undokumentiert → Fehler nur im Log).
+**Umgesetzt 2026-09-14**: (1) `IWindowRescuer` / `WindowRescuer` (EnumWindows, sichtbar, nicht gecloakt, kein
+Tool-Fenster; verloren = `MonitorFromRect` mit `MONITOR_DEFAULTTONULL` findet keinen Monitor, bei minimiert/maximiert
+über die Normalposition; Verschieben per `SetWindowPlacement` zentriert in den Arbeitsbereich des Hauptbildschirms,
+Größe begrenzt, Zustand bleibt, kein Fokusklau). Läuft nach **jedem** erfolgreichen Apply (Umschalten, Rollback,
+Wiederherstellung nach Fehler, Nachholen) nach `SwitchOptions.WindowRescueDelay` (1 s); Geometrie in
+`WindowGeometry`. (2) `Profile.AppsWaitForUsbDeviceId`/`…Name`/`AppsWaitSeconds` (30 s, 5–300, `set` wegen
+Source-Generator); der Orchestrator fragt `IUsbDeviceList` sekündlich ab, startet die Apps bei Zeitablauf trotzdem
+und meldet `AppsOutcome.DeviceMissing` (Tray-Meldung mit Gerätename und Sekunden, CLI-Zeile, Verlauf). Editor:
+Auswahl „Nicht warten“ + verbundene Geräte (wie Automatik-Seite, gespeichertes getrenntes Gerät „(nicht
+verbunden)“) und Sekundenfeld. (3) `IUsbPowerCheck` / `UsbPowerCheck` nur lesend (Energieschema AC über
+`PowerReadACValueIndex`, `Device Parameters` unter `HKLM\…\Enum\USB`); Entscheidung in `UsbPowerSaving.ShouldWarn`
+(warnt, wenn eine Geräteinstanz Stromsparen erlaubt und das Schema es nicht ausschließt – Schema allein warnt
+nicht). Hinweis + Link auf `docs/usb-power-saving.md` in jeder USB-Regelkarte, geprüft beim Laden und
+Aktualisieren; Probe `usb-power <VID_xxxx&PID_xxxx>`. (4) `Profile.DisableCommunicationsDucking` +
+`IDuckingPreference` / `RegistryDuckingPreference` (HKCU `UserDuckingPreference`, `null` = Wert löschen): setzt 3,
+merkt den Wert von vor dem ersten solchen Profil im Speicher, das nächste Profil ohne Schalter stellt ihn her,
+Ablehnen stellt den Stand vor dem Wechsel her. Tests (204 → 241) belegen: Rettung nach Umschalten mit 1 s
+Verzögerung, zweimal bei Rollback, nach Wiederherstellung und beim Nachholen, Ausnahme ändert das Ergebnis nicht,
+DryRun/Blocked rufen nichts auf; Gerät schon da (keine Wartezeit), erscheint nach 3 s, erscheint nie (Apps starten,
+`DeviceMissing`, Wartezeit geklemmt), kein Gerät (keine Abfrage), Ablehnen (kein Warten, keine Apps); Ducking
+setzen + Wiederherstellen über ein Zwischenprofil, fehlender Wert kommt als fehlend zurück, Nutzerwert ohne
+Schalter unberührt, Rollback, DryRun/Blocked unberührt, Fehler scheitert nicht; Geometrie, Warnregel und
+Registry-Flag (DWORD/Binär); fehlender `appsWaitSeconds`-Schlüssel lädt 30. Probe `usb-power` läuft am Server.
+**Nicht belegt:** echtes Verschieben von Fenstern nach einem Topologiewechsel, Warten mit echter Wheelbase,
+Wirkung der Absenkung in einem Discord-Anruf, Warnung mit echten Sim-Geräten, Editor und Automatik-Seite optisch
+→ Gaming-PC.
 Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, Desktopsymbole, Surround, VR, CEC.
 
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren

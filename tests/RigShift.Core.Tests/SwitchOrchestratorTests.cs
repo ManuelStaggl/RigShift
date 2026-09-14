@@ -23,7 +23,10 @@ public sealed class SwitchOrchestratorTests
     private readonly AutoAdvanceTimeProvider _time = new();
     private readonly IAudioController _audio = Substitute.For<IAudioController>();
     private readonly IAppLauncher _apps = Substitute.For<IAppLauncher>();
+    private readonly IUsbDeviceList _usbDevices = Substitute.For<IUsbDeviceList>();
     private readonly FakePowerController _power = new();
+    private readonly FakeDuckingPreference _ducking = new();
+    private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -593,6 +596,241 @@ public sealed class SwitchOrchestratorTests
         display.HdrSet.Count.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task Switch_Applied_RescuesWindowsAfterTheDelay()
+    {
+        var options = new SwitchOptions { WindowRescueDelay = TimeSpan.FromSeconds(1) };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive()), options).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        _windows.Received(1).RescueOffscreenWindows();
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Switch_RolledBack_RescuesAfterBothApplies()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirmSeconds: 15), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        _windows.Received(2).RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_FailureRestoresPreviousTopology_RescuesAfterTheRestore()
+    {
+        DisplaySnapshot allDark = Snapshot(Attached(Desk4K), Attached(DeskLeft), Attached(DeskRight), Attached(Ultrawide), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [87, 87, 0]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        _windows.Received(1).RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task CatchUp_RescuesWindows()
+    {
+        await Create(new FakeDisplayConfigurator(DeskActive())).CatchUpAsync(Rig(), appliedDisplays: 1, Ct);
+
+        _windows.Received(1).RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_RescueThrows_DoesNotChangeTheOutcome()
+    {
+        _windows.RescueOffscreenWindows().Throws(new InvalidOperationException("EnumWindows failed"));
+        _apps.IsRunning(default!).ReturnsForAnyArgs(false);
+        Profile rig = Rig() with { Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }] };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+    }
+
+    [Fact]
+    public async Task Switch_DryRunOrBlocked_RescuesNothing()
+    {
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), new SwitchRequest { DryRun = true }, Ct);
+        await Create(new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false))).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        _windows.DidNotReceive().RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitForDevice_AlreadyPresent_StartsWithoutWaiting()
+    {
+        _usbDevices.PresentDeviceIds().Returns(Present(Wheelbase));
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase(), SwitchRequest.Default, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitForDevice_AppearsLater_StartsOnceItIsThere()
+    {
+        _usbDevices.PresentDeviceIds().Returns(Present(), Present(), Present(), Present(Wheelbase));
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase(), SwitchRequest.Default, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitForDevice_NeverAppears_StartsAppsAndReportsIt()
+    {
+        _usbDevices.PresentDeviceIds().Returns(Present("VID_046D&PID_C547"));
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            RigWaitingForWheelbase() with { AppsWaitSeconds = 20 }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Apps.ShouldBe(AppsOutcome.DeviceMissing);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(20));
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitSeconds_IsClamped()
+    {
+        _usbDevices.PresentDeviceIds().Returns(Present());
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(RigWaitingForWheelbase() with { AppsWaitSeconds = 1 }, SwitchRequest.Default, Ct);
+
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(Profiles.Profile.MinAppsWaitSeconds));
+    }
+
+    [Fact]
+    public async Task Switch_AppsWithoutWaitDevice_DoNotPoll()
+    {
+        Profile rig = RigWaitingForWheelbase() with { AppsWaitForUsbDeviceId = null };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        _usbDevices.DidNotReceive().PresentDeviceIds();
+    }
+
+    [Fact]
+    public async Task Switch_AppsWaitForDevice_NotConfirmed_NeitherWaitsNorStartsApps()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            RigWaitingForWheelbase() with { ConfirmTimeoutSeconds = 15 }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        _usbDevices.DidNotReceive().PresentDeviceIds();
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task Switch_Ducking_IsTurnedOffAndRestoredByProfileWithoutIt()
+    {
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        await orchestrator.SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+        _ducking.Value.ShouldBe(CommunicationsDucking.DoNothing);
+
+        // A second profile with the flag keeps the value from before the first one.
+        _ducking.Value = CommunicationsDucking.MuteOtherSounds;
+        await orchestrator.SwitchAsync(Rig() with { Name = "VR", DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+        _ducking.Value.ShouldBe(CommunicationsDucking.DoNothing);
+
+        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+        _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy50Percent);
+
+        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+        _ducking.Written.ShouldBe([CommunicationsDucking.DoNothing, CommunicationsDucking.DoNothing, CommunicationsDucking.ReduceBy50Percent]);
+    }
+
+    [Fact]
+    public async Task Switch_Ducking_MissingValueComesBackAsMissing()
+    {
+        _ducking.Value = null;
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        await orchestrator.SwitchAsync(Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+
+        _ducking.Written.ShouldBe([CommunicationsDucking.DoNothing, null]);
+    }
+
+    [Fact]
+    public async Task Switch_ProfileWithoutDucking_LeavesTheUserValueAlone()
+    {
+        _ducking.Value = CommunicationsDucking.DoNothing;
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        _ducking.Written.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Switch_NotConfirmed_RestoresDucking()
+    {
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        SwitchResult result = await orchestrator.SwitchAsync(
+            Rig(confirmSeconds: 15) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy50Percent);
+        _ducking.Written.ShouldBe([CommunicationsDucking.DoNothing, CommunicationsDucking.ReduceBy50Percent]);
+
+        // Nothing is remembered from the rejected switch: a later profile without the flag changes nothing.
+        _ducking.Value = CommunicationsDucking.MuteOtherSounds;
+        await orchestrator.SwitchAsync(Rig() with { Name = "Desk" }, SwitchRequest.Default, Ct);
+        _ducking.Value.ShouldBe(CommunicationsDucking.MuteOtherSounds);
+    }
+
+    [Fact]
+    public async Task Switch_DryRunOrBlocked_LeavesDuckingAlone()
+    {
+        Profile rig = Rig() with { DisableCommunicationsDucking = true };
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, new SwitchRequest { DryRun = true }, Ct);
+        await Create(new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false))).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        _ducking.Written.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Switch_DuckingFailure_DoesNotFailTheSwitch()
+    {
+        _ducking.Fail = true;
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            Rig() with { DisableCommunicationsDucking = true }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+    }
+
+    private const string Wheelbase = "VID_0EB7&PID_0020";
+
+    private static HashSet<string> Present(params string[] ids) => new(ids, StringComparer.OrdinalIgnoreCase);
+
+    private static Profile RigWaitingForWheelbase() => Rig() with
+    {
+        Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }],
+        AppsWaitForUsbDeviceId = "vid_0eb7&pid_0020",
+        AppsWaitForUsbDeviceName = "Wheelbase",
+    };
+
+    // The rescue delay is zero unless a test sets it, so waits measured elsewhere stay exact.
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _apps, _power, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()), options ?? new SwitchOptions(), _time, Logger.None);
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _windows, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()),
+            options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

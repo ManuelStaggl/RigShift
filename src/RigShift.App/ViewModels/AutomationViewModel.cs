@@ -24,12 +24,17 @@ public sealed partial class AutomationViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly AutomationService _automation;
+    private const string UsbPowerHelpUrl = "https://github.com/ManuelStaggl/RigShift/blob/main/docs/usb-power-saving.md";
+
     private readonly IUsbDeviceList _devices;
+    private readonly IUsbPowerCheck _powerCheck;
     private readonly ILogger _log;
     private readonly Dictionary<string, string> _deviceNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, bool> _powerWarnings = new(StringComparer.OrdinalIgnoreCase);
     private bool _loading;
 
-    public AutomationViewModel(SettingsService settings, ProfileCatalog catalog, AutomationService automation, IUsbDeviceList devices, ILogger log)
+    public AutomationViewModel(
+        SettingsService settings, ProfileCatalog catalog, AutomationService automation, IUsbDeviceList devices, IUsbPowerCheck powerCheck, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(automation);
         ArgumentNullException.ThrowIfNull(log);
@@ -38,6 +43,7 @@ public sealed partial class AutomationViewModel : ObservableObject
         _catalog = catalog;
         _automation = automation;
         _devices = devices;
+        _powerCheck = powerCheck;
         _log = log.ForContext<AutomationViewModel>();
         automation.Changed += (_, _) => Quietly(() => IsPaused = automation.IsPaused);
     }
@@ -98,7 +104,50 @@ public sealed partial class AutomationViewModel : ObservableObject
         IsPaused = _automation.IsPaused;
         HasNoProfiles = _catalog.Profiles.Count == 0;
         IsEmpty = Rules.Count == 0;
+        RefreshPowerWarnings();
     });
+
+    /// <summary>Whether Windows may power the device down; checked once per device until the next refresh.</summary>
+    internal bool HasPowerWarning(string? deviceId)
+    {
+        if (deviceId is null)
+        {
+            return false;
+        }
+
+        if (!_powerWarnings.TryGetValue(deviceId, out bool warn))
+        {
+            try
+            {
+                warn = UsbPowerSaving.ShouldWarn(_powerCheck.Check(deviceId));
+            }
+            catch (Exception ex) when (ex is Win32Exception or System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            {
+                _log.Debug(ex, "USB power check for {Device} failed", deviceId);
+                warn = false;
+            }
+
+            _powerWarnings[deviceId] = warn;
+            if (warn)
+            {
+                _log.Information("USB power saving may turn off {Device}", DeviceNameFor(deviceId) ?? deviceId);
+            }
+        }
+
+        return warn;
+    }
+
+    private void RefreshPowerWarnings()
+    {
+        _powerWarnings.Clear();
+        foreach (RuleCard card in Rules)
+        {
+            card.UpdatePowerWarning();
+        }
+    }
+
+    [RelayCommand]
+    private void OpenUsbPowerHelp() => ShellFolders.OpenUrl(UsbPowerHelpUrl, _log);
 
     internal Choice? DeviceChoiceFor(string? deviceId) =>
         DeviceChoices.FirstOrDefault(c => string.Equals(c.Key, deviceId, StringComparison.OrdinalIgnoreCase));
@@ -181,6 +230,8 @@ public sealed partial class AutomationViewModel : ObservableObject
         {
             card.SelectedDevice = DeviceChoiceFor(card.DeviceId);
         }
+
+        RefreshPowerWarnings();
     });
 
     private void FillDevices(IReadOnlyList<AutomationRule> rules)
@@ -291,6 +342,12 @@ public sealed partial class RuleCard : ObservableObject
     [ObservableProperty]
     public partial double? ExitDelaySeconds { get; set; }
 
+    /// <summary>Windows may power the chosen device down (hint only, docs/usb-power-saving.md).</summary>
+    [ObservableProperty]
+    public partial bool HasPowerWarning { get; private set; }
+
+    internal void UpdatePowerWarning() => HasPowerWarning = _owner.HasPowerWarning(DeviceId);
+
     public AutomationRule ToRule()
     {
         (ExitAction onExit, Guid? exitProfile) = AutomationViewModel.ExitFrom(SelectedExit);
@@ -313,7 +370,11 @@ public sealed partial class RuleCard : ObservableObject
 
     partial void OnIsEnabledChanged(bool value) => _owner.OnCardChanged();
 
-    partial void OnSelectedDeviceChanged(Choice? value) => _owner.OnCardChanged();
+    partial void OnSelectedDeviceChanged(Choice? value)
+    {
+        UpdatePowerWarning();
+        _owner.OnCardChanged();
+    }
 
     partial void OnSelectedProfileChanged(Choice? value) => _owner.OnCardChanged();
 

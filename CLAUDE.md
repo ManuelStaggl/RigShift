@@ -41,7 +41,9 @@ alle 2026-09-13. **1.1.0** (2026-09-14): Update-Funktionen U1–U4 in der App. *
 (Wiedergabe + Aufnahme) und Apps pro Profil (Roadmap 4–5; 3 war schon da), Monitornamen, Seiten Bildschirme und
 Über & Hilfe, **Automatik mit USB-Trigger** (Roadmap 7, Polling), **Wach halten pro Profil** (Roadmap 8) und
 **HDR + Bildwiederholrate pro Bildschirm** (Roadmap 10). Gestrichen (Umfangsprüfung, `docs/PLAN.md` Abschnitt 6):
-Spiele-Automatik (6), Energieplan (9), lokale HTTP-API (11), Home Assistant. Als Nächstes Hardwaretest von 1.2.0 und
+Spiele-Automatik (6), Energieplan (9), lokale HTTP-API (11), Home Assistant. Neu für 1.3 (ebenfalls unveröffentlicht):
+verlorene Fenster holen (`IWindowRescuer`), Apps warten auf USB-Gerät, Hinweis USB-Stromsparen (`IUsbPowerCheck`,
+`docs/usb-power-saving.md`) und Anruf-Absenkung pro Profil aus (`IDuckingPreference`). Als Nächstes Hardwaretest von 1.2.0 und
 diesem Block zusammen am Gaming-PC, danach Release 1.3.0 (`docs/PLAN.md`, Abschnitt 6).
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 

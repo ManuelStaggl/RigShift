@@ -49,7 +49,29 @@
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+
+                <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
+                <StackPanel
+                  Grid.Row="4"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="4"
+                  Margin="0,12,0,0"
+                  Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
+                  <ui:InfoBar
+                    Title="{loc:Tr Automation_PowerSavingTitle}"
+                    IsClosable="False"
+                    IsOpen="{Binding HasPowerWarning, Mode=OneWay}"
+                    Message="{loc:Tr Automation_PowerSavingText}"
+                    Severity="Warning" />
+                  <ui:Button
+                    Margin="0,8,0,0"
+                    AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                    Command="{Binding Owner.OpenUsbPowerHelpCommand}"
+                    Content="{loc:Tr Automation_PowerSavingHelp}"
+                    Icon="{ui:SymbolIcon Open24}" />
+                </StackPanel>
 
                 <ui:ToggleSwitch
                   Grid.Row="1"
