@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot | audio | usb | import <folder> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -49,6 +49,25 @@ switch (command)
     case "usb":
         var usb = new RigShift.Windows.Apps.UsbDeviceList();
         Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
+        break;
+
+    case "power":
+        using (var power = new RigShift.Windows.Power.PowerController(log))
+        {
+            Print(new { Active = power.GetActivePlan(), Plans = power.ListPlans() });
+        }
+
+        break;
+
+    case "keep-awake" when args.Length >= 2:
+        // Holds the request for the given seconds; check it meanwhile with "powercfg /requests" (admin).
+        using (var power = new RigShift.Windows.Power.PowerController(log))
+        {
+            power.SetKeepAwake(true);
+            await Task.Delay(TimeSpan.FromSeconds(int.Parse(args[1], CultureInfo.InvariantCulture)));
+            power.SetKeepAwake(false);
+        }
+
         break;
 
     case "import" when args.Length >= 2:
@@ -91,7 +110,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | audio | import <folder> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot | audio | power | usb | import <folder> | plan <folder> <profile>");
         return 2;
 }
 

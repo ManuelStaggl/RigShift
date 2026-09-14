@@ -40,6 +40,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 |---|---|---|
 | `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
+| `IPowerController` | `PowerController` | Power plans via `PowerEnumerate`/`PowerSetActiveScheme`; keep-awake is a power request (display + system required) that Windows drops when the process ends. |
 | `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. |
 | `IDeviceEvents` (M2/M4) | `DeviceNotificationListener` | `WM_DISPLAYCHANGE`, `WM_DEVICECHANGE` from a hidden message window. |
 | `IAutostart` (M4) | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |

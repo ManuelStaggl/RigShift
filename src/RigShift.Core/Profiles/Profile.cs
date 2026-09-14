@@ -33,4 +33,13 @@ public sealed record Profile
     /// source generator skips the initializer of an <c>init</c> property when the key is missing (profiles before 1.3).
     /// </summary>
     public IReadOnlyList<AppAction> Apps { get; set; } = [];
+
+    /// <summary>No standby, screen saver or display timeout while this profile is active (docs/PLAN.md, section 6, item 8).</summary>
+    public bool KeepAwake { get; init; }
+
+    /// <summary>
+    /// Power plan to activate; <c>null</c> leaves it unchanged. Switching from such a profile to one without a plan
+    /// restores the plan that was active before.
+    /// </summary>
+    public PowerPlan? PowerPlan { get; init; }
 }

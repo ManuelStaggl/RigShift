@@ -28,6 +28,9 @@ All notable changes to this project are documented here. The format follows
 - Local HTTP API for scripts, SimHub and Stream Deck: list profiles, read the status and switch profiles. Off by
   default; turn it on in the settings. Only reachable from the same PC and protected by a token. See
   [docs/http-api.md](docs/http-api.md).
+- Power settings per profile: keep the PC awake (no sleep, screen saver or display timeout while racing with only a
+  wheel) and a power plan such as High performance. Switching to a profile without a plan brings back the previous
+  plan; if you do not confirm the switch, both are undone.
 
 ### Changed
 

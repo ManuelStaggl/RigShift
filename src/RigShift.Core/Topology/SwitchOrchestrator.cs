@@ -26,16 +26,24 @@ public sealed class SwitchOrchestrator
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
     private readonly IAppLauncher _apps;
+    private readonly IPowerController _power;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
+    /// <summary>
+    /// The power plan that was active before a profile with its own plan took over; restored by the next profile
+    /// without a plan. Lives only as long as the process – after a restart the current plan simply stays.
+    /// </summary>
+    private Guid? _planBeforeProfiles;
+
     public SwitchOrchestrator(
         IDisplayConfigurator display,
         IAudioController audio,
         IAppLauncher apps,
+        IPowerController power,
         ISwitchConfirmation confirmation,
         TopologyPlanner planner,
         SwitchOptions options,
@@ -45,6 +53,7 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
         ArgumentNullException.ThrowIfNull(apps);
+        ArgumentNullException.ThrowIfNull(power);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(options);
@@ -54,6 +63,7 @@ public sealed class SwitchOrchestrator
         _display = display;
         _audio = audio;
         _apps = apps;
+        _power = power;
         _confirmation = confirmation;
         _planner = planner;
         _options = options;
@@ -92,6 +102,7 @@ public sealed class SwitchOrchestrator
         AudioRestore audioRestore = confirm
             ? await CaptureAudioAsync(profile.Audio, cancellationToken)
             : AudioRestore.Nothing;
+        PowerRestore? powerRestore = confirm ? CapturePower(profile) : null;
 
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -111,6 +122,9 @@ public sealed class SwitchOrchestrator
         plan = applied.Plan;
         AudioOutcome audio = await SwitchAudioAsync(profile.Audio, cancellationToken);
 
+        // With audio, not with apps: both are undone without loss, and the countdown should already run on the new plan.
+        SwitchPower(profile);
+
         if (confirm)
         {
             ConfirmationResult answer = await _confirmation.ConfirmAsync(
@@ -118,6 +132,7 @@ public sealed class SwitchOrchestrator
             if (answer != ConfirmationResult.Confirmed)
             {
                 _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
+                RestorePower(powerRestore);
                 return await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, cancellationToken);
             }
         }
@@ -590,6 +605,94 @@ public sealed class SwitchOrchestrator
         }
     }
 
+    /// <summary>
+    /// Keep-awake follows the profile. A power plan is set when the profile names one; the plan that was active before
+    /// is remembered and comes back with the next profile that names none (docs/PLAN.md, section 6, items 8 + 9).
+    /// Failures are logged and never fail the switch.
+    /// </summary>
+    private void SwitchPower(Profile profile)
+    {
+        try
+        {
+            if (_power.IsKeepingAwake != profile.KeepAwake)
+            {
+                _power.SetKeepAwake(profile.KeepAwake);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Keep-awake for {Profile} could not be set to {KeepAwake}", profile.Name, profile.KeepAwake);
+        }
+
+        try
+        {
+            if (profile.PowerPlan is { } plan)
+            {
+                Guid current = _power.GetActivePlan();
+                _planBeforeProfiles ??= current;
+                if (current != plan.Id)
+                {
+                    _power.SetActivePlan(plan.Id);
+                    _log.Information("Power plan set to {PlanName} for {Profile}", plan.Name, profile.Name);
+                }
+            }
+            else if (_planBeforeProfiles is { } original)
+            {
+                _planBeforeProfiles = null;
+                if (_power.GetActivePlan() != original)
+                {
+                    _power.SetActivePlan(original);
+                    _log.Information("Power plan {Plan} from before restored for {Profile}", original, profile.Name);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Power plan for {Profile} could not be set", profile.Name);
+        }
+    }
+
+    private PowerRestore? CapturePower(Profile profile)
+    {
+        try
+        {
+            bool touchesPlan = profile.PowerPlan is not null || _planBeforeProfiles is not null;
+            return new PowerRestore(_power.IsKeepingAwake, touchesPlan ? _power.GetActivePlan() : null, _planBeforeProfiles);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Could not read the power state; rollback will leave it unchanged");
+            return null;
+        }
+    }
+
+    private void RestorePower(PowerRestore? restore)
+    {
+        if (restore is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_power.IsKeepingAwake != restore.KeepAwake)
+            {
+                _power.SetKeepAwake(restore.KeepAwake);
+            }
+
+            if (restore.Plan is { } plan && _power.GetActivePlan() != plan)
+            {
+                _power.SetActivePlan(plan);
+            }
+
+            _planBeforeProfiles = restore.PlanBeforeProfiles;
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Restoring the power state failed");
+        }
+    }
+
     private void LogPlan(TopologyPlan plan)
     {
         _log.Information("Plan for {Profile}: {Resolved} resolved, {Missing} missing, {Warnings} warnings",
@@ -617,6 +720,8 @@ public sealed class SwitchOrchestrator
     {
         public static AudioRestore Nothing { get; } = new([], []);
     }
+
+    private sealed record PowerRestore(bool KeepAwake, Guid? Plan, Guid? PlanBeforeProfiles);
 
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
 }

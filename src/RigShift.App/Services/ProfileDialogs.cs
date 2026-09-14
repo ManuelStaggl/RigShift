@@ -18,6 +18,7 @@ public sealed class ProfileDialogs
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
+    private readonly IPowerController _power;
     private readonly SettingsService _settings;
     private readonly HotkeyService _hotkeys;
     private readonly IServiceProvider _services;
@@ -27,6 +28,7 @@ public sealed class ProfileDialogs
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         IAudioController audio,
+        IPowerController power,
         SettingsService settings,
         HotkeyService hotkeys,
         IServiceProvider services,
@@ -36,6 +38,7 @@ public sealed class ProfileDialogs
         _catalog = catalog;
         _display = display;
         _audio = audio;
+        _power = power;
         _settings = settings;
         _hotkeys = hotkeys;
         _services = services;
@@ -85,7 +88,7 @@ public sealed class ProfileDialogs
     {
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
+            profile, isNew, playback, recording, ListPowerPlans(), _settings.Current.ConfirmTimeoutSeconds, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };
@@ -99,6 +102,19 @@ public sealed class ProfileDialogs
         finally
         {
             _hotkeys.Resume();
+        }
+    }
+
+    private IReadOnlyList<PowerPlan> ListPowerPlans()
+    {
+        try
+        {
+            return _power.ListPlans();
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "Power plans could not be listed for the editor");
+            return [];
         }
     }
 

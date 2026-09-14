@@ -168,6 +168,12 @@
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist. Starten überspringt Apps, die schon laufen. Beenden schließt die App und beendet sie, falls sie nach 5 Sekunden noch läuft.</value></data>
   <data name="Editor_AddApp" xml:space="preserve"><value>App hinzufügen</value></data>
+  <data name="Editor_Power" xml:space="preserve"><value>Energie</value></data>
+  <data name="Editor_PowerPlan" xml:space="preserve"><value>Energieplan</value></data>
+  <data name="Editor_KeepAwake" xml:space="preserve"><value>PC wach halten (kein Standby, Bildschirmschoner oder Bildschirm-Aus)</value></data>
+  <data name="Editor_PowerHint" xml:space="preserve"><value>Beides gilt, solange dieses Profil aktiv ist. Ein Wechsel auf ein Profil ohne Energieplan stellt den vorherigen Plan wieder her. Benachrichtigungen schaltet Windows bei Vollbild-Spielen selbst stumm.</value></data>
+  <data name="Power_Unchanged" xml:space="preserve"><value>Nicht ändern</value></data>
+  <data name="Power_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht vorhanden)</value></data>
   <data name="App_Start" xml:space="preserve"><value>Starten</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Beenden</value></data>
   <data name="App_Action" xml:space="preserve"><value>Aktion</value></data>

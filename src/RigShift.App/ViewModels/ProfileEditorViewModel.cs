@@ -29,6 +29,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         bool isNew,
         IReadOnlyList<AudioDeviceInfo> playbackDevices,
         IReadOnlyList<AudioDeviceInfo> recordingDevices,
+        IReadOnlyList<PowerPlan> powerPlans,
         int appConfirmTimeoutSeconds,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
@@ -69,6 +70,22 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
         {
             Apps.Add(new AppEditItem(app));
         }
+
+        ArgumentNullException.ThrowIfNull(powerPlans);
+        KeepAwake = profile.KeepAwake;
+        PowerPlanChoices = [new PowerPlanChoice(null, Loc.Instance["Power_Unchanged"])];
+        foreach (PowerPlan plan in powerPlans)
+        {
+            PowerPlanChoices.Add(new PowerPlanChoice(plan, plan.Name));
+        }
+
+        if (profile.PowerPlan is { } saved && !powerPlans.Any(p => p.Id == saved.Id))
+        {
+            // Keep a plan this machine does not have (profile copied from another PC) instead of silently dropping it.
+            PowerPlanChoices.Add(new PowerPlanChoice(saved, Loc.Format("Power_Unknown", saved.Name)));
+        }
+
+        SelectedPowerPlan = PowerPlanChoices.FirstOrDefault(c => c.Plan?.Id == profile.PowerPlan?.Id) ?? PowerPlanChoices[0];
     }
 
     /// <summary>True: saved, close the window. False: cancelled.</summary>
@@ -85,6 +102,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
 
     public ObservableCollection<AppEditItem> Apps { get; } = [];
+
+    public ObservableCollection<PowerPlanChoice> PowerPlanChoices { get; }
+
+    [ObservableProperty]
+    public partial PowerPlanChoice? SelectedPowerPlan { get; set; }
+
+    [ObservableProperty]
+    public partial bool KeepAwake { get; set; }
 
     /// <summary>The profile as saved, after <see cref="CloseRequested"/> with <c>true</c>.</summary>
     public Profile? Saved { get; private set; }
@@ -258,8 +283,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject
             RecordingVolumePercent = AudioSlots[2].VolumePercent,
         },
         Apps = Apps.Select(a => a.ToAction()).ToList(),
+        KeepAwake = KeepAwake,
+        PowerPlan = SelectedPowerPlan?.Plan,
     };
 }
+
+public sealed record PowerPlanChoice(PowerPlan? Plan, string Name);
 
 /// <summary>One display row in the editor.</summary>
 public sealed partial class DisplayEditItem : ObservableObject

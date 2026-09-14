@@ -73,6 +73,18 @@ GetStdHandle
 ATTACH_PARENT_PROCESS
 AllowSetForegroundWindow
 ASFW_ANY
+// Keep awake and power plan per profile (docs/PLAN.md, section 6, items 8 + 9).
+PowerCreateRequest
+PowerSetRequest
+PowerClearRequest
+POWER_REQUEST_TYPE
+REASON_CONTEXT
+PowerGetActiveScheme
+PowerSetActiveScheme
+PowerEnumerate
+PowerReadFriendlyName
+POWER_DATA_ACCESSOR
+LocalFree
 // Desktop shortcuts for profiles.
 ShellLink
 IShellLinkW

@@ -168,6 +168,12 @@
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="Editor_AppsHint" xml:space="preserve"><value>Run in this order once the switch is confirmed. Start skips apps that are already running. Stop closes the app and ends it if it is still running after 5 seconds.</value></data>
   <data name="Editor_AddApp" xml:space="preserve"><value>Add app</value></data>
+  <data name="Editor_Power" xml:space="preserve"><value>Power</value></data>
+  <data name="Editor_PowerPlan" xml:space="preserve"><value>Power plan</value></data>
+  <data name="Editor_KeepAwake" xml:space="preserve"><value>Keep the PC awake (no sleep, screen saver or display timeout)</value></data>
+  <data name="Editor_PowerHint" xml:space="preserve"><value>Both apply while this profile is active. Switching to a profile without a power plan brings back the plan from before. Windows mutes notifications on its own during full-screen games.</value></data>
+  <data name="Power_Unchanged" xml:space="preserve"><value>Don't change</value></data>
+  <data name="Power_Unknown" xml:space="preserve"><value>{0} (not on this PC)</value></data>
   <data name="App_Start" xml:space="preserve"><value>Start</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Stop</value></data>
   <data name="App_Action" xml:space="preserve"><value>Action</value></data>

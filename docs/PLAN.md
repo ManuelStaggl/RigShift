@@ -501,6 +501,28 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
    nicht, de + en. **Nicht belegt:** echtes Ein-/Ausschalten eines Geräts (braucht den Nutzer, z. B. Wheelbase).
 8. Rennmodus: Fokus-Assistent an, Spielmodus, Standby/Bildschirmschoner aus; alles beim Zurückwechseln zurück.
 9. Energieplan pro Profil (`powercfg /setactive`).
+   **Entschieden 2026-09-14 für 8 + 9 als ein Block** (Fragerunde mit dem User, alle Empfehlungen angenommen):
+   - Pro Profil **„Wach halten“** (kein Standby, kein Bildschirmschoner, Monitore bleiben an) und **Energieplan**
+     (aus = unverändert). Beides über dokumentierte APIs und verlustfrei umkehrbar.
+   - **Nicht stören und Spielmodus entfallen**: Nicht stören hat keine offizielle API (nur undokumentierte
+     Windows-Interna, die mit einem Update still brechen können), den Spielmodus schaltet Windows für erkannte Spiele
+     selbst. Stattdessen Doku-Hinweis auf die Windows-Automatik für Vollbild-Spiele.
+   - **Gesetzt zusammen mit Audio, beim Zurückrollen zurückgesetzt** – anders als Apps, weil beides ohne Verlust
+     umkehrbar ist und sonst während des Countdowns noch der alte Energieplan gälte.
+   - Eigene Entscheidungen: Wach halten per **Power Request** (`PowerCreateRequest`, DisplayRequired + SystemRequired)
+     statt `SetThreadExecutionState` – an ein Handle gebunden statt an den aufrufenden Thread, in `powercfg /requests`
+     als RigShift sichtbar, endet mit dem Prozess. Energieplan per `PowerSetActiveScheme` statt `powercfg`-Aufruf.
+     Rückkehr: der Plan von vor dem ersten Profil mit eigenem Plan wird gemerkt und vom nächsten Profil **ohne** Plan
+     zurückgesetzt (auch über ein Zwischenprofil hinweg); nur im Speicher, nach einem App-Neustart bleibt der Plan
+     einfach. Wach halten folgt dem Profil und wird beim App-Start für das aktive Profil neu gesetzt. Fehler nur im
+     Log, kein eigener Ausgang im Ergebnis.
+   **Umgesetzt 2026-09-14**: `Profile.KeepAwake/PowerPlan`, `IPowerController` + `Windows/Power/PowerController`,
+   Abschnitt „Energie“ im Profil-Editor, Probe `power` und `keep-awake <s>`. Unit-Tests belegen Wach halten folgt dem
+   Profil, Plan setzen und Rückkehr über ein Zwischenprofil, Plan des Nutzers bleibt unberührt, Zurückrollen, Dry-Run/
+   Blockiert unverändert, Fehler lässt den Wechsel gelingen. **Am Server belegt:** Planliste mit Namen und aktivem Plan,
+   Power Request unter DISPLAY und SYSTEM in `powercfg /requests`, nach Prozessende weg. **Nicht belegt:** Plan wirklich
+   umschalten (Systemeinstellung, am Server bewusst nicht), Bildschirmschoner/Standby bleiben aus, Editor-Optik →
+   Gaming-PC.
 10. HDR je Bildschirm (CCD `DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE`), Bildwiederholrate; Nachtlicht nur
     über undokumentierte Registry → als „experimentell" markieren.
 11. Lokale HTTP-API (`http://127.0.0.1:<port>/api/profiles`, Token in settings.json) für Skripte und SimHub.
