@@ -126,7 +126,7 @@
                   Icon="{ui:SymbolIcon Delete24}"
                   ToolTip="{loc:Tr Automation_Delete}" />
 
-                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" TextWrapping="Wrap" />
                 <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
                   <ComboBox
                     AutomationProperties.HelpText="{Binding SelectedDevice.Name}"

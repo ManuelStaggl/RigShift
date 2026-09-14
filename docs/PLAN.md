@@ -332,8 +332,11 @@ setzen + Wiederherstellen über ein Zwischenprofil, fehlender Wert kommt als feh
 Schalter unberührt, Rollback, DryRun/Blocked unberührt, Fehler scheitert nicht; Geometrie, Warnregel und
 Registry-Flag (DWORD/Binär); fehlender `appsWaitSeconds`-Schlüssel lädt 30. Probe `usb-power` läuft am Server.
 **Nicht belegt:** echtes Verschieben von Fenstern nach einem Topologiewechsel, Warten mit echter Wheelbase,
-Wirkung der Absenkung in einem Discord-Anruf, Warnung mit echten Sim-Geräten, Editor und Automatik-Seite optisch
-→ Gaming-PC.
+Wirkung der Absenkung in einem Discord-Anruf, Warnung mit echten Sim-Geräten → Gaming-PC.
+**Am Server angesehen** (Dev-Build, de, dunkel, ohne Umschalten): Automatik-Seite mit USB-Regel, Wartezeit und
+Stromspar-Warnung samt Anleitungsknopf (Gerät mit gesetztem Flag); Editor mit Hz-/HDR-Auswahl je Bildschirm,
+Anruf-Absenkung, Wach halten und „Vor dem App-Start auf Gerät warten“. Abgeschnittenes Ende-Label der Regelkarte
+korrigiert (Umbruch).
 Nicht übernommen: Audio pro App (undokumentierte Schnittstelle), Maus sperren, Desktopsymbole, Surround, VR, CEC.
 
 **v1.1 – Updates in der App** (vom Nutzer gewählt 2026-09-14; kommt zuerst, weil klein und für alle späteren
