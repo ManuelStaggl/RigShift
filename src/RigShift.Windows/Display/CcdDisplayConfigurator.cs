@@ -169,10 +169,11 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         }
 
         long started = System.Diagnostics.Stopwatch.GetTimestamp();
-        int result = CcdNative.SetHdr(handle.Adapter.ToLuid(), handle.TargetId, enabled);
-        _log.Information("HDR of {Display} set to {Enabled}: result {Result} after {Milliseconds:0} ms",
-            DisplayNames.Of(display.Identity), enabled, result, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-        return Task.FromResult(result);
+        HdrSetResult result = CcdNative.SetHdr(handle.Adapter.ToLuid(), handle.TargetId, enabled);
+        _log.Information("HDR of {Display} set to {Enabled} with the {Request} request: result {Result}, _2 query {QueryError}, after {Milliseconds:0} ms",
+            DisplayNames.Of(display.Identity), enabled, result.UsedLegacyRequest ? "SET_ADVANCED_COLOR_STATE" : "SET_HDR_STATE",
+            result.Result, result.QueryError, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        return Task.FromResult(result.Result);
     }
 
     public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken)

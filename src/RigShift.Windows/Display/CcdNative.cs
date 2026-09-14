@@ -107,20 +107,34 @@ internal static unsafe class CcdNative
             : null;
     }
 
-    /// <summary>Sets HDR with the 24H2 request, falling back to the older advanced color request. Returns the native error.</summary>
-    public static int SetHdr(LUID adapter, uint targetId, bool enabled)
+    /// <summary>
+    /// Sets HDR. When the _2 query answers (Windows 11 24H2 and later), only the 24H2 request is used and its error is
+    /// returned as is; the older advanced color request is used only when that query fails (analysis finding G-02).
+    /// </summary>
+    public static HdrSetResult SetHdr(LUID adapter, uint targetId, bool enabled)
     {
+        DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2 info2 = default;
+        info2.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2;
+        info2.header.size = (uint)sizeof(DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2);
+        info2.header.adapterId = adapter;
+        info2.header.id = targetId;
+        int queryError = PInvoke.DisplayConfigGetDeviceInfo(&info2.header);
+        if (queryError != 0)
+        {
+            return new HdrSetResult(queryError, SetAdvancedColor(adapter, targetId, enabled), UsedLegacyRequest: true);
+        }
+
         DISPLAYCONFIG_SET_HDR_STATE state = default;
         state.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_HDR_STATE;
         state.header.size = (uint)sizeof(DISPLAYCONFIG_SET_HDR_STATE);
         state.header.adapterId = adapter;
         state.header.id = targetId;
         state.enableHdr = enabled;
-        if (PInvoke.DisplayConfigSetDeviceInfo(&state.header) == 0)
-        {
-            return 0;
-        }
+        return new HdrSetResult(queryError, PInvoke.DisplayConfigSetDeviceInfo(&state.header), UsedLegacyRequest: false);
+    }
 
+    private static int SetAdvancedColor(LUID adapter, uint targetId, bool enabled)
+    {
         DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE legacy = default;
         legacy.header.type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE;
         legacy.header.size = (uint)sizeof(DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE);
@@ -130,6 +144,9 @@ internal static unsafe class CcdNative
         return PInvoke.DisplayConfigSetDeviceInfo(&legacy.header);
     }
 }
+
+/// <summary>Native codes of one HDR change: the _2 query that picks the request, and the request itself.</summary>
+internal readonly record struct HdrSetResult(int QueryError, int Result, bool UsedLegacyRequest);
 
 /// <summary>Conversions between CCD mode structs and the profile model.</summary>
 internal static class CcdModes
