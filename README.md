@@ -46,8 +46,9 @@ see no picture after a switch, it simply switches back after a few seconds.
 **Getting into the rig**
 
 - **Wheelbase on = rig.** An automation rule switches when a USB device connects and back when it is gone – after a
-  delay you choose, so a quick power cycle changes nothing. Devices are recognised by model (vendor and product
-  id), so two identical devices look like one; pick a device that only the rig has.
+  delay you choose, so a quick power cycle changes nothing. A rule can also wait for several devices, e.g. wheelbase
+  and pedals, and you can give each device your own name. Devices are recognised by model (vendor and product id), so
+  two identical devices look like one; pick a device that only the rig has.
 - **Apps per profile:** start SimHub or Crew Chief, close what you don't need – optionally only once the wheelbase is
   detected.
 - **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
@@ -63,7 +64,7 @@ see no picture after a switch, it simply switches back after a few seconds.
 | | |
 |---|---|
 | <img alt="Automation page with a wheelbase rule" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Profile editor with displays, refresh rate and HDR" src="docs/screenshots/profile-editor-dark.png" width="400"> |
-| **Automation** – to the rig when the wheelbase turns on, back when it is off. | **Profile editor** – displays with refresh rate and HDR, audio, apps. |
+| **Automation** – to the rig when the wheelbase (and pedals) turn on, back when they are off. | **Profile editor** – displays with refresh rate and HDR, audio, apps. |
 | <img alt="Tray popup for switching profiles" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog with countdown" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray popup** – switch profiles from the notification area. | **Safety net** – keep the new layout or it reverts on its own. |
 | <img alt="Displays page with monitor names" src="docs/screenshots/displays-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |

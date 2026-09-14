@@ -25,8 +25,15 @@ App composes them.
 - **`TopologyPlan`** – the result of matching a profile against a snapshot: resolved, missing, warnings,
   `IsBlocked`, `ShouldRetryLater`. Shown to the user instead of raw error codes.
 - **`SwitchResult`** – outcome of a switch (`Applied`, `AppliedPartially`, `RolledBack`, `Blocked`, `Failed`, `DryRun`).
-- **`AutomationRule`** – USB device trigger: switch to a profile when the device connects, and after a delay per
-  rule switch to a profile or back when it disconnects.
+- **`AutomationRule`** – USB device trigger: switch to a profile once all of the rule's devices are connected, and
+  after a delay per rule switch to a profile or back once one of them is gone. `AutomationTrigger` decides from polled
+  device ids (pure logic); rules of 1.3 with a single `usbDeviceId` are migrated on load.
+- **`UsbDeviceNames`** – custom USB device names by `VID_xxxx&PID_xxxx`, stored in the settings and shown in rules,
+  the editor's wait-for-device list, notifications and logs.
+- **`SwitchOrchestrator`** – runs one switch: plan, apply with retries, confirm, roll back, HDR, window rescue and
+  keep-awake. Audio (`AudioSwitcher`), apps and the wait for their USB device (`AppRunner`) and communications
+  ducking (`DuckingSwitcher`) are its internal parts. Apps run after the result: `SwitchResult.AppsCompletion`
+  completes with their outcome.
 
 ## Switch state machine
 
@@ -45,7 +52,7 @@ Details and the reasoning behind every step live in `docs/PLAN.md` (German) and 
 
 | Interface | Windows implementation | Notes |
 |---|---|---|
-| `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; `ApplyAsync` is one atomic `SetDisplayConfig`. HDR via `DisplayConfigGet/SetDeviceInfo` (24H2 `_2`/`SET_HDR_STATE`, older advanced color as fallback); refresh rates offered via DXGI output mode lists (exact rationals). |
+| `IDisplayConfigurator` | `CcdDisplayConfigurator` | `QueryAsync` uses `QDC_ALL_PATHS`; the snapshot is built from the raw CCD paths and modes by the pure function `CcdSnapshotBuilder`, which tests cover without hardware; `ApplyAsync` is one atomic `SetDisplayConfig`. HDR via `DisplayConfigGet/SetDeviceInfo` (24H2 `_2`/`SET_HDR_STATE`, older advanced color as fallback); refresh rates offered via DXGI output mode lists (exact rationals). |
 | `IAudioController` | `PolicyConfigAudioController` | Enumerate via `IMMDeviceEnumerator`; default via `IPolicyConfig`; volume via `IAudioEndpointVolume`. |
 | `IAppLauncher` | `ProcessAppLauncher` | Starts and stops a profile's programs via `Process`; programs are matched by file name. |
 | `IPowerController` | `PowerController` | Keep-awake is a power request (display + system required) that Windows drops when the process ends. |
@@ -73,6 +80,8 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
   folder on uninstall.
 - Updates: `UpdateService` checks GitHub Releases at startup and every 24 h and downloads a newer version; Velopack
   installs it the next time the tray app starts (never during a CLI call, which would lose its exit code).
+- UI: WPF-UI pages scroll through `Controls/WheelScrolling`, which hands the mouse wheel to the page's outer scroll
+  viewer; view models live one per file in `RigShift.App/ViewModels`.
 
 ## Known limitations (accepted)
 

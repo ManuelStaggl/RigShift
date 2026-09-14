@@ -8,89 +8,42 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- USB device names: name a device once on the automation page; the name shows in the rules, in the profile editor's
+- USB device names: name a device once on the **Automation** page; the name shows in the rules, in the profile editor's
   "Wait for device" list and in notifications.
 - Automation rules with several USB devices: the rule switches once all of them are connected, and its end action runs
   once one of them has been gone for the rule's wait time. Rules from earlier versions keep their device.
-- The automation page warns when two rules use the same USB devices – both of them switch when they connect.
+- The **Automation** page warns when two rules use the same USB devices – both of them switch when they connect.
 
 ### Changed
 
-- RigShift is no longer packed into one large EXE: updates download only the files that changed, and the app no longer
-  unpacks itself at every start.
+- **Note when updating:** automation rules no longer have their own on/off switch – pause the automation or delete the
+  rule instead. A rule that was switched off in an earlier version is removed when RigShift starts (noted in the log),
+  so it cannot suddenly start switching.
+- A new automation rule now switches to the default profile (or the first profile) when its device is gone, instead of
+  back to the previous profile. "Switch back to the previous profile" is still available for each rule.
+- Apps of a profile now start after the switch has finished. While they wait for their USB device, hotkeys, automation
+  and other switches work, and a new switch cancels the wait. If something goes wrong with the apps, a separate
+  notification says so.
+- Apps that wait for a USB device wait a fixed 30 seconds; the field for the longest wait is gone.
 - Profile editor: the own confirmation time per profile is replaced by a "Switch without asking" checkbox; the seconds are
   set only in the settings. Profiles with an own time of 0 s switch without asking, all others ask with the settings' time.
 - Profile editor: the call devices ("Playback for calls", "Recording for calls") moved into a collapsed "Advanced" section
   and follow playback and recording unless set.
-- Apps that wait for a USB device wait a fixed 30 seconds; the field for the longest wait is gone.
-- Display names are edited only on the Displays page; the editor still shows name and model.
-
-### Fixed
-
-- Profile editor: Enter saves, and closing with unsaved changes asks before discarding them.
-- Deleting a profile asks with a red delete button, centred on the RigShift window.
-- Deleting an automation rule asks first, in the same way; "Switch without confirmation" on a rule explains that nothing
-  is reverted automatically if a display stays dark.
-- Changing the language also updates the automation page's lists and an open profile editor without a restart.
-- "Refresh devices" on an automation rule no longer empties the chosen device of every rule.
-- After reconnecting to the PC (for example over Remote Desktop), the tray icon and the theme are no longer redrawn
-  several times in a row.
-- The main buttons have access keys (Alt + underlined letter), e.g. Save in the profile editor and Keep/Revert after a
-  switch.
-- Automation rules no longer have their own on/off switch – pause the automation or delete the rule instead. A rule that
-  was switched off in an earlier version is removed when RigShift starts (noted in the log), so it cannot suddenly start
-  switching.
-- A new automation rule now switches to the default profile (or the first profile) when its device is gone, instead of
-  back to the previous profile. "Switch back to the previous profile" is still available for each rule.
-
-### Fixed
-
-- If the settings cannot be saved while pausing or resuming the automation, the automation page shows an error and the
-  switch returns to the saved state instead of silently showing the wrong one.
-### Changed
-
-- Apps of a profile now start after the switch has finished. While they wait for their USB device, hotkeys, automation
-  and other switches work, and a new switch cancels the wait. If something goes wrong with the apps, a separate
-  notification says so.
+- Display names are edited only on the **Displays** page; the editor still shows name and model.
 - "Check" on a profile no longer blocks switching while it runs.
-
-### Fixed
-
-- A display that wakes up late and then answers "not ready" gets the full retry time again instead of failing.
-- Two identical monitors: if one is unplugged and the other moved to a different port, RigShift no longer guesses which
-  one it is; the switch is blocked with a hint.
-- A monitor that Windows lists twice (an old and a current entry) is matched to the entry that is ready.
-- When Windows had to choose the display modes, RigShift checks the result: a display that stayed dark makes the switch
-  count as partial, and the note about Windows' modes only appears when a mode really differs.
-- The active profile is up to date as soon as a switch reports its result.
-### Fixed
-
-- Stopping an app of a profile only ends programs started from the configured folder; a same-named program elsewhere
-  keeps running (where Windows lets RigShift read the program's path).
-- A desktop shortcut for a profile whose name ends with a backslash now opens the right profile.
-- A program that is not responding no longer holds up a switch while RigShift moves lost windows back; the move
-  takes at most 3 seconds and happens only once the switch is confirmed, so a rejected switch leaves windows where
-  they were.
-- HDR is set even if a display reports its HDR state only a moment after the switch.
-- The USB power-saving warning only looks at the ports the device is connected to right now, also covers devices
-  with their own driver (for example Thrustmaster or Logitech G HUB), and logs when the registry cannot be read.
-- A command-line call or link that connects to RigShift but sends nothing no longer blocks later calls (10-second
-  limit).
-- Audio devices are released right after use, and HDR changes log which Windows request was used and both result
-  codes.
-
-### Changed
-
+- RigShift is no longer packed into one large EXE: updates download only the files that changed, and the app no longer
+  unpacks itself at every start.
 - The diagnostic info replaces your user name in paths, and **About & help** and the README say what the log files
   contain before you attach them to an issue.
 - `SECURITY.md` describes how updates are delivered and verified, that they are not code-signed, and the remaining
   risk.
+
 ### Removed
 
 - The setting "Switch to the default profile when RigShift starts". It could compete with an automation rule at sign-in,
   and Windows restores the last display arrangement after a restart by itself. Existing settings files still load.
-- The **Reload** button on the Profiles page: profiles are reloaded after every save, also from the command line.
-  **Open profile folder** moved next to **Open log folder** on **About & help**, so Settings holds only settings.
+- The **Reload** button on the **Profiles** page: profiles are reloaded after every save, also from the command line.
+  **Open profile folder** moved next to **Open log folder** on **About & help**, so **Settings** holds only settings.
 
 ### Fixed
 
@@ -98,16 +51,50 @@ All notable changes to this project are documented here. The format follows
   right edge, also over text fields.
 - **About & help** shows the release notes of a new version compactly under a collapsed **What's new**, instead of
   the whole text with blank lines; the update buttons sit in their own row below the version.
-- The result of a switch also shows on the Profiles page, not only as a tray notification (Windows hides those during
-  full-screen games), and the page says "Switching…" while a switch runs. Clicking the notification of a failed or
-  blocked switch opens **About & help**.
+- The result of a switch also shows on the **Profiles** page, not only as a tray notification (Windows hides those
+  during full-screen games), and the page says "Switching…" while a switch runs. Clicking the notification of a failed
+  or blocked switch opens **About & help**.
 - An unexpected error in the window now shows a notification instead of only being logged, so a button no longer seems
   to do nothing.
+- Profile editor: Enter saves, and closing with unsaved changes asks before discarding them.
+- Deleting a profile asks with a red delete button, centred on the RigShift window.
+- Deleting an automation rule asks first, in the same way; "Switch without confirmation" on a rule explains that nothing
+  is reverted automatically if a display stays dark.
+- If the settings cannot be saved while pausing or resuming the automation, the **Automation** page shows an error and
+  the switch returns to the saved state instead of silently showing the wrong one.
+- "Refresh devices" on the **Automation** page no longer empties the chosen device of every rule.
 - Keyboard shortcuts show key names as your keyboard layout calls them, e.g. "Alt+," or "Ctrl+Alt+Page Up" instead of
   "OemComma" or "Prior".
+- The main buttons have access keys (Alt + underlined letter), e.g. Save in the profile editor and Keep/Revert after a
+  switch.
 - Switching the language in Settings now also updates texts that stayed in the old language until a restart (hints,
-  update status, recent switches, the Displays page), and dates and numbers keep your Windows regional format.
+  update status, recent switches, the **Displays** page, the **Automation** page's lists and an open profile editor),
+  and dates and numbers keep your Windows regional format.
 - German texts use one wording throughout ("Wechsel", addressing you directly) and consistent ellipses.
+- Layouts checked in German and English, light and dark, narrow and wide: name fields on the **Displays** page no
+  longer squeeze the details into a narrow column, and a profile without a symbol no longer leaves a gap.
+- After reconnecting to the PC (for example over Remote Desktop), the tray icon and the theme are no longer redrawn
+  several times in a row.
+- A display that wakes up late and then answers "not ready" gets the full retry time again instead of failing.
+- Two identical monitors: if one is unplugged and the other moved to a different port, RigShift no longer guesses which
+  one it is; the switch is blocked with a hint.
+- A monitor that Windows lists twice (an old and a current entry) is matched to the entry that is ready.
+- When Windows had to choose the display modes, RigShift checks the result: a display that stayed dark makes the switch
+  count as partial, and the note about Windows' modes only appears when a mode really differs.
+- The active profile is up to date as soon as a switch reports its result.
+- HDR is set even if a display reports its HDR state only a moment after the switch.
+- A program that is not responding no longer holds up a switch while RigShift moves lost windows back; the move
+  takes at most 3 seconds and happens only once the switch is confirmed, so a rejected switch leaves windows where
+  they were.
+- Stopping an app of a profile only ends programs started from the configured folder; a same-named program elsewhere
+  keeps running (where Windows lets RigShift read the program's path).
+- The USB power-saving warning only looks at the ports the device is connected to right now, also covers devices
+  with their own driver (for example Thrustmaster or Logitech G HUB), and logs when the registry cannot be read.
+- A desktop shortcut for a profile whose name ends with a backslash now opens the right profile.
+- A command-line call or link that connects to RigShift but sends nothing no longer blocks later calls (10-second
+  limit).
+- Audio devices are released right after use, and HDR changes log which Windows request was used and both result
+  codes.
 
 ## [1.3.1] - 2026-09-14
 
