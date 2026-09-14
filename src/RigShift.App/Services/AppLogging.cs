@@ -21,8 +21,6 @@ public static class AppLogging
 
         return new LoggerConfiguration()
             .MinimumLevel.Debug()
-            // The generic host logs six lines of lifetime chatter on every start (analysis finding K-04).
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ProcessId", Environment.ProcessId)
             .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)

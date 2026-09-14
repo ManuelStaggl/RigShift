@@ -3,7 +3,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
@@ -24,7 +23,7 @@ namespace RigShift.App;
 public partial class App : Application, IAppShell
 {
     private readonly CliRequest _request;
-    private IHost? _host;
+    private ServiceProvider? _services;
     private TrayIconService? _tray;
 
     public App(CliRequest request)
@@ -41,7 +40,7 @@ public partial class App : Application, IAppShell
 
     public bool IsExiting { get; private set; }
 
-    private IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("Host not started.");
+    private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
     public void ShowMainWindow(Type? page = null)
     {
@@ -75,7 +74,7 @@ public partial class App : Application, IAppShell
     {
         try
         {
-            if (_host?.Services.GetService<SwitchCoordinator>() is { IsSwitching: true } coordinator)
+            if (_services?.GetService<SwitchCoordinator>() is { IsSwitching: true } coordinator)
             {
                 Log.Information("Exit requested during a switch, cancelling it first");
                 if (!await coordinator.StopAsync(TimeSpan.FromSeconds(30)))
@@ -97,7 +96,7 @@ public partial class App : Application, IAppShell
 
         // Blocking here would deadlock the rollback (the countdown window needs this thread), so the session end is
         // refused once while the switch rolls back; the app exits right after.
-        if (_host?.Services.GetService<SwitchCoordinator>() is { IsSwitching: true })
+        if (_services?.GetService<SwitchCoordinator>() is { IsSwitching: true })
         {
             Log.Warning("Windows session ending ({Reason}) during a switch, refusing until it has rolled back", e.ReasonSessionEnding);
             e.Cancel = true;
@@ -119,12 +118,11 @@ public partial class App : Application, IAppShell
         {
             ApplyWindowsTheme();
 
-            // Arguments are parsed by CliParser; the host must not interpret them as configuration.
-            _host = Host.CreateDefaultBuilder()
-                .UseSerilog()
-                .ConfigureServices(RegisterServices)
-                .Build();
-            await _host.StartAsync();
+            // A plain container: the app has no hosted services, configuration or Microsoft.Extensions.Logging users,
+            // and every service logs through Serilog directly (analysis finding A-05).
+            var services = new ServiceCollection();
+            RegisterServices(services);
+            _services = services.BuildServiceProvider();
 
             await Services.GetRequiredService<SettingsService>().LoadAsync(CancellationToken.None);
             ProfileCatalog catalog = Services.GetRequiredService<ProfileCatalog>();
@@ -181,7 +179,8 @@ public partial class App : Application, IAppShell
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("RigShift exiting with code {ExitCode}", e.ApplicationExitCode);
-        _host?.Dispose();
+        // Disposes the singletons in reverse creation order; all of them are IDisposable (none async-only).
+        _services?.Dispose();
         Log.CloseAndFlush();
         base.OnExit(e);
     }

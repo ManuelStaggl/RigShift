@@ -15,7 +15,7 @@ Architekturfrage dort nachsehen, nicht neu entscheiden. Harte Regeln zur Anzeige
 |---|---|
 | `src/RigShift.Core` (`net10.0`) | Profile, Planner, Orchestrator, Legacy-Parser – **kein Win32, kein UI**, voll testbar |
 | `src/RigShift.Windows` | CCD-API, Core Audio, `IPolicyConfig`, Apps, USB, Energie, Fensterrettung – Interop über **CsWin32** (`NativeMethods.txt`); Anzeigeänderungen fängt `DisplayChangeWatcher` in der App |
-| `src/RigShift.App` | WPF + **WPF-UI 4.3**, H.NotifyIcon (Tray), CommunityToolkit.Mvvm, Generic Host, Serilog, System.CommandLine, Velopack |
+| `src/RigShift.App` | WPF + **WPF-UI 4.3**, H.NotifyIcon (Tray), CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection, Serilog, System.CommandLine, Velopack |
 | `tests/RigShift.Core.Tests` | xunit v3 + Shouldly + NSubstitute auf Microsoft.Testing.Platform |
 | `tests/RigShift.Windows.Tests` | CCD-Structs, Pfadaufbau, Legacy-Import |
 | `tests/RigShift.App.Tests` | App-Dienste ohne UI-Automation (Koordinator, Pipe, Settings, Automatik, Diagnose) |
