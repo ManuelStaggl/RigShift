@@ -49,7 +49,7 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
     {
         double hertz = display.RefreshDenominator == 0 ? 0 : (double)display.RefreshNumerator / display.RefreshDenominator;
         string text = string.Create(Loc.Instance.Culture,
-            $"{SwitchMessages.NameOf(display.Identity)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
+            $"{SwitchMessages.NameOf(display)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
         if (display.IsPrimary)
         {
             text += " · " + Loc.Instance["Profile_Primary"];
@@ -500,7 +500,8 @@ public sealed record DisplayRow(string Name, string State, string Mode, string E
 public sealed record AudioRow(string Name, string Direction, string State);
 
 public sealed partial class DiagnosticsViewModel(
-    IDisplayConfigurator display, IAudioController audio, SwitchCoordinator coordinator, AppPaths paths, ILogger log) : ObservableObject
+    IDisplayConfigurator display, IAudioController audio, SwitchCoordinator coordinator, ProfileCatalog catalog, AppPaths paths, ILogger log)
+    : ObservableObject
 {
     private readonly ILogger _log = log.ForContext<DiagnosticsViewModel>();
 
@@ -521,9 +522,10 @@ public sealed partial class DiagnosticsViewModel(
         {
             DisplaySnapshot snapshot = await Task.Run(() => display.QueryAsync(CancellationToken.None));
             Displays.Clear();
+            IReadOnlyDictionary<string, string> names = DisplayNames.Known(catalog.Profiles);
             foreach (AttachedDisplay attached in snapshot.Displays)
             {
-                Displays.Add(ToRow(attached));
+                Displays.Add(ToRow(attached, names.GetValueOrDefault(attached.Identity.TargetDevicePath)));
             }
 
             IReadOnlyList<AudioDeviceInfo> render = await Task.Run(() => audio.ListAsync(AudioDirection.Render, CancellationToken.None));
@@ -544,7 +546,7 @@ public sealed partial class DiagnosticsViewModel(
     [RelayCommand]
     private void OpenLogFolder() => ShellFolders.Open(paths.Logs, _log);
 
-    private static DisplayRow ToRow(AttachedDisplay display)
+    private static DisplayRow ToRow(AttachedDisplay display, string? customName)
     {
         string state = display.IsActive ? Loc.Instance["Diag_Active"]
             : display.IsAvailable ? Loc.Instance["Diag_Connected"]
@@ -559,7 +561,7 @@ public sealed partial class DiagnosticsViewModel(
             ? "–"
             : string.Create(CultureInfo.InvariantCulture, $"{display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}");
 
-        return new DisplayRow(SwitchMessages.NameOf(display.Identity), state, mode, edid, display.Identity.TargetDevicePath, display.Identity.AdapterDevicePath);
+        return new DisplayRow(SwitchMessages.NameOf(customName, display.Identity), state, mode, edid, display.Identity.TargetDevicePath, display.Identity.AdapterDevicePath);
     }
 
     private static AudioRow ToRow(AudioDeviceInfo device)

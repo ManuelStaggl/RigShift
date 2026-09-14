@@ -348,7 +348,7 @@ public sealed class SwitchOrchestrator
         {
             IEnumerable<string> names = plan.Missing
                 .Where(m => !m.Assignment.IsOptional)
-                .Select(m => string.Create(CultureInfo.InvariantCulture, $"{DisplayNames.Of(m.Assignment.Identity)} ({m.Reason})"));
+                .Select(m => string.Create(CultureInfo.InvariantCulture, $"{DisplayNames.Of(m.Assignment)} ({m.Reason})"));
             return "Required displays are missing: " + string.Join(", ", names);
         }
 
@@ -597,7 +597,7 @@ public sealed class SwitchOrchestrator
         foreach (MissingDisplay missing in plan.Missing)
         {
             _log.Warning("Display {Display} missing: {Reason} (optional: {Optional})",
-                DisplayNames.Of(missing.Assignment.Identity), missing.Reason, missing.Assignment.IsOptional);
+                DisplayNames.Of(missing.Assignment), missing.Reason, missing.Assignment.IsOptional);
         }
 
         foreach (PlanWarning warning in plan.Warnings)

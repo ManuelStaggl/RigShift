@@ -12,6 +12,8 @@ All notable changes to this project are documented here. The format follows
   volume comes back too.
 - Apps per profile: start or stop programs (for example SimHub or Crew Chief) in a fixed order once the switch is
   confirmed, with an optional wait after each one. Programs that already run are not started twice.
+- Your own names for monitors, e.g. "Left", shown as "Left · CM27X3" everywhere. Name a monitor once in the profile
+  editor and every profile with it uses the name.
 
 ### Fixed
 

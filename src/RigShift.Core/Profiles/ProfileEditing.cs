@@ -8,8 +8,8 @@ namespace RigShift.Core.Profiles;
 /// </summary>
 public static class ProfileEditing
 {
-    /// <summary>A new profile from the displays that are active right now.</summary>
-    public static Profile Capture(string name, DisplaySnapshot snapshot, AudioAssignment? audio = null)
+    /// <summary>A new profile from the displays that are active right now, with names known from <paramref name="known"/>.</summary>
+    public static Profile Capture(string name, DisplaySnapshot snapshot, AudioAssignment? audio = null, IEnumerable<Profile>? known = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
@@ -17,21 +17,33 @@ public static class ProfileEditing
         {
             Id = Guid.NewGuid(),
             Name = name.Trim(),
-            Displays = CurrentArrangement(snapshot, []),
+            Displays = CurrentArrangement(snapshot, [], known),
             Audio = audio ?? new AudioAssignment(),
         };
     }
 
     /// <summary>
     /// The active displays with their current mode and position, left to right. Displays that were optional in
-    /// <paramref name="previous"/> stay optional, unless they are the primary one.
+    /// <paramref name="previous"/> stay optional, unless they are the primary one. Custom names come from
+    /// <paramref name="previous"/> or, for displays not in it, from the profiles in <paramref name="known"/>.
     /// </summary>
-    public static IReadOnlyList<DisplayAssignment> CurrentArrangement(DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous)
+    public static IReadOnlyList<DisplayAssignment> CurrentArrangement(
+        DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous, IEnumerable<Profile>? known = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(previous);
 
-        var optional = previous
+        List<DisplayAssignment> before = previous.ToList();
+        var names = new Dictionary<string, string>(DisplayNames.Known(known ?? []), StringComparer.OrdinalIgnoreCase);
+        foreach (DisplayAssignment display in before)
+        {
+            if (DisplayNames.Normalize(display.CustomName) is { } name)
+            {
+                names[display.Identity.TargetDevicePath] = name;
+            }
+        }
+
+        var optional = before
             .Where(d => d.IsOptional)
             .Select(d => d.Identity.TargetDevicePath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -42,6 +54,7 @@ public static class ProfileEditing
             {
                 Identity = d.Identity,
                 IsOptional = !d.ActiveMode.IsPrimary && optional.Contains(d.Identity.TargetDevicePath),
+                CustomName = names.GetValueOrDefault(d.Identity.TargetDevicePath),
             })
             .OrderBy(d => d.PositionX)
             .ThenBy(d => d.PositionY)

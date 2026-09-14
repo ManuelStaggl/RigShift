@@ -145,6 +145,8 @@
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz · Position {3}, {4}</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional (darf fehlen)</value></data>
+  <data name="Editor_CustomName" xml:space="preserve"><value>Eigener Name</value></data>
+  <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>Eigener Name, z. B. Links</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Bildschirm entfernen</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Editor_Save" xml:space="preserve"><value>Speichern</value></data>

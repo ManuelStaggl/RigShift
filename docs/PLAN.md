@@ -395,6 +395,19 @@ Release vor dem Gaming-PC-Test**; der Test deckt dann 1.2.0 und diesen Block zus
    `SwitchResult.Apps` in Tray-Meldung und CLI. Unit-Tests belegen Reihenfolge nach Bestätigung, Wartezeit, kein
    Doppelstart, Fehler → weiter + unvollständig, keine Apps bei Ablehnung. **Nicht belegt:** echtes Starten/Beenden
    (Schließen per Fenster, harter Abbruch, Admin-Prozess) und Editor-Optik → Gaming-PC.
+
+Zusätzlich in 1.3.0 (Idee und Antworten des Nutzers 2026-09-14): **eigene Monitornamen**. Festlegungen:
+**pro Monitor, überall gültig** statt pro Profil – einmal benennen reicht, und genau das unterscheidet zwei gleiche
+Modelle (zwei CM27X3). Anzeige **„Name · Modell“** (ohne eigenen Namen wie bisher), in Hauptliste, Editor, Diagnose,
+Meldungen und CLI. Vergeben wird der Name **im Profil-Editor** (Feld je Anzeigekarte); keine eigene Oberfläche in der
+Diagnose, weil das mehr Fläche für wenig Nutzen wäre.
+**Umgesetzt 2026-09-14**: `DisplayAssignment.CustomName` – bewusst nicht in `DisplayIdentity`, weil
+`SwitchOrchestrator` Identitäten per Record-Gleichheit mit dem Snapshot vergleicht und ein Name das bräche. Kein
+eigener Namensspeicher: `ProfileCatalog.SaveAsync` überträgt den Namen per `DisplayNames.Propagate` auf alle Profile
+mit demselben `TargetDevicePath` (auch das Löschen); neu erfasste Anordnungen (`CurrentArrangement`, `Capture`,
+CLI `save`/`status`) übernehmen bekannte Namen. So zeigen Kernmeldungen und die CLI den Namen ohne zusätzliche
+Abhängigkeit. Unit-Tests belegen Anzeige, Kürzen, Übertragen, Löschen und Übernehmen; Editor und Hauptliste am
+Server angesehen.
 6. Prozess-Trigger (WMI `Win32_ProcessStartTrace` oder ETW; Fallback Polling 2 s) + **Spiele-Vorlagen**
    (LMU, iRacing, ACC, AC EVO, rFactor 2, AMS2, F1 – als JSON in `templates/`, per PR erweiterbar).
 

@@ -59,9 +59,16 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     public Profile? Find(Guid id) => _profiles.FirstOrDefault(p => p.Id == id);
 
+    /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
         await _store.SaveAsync(profile, cancellationToken);
+        foreach (Profile other in DisplayNames.Propagate(profile, _profiles))
+        {
+            await _store.SaveAsync(other, cancellationToken);
+            _log.Information("Display names of profile {Profile} updated from {Source}", other.Name, profile.Name);
+        }
+
         await ReloadAsync(cancellationToken);
     }
 

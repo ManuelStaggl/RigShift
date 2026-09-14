@@ -91,10 +91,14 @@ public static class SwitchMessages
 {
     public static string Outcome(SwitchOutcome outcome) => Loc.Instance["Outcome_" + outcome];
 
-    public static string NameOf(DisplayIdentity identity)
+    /// <summary>"Left · CM27X3", or the model alone without a custom name.</summary>
+    public static string NameOf(string? customName, DisplayIdentity identity) =>
+        DisplayNames.Label(customName, identity, Loc.Instance["Display_Unnamed"]);
+
+    public static string NameOf(DisplayAssignment display)
     {
-        ArgumentNullException.ThrowIfNull(identity);
-        return string.IsNullOrWhiteSpace(identity.FriendlyName) ? Loc.Instance["Display_Unnamed"] : identity.FriendlyName;
+        ArgumentNullException.ThrowIfNull(display);
+        return NameOf(display.CustomName, display.Identity);
     }
 
     public static string DescribePlan(TopologyPlan plan)
@@ -149,7 +153,7 @@ public static class SwitchMessages
     }
 
     private static string Names(IEnumerable<MissingDisplay> missing) =>
-        string.Join(", ", missing.Select(m => NameOf(m.Assignment.Identity)));
+        string.Join(", ", missing.Select(m => NameOf(m.Assignment)));
 }
 
 /// <summary>Opens folders in Explorer and web pages in the default browser.</summary>

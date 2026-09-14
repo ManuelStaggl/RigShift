@@ -109,7 +109,7 @@ public sealed class CommandRunner
         var text = new StringBuilder();
         text.AppendLine(CultureInfo.InvariantCulture, $"Active profile: {active?.Name ?? "none"}");
         text.Append("Active displays:");
-        foreach (DisplayAssignment display in ProfileEditing.CurrentArrangement(snapshot, []))
+        foreach (DisplayAssignment display in ProfileEditing.CurrentArrangement(snapshot, [], profiles))
         {
             text.AppendLine().Append("  ").Append(Describe(display));
         }
@@ -152,10 +152,10 @@ public sealed class CommandRunner
 
         Profile? existing = ProfileEditing.FindByName(profiles, name);
         Profile profile = existing is null
-            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback })
+            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, profiles)
             : existing with
             {
-                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays),
+                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays, profiles),
                 Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
             };
 
@@ -233,6 +233,5 @@ public sealed class CommandRunner
             $"{NameOf(display)}: {display.Width}x{display.Height} @ {hertz:0.##} Hz at ({display.PositionX}, {display.PositionY}){(display.IsPrimary ? ", primary" : string.Empty)}");
     }
 
-    private static string NameOf(DisplayAssignment display) =>
-        string.IsNullOrWhiteSpace(display.Identity.FriendlyName) ? "unnamed display" : display.Identity.FriendlyName;
+    private static string NameOf(DisplayAssignment display) => DisplayNames.Label(display.CustomName, display.Identity, "unnamed display");
 }

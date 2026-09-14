@@ -22,6 +22,13 @@ public sealed record DisplayAssignment
     /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
     public DisplayRotation Rotation { get; set; } = DisplayRotation.Identity;
 
+    /// <summary>
+    /// Name the user gave this monitor, e.g. "Left". Shown as "Left · CM27X3"; the same on every profile with this
+    /// display (<see cref="DisplayNames.Propagate"/>). Not part of <see cref="DisplayIdentity"/>, whose record equality
+    /// compares hardware.
+    /// </summary>
+    public string? CustomName { get; init; }
+
     public bool IsPrimary { get; init; }
 
     /// <summary>
