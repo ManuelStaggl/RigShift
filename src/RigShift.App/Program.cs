@@ -1,6 +1,7 @@
 using RigShift.App.Services;
 using RigShift.Core.Cli;
 using RigShift.Core.Settings;
+using Serilog;
 using Serilog.Core;
 using RigShift.Windows.Shell;
 using Velopack;
@@ -19,8 +20,27 @@ public static class Program
         // A pending update restarts the process to install itself. Only the tray app may do that: a CLI call would lose
         // its exit code. Commands are verbs; tray and Velopack hook arguments start with a dash. With automatic
         // installation off, only an explicit "install now" installs (Velopack's updater, see UpdateService).
+        // A rigshift:// link is a command too.
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
-        VelopackApp.Build().SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically()).Run();
+        VelopackApp.Build()
+            .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically())
+            .OnAfterInstallFastCallback(_ => RegisterUriScheme())
+            .OnAfterUpdateFastCallback(_ => RegisterUriScheme())
+            .OnBeforeUninstallFastCallback(_ => UriSchemeRegistration.Unregister())
+            .Run();
+
+        if (args.Length > 0 && RigShiftUri.IsUri(args[0]))
+        {
+            if (RigShiftUri.ToArguments(args[0]) is not { } linkArguments)
+            {
+                Log.Logger = AppLogging.Create(App.Paths);
+                Log.Warning("Ignored invalid link {Link}; only rigshift://apply/<profile name> is supported", args[0]);
+                Log.CloseAndFlush();
+                return CliExitCodes.InvalidArguments;
+            }
+
+            args = [.. linkArguments];
+        }
 
         CliParseResult parsed = CliParser.Parse(args);
         if (parsed.Request is not { } request)
@@ -44,6 +64,15 @@ public static class Program
         var app = new App(request);
         app.InitializeComponent();
         return app.Run();
+    }
+
+    /// <summary>Velopack hook: the installed executable handles rigshift:// links.</summary>
+    private static void RegisterUriScheme()
+    {
+        if (Environment.ProcessPath is { } executable)
+        {
+            UriSchemeRegistration.Register(executable);
+        }
     }
 
     /// <summary>Runs before logging is set up; an unreadable file means defaults, and the app logs that later.</summary>
