@@ -4,6 +4,14 @@ Stand: 2026-09-14 · Befunde: `befunde-1.3.md` (IDs darauf bezogen) · Für die 
 Skill `dotnet-standards`, `docs/display-topology.md`. Am Server nie umschalten (siehe CLAUDE.md). Nach jedem Paket:
 `dotnet build RigShift.slnx` 0 Warnungen, `dotnet test --solution RigShift.slnx` grün, CHANGELOG `[Unreleased]`.
 
+**Vorgabe des Nutzers (2026-09-14): Jeder einzelne Punkt dieses Plans wird abgearbeitet – Paket 1 und Paket 2
+vollständig, nichts wird „nach Gelegenheit“ liegen gelassen.** Die Pakete legen nur die Reihenfolge fest: Paket 1
+vor dem Release 1.3.1, Paket 2 danach (die Punkte, die Ergebnisse der Hardware-Testrunde brauchen, sind dort
+markiert; alle anderen Paket-2-Punkte können direkt nach 1.3.1 in derselben Umsetzungs-Session folgen). Der Abschnitt
+„Nutzer entscheidet“ enthält Fragen, die dem Nutzer interaktiv mit Empfehlung gestellt werden; die Antwort wird dann
+ebenfalls umgesetzt. Ein Punkt gilt erst als erledigt, wenn Akzeptanzkriterium und Tests erfüllt sind und er in
+einer Abhak-Liste am Ende dieser Datei als erledigt eingetragen ist (Commit-Hash dazu).
+
 ## Paket 1 – vor der Hardware-Testrunde (Release 1.3.1)
 
 Enthält alle Kritisch/Hoch mit Aufwand S/M sowie die Mittel-S-Punkte, ohne die die Testrunde nicht auswertbar wäre
@@ -205,3 +213,33 @@ prüfen: `%AppData%\RigShift\logs` muss die Velopack-Zeilen enthalten).
 | 18 | Snapshot-Rohdaten (einmalig) | `Probe snapshot` mit Rohausgabe für die Fixture | L-04 |
 | 19 | Diagnosebericht | „Diagnose-Infos kopieren“ im Rig | Inhalt prüfen, keine Endpoint-IDs/Benutzername (H-05) |
 | 20 | 2× CM27X3 | linken CM27X3 abstecken, Desk umschalten | Planner blockiert korrekt statt zu raten (B-10, ab Paket 2) |
+
+## Abhak-Liste (von der Umsetzungs-Session zu pflegen)
+
+| Punkt | Befund-IDs | Status | Commit |
+|---|---|---|---|
+| 1.1 Anruf-Absenkung persistent | B-01 | offen | |
+| 1.2 Beenden/Abmelden während Wechsel | B-02 | offen | |
+| 1.3 Automatik-Regelzustand, Entprellung, monotone Zeit | C-01, C-02, C-03 | offen | |
+| 1.4 Profilseite, InfoBar, Regelkarte, Editor-Layout | I-01, I-02, I-03, I-06, I-08 | offen | |
+| 1.5 App-Testprojekt, Settings-Reihenfolge, Fixtures, Fake | L-01, F-01, L-02, L-03 | offen | |
+| 1.6 Wiederherstellung und Rückmeldung | B-05, B-06, B-07, B-08 | offen | |
+| 1.7 Logging und Velopack-Log | K-01, K-02, K-03, K-04, F-03 | offen | |
+| 1.8 Link-Bestätigung, Pipe, Run-Key, gesperrte Dateien | H-02, H-01, F-02, F-05 | offen | |
+| 1.9 Doku-Korrekturen | N-01, N-02, N-03, N-04, A-06, A-01 (Doku) | offen | |
+| 1.10 Release 1.3.1 | M-01, M-04 | offen | |
+| 2 Apps-Nachlauf außerhalb des Gates | B-03 | offen | |
+| 2 Fensterrettung robust | B-04, B-14, B-12 | offen (Testrunde) | |
+| 2 Zeitbudget und Zwillinge | B-09, B-10, B-11 | offen | |
+| 2 Dry-Run ohne Gate | B-13 | offen | |
+| 2 Stromspar-Prüfung | C-04, N-06 | offen (Testrunde) | |
+| 2 Automatik-Kleinkram | C-05, C-06, A-07 | offen | |
+| 2 Umschalt-Feedback im Fenster | I-04, I-07 | offen | |
+| 2 Tray-Popup, Editor, Dialoge | I-05, I-09, I-10, I-11, I-12, I-15, I-16 | offen | |
+| 2 Sprache und Texte | I-13, I-14, I-17, J-01, J-02, J-03 | offen | |
+| 2 Interop-Kleinkram | G-01, G-02, G-03, G-04, H-04, H-05 | offen (G-02 Testrunde) | |
+| 2 Aufräumen | A-01, A-02, A-04, A-05, A-08, K-05, L-05, M-02, M-03 | offen | |
+| 2 Struktur | A-03 | offen | |
+| 2 Windows-Schicht-Fixture | L-04 | offen (Rohdaten aus Testrunde) | |
+| 2 SECURITY.md | H-03 | offen | |
+| Nutzerfragen beantwortet und umgesetzt | D-02, O-01…O-08, A-09, C-07, C-08, F-06, F-07, D-03, I-18 | offen | |
