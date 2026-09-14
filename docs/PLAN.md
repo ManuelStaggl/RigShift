@@ -331,8 +331,35 @@ installiertes offizielles 1.0.1 lädt 1.1.0 in 10 s, nächster Start „RigShift
 
 **v1.1 – Auslösen und Steuern**
 
-1. Globale Tastenkürzel pro Profil (`RegisterHotKey`).
-2. URI-Schema `rigshift://apply/<name>` (HKCU-Registrierung durch Velopack-Hook).
+Zuschnitt (vom Nutzer gewählt 2026-09-14): Punkte 1 und 2 kommen zusammen als **1.2.0** – beide sind reine Auslöser
+ohne neue Audio-Logik und am Server prüfbar. Mikrofon, Lautstärke und Apps (3–5) folgen als eigener Block, weil sie
+einen Hardwaretest am Gaming-PC brauchen. Festlegungen zu Punkt 1:
+
+- Eingabe im Profil-Editor als **Aufnahmefeld** (anklicken, Kombination drücken, Löschen-Knopf). Strg, Alt oder Win
+  ist Pflicht, damit keine normale Taste systemweit belegt wird – Umschalt allein reicht nicht (Umschalt+A würde das
+  große A in jeder App schlucken).
+- Während der Profil-Editor offen ist, sind alle Kürzel abgemeldet: sonst würde das Aufnehmen eines schon belegten
+  Kürzels sofort umschalten, und die Belegt-Prüfung beim Speichern (`RegisterHotKey` probeweise) sähe die eigenen.
+- Nochmal dasselbe Kürzel drücken, während dessen Bestätigungs-Countdown läuft, bestätigt (wie Enter).
+- Belegt eine andere App das Kürzel (`RegisterHotKey` schlägt fehl): Hinweis direkt im Editor beim Speichern, beim
+  App-Start einmalige Tray-Meldung für alle fehlgeschlagenen Kürzel, beides geloggt.
+- Ein Kürzel schaltet **genau wie ein Tray-Klick** um – Bestätigungs-Countdown nach Profil-/App-Einstellung. Das
+  Sicherheitsnetz bleibt, weil ein Kürzel gerade dann gedrückt wird, wenn man den Zielbildschirm nicht sieht.
+
+1. Globale Tastenkürzel pro Profil (`RegisterHotKey`). **Umgesetzt 2026-09-14**: `Profile.Hotkey` (MOD-Flags +
+   Virtual-Key), Prüfung in `ProfileEditing.Validate` (ungültig / doppelt), `HotkeyService` (Message-only-Fenster,
+   neu registriert nur bei echter Änderung, `MOD_NOREPEAT`), Kürzel im Tray-Menü rechts neben dem Profil. Am Server
+   belegt (Dev-Build, RDP): Registrierung im Log; von einer anderen App gehaltenes Kürzel → Start-Warnung mit
+   Fehler 1409; Editor nimmt per Tastatur `Strg+Alt+F3` auf, verweigert das Speichern, sobald eine andere App es hält
+   („Eine andere App belegt dieses Tastenkürzel schon“). **Nicht belegt** (würde am Server umschalten): Drücken des
+   Kürzels, erneutes Drücken als Bestätigung, Tray-Meldung und Menü-Beschriftung optisch → Gaming-PC.
+2. URI-Schema `rigshift://apply/<name>` (HKCU-Registrierung durch Velopack-Hook). **Umgesetzt 2026-09-14**:
+   `RigShiftUri` macht daraus `apply <name>` (gleicher Weg wie die CLI, also mit Countdown). Bewusst **nur** `apply`
+   und **keine** Optionen im Link (kein `?no-confirm`): eine Webseite darf weder Profile ändern noch das
+   Sicherheitsnetz abschalten. Registrierung in den Velopack-Hooks nach Installation/Update, entfernt vor der
+   Deinstallation; portable Kopien registrieren nicht (Pfad wäre instabil). Am Server belegt: ungültige Links
+   (`save`, Query) → Exit 5 + Log-Warnung. **Nicht belegt:** Registry-Eintrag aus dem Hook (erst mit installiertem
+   Paket) und Aufruf aus Browser/Win+R.
 3. Mikrofon pro Profil + getrennte Kommunikationsrolle (gleiche API wie Wiedergabe, fast gratis).
 4. Lautstärke pro Profil (`IAudioEndpointVolume`).
 5. Apps pro Profil starten/beenden (Reihenfolge, Wartezeit, „nur wenn nicht läuft").
