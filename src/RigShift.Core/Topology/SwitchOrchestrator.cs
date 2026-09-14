@@ -145,14 +145,41 @@ public sealed class SwitchOrchestrator
 
         if (confirm)
         {
-            ConfirmationResult answer = await _confirmation.ConfirmAsync(
-                profile, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
+            ConfirmationResult answer;
+            try
+            {
+                answer = await _confirmation.ConfirmAsync(profile, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                answer = ConfirmationResult.TimedOut;
+            }
+
             if (answer != ConfirmationResult.Confirmed)
             {
-                _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
+                // Cancelled (app exit, logoff): the window closing is no answer, and the rollback must run to the end
+                // before the caller learns about the cancellation (analysis finding B-02).
+                bool cancelled = cancellationToken.IsCancellationRequested;
+                CancellationToken rollbackToken = cancelled ? CancellationToken.None : cancellationToken;
+                if (cancelled)
+                {
+                    _log.Warning("Switch to {Profile} cancelled during confirmation, rolling back", profile.Name);
+                }
+                else
+                {
+                    _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
+                }
+
                 RestoreKeepAwake(keepAwakeBefore);
-                await RestoreDuckingAsync(duckingRestore, cancellationToken);
-                return await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, cancellationToken);
+                await RestoreDuckingAsync(duckingRestore, rollbackToken);
+                SwitchResult rolledBack = await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, rollbackToken);
+                if (cancelled)
+                {
+                    _log.Warning("Switch to {Profile} cancelled, rolled back ({Outcome})", profile.Name, rolledBack.Outcome);
+                    throw new OperationCanceledException(cancellationToken);
+                }
+
+                return rolledBack;
             }
         }
 

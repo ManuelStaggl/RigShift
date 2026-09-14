@@ -21,6 +21,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private readonly ILogger _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>Cancelled when the app exits; a running switch rolls back and ends (analysis finding B-02).</summary>
+    private readonly CancellationTokenSource _stopping = new();
+
+    /// <summary>The switch or catch-up running now, if any. UI thread only.</summary>
+    private Task? _current;
+
     /// <summary>Last switch applied partially: the profile and how many displays it got. Cleared by any other switch.</summary>
     private (Profile Profile, int Displays)? _pendingCatchUp;
 
@@ -46,7 +52,28 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     public bool IsIdle => !IsSwitching;
 
-    public void Dispose() => _gate.Dispose();
+    public void Dispose()
+    {
+        _gate.Dispose();
+        _stopping.Dispose();
+    }
+
+    /// <summary>
+    /// Cancels a running switch – a pending confirmation rolls back – and waits for it to end, at most
+    /// <paramref name="timeout"/>. Returns false if it is still running then.
+    /// </summary>
+    public async Task<bool> StopAsync(TimeSpan timeout)
+    {
+        await _stopping.CancelAsync();
+        if (_current is not { IsCompleted: false } current)
+        {
+            return true;
+        }
+
+        _log.Information("Waiting up to {Seconds} s for the running switch to end", timeout.TotalSeconds);
+        Task finished = await Task.WhenAny(current, Task.Delay(timeout, _time));
+        return finished == current;
+    }
 
     public async Task SwitchAsync(Profile profile)
     {
@@ -74,13 +101,19 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(request);
-        return RunAsync(profile, request, rethrow: true);
+        return RunAsync(profile, request, rethrow: true, cancellationToken);
     }
 
-    private async Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow)
+    private async Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken = default)
     {
         bool dryRun = request.DryRun;
-        if (!await _gate.WaitAsync(0))
+        if (_stopping.IsCancellationRequested)
+        {
+            _log.Information("Switch to {Profile} ignored, RigShift is exiting", profile.Name);
+            return null;
+        }
+
+        if (!await _gate.WaitAsync(0, CancellationToken.None))
         {
             _log.Information("Switch to {Profile} ignored, another switch is running", profile.Name);
             BusyRejected?.Invoke(this, EventArgs.Empty);
@@ -89,10 +122,13 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
         IsSwitching = true;
         DateTimeOffset started = _time.GetLocalNow();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Token, cancellationToken);
         try
         {
             SwitchRequest effective = request with { DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
-            SwitchResult result = await Task.Run(() => _orchestrator.SwitchAsync(profile, effective, CancellationToken.None));
+            Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
+            _current = running;
+            SwitchResult result = await running;
 
             if (!dryRun)
             {
@@ -101,6 +137,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             }
 
             return result;
+        }
+        catch (OperationCanceledException) when (linked.IsCancellationRequested)
+        {
+            _log.Information("Switch to {Profile} cancelled", profile.Name);
+            return null;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -149,7 +190,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         {
             // The active profile does not decide: when the missing display connects, Windows itself may restore whatever
             // layout its database holds for that set of monitors (M5 2026-09-13 20:17: spacedesk connected → Desk).
-            SwitchResult? result = await Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, CancellationToken.None));
+            Task<SwitchResult?> running = Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, _stopping.Token), CancellationToken.None);
+            _current = running;
+            SwitchResult? result = await running;
             if (result is not null)
             {
                 RememberCatchUp(pending.Profile, result);
@@ -161,6 +204,10 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
                 _log.Information("Catch-up for {Profile} dropped, {Active} is active now", pending.Profile.Name, active.Name);
                 _pendingCatchUp = null;
             }
+        }
+        catch (OperationCanceledException) when (_stopping.IsCancellationRequested)
+        {
+            _log.Information("Catch-up of {Profile} cancelled", pending.Profile.Name);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

@@ -55,10 +55,53 @@ public partial class App : Application, IAppShell
         window.Activate();
     }
 
+    /// <summary>
+    /// Ends the app. A running switch is cancelled first and may roll back for up to 30 s, so displays, audio and the
+    /// ducking setting are never left half-switched (analysis finding B-02).
+    /// </summary>
     public void Quit()
     {
+        if (IsExiting)
+        {
+            return;
+        }
+
         IsExiting = true;
-        Shutdown();
+        _ = QuitAsync();
+    }
+
+    private async Task QuitAsync()
+    {
+        try
+        {
+            if (_host?.Services.GetService<SwitchCoordinator>() is { IsSwitching: true } coordinator)
+            {
+                Log.Information("Exit requested during a switch, cancelling it first");
+                if (!await coordinator.StopAsync(TimeSpan.FromSeconds(30)))
+                {
+                    Log.Warning("The switch did not end within 30 s, exiting anyway");
+                }
+            }
+        }
+        finally
+        {
+            Shutdown();
+        }
+    }
+
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        base.OnSessionEnding(e);
+
+        // Blocking here would deadlock the rollback (the countdown window needs this thread), so the session end is
+        // refused once while the switch rolls back; the app exits right after.
+        if (_host?.Services.GetService<SwitchCoordinator>() is { IsSwitching: true })
+        {
+            Log.Warning("Windows session ending ({Reason}) during a switch, refusing until it has rolled back", e.ReasonSessionEnding);
+            e.Cancel = true;
+            Quit();
+        }
     }
 
     protected override async void OnStartup(StartupEventArgs e)

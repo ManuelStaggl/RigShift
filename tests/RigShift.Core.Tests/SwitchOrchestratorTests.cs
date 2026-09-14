@@ -289,6 +289,27 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_CancelledDuringConfirmation_RollsBackBeforeThrowing()
+    {
+        using var exit = new CancellationTokenSource();
+        var display = new FakeDisplayConfigurator(DeskActive());
+        // Like the countdown window on app exit: the token fires and the window closes without an answer.
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(_ =>
+        {
+            exit.Cancel();
+            return Task.FromResult(ConfirmationResult.Rejected);
+        });
+
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            Create(display).SwitchAsync(Rig(confirmSeconds: 15) with { DisableCommunicationsDucking = true }, SwitchRequest.Default, exit.Token));
+
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+        _ducking.Value.ShouldBe(CommunicationsDucking.ReduceBy50Percent);
+        _duckingMemory.Remembered.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Switch_Confirmed_KeepsNewTopology()
     {
         var display = new FakeDisplayConfigurator(DeskActive());

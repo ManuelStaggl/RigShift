@@ -15,6 +15,8 @@ All notable changes to this project are documented here. The format follows
 - The Windows setting for sounds during calls comes back even if RigShift was closed, crashed or the PC restarted while a
   profile with "Don't lower game sound during calls" was active. RigShift now remembers the previous value in its settings and
   restores it at the next start or with the next profile.
+- Quitting RigShift or signing out of Windows during the confirmation countdown no longer leaves displays and audio
+  half-switched: the switch is rolled back first (at most 30 s), then RigShift exits.
 
 ## [1.3.0] - 2026-09-14
 
