@@ -91,6 +91,10 @@ internal sealed class DuckingSwitcher(IDuckingPreference ducking, IDuckingMemory
             _ducking.Write(original.Value);
             _log.Information("Communications ducking {Preference} from before restored for {Profile}", original.Value, profileName);
         }
+        else
+        {
+            _log.Debug("Communications ducking already {Preference} as before, nothing to restore for {Profile}", original.Value, profileName);
+        }
     }
 
     public async Task<DuckingRestore?> CaptureAsync(Profile profile, CancellationToken cancellationToken)

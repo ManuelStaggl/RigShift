@@ -45,6 +45,32 @@ public sealed class DiagnosticsReportTests
         report.ShouldContain(@"%USERPROFILE%\SimHub\SimHubWPF.exe");
     }
 
+    [Fact]
+    public void Build_ErrorCodeOnlyForFailedSwitches()
+    {
+        // HW-17: a transient 1610 on the way to a successful switch looked like the cause.
+        var switched = new SwitchRecord(DateTimeOffset.UnixEpoch, "Rig", SwitchOutcome.Applied, AudioOutcome.NotConfigured,
+            AppsOutcome.NotConfigured, 6, TimeSpan.FromSeconds(7), 1610, null, ["spacedesk"]);
+        var input = new DiagnosticsInput("1.4.1", IsInstalled: true, Snapshot: null, DisplayError: null,
+            Playback: [], Recording: [], AudioError: null, Profiles: [], ActiveProfileId: null,
+            DisplayNames: new Dictionary<string, string>(), History: [switched]);
+
+        DiagnosticsReport.Build(input).ShouldNotContain("error 1610");
+    }
+
+    [Theory]
+    [InlineData(@"\\?\DISPLAY#AUS32F6#5&2a2a2a2a&0&UID4353#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}", "AUS32F6 · UID4353")]
+    [InlineData(@"\\?\DISPLAY#Default_Monitor#TEST&5", "Default_Monitor")]
+    [InlineData("", "(unrecognized)")]
+    public void ShortTargetPath_KeepsModelAndUid(string path, string expected) =>
+        DiagnosticsReport.ShortTargetPath(path).ShouldBe(expected);
+
+    [Theory]
+    [InlineData(@"\\?\PCI#VEN_10DE&DEV_2702&SUBSYS_51841458&REV_A1#4&1a2b3c4d&0&0019#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}", "VEN_10DE&DEV_2702")]
+    [InlineData(@"\\?\ROOT#DISPLAY#0000#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}", @"ROOT\DISPLAY")]
+    public void ShortAdapterPath_KeepsVendorAndDevice(string path, string expected) =>
+        DiagnosticsReport.ShortAdapterPath(path).ShouldBe(expected);
+
     [Theory]
     [InlineData(@"D:\Users\manue\Games\x.exe", @"D:\Users\<user>\Games\x.exe")]
     [InlineData(@"c:\users\Someone Else", @"c:\users\<user> Else")]

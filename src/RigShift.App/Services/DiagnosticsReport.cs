@@ -86,7 +86,7 @@ public static partial class DiagnosticsReport
         foreach (SwitchRecord record in input.History)
         {
             text.AppendLine(FormattableString.Invariant(
-                $"- {record.At:yyyy-MM-dd HH:mm:ss} {record.ProfileName}: {record.Outcome}, {record.Attempts} attempt(s), {record.Duration.TotalSeconds:0.0} s, audio {record.Audio}, apps {record.Apps}{(record.NativeError is { } error ? $", error {error}" : string.Empty)}{(record.HasDetails ? $" – {record.Details}" : string.Empty)}"));
+                $"- {record.At:yyyy-MM-dd HH:mm:ss} {record.ProfileName}: {record.Outcome}, {record.Attempts} attempt(s), {record.Duration.TotalSeconds:0.0} s, audio {record.Audio}, apps {record.Apps}{(record.Outcome == SwitchOutcome.Failed && record.NativeError is { } error ? $", error {error}" : string.Empty)}{(record.HasDetails ? $" – {record.Details}" : string.Empty)}"));
         }
 
         return Anonymize(text.ToString(), Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -123,9 +123,44 @@ public static partial class DiagnosticsReport
 
         text.AppendLine();
         text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}"));
-        text.AppendLine(FormattableString.Invariant($"  target {display.Identity.TargetDevicePath}"));
-        text.AppendLine(FormattableString.Invariant($"  adapter {display.Identity.AdapterDevicePath}"));
+        text.AppendLine(FormattableString.Invariant($"  target {ShortTargetPath(display.Identity.TargetDevicePath)}"));
+        text.AppendLine(FormattableString.Invariant($"  adapter {ShortAdapterPath(display.Identity.AdapterDevicePath)}"));
     }
+
+    /// <summary>
+    /// <c>\\?\DISPLAY#AUS32F6#5&amp;…&amp;UID4353#{…}</c> → <c>AUS32F6 · UID4353</c>. The instance ids identify the machine and
+    /// help nobody reading an issue (finding HW-17).
+    /// </summary>
+    internal static string ShortTargetPath(string path)
+    {
+        string[] parts = path.Split('#');
+        if (parts.Length < 2)
+        {
+            return "(unrecognized)";
+        }
+
+        Match uid = UidPart().Match(path);
+        return uid.Success ? $"{parts[1]} · {uid.Value}" : parts[1];
+    }
+
+    /// <summary><c>\\?\PCI#VEN_10DE&amp;DEV_2702&amp;SUBSYS_…#…</c> → <c>VEN_10DE&amp;DEV_2702</c>; other buses keep their first two parts.</summary>
+    internal static string ShortAdapterPath(string path)
+    {
+        Match device = PciDevicePart().Match(path);
+        if (device.Success)
+        {
+            return device.Value;
+        }
+
+        string[] parts = path.Split('#');
+        return parts.Length < 2 ? "(unrecognized)" : $"{parts[0].Replace(@"\\?\", string.Empty, StringComparison.Ordinal)}\\{parts[1].Split('&')[0]}";
+    }
+
+    [GeneratedRegex(@"UID\d+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex UidPart();
+
+    [GeneratedRegex(@"VEN_[0-9A-F]{4}&DEV_[0-9A-F]{4}", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex PciDevicePart();
 
     private static void AppendAudio(StringBuilder text, string direction, IReadOnlyList<AudioDeviceInfo> devices)
     {

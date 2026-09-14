@@ -77,6 +77,12 @@ public sealed class SwitchOrchestrator
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
     }
 
+    /// <summary>
+    /// Raised on the switch's thread when required displays are not connected and the switch waits for the user to switch
+    /// them on (finding HW-16). Carries those displays.
+    /// </summary>
+    public event EventHandler<IReadOnlyList<DisplayAssignment>>? WaitingForDisplays;
+
     public async Task<SwitchResult> SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
@@ -99,7 +105,18 @@ public sealed class SwitchOrchestrator
         LogPlan(plan);
 
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
-        plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: false, cancellationToken);
+        List<DisplayAssignment> notConnected = [.. plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached).Select(m => m.Assignment)];
+        if (notConnected.Count > 0)
+        {
+            // A monitor that left the bus cannot be woken by software (no CEC on GPUs, DDC/CI needs the link): ask the user
+            // to switch it on and wait for it instead of blocking at once (finding HW-16).
+            _log.Information("Waiting up to {Seconds:0} s for required displays that are not connected: {Displays}",
+                _options.MissingDisplayWaitBudget.TotalSeconds, string.Join(", ", notConnected.Select(d => DisplayNames.Of(d))));
+            deadline = _time.GetUtcNow() + _options.MissingDisplayWaitBudget;
+            WaitingForDisplays?.Invoke(this, notConnected);
+        }
+
+        plan = await PollTopologyAsync(profile, plan, deadline, force: false, includeDetached: notConnected.Count > 0, cancellationToken);
         if (BlockReason(plan) is { } blocked)
         {
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
@@ -164,7 +181,7 @@ public sealed class SwitchOrchestrator
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                answer = ConfirmationResult.TimedOut;
+                answer = ConfirmationResult.Cancelled;
             }
 
             if (answer == ConfirmationResult.Confirmed)
@@ -208,7 +225,8 @@ public sealed class SwitchOrchestrator
         Task<AppsOutcome> appsRun = _appRunner.Start(profile);
         AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
 
-        SwitchOutcome outcome = plan.ShouldRetryLater || modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
+        // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it (finding HW-03).
+        SwitchOutcome outcome = modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
         return Finish(new SwitchResult
@@ -331,7 +349,7 @@ public sealed class SwitchOrchestrator
             ? await CheckDatabaseModesAsync(applied.Plan, cancellationToken)
             : ModeCheck.AsPlanned(applied.Plan);
         SwitchOutcome outcome = !applied.Succeeded ? SwitchOutcome.Failed
-            : modes.Plan.ShouldRetryLater || modes.DisplaysDark ? SwitchOutcome.AppliedPartially
+            : modes.DisplaysDark ? SwitchOutcome.AppliedPartially
             : SwitchOutcome.Applied;
         _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
@@ -519,7 +537,7 @@ public sealed class SwitchOrchestrator
 
             try
             {
-                plan = await PollTopologyAsync(profile, plan, deadline, afterAttempt: true, cancellationToken);
+                plan = await PollTopologyAsync(profile, plan, deadline, force: true, includeDetached: true, cancellationToken);
             }
             catch (Exception ex) when (IsDisplayApiFailure(ex))
             {
@@ -535,14 +553,15 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Re-queries the topology while a required display is attached but not ready, until the deadline. After a failed
-    /// attempt a required display that vanished is waited for too: a waking monitor can drop off the bus for seconds.
+    /// Re-queries the topology while a required display is attached but not ready, until the deadline. With
+    /// <paramref name="includeDetached"/> a required display that is not connected is waited for too: a waking monitor can
+    /// drop off the bus for seconds, and a switched-off one may be switched on (HW-16). <paramref name="force"/> re-queries
+    /// at least once.
     /// </summary>
     private async Task<TopologyPlan> PollTopologyAsync(
-        Profile profile, TopologyPlan plan, DateTimeOffset deadline, bool afterAttempt, CancellationToken cancellationToken)
+        Profile profile, TopologyPlan plan, DateTimeOffset deadline, bool force, bool includeDetached, CancellationToken cancellationToken)
     {
-        bool force = afterAttempt;
-        while ((force || IsWaitingForTarget(plan, afterAttempt)) && _time.GetUtcNow() < deadline)
+        while ((force || IsWaitingForTarget(plan, includeDetached)) && _time.GetUtcNow() < deadline)
         {
             force = false;
             await Task.Delay(_options.PollInterval, _time, cancellationToken);
@@ -582,7 +601,8 @@ public sealed class SwitchOrchestrator
     /// </summary>
     private async Task SwitchHdrAsync(Profile profile, CancellationToken cancellationToken)
     {
-        if (!profile.Displays.Any(d => d.Hdr is not null))
+        List<DisplayAssignment> wantedDisplays = [.. profile.Displays.Where(d => d.Hdr is not null)];
+        if (wantedDisplays.Count == 0)
         {
             return;
         }
@@ -591,14 +611,28 @@ public sealed class SwitchOrchestrator
         try
         {
             DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
-            List<DisplayAssignment> unknown = await SetHdrAsync([.. profile.Displays.Where(d => d.Hdr is not null)], now, cancellationToken);
-            if (unknown.Count > 0)
+            if (!NeedsHdrCheck(wantedDisplays, now))
+            {
+                _log.Information("HDR for {Profile} is already as wanted", profile.Name);
+                return;
+            }
+
+            // A monitor may still do its handshake right after the apply and drop off the bus; switching HDR then is what
+            // froze the test PC (finding HW-12). Two snapshots in a row must agree first.
+            if (await WaitForSettledDisplaysAsync(now, cancellationToken) is not { } settled)
+            {
+                _log.Warning("HDR for {Profile} left unchanged: the displays did not settle within {Budget}", profile.Name, _options.HdrSettleBudget);
+                return;
+            }
+
+            HdrPass pass = await SetHdrAsync(wantedDisplays, settled, cancellationToken);
+            if (!pass.TimedOut && pass.Unknown.Count > 0)
             {
                 // Right after an apply the driver may not report HDR yet (analysis finding B-12): ask once more.
-                _log.Information("HDR state of {Count} display(s) not reported yet, asking again in {Delay}", unknown.Count, HdrRetryDelay);
+                _log.Information("HDR state of {Count} display(s) not reported yet, asking again in {Delay}", pass.Unknown.Count, HdrRetryDelay);
                 await Task.Delay(HdrRetryDelay, _time, cancellationToken);
                 now = await _display.QueryAsync(cancellationToken);
-                foreach (DisplayAssignment wanted in await SetHdrAsync(unknown, now, cancellationToken))
+                foreach (DisplayAssignment wanted in (await SetHdrAsync(pass.Unknown, now, cancellationToken)).Unknown)
                 {
                     _log.Warning("Display {Display} does not support HDR, left unchanged", DisplayNames.Of(wanted));
                 }
@@ -614,14 +648,59 @@ public sealed class SwitchOrchestrator
 
     private static readonly TimeSpan HdrRetryDelay = TimeSpan.FromSeconds(1);
 
-    /// <summary>Sets HDR where the state differs. Returns the active displays that reported no HDR state.</summary>
-    private async Task<List<DisplayAssignment>> SetHdrAsync(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now, CancellationToken cancellationToken)
+    /// <summary>Whether an active display of the profile reports another HDR state than wanted, or none yet.</summary>
+    private static bool NeedsHdrCheck(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now) =>
+        wantedDisplays.Any(wanted => ActiveTarget(now, wanted)?.ActiveMode is { } mode && mode.Hdr != wanted.Hdr);
+
+    private static AttachedDisplay? ActiveTarget(DisplaySnapshot snapshot, DisplayAssignment wanted) =>
+        snapshot.Displays.FirstOrDefault(d => d.IsActive
+            && string.Equals(d.Identity.TargetDevicePath, wanted.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Re-queries until two snapshots in a row show the same displays with the same modes (HDR state aside), at most
+    /// <see cref="SwitchOptions.HdrSettleBudget"/>. Returns the settled snapshot, or <c>null</c> when they kept changing.
+    /// </summary>
+    private async Task<DisplaySnapshot?> WaitForSettledDisplaysAsync(DisplaySnapshot first, CancellationToken cancellationToken)
+    {
+        DateTimeOffset deadline = _time.GetUtcNow() + _options.HdrSettleBudget;
+        DisplaySnapshot previous = first;
+        while (true)
+        {
+            await Task.Delay(_options.PollInterval, _time, cancellationToken);
+            DisplaySnapshot current = await _display.QueryAsync(cancellationToken);
+            if (LayoutKey(current).SetEquals(LayoutKey(previous)))
+            {
+                return current;
+            }
+
+            if (_time.GetUtcNow() >= deadline)
+            {
+                return null;
+            }
+
+            _log.Debug("Displays still changing after the apply, waiting before HDR");
+            previous = current;
+        }
+    }
+
+    private static HashSet<string> LayoutKey(DisplaySnapshot snapshot) =>
+        snapshot.Displays
+            .Select(d => d.ActiveMode is { } m
+                ? string.Create(CultureInfo.InvariantCulture,
+                    $"{d.Identity.TargetDevicePath}|{d.IsAvailable}|{m.Width}x{m.Height}@{m.RefreshNumerator}/{m.RefreshDenominator}|{m.PositionX},{m.PositionY}")
+                : string.Create(CultureInfo.InvariantCulture, $"{d.Identity.TargetDevicePath}|{d.IsAvailable}|off"))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Sets HDR where the state differs. Returns the active displays that reported no HDR state, and whether a call did not
+    /// return within <see cref="SwitchOptions.HdrCallTimeout"/> – then the remaining displays are left alone.
+    /// </summary>
+    private async Task<HdrPass> SetHdrAsync(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now, CancellationToken cancellationToken)
     {
         var unknown = new List<DisplayAssignment>();
         foreach (DisplayAssignment wanted in wantedDisplays)
         {
-            AttachedDisplay? target = now.Displays.FirstOrDefault(d => d.IsActive
-                && string.Equals(d.Identity.TargetDevicePath, wanted.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+            AttachedDisplay? target = ActiveTarget(now, wanted);
             if (wanted.Hdr is not { } enabled || target?.ActiveMode is not { } mode)
             {
                 continue;
@@ -633,7 +712,18 @@ public sealed class SwitchOrchestrator
             }
             else if (mode.Hdr != enabled)
             {
-                int code = await _display.SetHdrAsync(target, enabled, cancellationToken);
+                int code;
+                try
+                {
+                    code = await _display.SetHdrAsync(target, enabled, cancellationToken).WaitAsync(_options.HdrCallTimeout, _time, cancellationToken);
+                }
+                catch (TimeoutException)
+                {
+                    _log.Error("HDR of {Display} did not return within {Timeout}; the graphics driver may hang. HDR is left alone for the rest of this switch",
+                        DisplayNames.Of(wanted), _options.HdrCallTimeout);
+                    return new HdrPass(unknown, TimedOut: true);
+                }
+
                 if (code != 0)
                 {
                     _log.Warning("HDR of {Display} could not be set to {Enabled} (native error {Error})", DisplayNames.Of(wanted), enabled, code);
@@ -641,8 +731,10 @@ public sealed class SwitchOrchestrator
             }
         }
 
-        return unknown;
+        return new HdrPass(unknown, TimedOut: false);
     }
+
+    private sealed record HdrPass(List<DisplayAssignment> Unknown, bool TimedOut);
 
     /// <summary>The topology before the switch, as a throwaway profile. All displays optional: a partial restore beats none.</summary>
     private static Profile PreviousTopology(DisplaySnapshot before)

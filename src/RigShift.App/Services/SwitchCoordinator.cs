@@ -38,9 +38,17 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         _settings = settings;
         _time = time;
         _log = log.ForContext<SwitchCoordinator>();
+        orchestrator.WaitingForDisplays += (_, displays) =>
+            WaitingForDisplays?.Invoke(this, [.. displays.Select(d => SwitchMessages.NameOf(d))]);
     }
 
     public event EventHandler<SwitchRecord>? SwitchCompleted;
+
+    /// <summary>
+    /// A switch waits for required displays that are not connected; carries their names (finding HW-16). Raised on the
+    /// switch's thread pool thread.
+    /// </summary>
+    public event EventHandler<IReadOnlyList<string>>? WaitingForDisplays;
 
     public event EventHandler? BusyRejected;
 
@@ -267,17 +275,24 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     }
 
     private void RememberCatchUp(Profile profile, SwitchResult result) =>
-        _pendingCatchUp = result.Outcome == SwitchOutcome.AppliedPartially ? (profile, result.Plan.Resolved.Count)
+        _pendingCatchUp = result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially && result.Plan.ShouldRetryLater
+            ? (profile, result.Plan.Resolved.Count)
             : result.Outcome == SwitchOutcome.Failed && _pendingCatchUp?.Profile.Id == profile.Id ? _pendingCatchUp
             : null;
 
     private SwitchRecord ToRecord(DateTimeOffset started, Profile profile, SwitchResult result) =>
         new(started, profile.Name, result.Outcome, result.Audio, result.Apps, result.Attempts, result.Duration, result.LastNativeError, result.Message,
-            result.Plan.Missing.Select(m => SwitchMessages.NameOf(m.Assignment)).ToList(),
+            MissingForRecord(result).Select(m => SwitchMessages.NameOf(m.Assignment)).ToList(),
             profile.AppsWaitForUsbDeviceId is null && profile.AppsWaitForUsbDeviceName is null
                 ? null
                 : Core.Automation.UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, _settings.Current.UsbDeviceNames),
             Profile.AppsDeviceWaitSeconds, result.Note);
+
+    /// <summary>A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14).</summary>
+    private static IEnumerable<MissingDisplay> MissingForRecord(SwitchResult result) =>
+        result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
+            ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional)
+            : result.Plan.Missing;
 
     private async Task CompleteAsync(SwitchRecord record)
     {
@@ -295,6 +310,12 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning(ex, "The active profile could not be refreshed after the switch to {Profile}", record.ProfileName);
+        }
+
+        // Displays that are only on in this profile (spacedesk) can list their rates now; the editor offers them later (HW-13).
+        if (record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
+        {
+            _ = _catalog.RememberActiveRefreshRatesAsync(CancellationToken.None);
         }
 
         SwitchCompleted?.Invoke(this, record);

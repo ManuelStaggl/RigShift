@@ -104,8 +104,10 @@ public sealed class TrayIconService : IDisposable
         UpdateService updates,
         HotkeyService hotkeys,
         AutomationService automation,
+        SwitchOptions switchOptions,
         ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(switchOptions);
         ArgumentNullException.ThrowIfNull(hotkeys);
         ArgumentNullException.ThrowIfNull(automation);
         _automation = automation;
@@ -165,6 +167,10 @@ public sealed class TrayIconService : IDisposable
                 Notify(apps);
             }
         };
+        coordinator.WaitingForDisplays += (_, names) => _icon.Dispatcher.InvokeAsync(() => Notify((
+            Loc.Instance["Result_WaitingTitle"],
+            Loc.Format("Result_WaitingText", string.Join(", ", names), (int)switchOptions.MissingDisplayWaitBudget.TotalSeconds),
+            NotificationIcon.Info)));
         coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
         _updates = updates;
         updates.UpdateReady += (_, version) => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true);

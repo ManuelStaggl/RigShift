@@ -1,12 +1,15 @@
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RigShift.App.Localization;
 using RigShift.App.Services;
+using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 
 namespace RigShift.App.ViewModels;
 
 /// <summary>A profile as shown in the tray popup, the tray menu and the profile page.</summary>
-public sealed partial class ProfileItem(Profile profile) : ObservableObject
+/// <param name="usbDeviceNames">Custom USB device names, for the device the apps wait for.</param>
+public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject
 {
     public Profile Profile { get; } = profile;
 
@@ -27,6 +30,11 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
         .ThenBy(d => d.PositionY)
         .Select(Describe)
         .ToList();
+
+    /// <summary>"Apps: SimHub, CrewChief · waits for Simagic Base"; <c>null</c> without apps (finding HW-09).</summary>
+    public string? AppsLine { get; } = DescribeApps(profile, usbDeviceNames);
+
+    public bool HasApps => AppsLine is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AccessibleName))]
@@ -55,4 +63,26 @@ public sealed partial class ProfileItem(Profile profile) : ObservableObject
 
         return text;
     }
+
+    private static string? DescribeApps(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames)
+    {
+        if (profile.Apps.Count == 0)
+        {
+            return null;
+        }
+
+        string apps = string.Join(", ", profile.Apps.Select(app =>
+            app.Kind == AppActionKind.Stop ? Loc.Format("Profile_AppStop", AppName(app.Path)) : AppName(app.Path)));
+        string text = Loc.Format("Profile_Apps", apps);
+        if (profile.AppsWaitForUsbDeviceId is not null)
+        {
+            text += " · " + Loc.Format("Profile_AppsWait",
+                UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDeviceNames));
+        }
+
+        return text;
+    }
+
+    private static string AppName(string path) =>
+        Path.GetFileNameWithoutExtension(path) is { Length: > 0 } name ? name : path;
 }

@@ -376,7 +376,7 @@ public sealed partial class AutomationViewModel : ObservableObject
     }
 
     private void FillDevices(IReadOnlyList<AutomationRule> rules) =>
-        UsbDeviceChoices.Fill(DeviceChoices, _windowsNames, _connected, rules.SelectMany(r => r.Devices ?? []), CustomNames);
+        UsbDeviceChoices.Fill(DeviceChoices, _windowsNames, _connected, UsbDeviceChoices.Known(rules, _catalog.Profiles, CustomNames), CustomNames);
 
     /// <summary>Called when a rule's devices change: a newly picked device can be named at once.</summary>
     internal void OnRuleDevicesChanged()
@@ -393,11 +393,7 @@ public sealed partial class AutomationViewModel : ObservableObject
             .GroupBy(d => d.Id, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.First().Name, StringComparer.OrdinalIgnoreCase);
         var known = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-        IEnumerable<RuleDevice> used = rules
-            .SelectMany(r => r.Devices ?? [])
-            .Concat(_catalog.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }))
-            .Concat((CustomNames ?? new Dictionary<string, string>()).Keys.Select(id => new RuleDevice { Id = id }));
-        foreach (RuleDevice device in used)
+        foreach (RuleDevice device in UsbDeviceChoices.Known(rules, _catalog.Profiles, CustomNames))
         {
             if (UsbDeviceIds.Normalize(device.Id) is { } id && (!known.TryGetValue(id, out string? name) || name is null))
             {

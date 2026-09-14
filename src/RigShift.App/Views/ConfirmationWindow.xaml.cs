@@ -46,7 +46,7 @@ public partial class ConfirmationWindow : FluentWindow
         _timer.Tick += OnTick;
         SourceInitialized += OnSourceInitialized;
         ContentRendered += OnContentRendered;
-        _cancellation = cancellationToken.Register(() => Dispatcher.InvokeAsync(() => Finish(ConfirmationResult.TimedOut)));
+        _cancellation = cancellationToken.Register(() => Dispatcher.InvokeAsync(() => Finish(ConfirmationResult.Cancelled)));
     }
 
     public static Task<ConfirmationResult> ShowAsync(Profile profile, TimeSpan timeout, CancellationToken cancellationToken)

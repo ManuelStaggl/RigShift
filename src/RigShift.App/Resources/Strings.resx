@@ -39,6 +39,15 @@
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} active</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Displays switched.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Switched without: {0}</value></data>
+  <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Displays switched. {0} follows once it is connected.</value></data>
+  <data name="Result_WaitingTitle" xml:space="preserve"><value>Switch on your display</value></data>
+  <data name="Result_WaitingText" xml:space="preserve"><value>Not connected: {0}. RigShift waits up to {1} seconds for it.</value></data>
+  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>"Confirm after switching" is off in the settings, so every profile switches without asking.</value></data>
+  <data name="Editor_HdrWarning" xml:space="preserve"><value>Switch HDR on this display once in the Windows settings first. On some monitors, especially over HDMI, switching HDR can freeze the graphics driver.</value></data>
+  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates show up once this display was switched on while RigShift was running.</value></data>
+  <data name="Profile_Apps" xml:space="preserve"><value>Apps: {0}</value></data>
+  <data name="Profile_AppStop" xml:space="preserve"><value>{0} (close)</value></data>
+  <data name="Profile_AppsWait" xml:space="preserve"><value>waits for {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio could not be switched completely.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>

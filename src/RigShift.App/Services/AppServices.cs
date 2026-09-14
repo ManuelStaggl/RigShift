@@ -191,6 +191,9 @@ public static class SwitchMessages
         string missing = string.Join(", ", record.MissingDisplays);
         (string title, string text, H.NotifyIcon.Core.NotificationIcon icon) = record.Outcome switch
         {
+            // Only optional displays are missing: switched, and they follow once connected (finding HW-03).
+            SwitchOutcome.Applied when record.MissingDisplays.Count > 0 =>
+                (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_AppliedFollowUpText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.Applied => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Instance["Result_AppliedText"], H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.AppliedPartially => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_PartialText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.RolledBack => (Loc.Format("Result_RolledBackTitle", record.ProfileName), Loc.Instance["Result_RolledBackText"], H.NotifyIcon.Core.NotificationIcon.Warning),

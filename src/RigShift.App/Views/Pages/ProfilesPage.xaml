@@ -120,6 +120,13 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
 
+                  <TextBlock
+                    Margin="0,4,0,0"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding AppsLine}"
+                    TextWrapping="Wrap"
+                    Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}" />
+
                   <TextBlock Margin="0,8,0,0" Text="{Binding CheckMessage}" TextWrapping="Wrap" controls:LiveRegion.IsLive="True">
                     <TextBlock.Style>
                       <Style TargetType="TextBlock">

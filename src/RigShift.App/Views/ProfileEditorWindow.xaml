@@ -80,8 +80,16 @@
             Margin="0,4,0,0"
             VerticalAlignment="Center"
             Content="{loc:Tr Editor_SwitchWithoutAsking}"
-            IsChecked="{Binding SwitchWithoutAsking}" />
+            IsChecked="{Binding SwitchWithoutAsking}"
+            IsEnabled="{Binding ConfirmationEnabled}" />
         </Grid>
+        <!-- Off in the settings, the checkbox changes nothing; say where the setting is (finding HW-02). -->
+        <TextBlock
+          Margin="0,-8,0,16"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Editor_ConfirmationOff}"
+          TextWrapping="Wrap"
+          Visibility="{Binding ConfirmationDisabled, Converter={StaticResource BoolToVisibility}}" />
 
         <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Hotkey}" />
         <Grid Margin="0,4,0,0">
@@ -185,6 +193,19 @@
                         IsChecked="{Binding IsOptional}"
                         IsEnabled="{Binding CanBeOptional}" />
                     </WrapPanel>
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{loc:Tr Editor_RefreshRatesUnknown}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding RatesUnknown, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Switching HDR froze a test PC over HDMI, also from the Windows settings (finding HW-12). -->
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                      Text="{loc:Tr Editor_HdrWarning}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding SwitchesHdr, Converter={StaticResource BoolToVisibility}}" />
                   </StackPanel>
                   <ui:Button
                     Grid.Column="1"

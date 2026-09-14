@@ -15,6 +15,21 @@ public sealed record SwitchOptions
     /// </summary>
     public TimeSpan TargetWaitBudget { get; init; } = TimeSpan.FromSeconds(20);
 
+    /// <summary>
+    /// How long to wait for a required display that is not connected at all (switched off, or dropped off the bus in
+    /// standby) before the switch is blocked; the user is asked to switch it on (finding HW-16).
+    /// </summary>
+    public TimeSpan MissingDisplayWaitBudget { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Longest time a native HDR call may take. Switching HDR over HDMI froze the graphics stack of the test PC (finding
+    /// HW-12); the switch goes on without waiting for a call that does not return.
+    /// </summary>
+    public TimeSpan HdrCallTimeout { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
+    public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
+
     /// <summary>Interval for re-querying the topology while waiting.</summary>
     public TimeSpan PollInterval { get; init; } = TimeSpan.FromSeconds(1);
 

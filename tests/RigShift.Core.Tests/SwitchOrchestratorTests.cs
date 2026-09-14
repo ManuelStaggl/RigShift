@@ -186,26 +186,46 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_RequiredDisplayNotAttached_IsBlockedImmediately()
+    public async Task Switch_RequiredDisplayNotAttached_AsksForItAndBlocksAfterTheWait()
     {
         var display = new FakeDisplayConfigurator(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(Tablet)));
+        SwitchOrchestrator orchestrator = Create(display);
+        IReadOnlyList<DisplayAssignment>? asked = null;
+        orchestrator.WaitingForDisplays += (_, displays) => asked = displays;
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Blocked);
         result.Message.ShouldNotBeNull().ShouldContain("Ultrawide 49");
+        asked.ShouldNotBeNull().ShouldHaveSingleItem().Identity.ShouldBe(Ultrawide);
         display.Applied.ShouldBeEmpty();
-        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+        _time.Elapsed.ShouldBe(new SwitchOptions().MissingDisplayWaitBudget);
     }
 
     [Fact]
-    public async Task Switch_OptionalDisplayMissing_AppliesPartially()
+    public async Task Switch_RequiredDisplaySwitchedOnWhileWaiting_Applies()
+    {
+        // HW-16: the G9 had left the bus; the user switches it on after the notification.
+        DisplaySnapshot ultrawideOff = Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(Tablet));
+        var display = new FakeDisplayConfigurator([ultrawideOff, ultrawideOff, ultrawideOff, DeskActive()]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.Applied.Single().Plan.Resolved.ShouldContain(r => r.Target.Identity == Ultrawide);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task Switch_OptionalDisplayMissing_CountsAsApplied()
     {
         var display = new FakeDisplayConfigurator(DeskActive(tabletAttached: false));
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
-        result.Outcome.ShouldBe(SwitchOutcome.AppliedPartially);
+        // HW-03: no "partially" for a spacedesk viewer that is not there; the plan still lists it for the catch-up.
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Plan.ShouldRetryLater.ShouldBeTrue();
         display.Applied.Single().Plan.Resolved.Single().Target.Identity.ShouldBe(Ultrawide);
         _time.Elapsed.ShouldBe(TimeSpan.Zero);
     }
@@ -788,6 +808,56 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true), (DeskLeft.TargetDevicePath, true)]);
+    }
+
+    [Fact]
+    public async Task Switch_HdrCallHangs_SwitchGoesOnAndLeavesOtherDisplaysAlone()
+    {
+        // HW-12: the native HDR call never returned and nothing after it ran.
+        DisplayAssignment left = Mode(DeskLeft, 1920, 1080, 100, x: 5120);
+        var display = new FakeDisplayConfigurator([
+            DeskActive(),
+            Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(DeskLeft, activeMode: left with { Hdr = false })),
+        ])
+        {
+            HdrNeverReturns = true,
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }, left with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+    }
+
+    [Fact]
+    public async Task Switch_DisplaysStillChangingAfterApply_HdrWaitsUntilTheySettle()
+    {
+        DisplaySnapshot tabletComing = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet));
+        DisplaySnapshot tabletActive = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet, activeMode: TabletMode));
+        var display = new FakeDisplayConfigurator([DeskActive(), tabletComing, tabletActive, tabletActive]);
+        var options = new SwitchOptions { WindowRescueDelay = TimeSpan.Zero };
+
+        SwitchResult result = await Create(display, options).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
+    public async Task Switch_DisplaysNeverSettle_HdrLeftUnchanged()
+    {
+        DisplaySnapshot a = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet));
+        DisplaySnapshot b = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet, activeMode: TabletMode));
+        var display = new FakeDisplayConfigurator([DeskActive(), .. Enumerable.Range(0, 40).Select(i => i % 2 == 0 ? a : b)]);
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.HdrSet.ShouldBeEmpty();
     }
 
     [Fact]

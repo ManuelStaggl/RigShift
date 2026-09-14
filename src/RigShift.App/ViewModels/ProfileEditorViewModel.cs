@@ -26,6 +26,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly bool _isNew;
     private readonly IReadOnlyList<UsbDevice> _usbDevices;
     private readonly IReadOnlyDictionary<string, string>? _customUsbNames;
+    private readonly IReadOnlyList<RuleDevice> _knownUsbDevices;
     private readonly string? _savedWaitDeviceId;
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
@@ -44,6 +45,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         IReadOnlyList<AudioDeviceInfo> recordingDevices,
         IReadOnlyList<UsbDevice> usbDevices,
         IReadOnlyDictionary<string, string>? usbDeviceNames,
+        IReadOnlyList<RuleDevice> knownUsbDevices,
+        bool confirmationEnabled,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         HotkeyService hotkeys,
@@ -59,6 +62,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _isNew = isNew;
         _usbDevices = usbDevices;
         _customUsbNames = usbDeviceNames;
+        _knownUsbDevices = knownUsbDevices;
+        ConfirmationEnabled = confirmationEnabled;
         _savedWaitDeviceId = UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId);
         _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
@@ -150,6 +155,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     [ObservableProperty]
     public partial bool SwitchWithoutAsking { get; set; }
+
+    /// <summary>
+    /// "Confirm after switching" is on in the settings. Off, every profile switches without asking, so the checkbox is
+    /// disabled and a hint says where the setting is (finding HW-02).
+    /// </summary>
+    public bool ConfirmationEnabled { get; }
+
+    public bool ConfirmationDisabled => !ConfirmationEnabled;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
@@ -293,9 +306,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _ = LoadRefreshRatesAsync();
     }
 
-    /// <summary>Offers the refresh rates each display reports at its resolution; displays that are off keep only their own.</summary>
+    /// <summary>
+    /// Offers the refresh rates each display reports at its resolution. A display that is off offers the rates it reported
+    /// when it was last active; without any, a hint says why the list is short (finding HW-13).
+    /// </summary>
     private async Task LoadRefreshRatesAsync()
     {
+        var found = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
         foreach (DisplayEditItem item in Displays.ToList())
         {
             DisplayAssignment assignment = item.Assignment;
@@ -303,6 +320,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             {
                 IReadOnlyList<RefreshRate> rates = await Task.Run(() =>
                     _display.ListRefreshRatesAsync(assignment.Identity, assignment.Width, assignment.Height, CancellationToken.None));
+                if (rates.Count > 0)
+                {
+                    found.Add((assignment.Identity, assignment.Width, assignment.Height, rates));
+                }
+                else
+                {
+                    rates = _catalog.RememberedRefreshRates(assignment.Identity, assignment.Width, assignment.Height);
+                    _log.Debug("{Display} is not active; offering {Count} remembered refresh rates", DisplayNames.Of(assignment), rates.Count);
+                }
+
                 item.OfferRefreshRates(rates);
             }
             catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
@@ -310,6 +337,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
                 _log.Warning(ex, "Refresh rates of {Display} could not be read", DisplayNames.Of(assignment));
             }
         }
+
+        await _catalog.RememberRefreshRatesAsync(found, CancellationToken.None);
     }
 
     public void Dispose() => Loc.Instance.PropertyChanged -= OnLanguageChanged;
@@ -361,11 +390,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == selectedKey) ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
     }
 
-    /// <summary>Same source and naming as the automation page; a saved device that is not connected stays selectable.</summary>
+    /// <summary>
+    /// Same source and naming as the automation page; the saved device and every other known device stay selectable while
+    /// they are not connected (finding HW-08).
+    /// </summary>
     private void FillAppsWaitChoices(string? selectedKey)
     {
         RuleDevice[] saved = _savedWaitDeviceId is null ? [] : [new RuleDevice { Id = _savedWaitDeviceId, Name = _savedWaitDeviceName }];
-        UsbDeviceChoices.Fill(AppsWaitDeviceChoices, _usbDeviceNames, _usbDevices, saved, _customUsbNames);
+        UsbDeviceChoices.Fill(AppsWaitDeviceChoices, _usbDeviceNames, _usbDevices, [.. saved, .. _knownUsbDevices], _customUsbNames);
         AppsWaitDeviceChoices.Insert(0, new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
 
         SelectedAppsWaitDevice = AppsWaitDeviceChoices.FirstOrDefault(c => string.Equals(c.Key, selectedKey, StringComparison.OrdinalIgnoreCase))
@@ -448,7 +480,15 @@ public sealed partial class DisplayEditItem : ObservableObject
     public ObservableCollection<HdrChoice> HdrChoices { get; } = [.. NewHdrChoices()];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SwitchesHdr))]
     public partial HdrChoice? SelectedHdr { get; set; }
+
+    /// <summary>HDR is set on or off: the editor warns to try it in Windows first (finding HW-12).</summary>
+    public bool SwitchesHdr => SelectedHdr?.Value is not null;
+
+    /// <summary>The display offered no rates now and none are remembered, so only the saved one is listed (HW-13).</summary>
+    [ObservableProperty]
+    public partial bool RatesUnknown { get; private set; }
 
     /// <summary>New texts after a language change; <see cref="Sync"/> selects the same values again.</summary>
     internal void Relabel()
@@ -507,6 +547,7 @@ public sealed partial class DisplayEditItem : ObservableObject
     {
         RefreshRate current = RefreshRate.Of(Assignment);
         List<RefreshRate> all = [current, .. rates.Where(r => !r.LooksLike(current))];
+        RatesUnknown = rates.Count == 0;
         _syncing = true;
         try
         {

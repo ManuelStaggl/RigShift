@@ -41,6 +41,9 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
+    /// <summary>Refresh rates displays offered once, for the profile editor (<see cref="Profiles.RefreshRateMemory"/>, finding HW-13).</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>>? RefreshRates { get; init; }
+
     /// <summary>Custom USB device names by <c>VID_xxxx&amp;PID_xxxx</c> (user decision U-01, <see cref="Automation.UsbDeviceNames"/>).</summary>
     public IReadOnlyDictionary<string, string>? UsbDeviceNames { get; init; }
 

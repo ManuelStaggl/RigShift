@@ -88,10 +88,13 @@ public enum AudioOutcome
 
 public enum SwitchOutcome
 {
-    /// <summary>Topology and audio applied, user confirmed (or no confirmation required).</summary>
+    /// <summary>
+    /// Topology and audio applied, user confirmed (or no confirmation required). Optional displays that are not there count
+    /// as applied (finding HW-03); they are in <see cref="TopologyPlan.Missing"/> and a follow-up pass picks them up.
+    /// </summary>
     Applied,
 
-    /// <summary>Applied with optional displays skipped; a follow-up pass will pick them up.</summary>
+    /// <summary>Applied, but a display stayed dark with the database modes; a follow-up pass may pick it up.</summary>
     AppliedPartially,
 
     /// <summary>Applied, but the user did not confirm within the timeout – previous profile restored.</summary>

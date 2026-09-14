@@ -101,12 +101,17 @@ internal sealed class FakeDisplayConfigurator : IDisplayConfigurator
         }
     }
 
+    /// <summary>Setting HDR never returns, like the frozen graphics driver of finding HW-12.</summary>
+    public bool HdrNeverReturns { get; set; }
+
     public Task<int> SetHdrAsync(AttachedDisplay display, bool enabled, CancellationToken cancellationToken)
     {
         lock (_gate)
         {
             HdrSet.Add((display.Identity.TargetDevicePath, enabled));
-            return Task.FromResult(HdrResults.GetValueOrDefault(display.Identity.TargetDevicePath, HdrResult));
+            return HdrNeverReturns
+                ? new TaskCompletionSource<int>().Task
+                : Task.FromResult(HdrResults.GetValueOrDefault(display.Identity.TargetDevicePath, HdrResult));
         }
     }
 

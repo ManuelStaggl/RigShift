@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using RigShift.App.Localization;
 using RigShift.Core.Automation;
+using RigShift.Core.Profiles;
 
 namespace RigShift.App.ViewModels;
 
@@ -10,6 +11,20 @@ namespace RigShift.App.ViewModels;
 /// </summary>
 internal static class UsbDeviceChoices
 {
+    /// <summary>
+    /// Every device RigShift knows without it being connected: the devices of the rules, the devices profiles wait for and
+    /// named devices. A device picked once stays selectable while it is off (finding HW-08).
+    /// </summary>
+    public static IEnumerable<RuleDevice> Known(
+        IEnumerable<AutomationRule>? rules, IEnumerable<Profile> profiles, IReadOnlyDictionary<string, string>? customNames)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        return (rules ?? [])
+            .SelectMany(r => r.Devices ?? [])
+            .Concat(profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }))
+            .Concat((customNames?.Keys ?? []).Select(id => new RuleDevice { Id = id }));
+    }
+
     /// <param name="windowsNames">Filled with Windows' name per device id, which rules and profiles store with the id.</param>
     public static void Fill(
         ObservableCollection<Choice> choices,
@@ -33,14 +48,22 @@ internal static class UsbDeviceChoices
             }
         }
 
+        // A device without Windows' name (only named) gets one from a later entry that has it, so its label is not the id.
+        var savedNames = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         foreach (RuleDevice device in saved)
         {
-            if (UsbDeviceIds.Normalize(device.Id) is { } id && !windowsNames.ContainsKey(id))
+            if (UsbDeviceIds.Normalize(device.Id) is { } id && !windowsNames.ContainsKey(id)
+                && (!savedNames.TryGetValue(id, out string? name) || name is null))
             {
-                string name = string.IsNullOrWhiteSpace(device.Name) ? id : device.Name;
-                windowsNames[id] = name;
-                choices.Add(new Choice(id, Loc.Format("Automation_DeviceNotConnected", UsbDeviceNames.Label(id, name, customNames))));
+                savedNames[id] = string.IsNullOrWhiteSpace(device.Name) ? null : device.Name;
             }
+        }
+
+        foreach ((string id, string? savedName) in savedNames)
+        {
+            string name = savedName ?? id;
+            windowsNames[id] = name;
+            choices.Add(new Choice(id, Loc.Format("Automation_DeviceNotConnected", UsbDeviceNames.Label(id, name, customNames))));
         }
     }
 }

@@ -17,4 +17,7 @@ public enum ConfirmationResult
     Confirmed,
     Rejected,
     TimedOut,
+
+    /// <summary>RigShift is exiting (or the switch was cancelled otherwise) while the countdown ran (finding HW-07).</summary>
+    Cancelled,
 }

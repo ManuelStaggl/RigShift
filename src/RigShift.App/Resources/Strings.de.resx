@@ -39,6 +39,15 @@
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} aktiv</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Bildschirme umgeschaltet.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
+  <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Bildschirme umgeschaltet. {0} folgt, sobald verbunden.</value></data>
+  <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
+  <data name="Result_WaitingText" xml:space="preserve"><value>Nicht verbunden: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
+  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>„Nach dem Umschalten bestätigen“ ist in den Einstellungen aus, daher schaltet jedes Profil ohne Nachfrage um.</value></data>
+  <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen umschalten. Bei manchen Monitoren, vor allem über HDMI, kann das Umschalten von HDR den Grafiktreiber einfrieren.</value></data>
+  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten erscheinen, sobald der Bildschirm einmal eingeschaltet war, während RigShift lief.</value></data>
+  <data name="Profile_Apps" xml:space="preserve"><value>Apps: {0}</value></data>
+  <data name="Profile_AppStop" xml:space="preserve"><value>{0} (beenden)</value></data>
+  <data name="Profile_AppsWait" xml:space="preserve"><value>wartet auf {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>

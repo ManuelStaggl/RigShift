@@ -36,6 +36,21 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
+    public async Task Blocked_AsksForTheDisplay_AndNamesOnlyRequiredDisplays()
+    {
+        // HW-14 and HW-16: neither the ultrawide (required) nor the tablet (optional) is connected.
+        _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0])));
+        IReadOnlyList<string>? asked = null;
+        _host.Coordinator.WaitingForDisplays += (_, names) => asked = names;
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(Rig(), SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
+        asked.ShouldNotBeNull().ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
+        _host.Coordinator.History[0].MissingDisplays.ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
+    }
+
+    [Fact]
     public async Task History_KeepsTenNewest()
     {
         for (int i = 0; i <= 10; i++)
@@ -54,8 +69,8 @@ public sealed class SwitchCoordinatorTests : IDisposable
         Profile rig = Rig();
         _host.Display.SetSnapshot(DeskActive(tabletAttached: false));
 
-        // Partial: the tablet is missing, so catch-up follows the rig.
-        (await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default))!.Outcome.ShouldBe(SwitchOutcome.AppliedPartially);
+        // The tablet is missing: applied (HW-03), and the catch-up follows the rig.
+        (await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default))!.Outcome.ShouldBe(SwitchOutcome.Applied);
 
         // A failed switch to the same profile keeps following it.
         _host.Display.EnqueueApplyResults(87, 87);

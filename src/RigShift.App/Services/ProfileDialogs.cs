@@ -138,8 +138,11 @@ public sealed class ProfileDialogs
     {
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
+        Core.Settings.AppSettings settings = _settings.Current;
         var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, _settings.Current.UsbDeviceNames, _catalog, _display, _hotkeys, _log);
+            profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
+            [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
+            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };

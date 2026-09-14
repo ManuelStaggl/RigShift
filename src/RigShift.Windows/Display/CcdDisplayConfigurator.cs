@@ -180,12 +180,22 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
             return Task.FromResult((int)WIN32_ERROR.ERROR_INVALID_PARAMETER);
         }
 
-        long started = System.Diagnostics.Stopwatch.GetTimestamp();
-        HdrSetResult result = CcdNative.SetHdr(handle.Adapter.ToLuid(), handle.TargetId, enabled);
-        _log.Information("HDR of {Display} set to {Enabled} with the {Request} request: result {Result}, _2 query {QueryError}, after {Milliseconds:0} ms",
-            DisplayNames.Of(display.Identity), enabled, result.UsedLegacyRequest ? "SET_ADVANCED_COLOR_STATE" : "SET_HDR_STATE",
-            result.Result, result.QueryError, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-        return Task.FromResult(result.Result);
+        // Logged before the native call: at HW-12 the call never returned and the log ended without a trace of it. The call
+        // runs on its own thread, so the orchestrator's time limit can give up on it without blocking a pool thread.
+        _log.Information("Setting HDR of {Display} to {Enabled}", DisplayNames.Of(display.Identity), enabled);
+        return Task.Factory.StartNew(
+            () =>
+            {
+                long started = System.Diagnostics.Stopwatch.GetTimestamp();
+                HdrSetResult result = CcdNative.SetHdr(handle.Adapter.ToLuid(), handle.TargetId, enabled);
+                _log.Information("HDR of {Display} set to {Enabled} with the {Request} request: result {Result}, _2 query {QueryError}, after {Milliseconds:0} ms",
+                    DisplayNames.Of(display.Identity), enabled, result.UsedLegacyRequest ? "SET_ADVANCED_COLOR_STATE" : "SET_HDR_STATE",
+                    result.Result, result.QueryError, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                return result.Result;
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
     }
 
     public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken)

@@ -74,6 +74,62 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>Custom monitor names from the settings registry and the profiles.</summary>
     public IReadOnlyDictionary<string, string> KnownDisplayNames => DisplayNames.Known(_profiles, _settings.Current.DisplayNames);
 
+    /// <summary>Rates the display offered at this resolution when it was last active (finding HW-13).</summary>
+    public IReadOnlyList<RefreshRate> RememberedRefreshRates(DisplayIdentity identity, int width, int height) =>
+        RefreshRateMemory.Get(_settings.Current.RefreshRates, identity, width, height);
+
+    /// <summary>Remembers the rates of every active display, e.g. after a switch; failures are only logged.</summary>
+    public async Task RememberActiveRefreshRatesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)> found = await Task.Run(async () =>
+            {
+                DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+                var rates = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
+                foreach (AttachedDisplay display in snapshot.Displays)
+                {
+                    if (display.ActiveMode is { } mode)
+                    {
+                        rates.Add((display.Identity, mode.Width, mode.Height,
+                            await _display.ListRefreshRatesAsync(display.Identity, mode.Width, mode.Height, cancellationToken)));
+                    }
+                }
+
+                return rates;
+            }, cancellationToken);
+            await RememberRefreshRatesAsync(found, cancellationToken);
+        }
+        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        {
+            _log.Warning(ex, "Refresh rates of the active displays could not be read");
+        }
+    }
+
+    /// <summary>Saves rates that are new or changed; empty lists are ignored. Failures are only logged.</summary>
+    public async Task RememberRefreshRatesAsync(
+        IReadOnlyList<(DisplayIdentity Identity, int Width, int Height, IReadOnlyList<RefreshRate> Rates)> found, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(found);
+        try
+        {
+            await _settings.UpdateAsync(s =>
+            {
+                IReadOnlyDictionary<string, IReadOnlyList<string>>? memory = s.RefreshRates;
+                foreach ((DisplayIdentity identity, int width, int height, IReadOnlyList<RefreshRate> rates) in found)
+                {
+                    memory = RefreshRateMemory.With(memory, identity, width, height, rates);
+                }
+
+                return ReferenceEquals(memory, s.RefreshRates) ? s : s with { RefreshRates = memory };
+            }, cancellationToken, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Refresh rates could not be remembered");
+        }
+    }
+
     /// <summary>Names a monitor everywhere: in the settings registry and in every profile that contains it.</summary>
     public async Task RenameDisplayAsync(string targetDevicePath, string? name, CancellationToken cancellationToken)
     {
@@ -175,7 +231,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         Items.Clear();
         foreach (Profile profile in _profiles)
         {
-            Items.Add(new ProfileItem(profile));
+            Items.Add(new ProfileItem(profile, _settings.Current.UsbDeviceNames));
         }
 
         IsEmpty = Items.Count == 0;

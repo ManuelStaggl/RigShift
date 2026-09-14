@@ -54,8 +54,8 @@
             Minimum="1"
             SmallChange="1"
             ToolTip="{loc:Tr Settings_ConfirmSeconds}"
-            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}"
-            Visibility="{Binding ConfirmEnabled, Converter={StaticResource BoolToVisibility}}" />
+            IsEnabled="{Binding ConfirmEnabled}"
+            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
           <ui:ToggleSwitch VerticalAlignment="Center" AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" />
         </StackPanel>
       </ui:CardControl>

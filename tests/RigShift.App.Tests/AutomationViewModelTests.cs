@@ -105,6 +105,21 @@ public sealed class AutomationViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task DeviceChoices_OfferKnownDevicesThatAreNotConnected()
+    {
+        // HW-08: the base was in a profile's app wait, but off – it must still be selectable.
+        const string Pedals = "VID_0EB7&PID_0030";
+        const string Button = "VID_1234&PID_0001";
+        _host.Store.Profiles.Add(Profile("Desk", []) with { AppsWaitForUsbDeviceId = Pedals, AppsWaitForUsbDeviceName = "Pedals" });
+        await _host.Settings.UpdateAsync(s => s with { UsbDeviceNames = new Dictionary<string, string> { [Button] = "Box" } }, Ct);
+
+        AutomationViewModel viewModel = await CreateAsync();
+
+        viewModel.DeviceChoiceFor(Pedals).ShouldNotBeNull().Name.ShouldContain("Pedals");
+        viewModel.DeviceChoiceFor(Button).ShouldNotBeNull().Name.ShouldContain("Box");
+    }
+
+    [Fact]
     public async Task DeletingDuplicate_ClearsWarning()
     {
         AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase), RuleFor(Wheelbase));
