@@ -52,7 +52,9 @@ USB-Gerätenamen und Regeln mit mehreren Geräten (U-01/U-02) und die visuelle P
 von `docs/analysis/umsetzungsplan-1.3.md`), README-Screenshots aus Demo-Daten neu. **1.5.0** (2026-09-14, ohne Hardwaretest): Bildschirmnummern wie Windows
 (`\\.\DISPLAYn`, HW-04/05), App-Auswahl mit Startmenü- und laufenden Apps (HW-11), Toast „Profil erkannt – Rest
 anwenden“, wenn Windows die Anordnung selbst herstellt (HW-15); Tabelle „Umsetzung 1.5.0“ am Ende von
-`docs/analysis/umsetzungsplan-1.3.md`. Als Nächstes: Hardware-Testrunde 1.4.1 + 1.5.0 am Gaming-PC (Liste dort).
+`docs/analysis/umsetzungsplan-1.3.md`. **1.6.0** (2026-09-15, ohne Hardwaretest): Einrichtungsassistent
+(`SetupWizardViewModel`, Plan Punkt 13) und Head-Budget-Warnung nur für NVIDIA (`GpuVendors`, Punkt 16 Teil 1); winget
+gestrichen. Hardwaretests nur noch bei Meldungen; AMD/Intel-Grenzen warten auf Community-Rückmeldungen.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach

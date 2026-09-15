@@ -54,8 +54,9 @@ Dropped after a scope review (the tool should stay small):
 - ❌ Home Assistant via MQTT discovery – no demand
 - ❌ Focus assist, game mode, night light – no official API
 
-## v2 – community
+## v1.6 – first-time users
 
-- Setup wizard for first-time users
-- winget
-- AMD / Intel validation, per-GPU head-budget presets
+- 🟢 Setup assistant: desk, rig and an optional wheelbase rule on the first start (1.6.0)
+- 🟢 Head-budget warning only for NVIDIA cards (1.6.0)
+- ⚪ AMD / Intel limits from community reports, then per-GPU head-budget presets
+- ❌ winget – not planned for now; the installer and the portable ZIP on GitHub stay the way to get RigShift

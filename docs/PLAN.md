@@ -645,12 +645,19 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 
 **v2 – Community**
 
-13. Einrichtungsassistent (erstes Profil aus aktuellem Zustand, zweites nach Umstecken).
-14. Diagnose-Export ohne persönliche Daten (Pfade gehasht, Namen behalten) für Issues.
-15. winget-Manifest. ~~Code-Signatur~~ **gestrichen 2026-09-14** (User: kostet Geld, lohnt sich für ein
-    kostenloses Tool nicht) – README erklärt stattdessen die SmartScreen-Warnung.
-16. AMD/Intel-Validierung durch Community-Tester; Head-Budget-Voreinstellungen je GPU-Familie.
-17. Trockenlauf-Modus in der UI (die CLI hat `--dry-run` schon in v1).
+13. Einrichtungsassistent (erstes Profil aus aktuellem Zustand, zweites nach Umstecken). **Umgesetzt in 1.6.0**
+    (2026-09-15); Umfang per Fragerunde: zwei Profile mit Wiedergabegerät plus optionaler USB-Auslöser-Schritt.
+14. Diagnose-Export ohne persönliche Daten (Pfade gehasht, Namen behalten) für Issues. **Umgesetzt in 1.4.0/1.4.1**
+    („Diagnose-Infos kopieren“ ohne Benutzernamen und volle Gerätepfade).
+15. ~~winget-Manifest~~ **gestrichen 2026-09-15** (User-Entscheidung „winget weglassen“). ~~Code-Signatur~~
+    **gestrichen 2026-09-14** (User: kostet Geld, lohnt sich für ein kostenloses Tool nicht) – README erklärt
+    stattdessen die SmartScreen-Warnung.
+16. AMD/Intel-Validierung durch Community-Tester; Head-Budget-Voreinstellungen je GPU-Familie. **Teil 1 in 1.6.0:**
+    Warnung nur noch für NVIDIA (Hersteller aus `VEN_xxxx` des Adapterpfads), AMD/Intel ungeprüft, bis Rückmeldungen
+    ihre Grenzen belegen – eine falsche Warnung ist schlechter als keine.
+17. Trockenlauf-Modus in der UI (die CLI hat `--dry-run` schon in v1). **Umgesetzt** als Knopf „Prüfen“ je Profil.
+
+Versionsentscheidung 2026-09-15 (User): Assistent und GPU-Anpassung erscheinen als **1.6.0**, nicht als 2.0.
 
 ---
 

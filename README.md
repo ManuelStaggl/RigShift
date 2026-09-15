@@ -79,9 +79,10 @@ see no picture after a switch, it simply switches back after a few seconds.
 
 1. Download **`RigShift-win-Setup.exe`** from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
    and run it. RigShift installs for your user account and starts in the tray. A portable ZIP is attached as well.
-2. Arrange your desk in the Windows display settings, then click **Save current arrangement** in RigShift.
-3. Do the same for your rig.
-4. Optional: on **Automation**, add a rule for your wheelbase.
+2. On the first start the **setup assistant** opens: it saves your desk, then your rig after you switch the displays,
+   and optionally a rule that switches when your wheelbase turns on.
+3. Prefer doing it by hand? Arrange your displays in the Windows settings and click **Save current arrangement** for
+   each setup; add rules on **Automation**. The assistant stays available on the **Profiles** page.
 
 RigShift is a free hobby project and not code-signed, so Windows SmartScreen may say *"Windows protected your PC"*.
 Click **More info → Run anyway**.
