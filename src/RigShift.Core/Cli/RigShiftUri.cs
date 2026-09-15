@@ -1,15 +1,16 @@
 namespace RigShift.Core.Cli;
 
 /// <summary>
-/// The <c>rigshift://apply/&lt;name&gt;</c> link (docs/PLAN.md, section 6): Windows starts <c>RigShift.exe "&lt;uri&gt;"</c>,
-/// which becomes <c>apply &lt;name&gt; --from-link</c>. Only <c>apply</c> exists – a link on a web page must not be able
-/// to save or change profiles – and it always asks for confirmation, even when confirmation is turned off.
+/// The <c>rigshift://apply/&lt;name&gt;</c> and <c>rigshift://toggle</c> links (docs/PLAN.md, section 6): Windows starts
+/// <c>RigShift.exe "&lt;uri&gt;"</c>, which becomes <c>apply &lt;name&gt; --from-link</c> or <c>toggle --from-link</c>.
+/// Only switching exists – a link on a web page must not be able to save or change profiles – and it always asks for
+/// confirmation, even when confirmation is turned off.
 /// </summary>
 public static class RigShiftUri
 {
     public const string Scheme = "rigshift";
 
-    /// <summary>Hidden <c>apply</c> option marking a link; travels with the arguments over the pipe.</summary>
+    /// <summary>Hidden option marking a link; travels with the arguments over the pipe.</summary>
     public const string FromLinkOption = "--from-link";
 
     public static bool IsUri(string argument)
@@ -24,14 +25,23 @@ public static class RigShiftUri
         ArgumentNullException.ThrowIfNull(uri);
         if (!Uri.TryCreate(uri, UriKind.Absolute, out Uri? parsed)
             || !string.Equals(parsed.Scheme, Scheme, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(parsed.Host, "apply", StringComparison.OrdinalIgnoreCase)
             || !string.IsNullOrEmpty(parsed.Query)
             || !string.IsNullOrEmpty(parsed.Fragment))
         {
             return null;
         }
 
-        string name = Uri.UnescapeDataString(parsed.AbsolutePath.Trim('/')).Trim();
-        return name.Length == 0 || name.Contains('/', StringComparison.Ordinal) ? null : ["apply", name, FromLinkOption];
+        string path = Uri.UnescapeDataString(parsed.AbsolutePath.Trim('/')).Trim();
+        if (string.Equals(parsed.Host, "toggle", StringComparison.OrdinalIgnoreCase))
+        {
+            return path.Length == 0 ? ["toggle", FromLinkOption] : null;
+        }
+
+        if (!string.Equals(parsed.Host, "apply", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return path.Length == 0 || path.Contains('/', StringComparison.Ordinal) ? null : ["apply", path, FromLinkOption];
     }
 }

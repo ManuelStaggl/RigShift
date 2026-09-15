@@ -40,6 +40,24 @@ public sealed class CliParserTests
     }
 
     [Fact]
+    public void Parse_ToggleWithOptions()
+    {
+        CliRequest request = CliParser.Parse(["toggle", "--no-confirm", "--dry-run", "--from-link"]).Request.ShouldNotBeNull();
+
+        request.Command.ShouldBe(CliCommand.Toggle);
+        request.ProfileName.ShouldBeNull();
+        request.NoConfirm.ShouldBeTrue();
+        request.DryRun.ShouldBeTrue();
+        request.FromLink.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Parse_ToggleWithAName_IsAnError()
+    {
+        CliParser.Parse(["toggle", "Rig"]).ExitCode.ShouldBe(CliExitCodes.InvalidArguments);
+    }
+
+    [Fact]
     public void Parse_Save_TakesTheName()
     {
         CliRequest request = CliParser.Parse(["save", "Desk"]).Request.ShouldNotBeNull();

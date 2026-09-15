@@ -53,6 +53,12 @@ public sealed partial class ProfileCatalog : ObservableObject
     [ObservableProperty]
     public partial Profile? ActiveProfile { get; set; }
 
+    /// <summary>
+    /// The profile that was active before <see cref="ActiveProfile"/> changed – the target of "back to the previous
+    /// profile" (1.7.0). Kept while no profile is active, not persisted across restarts.
+    /// </summary>
+    public Guid? PreviousProfileId { get; private set; }
+
     [ObservableProperty]
     public partial bool IsEmpty { get; set; }
 
@@ -210,7 +216,13 @@ public sealed partial class ProfileCatalog : ObservableObject
         try
         {
             DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(cancellationToken), cancellationToken);
-            ActiveProfile = _matcher.FindActive(_profiles, snapshot);
+            Profile? active = _matcher.FindActive(_profiles, snapshot);
+            if (ActiveProfile is { } before && before.Id != active?.Id)
+            {
+                PreviousProfileId = before.Id;
+            }
+
+            ActiveProfile = active;
             _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
         }
         catch (Win32Exception ex)

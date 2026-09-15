@@ -10,6 +10,9 @@ namespace RigShift.Core.Cli;
 /// <summary>Runs a switch for the command line. The app implements it with its switch coordinator.</summary>
 public interface IProfileSwitcher
 {
+    /// <summary>Where <c>toggle</c> goes right now (<see cref="ProfileEditing.ToggleTarget"/>), or <c>null</c>.</summary>
+    Profile? ToggleTarget { get; }
+
     /// <returns>The result, or <c>null</c> if another switch is already running.</returns>
     Task<SwitchResult?> SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken);
 }
@@ -66,6 +69,7 @@ public sealed class CommandRunner
                 CliCommand.List => await ListAsync(cancellationToken),
                 CliCommand.Status => await StatusAsync(cancellationToken),
                 CliCommand.Apply => await ApplyAsync(request, cancellationToken),
+                CliCommand.Toggle => await ToggleAsync(request, cancellationToken),
                 CliCommand.Save => await SaveAsync(request.ProfileName ?? string.Empty, cancellationToken),
                 _ => new CliResponse(CliExitCodes.InvalidArguments, "No command given."),
             };
@@ -125,6 +129,28 @@ public sealed class CommandRunner
             return NotFound(request.ProfileName, profiles);
         }
 
+        return await SwitchAsync(profile, request, cancellationToken);
+    }
+
+    /// <summary><c>toggle</c>: back to the previous profile, or to the default profile when nothing was active before.</summary>
+    private async Task<CliResponse> ToggleAsync(CliRequest request, CancellationToken cancellationToken)
+    {
+        if (_switcher is null)
+        {
+            return new CliResponse(CliExitCodes.Failed, "Switching needs the RigShift app, which is not running.");
+        }
+
+        if (_switcher.ToggleTarget is not { } profile)
+        {
+            return new CliResponse(CliExitCodes.ProfileNotFound,
+                "No previous profile to go back to. Switch to a profile first, or set a default profile in the settings.");
+        }
+
+        return await SwitchAsync(profile, request, cancellationToken);
+    }
+
+    private async Task<CliResponse> SwitchAsync(Profile profile, CliRequest request, CancellationToken cancellationToken)
+    {
         if (_switcher is null)
         {
             return new CliResponse(CliExitCodes.Failed, "Switching needs the RigShift app, which is not running.");

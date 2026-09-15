@@ -71,6 +71,8 @@
   <data name="Outcome_DryRun" xml:space="preserve"><value>Checked</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Default profile</value></data>
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
+  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Shortcut: back to the previous profile</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One shortcut for both directions: switches to the profile that was active before, or to the default profile right after a start.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation within these seconds, the previous settings come back.</value></data>

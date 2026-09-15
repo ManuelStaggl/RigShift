@@ -18,6 +18,9 @@ public sealed record AppSettings
     /// </summary>
     public Guid? DefaultProfileId { get; init; }
 
+    /// <summary>System-wide key combination for "back to the previous profile" (1.7.0); <c>null</c> = none.</summary>
+    public Profiles.Hotkey? ToggleHotkey { get; init; }
+
     /// <summary>
     /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on
     /// purpose: the JSON source generator sets init-only properties through an object initializer and turns a missing

@@ -11,6 +11,9 @@ public enum CliCommand
     List,
     Save,
     Status,
+
+    /// <summary>Back to the previous profile, or to the default profile when nothing was active before (1.7.0).</summary>
+    Toggle,
 }
 
 /// <summary>What <c>RigShift.exe</c> was asked to do.</summary>
@@ -48,7 +51,8 @@ public sealed record CliParseResult(CliRequest? Request, int ExitCode, string Ou
 
 /// <summary>
 /// Command line of <c>RigShift.exe</c> (docs/PLAN.md, section 4.4):
-/// <c>apply &lt;name&gt; [--no-confirm] [--dry-run]</c>, <c>list</c>, <c>save &lt;name&gt;</c>, <c>status</c>.
+/// <c>apply &lt;name&gt; [--no-confirm] [--dry-run]</c>, <c>toggle [--no-confirm] [--dry-run]</c>, <c>list</c>,
+/// <c>save &lt;name&gt;</c>, <c>status</c>.
 /// </summary>
 public static class CliParser
 {
@@ -83,16 +87,24 @@ public static class CliParser
         var fromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
         var apply = new Command("apply", "Switch to a profile.") { applyName, noConfirm, dryRun, fromLink };
 
+        var toggleNoConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new arrangement without asking." };
+        var toggleDryRun = new Option<bool>("--dry-run") { Description = "Check the previous profile against the connected displays without switching." };
+        var toggleFromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
+        var toggle = new Command("toggle", "Switch back to the previous profile (or to the default profile if none was active before).")
+        {
+            toggleNoConfirm, toggleDryRun, toggleFromLink,
+        };
+
         var saveName = new Argument<string>("name") { Description = "Profile name. An existing profile with this name is updated." };
         var save = new Command("save", "Save the current display arrangement and default audio device as a profile.") { saveName };
 
         var list = new Command("list", "List all profiles; the active one is marked with *.");
         var status = new Command("status", "Show the active profile and the active displays.");
 
-        var root = new RootCommand("RigShift switches displays and audio between profiles.") { minimized, preview, previewBranding, previewTheme, apply, list, save, status };
+        var root = new RootCommand("RigShift switches displays and audio between profiles.") { minimized, preview, previewBranding, previewTheme, apply, toggle, list, save, status };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
-        foreach (Command command in (Command[])[root, apply, list, save, status])
+        foreach (Command command in (Command[])[root, apply, toggle, list, save, status])
         {
             command.SetAction(_ => CliExitCodes.Applied);
         }
@@ -122,6 +134,13 @@ public static class CliParser
             DryRun = parsed.GetValue(dryRun),
             FromLink = parsed.GetValue(fromLink),
         }
+            : chosen == toggle ? request with
+            {
+                Command = CliCommand.Toggle,
+                NoConfirm = parsed.GetValue(toggleNoConfirm),
+                DryRun = parsed.GetValue(toggleDryRun),
+                FromLink = parsed.GetValue(toggleFromLink),
+            }
             : chosen == save ? request with { Command = CliCommand.Save, ProfileName = parsed.GetValue(saveName) }
             : chosen == list ? request with { Command = CliCommand.List }
             : chosen == status ? request with { Command = CliCommand.Status }

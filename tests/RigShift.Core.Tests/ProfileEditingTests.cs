@@ -54,6 +54,33 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void ToggleTarget_PrefersThePreviousProfile_ThenTheDefault()
+    {
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile tv = Profile("TV", DeskModes);
+        Profile[] all = [desk, rig, tv];
+
+        ProfileEditing.ToggleTarget(all, rig.Id, desk.Id, tv.Id).ShouldBe(desk);
+        ProfileEditing.ToggleTarget(all, rig.Id, null, tv.Id).ShouldBe(tv);
+        ProfileEditing.ToggleTarget(all, null, null, tv.Id).ShouldBe(tv);
+    }
+
+    [Fact]
+    public void ToggleTarget_SkipsTheActiveAndDeletedProfiles()
+    {
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile[] all = [desk, rig];
+
+        // Previous is active again (Windows restored it): fall through to the default.
+        ProfileEditing.ToggleTarget(all, desk.Id, desk.Id, rig.Id).ShouldBe(rig);
+        // Previous was deleted, default is the active one: nowhere to go.
+        ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid(), desk.Id).ShouldBeNull();
+        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBeNull();
+    }
+
+    [Fact]
     public void FindByName_IgnoresCaseAndBlanks()
     {
         Profile rig = Rig();

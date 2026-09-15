@@ -96,22 +96,26 @@ the `rigshift://` link handler.
 No plugin needed:
 
 - **Hotkey:** give the profile a keyboard shortcut and use the Stream Deck *Hotkey* action or a button box key.
-  Fastest option.
-- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig`. A link always asks for confirmation,
-  even when "Confirm after switching" is off or the profile's timeout is 0, because any web page can open one.
+  Fastest option. One key for both directions: **Settings → Shortcut: back to the previous profile** switches to
+  the profile that was active before (or to the default profile right after a start).
+- **Link:** a Stream Deck *Website* action with `rigshift://apply/Rig`, or `rigshift://toggle` for "back to the
+  previous profile". A link always asks for confirmation, even when "Confirm after switching" is off or the
+  profile's timeout is 0, because any web page can open one.
 - **Shortcut:** **⋯ → Create desktop shortcut** on a profile and point a Stream Deck *Open* action at it.
 
 ## Command line
 
 ```bat
 RigShift.exe apply <name> [--no-confirm] [--dry-run]
+RigShift.exe toggle [--no-confirm] [--dry-run]
 RigShift.exe list
 RigShift.exe save <name>
 RigShift.exe status
 ```
 
 Names are not case-sensitive. `save` stores the current display arrangement and default playback device; an existing
-profile with that name is updated. `apply` and `save` start RigShift in the tray if needed and wait for the result.
+profile with that name is updated. `toggle` goes back to the previous profile, or to the default profile when none was
+active before. `apply`, `toggle` and `save` start RigShift in the tray if needed and wait for the result.
 
 | Exit code | Meaning |
 |---|---|

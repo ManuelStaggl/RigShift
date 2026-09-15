@@ -71,6 +71,8 @@
   <data name="Outcome_DryRun" xml:space="preserve"><value>Geprüft</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Standardprofil</value></data>
   <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
+  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Tastenkürzel: zurück zum vorherigen Profil</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Ein Kürzel für beide Richtungen: schaltet zum vorher aktiven Profil, direkt nach dem Start zum Standardprofil.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung innerhalb dieser Sekunden kommen die vorherigen Einstellungen zurück.</value></data>

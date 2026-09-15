@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RigShift.App.Localization;
+using CommunityToolkit.Mvvm.Input;
 using RigShift.App.Services;
+using RigShift.Core.Profiles;
 using RigShift.Core.Settings;
 using Serilog;
 
@@ -14,20 +16,25 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
+    private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
+    private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
         _settings = settings;
         _catalog = catalog;
+        _hotkeys = hotkeys;
         _log = log.ForContext<SettingsViewModel>();
+        ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ConfirmHint));
+            ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
             Load();
         };
     }
@@ -58,6 +65,61 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial Choice? SelectedLanguage { get; set; }
 
+    /// <summary>"Back to the previous profile" (1.7.0); recorded like a profile hotkey in the editor.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ToggleHotkeyText), nameof(HasToggleHotkey))]
+    public partial Hotkey? ToggleHotkey { get; set; }
+
+    public string ToggleHotkeyText => ToggleHotkey is null ? string.Empty : HotkeyFormat.Format(ToggleHotkey);
+
+    public bool HasToggleHotkey => ToggleHotkey is not null;
+
+    [ObservableProperty]
+    public partial string ToggleHotkeyHint { get; set; }
+
+    /// <summary>The hotkey field took the focus: RigShift's own hotkeys must not fire while a combination is pressed.</summary>
+    public void BeginHotkeyRecording() => _hotkeys.Suspend();
+
+    public void EndHotkeyRecording() => _hotkeys.Resume();
+
+    /// <summary>A key combination pressed in the hotkey field; only Ctrl, Alt or Win with another key is accepted.</summary>
+    internal void RecordToggleHotkey(HotkeyModifiers modifiers, int virtualKey)
+    {
+        var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
+        if (!hotkey.IsValid)
+        {
+            SetToggleHotkeyHint("Editor_HotkeyNeedsModifier");
+            return;
+        }
+
+        // Hotkeys are suspended while the field has the focus, so this only sees other applications.
+        if (!_hotkeys.IsAvailable(hotkey))
+        {
+            SetToggleHotkeyHint("Problem_HotkeyInUse");
+            return;
+        }
+
+        ToggleHotkey = hotkey;
+        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
+        _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
+        Persist(s => s with { ToggleHotkey = hotkey });
+    }
+
+    [RelayCommand]
+    private void ClearToggleHotkey()
+    {
+        ToggleHotkey = null;
+        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
+        _log.Information("Toggle hotkey removed");
+        Persist(s => s with { ToggleHotkey = null });
+    }
+
+    private void SetToggleHotkeyHint(string key)
+    {
+        _toggleHotkeyHintKey = key;
+        ToggleHotkeyHint = Loc.Instance[key];
+    }
+
     public void Load()
     {
         _loading = true;
@@ -84,6 +146,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             StartWithWindows = _settings.Autostart.IsEnabled;
+            ToggleHotkey = current.ToggleHotkey;
         }
         finally
         {

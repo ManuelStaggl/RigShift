@@ -51,7 +51,7 @@ public static class Program
         {
             if (RigShiftUri.ToArguments(args[0]) is not { } linkArguments)
             {
-                Log.Warning("Ignored invalid link {Link}; only rigshift://apply/<profile name> is supported", args[0]);
+                Log.Warning("Ignored invalid link {Link}; only rigshift://apply/<profile name> and rigshift://toggle are supported", args[0]);
                 return CliExitCodes.InvalidArguments;
             }
 

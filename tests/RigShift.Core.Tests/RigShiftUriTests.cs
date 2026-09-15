@@ -17,6 +17,17 @@ public sealed class RigShiftUriTests
     }
 
     [Theory]
+    [InlineData("rigshift://toggle")]
+    [InlineData("rigshift://toggle/")]
+    [InlineData("RIGSHIFT://Toggle")]
+    public void ToArguments_ToggleLink_BecomesToggleCommand(string uri)
+    {
+        RigShiftUri.ToArguments(uri).ShouldBe(["toggle", "--from-link"]);
+    }
+
+    [Theory]
+    [InlineData("rigshift://toggle/Rig")]
+    [InlineData("rigshift://toggle?x=1")]
     [InlineData("rigshift://apply/")]
     [InlineData("rigshift://apply")]
     [InlineData("rigshift://save/Rig")]

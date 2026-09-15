@@ -94,6 +94,25 @@ public static class ProfileEditing
         return profiles.FirstOrDefault(p => NamesEqual(p.Name, name));
     }
 
+    /// <summary>
+    /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, otherwise
+    /// the default profile – unless that is the active one. <c>null</c> when there is nowhere to go.
+    /// </summary>
+    public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId, Guid? defaultId)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        List<Profile> all = [.. profiles];
+        foreach (Guid? candidate in (Guid?[])[previousId, defaultId])
+        {
+            if (candidate is { } id && id != activeId && all.FirstOrDefault(p => p.Id == id) is { } target)
+            {
+                return target;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary><paramref name="baseName"/>, or <c>baseName 2</c>, <c>baseName 3</c>, … if taken.</summary>
     public static string UniqueName(string baseName, IEnumerable<string> existing)
     {

@@ -123,6 +123,41 @@ public sealed class CommandRunnerTests
     }
 
     [Fact]
+    public async Task Toggle_WithoutTarget_Returns4()
+    {
+        _switcher.ToggleTarget.Returns((Profile?)null);
+
+        CliResponse response = await Runner(_switcher).RunAsync(new CliRequest { Command = CliCommand.Toggle }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.ProfileNotFound);
+        response.Output.ShouldContain("No previous profile");
+    }
+
+    [Fact]
+    public async Task Toggle_SwitchesToTheTargetWithTheOptions()
+    {
+        Profile rig = Rig();
+        _switcher.ToggleTarget.Returns(rig);
+        _switcher.SwitchAsync(rig, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = EmptyPlan(rig) });
+
+        CliResponse response = await Runner(_switcher)
+            .RunAsync(new CliRequest { Command = CliCommand.Toggle, NoConfirm = true, FromLink = true }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldStartWith("Rig: Applied");
+        await _switcher.Received().SwitchAsync(rig, Arg.Is<SwitchRequest>(r => r.SkipConfirmation && r.FromLink && !r.DryRun), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Toggle_WithoutApp_Fails()
+    {
+        CliResponse response = await Runner().RunAsync(new CliRequest { Command = CliCommand.Toggle }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+    }
+
+    [Fact]
     public async Task Save_NewName_CapturesDisplaysAndDefaultPlayback()
     {
         CommandRunner runner = Runner();

@@ -60,6 +60,45 @@
         </StackPanel>
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSwap24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_ToggleHotkey}" TextWrapping="Wrap" />
+            <TextBlock
+              controls:LiveRegion.IsLive="True"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding ToggleHotkeyHint}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <Grid MinWidth="220">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ui:TextBox
+            AutomationProperties.HelpText="{Binding ToggleHotkeyHint}"
+            AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
+            ClearButtonEnabled="False"
+            GotKeyboardFocus="OnToggleHotkeyGotFocus"
+            IsReadOnly="True"
+            IsReadOnlyCaretVisible="False"
+            LostKeyboardFocus="OnToggleHotkeyLostFocus"
+            PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
+            PreviewKeyDown="OnToggleHotkeyKeyDown"
+            Text="{Binding ToggleHotkeyText, Mode=OneWay}" />
+          <ui:Button
+            Grid.Column="1"
+            Margin="8,0,0,0"
+            VerticalAlignment="Stretch"
+            AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
+            Command="{Binding ClearToggleHotkeyCommand}"
+            Icon="{ui:SymbolIcon Dismiss24}"
+            IsEnabled="{Binding HasToggleHotkey}"
+            ToolTip="{loc:Tr Editor_HotkeyClear}" />
+        </Grid>
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon LocalLanguage24}">
         <ui:CardControl.Header>
           <TextBlock Text="{loc:Tr Settings_Language}" TextWrapping="Wrap" />

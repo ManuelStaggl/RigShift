@@ -119,6 +119,10 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         return CheckCoreAsync(profile, rethrow: false, CancellationToken.None);
     }
 
+    /// <summary>Where "back to the previous profile" goes right now: the hotkey, <c>toggle</c> and <c>rigshift://toggle</c> share it.</summary>
+    public Profile? ToggleTarget =>
+        ProfileEditing.ToggleTarget(_catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.PreviousProfileId, _settings.Current.DefaultProfileId);
+
     /// <summary>Command line: the caller needs the exception to report a failure instead of "busy".</summary>
     Task<SwitchResult?> IProfileSwitcher.SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
     {
