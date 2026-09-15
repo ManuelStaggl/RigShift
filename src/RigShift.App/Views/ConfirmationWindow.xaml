@@ -27,21 +27,22 @@
       FontTypography="BodyStrong"
       TextWrapping="Wrap" />
     <ui:TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Confirm_Hint}" TextWrapping="Wrap" />
+    <!-- Windows order, as in its own "Keep these display settings?" dialog: the action first, the way back second. -->
     <StackPanel Margin="0,24,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
       <ui:Button
-        x:Name="RevertButton"
-        Margin="0,0,8,0"
-        Click="OnRevert"
-        Content="{loc:Tr Confirm_Revert}"
-        Icon="{ui:SymbolIcon ArrowUndo24}"
-        IsCancel="True" />
-      <ui:Button
         x:Name="KeepButton"
+        MinWidth="120"
+        Margin="0,0,8,0"
         Appearance="Primary"
         Click="OnKeep"
         Content="{loc:Tr Confirm_Keep}"
-        Icon="{ui:SymbolIcon Checkmark24}"
         IsDefault="True" />
+      <ui:Button
+        x:Name="RevertButton"
+        MinWidth="120"
+        Click="OnRevert"
+        Content="{loc:Tr Confirm_Revert}"
+        IsCancel="True" />
     </StackPanel>
   </StackPanel>
 </ui:FluentWindow>

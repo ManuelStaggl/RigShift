@@ -43,7 +43,7 @@
   <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to apply its audio, apps and other settings too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Switch on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not connected: {0}. RigShift waits up to {1} seconds for it.</value></data>
-  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>“Confirm after switching” is off in the settings, so every profile switches without asking.</value></data>
+  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>Off in the settings: every profile switches without asking.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>Switch HDR on this display once in the Windows settings first. On some monitors, especially over HDMI, switching HDR can freeze the graphics driver.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates show up once this display was switched on while RigShift was running.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (close)</value></data>
@@ -126,7 +126,7 @@
   <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Switch without asking</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Displays</value></data>
-  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Arrange displays in the Windows settings, then take the current arrangement.</value></data>
+  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Arrange them in Windows first, then use the current arrangement.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Use current arrangement</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Current arrangement taken over: {0} display(s).</value></data>
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · position {2}, {3}</value></data>
@@ -164,7 +164,7 @@
   <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>None</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>
-  <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running. Use Ctrl, Alt or Win with another key.</value></data>
+  <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Hold Ctrl, Alt or Win as well.</value></data>
   <data name="Hotkey_Failed" xml:space="preserve"><value>Another app uses the keyboard shortcut of these profiles, so it does not work: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Ctrl</value></data>
@@ -174,16 +174,15 @@
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="Editor_AppsHint" xml:space="preserve"><value>Run in this order once the switch is confirmed.</value></data>
   <data name="Editor_AddApp" xml:space="preserve"><value>_Add app</value></data>
-  <data name="Editor_Power" xml:space="preserve"><value>Power</value></data>
-  <data name="Editor_KeepAwake" xml:space="preserve"><value>Keep the PC awake (no sleep, screen saver or display timeout)</value></data>
-  <data name="Editor_PowerHint" xml:space="preserve"><value>Applies while this profile is active.</value></data>
+  <data name="Editor_KeepAwake" xml:space="preserve"><value>Keep the PC awake</value></data>
+  <data name="Editor_PowerHint" xml:space="preserve"><value>Sound and wake settings apply while this profile is active.</value></data>
   <data name="App_Start" xml:space="preserve"><value>Start</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Stop</value></data>
   <data name="App_Action" xml:space="preserve"><value>Action</value></data>
   <data name="App_Path" xml:space="preserve"><value>App</value></data>
   <data name="App_PathPlaceholder" xml:space="preserve"><value>Path to the .exe file</value></data>
   <data name="App_Browse" xml:space="preserve"><value>Choose app</value></data>
-  <data name="App_Arguments" xml:space="preserve"><value>Arguments (optional)</value></data>
+  <data name="App_Arguments" xml:space="preserve"><value>Arguments</value></data>
   <data name="App_Wait" xml:space="preserve"><value>Wait afterwards (seconds)</value></data>
   <data name="App_Remove" xml:space="preserve"><value>Remove app</value></data>
   <data name="AppPicker_Search" xml:space="preserve"><value>Search installed and running apps</value></data>
@@ -258,9 +257,9 @@
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for device before starting apps</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>If the device does not show up within 30 seconds, the apps start anyway.</value></data>
-  <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls (Windows communications setting)</value></data>
-  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Applies while this profile is active. Discord may need to rejoin the call.</value></data>
-  <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls</value></data>
+  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Windows communications setting. Discord may need to rejoin the call.</value></data>
+  <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Devices for calls</value></data>
   <data name="Editor_DiscardTitle" xml:space="preserve"><value>Discard changes?</value></data>
   <data name="Editor_DiscardText" xml:space="preserve"><value>This profile has unsaved changes.</value></data>
   <data name="Editor_Discard" xml:space="preserve"><value>Discard</value></data>
@@ -285,7 +284,7 @@
   <data name="Setup_Title" xml:space="preserve"><value>Set up RigShift</value></data>
   <data name="Setup_StepCounter" xml:space="preserve"><value>Step {0} of {1}</value></data>
   <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Welcome to RigShift</value></data>
-  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift switches your PC between your desk and your sim rig: displays, main display and sound in one go. In a few steps you save both setups.</value></data>
+  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go. Three steps:</value></data>
   <data name="Setup_FirstTitle" xml:space="preserve"><value>Your first setup</value></data>
   <data name="Setup_FirstText" xml:space="preserve"><value>Turn on the displays you use at your desk and arrange them in the Windows display settings. RigShift saves what is active right now.</value></data>
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Your second setup</value></data>
@@ -324,4 +323,10 @@
   <data name="About_FoldersHint" xml:space="preserve"><value>Log files and profiles.</value></data>
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profiles</value></data>
+  <data name="Editor_General" xml:space="preserve"><value>General</value></data>
+  <data name="Editor_Behavior" xml:space="preserve"><value>Behavior</value></data>
+  <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>No sleep, screen saver or display timeout.</value></data>
+  <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Save your desk setup as it is now</value></data>
+  <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Switch to your rig and save it too</value></data>
+  <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: a USB device that switches automatically</value></data>
 </root>

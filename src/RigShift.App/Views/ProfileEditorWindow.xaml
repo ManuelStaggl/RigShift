@@ -25,10 +25,11 @@
 
     <ui:TitleBar Grid.Row="0" Title="{Binding Title}" ShowMaximize="False" ShowMinimize="False" />
 
+    <!-- Sections General, Displays, Audio, Behavior, Apps; labels above every field. -->
     <ScrollViewer Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto">
-      <StackPanel Margin="24,8,24,16">
+      <StackPanel Margin="24,0,24,16">
         <ui:InfoBar
-          Margin="0,0,0,16"
+          Margin="0,8,0,0"
           Title="{loc:Tr Editor_ProblemsTitle}"
           IsClosable="False"
           IsOpen="{Binding HasProblems, Mode=OneWay}"
@@ -36,30 +37,20 @@
           Severity="Error"
           AutomationProperties.LiveSetting="Assertive" />
 
-        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Name}" />
-        <ui:TextBox
-          x:Name="NameBox"
-          Margin="0,4,0,16"
-          AutomationProperties.Name="{loc:Tr Editor_Name}"
-          MaxLength="60"
-          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-
-        <!-- Same column grid as the audio rows below: labels/left controls 220, gap 24, rest. -->
-        <Grid Margin="0,0,0,16">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
-            <ColumnDefinition Width="24" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-          </Grid.RowDefinitions>
-          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Icon}" />
-          <ComboBox
-              Grid.Row="1"
-              Margin="0,4,0,0"
-              VerticalAlignment="Center"
+        <ui:TextBlock Margin="0,8,0,8" Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_General}" />
+        <!-- Two columns that wrap below each other in a narrow window. -->
+        <WrapPanel>
+          <StackPanel Width="360" Margin="0,0,24,12">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_Name}" />
+            <ui:TextBox
+              x:Name="NameBox"
+              AutomationProperties.Name="{loc:Tr Editor_Name}"
+              MaxLength="60"
+              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Width="220" Margin="0,0,24,12">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_Icon}" />
+            <ComboBox
               AutomationProperties.Name="{loc:Tr Editor_Icon}"
               ItemsSource="{Binding IconChoices}"
               SelectedItem="{Binding SelectedIcon}"
@@ -72,43 +63,25 @@
                   </StackPanel>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
-          </ComboBox>
-          <!-- Seconds come from the settings only (analysis decision O-01). -->
-          <CheckBox
-            Grid.Row="1"
-            Grid.Column="2"
-            Margin="0,4,0,0"
-            VerticalAlignment="Center"
-            Content="{loc:Tr Editor_SwitchWithoutAsking}"
-            IsChecked="{Binding SwitchWithoutAsking}"
-            IsEnabled="{Binding ConfirmationEnabled}" />
-        </Grid>
-        <!-- Off in the settings, the checkbox changes nothing; say where the setting is (finding HW-02). -->
-        <TextBlock
-          Margin="0,-8,0,16"
-          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-          Text="{loc:Tr Editor_ConfirmationOff}"
-          TextWrapping="Wrap"
-          Visibility="{Binding ConfirmationDisabled, Converter={StaticResource BoolToVisibility}}" />
+            </ComboBox>
+          </StackPanel>
+        </WrapPanel>
 
-        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Hotkey}" />
-        <Grid Margin="0,4,0,0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_Hotkey}" />
+        <StackPanel Orientation="Horizontal">
           <ui:TextBox
             x:Name="HotkeyBox"
-            AutomationProperties.HelpText="{Binding HotkeyHint}"
+            Width="360"
+            AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
             AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
             ClearButtonEnabled="False"
             IsReadOnly="True"
             IsReadOnlyCaretVisible="False"
             PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
             PreviewKeyDown="OnHotkeyKeyDown"
-            Text="{Binding HotkeyText, Mode=OneWay}" />
+            Text="{Binding HotkeyText, Mode=OneWay}"
+            ToolTip="{loc:Tr Hotkey_RecordTip}" />
           <ui:Button
-            Grid.Column="1"
             Margin="8,0,0,0"
             VerticalAlignment="Stretch"
             AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
@@ -116,28 +89,25 @@
             Icon="{ui:SymbolIcon Dismiss24}"
             IsEnabled="{Binding HasHotkey}"
             ToolTip="{loc:Tr Editor_HotkeyClear}" />
-        </Grid>
-        <TextBlock
-          Margin="0,4,0,0"
-          AutomationProperties.LiveSetting="Polite"
-          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-          Text="{Binding HotkeyHint}"
-          TextWrapping="Wrap" />
+        </StackPanel>
+        <TextBlock Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" Style="{StaticResource Caption}" Text="{Binding HotkeyHint}" />
 
-        <Grid Margin="0,24,0,4">
+        <Grid Margin="0,24,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <ui:TextBlock VerticalAlignment="Center" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Displays}" />
-          <ui:Button Grid.Column="1" Command="{Binding TakeCurrentCommand}" Content="{loc:Tr Editor_TakeCurrent}" Icon="{ui:SymbolIcon ArrowSync24}" />
+          <StackPanel VerticalAlignment="Center">
+            <ui:TextBlock Margin="0" Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Displays}" />
+            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Editor_DisplaysHint}" />
+          </StackPanel>
+          <ui:Button Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Command="{Binding TakeCurrentCommand}" Content="{loc:Tr Editor_TakeCurrent}" />
         </Grid>
-        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisplaysHint}" TextWrapping="Wrap" />
-        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ArrangementNote}" AutomationProperties.LiveSetting="Polite">
+        <TextBlock Margin="0,0,0,8" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding ArrangementNote}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite">
           <TextBlock.Style>
             <Style TargetType="TextBlock">
               <Style.Triggers>
-                <!-- No empty line between the hint and the list while there is no note. -->
+                <!-- No empty line between the header and the list while there is no note. -->
                 <DataTrigger Binding="{Binding ArrangementNote}" Value="{x:Null}">
                   <Setter Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
@@ -146,18 +116,18 @@
           </TextBlock.Style>
         </TextBlock>
 
-        <ItemsControl Margin="0,12,0,0" Focusable="False" ItemsSource="{Binding Displays}">
+        <ItemsControl Focusable="False" ItemsSource="{Binding Displays}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <ui:Card Margin="0,0,0,8" Padding="16,12">
+              <ui:Card Margin="0,0,0,4" Padding="16">
                 <Grid>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" />
-                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ModeText}" TextWrapping="Wrap" />
+                    <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource Caption}" Text="{Binding ModeText}" />
                     <!-- Display names are edited on the Displays page only (analysis decision O-05). -->
                     <WrapPanel Margin="0,8,0,0">
                       <ComboBox
@@ -195,9 +165,8 @@
                     </WrapPanel>
                     <TextBlock
                       Margin="0,4,0,0"
-                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Style="{StaticResource Caption}"
                       Text="{loc:Tr Editor_RefreshRatesUnknown}"
-                      TextWrapping="Wrap"
                       Visibility="{Binding RatesUnknown, Converter={StaticResource BoolToVisibility}}" />
                     <!-- Switching HDR froze a test PC over HDMI, also from the Windows settings (finding HW-12). -->
                     <TextBlock
@@ -211,6 +180,7 @@
                     Grid.Column="1"
                     Margin="16,0,0,0"
                     VerticalAlignment="Top"
+                    Appearance="Transparent"
                     AutomationProperties.HelpText="{Binding Name}"
                     AutomationProperties.Name="{loc:Tr Editor_Remove}"
                     Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -223,93 +193,77 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Audio}" />
         <ItemsControl x:Name="AudioItems" Focusable="False" ItemsSource="{Binding AudioSlots}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Grid Margin="0,0,0,8">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="220" />
-                  <ColumnDefinition Width="24" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Label}" TextWrapping="Wrap" />
-                <ComboBox
-                  Grid.Column="2"
-                  AutomationProperties.Name="{Binding Label}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding Choices}"
-                  SelectedItem="{Binding Selected}" />
-                <Grid
-                  Grid.Row="1"
-                  Grid.Column="2"
-                  Margin="0,6,0,4"
-                  IsEnabled="{Binding HasDevice}"
-                  Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
-                  <Grid.Resources>
-                    <!-- WPF-UI draws a disabled slider like an enabled one; dim it so "off" is visible. -->
-                    <Style BasedOn="{StaticResource {x:Type Slider}}" TargetType="Slider">
-                      <Style.Triggers>
-                        <Trigger Property="IsEnabled" Value="False">
-                          <Setter Property="Opacity" Value="0.4" />
-                        </Trigger>
-                      </Style.Triggers>
-                    </Style>
-                  </Grid.Resources>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="56" />
-                  </Grid.ColumnDefinitions>
-                  <CheckBox
-                    VerticalAlignment="Center"
-                    AutomationProperties.HelpText="{Binding Label}"
-                    Content="{loc:Tr Audio_SetVolume}"
-                    IsChecked="{Binding SetVolume}" />
-                  <Slider
-                    x:Name="VolumeSlider"
-                    Grid.Column="1"
-                    Margin="12,0,0,0"
-                    VerticalAlignment="Center"
-                    AutomationProperties.HelpText="{Binding Label}"
-                    AutomationProperties.Name="{loc:Tr Audio_SetVolume}"
-                    IsEnabled="{Binding SetVolume}"
-                    IsSnapToTickEnabled="True"
-                    LargeChange="10"
-                    Maximum="100"
-                    Minimum="0"
-                    SmallChange="1"
-                    TickFrequency="1"
-                    Value="{Binding Volume}" />
-                  <TextBlock
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                    Text="{Binding VolumeText}"
-                    TextAlignment="Right">
-                    <TextBlock.Style>
-                      <Style TargetType="TextBlock">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Width="360" Margin="0,0,0,12" HorizontalAlignment="Left">
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Label}" />
+                  <ComboBox
+                    AutomationProperties.Name="{Binding Label}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding Choices}"
+                    SelectedItem="{Binding Selected}" />
+                  <Grid Margin="0,8,0,0" IsEnabled="{Binding HasDevice}" Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.Resources>
+                      <!-- WPF-UI draws a disabled slider like an enabled one; dim it so "off" is visible. -->
+                      <Style BasedOn="{StaticResource {x:Type Slider}}" TargetType="Slider">
                         <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsEnabled, ElementName=VolumeSlider}" Value="False">
+                          <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
-                          </DataTrigger>
+                          </Trigger>
                         </Style.Triggers>
                       </Style>
-                    </TextBlock.Style>
-                  </TextBlock>
-                </Grid>
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="48" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox
+                      VerticalAlignment="Center"
+                      AutomationProperties.HelpText="{Binding Label}"
+                      Content="{loc:Tr Audio_SetVolume}"
+                      IsChecked="{Binding SetVolume}" />
+                    <Slider
+                      x:Name="VolumeSlider"
+                      Grid.Column="1"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      AutomationProperties.HelpText="{Binding Label}"
+                      AutomationProperties.Name="{loc:Tr Audio_SetVolume}"
+                      IsEnabled="{Binding SetVolume}"
+                      IsSnapToTickEnabled="True"
+                      LargeChange="10"
+                      Maximum="100"
+                      Minimum="0"
+                      SmallChange="1"
+                      TickFrequency="1"
+                      Value="{Binding Volume}" />
+                    <TextBlock
+                      Grid.Column="2"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                      Text="{Binding VolumeText}"
+                      TextAlignment="Right">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsEnabled, ElementName=VolumeSlider}" Value="False">
+                              <Setter Property="Opacity" Value="0.4" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </Grid>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
 
         <!-- Call devices follow playback and recording unless set here (analysis decision O-02). -->
         <Expander
-          Margin="0,4,0,0"
           HorizontalAlignment="Stretch"
           Header="{loc:Tr Editor_AudioAdvanced}"
           IsExpanded="{Binding ShowCommunicationsAudio, Mode=OneTime}">
@@ -320,43 +274,51 @@
             ItemsSource="{Binding CommunicationsAudioSlots}" />
         </Expander>
 
-        <CheckBox Margin="0,8,0,0" Content="{loc:Tr Editor_DisableDucking}" IsChecked="{Binding DisableCommunicationsDucking}" />
-        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisableDuckingHint}" TextWrapping="Wrap" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Behavior}" />
+        <!-- Seconds come from the settings only (analysis decision O-01). -->
+        <CheckBox Content="{loc:Tr Editor_SwitchWithoutAsking}" IsChecked="{Binding SwitchWithoutAsking}" IsEnabled="{Binding ConfirmationEnabled}" />
+        <!-- Off in the settings, the checkbox changes nothing; say where the setting is (finding HW-02). -->
+        <TextBlock
+          Margin="28,0,0,4"
+          Style="{StaticResource Caption}"
+          Text="{loc:Tr Editor_ConfirmationOff}"
+          Visibility="{Binding ConfirmationDisabled, Converter={StaticResource BoolToVisibility}}" />
+        <CheckBox Content="{loc:Tr Editor_DisableDucking}" IsChecked="{Binding DisableCommunicationsDucking}" ToolTip="{loc:Tr Editor_DisableDuckingHint}" />
+        <CheckBox Content="{loc:Tr Editor_KeepAwake}" IsChecked="{Binding KeepAwake}" ToolTip="{loc:Tr Editor_KeepAwakeHint}" />
+        <TextBlock Margin="0,4,0,0" Style="{StaticResource Caption}" Text="{loc:Tr Editor_PowerHint}" />
 
-        <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Power}" />
-        <CheckBox Content="{loc:Tr Editor_KeepAwake}" IsChecked="{Binding KeepAwake}" />
-        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_PowerHint}" TextWrapping="Wrap" />
-
-        <Grid Margin="0,24,0,4">
+        <Grid Margin="0,24,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <ui:TextBlock VerticalAlignment="Center" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Apps}" />
-          <ui:Button Grid.Column="1" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" Icon="{ui:SymbolIcon Add24}" />
+          <StackPanel VerticalAlignment="Center">
+            <ui:TextBlock Margin="0" Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Apps}" />
+            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Editor_AppsHint}" />
+          </StackPanel>
+          <ui:Button Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" />
         </Grid>
-        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsHint}" TextWrapping="Wrap" />
 
         <!-- Fixed wait of 30 s, no field (analysis decision O-04). -->
-        <StackPanel Margin="0,12,0,0">
-          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_AppsWaitDevice}" />
+        <StackPanel Width="360" Margin="0,0,0,12" HorizontalAlignment="Left" ToolTip="{loc:Tr Editor_AppsWaitHint}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_AppsWaitDevice}" />
           <ComboBox
-            Margin="0,4,0,0"
+            AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
             AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
             DisplayMemberPath="Name"
             ItemsSource="{Binding AppsWaitDeviceChoices}"
             SelectedItem="{Binding SelectedAppsWaitDevice}" />
-          <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsWaitHint}" TextWrapping="Wrap" />
         </StackPanel>
 
-        <ItemsControl Margin="0,12,0,0" Focusable="False" ItemsSource="{Binding Apps}">
+        <ItemsControl Focusable="False" ItemsSource="{Binding Apps}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <ui:Card Margin="0,0,0,8" Padding="16,12">
+              <ui:Card Margin="0,0,0,4" Padding="16">
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="140" />
-                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="8" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -365,20 +327,37 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                   </Grid.RowDefinitions>
+                  <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
+                  <Grid Width="24" Height="24" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <ui:SymbolIcon FontSize="20" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Apps24">
+                      <ui:SymbolIcon.Style>
+                        <Style TargetType="ui:SymbolIcon">
+                          <Setter Property="Visibility" Value="Collapsed" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                              <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </ui:SymbolIcon.Style>
+                    </ui:SymbolIcon>
+                    <Image Source="{Binding Icon}" />
+                  </Grid>
                   <ComboBox
+                    Grid.Column="1"
                     VerticalAlignment="Center"
                     AutomationProperties.Name="{loc:Tr App_Action}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding KindChoices}"
                     SelectedItem="{Binding SelectedKind}" />
                   <ui:TextBox
-                    Grid.Column="2"
+                    Grid.Column="3"
                     VerticalAlignment="Center"
                     AutomationProperties.Name="{loc:Tr App_Path}"
                     PlaceholderText="{loc:Tr App_PathPlaceholder}"
                     Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
                   <ui:Button
-                    Grid.Column="3"
+                    Grid.Column="4"
                     Margin="8,0,0,0"
                     VerticalAlignment="Stretch"
                     AutomationProperties.Name="{loc:Tr App_Browse}"
@@ -386,30 +365,25 @@
                     Icon="{ui:SymbolIcon FolderOpen24}"
                     ToolTip="{loc:Tr App_Browse}" />
                   <ui:Button
-                    Grid.Column="4"
+                    Grid.Column="5"
                     Margin="8,0,0,0"
                     VerticalAlignment="Stretch"
+                    Appearance="Transparent"
                     AutomationProperties.Name="{loc:Tr App_Remove}"
                     Command="{Binding DataContext.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="{Binding}"
                     Icon="{ui:SymbolIcon Delete24}"
                     ToolTip="{loc:Tr App_Remove}" />
-                  <Grid Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="12" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ui:TextBox
-                      VerticalAlignment="Center"
-                      AutomationProperties.Name="{loc:Tr App_Arguments}"
-                      IsEnabled="{Binding IsStart}"
-                      Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                      <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr App_Wait}" />
+                  <WrapPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Margin="0,8,0,0">
+                    <StackPanel Width="280" Margin="0,0,16,0">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_Arguments}" />
+                      <ui:TextBox AutomationProperties.Name="{loc:Tr App_Arguments}" IsEnabled="{Binding IsStart}" Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel>
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_Wait}" />
                       <ui:NumberBox
-                        Width="150"
-                        Margin="8,0,0,0"
+                        Width="120"
+                        HorizontalAlignment="Left"
                         AutomationProperties.Name="{loc:Tr App_Wait}"
                         ClearButtonEnabled="False"
                         MaxDecimalPlaces="0"
@@ -418,7 +392,7 @@
                         SmallChange="1"
                         Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
-                  </Grid>
+                  </WrapPanel>
                 </Grid>
               </ui:Card>
             </DataTemplate>
@@ -427,10 +401,11 @@
       </StackPanel>
     </ScrollViewer>
 
+    <!-- Windows order: the action first, Cancel last (finding E-06). -->
     <Border Grid.Row="2" Padding="24,12" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
       <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-        <ui:Button Margin="0,0,8,0" Command="{Binding CancelCommand}" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
-        <ui:Button Appearance="Primary" Command="{Binding SaveCommand}" Content="{loc:Tr Editor_Save}" Icon="{ui:SymbolIcon Save24}" IsDefault="True" />
+        <ui:Button MinWidth="120" Margin="0,0,8,0" Appearance="Primary" Command="{Binding SaveCommand}" Content="{loc:Tr Editor_Save}" IsDefault="True" />
+        <ui:Button MinWidth="120" Command="{Binding CancelCommand}" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
       </StackPanel>
     </Border>
   </Grid>

@@ -649,7 +649,11 @@ public sealed partial class AppEditItem : ObservableObject
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Icon))]
     public partial string Path { get; set; }
+
+    /// <summary>The program's own icon; <c>null</c> while the path is not a file with one.</summary>
+    public System.Windows.Media.ImageSource? Icon => AppIcons.Load(Path);
 
     [ObservableProperty]
     public partial string Arguments { get; set; }

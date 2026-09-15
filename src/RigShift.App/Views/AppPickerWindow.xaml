@@ -107,7 +107,7 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <ui:Button HorizontalAlignment="Left" Click="OnBrowseFile" Content="{loc:Tr AppPicker_BrowseFile}" Icon="{ui:SymbolIcon FolderOpen24}" />
+      <ui:Button HorizontalAlignment="Left" Click="OnBrowseFile" Content="{loc:Tr AppPicker_BrowseFile}" />
       <StackPanel Grid.Column="1" Orientation="Horizontal">
         <ui:Button Margin="0,0,8,0" Appearance="Primary" Click="OnChoose" Content="{loc:Tr AppPicker_Choose}" IsDefault="True" IsEnabled="{Binding CanChoose}" />
         <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />
