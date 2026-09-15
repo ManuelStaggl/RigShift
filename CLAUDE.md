@@ -54,7 +54,9 @@ von `docs/analysis/umsetzungsplan-1.3.md`), README-Screenshots aus Demo-Daten ne
 anwenden“, wenn Windows die Anordnung selbst herstellt (HW-15); Tabelle „Umsetzung 1.5.0“ am Ende von
 `docs/analysis/umsetzungsplan-1.3.md`. **1.6.0** (2026-09-15, ohne Hardwaretest): Einrichtungsassistent
 (`SetupWizardViewModel`, Plan Punkt 13) und Head-Budget-Warnung nur für NVIDIA (`GpuVendors`, Punkt 16 Teil 1); winget
-gestrichen. Hardwaretests nur noch bei Meldungen; AMD/Intel-Grenzen warten auf Community-Rückmeldungen.
+gestrichen. **1.7.0** (2026-09-15, ohne Hardwaretest): Vollbild-Schutz für die Ende-Aktion (`IFullscreenCheck`, Plan Punkt 18),
+vorheriges Profil per Hotkey/`toggle`/`rigshift://toggle` (Punkt 19), Sicherung als ZIP (`BackupArchive`, Punkt 20).
+Hardwaretests nur noch bei Meldungen; AMD/Intel-Grenzen warten auf Community-Rückmeldungen.
 Protokolle M5/M6: `docs/PLAN.md`, Abschnitt 5.
 
 M5-Testaufbau (für Nachtests): hier `dotnet publish src/RigShift.App -c Release`, per `scp` nach

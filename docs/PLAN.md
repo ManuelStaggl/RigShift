@@ -659,6 +659,30 @@ Erkennen auf mehreren Bildschirmen mit unterschiedlicher Skalierung → Gaming-P
 
 Versionsentscheidung 2026-09-15 (User): Assistent und GPU-Anpassung erscheinen als **1.6.0**, nicht als 2.0.
 
+**Recherche 2026-09-15 für 1.7.0** (zweiter Blick auf DisplayMagician, DisplayProfileManager, MonitorSwitcher,
+Monitor Profile Switcher, SoundSwitch): keines hat eine Funktion, die RigShift fehlt und zum Kern passt; die
+meistgewünschten Punkte dort (HDR, Hotkeys, Bestätigungs-Timer, Programme vor dem Start) sind schon drin. Die Lücken
+kommen aus dem Rig-Alltag. Vom User gewählt und umgesetzt:
+
+18. **Vollbild-Schutz.** Die Ende-Aktion einer USB-Regel wartet, solange eine Vollbild-Anwendung läuft
+    (`SHQueryUserNotificationState`: BUSY, D3D-Vollbild, Präsentation, Store-App) – ein USB-Aussetzer der Wheelbase
+    mitten im Rennen darf nicht auf den Schreibtisch schalten. Nur verschoben, nicht verworfen: nach Spielende feuert
+    sie; kommt das Gerät vorher zurück, gilt wie bisher „DeviceBack“. Immer an, im Log als `ExitHeld` (einmal je
+    Wartezeit). Start-Aktionen sind nicht betroffen.
+19. **Vorheriges Profil.** Ein Kürzel für beide Richtungen (Einstellungen), dazu CLI `toggle` und
+    `rigshift://toggle`. Ziel = vorher aktives Profil (`ProfileCatalog.PreviousProfileId`, nicht persistiert), sonst
+    Standardprofil, wenn es nicht aktiv ist, sonst nichts (Log, CLI-Exit 4). Logik in `ProfileEditing.ToggleTarget`,
+    Ziel über `IProfileSwitcher.ToggleTarget` geteilt.
+20. **Sicherung.** Über & Hilfe: „Sicherung speichern…“ schreibt `profiles/*.json` + `settings.json` als ZIP,
+    „Sicherung wiederherstellen…“ prüft das Archiv (`BackupArchive.Inspect`, nur bekannte Einträge, Profil-JSON
+    muss lesbar sein, kein neueres Schema), fragt nach, ersetzt alles und lädt Einstellungen und Profile im laufenden
+    Programm neu. Profildateien werden unter der ID im Inhalt geschrieben, nie unter dem Archivnamen (Zip-Slip).
+    Motivation: das Velopack-Setup hat hier schon einmal einen Datenordner geleert.
+
+**Abgelehnt** (User): Bestätigung per Lenkrad-/Controller-Taste. **Nicht empfohlen:** Wallpaper/Taskleiste pro
+Profil, DPI-Skalierung (merkt Windows je Bildschirm), App-Lautstärken, reine Audio-Kurzprofile, DDC/CI, Stream-Deck-
+Plugin, weitere Sprachen (nur als Community-Anleitung).
+
 ---
 
 ## 7. Teststrategie

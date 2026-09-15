@@ -60,3 +60,15 @@ Dropped after a scope review (the tool should stay small):
 - 🟢 Head-budget warning only for NVIDIA cards (1.6.0)
 - ⚪ AMD / Intel limits from community reports, then per-GPU head-budget presets
 - ❌ winget – not planned for now; the installer and the portable ZIP on GitHub stay the way to get RigShift
+
+## v1.7 – rig-day details
+
+Chosen after a second look at comparable tools (DisplayMagician, DisplayProfileManager, MonitorSwitcher): none of
+their extra features fit the core, so the additions come from rig use itself.
+
+- 🟢 No automatic switch back while a full-screen game is running – a USB hiccup mid-race changes nothing (1.7.0)
+- 🟢 Back to the previous profile: one hotkey, `toggle` on the command line, `rigshift://toggle` (1.7.0)
+- 🟢 Backup and restore of profiles, rules and settings as one ZIP file (1.7.0)
+- ❌ Confirm the countdown with a wheel or controller button – not wanted
+- ❌ Wallpaper or taskbar per profile, DPI scaling, per-app volume, audio-only profiles, DDC/CI monitor inputs, a
+  Stream Deck plugin – outside the core or covered by what exists

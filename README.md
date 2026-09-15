@@ -56,11 +56,14 @@ see no picture after a switch, it simply switches back after a few seconds.
   detected. Pick them from a searchable list of installed and running programs.
 - **Nothing gets lost:** windows left on a screen that is now off move to the main screen.
 - **Race-ready:** keep the PC awake while you only use the wheel, keep game sound loud during Discord calls, and get a
-  warning when Windows may cut power to your USB sim hardware.
+  warning when Windows may cut power to your USB sim hardware. If the wheelbase drops off USB mid-race, nothing
+  switches back until the game closes.
 
 **Control it your way**
 
-- Tray icon, a keyboard shortcut per profile, Stream Deck or button box, `rigshift://` links and a command line.
+- Tray icon, a keyboard shortcut per profile or one for "back to the previous profile", Stream Deck or button box,
+  `rigshift://` links and a command line.
+- **Backup:** save profiles, rules and settings as one ZIP file and restore them on a new PC.
 
 ## Screenshots
 
