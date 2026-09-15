@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-15
+
+### Added
+
+- **Back to the previous profile** with one key: **Settings → Shortcut: back to the previous profile** switches to
+  the profile that was active before, or to the default profile right after a start. The same target is available as
+  `RigShift.exe toggle` and as the `rigshift://toggle` link, e.g. for a single Stream Deck button.
+- **Backup:** **About & help → Save backup** writes profiles, automation rules and settings into one ZIP file;
+  **Restore backup** puts them back on a new PC or after a reinstall, replacing what is there after a confirmation.
+
+### Changed
+
+- An automation rule no longer switches back while a full-screen game is running: if the wheelbase drops off the USB
+  bus mid-race, the end action waits until the game closes. The device coming back meanwhile cancels it as before.
+
 ## [1.6.0] - 2026-09-15
 
 ### Added
