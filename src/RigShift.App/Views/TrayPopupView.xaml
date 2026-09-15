@@ -5,7 +5,7 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization">
-  <!-- Layout after the brand package mockup (07-mockups), limited to what the app can do. -->
+  <!-- Built like the Windows flyouts: the list starts at the top, rows are flat, the active row is marked by accent text and a check mark. -->
   <UserControl.Resources>
     <Style x:Key="TrayRowButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
       <Setter Property="Appearance" Value="Transparent" />
@@ -14,93 +14,72 @@
       <Setter Property="Padding" Value="12,8" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="CornerRadius" Value="{DynamicResource RigShift.Radius.control}" />
+      <Setter Property="CornerRadius" Value="4" />
     </Style>
   </UserControl.Resources>
 
   <Border
     Width="320"
-    Padding="8,16,8,8"
+    Padding="4,12,4,4"
     Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
     BorderThickness="1"
-    CornerRadius="{DynamicResource RigShift.Radius.card}">
+    CornerRadius="8">
     <StackPanel>
-      <StackPanel Margin="12,0,12,12" Orientation="Horizontal">
-        <Image
-          Width="48"
-          Height="32"
-          AutomationProperties.Name="RigShift"
-          RenderOptions.BitmapScalingMode="HighQuality"
-          Source="{DynamicResource RigShift.Image.symbol}"
-          Stretch="Uniform" />
-        <TextBlock
-          Margin="12,0,0,0"
-          VerticalAlignment="Center"
-          FontFamily="{DynamicResource RigShift.Font.Display}"
-          FontSize="{DynamicResource RigShift.Type.subtitle.Size}"
-          FontWeight="{DynamicResource RigShift.Type.subtitle.Weight}"
-          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-          Text="{loc:Tr Tray_Header}" />
-      </StackPanel>
+      <ui:TextBlock Margin="12,0,12,4" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="RigShift" />
 
       <TextBlock
-        Margin="12,0,12,8"
+        Margin="12,0,12,4"
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{Binding StatusText}"
         TextWrapping="Wrap"
         Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
 
       <!-- Scrolls instead of growing past the screen with many profiles (analysis finding I-05); MaxHeight set in code. -->
-      <ScrollViewer x:Name="ProfileList" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-      <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <ui:Button
-              AutomationProperties.Name="{Binding AccessibleName}"
-              Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-              CommandParameter="{Binding}"
-              IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}">
-              <ui:Button.Style>
-                <Style TargetType="ui:Button" BasedOn="{StaticResource TrayRowButton}">
-                  <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsActive}" Value="True">
-                      <Setter Property="Background" Value="{DynamicResource RigShift.Brush.selected}" />
-                      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.primary}" />
-                    </DataTrigger>
-                  </Style.Triggers>
-                </Style>
-              </ui:Button.Style>
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <controls:ProfileIcon Width="24" Height="24" VerticalAlignment="Center" IconKey="{Binding IconKey}" IsFilled="{Binding IsActive}" />
-                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+      <ScrollViewer x:Name="ProfileList" Margin="0,4,0,0" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ui:Button
+                AutomationProperties.Name="{Binding AccessibleName}"
+                Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                CommandParameter="{Binding}"
+                IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <ui:Button.Style>
+                  <Style TargetType="ui:Button" BasedOn="{StaticResource TrayRowButton}">
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsActive}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </ui:Button.Style>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <controls:ProfileIcon Width="20" Height="20" VerticalAlignment="Center" IconKey="{Binding IconKey}" IsFilled="{Binding IsActive}" />
                   <TextBlock
-                    FontFamily="{DynamicResource RigShift.Font.Text}"
-                    FontSize="{DynamicResource RigShift.Type.body.Size}"
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
                     Text="{Binding Name}"
                     TextTrimming="CharacterEllipsis" />
-                  <TextBlock
-                    FontFamily="{DynamicResource RigShift.Font.Small}"
-                    FontSize="{DynamicResource RigShift.Type.caption.Size}"
-                    Text="{loc:Tr Profile_Active}"
+                  <ui:SymbolIcon
+                    Grid.Column="2"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Symbol="Checkmark24"
                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
-                <ui:SymbolIcon
-                  Grid.Column="2"
-                  Margin="12,0,0,0"
-                  VerticalAlignment="Center"
-                  Symbol="Checkmark24"
-                  Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
-              </Grid>
-            </ui:Button>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+                </Grid>
+              </ui:Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </ScrollViewer>
 
       <TextBlock

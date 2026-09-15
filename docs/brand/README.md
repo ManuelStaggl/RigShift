@@ -6,9 +6,7 @@ icons are not.** They are © 2026 Manuel Staggl, all rights reserved.
 This covers:
 
 - `docs/brand/` – logo files (`*.svg`, `*.png`)
-- `src/RigShift.App/Assets/Brand/` – symbol images (`*.png`) and icons (`*.ico`)
-
-The colour tokens in `src/RigShift.App/Assets/Brand/*.xaml` are ordinary source code under MIT.
+- `src/RigShift.App/Assets/Brand/` – app and tray icons (`*.ico`)
 
 ## What you may do
 
