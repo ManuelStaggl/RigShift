@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-15
+
 ### Added
 
 - Setup assistant: on the first start without profiles, RigShift walks you through saving your first setup, switching
