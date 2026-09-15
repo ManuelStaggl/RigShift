@@ -11,6 +11,18 @@ All notable changes to this project are documented here. The format follows
 - Profile cards show the app names from the app picker ("SimHub") instead of file names ("SimHubWPF").
 - Shorter texts on all pages, consistent page headers and section headings, "Test" instead of "Check" for a dry run,
   "Icon" instead of "Symbol", "App" instead of "Program".
+- **Reworked look, closer to Windows 11**: RigShift follows your Windows accent color instead of its own blue; settings,
+  displays, automation and About use the same card layout as the Windows settings; text buttons lose their icons.
+- Profile cards have one button, **Switch**; Test, Edit, Duplicate, default profile, shortcut and Delete are in the
+  **…** menu. The apps line shows the programs' own icons.
+- Automation rules collapse to one line ("Wheel + Pedals → Sim Rig") and open to edit.
+- The profile editor is split into General, Displays, Audio, Behavior and Apps, with labels above the fields.
+- Dialogs put the action first: **Save · Cancel**, **Keep · Revert**.
+- The setup assistant is shorter and ends with a summary; the tray popup starts directly with the profile list.
+
+### Fixed
+
+- The name field for USB devices suggested "e.g. Left".
 
 ## [1.7.0] - 2026-09-15
 
