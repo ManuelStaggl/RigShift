@@ -73,7 +73,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter))]
+    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary))]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand))]
     public partial SetupStep Step { get; private set; }
 
@@ -407,7 +407,22 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(RuleText));
     }
 
-    private void EnterDone() => Step = SetupStep.Done;
+    private void EnterDone()
+    {
+        Summary.Clear();
+        foreach (Profile profile in new[] { FirstProfile, SecondProfile }.OfType<Profile>())
+        {
+            Summary.Add(new ProfileItem(profile, _settings.Current.UsbDeviceNames));
+        }
+
+        Step = SetupStep.Done;
+    }
+
+    /// <summary>The saved profiles, shown on the last step.</summary>
+    public ObservableCollection<ProfileItem> Summary { get; } = [];
+
+    /// <summary>What the created rule does, on the last step; <c>null</c> without a rule.</summary>
+    public string? RuleSummary => CreatedRule is not null ? RuleText : null;
 
 #if DEBUG
     /// <summary>Developer aid: a later step with demo profiles made from the current arrangement; nothing is saved.</summary>
