@@ -211,7 +211,7 @@
       <ItemsControl Focusable="False" ItemsSource="{Binding NamedDevices}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Usb24, FontSize=20}">
+            <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon UsbPlug24, FontSize=20}">
               <ui:CardControl.Header>
                 <StackPanel ToolTip="{Binding Id}">
                   <TextBlock Text="{Binding WindowsName}" TextWrapping="Wrap" />
