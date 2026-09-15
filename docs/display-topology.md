@@ -11,6 +11,10 @@ Display Stream Compression at high pixel rates – 4K@165 Hz, 5120×1440@240 Hz 
 (NVIDIA KB 5338 / 5788). Consequently a 49" ultrawide at 240 Hz cannot be active together with a 4K@165 monitor
 plus two more monitors.
 
+The planner's head-budget warning applies this rule to NVIDIA adapters (and adapters without a PCI vendor id). AMD
+(`VEN_1002`) and Intel (`VEN_8086`) cards are not checked: their limits are not verified, and a false warning is worse
+than none. The single-call rule below applies to every vendor.
+
 Tools that enable and disable monitors one at a time (NirSoft MultiMonitorTool, most "profile" tools) hit the
 limit mid-sequence and fail. The only reliable approach is to hand the complete target topology to
 `SetDisplayConfig` in a single call:

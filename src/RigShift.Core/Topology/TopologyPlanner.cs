@@ -189,11 +189,12 @@ public sealed class TopologyPlanner
         foreach (IGrouping<string, PlannedDisplay> adapter in resolved.GroupBy(
             r => r.Target.Identity.AdapterDevicePath, StringComparer.OrdinalIgnoreCase))
         {
-            int heads = adapter.Sum(r => EstimateHeads(r.Assignment));
-            int budget = _options.HeadBudgetByAdapter.TryGetValue(adapter.Key, out int configured)
-                ? configured
-                : _options.DefaultHeadBudget;
+            if (_options.HeadBudgetFor(adapter.Key) is not { } budget)
+            {
+                continue;
+            }
 
+            int heads = adapter.Sum(r => EstimateHeads(r.Assignment));
             if (heads > budget)
             {
                 string displays = string.Join(", ", adapter.Select(r => string.Create(CultureInfo.InvariantCulture,

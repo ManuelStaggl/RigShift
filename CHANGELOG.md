@@ -13,6 +13,12 @@ All notable changes to this project are documented here. The format follows
   automation rule: turn your wheelbase (or any USB device) off and on, RigShift picks it and switches between both
   profiles with it. Open it again any time from the **Profiles** page.
 
+### Changed
+
+- The warning that the graphics card may not drive all displays now only appears for NVIDIA cards. Its rule (displays
+  with Display Stream Compression take two of four heads) is NVIDIA's; AMD and Intel cards no longer get it until
+  their limits are known. Reports from AMD and Intel users are welcome.
+
 ## [1.5.0] - 2026-09-14
 
 ### Added

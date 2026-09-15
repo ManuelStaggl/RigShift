@@ -155,6 +155,31 @@ public sealed class TopologyPlannerTests
         plan.Warnings.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData(@"\\?\PCI#VEN_1002&DEV_73BF#TEST#1")]
+    [InlineData(@"\\?\PCI#VEN_8086&DEV_A780#TEST#1")]
+    public void Plan_HeadBudget_AmdAndIntelAreNotChecked_UnlessConfigured(string adapter)
+    {
+        // The same six-head layout as above, on a card whose limits the NVIDIA rule does not describe.
+        DisplayAssignment[] modes = [UltrawideMode, .. DeskModes];
+        modes = [.. modes.Select(m => m with { Identity = m.Identity with { AdapterDevicePath = adapter } })];
+        DisplaySnapshot snapshot = Snapshot([.. modes.Select(m => Attached(m.Identity, activeMode: m))]);
+
+        _planner.Plan(Profile("Everything", modes), snapshot).Warnings.ShouldBeEmpty();
+
+        var configured = new TopologyPlanner(new TopologyPlannerOptions { HeadBudgetByAdapter = new Dictionary<string, int> { [adapter] = 4 } });
+        configured.Plan(Profile("Everything", modes), snapshot).Warnings.ShouldHaveSingleItem().Kind.ShouldBe(PlanWarningKind.HeadBudgetExceeded);
+    }
+
+    [Theory]
+    [InlineData(@"\\?\PCI#VEN_10DE&DEV_2702&SUBSYS_1#4&1", GpuVendor.Nvidia)]
+    [InlineData(@"\\?\pci#ven_1002&dev_73bf#x", GpuVendor.Amd)]
+    [InlineData(@"\\?\PCI#VEN_8086&DEV_A780#x", GpuVendor.Intel)]
+    [InlineData(@"\\?\SWD#SPACEDESK#TEST#1", GpuVendor.Unknown)]
+    [InlineData(null, GpuVendor.Unknown)]
+    public void GpuVendors_FromAdapterPath(string? adapter, GpuVendor expected) =>
+        GpuVendors.Of(adapter).ShouldBe(expected);
+
     [Fact]
     public void Plan_HeadBudget_CountsPerAdapter_AndHonoursOverride()
     {
