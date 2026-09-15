@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>The monitors attached right now, with their custom names and a way to tell them apart (docs/PLAN.md, section 6).</summary>
+/// <summary>The monitors attached right now, with their custom names and a way to tell them apart.</summary>
 public sealed partial class DisplaysViewModel(IDisplayConfigurator display, ProfileCatalog catalog, ILogger log) : ObservableObject
 {
     private readonly ILogger _log = log.ForContext<DisplaysViewModel>();

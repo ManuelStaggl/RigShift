@@ -13,7 +13,7 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>Version and updates, troubleshooting and links (docs/PLAN.md, section 6).</summary>
+/// <summary>Version and updates, troubleshooting and links.</summary>
 public sealed partial class AboutViewModel : ObservableObject
 {
     private const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";

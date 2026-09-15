@@ -19,7 +19,7 @@ public sealed record UsbPowerFindings
     public int InstancesWithPowerSaving { get; init; }
 }
 
-/// <summary>Turns raw findings into "show the hint or not" (docs/PLAN.md, section 6, "Neu für 1.3", item 3).</summary>
+/// <summary>Turns raw findings into "show the hint or not".</summary>
 public static class UsbPowerSaving
 {
     /// <summary>

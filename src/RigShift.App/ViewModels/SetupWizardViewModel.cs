@@ -25,7 +25,7 @@ public enum SetupStep
 }
 
 /// <summary>
-/// Setup assistant for first-time users (docs/PLAN.md, section 6, item 13): the first profile from the current
+/// Setup assistant for first-time users: the first profile from the current
 /// arrangement, the second after the user has switched their displays, then an optional USB trigger between them.
 /// Details such as HDR, apps and hotkeys stay in the profile editor.
 /// </summary>

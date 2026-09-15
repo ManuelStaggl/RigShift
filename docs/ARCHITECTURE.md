@@ -45,8 +45,8 @@ Idle → Planning → Applying → AudioSwitch → Confirming → Applied
                                            FollowUp (re-plan on WM_DISPLAYCHANGE while the profile stays active)
 ```
 
-Details and the reasoning behind every step live in `docs/PLAN.md` (German) and `docs/display-topology.md`
-(English, the hard rules).
+The hard rules behind every step are in `docs/display-topology.md`
+and the decisions in `docs/decisions/`.
 
 ## Interfaces (Core → Windows)
 

@@ -92,7 +92,7 @@ public sealed record TriggerEvent(AutomationRule Rule, TriggerEventKind Kind)
 public sealed record TriggerEvaluation(IReadOnlyList<TriggerAction> Actions, IReadOnlyList<TriggerEvent> Events);
 
 /// <summary>
-/// Decides from polled USB devices when rules switch (docs/PLAN.md, section 6). Pure logic: the caller supplies what is
+/// Decides from polled USB devices when rules switch. Pure logic: the caller supplies what is
 /// present, the active profile and a monotonic time.
 /// </summary>
 /// <remarks>

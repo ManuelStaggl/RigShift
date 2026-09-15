@@ -2,7 +2,7 @@ namespace RigShift.Core.Profiles;
 
 /// <summary>
 /// Human-readable display names. A user-given name belongs to the monitor, not to one profile: it is stored on every
-/// <see cref="DisplayAssignment"/> with the same target device path and kept in sync on save (docs/PLAN.md, section 6).
+/// <see cref="DisplayAssignment"/> with the same target device path and kept in sync on save.
 /// </summary>
 public static class DisplayNames
 {

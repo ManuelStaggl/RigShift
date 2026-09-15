@@ -7,7 +7,7 @@ namespace RigShift.Windows.Tests;
 
 public sealed class CcdStructTests
 {
-    // The legacy .display files store these structs as raw bytes (72 and 64 bytes, see docs/PLAN.md section 10).
+    // The legacy .display files store these structs as raw bytes (72 and 64 bytes).
     [Fact]
     public void PathInfo_Is72Bytes() => Marshal.SizeOf<DISPLAYCONFIG_PATH_INFO>().ShouldBe(72);
 

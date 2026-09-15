@@ -10,7 +10,7 @@ namespace RigShift.App.Services;
 /// <summary>
 /// Registers the profile hotkeys and the "back to the previous profile" hotkey with Windows and switches when one is
 /// pressed – the same way as a tray click, including the confirmation countdown. Pressing the hotkey again during that
-/// countdown confirms (docs/PLAN.md, section 6).
+/// countdown confirms.
 /// </summary>
 public sealed class HotkeyService : IDisposable
 {

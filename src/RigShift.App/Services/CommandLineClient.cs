@@ -16,7 +16,7 @@ namespace RigShift.App.Services;
 /// <summary>
 /// The short-lived <c>RigShift.exe &lt;command&gt;</c> process. It forwards the command to the tray app over the pipe
 /// and exits with the app's exit code; <c>list</c> and <c>status</c> are answered locally when no app runs
-/// (docs/PLAN.md, section 10, M4).
+///.
 /// </summary>
 internal static class CommandLineClient
 {

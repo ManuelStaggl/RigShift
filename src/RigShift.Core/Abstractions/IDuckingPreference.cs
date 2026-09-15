@@ -3,7 +3,7 @@ namespace RigShift.Core.Abstractions;
 /// <summary>
 /// OS boundary for the Windows communications setting "When Windows detects communications activity"
 /// (HKCU <c>Software\Microsoft\Multimedia\Audio</c>, DWORD <c>UserDuckingPreference</c>). Undocumented, so callers only
-/// log failures (docs/PLAN.md, section 6, "Neu für 1.3", item 4).
+/// log failures.
 /// </summary>
 public interface IDuckingPreference
 {

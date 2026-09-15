@@ -50,7 +50,7 @@ public sealed record CliRequest
 public sealed record CliParseResult(CliRequest? Request, int ExitCode, string Output);
 
 /// <summary>
-/// Command line of <c>RigShift.exe</c> (docs/PLAN.md, section 4.4):
+/// Command line of <c>RigShift.exe</c>:
 /// <c>apply &lt;name&gt; [--no-confirm] [--dry-run]</c>, <c>toggle [--no-confirm] [--dry-run]</c>, <c>list</c>,
 /// <c>save &lt;name&gt;</c>, <c>status</c>.
 /// </summary>

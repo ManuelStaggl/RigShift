@@ -12,7 +12,7 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// Polls the connected USB devices every 2 seconds and switches when a rule's device connects or disappears
-/// (docs/PLAN.md, section 6). Polling needs no window and no administrator rights.
+///. Polling needs no window and no administrator rights.
 /// </summary>
 public sealed class AutomationService : IDisposable
 {

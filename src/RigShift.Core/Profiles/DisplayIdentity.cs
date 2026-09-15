@@ -18,6 +18,6 @@ public sealed record DisplayIdentity
 
     public ushort EdidProductCodeId { get; init; }
 
-    /// <summary>Human-readable name from EDID, for UI and logs only – never used for matching. <c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
+    /// <summary>Human-readable name from EDID, for UI and logs only – never used for matching. <c>set</c>: an <c>init</c> initializer is skipped when the key is missing.</summary>
     public string FriendlyName { get; set; } = string.Empty;
 }

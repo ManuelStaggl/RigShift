@@ -68,7 +68,7 @@ public sealed class ProfileDialogs
         return await ShowAsync(profile, isNew: true, playback);
     }
 
-    /// <summary>The setup assistant (docs/PLAN.md, section 6, item 13); remembers that it was shown.</summary>
+    /// <summary>The setup assistant; remembers that it was shown.</summary>
     /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
     public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
     {

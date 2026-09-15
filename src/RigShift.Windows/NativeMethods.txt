@@ -16,7 +16,7 @@ DISPLAYCONFIG_MODE_INFO_TYPE
 DISPLAYCONFIG_PIXELFORMAT
 DISPLAYCONFIG_PATH_ACTIVE
 DISPLAYCONFIG_PATH_MODE_IDX_INVALID
-// HDR per display (docs/PLAN.md, section 6, item 10). _2 / SET_HDR_STATE from Windows 11 24H2, the others before.
+// HDR per display. _2 / SET_HDR_STATE from Windows 11 24H2, the others before.
 DisplayConfigSetDeviceInfo
 DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
 DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2
@@ -37,7 +37,7 @@ IAudioEndpointVolume
 PKEY_Device_FriendlyName
 DEVICE_STATE
 PropVariantClear
-// USB device triggers: present devices and their names (polled, docs/PLAN.md section 6, item 7).
+// USB device triggers: present devices and their names (polled).
 CM_Get_Device_ID_List_SizeW
 CM_Get_Device_ID_ListW
 CM_Locate_DevNodeW
@@ -75,7 +75,7 @@ GetStdHandle
 ATTACH_PARENT_PROCESS
 AllowSetForegroundWindow
 ASFW_ANY
-// Keep awake per profile (docs/PLAN.md, section 6, item 8).
+// Keep awake per profile.
 PowerCreateRequest
 PowerSetRequest
 PowerClearRequest

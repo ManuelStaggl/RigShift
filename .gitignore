@@ -21,3 +21,8 @@ TestResults/
 *.binlog
 *.nupkg
 *.snupkg
+
+# Internal working notes (German plan, analysis rounds, assistant instructions) stay local
+CLAUDE.md
+docs/PLAN.md
+docs/analysis/

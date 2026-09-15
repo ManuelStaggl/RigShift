@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace RigShift.Core.Automation;
 
-/// <summary>What a rule does once its device is gone (docs/PLAN.md, section 6).</summary>
+/// <summary>What a rule does once its device is gone.</summary>
 public enum ExitAction
 {
     /// <summary>Stay in the rule's profile.</summary>

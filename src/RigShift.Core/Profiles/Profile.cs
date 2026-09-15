@@ -18,7 +18,7 @@ public sealed record Profile
 
     public required IReadOnlyList<DisplayAssignment> Displays { get; init; }
 
-    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
+    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing.</summary>
     public AudioAssignment Audio { get; set; } = new();
 
     /// <summary>
@@ -43,12 +43,12 @@ public sealed record Profile
     /// </summary>
     public IReadOnlyList<AppAction> Apps { get; set; } = [];
 
-    /// <summary>No standby, screen saver or display timeout while this profile is active (docs/PLAN.md, section 6, item 8).</summary>
+    /// <summary>No standby, screen saver or display timeout while this profile is active.</summary>
     public bool KeepAwake { get; init; }
 
     /// <summary>
     /// USB device (<c>VID_xxxx&amp;PID_xxxx</c>) the apps wait for before they start, e.g. the wheelbase; <c>null</c> to start
-    /// them right away (docs/PLAN.md, section 6, "Neu für 1.3", item 2).
+    /// them right away.
     /// </summary>
     public string? AppsWaitForUsbDeviceId { get; init; }
 

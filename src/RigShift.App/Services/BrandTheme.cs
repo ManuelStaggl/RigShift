@@ -43,8 +43,8 @@ public static class BrandTheme
 
         resources["RigShift.Image.symbol"] = Image($"rigshift-symbol-color-{(IsDark ? "dark" : "light")}-128w.png");
 
-        // docs/PLAN.md 4.8: the WPF-UI accent is the brand primary of the theme (#0067B8 light, #79B8FF dark). Letting WPF-UI
-        // derive its shades from one blue gave other colors than the plan (analysis finding I-17).
+        // The WPF-UI accent is the brand primary of the theme (#0067B8 light, #79B8FF dark). Letting WPF-UI
+        // derive its shades from one blue gave other colors than the brand guide.
         if (!highContrast && tokens[PrimaryColorKey] is Color primary)
         {
             ApplicationAccentColorManager.Apply(primary, primary, primary, primary);

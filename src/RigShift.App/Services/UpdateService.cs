@@ -29,7 +29,7 @@ public enum UpdateState
 }
 
 /// <summary>
-/// Checks GitHub Releases at startup, every 24 hours and on request (docs/PLAN.md, sections 6 and 8). With automatic
+/// Checks GitHub Releases at startup, every 24 hours and on request. With automatic
 /// installation a newer version is downloaded and Velopack installs it the next time the tray app starts; otherwise
 /// RigShift only reports it until the user installs it. Does nothing when RigShift was not installed by Velopack
 /// (development builds). All members are used on the UI thread; events are raised there.

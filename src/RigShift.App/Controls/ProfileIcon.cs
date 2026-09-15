@@ -63,7 +63,7 @@ public sealed class ProfileIcon : Decorator
 /// <summary>Maps profile symbol keys to Fluent System Icons and renders them for the tray.</summary>
 public static class ProfileIconRenderer
 {
-    /// <summary>Chosen by the user on 2026-09-13 (docs/PLAN.md, section 10).</summary>
+    /// <summary>Chosen by the user on 2026-09-13.</summary>
     public static SymbolRegular? SymbolFor(string? key) => ProfileIcons.Normalize(key) switch
     {
         ProfileIcons.Desk => SymbolRegular.Desktop24,

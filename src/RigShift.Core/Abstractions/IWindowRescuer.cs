@@ -2,7 +2,7 @@ namespace RigShift.Core.Abstractions;
 
 /// <summary>
 /// OS boundary for windows that end up on a display that is off after a switch (Discord, Steam, SimHub remember their
-/// last position). Always on, no setting (docs/PLAN.md, section 6, "Neu für 1.3", item 1).
+/// last position). Always on, no setting.
 /// </summary>
 public interface IWindowRescuer
 {

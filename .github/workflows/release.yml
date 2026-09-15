@@ -1,6 +1,6 @@
 name: Release
 
-# Builds the Velopack package for tag vX.Y.Z and publishes it as a GitHub release (docs/PLAN.md, section 8).
+# Builds the Velopack package for tag vX.Y.Z and publishes it as a GitHub release.
 # The release notes are the matching section of CHANGELOG.md.
 
 on:

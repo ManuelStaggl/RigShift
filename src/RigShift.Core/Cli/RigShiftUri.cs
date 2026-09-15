@@ -1,7 +1,7 @@
 namespace RigShift.Core.Cli;
 
 /// <summary>
-/// The <c>rigshift://apply/&lt;name&gt;</c> and <c>rigshift://toggle</c> links (docs/PLAN.md, section 6): Windows starts
+/// The <c>rigshift://apply/&lt;name&gt;</c> and <c>rigshift://toggle</c> links: Windows starts
 /// <c>RigShift.exe "&lt;uri&gt;"</c>, which becomes <c>apply &lt;name&gt; --from-link</c> or <c>toggle --from-link</c>.
 /// Only switching exists – a link on a web page must not be able to save or change profiles – and it always asks for
 /// confirmation, even when confirmation is turned off.

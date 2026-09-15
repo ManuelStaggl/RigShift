@@ -11,7 +11,7 @@ namespace RigShift.Windows.Apps;
 
 /// <summary>
 /// <see cref="IUsbDeviceList"/> over the configuration manager: the present device instances below the USB enumerator.
-/// Polled instead of device notifications, so games and devices share one path (docs/PLAN.md, section 6, item 7).
+/// Polled instead of device notifications, so games and devices share one path.
 /// </summary>
 public sealed class UsbDeviceList : IUsbDeviceList
 {

@@ -19,7 +19,7 @@ public sealed record DisplayAssignment
 
     public required int PositionY { get; init; }
 
-    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing (docs/PLAN.md, stumbling blocks).</summary>
+    /// <summary><c>set</c>: an <c>init</c> initializer is skipped when the key is missing.</summary>
     public DisplayRotation Rotation { get; set; } = DisplayRotation.Identity;
 
     /// <summary>
@@ -33,7 +33,7 @@ public sealed record DisplayAssignment
 
     /// <summary>
     /// HDR on or off after the switch; <c>null</c> leaves it unchanged. In a snapshot: the current state, <c>null</c>
-    /// when the display does not support HDR (docs/PLAN.md, section 6, item 10).
+    /// when the display does not support HDR.
     /// </summary>
     public bool? Hdr { get; init; }
 

@@ -7,7 +7,7 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// Runs one profile switch: plan → wait for sleeping targets → apply with retry → audio → confirm → rollback or apps.
-/// State machine and rationale: docs/PLAN.md section 4.3; hard rules: docs/display-topology.md.
+/// State machine of a switch; the hard rules are in docs/display-topology.md.
 /// </summary>
 public sealed class SwitchOrchestrator
 {
@@ -624,7 +624,7 @@ public sealed class SwitchOrchestrator
     /// <summary>
     /// HDR per display right after the arrangement, on a fresh snapshot: a display that was just switched on only
     /// reports its HDR state once active. Rollbacks restore it the same way, because the previous topology carries the
-    /// state it had. Failures are logged and never fail the switch (docs/PLAN.md, section 6, item 10).
+    /// state it had. Failures are logged and never fail the switch.
     /// </summary>
     private async Task SwitchHdrAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -785,7 +785,7 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Keep-awake follows the profile (docs/PLAN.md, section 6, item 8). Failures are logged and never fail the switch.
+    /// Keep-awake follows the profile. Failures are logged and never fail the switch.
     /// </summary>
     private void SwitchKeepAwake(Profile profile)
     {

@@ -7,7 +7,7 @@ public sealed record UsbDevice(string Id, string Name);
 
 /// <summary>
 /// USB devices are matched by vendor and product id (<c>VID_046D&amp;PID_C24F</c>), so a device keeps matching in another
-/// port (docs/PLAN.md, section 6, item 7).
+/// port.
 /// </summary>
 public static partial class UsbDeviceIds
 {

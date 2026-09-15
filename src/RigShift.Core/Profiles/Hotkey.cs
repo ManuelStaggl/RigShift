@@ -12,7 +12,7 @@ public enum HotkeyModifiers
 }
 
 /// <summary>
-/// A system-wide key combination that switches to a profile (docs/PLAN.md, section 6). Ctrl, Alt or Win is required:
+/// A system-wide key combination that switches to a profile. Ctrl, Alt or Win is required:
 /// a plain key – or Shift+A, the capital A – would be taken away from every other application.
 /// </summary>
 public sealed record Hotkey

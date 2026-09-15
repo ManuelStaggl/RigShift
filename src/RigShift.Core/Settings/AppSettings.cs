@@ -40,7 +40,7 @@ public sealed record AppSettings
 
     /// <summary>
     /// Custom monitor names by target device path, also for monitors that are in no profile (displays page). Profiles
-    /// carry the name too, so the core and the command line do not need the settings (docs/PLAN.md, section 6).
+    /// carry the name too, so the core and the command line do not need the settings.
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
@@ -50,7 +50,7 @@ public sealed record AppSettings
     /// <summary>Custom USB device names by <c>VID_xxxx&amp;PID_xxxx</c> (user decision U-01, <see cref="Automation.UsbDeviceNames"/>).</summary>
     public IReadOnlyDictionary<string, string>? UsbDeviceNames { get; init; }
 
-    /// <summary>USB device rules of the automation page (docs/PLAN.md, section 6).</summary>
+    /// <summary>USB device rules of the automation page.</summary>
     public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
 
     /// <summary>

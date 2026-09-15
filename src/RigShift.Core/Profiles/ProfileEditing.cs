@@ -4,7 +4,7 @@ namespace RigShift.Core.Profiles;
 
 /// <summary>
 /// Rules for creating and editing profiles: capturing the live arrangement, choosing the primary display, names.
-/// Positions are never typed in by the user – they come from the arrangement Windows reports (docs/PLAN.md, section 10).
+/// Positions are never typed in by the user – they come from the arrangement Windows reports.
 /// </summary>
 public static class ProfileEditing
 {

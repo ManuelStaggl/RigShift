@@ -1,6 +1,6 @@
 namespace RigShift.Core.Abstractions;
 
-/// <summary>OS boundary for the keep-awake request (docs/PLAN.md, section 6, item 8).</summary>
+/// <summary>OS boundary for the keep-awake request.</summary>
 public interface IPowerController
 {
     /// <summary>True while RigShift holds a request that keeps the system and the displays on.</summary>

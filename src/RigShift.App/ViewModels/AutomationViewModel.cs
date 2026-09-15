@@ -13,7 +13,7 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// Rules: "when these USB devices are connected, switch to that profile" (docs/PLAN.md, section 6), and the custom USB
+/// Rules: "when these USB devices are connected, switch to that profile", and the custom USB
 /// device names (user decision U-01). Changes save at once.
 /// </summary>
 public sealed partial class AutomationViewModel : ObservableObject

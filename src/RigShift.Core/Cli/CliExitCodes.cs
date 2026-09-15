@@ -2,7 +2,7 @@ using RigShift.Core.Topology;
 
 namespace RigShift.Core.Cli;
 
-/// <summary>Process exit codes of <c>RigShift.exe</c> (docs/PLAN.md, section 4.4). Part of the public contract.</summary>
+/// <summary>Process exit codes of <c>RigShift.exe</c>. Part of the public contract.</summary>
 public static class CliExitCodes
 {
     /// <summary>Applied (also partially, without optional displays), dry run not blocked, or any other command succeeded.</summary>
