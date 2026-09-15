@@ -12,6 +12,44 @@
         <ui:ControlsDictionary />
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+      <!-- Layout of the Windows settings: content 24 from the edge and at most 1000 wide, cards 4 apart within a group,
+           groups 24 apart under a 14 px semibold heading, one line of caption text below a card's header. -->
+      <Style x:Key="PageContent" TargetType="StackPanel">
+        <Setter Property="Margin" Value="24,16,24,24" />
+        <Setter Property="MaxWidth" Value="1000" />
+      </Style>
+      <Style x:Key="PageTitle" TargetType="ui:TextBlock">
+        <Setter Property="FontTypography" Value="Title" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+      </Style>
+      <Style x:Key="SectionHeader" TargetType="ui:TextBlock">
+        <Setter Property="FontTypography" Value="BodyStrong" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin" Value="0,24,0,8" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
+      <Style x:Key="Caption" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
+      <!-- Result of an action below a card's header; takes no space while there is none. -->
+      <Style x:Key="StatusText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Style.Triggers>
+          <Trigger Property="Text" Value="">
+            <Setter Property="Visibility" Value="Collapsed" />
+          </Trigger>
+        </Style.Triggers>
+      </Style>
+      <Style x:Key="FieldLabel" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
     </ResourceDictionary>
   </Application.Resources>
 </Application>

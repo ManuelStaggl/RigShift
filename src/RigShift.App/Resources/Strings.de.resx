@@ -6,7 +6,6 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profile</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="Profiles_OpenFolder" xml:space="preserve"><value>Profilordner öffnen</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
   <data name="Profiles_EmptyText" xml:space="preserve"><value>Noch keine Profile. Speichere die aktuelle Anordnung, um eines anzulegen.</value></data>
   <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Einige Profile konnten nicht geladen werden</value></data>
@@ -71,16 +70,15 @@
   <data name="Outcome_DryRun" xml:space="preserve"><value>Getestet</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Standardprofil</value></data>
   <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
-  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Tastenkürzel: zurück zum vorherigen Profil</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Schaltet zum vorher aktiven Profil, nach dem Start zum Standardprofil.</value></data>
+  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Vorheriges Profil</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Tastenkürzel, das zum zuvor aktiven Profil schaltet.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
-  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung innerhalb dieser Sekunden kommen die vorherigen Einstellungen zurück.</value></data>
-  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt.</value></data>
+  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung wird zurückgeschaltet.</value></data>
+  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Aus: Ein dunkler Bildschirm wird nicht zurückgestellt.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
-  <data name="Settings_OpenLogs" xml:space="preserve"><value>Log-Ordner öffnen</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (Entwicklungs-Build)</value></data>
   <data name="Settings_CheckUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
@@ -95,7 +93,7 @@
   <data name="Update_StatusAvailable" xml:space="preserve"><value>Version {0} ist verfügbar.</value></data>
   <data name="Update_Available" xml:space="preserve"><value>Version {0} ist verfügbar. Unter „Über &amp; Hilfe“ kannst du sie installieren.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Updates automatisch installieren</value></data>
-  <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: RigShift meldet neue Versionen nur und installiert erst, wenn du es auswählst.</value></data>
+  <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: Neue Versionen werden nur gemeldet.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release-Notes auf GitHub</value></data>
   <data name="About_WhatsNew" xml:space="preserve"><value>Was ist neu</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
@@ -127,7 +125,6 @@
   <data name="Icon_Vr" xml:space="preserve"><value>VR</value></data>
   <data name="Icon_Tv" xml:space="preserve"><value>TV / Couch</value></data>
   <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
-  <data name="Tray_Header" xml:space="preserve"><value>Profil wechseln</value></data>
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Ohne Nachfrage umschalten</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Bildschirme in den Windows-Einstellungen anordnen, dann die aktuelle Anordnung übernehmen.</value></data>
@@ -166,7 +163,7 @@
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
-  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Klicke hier und drücke eine Tastenkombination</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Keins</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft. Strg, Alt oder Win zusammen mit einer weiteren Taste.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Halte zusätzlich Strg, Alt oder Win.</value></data>
@@ -202,7 +199,7 @@
   <data name="Nav_About" xml:space="preserve"><value>Über &amp; Hilfe</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Erkennen</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Aktualisieren</value></data>
-  <data name="Displays_Hint" xml:space="preserve"><value>Benenne deine Bildschirme; der Name erscheint überall, z. B. „Links · CM27X3“. Erkennen zeigt die Windows-Nummer jedes Bildschirms auf ihm an.</value></data>
+  <data name="Displays_Hint" xml:space="preserve"><value>Namen erscheinen in Profilen und Meldungen.</value></data>
   <data name="Displays_Empty" xml:space="preserve"><value>Keine Bildschirme gefunden.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Aktiv · Hauptanzeige</value></data>
@@ -213,17 +210,15 @@
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Noch in keinem Profil</value></data>
   <data name="About_Troubleshooting" xml:space="preserve"><value>Fehlersuche</value></data>
   <data name="About_History" xml:space="preserve"><value>Letzte Wechsel</value></data>
-  <data name="About_NoHistory" xml:space="preserve"><value>Seit dem Start von RigShift noch kein Wechsel.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Diagnose-Infos kopieren</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt; Protokolldateien sind nicht anonymisiert – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
-  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Regeln und Einstellungen in einer ZIP-Datei. Wiederherstellen ersetzt alles.</value></data>
-  <data name="About_SaveBackup" xml:space="preserve"><value>Sicherung speichern…</value></data>
-  <data name="About_RestoreBackup" xml:space="preserve"><value>Sicherung wiederherstellen…</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
+  <data name="About_SaveBackup" xml:space="preserve"><value>Speichern …</value></data>
+  <data name="About_RestoreBackup" xml:space="preserve"><value>Wiederherstellen …</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
   <data name="About_BackupRestored" xml:space="preserve"><value>Sicherung wiederhergestellt: {0} Profil(e).</value></data>
   <data name="About_BackupFailed" xml:space="preserve"><value>Fehler: {0}</value></data>
@@ -238,7 +233,7 @@
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät wie die Wheelbase verbunden ist, und zurück, sobald es weg ist.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, wenn USB-Geräte verbunden werden, und zurück, wenn sie fehlen.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
@@ -283,7 +278,7 @@
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Gerät entfernen</value></data>
   <data name="Automation_NamesTitle" xml:space="preserve"><value>USB-Gerätenamen</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Einmal benennen – der Name erscheint in Regeln, Profilen und Meldungen.</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>
   <data name="Automation_NamesEmpty" xml:space="preserve"><value>Sobald eine Regel oder ein Profil ein USB-Gerät nutzt, kannst du es hier benennen.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
@@ -318,4 +313,16 @@
   <data name="Setup_NoTrigger" xml:space="preserve"><value>Überspringen</value></data>
   <data name="Setup_CreateRule" xml:space="preserve"><value>Regel anlegen</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Hotkey_RecordTip" xml:space="preserve"><value>Klicken, dann Strg, Alt oder Win mit einer weiteren Taste drücken. Rücktaste entfernt es.</value></data>
+  <data name="Displays_IdentifyTip" xml:space="preserve"><value>Zeigt die Windows-Nummer auf jedem Bildschirm.</value></data>
+  <data name="Automation_Rules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="Automation_NoDevice" xml:space="preserve"><value>Kein Gerät</value></data>
+  <data name="Automation_NamePlaceholder" xml:space="preserve"><value>z. B. Lenkrad</value></data>
+  <data name="About_Diagnostics" xml:space="preserve"><value>Diagnose-Infos</value></data>
+  <data name="About_DiagnosticsHint" xml:space="preserve"><value>Für ein GitHub-Issue, ohne deinen Benutzernamen.</value></data>
+  <data name="About_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="About_Folders" xml:space="preserve"><value>Ordner</value></data>
+  <data name="About_FoldersHint" xml:space="preserve"><value>Protokolldateien und Profile.</value></data>
+  <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
+  <data name="About_Profiles" xml:space="preserve"><value>Profile</value></data>
 </root>

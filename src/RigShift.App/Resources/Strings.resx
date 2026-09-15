@@ -6,7 +6,6 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profiles</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
-  <data name="Profiles_OpenFolder" xml:space="preserve"><value>Open profile folder</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>No profiles found</value></data>
   <data name="Profiles_EmptyText" xml:space="preserve"><value>No profiles yet. Save the current arrangement to create one.</value></data>
   <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Some profiles could not be loaded</value></data>
@@ -71,16 +70,15 @@
   <data name="Outcome_DryRun" xml:space="preserve"><value>Tested</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Default profile</value></data>
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
-  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Shortcut: back to the previous profile</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Switches to the profile that was active before, or to the default profile after a start.</value></data>
+  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Previous profile</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Shortcut that switches to the profile active before.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
-  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation within these seconds, the previous settings come back.</value></data>
-  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Switches without asking. If a display stays dark, nothing is reverted automatically.</value></data>
+  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation, the previous settings come back.</value></data>
+  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Off: a display that stays dark is not reverted.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Same as Windows</value></data>
-  <data name="Settings_OpenLogs" xml:space="preserve"><value>Open log folder</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (development build)</value></data>
   <data name="Settings_CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
@@ -95,7 +93,7 @@
   <data name="Update_StatusAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
   <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open “About &amp; help” to install it.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
-  <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: RigShift only reports new versions and installs nothing until you choose to.</value></data>
+  <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: new versions are only reported.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release notes on GitHub</value></data>
   <data name="About_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
@@ -127,7 +125,6 @@
   <data name="Icon_Vr" xml:space="preserve"><value>VR</value></data>
   <data name="Icon_Tv" xml:space="preserve"><value>TV / couch</value></data>
   <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
-  <data name="Tray_Header" xml:space="preserve"><value>Switch profile</value></data>
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Switch without asking</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Displays</value></data>
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Arrange displays in the Windows settings, then take the current arrangement.</value></data>
@@ -166,7 +163,7 @@
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Another profile already uses this keyboard shortcut.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this keyboard shortcut. Choose a different one.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
-  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Click here and press a key combination</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>None</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running. Use Ctrl, Alt or Win with another key.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Hold Ctrl, Alt or Win as well.</value></data>
@@ -202,7 +199,7 @@
   <data name="Nav_About" xml:space="preserve"><value>About &amp; help</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Identify</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Refresh</value></data>
-  <data name="Displays_Hint" xml:space="preserve"><value>Name your displays; the name is used everywhere, e.g. “Left · CM27X3”. Identify shows each display’s Windows number on its screen.</value></data>
+  <data name="Displays_Hint" xml:space="preserve"><value>Names appear in profiles and notifications.</value></data>
   <data name="Displays_Empty" xml:space="preserve"><value>No displays found.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Active</value></data>
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Active · main display</value></data>
@@ -213,17 +210,15 @@
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
   <data name="About_Troubleshooting" xml:space="preserve"><value>Troubleshooting</value></data>
   <data name="About_History" xml:space="preserve"><value>Recent switches</value></data>
-  <data name="About_NoHistory" xml:space="preserve"><value>No switches since RigShift started.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Copy diagnostic info</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed; log files are not anonymized, so check them before attaching one.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
-  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, rules and settings in one ZIP file. Restoring replaces everything.</value></data>
-  <data name="About_SaveBackup" xml:space="preserve"><value>Save backup…</value></data>
-  <data name="About_RestoreBackup" xml:space="preserve"><value>Restore backup…</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, rules and settings as one ZIP file.</value></data>
+  <data name="About_SaveBackup" xml:space="preserve"><value>Save…</value></data>
+  <data name="About_RestoreBackup" xml:space="preserve"><value>Restore…</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Backup saved with {0} profile(s).</value></data>
   <data name="About_BackupRestored" xml:space="preserve"><value>Backup restored: {0} profile(s).</value></data>
   <data name="About_BackupFailed" xml:space="preserve"><value>Error: {0}</value></data>
@@ -238,7 +233,7 @@
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift is free. If you like it, you can support it on Ko-fi.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automation</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a USB device such as your wheelbase connects, and back when it is gone.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when USB devices connect, and back when they are gone.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>_Add rule</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Pause automation</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>
@@ -283,7 +278,7 @@
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>With several devices the rule switches once all of them are connected, and its end action runs once one of them is gone.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Remove device</value></data>
   <data name="Automation_NamesTitle" xml:space="preserve"><value>USB device names</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Name a device once; the name is used in rules, profiles and notifications.</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Names appear in rules, profiles and notifications.</value></data>
   <data name="Automation_NamesEmpty" xml:space="preserve"><value>As soon as a rule or profile uses a USB device, you can name it here.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Not connected</value></data>
@@ -318,4 +313,16 @@
   <data name="Setup_NoTrigger" xml:space="preserve"><value>Skip</value></data>
   <data name="Setup_CreateRule" xml:space="preserve"><value>Create rule</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Finish</value></data>
+  <data name="Hotkey_RecordTip" xml:space="preserve"><value>Click, then press Ctrl, Alt or Win with another key. Backspace removes it.</value></data>
+  <data name="Displays_IdentifyTip" xml:space="preserve"><value>Shows the Windows number on each display.</value></data>
+  <data name="Automation_Rules" xml:space="preserve"><value>Rules</value></data>
+  <data name="Automation_NoDevice" xml:space="preserve"><value>No device</value></data>
+  <data name="Automation_NamePlaceholder" xml:space="preserve"><value>e.g. Wheel</value></data>
+  <data name="About_Diagnostics" xml:space="preserve"><value>Diagnostic info</value></data>
+  <data name="About_DiagnosticsHint" xml:space="preserve"><value>For a GitHub issue, without your user name.</value></data>
+  <data name="About_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="About_Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="About_FoldersHint" xml:space="preserve"><value>Log files and profiles.</value></data>
+  <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
+  <data name="About_Profiles" xml:space="preserve"><value>Profiles</value></data>
 </root>

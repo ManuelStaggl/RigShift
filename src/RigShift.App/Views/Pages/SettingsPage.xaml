@@ -8,43 +8,39 @@
   Title="{loc:Tr Nav_Settings}"
   ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Margin="24,8,24,24">
-      <ui:TextBlock Margin="0,0,0,16" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Settings}" />
+    <StackPanel Style="{StaticResource PageContent}">
+      <ui:TextBlock Margin="0,0,0,16" Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Settings}" />
 
       <!-- Headers as wrapping TextBlocks: a plain string header is cut off in a narrow window (analysis finding I-09). -->
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Star24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Star24, FontSize=20}">
         <ui:CardControl.Header>
           <TextBlock Text="{loc:Tr Settings_DefaultProfile}" TextWrapping="Wrap" />
         </ui:CardControl.Header>
         <ComboBox
-          MinWidth="220"
+          MinWidth="200"
           AutomationProperties.Name="{loc:Tr Settings_DefaultProfile}"
           DisplayMemberPath="Name"
           ItemsSource="{Binding ProfileChoices}"
           SelectedItem="{Binding SelectedDefaultProfile}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Power24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Power24, FontSize=20}">
         <ui:CardControl.Header>
           <TextBlock Text="{loc:Tr Settings_Autostart}" TextWrapping="Wrap" />
         </ui:CardControl.Header>
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_Autostart}" IsChecked="{Binding StartWithWindows}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Window24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Window24, FontSize=20}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" TextWrapping="Wrap" />
-            <TextBlock
-              controls:LiveRegion.IsLive="True"
-              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-              Text="{Binding ConfirmHint}"
-              TextWrapping="Wrap" />
+            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource Caption}" Text="{Binding ConfirmHint}" />
           </StackPanel>
         </ui:CardControl.Header>
         <StackPanel Orientation="Horizontal">
           <ui:NumberBox
-            Width="150"
+            Width="120"
             Margin="0,0,16,0"
             VerticalAlignment="Center"
             AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"
@@ -60,24 +56,17 @@
         </StackPanel>
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSwap24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon ArrowSwap24, FontSize=20}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_ToggleHotkey}" TextWrapping="Wrap" />
-            <TextBlock
-              controls:LiveRegion.IsLive="True"
-              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-              Text="{Binding ToggleHotkeyHint}"
-              TextWrapping="Wrap" />
+            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource Caption}" Text="{Binding ToggleHotkeyHint}" />
           </StackPanel>
         </ui:CardControl.Header>
-        <Grid MinWidth="220">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal">
           <ui:TextBox
-            AutomationProperties.HelpText="{Binding ToggleHotkeyHint}"
+            Width="200"
+            AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
             AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
             ClearButtonEnabled="False"
             GotKeyboardFocus="OnToggleHotkeyGotFocus"
@@ -86,9 +75,9 @@
             LostKeyboardFocus="OnToggleHotkeyLostFocus"
             PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
             PreviewKeyDown="OnToggleHotkeyKeyDown"
-            Text="{Binding ToggleHotkeyText, Mode=OneWay}" />
+            Text="{Binding ToggleHotkeyText, Mode=OneWay}"
+            ToolTip="{loc:Tr Hotkey_RecordTip}" />
           <ui:Button
-            Grid.Column="1"
             Margin="8,0,0,0"
             VerticalAlignment="Stretch"
             AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
@@ -96,26 +85,26 @@
             Icon="{ui:SymbolIcon Dismiss24}"
             IsEnabled="{Binding HasToggleHotkey}"
             ToolTip="{loc:Tr Editor_HotkeyClear}" />
-        </Grid>
+        </StackPanel>
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon LocalLanguage24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon LocalLanguage24, FontSize=20}">
         <ui:CardControl.Header>
           <TextBlock Text="{loc:Tr Settings_Language}" TextWrapping="Wrap" />
         </ui:CardControl.Header>
         <ComboBox
-          MinWidth="220"
+          MinWidth="200"
           AutomationProperties.Name="{loc:Tr Settings_Language}"
           DisplayMemberPath="Name"
           ItemsSource="{Binding LanguageChoices}"
           SelectedItem="{Binding SelectedLanguage}" />
       </ui:CardControl>
 
-      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowDownload24}">
+      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon ArrowDownload24, FontSize=20}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_AutoUpdate}" TextWrapping="Wrap" />
-            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Settings_AutoUpdateHint}" TextWrapping="Wrap" />
+            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Settings_AutoUpdateHint}" />
           </StackPanel>
         </ui:CardControl.Header>
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}" IsChecked="{Binding InstallUpdatesAutomatically}" />

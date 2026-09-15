@@ -7,13 +7,13 @@
   Title="{loc:Tr Nav_Automation}"
   ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Margin="24,8,24,24">
-      <Grid Margin="0,0,0,8">
+    <StackPanel Style="{StaticResource PageContent}">
+      <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Automation}" />
+        <ui:TextBlock Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Automation}" />
         <StackPanel Grid.Column="1" Orientation="Horizontal">
           <!-- One refresh for all rules and the name list; icon only so the header fits at the narrowest width. -->
           <ui:Button
@@ -23,20 +23,24 @@
             Command="{Binding RefreshDevicesCommand}"
             Icon="{ui:SymbolIcon ArrowClockwise24}"
             ToolTip="{loc:Tr Automation_RefreshDevices}" />
-          <ui:Button Appearance="Primary" Command="{Binding AddRuleCommand}" Content="{loc:Tr Automation_Add}" Icon="{ui:SymbolIcon Add24}" />
+          <ui:Button Appearance="Primary" Command="{Binding AddRuleCommand}" Content="{loc:Tr Automation_Add}" />
         </StackPanel>
       </Grid>
-      <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Hint}" TextWrapping="Wrap" />
+      <TextBlock Margin="0,4,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Hint}" TextWrapping="Wrap" />
 
-      <ui:CardControl Margin="0,0,0,16" Header="{loc:Tr Automation_Pause}" Icon="{ui:SymbolIcon Pause24}">
+      <ui:CardControl Icon="{ui:SymbolIcon Pause24, FontSize=20}">
+        <ui:CardControl.Header>
+          <TextBlock Text="{loc:Tr Automation_Pause}" TextWrapping="Wrap" />
+        </ui:CardControl.Header>
         <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Automation_Pause}" IsChecked="{Binding IsPaused}" />
       </ui:CardControl>
 
-      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding IsPaused, Mode=OneWay}" Message="{loc:Tr Automation_Paused}" Severity="Warning" />
-      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding HasNoProfiles, Mode=OneWay}" Message="{loc:Tr Automation_NoProfiles}" Severity="Informational" />
-      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding IsEmpty, Mode=OneWay}" Message="{loc:Tr Automation_Empty}" Severity="Informational" />
+      <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Automation_Rules}" />
+      <ui:InfoBar Margin="0,0,0,8" IsClosable="False" IsOpen="{Binding IsPaused, Mode=OneWay}" Message="{loc:Tr Automation_Paused}" Severity="Warning" />
+      <ui:InfoBar Margin="0,0,0,8" IsClosable="False" IsOpen="{Binding HasNoProfiles, Mode=OneWay}" Message="{loc:Tr Automation_NoProfiles}" Severity="Informational" />
+      <ui:InfoBar Margin="0,0,0,8" IsClosable="False" IsOpen="{Binding IsEmpty, Mode=OneWay}" Message="{loc:Tr Automation_Empty}" Severity="Informational" />
       <ui:InfoBar
-        Margin="0,0,0,16"
+        Margin="0,0,0,8"
         IsClosable="False"
         IsOpen="{Binding HasError, Mode=OneWay}"
         Message="{Binding ErrorMessage}"
@@ -46,38 +50,133 @@
       <ItemsControl Focusable="False" ItemsSource="{Binding Rules}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <ui:Card Margin="0,0,0,8" Padding="16,12">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <!-- Collapsed a rule reads as one line, "Wheel + Pedals → Sim Rig"; open it shows the form. -->
+            <ui:CardExpander
+              Margin="0,0,0,4"
+              HorizontalContentAlignment="Stretch"
+              AutomationProperties.Name="{Binding Title}"
+              Icon="{ui:SymbolIcon Flash24, FontSize=20}"
+              IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+              <ui:CardExpander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource Caption}" Text="{Binding SelectedExit.Name}" />
+                  </StackPanel>
+                  <ui:SymbolIcon
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                    Symbol="Warning24"
+                    Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}" />
+                  <ui:Button
+                    Grid.Column="2"
+                    Margin="12,0,8,0"
+                    VerticalAlignment="Center"
+                    Appearance="Transparent"
+                    AutomationProperties.HelpText="{Binding DevicesText}"
+                    AutomationProperties.Name="{loc:Tr Automation_Delete}"
+                    Command="{Binding Owner.DeleteRuleCommand}"
+                    CommandParameter="{Binding}"
+                    Icon="{ui:SymbolIcon Delete24}"
+                    ToolTip="{loc:Tr Automation_Delete}" />
+                </Grid>
+              </ui:CardExpander.Header>
 
-                <!-- Another rule watches the same device: both run when it connects (analysis finding C-05). -->
-                <ui:InfoBar
-                  Grid.Row="5"
-                  Grid.ColumnSpan="2"
+              <StackPanel>
+                <!-- A combination switches once all devices are connected (U-02). -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding DevicesHeader}" />
+                <ItemsControl Focusable="False" ItemsSource="{Binding Devices}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox
+                          AutomationProperties.Name="{loc:Tr Automation_Device}"
+                          DisplayMemberPath="Name"
+                          ItemsSource="{Binding Card.Owner.DeviceChoices}"
+                          SelectedItem="{Binding SelectedDevice}"
+                          ToolTip="{Binding SelectedDevice.Name}" />
+                        <ui:Button
+                          Grid.Column="1"
+                          Margin="8,0,0,0"
+                          VerticalAlignment="Stretch"
+                          AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
+                          AutomationProperties.Name="{loc:Tr Automation_RemoveDevice}"
+                          Command="{Binding Card.RemoveDeviceCommand}"
+                          CommandParameter="{Binding}"
+                          Icon="{ui:SymbolIcon Dismiss24}"
+                          ToolTip="{loc:Tr Automation_RemoveDevice}"
+                          Visibility="{Binding Card.IsCombination, Converter={StaticResource BoolToVisibility}}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ui:Button
+                  AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
+                  Command="{Binding AddDeviceCommand}"
+                  Content="{loc:Tr Automation_AddDevice}"
+                  ToolTip="{loc:Tr Automation_AddDeviceHint}" />
+
+                <!-- Wraps in a narrow window: profile, end action, delay (analysis finding I-03). Labels above every field. -->
+                <WrapPanel Margin="0,16,0,0">
+                  <StackPanel MinWidth="200" Margin="0,0,16,8">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Automation_Profile}" />
+                    <ComboBox
+                      AutomationProperties.HelpText="{Binding DevicesText}"
+                      AutomationProperties.Name="{loc:Tr Automation_Profile}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Owner.ProfileChoices}"
+                      SelectedItem="{Binding SelectedProfile}" />
+                  </StackPanel>
+                  <StackPanel MinWidth="240" Margin="0,0,16,8">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Automation_DeviceGone}" />
+                    <ComboBox
+                      AutomationProperties.HelpText="{Binding DevicesText}"
+                      AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Owner.ExitChoices}"
+                      SelectedItem="{Binding SelectedExit}" />
+                  </StackPanel>
+                  <StackPanel Margin="0,0,0,8" ToolTip="{loc:Tr Automation_ExitDelayHint}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Automation_ExitDelay}" />
+                    <ui:NumberBox
+                      Width="120"
+                      AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
+                      AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
+                      ClearButtonEnabled="False"
+                      MaxDecimalPlaces="0"
+                      Maximum="600"
+                      Minimum="0"
+                      SmallChange="5"
+                      Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=LostFocus}" />
+                  </StackPanel>
+                </WrapPanel>
+
+                <CheckBox
                   Margin="0,4,0,0"
-                  IsClosable="False"
-                  IsOpen="{Binding HasDuplicateDevice, Mode=OneWay}"
-                  Message="{loc:Tr Automation_DuplicateDevice}"
-                  Severity="Warning"
-                  Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
+                  AutomationProperties.HelpText="{loc:Tr Automation_SkipConfirmationHint}"
+                  Content="{loc:Tr Automation_SkipConfirmation}"
+                  IsChecked="{Binding SkipConfirmation}" />
+                <!-- Without the countdown nothing reverts a dark display; say so where it is switched on (analysis finding I-12). -->
+                <TextBlock
+                  Margin="28,0,0,0"
+                  Style="{StaticResource Caption}"
+                  Text="{loc:Tr Automation_SkipConfirmationHint}"
+                  Visibility="{Binding SkipConfirmation, Converter={StaticResource BoolToVisibility}}" />
 
                 <!-- Hint only: RigShift reads the power settings but never changes them (docs/usb-power-saving.md). -->
-                <StackPanel
-                  Grid.Row="4"
-                  Grid.ColumnSpan="2"
-                  Margin="0,4,0,0"
-                  Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Margin="0,12,0,0" Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
                   <ui:InfoBar
                     Title="{loc:Tr Automation_PowerSavingTitle}"
                     IsClosable="False"
@@ -88,150 +187,47 @@
                     Margin="0,8,0,0"
                     AutomationProperties.HelpText="{Binding DevicesText}"
                     Command="{Binding Owner.OpenUsbPowerHelpCommand}"
-                    Content="{loc:Tr Automation_PowerSavingHelp}"
-                    Icon="{ui:SymbolIcon Open24}" />
+                    Content="{loc:Tr Automation_PowerSavingHelp}" />
                 </StackPanel>
 
-                <!-- Lines one and two: the devices, full width so their names stay readable; a combination switches once all
-                     are connected (U-02). Line three wraps: profile, end action, delay, confirmation (analysis finding I-03). -->
-                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DevicesHeader}" TextWrapping="Wrap" />
-                <StackPanel Grid.Row="1" Margin="0,4,0,0">
-                  <ItemsControl Focusable="False" ItemsSource="{Binding Devices}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Grid Margin="0,0,0,8">
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                          </Grid.ColumnDefinitions>
-                          <ComboBox
-                            AutomationProperties.Name="{loc:Tr Automation_Device}"
-                            DisplayMemberPath="Name"
-                            ItemsSource="{Binding Card.Owner.DeviceChoices}"
-                            SelectedItem="{Binding SelectedDevice}"
-                            ToolTip="{Binding SelectedDevice.Name}" />
-                          <ui:Button
-                            Grid.Column="1"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Stretch"
-                            AutomationProperties.HelpText="{Binding SelectedDevice.Name}"
-                            AutomationProperties.Name="{loc:Tr Automation_RemoveDevice}"
-                            Command="{Binding Card.RemoveDeviceCommand}"
-                            CommandParameter="{Binding}"
-                            Icon="{ui:SymbolIcon Dismiss24}"
-                            ToolTip="{loc:Tr Automation_RemoveDevice}"
-                            Visibility="{Binding Card.IsCombination, Converter={StaticResource BoolToVisibility}}" />
-                        </Grid>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                  <ui:Button
-                    AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
-                    Command="{Binding AddDeviceCommand}"
-                    Content="{loc:Tr Automation_AddDevice}"
-                    Icon="{ui:SymbolIcon Add24}"
-                    ToolTip="{loc:Tr Automation_AddDeviceHint}" />
-                </StackPanel>
-
-                <ui:Button
-                  Grid.Row="1"
-                  Grid.Column="1"
-                  Margin="16,4,0,0"
-                  VerticalAlignment="Top"
-                  AutomationProperties.HelpText="{Binding DevicesText}"
-                  AutomationProperties.Name="{loc:Tr Automation_Delete}"
-                  Command="{Binding Owner.DeleteRuleCommand}"
-                  CommandParameter="{Binding}"
-                  Icon="{ui:SymbolIcon Delete24}"
-                  ToolTip="{loc:Tr Automation_Delete}" />
-
-                <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0">
-                  <StackPanel MinWidth="200" Margin="0,0,24,8">
-                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_Profile}" />
-                    <ComboBox
-                      Margin="0,4,0,0"
-                      AutomationProperties.HelpText="{Binding DevicesText}"
-                      AutomationProperties.Name="{loc:Tr Automation_Profile}"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding Owner.ProfileChoices}"
-                      SelectedItem="{Binding SelectedProfile}" />
-                  </StackPanel>
-                  <StackPanel MinWidth="240" Margin="0,0,24,8">
-                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_DeviceGone}" />
-                    <ComboBox
-                      Margin="0,4,0,0"
-                      AutomationProperties.HelpText="{Binding DevicesText}"
-                      AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding Owner.ExitChoices}"
-                      SelectedItem="{Binding SelectedExit}" />
-                  </StackPanel>
-                  <StackPanel Margin="0,0,24,8" VerticalAlignment="Bottom" Orientation="Horizontal" ToolTip="{loc:Tr Automation_ExitDelayHint}">
-                    <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Automation_ExitDelay}" />
-                    <ui:NumberBox
-                      Width="150"
-                      AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
-                      AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
-                      ClearButtonEnabled="False"
-                      MaxDecimalPlaces="0"
-                      Maximum="600"
-                      Minimum="0"
-                      SmallChange="5"
-                      Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=LostFocus}" />
-                  </StackPanel>
-                  <CheckBox
-                    Margin="0,0,0,12"
-                    VerticalAlignment="Bottom"
-                    AutomationProperties.HelpText="{loc:Tr Automation_SkipConfirmationHint}"
-                    Content="{loc:Tr Automation_SkipConfirmation}"
-                    IsChecked="{Binding SkipConfirmation}" />
-                </WrapPanel>
-
-                <!-- Without the countdown nothing reverts a dark display; say so where it is switched on (analysis finding I-12). -->
-                <TextBlock
-                  Grid.Row="3"
-                  Grid.ColumnSpan="2"
-                  Margin="0,0,0,4"
-                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                  Text="{loc:Tr Automation_SkipConfirmationHint}"
-                  TextWrapping="Wrap"
-                  Visibility="{Binding SkipConfirmation, Converter={StaticResource BoolToVisibility}}" />
-              </Grid>
-            </ui:Card>
+                <!-- Another rule watches the same device: both run when it connects (analysis finding C-05). -->
+                <ui:InfoBar
+                  Margin="0,12,0,0"
+                  IsClosable="False"
+                  IsOpen="{Binding HasDuplicateDevice, Mode=OneWay}"
+                  Message="{loc:Tr Automation_DuplicateDevice}"
+                  Severity="Warning"
+                  Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+            </ui:CardExpander>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
       <!-- Custom USB device names: given once, shown in rules, the editor and notifications (U-01). -->
-      <ui:TextBlock
-        Margin="0,24,0,4"
-        FontTypography="Subtitle"
-        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-        Text="{loc:Tr Automation_NamesTitle}"
-        TextWrapping="Wrap" />
-      <TextBlock Margin="0,0,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Automation_NamesHint}" TextWrapping="Wrap" />
-      <ui:InfoBar Margin="0,0,0,16" IsClosable="False" IsOpen="{Binding HasNoNamedDevices, Mode=OneWay}" Message="{loc:Tr Automation_NamesEmpty}" Severity="Informational" />
+      <ui:TextBlock Margin="0,24,0,0" Style="{StaticResource SectionHeader}" Text="{loc:Tr Automation_NamesTitle}" />
+      <TextBlock Margin="0,0,0,8" Style="{StaticResource Caption}" Text="{loc:Tr Automation_NamesHint}" />
+      <ui:InfoBar Margin="0,0,0,8" IsClosable="False" IsOpen="{Binding HasNoNamedDevices, Mode=OneWay}" Message="{loc:Tr Automation_NamesEmpty}" Severity="Informational" />
       <ItemsControl Focusable="False" ItemsSource="{Binding NamedDevices}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <ui:Card Margin="0,0,0,8" Padding="16,12">
-              <!-- Same layout as the Displays page: the name field below the text. -->
-              <StackPanel>
-                <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding WindowsName}" TextWrapping="Wrap" />
-                <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
-                <ui:TextBox
-                  Width="320"
-                  Margin="0,8,0,0"
-                  HorizontalAlignment="Left"
-                  AutomationProperties.HelpText="{Binding WindowsName}"
-                  AutomationProperties.Name="{loc:Tr Editor_CustomName}"
-                  KeyDown="OnNameKeyDown"
-                  LostFocus="OnNameLostFocus"
-                  MaxLength="40"
-                  PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
-                  Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
-              </StackPanel>
-            </ui:Card>
+            <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Usb24, FontSize=20}">
+              <ui:CardControl.Header>
+                <StackPanel ToolTip="{Binding Id}">
+                  <TextBlock Text="{Binding WindowsName}" TextWrapping="Wrap" />
+                  <TextBlock Style="{StaticResource Caption}" Text="{Binding DetailsText}" />
+                </StackPanel>
+              </ui:CardControl.Header>
+              <ui:TextBox
+                Width="200"
+                AutomationProperties.HelpText="{Binding WindowsName}"
+                AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                KeyDown="OnNameKeyDown"
+                LostFocus="OnNameLostFocus"
+                MaxLength="40"
+                PlaceholderText="{loc:Tr Automation_NamePlaceholder}"
+                Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+            </ui:CardControl>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>

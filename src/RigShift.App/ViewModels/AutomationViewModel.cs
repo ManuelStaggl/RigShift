@@ -127,10 +127,14 @@ public sealed partial class AutomationViewModel : ObservableObject
             ExitChoices.Add(new Choice(ExitToPrefix + missing.ToString("D"), Loc.Format("Automation_ExitTo", Loc.Instance["Automation_MissingProfile"])));
         }
 
+        // A language change rebuilds the cards; the ones the user opened stay open.
+        HashSet<Guid> expanded = Rules.Where(r => r.IsExpanded).Select(r => r.Id).ToHashSet();
         Rules.Clear();
         foreach (AutomationRule rule in rules)
         {
-            Rules.Add(new RuleCard(this, rule));
+            var card = new RuleCard(this, rule);
+            card.IsExpanded |= expanded.Contains(rule.Id);
+            Rules.Add(card);
         }
 
         IsPaused = _automation.IsPaused;
@@ -279,7 +283,7 @@ public sealed partial class AutomationViewModel : ObservableObject
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = exitProfile,
         };
-        Quietly(() => Rules.Add(new RuleCard(this, rule)));
+        Quietly(() => Rules.Add(new RuleCard(this, rule) { IsExpanded = true }));
         IsEmpty = false;
         UpdateDuplicates();
         OnRuleDevicesChanged();
@@ -458,7 +462,19 @@ public sealed partial class RuleCard : ObservableObject
         SelectedExit = owner.ExitChoiceFor(rule);
         SkipConfirmation = rule.SkipConfirmation;
         ExitDelaySeconds = rule.ExitDelaySeconds;
+
+        // A rule without a device does nothing yet, so it starts open.
+        IsExpanded = DeviceIds.Count == 0;
     }
+
+    /// <summary>The collapsed card's line: "Wheel + Pedals → Sim Rig".</summary>
+    public string Title => $"{DevicesText ?? Loc.Instance["Automation_NoDevice"]} → {SelectedProfile?.Name ?? "–"}";
+
+    [ObservableProperty]
+    public partial bool IsExpanded { get; set; }
+
+    /// <summary>Marks a collapsed card whose warnings are inside.</summary>
+    public bool HasWarning => HasPowerWarning || HasDuplicateDevice;
 
     public Guid Id { get; }
 
@@ -497,12 +513,14 @@ public sealed partial class RuleCard : ObservableObject
 
     /// <summary>Windows may power one of the chosen devices down (hint only, docs/usb-power-saving.md).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWarning))]
     public partial bool HasPowerWarning { get; private set; }
 
     internal void UpdatePowerWarning() => HasPowerWarning = DeviceIds.Any(_owner.HasPowerWarning);
 
     /// <summary>Another rule watches the same devices (analysis finding C-05).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWarning))]
     public partial bool HasDuplicateDevice { get; internal set; }
 
     /// <summary>Shows the rule's devices from the current device list; a rule without any gets one empty entry.</summary>
@@ -570,6 +588,7 @@ public sealed partial class RuleCard : ObservableObject
     {
         UpdatePowerWarning();
         OnPropertyChanged(nameof(DevicesText));
+        OnPropertyChanged(nameof(Title));
         _owner.UpdateDuplicates();
         _owner.OnRuleDevicesChanged();
         _owner.OnCardChanged();
@@ -580,9 +599,14 @@ public sealed partial class RuleCard : ObservableObject
         OnPropertyChanged(nameof(IsCombination));
         OnPropertyChanged(nameof(DevicesHeader));
         OnPropertyChanged(nameof(DevicesText));
+        OnPropertyChanged(nameof(Title));
     }
 
-    partial void OnSelectedProfileChanged(Choice? value) => _owner.OnCardChanged();
+    partial void OnSelectedProfileChanged(Choice? value)
+    {
+        OnPropertyChanged(nameof(Title));
+        _owner.OnCardChanged();
+    }
 
     partial void OnSelectedExitChanged(Choice? value) => _owner.OnCardChanged();
 
@@ -630,7 +654,7 @@ public sealed partial class UsbNameCard : ObservableObject
         WindowsName = windowsName;
         _savedName = UsbDeviceNames.Normalize(customName);
         CustomName = _savedName ?? string.Empty;
-        DetailsText = Loc.Instance[isConnected ? "Automation_NameConnected" : "Automation_NameNotConnected"] + " · " + id;
+        DetailsText = Loc.Instance[isConnected ? "Automation_NameConnected" : "Automation_NameNotConnected"];
     }
 
     public string Id { get; }

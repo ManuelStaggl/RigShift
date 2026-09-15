@@ -50,7 +50,7 @@ public sealed partial class AboutViewModel : ObservableObject
         _settings = settings;
         _log = log.ForContext<AboutViewModel>();
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
-        _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoHistory));
+        _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasHistory));
         RefreshUpdateStatus();
 
         // Version, update status and the history rows are built in code; re-read them on a language change (I-13).
@@ -180,7 +180,8 @@ public sealed partial class AboutViewModel : ObservableObject
 
     public ObservableCollection<SwitchRecord> History => _coordinator.History;
 
-    public bool HasNoHistory => History.Count == 0;
+    /// <summary>The history section is shown only once there is something in it.</summary>
+    public bool HasHistory => History.Count > 0;
 
     [ObservableProperty]
     public partial string? CopyStatus { get; set; }

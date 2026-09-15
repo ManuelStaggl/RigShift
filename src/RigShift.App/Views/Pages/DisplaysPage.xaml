@@ -8,19 +8,19 @@
   Title="{loc:Tr Nav_Displays}"
   ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Margin="24,8,24,24">
-      <Grid Margin="0,0,0,8">
+    <StackPanel Style="{StaticResource PageContent}">
+      <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Displays}" />
+        <ui:TextBlock Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Displays}" />
         <StackPanel Grid.Column="1" Orientation="Horizontal">
-          <ui:Button Margin="0,0,8,0" Appearance="Primary" Command="{Binding IdentifyCommand}" Content="{loc:Tr Displays_Identify}" Icon="{ui:SymbolIcon NumberSymbolSquare24}" />
-          <ui:Button Command="{Binding RefreshCommand}" Content="{loc:Tr Displays_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" />
+          <ui:Button Margin="0,0,8,0" Command="{Binding IdentifyCommand}" Content="{loc:Tr Displays_Identify}" ToolTip="{loc:Tr Displays_IdentifyTip}" />
+          <ui:Button Command="{Binding RefreshCommand}" Content="{loc:Tr Displays_Refresh}" />
         </StackPanel>
       </Grid>
-      <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Displays_Hint}" TextWrapping="Wrap" />
+      <TextBlock Margin="0,4,0,16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Displays_Hint}" TextWrapping="Wrap" />
 
       <ui:InfoBar
         Margin="0,0,0,16"
@@ -40,47 +40,45 @@
       <ItemsControl Focusable="False" ItemsSource="{Binding Displays}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <ui:Card Margin="0,0,0,8" Padding="16,12">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border
-                  Width="44"
-                  Height="44"
-                  Margin="0,0,16,0"
-                  VerticalAlignment="Top"
-                  Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                  CornerRadius="22">
-                  <TextBlock
-                    HorizontalAlignment="Center"
+            <ui:CardControl Margin="0,0,0,4">
+              <ui:CardControl.Header>
+                <Grid ToolTip="{Binding ProfilesText}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <!-- The Windows number in place of an icon, as "Identify" shows it on the screen. -->
+                  <Border
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,16,0"
                     VerticalAlignment="Center"
-                    AutomationProperties.Name="{Binding NumberText}"
-                    FontSize="20"
-                    FontWeight="SemiBold"
-                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                    Text="{Binding NumberText}" />
-                </Border>
-                <!-- The name field sits below the text, so a narrow window does not squeeze the details into a column. -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                  <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextWrapping="Wrap" />
-                  <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DetailsText}" TextWrapping="Wrap" />
-                  <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ProfilesText}" TextWrapping="Wrap" />
-                <ui:TextBox
-                  Width="320"
-                  Margin="0,8,0,0"
-                  HorizontalAlignment="Left"
-                  AutomationProperties.HelpText="{Binding ModelName}"
-                  AutomationProperties.Name="{loc:Tr Editor_CustomName}"
-                  KeyDown="OnNameKeyDown"
-                  LostFocus="OnNameLostFocus"
-                  MaxLength="40"
-                  PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
-                  Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-              </Grid>
-            </ui:Card>
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    CornerRadius="14">
+                    <TextBlock
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="{Binding NumberText}"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                      Text="{Binding NumberText}" />
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource Caption}" Text="{Binding DetailsText}" />
+                  </StackPanel>
+                </Grid>
+              </ui:CardControl.Header>
+              <ui:TextBox
+                Width="200"
+                AutomationProperties.HelpText="{Binding ModelName}"
+                AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                KeyDown="OnNameKeyDown"
+                LostFocus="OnNameLostFocus"
+                MaxLength="40"
+                PlaceholderText="{loc:Tr Editor_CustomNamePlaceholder}"
+                Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+            </ui:CardControl>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
