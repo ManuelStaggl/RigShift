@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RigShift.App.Localization;
 using RigShift.App.Services;
@@ -11,6 +12,8 @@ namespace RigShift.App.ViewModels;
 /// <param name="usbDeviceNames">Custom USB device names, for the device the apps wait for.</param>
 public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject
 {
+    private IReadOnlyList<ImageSource>? _appIcons;
+
     public Profile Profile { get; } = profile;
 
     public string Name => Profile.Name;
@@ -24,6 +27,15 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     /// <summary>Name for screen readers; the active state is also shown as text and check mark, not only by color.</summary>
     public string AccessibleName => IsActive ? $"{Name}, {Loc.Instance["Profile_Active"]}" : Name;
 
+    /// <summary>"Default · Active" below the name on the profile card; <c>null</c> when neither applies.</summary>
+    public string? StatusText => (IsDefault, IsActive) switch
+    {
+        (true, true) => $"{Loc.Instance["Profile_Default"]} · {Loc.Instance["Profile_Active"]}",
+        (true, false) => Loc.Instance["Profile_Default"],
+        (false, true) => Loc.Instance["Profile_Active"],
+        _ => null,
+    };
+
     /// <summary>Left to right, as the displays stand on the desk.</summary>
     public IReadOnlyList<string> DisplayLines { get; } = profile.Displays
         .OrderBy(d => d.PositionX)
@@ -31,16 +43,23 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         .Select(Describe)
         .ToList();
 
-    /// <summary>"Apps: SimHub, CrewChief · waits for Simagic Base"; <c>null</c> without apps (finding HW-09).</summary>
+    /// <summary>"SimHub, CrewChief · waits for Simagic Base"; <c>null</c> without apps (finding HW-09).</summary>
     public string? AppsLine { get; } = DescribeApps(profile, usbDeviceNames);
 
     public bool HasApps => AppsLine is not null;
 
+    /// <summary>The programs' own icons, read when the card first shows them; programs without one are left out.</summary>
+    public IReadOnlyList<ImageSource> AppIcons => _appIcons ??= Profile.Apps
+        .Select(app => Services.AppIcons.Load(app.Path))
+        .OfType<ImageSource>()
+        .ToList();
+
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AccessibleName))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText))]
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
     public partial bool IsDefault { get; set; }
 
     [ObservableProperty]
@@ -71,9 +90,8 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
             return null;
         }
 
-        string apps = string.Join(", ", profile.Apps.Select(app =>
+        string text = string.Join(", ", profile.Apps.Select(app =>
             app.Kind == AppActionKind.Stop ? Loc.Format("Profile_AppStop", AppName(app)) : AppName(app)));
-        string text = Loc.Format("Profile_Apps", apps);
         if (profile.AppsWaitForUsbDeviceId is not null)
         {
             text += " · " + Loc.Format("Profile_AppsWait",

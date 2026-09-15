@@ -1,13 +1,9 @@
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using RigShift.App.Localization;
+using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Windows.Apps;
 using Serilog;
@@ -118,31 +114,6 @@ public partial class AppPickerWindow : FluentWindow
         if (dialog.ShowDialog(this) == true)
         {
             Choose(dialog.FileName, null);
-        }
-    }
-}
-
-/// <summary>Program icons for the picker, frozen so they can be made off the UI thread.</summary>
-internal static class AppIcons
-{
-    public static ImageSource? Load(string path)
-    {
-        try
-        {
-            using System.Drawing.Icon? icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
-            if (icon is null)
-            {
-                return null;
-            }
-
-            BitmapSource image = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            image.Freeze();
-            return image;
-        }
-        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or Win32Exception or COMException)
-        {
-            Log.Debug("No icon for {File}: {Reason}", Path.GetFileName(path), ex.Message);
-            return null;
         }
     }
 }

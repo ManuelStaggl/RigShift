@@ -178,6 +178,16 @@ public sealed partial class ProfileCatalog : ObservableObject
         await ReloadAsync(cancellationToken);
     }
 
+    /// <summary>Makes the profile the default profile, or leaves no default if it already is.</summary>
+    public async Task ToggleDefaultAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        Guid? id = _settings.Current.DefaultProfileId == profile.Id ? null : profile.Id;
+        await _settings.UpdateAsync(s => s with { DefaultProfileId = id }, cancellationToken);
+        _log.Information("Default profile set to {Profile}", id is null ? "(none)" : profile.Name);
+    }
+
     /// <summary>Deletes the profile; if it was the default profile, there is no default afterwards.</summary>
     public async Task DeleteAsync(Profile profile, CancellationToken cancellationToken)
     {

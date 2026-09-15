@@ -65,6 +65,15 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
     }
 
     [RelayCommand]
+    private async Task ToggleDefaultAsync(ProfileItem? item)
+    {
+        if (item is not null)
+        {
+            await RunStoreActionAsync(() => catalog.ToggleDefaultAsync(item.Profile, CancellationToken.None), null);
+        }
+    }
+
+    [RelayCommand]
     private async Task DeleteAsync(ProfileItem? item)
     {
         if (item is not null && await ProfileDialogs.ConfirmDeleteAsync(item.Name))
@@ -97,12 +106,16 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
         }
     }
 
-    private async Task RunStoreActionAsync(Func<Task> action, string success)
+    /// <param name="success">Status after success; <c>null</c> when the card itself shows the result.</param>
+    private async Task RunStoreActionAsync(Func<Task> action, string? success)
     {
         try
         {
             await action();
-            ShowStatus(success);
+            if (success is not null)
+            {
+                ShowStatus(success);
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

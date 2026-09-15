@@ -8,14 +8,14 @@
   Title="{loc:Tr Nav_Profiles}"
   ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Margin="24,8,24,24">
+    <StackPanel Style="{StaticResource PageContent}">
       <!-- Same header as Displays and Automation: title left, actions right. The assistant is icon-only so the header fits at the narrowest width. -->
       <Grid Margin="0,0,0,16">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" />
+        <ui:TextBlock Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Profiles}" />
         <StackPanel Grid.Column="1" Orientation="Horizontal">
           <ui:Button
             Margin="0,0,8,0"
@@ -24,24 +24,19 @@
             Command="{Binding SetupAssistantCommand}"
             Icon="{ui:SymbolIcon Wand24}"
             ToolTip="{loc:Tr Profiles_SetupAssistant}" />
-          <ui:Button Appearance="Primary" Command="{Binding SaveCurrentCommand}" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" />
+          <ui:Button Command="{Binding SaveCurrentCommand}" Content="{loc:Tr Profiles_SaveCurrent}" />
         </StackPanel>
       </Grid>
 
       <!-- Visible while any switch runs, from the page, the tray, a hotkey or an automation rule (analysis finding I-04). -->
       <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">
-        <ui:ProgressRing
-          Width="16"
-          Height="16"
-          IsIndeterminate="True"
-          Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+        <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True" />
         <TextBlock
           Margin="8,0,0,0"
           VerticalAlignment="Center"
           controls:LiveRegion.IsLive="True"
           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-          Text="{loc:Tr Tray_Switching}"
-          Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+          Text="{loc:Tr Tray_Switching}" />
       </StackPanel>
 
       <!-- TwoWay: InfoBar.IsOpen does not bind two-way by default, and closing with X must reach the view model. -->
@@ -72,140 +67,150 @@
       <ItemsControl ItemsSource="{Binding Catalog.Items}" Focusable="False">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <ui:Card Margin="0,0,0,12">
-              <!-- Text on top, buttons below: a narrow window squeezes neither into single characters (analysis finding I-01). -->
-              <StackPanel>
-                <StackPanel>
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <controls:ProfileIcon
-                      Width="28"
-                      Height="28"
-                      Margin="0,0,12,0"
-                      Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}"
-                      VerticalAlignment="Center"
-                      IconKey="{Binding IconKey}"
-                      IsFilled="{Binding IsActive}"
-                      TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <ui:TextBlock
-                      Grid.Column="1"
-                      VerticalAlignment="Center"
-                      FontTypography="Subtitle"
-                      Text="{Binding Name}"
-                      TextTrimming="CharacterEllipsis"
-                      ToolTip="{Binding Name}" />
-                    <Border
-                      Grid.Column="2"
-                      Margin="12,0,0,0"
-                      Padding="8,2"
-                      VerticalAlignment="Center"
-                      BorderBrush="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                      BorderThickness="1"
-                      CornerRadius="4"
-                      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                      <TextBlock Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="{loc:Tr Profile_Active}" />
-                    </Border>
-                    <Border
-                      Grid.Column="3"
-                      Margin="8,0,0,0"
-                      Padding="8,2"
-                      VerticalAlignment="Center"
-                      BorderBrush="{DynamicResource TextFillColorSecondaryBrush}"
-                      BorderThickness="1"
-                      CornerRadius="4"
-                      Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibility}}">
-                      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Profile_Default}" />
-                    </Border>
-                  </Grid>
+            <!-- One action on the card, "Switch"; everything else in the "…" menu (user decision P-01). -->
+            <ui:Card Margin="0,0,0,4" Padding="16">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                  <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding DisplayLines}" Focusable="False">
+                <controls:ProfileIcon
+                  Width="24"
+                  Height="24"
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"
+                  IconKey="{Binding IconKey}"
+                  IsFilled="{Binding IsActive}"
+                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                  Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <ui:TextBlock
+                    FontTypography="Subtitle"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Name}" />
+                  <TextBlock Style="{StaticResource StatusText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
+                </StackPanel>
+
+                <ui:Button
+                  Grid.Column="2"
+                  Margin="12,0,8,0"
+                  VerticalAlignment="Center"
+                  Appearance="Primary"
+                  AutomationProperties.HelpText="{Binding Name}"
+                  Command="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                  CommandParameter="{Binding}"
+                  Content="{loc:Tr Profile_Apply}"
+                  IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                <ui:Button
+                  Grid.Column="3"
+                  VerticalAlignment="Stretch"
+                  AutomationProperties.HelpText="{Binding Name}"
+                  AutomationProperties.Name="{loc:Tr Profile_More}"
+                  Click="OnMoreClick"
+                  Icon="{ui:SymbolIcon MoreHorizontal24}"
+                  Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Page}}"
+                  ToolTip="{loc:Tr Profile_More}">
+                  <ui:Button.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.CheckCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Check}"
+                        Icon="{ui:SymbolIcon DocumentSearch24}"
+                        IsEnabled="{Binding PlacementTarget.Tag.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Edit}"
+                        Icon="{ui:SymbolIcon Edit24}" />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.DuplicateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Duplicate}"
+                        Icon="{ui:SymbolIcon Copy24}" />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.ToggleDefaultCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Settings_DefaultProfile}"
+                        IsCheckable="False"
+                        IsChecked="{Binding IsDefault, Mode=OneWay}" />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Shortcut}"
+                        Icon="{ui:SymbolIcon Link24}" />
+                      <Separator />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Delete}"
+                        Icon="{ui:SymbolIcon Delete24}" />
+                    </ContextMenu>
+                  </ui:Button.ContextMenu>
+                </ui:Button>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,8,0,0">
+                  <ItemsControl ItemsSource="{Binding DisplayLines}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
+                        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
 
-                  <TextBlock
-                    Margin="0,4,0,0"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="{Binding AppsLine}"
-                    TextWrapping="Wrap"
-                    Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}" />
+                  <Grid Margin="0,4,0,0" Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!-- The programs' own icons; a generic apps symbol only when none could be read. -->
+                    <ItemsControl VerticalAlignment="Center" Focusable="False" ItemsSource="{Binding AppIcons}">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Image Width="16" Height="16" Margin="0,0,6,0" Source="{Binding}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                      <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding AppIcons.Count}" Value="0">
+                              <Setter Property="Template">
+                                <Setter.Value>
+                                  <ControlTemplate>
+                                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Apps24" />
+                                  </ControlTemplate>
+                                </Setter.Value>
+                              </Setter>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </ItemsControl.Style>
+                    </ItemsControl>
+                    <TextBlock
+                      Grid.Column="1"
+                      AutomationProperties.Name="{loc:Tr Editor_Apps}"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding AppsLine}"
+                      TextWrapping="Wrap" />
+                  </Grid>
 
-                  <TextBlock Margin="0,8,0,0" Text="{Binding CheckMessage}" TextWrapping="Wrap" controls:LiveRegion.IsLive="True">
-                    <TextBlock.Style>
-                      <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding CheckMessage}" Value="{x:Null}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                          </DataTrigger>
-                        </Style.Triggers>
-                      </Style>
-                    </TextBlock.Style>
-                  </TextBlock>
+                  <TextBlock Margin="0,8,0,0" controls:LiveRegion.IsLive="True" Style="{StaticResource StatusText}" Text="{Binding CheckMessage}" />
                 </StackPanel>
-
-                <WrapPanel Margin="0,12,0,0" HorizontalAlignment="Right">
-                  <ui:Button
-                    Margin="0,0,8,0"
-                    Content="{loc:Tr Profile_Check}"
-                    Icon="{ui:SymbolIcon DocumentSearch24}"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    Command="{Binding DataContext.CheckCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                    CommandParameter="{Binding}"
-                    IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
-                  <ui:Button
-                    Margin="0,0,8,0"
-                    Appearance="Primary"
-                    Content="{loc:Tr Profile_Apply}"
-                    Icon="{ui:SymbolIcon Play24}"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    Command="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                    CommandParameter="{Binding}"
-                    IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
-                  <ui:Button
-                    Margin="0,0,8,0"
-                    Content="{loc:Tr Profile_Edit}"
-                    Icon="{ui:SymbolIcon Edit24}"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                    CommandParameter="{Binding}" />
-                  <ui:Button
-                    Click="OnMoreClick"
-                    Icon="{ui:SymbolIcon MoreHorizontal24}"
-                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Page}}"
-                    ToolTip="{loc:Tr Profile_More}"
-                    AutomationProperties.HelpText="{Binding Name}"
-                    AutomationProperties.Name="{loc:Tr Profile_More}">
-                    <ui:Button.ContextMenu>
-                      <ContextMenu>
-                        <MenuItem
-                          Command="{Binding PlacementTarget.Tag.DuplicateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                          CommandParameter="{Binding}"
-                          Header="{loc:Tr Profile_Duplicate}"
-                          Icon="{ui:SymbolIcon Copy24}" />
-                        <MenuItem
-                          Command="{Binding PlacementTarget.Tag.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                          CommandParameter="{Binding}"
-                          Header="{loc:Tr Profile_Shortcut}"
-                          Icon="{ui:SymbolIcon Link24}" />
-                        <Separator />
-                        <MenuItem
-                          Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                          CommandParameter="{Binding}"
-                          Header="{loc:Tr Profile_Delete}"
-                          Icon="{ui:SymbolIcon Delete24}" />
-                      </ContextMenu>
-                    </ui:Button.ContextMenu>
-                  </ui:Button>
-                </WrapPanel>
-              </StackPanel>
+              </Grid>
             </ui:Card>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

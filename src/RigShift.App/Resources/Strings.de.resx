@@ -46,7 +46,6 @@
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>„Nach dem Umschalten bestätigen“ ist in den Einstellungen aus, daher schaltet jedes Profil ohne Nachfrage um.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen umschalten. Bei manchen Monitoren, vor allem über HDMI, kann das Umschalten von HDR den Grafiktreiber einfrieren.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten erscheinen, sobald der Bildschirm einmal eingeschaltet war, während RigShift lief.</value></data>
-  <data name="Profile_Apps" xml:space="preserve"><value>Apps: {0}</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (beenden)</value></data>
   <data name="Profile_AppsWait" xml:space="preserve"><value>wartet auf {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
