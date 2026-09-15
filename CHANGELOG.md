@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-15
+
 ### Changed
 
 - Profile cards show the app names from the app picker ("SimHub") instead of file names ("SimHubWPF").
