@@ -184,8 +184,7 @@
                     VerticalAlignment="Bottom"
                     AutomationProperties.HelpText="{loc:Tr Automation_SkipConfirmationHint}"
                     Content="{loc:Tr Automation_SkipConfirmation}"
-                    IsChecked="{Binding SkipConfirmation}"
-                    ToolTip="{loc:Tr Automation_SkipConfirmationHint}" />
+                    IsChecked="{Binding SkipConfirmation}" />
                 </WrapPanel>
 
                 <!-- Without the countdown nothing reverts a dark display; say so where it is switched on (analysis finding I-12). -->

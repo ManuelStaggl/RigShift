@@ -9,14 +9,24 @@
   ScrollViewer.CanContentScroll="False">
   <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
     <StackPanel Margin="24,8,24,24">
-      <!-- Title and buttons wrap onto two lines in a narrow window instead of overlapping (analysis finding I-01). -->
-      <WrapPanel Margin="0,0,0,8">
-        <ui:TextBlock Margin="0,0,24,8" VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" />
-        <WrapPanel VerticalAlignment="Center">
-          <ui:Button Margin="0,0,8,8" Appearance="Primary" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" Command="{Binding SaveCurrentCommand}" />
-          <ui:Button Margin="0,0,0,8" Content="{loc:Tr Profiles_SetupAssistant}" Icon="{ui:SymbolIcon Wand24}" Command="{Binding SetupAssistantCommand}" />
-        </WrapPanel>
-      </WrapPanel>
+      <!-- Same header as Displays and Automation: title left, actions right. The assistant is icon-only so the header fits at the narrowest width. -->
+      <Grid Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <ui:TextBlock VerticalAlignment="Center" FontTypography="Title" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Nav_Profiles}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,8,0"
+            VerticalAlignment="Stretch"
+            AutomationProperties.Name="{loc:Tr Profiles_SetupAssistant}"
+            Command="{Binding SetupAssistantCommand}"
+            Icon="{ui:SymbolIcon Wand24}"
+            ToolTip="{loc:Tr Profiles_SetupAssistant}" />
+          <ui:Button Appearance="Primary" Command="{Binding SaveCurrentCommand}" Content="{loc:Tr Profiles_SaveCurrent}" Icon="{ui:SymbolIcon Add24}" />
+        </StackPanel>
+      </Grid>
 
       <!-- Visible while any switch runs, from the page, the tray, a hotkey or an automation rule (analysis finding I-04). -->
       <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">

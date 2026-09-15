@@ -8,11 +8,11 @@
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Profiles_OpenFolder" xml:space="preserve"><value>Profilordner öffnen</value></data>
   <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
-  <data name="Profiles_EmptyText" xml:space="preserve"><value>RigShift liest Profile aus {0}. Speichere die aktuelle Anordnung als Profil oder kopiere Profildateien dorthin und starte RigShift neu.</value></data>
+  <data name="Profiles_EmptyText" xml:space="preserve"><value>Noch keine Profile. Speichere die aktuelle Anordnung, um eines anzulegen.</value></data>
   <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Einige Profile konnten nicht geladen werden</value></data>
-  <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) nicht lesbar: {1}. Eine Datei ist vielleicht in einem anderen Programm geöffnet, beschädigt oder von einer neueren RigShift-Version. Details stehen im Log; RigShift versucht es beim Speichern eines Profils oder beim nächsten Start erneut.</value></data>
+  <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) konnten nicht gelesen werden: {1}. Details stehen im Log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
-  <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="Profile_Check" xml:space="preserve"><value>Testen</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Profile_Default" xml:space="preserve"><value>Standard</value></data>
   <data name="Profile_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
@@ -21,9 +21,9 @@
   <data name="Check_Ready" xml:space="preserve"><value>Bereit: alle Bildschirme sind verfügbar.</value></data>
   <data name="Check_OptionalMissing" xml:space="preserve"><value>Bereit. Nicht verfügbar (optional, wird übersprungen): {0}</value></data>
   <data name="Check_Blocked" xml:space="preserve"><value>Gerade nicht möglich. Fehlende Bildschirme: {0}</value></data>
-  <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>Die Grafikkarte kann bei diesen Auflösungen und Bildraten eventuell nicht alle Bildschirme gleichzeitig ansteuern. RigShift versucht es trotzdem.</value></data>
+  <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>Die Grafikkarte kann bei diesen Auflösungen und Bildraten eventuell nicht alle Bildschirme ansteuern.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>Ein Bildschirm wurde an einem anderen Anschluss oder Kabel erkannt.</value></data>
-  <data name="Warning_AmbiguousTwin" xml:space="preserve"><value>Zwei baugleiche Bildschirme hängen nicht mehr an ihren gespeicherten Anschlüssen; RigShift kann sie nicht unterscheiden und rät nicht.</value></data>
+  <data name="Warning_AmbiguousTwin" xml:space="preserve"><value>Zwei baugleiche Bildschirme hängen nicht mehr an ihren gespeicherten Anschlüssen; RigShift kann sie nicht unterscheiden.</value></data>
   <data name="Warning_NoPrimary" xml:space="preserve"><value>Kein Bildschirm ist als Hauptanzeige markiert; Windows wählt einen aus.</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>RigShift öffnen</value></data>
   <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>
@@ -68,11 +68,11 @@
   <data name="Outcome_RolledBack" xml:space="preserve"><value>Zurückgenommen</value></data>
   <data name="Outcome_Blocked" xml:space="preserve"><value>Nicht möglich</value></data>
   <data name="Outcome_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
-  <data name="Outcome_DryRun" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="Outcome_DryRun" xml:space="preserve"><value>Getestet</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Standardprofil</value></data>
   <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Tastenkürzel: zurück zum vorherigen Profil</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Ein Kürzel für beide Richtungen: schaltet zum vorher aktiven Profil, direkt nach dem Start zum Standardprofil.</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Schaltet zum vorher aktiven Profil, nach dem Start zum Standardprofil.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung innerhalb dieser Sekunden kommen die vorherigen Einstellungen zurück.</value></data>
@@ -115,7 +115,7 @@
   <data name="Status_Duplicated" xml:space="preserve"><value>„{0}“ angelegt.</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Verknüpfung „{0}“ auf dem Desktop erstellt. Sie funktioniert auch als Stream-Deck-Aktion.</value></data>
-  <data name="Status_Error" xml:space="preserve"><value>Das hat nicht geklappt: {0}</value></data>
+  <data name="Status_Error" xml:space="preserve"><value>Fehler: {0}</value></data>
   <data name="Editor_TitleNew" xml:space="preserve"><value>Neues Profil</value></data>
   <data name="Editor_TitleEdit" xml:space="preserve"><value>Profil bearbeiten</value></data>
   <data name="Editor_NewName" xml:space="preserve"><value>Neues Profil</value></data>
@@ -130,7 +130,7 @@
   <data name="Tray_Header" xml:space="preserve"><value>Profil wechseln</value></data>
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Ohne Nachfrage umschalten</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Bildschirme</value></data>
-  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Auflösung und Position stellst du in den Windows-Anzeigeeinstellungen ein und übernimmst sie dann hier.</value></data>
+  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Bildschirme in den Windows-Einstellungen anordnen, dann die aktuelle Anordnung übernehmen.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Aktuelle Anordnung übernehmen</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Aktuelle Anordnung übernommen: {0} Bildschirm(e).</value></data>
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · Position {2}, {3}</value></data>
@@ -141,9 +141,9 @@
   <data name="Hdr_On" xml:space="preserve"><value>HDR an</value></data>
   <data name="Hdr_Off" xml:space="preserve"><value>HDR aus</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
-  <data name="Editor_Optional" xml:space="preserve"><value>Optional (darf fehlen)</value></data>
-  <data name="Editor_CustomName" xml:space="preserve"><value>Eigener Name</value></data>
-  <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>Eigener Name, z. B. Links</value></data>
+  <data name="Editor_Optional" xml:space="preserve"><value>Optional</value></data>
+  <data name="Editor_CustomName" xml:space="preserve"><value>Name</value></data>
+  <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>z. B. Links</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Bildschirm entfernen</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Editor_Save" xml:space="preserve"><value>_Speichern</value></data>
@@ -176,33 +176,33 @@
   <data name="Audio_SetVolume" xml:space="preserve"><value>Lautstärke festlegen</value></data>
   <data name="Audio_VolumeValue" xml:space="preserve"><value>{0} %</value></data>
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
-  <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist. Starten überspringt Apps, die schon laufen. Beenden schließt die App und beendet sie, falls sie nach 5 Sekunden noch läuft.</value></data>
+  <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist.</value></data>
   <data name="Editor_AddApp" xml:space="preserve"><value>App _hinzufügen</value></data>
   <data name="Editor_Power" xml:space="preserve"><value>Energie</value></data>
   <data name="Editor_KeepAwake" xml:space="preserve"><value>PC wach halten (kein Standby, Bildschirmschoner oder Bildschirm-Aus)</value></data>
-  <data name="Editor_PowerHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist. Benachrichtigungen schaltet Windows bei Vollbild-Spielen selbst stumm.</value></data>
+  <data name="Editor_PowerHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist.</value></data>
   <data name="App_Start" xml:space="preserve"><value>Starten</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Beenden</value></data>
   <data name="App_Action" xml:space="preserve"><value>Aktion</value></data>
-  <data name="App_Path" xml:space="preserve"><value>Programm</value></data>
+  <data name="App_Path" xml:space="preserve"><value>App</value></data>
   <data name="App_PathPlaceholder" xml:space="preserve"><value>Pfad zur .exe-Datei</value></data>
-  <data name="App_Browse" xml:space="preserve"><value>Programm auswählen</value></data>
+  <data name="App_Browse" xml:space="preserve"><value>App auswählen</value></data>
   <data name="App_Arguments" xml:space="preserve"><value>Argumente (optional)</value></data>
   <data name="App_Wait" xml:space="preserve"><value>Danach warten (Sekunden)</value></data>
   <data name="App_Remove" xml:space="preserve"><value>App entfernen</value></data>
   <data name="AppPicker_Search" xml:space="preserve"><value>Installierte und laufende Apps durchsuchen</value></data>
   <data name="AppPicker_Running" xml:space="preserve"><value>Läuft</value></data>
-  <data name="AppPicker_Empty" xml:space="preserve"><value>Keine App gefunden. Programme ohne Startmenü-Eintrag wählst du über „Datei suchen“.</value></data>
+  <data name="AppPicker_Empty" xml:space="preserve"><value>Keine App gefunden. Programme ohne Startmenü-Eintrag findest du über „Datei suchen“.</value></data>
   <data name="AppPicker_BrowseFile" xml:space="preserve"><value>_Datei suchen …</value></data>
   <data name="AppPicker_Choose" xml:space="preserve"><value>Aus_wählen</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*</value></data>
-  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App ein Programm.</value></data>
+  <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App eine Datei.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
   <data name="Nav_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Über &amp; Hilfe</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Erkennen</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Aktualisieren</value></data>
-  <data name="Displays_Hint" xml:space="preserve"><value>Benenne deine Monitore hier oder im Profil-Editor; der Name erscheint überall, z. B. „Links · CM27X3“. Die Nummern sind die, mit denen Windows die Bildschirme zählt; Erkennen zeigt die Nummer jedes aktiven Bildschirms direkt auf ihm an.</value></data>
+  <data name="Displays_Hint" xml:space="preserve"><value>Benenne deine Bildschirme; der Name erscheint überall, z. B. „Links · CM27X3“. Erkennen zeigt die Windows-Nummer jedes Bildschirms auf ihm an.</value></data>
   <data name="Displays_Empty" xml:space="preserve"><value>Keine Bildschirme gefunden.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Aktiv · Hauptanzeige</value></data>
@@ -216,17 +216,17 @@
   <data name="About_NoHistory" xml:space="preserve"><value>Seit dem Start von RigShift noch kein Wechsel.</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyDiagnostics" xml:space="preserve"><value>Diagnose-Infos kopieren</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Er enthält Version, Bildschirme mit Gerätepfaden, Namen der Audiogeräte, Profile und die letzten Wechsel – keine Audio-Geräte-IDs, und dein Benutzername in Pfaden wird ersetzt. Die Protokolldateien sind nicht anonymisiert: Sie enthalten Pfade mit deinem Benutzernamen und Audio-Geräte-IDs – sieh sie durch, bevor du eine anhängst.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt; Protokolldateien sind nicht anonymisiert – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Automatik-Regeln und Einstellungen in einer ZIP-Datei – für einen neuen PC oder nach einer Neuinstallation. Wiederherstellen ersetzt alles, was RigShift jetzt hat.</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Regeln und Einstellungen in einer ZIP-Datei. Wiederherstellen ersetzt alles.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Sicherung speichern…</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Sicherung wiederherstellen…</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
   <data name="About_BackupRestored" xml:space="preserve"><value>Sicherung wiederhergestellt: {0} Profil(e).</value></data>
-  <data name="About_BackupFailed" xml:space="preserve"><value>Das hat nicht geklappt: {0}</value></data>
+  <data name="About_BackupFailed" xml:space="preserve"><value>Fehler: {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Warte, bis der laufende Wechsel fertig ist.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Sicherung wiederherstellen?</value></data>
   <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value></data>
@@ -235,16 +235,16 @@
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
   <data name="About_Kofi" xml:space="preserve"><value>Spendier mir einen Kaffee</value></data>
-  <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen – ganz freiwillig.</value></data>
+  <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist. Läuft ein Spiel im Vollbild, wartet das Zurückschalten, bis es beendet ist.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät wie die Wheelbase verbunden ist, und zurück, sobald es weg ist.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>
-  <data name="Automation_Profile" xml:space="preserve"><value>umschalten auf</value></data>
+  <data name="Automation_Profile" xml:space="preserve"><value>Umschalten auf</value></data>
   <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
@@ -259,13 +259,13 @@
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Automation_RefreshDevices" xml:space="preserve"><value>Geräte aktualisieren</value></data>
   <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Eine andere Regel nutzt dieselben Geräte. Werden sie verbunden, schalten beide Regeln um, nacheinander.</value></data>
-  <data name="Automation_PauseFailed" xml:space="preserve"><value>Die Automatik ließ sich nicht pausieren oder fortsetzen, weil die Einstellungen nicht gespeichert werden konnten. Details stehen im Log.</value></data>
+  <data name="Automation_PauseFailed" xml:space="preserve"><value>Die Einstellung konnte nicht gespeichert werden. Details stehen im Log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem App-Start auf Gerät warten</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Nicht warten</value></data>
-  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Wheel-Software und Spiele brauchen das Gerät oft schon beim Start. Erscheint es nicht innerhalb von 30 Sekunden, starten die Apps trotzdem und RigShift gibt Bescheid.</value></data>
+  <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Erscheint das Gerät nicht innerhalb von 30 Sekunden, starten die Apps trotzdem.</value></data>
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Spielton bei Anrufen nicht absenken (Windows-Kommunikationseinstellung)</value></data>
-  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist; ein Profil ohne diese Option stellt deine vorherige Einstellung wieder her. Apps wie Discord müssen dem Anruf eventuell neu beitreten.</value></data>
+  <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Gilt, solange dieses Profil aktiv ist. Discord muss dem Anruf eventuell neu beitreten.</value></data>
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Erweitert</value></data>
   <data name="Editor_DiscardTitle" xml:space="preserve"><value>Änderungen verwerfen?</value></data>
   <data name="Editor_DiscardText" xml:space="preserve"><value>Dieses Profil hat ungespeicherte Änderungen.</value></data>
@@ -283,7 +283,7 @@
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Gerät entfernen</value></data>
   <data name="Automation_NamesTitle" xml:space="preserve"><value>USB-Gerätenamen</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Die Geräte deiner Regeln und Profile. Einmal benennen – der Name erscheint in Regeln, beim Warten auf ein Gerät und in Meldungen.</value></data>
+  <data name="Automation_NamesHint" xml:space="preserve"><value>Einmal benennen – der Name erscheint in Regeln, Profilen und Meldungen.</value></data>
   <data name="Automation_NamesEmpty" xml:space="preserve"><value>Sobald eine Regel oder ein Profil ein USB-Gerät nutzt, kannst du es hier benennen.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
@@ -291,16 +291,16 @@
   <data name="Setup_Title" xml:space="preserve"><value>RigShift einrichten</value></data>
   <data name="Setup_StepCounter" xml:space="preserve"><value>Schritt {0} von {1}</value></data>
   <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Willkommen bei RigShift</value></data>
-  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift schaltet deinen PC zwischen Aufbauten um, zum Beispiel Schreibtisch und Sim Rig: Bildschirme, Hauptbildschirm und Ton auf einmal. In wenigen Schritten speicherst du beide Aufbauten und kannst ein USB-Gerät wie deine Wheelbase umschalten lassen.</value></data>
+  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift schaltet deinen PC zwischen Schreibtisch und Sim Rig um: Bildschirme, Hauptbildschirm und Ton auf einmal. In wenigen Schritten speicherst du beide Aufbauten.</value></data>
   <data name="Setup_FirstTitle" xml:space="preserve"><value>Dein erster Aufbau</value></data>
-  <data name="Setup_FirstText" xml:space="preserve"><value>Stell die Bildschirme so ein, wie du sie am Schreibtisch nutzt: die richtigen Monitore einschalten und in den Windows-Anzeigeeinstellungen anordnen. RigShift speichert, was gerade aktiv ist.</value></data>
+  <data name="Setup_FirstText" xml:space="preserve"><value>Schalte die Bildschirme ein, die du am Schreibtisch nutzt, und ordne sie in den Windows-Anzeigeeinstellungen an. RigShift speichert, was gerade aktiv ist.</value></data>
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Dein zweiter Aufbau</value></data>
-  <data name="Setup_SecondText" xml:space="preserve"><value>Wechsle jetzt zu deinem zweiten Aufbau, zum Beispiel dem Rig: dessen Bildschirme einschalten, die anderen ausschalten und in den Windows-Anzeigeeinstellungen anordnen. RigShift sieht die Änderung nach wenigen Sekunden. „{0}“ ist schon gespeichert.</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>Wechsle jetzt zum zweiten Aufbau, zum Beispiel dem Rig: dessen Bildschirme ein-, die anderen ausschalten und anordnen. „{0}“ ist schon gespeichert.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
-  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät eingeschaltet wird, zum Beispiel deine Wheelbase oder Pedale. Schalte das Gerät aus, warte kurz und schalte es wieder ein. RigShift wählt es hier aus. Du kannst es auch aus der Liste wählen.</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Schalte es aus und wieder ein, dann wählt RigShift es hier aus – oder wähle es aus der Liste.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
-  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten kannst du über das Tray-Symbol neben der Uhr. Im Profileditor kommen Tastenkürzel, Apps, HDR und Bildwiederholrate dazu; die Seite Automatik schaltet um, sobald ein USB-Gerät eingeschaltet wird.</value></data>
-  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Deine Regel ist aktiv: Gerät einschalten schaltet um, ausschalten schaltet zurück. Umschalten geht auch über das Tray-Symbol neben der Uhr. Im Profileditor kommen Tastenkürzel, Apps, HDR und Bildwiederholrate dazu.</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten kannst du über das Tray-Symbol neben der Uhr. Die Seite Automatik schaltet um, sobald ein USB-Gerät eingeschaltet wird.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Deine Regel ist aktiv: Gerät einschalten schaltet um, ausschalten zurück. Umschalten geht auch über das Tray-Symbol neben der Uhr.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen öffnen</value></data>

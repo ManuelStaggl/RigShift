@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Profile cards show the app names from the app picker ("SimHub") instead of file names ("SimHubWPF").
+- Shorter texts on all pages, consistent page headers and section headings, "Test" instead of "Check" for a dry run,
+  "Icon" instead of "Symbol", "App" instead of "Program".
+
 ## [1.7.0] - 2026-09-15
 
 ### Added

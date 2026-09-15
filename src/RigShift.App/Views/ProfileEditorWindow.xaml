@@ -129,7 +129,7 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Displays}" />
+          <ui:TextBlock VerticalAlignment="Center" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Displays}" />
           <ui:Button Grid.Column="1" Command="{Binding TakeCurrentCommand}" Content="{loc:Tr Editor_TakeCurrent}" Icon="{ui:SymbolIcon ArrowSync24}" />
         </Grid>
         <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisplaysHint}" TextWrapping="Wrap" />
@@ -223,7 +223,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <TextBlock Margin="0,16,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
+        <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Audio}" />
         <ItemsControl x:Name="AudioItems" Focusable="False" ItemsSource="{Binding AudioSlots}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -323,7 +323,7 @@
         <CheckBox Margin="0,8,0,0" Content="{loc:Tr Editor_DisableDucking}" IsChecked="{Binding DisableCommunicationsDucking}" />
         <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_DisableDuckingHint}" TextWrapping="Wrap" />
 
-        <TextBlock Margin="0,16,0,8" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Power}" />
+        <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Power}" />
         <CheckBox Content="{loc:Tr Editor_KeepAwake}" IsChecked="{Binding KeepAwake}" />
         <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_PowerHint}" TextWrapping="Wrap" />
 
@@ -332,7 +332,7 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Apps}" />
+          <ui:TextBlock VerticalAlignment="Center" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Apps}" />
           <ui:Button Grid.Column="1" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" Icon="{ui:SymbolIcon Add24}" />
         </Grid>
         <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsHint}" TextWrapping="Wrap" />
@@ -404,7 +404,6 @@
                       VerticalAlignment="Center"
                       AutomationProperties.Name="{loc:Tr App_Arguments}"
                       IsEnabled="{Binding IsStart}"
-                      PlaceholderText="{loc:Tr App_Arguments}"
                       Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
                     <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
                       <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr App_Wait}" />
