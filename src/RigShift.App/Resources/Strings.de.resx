@@ -225,7 +225,7 @@
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen – ganz freiwillig.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, sobald ein USB-Gerät verbunden wird, z. B. die Wheelbase. RigShift sieht alle 2 Sekunden nach. Ist das Gerät weg, wartet es die in der Regel eingestellte Zeit, damit kurzes Aus- und Einschalten nicht hin- und herschaltet, und handelt nur, solange das Profil der Regel noch aktiv ist. Läuft ein Spiel im Vollbild, wartet das Zurückschalten, bis es beendet ist.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>

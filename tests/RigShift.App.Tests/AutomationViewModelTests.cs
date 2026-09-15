@@ -192,7 +192,7 @@ public sealed class AutomationViewModelTests : IDisposable
 
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
         powerCheck.Check(Arg.Any<string>()).Returns(new UsbPowerFindings());
-        var automation = new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, TimeProvider.System, Logger.None);
+        var automation = new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
         var viewModel = new AutomationViewModel(_host.Settings, _host.Catalog, automation, _host.Usb, powerCheck, Logger.None)
         {
             ConfirmDeleteRule = _ => Task.FromResult(true),

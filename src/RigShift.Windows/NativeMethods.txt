@@ -106,3 +106,6 @@ WM_NULL
 ShellLink
 IShellLinkW
 IPersistFile
+// Automation: hold the end action while a full-screen game runs (1.7.0).
+SHQueryUserNotificationState
+QUERY_USER_NOTIFICATION_STATE

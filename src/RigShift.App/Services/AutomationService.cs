@@ -22,6 +22,7 @@ public sealed class AutomationService : IDisposable
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
     private readonly IUsbDeviceList _devices;
+    private readonly IFullscreenCheck _fullscreen;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
     private readonly AutomationTrigger _trigger = new();
@@ -38,6 +39,7 @@ public sealed class AutomationService : IDisposable
         ProfileCatalog catalog,
         SwitchCoordinator coordinator,
         IUsbDeviceList devices,
+        IFullscreenCheck fullscreen,
         TimeProvider time,
         ILogger log)
     {
@@ -49,6 +51,7 @@ public sealed class AutomationService : IDisposable
         _catalog = catalog;
         _coordinator = coordinator;
         _devices = devices;
+        _fullscreen = fullscreen;
         _time = time;
         _started = time.GetTimestamp();
         _log = log.ForContext<AutomationService>();
@@ -158,7 +161,8 @@ public sealed class AutomationService : IDisposable
             }
 
             _skipLogged = false;
-            TriggerEvaluation evaluation = _trigger.Evaluate(rules, present, _catalog.ActiveProfile?.Id, Now);
+            // Asked only when an end action is due: a full-screen game holds it back (1.7.0).
+            TriggerEvaluation evaluation = _trigger.Evaluate(rules, present, _catalog.ActiveProfile?.Id, Now, _fullscreen.IsFullscreenAppRunning);
             foreach (TriggerEvent triggerEvent in evaluation.Events)
             {
                 LogEvent(triggerEvent);
@@ -235,6 +239,9 @@ public sealed class AutomationService : IDisposable
                 break;
             case TriggerEventKind.ExitSkipped:
                 _log.Information("{Subject} stayed gone, end action skipped: {Reason}", subject, triggerEvent.SkipReason);
+                break;
+            case TriggerEventKind.ExitHeld:
+                _log.Information("{Subject} stayed gone, but a full-screen app is running: end action waits until it closes", subject);
                 break;
             case TriggerEventKind.Disarmed when triggerEvent.Retry == RetryMode.Later:
                 _log.Information("Rule for {Subject} retries in {Seconds} s if the device is still connected", subject, triggerEvent.Delay?.TotalSeconds ?? 0);

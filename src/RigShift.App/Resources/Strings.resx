@@ -225,7 +225,7 @@
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift is free. If you like it, you can support it on Ko-fi – entirely optional.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
   <data name="Nav_Automation" xml:space="preserve"><value>Automation</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a USB device connects, e.g. your wheelbase. RigShift checks every 2 seconds. When the device is gone, it waits the time set in the rule so a quick power cycle does not switch back and forth, and it only acts while the rule’s profile is still active.</value></data>
+  <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when a USB device connects, e.g. your wheelbase. RigShift checks every 2 seconds. When the device is gone, it waits the time set in the rule so a quick power cycle does not switch back and forth, and it only acts while the rule’s profile is still active. While a full-screen game is running, switching back waits until the game closes.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>_Add rule</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Pause automation</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>

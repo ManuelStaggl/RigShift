@@ -39,6 +39,12 @@ public enum TriggerEventKind
 
     /// <summary>The start switch did not succeed; the rule waits as told by <see cref="TriggerEvent.Retry"/>.</summary>
     Disarmed,
+
+    /// <summary>
+    /// The device stayed gone long enough, but a full-screen application is running: the end action waits until it
+    /// closes, so a USB hiccup during a race never switches the displays away (1.7.0). Reported once per wait.
+    /// </summary>
+    ExitHeld,
 }
 
 public enum ExitSkipReason
@@ -159,6 +165,7 @@ public sealed class AutomationTrigger
         state.PreviousProfileId = null;
         state.GoneSince = null;
         state.PollsGone = 0;
+        state.ExitHeld = false;
         if (retry == RetryMode.Later)
         {
             // Not running: the next poll with the device present is a start again, once the wait is over.
@@ -175,8 +182,12 @@ public sealed class AutomationTrigger
 
     /// <param name="present">Connected devices as <c>VID_xxxx&amp;PID_xxxx</c>, compared without case.</param>
     /// <param name="now">Monotonic time, e.g. <see cref="TimeProvider.GetElapsedTime(long)"/> since the service started.</param>
+    /// <param name="exitBlocked">
+    /// Asked at most once per poll, and only when an end action is due: <c>true</c> holds it back (a full-screen game is
+    /// running). The device coming back meanwhile cancels the end action as usual.
+    /// </param>
     public TriggerEvaluation Evaluate(
-        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, TimeSpan now)
+        IReadOnlyList<AutomationRule> rules, IReadOnlySet<string> present, Guid? activeProfileId, TimeSpan now, Func<bool>? exitBlocked = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(present);
@@ -188,6 +199,7 @@ public sealed class AutomationTrigger
 
         var actions = new List<TriggerAction>();
         var events = new List<TriggerEvent>();
+        bool? blocked = null;
         foreach (AutomationRule rule in rules)
         {
             if (IsIgnored(rule))
@@ -220,6 +232,7 @@ public sealed class AutomationTrigger
                 bool restarted = state.GoneSince is not null;
                 state.GoneSince = null;
                 state.PollsGone = 0;
+                state.ExitHeld = false;
                 if (restarted)
                 {
                     events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceBack));
@@ -257,6 +270,20 @@ public sealed class AutomationTrigger
 
             if (!running && state.GoneSince is { } gone && state.PollsGone >= PollsGoneForExit && now - gone >= ExitDelayOf(rule))
             {
+                // Only an end action that would switch is worth holding; a skipped one is reported as skipped right away.
+                bool wouldSwitch = state.StartedByRule && activeProfileId == rule.ProfileId && rule.OnExit != ExitAction.Stay;
+                if (wouldSwitch && (blocked ??= exitBlocked?.Invoke() ?? false))
+                {
+                    if (!state.ExitHeld)
+                    {
+                        state.ExitHeld = true;
+                        events.Add(new TriggerEvent(rule, TriggerEventKind.ExitHeld));
+                    }
+
+                    continue;
+                }
+
+                state.ExitHeld = false;
                 state.GoneSince = null;
                 state.PollsGone = 0;
                 ExitSkipReason skipped = OnExited(rule, state, activeProfileId, actions);
@@ -337,6 +364,9 @@ public sealed class AutomationTrigger
 
         /// <summary>Polls in a row without the device since <see cref="GoneSince"/>.</summary>
         public int PollsGone { get; set; }
+
+        /// <summary>The end action is due but waits for a full-screen application to close; reported once.</summary>
+        public bool ExitHeld { get; set; }
 
         /// <summary>A start that could not run is not retried before this time.</summary>
         public TimeSpan? RetryAt { get; set; }

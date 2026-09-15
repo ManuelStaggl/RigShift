@@ -376,6 +376,84 @@ public sealed class AutomationTriggerTests
         GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
     }
 
+[Fact]
+    public void FullscreenApp_HoldsExitUntilItCloses_ReportedOnce()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+
+        TriggerEvaluation held = _trigger.Evaluate([rule], Present(), Rig, _now, () => true);
+        _now += TimeSpan.FromSeconds(2);
+        TriggerEvaluation stillHeld = _trigger.Evaluate([rule], Present(), Rig, _now, () => true);
+        _now += TimeSpan.FromMinutes(30);
+        TriggerEvaluation released = _trigger.Evaluate([rule], Present(), Rig, _now, () => false);
+
+        held.Actions.ShouldBeEmpty();
+        held.Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.ExitHeld);
+        stillHeld.Actions.ShouldBeEmpty();
+        stillHeld.Events.ShouldBeEmpty();
+        released.Actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
+    }
+
+    [Fact]
+    public void FullscreenApp_DeviceBackWhileHeld_CancelsTheExit()
+    {
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+        _trigger.Evaluate([rule], Present(), Rig, _now, () => true).Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.ExitHeld);
+        _now += TimeSpan.FromSeconds(2);
+
+        TriggerEvaluation back = _trigger.Evaluate([rule], Present(Wheelbase), Rig, _now, () => true);
+        _now += TimeSpan.FromMinutes(1);
+        TriggerEvaluation later = _trigger.Evaluate([rule], Present(Wheelbase), Rig, _now, () => false);
+
+        back.Actions.ShouldBeEmpty();
+        back.Events.ShouldHaveSingleItem().Kind.ShouldBe(TriggerEventKind.DeviceBack);
+        later.Actions.ShouldBeEmpty();
+        later.Events.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void FullscreenApp_NotAskedWhenTheExitWouldBeSkippedAnyway()
+    {
+        AutomationRule rule = WheelbaseRule(ExitAction.Stay);
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        Poll(rule, Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rule);
+        bool asked = false;
+
+        TriggerEvaluation evaluation = _trigger.Evaluate([rule], Present(), Rig, _now, () => asked = true);
+
+        asked.ShouldBeFalse();
+        evaluation.Actions.ShouldBeEmpty();
+        evaluation.Events.ShouldHaveSingleItem().SkipReason.ShouldBe(ExitSkipReason.Stay);
+    }
+
+    [Fact]
+    public void FullscreenApp_AskedOncePerPollForSeveralRules()
+    {
+        AutomationRule rig = WheelbaseRule();
+        AutomationRule tv = new() { Devices = On(Pedals), ProfileId = Rig, OnExit = ExitAction.SwitchTo, ExitProfileId = Tv };
+        Poll([rig, tv], Desk);
+        Poll([rig, tv], Desk, Wheelbase, Pedals).Count.ShouldBe(2);
+        Poll([rig, tv], Rig).ShouldBeEmpty();
+        _now += AutomationTrigger.ExitDelayOf(rig);
+        int asked = 0;
+
+        TriggerEvaluation evaluation = _trigger.Evaluate([rig, tv], Present(), Rig, _now, () => ++asked > 0);
+
+        asked.ShouldBe(1);
+        evaluation.Actions.ShouldBeEmpty();
+        evaluation.Events.Count(e => e.Kind == TriggerEventKind.ExitHeld).ShouldBe(2);
+    }
+
     [Fact]
     public void ExitDelay_IsKeptWithinZeroAndTenMinutes()
     {

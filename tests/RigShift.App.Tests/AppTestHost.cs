@@ -44,6 +44,8 @@ internal sealed class AppTestHost : IDisposable
 
     public IUsbDeviceList Usb { get; } = Substitute.For<IUsbDeviceList>();
 
+    public IFullscreenCheck Fullscreen { get; } = Substitute.For<IFullscreenCheck>();
+
     public ISwitchConfirmation Confirmation { get; } = Substitute.For<ISwitchConfirmation>();
 
     public SettingsService Settings { get; }

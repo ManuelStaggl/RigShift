@@ -300,6 +300,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IPowerController, Windows.Power.PowerController>();
         services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
         services.AddSingleton<IUsbPowerCheck, Windows.Power.UsbPowerCheck>();
+        services.AddSingleton<IFullscreenCheck, Windows.Shell.ShellFullscreenCheck>();
         services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
         services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
         services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();

@@ -97,6 +97,6 @@ public sealed class AutomationServiceTests : IDisposable
         await _host.Catalog.ReloadAsync(Ct);
         await _host.Settings.UpdateAsync(
             s => s with { AutomationRules = [new AutomationRule { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id }] }, Ct);
-        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, TimeProvider.System, Logger.None);
+        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
     }
 }
