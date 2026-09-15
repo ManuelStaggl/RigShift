@@ -47,6 +47,24 @@ public sealed class SettingsServiceTests : IDisposable
         (await new SettingsDuckingMemory(settings).LoadAsync(Ct)).ShouldBe(new RememberedDucking(CommunicationsDucking.ReduceBy50Percent));
     }
 
+    [Fact]
+    public async Task Reload_ReadsTheReplacedFileAndRaisesChanged()
+    {
+        string file = Path.Combine(_directory, "settings.json");
+        using var settings = new SettingsService(new JsonSettingsStore(file, Logger.None), Substitute.For<IAutostart>());
+        await settings.UpdateAsync(s => s with { ConfirmTimeoutSeconds = 30 }, Ct);
+        bool changed = false;
+        settings.Changed += (_, _) => changed = true;
+
+        // A restored backup replaces the file behind the service's back.
+        await new JsonSettingsStore(file, Logger.None).SaveAsync(new AppSettings { ConfirmTimeoutSeconds = 5, Language = "en" }, Ct);
+        await settings.ReloadAsync(Ct);
+
+        changed.ShouldBeTrue();
+        settings.Current.ConfirmTimeoutSeconds.ShouldBe(5);
+        settings.Current.Language.ShouldBe("en");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory))

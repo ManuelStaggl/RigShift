@@ -141,6 +141,21 @@ public sealed class ProfileDialogs
         return await box.ShowDialogAsync() == MessageBoxResult.Primary;
     }
 
+    /// <summary>Restoring a backup replaces everything: same style as deleting (1.7.0).</summary>
+    public static async Task<bool> ConfirmRestoreAsync(int profileCount)
+    {
+        var box = new MessageBox
+        {
+            Title = Loc.Instance["About_RestoreTitle"],
+            Content = Loc.Format("About_RestoreText", profileCount),
+            PrimaryButtonText = Loc.Instance["About_Restore"],
+            PrimaryButtonAppearance = ControlAppearance.Danger,
+            CloseButtonText = Loc.Instance["Common_Cancel"],
+        };
+        SetOwner(box, ActiveWindow());
+        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+    }
+
     /// <summary>Asked when the editor closes with unsaved changes (analysis finding I-11). True: discard them.</summary>
     public static async Task<bool> ConfirmDiscardAsync(System.Windows.Window owner)
     {

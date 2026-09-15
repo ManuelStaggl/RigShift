@@ -136,6 +136,22 @@
         </StackPanel>
       </ui:Card>
 
+      <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_Backup}" />
+      <ui:Card Margin="0,0,0,8" Padding="16">
+        <StackPanel>
+          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
+          <WrapPanel Margin="0,12,0,0">
+            <ui:Button Margin="0,0,8,8" Command="{Binding SaveBackupCommand}" Content="{loc:Tr About_SaveBackup}" Icon="{ui:SymbolIcon Save24}" />
+            <ui:Button Margin="0,0,8,8" Command="{Binding RestoreBackupCommand}" Content="{loc:Tr About_RestoreBackup}" Icon="{ui:SymbolIcon FolderArrowUp24}" />
+          </WrapPanel>
+          <TextBlock
+            controls:LiveRegion.IsLive="True"
+            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+            Text="{Binding BackupStatus}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </ui:Card>
+
       <ui:TextBlock Margin="0,16,0,8" FontTypography="Subtitle" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr About_Links}" />
       <ui:Card Padding="16">
         <StackPanel>

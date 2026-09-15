@@ -1,11 +1,13 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 
@@ -22,10 +24,18 @@ public sealed partial class AboutViewModel : ObservableObject
     private readonly IDisplayConfigurator _display;
     private readonly IAudioController _audio;
     private readonly AppPaths _paths;
+    private readonly SettingsService _settings;
     private readonly ILogger _log;
 
     public AboutViewModel(
-        UpdateService updates, SwitchCoordinator coordinator, ProfileCatalog catalog, IDisplayConfigurator display, IAudioController audio, AppPaths paths, ILogger log)
+        UpdateService updates,
+        SwitchCoordinator coordinator,
+        ProfileCatalog catalog,
+        IDisplayConfigurator display,
+        IAudioController audio,
+        AppPaths paths,
+        SettingsService settings,
+        ILogger log)
     {
         ArgumentNullException.ThrowIfNull(updates);
         ArgumentNullException.ThrowIfNull(coordinator);
@@ -37,6 +47,7 @@ public sealed partial class AboutViewModel : ObservableObject
         _display = display;
         _audio = audio;
         _paths = paths;
+        _settings = settings;
         _log = log.ForContext<AboutViewModel>();
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
         _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasNoHistory));
@@ -48,8 +59,107 @@ public sealed partial class AboutViewModel : ObservableObject
             OnPropertyChanged(nameof(VersionText));
             RefreshUpdateStatus();
             CopyStatus = null;
+            BackupStatus = null;
             System.Windows.Data.CollectionViewSource.GetDefaultView(History).Refresh();
         };
+    }
+
+    [ObservableProperty]
+    public partial string? BackupStatus { get; set; }
+
+    /// <summary>Profiles, rules and settings as one ZIP file (1.7.0): for a new PC or after a reinstall.</summary>
+    [RelayCommand]
+    private async Task SaveBackupAsync()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = $"RigShift-backup-{DateTime.Now:yyyy-MM-dd}.zip",
+            DefaultExt = ".zip",
+            Filter = "ZIP (*.zip)|*.zip",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            int count = await Task.Run(() =>
+            {
+                using FileStream stream = File.Create(dialog.FileName);
+                return BackupArchive.Write(_paths.DataDirectory, stream);
+            });
+            _log.Information("Backup with {Count} profile(s) saved to {File}", count, dialog.FileName);
+            BackupStatus = Loc.Format("About_BackupSaved", count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Backup could not be saved to {File}", dialog.FileName);
+            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+        }
+    }
+
+    /// <summary>Replaces every profile and the settings after a confirmation; the running app picks the new files up.</summary>
+    [RelayCommand]
+    private async Task RestoreBackupAsync()
+    {
+        if (_coordinator.IsSwitching)
+        {
+            BackupStatus = Loc.Instance["About_BackupBusy"];
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "ZIP (*.zip)|*.zip", CheckFileExists = true };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        BackupContent content;
+        try
+        {
+            content = await Task.Run(() =>
+            {
+                using FileStream stream = File.OpenRead(dialog.FileName);
+                return BackupArchive.Inspect(stream);
+            });
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Backup {File} could not be read", dialog.FileName);
+            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+            return;
+        }
+
+        if (!await ProfileDialogs.ConfirmRestoreAsync(content.Profiles.Count))
+        {
+            return;
+        }
+
+        if (_coordinator.IsSwitching)
+        {
+            BackupStatus = Loc.Instance["About_BackupBusy"];
+            return;
+        }
+
+        try
+        {
+            await Task.Run(() => BackupArchive.Restore(_paths.DataDirectory, content, _log));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error(ex, "Backup {File} could not be restored", dialog.FileName);
+            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+        }
+
+        // Even after a failure halfway, what is on disk now is what counts.
+        await _settings.ReloadAsync(CancellationToken.None);
+        await _catalog.ReloadAsync(CancellationToken.None);
+        if (BackupStatus is null || !BackupStatus.StartsWith(Loc.Format("About_BackupFailed", string.Empty), StringComparison.Ordinal))
+        {
+            BackupStatus = Loc.Format("About_BackupRestored", content.Profiles.Count);
+        }
     }
 
     public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);

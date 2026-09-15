@@ -51,6 +51,23 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
         Loc.Instance.SetLanguage(Current.Language);
     }
 
+    /// <summary>The file was replaced behind our back (a restored backup): read it again and tell everyone. UI thread.</summary>
+    public async Task ReloadAsync(CancellationToken cancellationToken)
+    {
+        await _updates.WaitAsync(cancellationToken);
+        try
+        {
+            Current = await store.LoadAsync(cancellationToken);
+        }
+        finally
+        {
+            _updates.Release();
+        }
+
+        Loc.Instance.SetLanguage(Current.Language);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <param name="notify">
     /// <c>false</c> for bookkeeping the UI does not show (ducking memory): no <see cref="Changed"/>, so it is safe off the
     /// UI thread and does not rebuild pages on every switch.

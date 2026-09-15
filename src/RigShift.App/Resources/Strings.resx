@@ -220,6 +220,17 @@
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, automation rules and settings in one ZIP file – for a new PC or after a reinstall. Restoring replaces everything RigShift has now.</value></data>
+  <data name="About_SaveBackup" xml:space="preserve"><value>Save backup…</value></data>
+  <data name="About_RestoreBackup" xml:space="preserve"><value>Restore backup…</value></data>
+  <data name="About_BackupSaved" xml:space="preserve"><value>Backup saved with {0} profile(s).</value></data>
+  <data name="About_BackupRestored" xml:space="preserve"><value>Backup restored: {0} profile(s).</value></data>
+  <data name="About_BackupFailed" xml:space="preserve"><value>That did not work: {0}</value></data>
+  <data name="About_BackupBusy" xml:space="preserve"><value>Wait until the running switch has finished.</value></data>
+  <data name="About_RestoreTitle" xml:space="preserve"><value>Restore backup?</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. This cannot be undone.</value></data>
+  <data name="About_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift on GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
   <data name="About_License" xml:space="preserve"><value>License</value></data>

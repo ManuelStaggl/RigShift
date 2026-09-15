@@ -220,6 +220,17 @@
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Automatik-Regeln und Einstellungen in einer ZIP-Datei – für einen neuen PC oder nach einer Neuinstallation. Wiederherstellen ersetzt alles, was RigShift jetzt hat.</value></data>
+  <data name="About_SaveBackup" xml:space="preserve"><value>Sicherung speichern…</value></data>
+  <data name="About_RestoreBackup" xml:space="preserve"><value>Sicherung wiederherstellen…</value></data>
+  <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
+  <data name="About_BackupRestored" xml:space="preserve"><value>Sicherung wiederhergestellt: {0} Profil(e).</value></data>
+  <data name="About_BackupFailed" xml:space="preserve"><value>Das hat nicht geklappt: {0}</value></data>
+  <data name="About_BackupBusy" xml:space="preserve"><value>Warte, bis der laufende Wechsel fertig ist.</value></data>
+  <data name="About_RestoreTitle" xml:space="preserve"><value>Sicherung wiederherstellen?</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="About_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift auf GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
