@@ -77,7 +77,8 @@ UI-Automation-Fokus + Enter; bei getrennter RDP-Sitzung scheitert `SendKeys` (�
 beendet“, kein Eingabedesktop) → Enter per `PostMessage(hwnd, WM_KEYDOWN/WM_KEYUP, VK_RETURN)` ans Fenster schicken.
 Update-Zustände live prüfen: aktuellen Code per `vpk pack --packVersion 1.0.0` packen und installieren, dann findet
 die App das echte GitHub-Release; `onlyNotifyAboutUpdates: true` in `%AppData%\RigShift\settings.json` verhindert den
-Download. Countdown-Dialog nur in
+Download. Einrichtungsassistent ohne echte Daten (Debug-Builds): Umgebungsvariablen `RIGSHIFT_DATA_DIR=<leerer Ordner>` und
+`RIGSHIFT_PREVIEW_SETUP=second|trigger|done` öffnen ihn mit Demo-Profilen im gewählten Schritt. Countdown-Dialog nur in
 Debug-Builds über `RigShift.exe --preview-confirmation` erreichbar; Tray-Popup (mit aktivem Profil) und Tray-Icon-Bögen
 für alle DPI-Stufen über `--preview-branding <ordner>`, Theme erzwingen mit `--preview-theme light|dark`.
 

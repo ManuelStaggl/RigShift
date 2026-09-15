@@ -69,11 +69,20 @@ public sealed class ProfileDialogs
     }
 
     /// <summary>The setup assistant (docs/PLAN.md, section 6, item 13); remembers that it was shown.</summary>
-    public async Task ShowSetupAssistantAsync()
+    /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
+    public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
     {
         var viewModel = new SetupWizardViewModel(
             _catalog, _display, _audio, _usbDevices, _services.GetRequiredService<IUsbPowerCheck>(),
             _services.GetRequiredService<ActiveProfileMatcher>(), _settings, _log);
+#if DEBUG
+        if (previewStep is { } step)
+        {
+            await viewModel.PreviewAsync(step);
+        }
+#else
+        _ = previewStep;
+#endif
         var window = new SetupWizardWindow(viewModel, _services.GetRequiredService<DisplayChangeWatcher>());
         MainWindow main = _services.GetRequiredService<MainWindow>();
         if (main.IsVisible)

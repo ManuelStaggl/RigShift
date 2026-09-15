@@ -8,7 +8,7 @@
   Title="{loc:Tr Setup_Title}"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="640"
-  Height="640"
+  Height="720"
   MinWidth="440"
   MinHeight="420"
   ExtendsContentIntoTitleBar="True"

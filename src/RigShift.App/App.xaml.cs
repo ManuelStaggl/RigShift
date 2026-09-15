@@ -35,8 +35,12 @@ public partial class App : Application, IAppShell
     /// <c>%AppData%\RigShift</c>: Velopack installs into <c>%LocalAppData%\RigShift</c> and deletes that folder on
     /// uninstall, so profiles and settings must live elsewhere.
     /// </summary>
-    public static AppPaths Paths { get; } = new(Path.GetFullPath(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift")));
+    public static AppPaths Paths { get; } = new(Path.GetFullPath(
+#if DEBUG
+        // Developer aid: screenshots of steps that save profiles, without touching the real data.
+        Environment.GetEnvironmentVariable("RIGSHIFT_DATA_DIR") is { Length: > 0 } previewData ? previewData :
+#endif
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift")));
 
     public bool IsExiting { get; private set; }
 
@@ -175,6 +179,14 @@ public partial class App : Application, IAppShell
                 ShowMainWindow();
 
                 // First start: guide through the first two profiles. Queued, so startup finishes before the dialog blocks.
+#if DEBUG
+                // Developer aid: the assistant at a later step with demo profiles (second, trigger, done).
+                if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep previewStep))
+                {
+                    _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync(previewStep));
+                }
+                else
+#endif
                 if (catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
                 {
                     _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());

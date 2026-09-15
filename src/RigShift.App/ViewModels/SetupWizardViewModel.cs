@@ -409,6 +409,35 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     private void EnterDone() => Step = SetupStep.Done;
 
+#if DEBUG
+    /// <summary>Developer aid: a later step with demo profiles made from the current arrangement; nothing is saved.</summary>
+    internal async Task PreviewAsync(SetupStep step)
+    {
+        DisplaySnapshot snapshot = await QueryAsync();
+        FirstProfile = ProfileEditing.Capture(Loc.Instance["Setup_FirstName"], snapshot);
+        SecondProfile = ProfileEditing.Capture(Loc.Instance["Setup_SecondName"], snapshot);
+        switch (step)
+        {
+            case SetupStep.Second:
+                await EnterProfileStepAsync(SetupStep.Second, Loc.Instance["Setup_SecondName"]);
+                break;
+            case SetupStep.Trigger:
+                EnterTrigger();
+                if (DeviceChoices.Count > 0)
+                {
+                    SelectedDevice = DeviceChoices[0];
+                    DetectedMessage = Loc.Format("Setup_Detected", DeviceChoices[0].Name);
+                }
+
+                break;
+            case SetupStep.Done:
+                CreatedRule = new AutomationRule();
+                EnterDone();
+                break;
+        }
+    }
+#endif
+
     private async Task FillPlaybackAsync(AudioEndpoint? keep)
     {
         IReadOnlyList<AudioDeviceInfo> devices;
