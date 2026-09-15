@@ -15,6 +15,9 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Views;
 
+/// <summary>Result of the picker: the path and, for an installed or running app, its display name.</summary>
+public sealed record PickedApp(string Path, string? Name);
+
 /// <summary>Picks a program for a profile: installed and running apps, or any file (finding HW-11).</summary>
 public partial class AppPickerWindow : FluentWindow
 {
@@ -34,14 +37,14 @@ public partial class AppPickerWindow : FluentWindow
         };
     }
 
-    public string? ChosenPath { get; private set; }
+    public PickedApp? Chosen { get; private set; }
 
-    /// <returns>The chosen program's path, or <c>null</c> if cancelled.</returns>
-    public static string? Pick(Window? owner, string? currentPath) =>
+    /// <returns>The chosen program, or <c>null</c> if cancelled.</returns>
+    public static PickedApp? Pick(Window? owner, string? currentPath) =>
         Pick(owner, currentPath, () => AppDiscovery.Find(Log.Logger));
 
     /// <param name="find">The programs to offer; a demo list for README screenshots in debug builds.</param>
-    internal static string? Pick(Window? owner, string? currentPath, Func<IReadOnlyList<DiscoveredApp>> find)
+    internal static PickedApp? Pick(Window? owner, string? currentPath, Func<IReadOnlyList<DiscoveredApp>> find)
     {
         var viewModel = new AppPickerViewModel(find, AppIcons.Load, Log.Logger);
         var window = new AppPickerWindow(viewModel, currentPath);
@@ -54,12 +57,12 @@ public partial class AppPickerWindow : FluentWindow
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
-        return window.ShowDialog() == true ? window.ChosenPath : null;
+        return window.ShowDialog() == true ? window.Chosen : null;
     }
 
-    private void Choose(string path)
+    private void Choose(string path, string? name)
     {
-        ChosenPath = path;
+        Chosen = new PickedApp(path, name);
         Log.Information("App picker chose {File}", Path.GetFileName(path));
         DialogResult = true;
     }
@@ -68,7 +71,7 @@ public partial class AppPickerWindow : FluentWindow
     {
         if (_viewModel.Selected is { } app)
         {
-            Choose(app.Path);
+            Choose(app.Path, app.Name);
         }
     }
 
@@ -76,7 +79,7 @@ public partial class AppPickerWindow : FluentWindow
     {
         if (e.OriginalSource is DependencyObject source && ItemsControl.ContainerFromElement(AppList, source) is ListBoxItem { DataContext: AppChoice app })
         {
-            Choose(app.Path);
+            Choose(app.Path, app.Name);
         }
     }
 
@@ -114,7 +117,7 @@ public partial class AppPickerWindow : FluentWindow
 
         if (dialog.ShowDialog(this) == true)
         {
-            Choose(dialog.FileName);
+            Choose(dialog.FileName, null);
         }
     }
 }

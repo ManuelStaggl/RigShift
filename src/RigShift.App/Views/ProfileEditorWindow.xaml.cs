@@ -81,18 +81,18 @@ public partial class ProfileEditorWindow : FluentWindow
             return;
         }
 
-        if (AppPickerWindow.Pick(this, item.Path) is { } path)
+        if (AppPickerWindow.Pick(this, item.Path) is { } picked)
         {
-            item.Path = path;
+            item.SetPicked(picked.Path, picked.Name);
         }
     }
 
     /// <summary>A new app entry starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
     private void OnAddApp(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (AppPickerWindow.Pick(this, null) is { } path)
+        if (AppPickerWindow.Pick(this, null) is { } picked)
         {
-            _viewModel.AddApp(path);
+            _viewModel.AddApp(picked.Path, picked.Name);
         }
     }
 

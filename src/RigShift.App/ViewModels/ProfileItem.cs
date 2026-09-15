@@ -72,7 +72,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         }
 
         string apps = string.Join(", ", profile.Apps.Select(app =>
-            app.Kind == AppActionKind.Stop ? Loc.Format("Profile_AppStop", AppName(app.Path)) : AppName(app.Path)));
+            app.Kind == AppActionKind.Stop ? Loc.Format("Profile_AppStop", AppName(app)) : AppName(app)));
         string text = Loc.Format("Profile_Apps", apps);
         if (profile.AppsWaitForUsbDeviceId is not null)
         {
@@ -83,6 +83,6 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         return text;
     }
 
-    private static string AppName(string path) =>
-        Path.GetFileNameWithoutExtension(path) is { Length: > 0 } name ? name : path;
+    private static string AppName(AppAction app) =>
+        app.Name ?? (Path.GetFileNameWithoutExtension(app.Path) is { Length: > 0 } name ? name : app.Path);
 }

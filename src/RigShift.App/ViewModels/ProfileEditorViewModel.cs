@@ -15,8 +15,7 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// Editor for one profile: name, icon, whether it asks after switching, which displays take part (primary, optional) and
-/// audio. Resolutions and positions are not editable; they come from "use current arrangement" (docs/PLAN.md, section 10,
-/// M4). Refresh rate and HDR are chosen per display (section 6, item 10); display names only on the Displays page.
+/// audio. Resolutions and positions are not editable; they come from "use current arrangement". Refresh rate and HDR are chosen per display (section 6, item 10); display names only on the Displays page.
 /// </summary>
 public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposable
 {
@@ -221,7 +220,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         SetHotkeyHint("Editor_HotkeyHint");
     }
 
-    internal void AddApp(string path) => Apps.Add(new AppEditItem(new AppAction { Path = path }));
+    internal void AddApp(string path, string? name = null) => Apps.Add(new AppEditItem(new AppAction { Path = path, Name = name }));
 
     [RelayCommand]
     private void RemoveApp(AppEditItem? item)
@@ -607,8 +606,21 @@ public sealed partial class AppEditItem : ObservableObject
         FillKindChoices();
         SelectedKind = KindChoices[action.Kind == AppActionKind.Stop ? 1 : 0];
         Path = action.Path;
+        _pickedPath = action.Name is null ? null : action.Path;
+        _pickedName = action.Name;
         Arguments = action.Arguments ?? string.Empty;
         WaitSeconds = action.WaitSeconds;
+    }
+
+    private string? _pickedPath;
+    private string? _pickedName;
+
+    /// <summary>Takes path and display name from the picker; the name only survives as long as the path stays the picked one.</summary>
+    internal void SetPicked(string path, string? name)
+    {
+        Path = path;
+        _pickedPath = name is null ? null : path;
+        _pickedName = name;
     }
 
     public ObservableCollection<Choice> KindChoices { get; } = [];
@@ -649,6 +661,7 @@ public sealed partial class AppEditItem : ObservableObject
     {
         Kind = IsStart ? AppActionKind.Start : AppActionKind.Stop,
         Path = Path.Trim(),
+        Name = _pickedName is not null && string.Equals(Path.Trim(), _pickedPath, StringComparison.OrdinalIgnoreCase) ? _pickedName : null,
         Arguments = IsStart && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
         WaitSeconds = (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
     };

@@ -1,12 +1,15 @@
 namespace RigShift.Core.Profiles;
 
-/// <summary>A program to start or end after a confirmed switch (docs/PLAN.md, section 6, point 5).</summary>
+/// <summary>A program to start or end after a confirmed switch.</summary>
 public sealed record AppAction
 {
     public AppActionKind Kind { get; init; }
 
     /// <summary>Path to the program; environment variables such as <c>%ProgramFiles%</c> are expanded.</summary>
     public required string Path { get; init; }
+
+    /// <summary>Display name from the app picker ("SimHub" rather than "SimHubWPF"); null for a path typed or browsed by hand.</summary>
+    public string? Name { get; init; }
 
     /// <summary>Command line arguments for <see cref="AppActionKind.Start"/>; ignored when ending an app.</summary>
     public string? Arguments { get; init; }
