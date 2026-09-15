@@ -274,4 +274,35 @@
   <data name="Automation_NamesEmpty" xml:space="preserve"><value>As soon as a rule or profile uses a USB device, you can name it here.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Not connected</value></data>
+  <data name="Profiles_SetupAssistant" xml:space="preserve"><value>Setup assistant</value></data>
+  <data name="Setup_Title" xml:space="preserve"><value>Set up RigShift</value></data>
+  <data name="Setup_StepCounter" xml:space="preserve"><value>Step {0} of {1}</value></data>
+  <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Welcome to RigShift</value></data>
+  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift switches your PC between setups, for example your desk and your sim rig: displays, main display and sound in one go. In a few steps you save both setups and, if you like, let a USB device such as your wheelbase switch between them.</value></data>
+  <data name="Setup_FirstTitle" xml:space="preserve"><value>Your first setup</value></data>
+  <data name="Setup_FirstText" xml:space="preserve"><value>Set up your displays the way you use them at your desk: turn on the right monitors and arrange them in the Windows display settings. RigShift saves what is active right now.</value></data>
+  <data name="Setup_SecondTitle" xml:space="preserve"><value>Your second setup</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>Now switch to your second setup, for example your rig: turn its displays on, turn the others off and arrange them in the Windows display settings. RigShift sees the change within a few seconds. "{0}" is already saved.</value></data>
+  <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device turns on, for example your wheelbase or pedals. Turn the device off, wait a moment and turn it on again. RigShift picks it here. You can also choose it from the list.</value></data>
+  <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Switch from the tray icon next to the clock. In the profile editor you can add a keyboard shortcut, apps, HDR and refresh rates; the Automation page switches when a USB device turns on.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Your rule is active: turn the device on to switch, turn it off to switch back. You can also switch from the tray icon next to the clock. In the profile editor you can add a keyboard shortcut, apps, HDR and refresh rates.</value></data>
+  <data name="Setup_FirstName" xml:space="preserve"><value>Desk</value></data>
+  <data name="Setup_SecondName" xml:space="preserve"><value>Sim rig</value></data>
+  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Open Windows display settings</value></data>
+  <data name="Setup_DisplaysNow" xml:space="preserve"><value>Active displays right now</value></data>
+  <data name="Setup_NoDisplays" xml:space="preserve"><value>No active display found. Details are in the log.</value></data>
+  <data name="Setup_SameTitle" xml:space="preserve"><value>Still the first setup</value></data>
+  <data name="Setup_SameText" xml:space="preserve"><value>Windows still shows the same displays as your first setup. Change the displays first, then save.</value></data>
+  <data name="Setup_DetailsLater" xml:space="preserve"><value>Keyboard shortcut, apps, HDR and refresh rate can be set later in the profile editor.</value></data>
+  <data name="Setup_Detected" xml:space="preserve"><value>Detected: {0}</value></data>
+  <data name="Setup_RuleText" xml:space="preserve"><value>When {0} turns on, RigShift switches to "{1}". When it turns off, back to "{2}".</value></data>
+  <data name="Setup_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="Setup_SkipAll" xml:space="preserve"><value>Set up myself</value></data>
+  <data name="Setup_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Setup_SaveContinue" xml:space="preserve"><value>Save and continue</value></data>
+  <data name="Setup_NoTrigger" xml:space="preserve"><value>Skip</value></data>
+  <data name="Setup_CreateRule" xml:space="preserve"><value>Create rule</value></data>
+  <data name="Setup_Finish" xml:space="preserve"><value>Finish</value></data>
 </root>

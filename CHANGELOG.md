@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Setup assistant: on the first start without profiles, RigShift walks you through saving your first setup, switching
+  your displays and saving the second one, with the playback device for each. An optional last step creates an
+  automation rule: turn your wheelbase (or any USB device) off and on, RigShift picks it and switches between both
+  profiles with it. Open it again any time from the **Profiles** page.
+
 ## [1.5.0] - 2026-09-14
 
 ### Added

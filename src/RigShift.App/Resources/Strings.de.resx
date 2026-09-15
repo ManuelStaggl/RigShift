@@ -274,4 +274,35 @@
   <data name="Automation_NamesEmpty" xml:space="preserve"><value>Sobald eine Regel oder ein Profil ein USB-Gerät nutzt, kannst du es hier benennen.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
+  <data name="Profiles_SetupAssistant" xml:space="preserve"><value>Einrichtungsassistent</value></data>
+  <data name="Setup_Title" xml:space="preserve"><value>RigShift einrichten</value></data>
+  <data name="Setup_StepCounter" xml:space="preserve"><value>Schritt {0} von {1}</value></data>
+  <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Willkommen bei RigShift</value></data>
+  <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift schaltet deinen PC zwischen Aufbauten um, zum Beispiel Schreibtisch und Sim Rig: Bildschirme, Hauptbildschirm und Ton auf einmal. In wenigen Schritten speicherst du beide Aufbauten und kannst ein USB-Gerät wie deine Wheelbase umschalten lassen.</value></data>
+  <data name="Setup_FirstTitle" xml:space="preserve"><value>Dein erster Aufbau</value></data>
+  <data name="Setup_FirstText" xml:space="preserve"><value>Stell die Bildschirme so ein, wie du sie am Schreibtisch nutzt: die richtigen Monitore einschalten und in den Windows-Anzeigeeinstellungen anordnen. RigShift speichert, was gerade aktiv ist.</value></data>
+  <data name="Setup_SecondTitle" xml:space="preserve"><value>Dein zweiter Aufbau</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>Wechsle jetzt zu deinem zweiten Aufbau, zum Beispiel dem Rig: dessen Bildschirme einschalten, die anderen ausschalten und in den Windows-Anzeigeeinstellungen anordnen. RigShift sieht die Änderung nach wenigen Sekunden. „{0}“ ist schon gespeichert.</value></data>
+  <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät eingeschaltet wird, zum Beispiel deine Wheelbase oder Pedale. Schalte das Gerät aus, warte kurz und schalte es wieder ein. RigShift wählt es hier aus. Du kannst es auch aus der Liste wählen.</value></data>
+  <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten kannst du über das Tray-Symbol neben der Uhr. Im Profileditor kommen Tastenkürzel, Apps, HDR und Bildwiederholrate dazu; die Seite Automatik schaltet um, sobald ein USB-Gerät eingeschaltet wird.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Deine Regel ist aktiv: Gerät einschalten schaltet um, ausschalten schaltet zurück. Umschalten geht auch über das Tray-Symbol neben der Uhr. Im Profileditor kommen Tastenkürzel, Apps, HDR und Bildwiederholrate dazu.</value></data>
+  <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
+  <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
+  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen öffnen</value></data>
+  <data name="Setup_DisplaysNow" xml:space="preserve"><value>Gerade aktive Bildschirme</value></data>
+  <data name="Setup_NoDisplays" xml:space="preserve"><value>Kein aktiver Bildschirm gefunden. Details stehen im Log.</value></data>
+  <data name="Setup_SameTitle" xml:space="preserve"><value>Noch der erste Aufbau</value></data>
+  <data name="Setup_SameText" xml:space="preserve"><value>Windows zeigt noch dieselben Bildschirme wie beim ersten Aufbau. Ändere zuerst die Bildschirme, dann speichern.</value></data>
+  <data name="Setup_DetailsLater" xml:space="preserve"><value>Tastenkürzel, Apps, HDR und Bildwiederholrate lassen sich später im Profileditor einstellen.</value></data>
+  <data name="Setup_Detected" xml:space="preserve"><value>Erkannt: {0}</value></data>
+  <data name="Setup_RuleText" xml:space="preserve"><value>Wenn {0} eingeschaltet wird, schaltet RigShift auf „{1}“. Beim Ausschalten zurück auf „{2}“.</value></data>
+  <data name="Setup_Start" xml:space="preserve"><value>Los geht’s</value></data>
+  <data name="Setup_SkipAll" xml:space="preserve"><value>Selbst einrichten</value></data>
+  <data name="Setup_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="Setup_SaveContinue" xml:space="preserve"><value>Speichern und weiter</value></data>
+  <data name="Setup_NoTrigger" xml:space="preserve"><value>Überspringen</value></data>
+  <data name="Setup_CreateRule" xml:space="preserve"><value>Regel anlegen</value></data>
+  <data name="Setup_Finish" xml:space="preserve"><value>Fertig</value></data>
 </root>

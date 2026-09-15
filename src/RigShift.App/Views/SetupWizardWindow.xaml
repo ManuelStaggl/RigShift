@@ -1,0 +1,196 @@
+<ui:FluentWindow
+  x:Class="RigShift.App.Views.SetupWizardWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="{loc:Tr Setup_Title}"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
+  Width="640"
+  Height="640"
+  MinWidth="440"
+  MinHeight="420"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="True"
+  WindowBackdropType="Mica"
+  WindowCornerPreference="Round"
+  WindowStartupLocation="CenterOwner">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Grid.Row="0" Title="{loc:Tr Setup_Title}" ShowMaximize="False" ShowMinimize="False" />
+
+    <ScrollViewer Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="24,8,24,16">
+        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StepCounter}" />
+        <ui:TextBlock
+          x:Name="StepHeading"
+          Margin="0,4,0,8"
+          controls:LiveRegion.IsLive="True"
+          FontTypography="Subtitle"
+          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+          Text="{Binding StepTitle}"
+          TextWrapping="Wrap" />
+        <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding StepText}" TextWrapping="Wrap" />
+
+        <ui:InfoBar
+          Margin="0,0,0,16"
+          IsClosable="False"
+          IsOpen="{Binding HasError, Mode=OneWay}"
+          Message="{Binding ErrorMessage}"
+          Severity="Error" />
+
+        <!-- Profile steps: what Windows shows now, a name and the playback device. -->
+        <StackPanel Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}">
+          <ui:Button
+            Margin="0,0,0,16"
+            Command="{Binding OpenDisplaySettingsCommand}"
+            Content="{loc:Tr Setup_OpenDisplaySettings}"
+            Icon="{ui:SymbolIcon Open24}" />
+
+          <ui:InfoBar
+            Margin="0,0,0,16"
+            Title="{loc:Tr Setup_SameTitle}"
+            IsClosable="False"
+            IsOpen="{Binding MatchesFirst, Mode=OneWay}"
+            Message="{loc:Tr Setup_SameText}"
+            Severity="Warning"
+            controls:LiveRegion.IsLive="True" />
+
+          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Setup_DisplaysNow}" />
+          <ui:Card Margin="0,4,0,16">
+            <StackPanel>
+              <ItemsControl Focusable="False" ItemsSource="{Binding DisplayLines}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Margin="0,2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{loc:Tr Setup_NoDisplays}"
+                TextWrapping="Wrap"
+                Visibility="{Binding HasNoDisplays, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+          </ui:Card>
+
+          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Editor_Name}" />
+          <ui:TextBox
+            x:Name="NameBox"
+            Margin="0,4,0,4"
+            AutomationProperties.Name="{loc:Tr Editor_Name}"
+            MaxLength="60"
+            Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBlock
+            Margin="0,0,0,12"
+            Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+            Text="{Binding NameProblem}"
+            TextWrapping="Wrap"
+            Visibility="{Binding HasNameProblem, Converter={StaticResource BoolToVisibility}}" />
+
+          <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Playback.Label}" />
+          <ComboBox
+            Margin="0,4,0,0"
+            AutomationProperties.Name="{Binding Playback.Label}"
+            DisplayMemberPath="Name"
+            ItemsSource="{Binding Playback.Choices}"
+            SelectedItem="{Binding Playback.Selected}" />
+          <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Setup_DetailsLater}" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Trigger step: turn the device on, RigShift picks it. -->
+        <StackPanel Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}">
+          <ui:InfoBar
+            Margin="0,0,0,16"
+            IsClosable="False"
+            IsOpen="{Binding HasDetected, Mode=OneWay}"
+            Message="{Binding DetectedMessage}"
+            Severity="Success"
+            controls:LiveRegion.IsLive="True" />
+
+          <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Automation_Device}" />
+          <ComboBox
+            Margin="0,4,0,8"
+            AutomationProperties.Name="{loc:Tr Automation_Device}"
+            DisplayMemberPath="Name"
+            ItemsSource="{Binding DeviceChoices}"
+            SelectedItem="{Binding SelectedDevice}" />
+          <TextBlock Margin="0,0,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding RuleText}" TextWrapping="Wrap" />
+
+          <ui:InfoBar
+            Margin="0,0,0,8"
+            Title="{loc:Tr Automation_PowerSavingTitle}"
+            IsClosable="False"
+            IsOpen="{Binding HasPowerWarning, Mode=OneWay}"
+            Message="{loc:Tr Automation_PowerSavingText}"
+            Severity="Warning" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" Margin="24,16,24,20">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Welcome -->
+      <ui:Button
+        HorizontalAlignment="Left"
+        Command="{Binding SkipCommand}"
+        Content="{loc:Tr Setup_SkipAll}"
+        Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}" />
+      <ui:Button
+        x:Name="StartButton"
+        Grid.Column="1"
+        Appearance="Primary"
+        Command="{Binding StartCommand}"
+        Content="{loc:Tr Setup_Start}"
+        Icon="{ui:SymbolIcon ArrowRight24}"
+        Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}" />
+
+      <!-- Profile steps -->
+      <ui:Button
+        HorizontalAlignment="Left"
+        Command="{Binding SkipCommand}"
+        Content="{loc:Tr Setup_Close}"
+        Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}" />
+      <ui:Button
+        Grid.Column="1"
+        Appearance="Primary"
+        Command="{Binding SaveProfileCommand}"
+        Content="{loc:Tr Setup_SaveContinue}"
+        Icon="{ui:SymbolIcon Save24}"
+        Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}" />
+
+      <!-- Trigger -->
+      <ui:Button
+        HorizontalAlignment="Left"
+        Command="{Binding SkipTriggerCommand}"
+        Content="{loc:Tr Setup_NoTrigger}"
+        Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
+      <ui:Button
+        Grid.Column="1"
+        Appearance="Primary"
+        Command="{Binding CreateRuleCommand}"
+        Content="{loc:Tr Setup_CreateRule}"
+        Icon="{ui:SymbolIcon Flash24}"
+        Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
+
+      <!-- Done -->
+      <ui:Button
+        Grid.Column="1"
+        Appearance="Primary"
+        Command="{Binding SkipCommand}"
+        Content="{loc:Tr Setup_Finish}"
+        Icon="{ui:SymbolIcon Checkmark24}"
+        Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+    </Grid>
+  </Grid>
+</ui:FluentWindow>

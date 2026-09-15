@@ -50,6 +50,12 @@ public sealed record AppSettings
     /// <summary>USB device rules of the automation page (docs/PLAN.md, section 6).</summary>
     public IReadOnlyList<AutomationRule>? AutomationRules { get; init; }
 
+    /// <summary>
+    /// The setup assistant opened once; it starts by itself only on a first start without profiles. <c>false</c> is the
+    /// default for files without the key, which is right: those users have profiles already.
+    /// </summary>
+    public bool SetupAssistantShown { get; init; }
+
     /// <summary>All rules paused, e.g. from the tray menu. <c>false</c> is the default for files without the key.</summary>
     public bool AutomationPaused { get; init; }
 

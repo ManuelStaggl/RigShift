@@ -173,6 +173,12 @@ public partial class App : Application, IAppShell
             if (!_request.Minimized)
             {
                 ShowMainWindow();
+
+                // First start: guide through the first two profiles. Queued, so startup finishes before the dialog blocks.
+                if (catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
+                {
+                    _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());
+                }
             }
 
             KeepAwakeForActiveProfile(catalog);

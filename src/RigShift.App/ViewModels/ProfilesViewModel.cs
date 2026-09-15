@@ -37,6 +37,9 @@ public sealed partial class ProfilesViewModel(ProfileCatalog catalog, SwitchCoor
     }
 
     [RelayCommand]
+    private Task SetupAssistantAsync() => dialogs.ShowSetupAssistantAsync();
+
+    [RelayCommand]
     private async Task EditAsync(ProfileItem? item)
     {
         if (item is not null && await dialogs.EditAsync(item.Profile) is { } saved)

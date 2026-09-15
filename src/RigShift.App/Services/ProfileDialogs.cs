@@ -68,6 +68,35 @@ public sealed class ProfileDialogs
         return await ShowAsync(profile, isNew: true, playback);
     }
 
+    /// <summary>The setup assistant (docs/PLAN.md, section 6, item 13); remembers that it was shown.</summary>
+    public async Task ShowSetupAssistantAsync()
+    {
+        var viewModel = new SetupWizardViewModel(
+            _catalog, _display, _audio, _usbDevices, _services.GetRequiredService<IUsbPowerCheck>(),
+            _services.GetRequiredService<ActiveProfileMatcher>(), _settings, _log);
+        var window = new SetupWizardWindow(viewModel, _services.GetRequiredService<DisplayChangeWatcher>());
+        MainWindow main = _services.GetRequiredService<MainWindow>();
+        if (main.IsVisible)
+        {
+            window.Owner = main;
+        }
+        else
+        {
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+        }
+
+        try
+        {
+            await _settings.UpdateAsync(s => s with { SetupAssistantShown = true }, CancellationToken.None, notify: false);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Could not remember that the setup assistant was shown");
+        }
+
+        window.ShowDialog();
+    }
+
     /// <returns>The saved profile, or <c>null</c> if cancelled.</returns>
     public async Task<Profile?> EditAsync(Profile profile) =>
         await ShowAsync(profile, isNew: false, await ListAudioAsync(AudioDirection.Render));
