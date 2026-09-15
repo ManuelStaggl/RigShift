@@ -187,10 +187,10 @@ public partial class App : Application, IAppShell
                 }
                 else
 #endif
-                if (catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
-                {
-                    _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());
-                }
+                    if (catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
+                    {
+                        _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());
+                    }
             }
 
             KeepAwakeForActiveProfile(catalog);

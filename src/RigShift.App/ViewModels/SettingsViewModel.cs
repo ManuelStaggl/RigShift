@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
-using RigShift.App.Localization;
 using CommunityToolkit.Mvvm.Input;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Profiles;
 using RigShift.Core.Settings;

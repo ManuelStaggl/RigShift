@@ -110,12 +110,12 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public string? NameProblem => ProfileEditing.Validate(new Profile { Id = Guid.Empty, Name = ProfileName, Displays = _currentDisplays }, _catalog.Profiles)
         .Select(p => (ProfileProblem?)p)
         .FirstOrDefault(p => p is ProfileProblem.NameMissing or ProfileProblem.NameTaken or ProfileProblem.NameTooLong) switch
-        {
-            ProfileProblem.NameMissing => Loc.Instance["Problem_NameMissing"],
-            ProfileProblem.NameTaken => Loc.Instance["Problem_NameTaken"],
-            ProfileProblem.NameTooLong => Loc.Instance["Problem_NameTooLong"],
-            _ => null,
-        };
+    {
+        ProfileProblem.NameMissing => Loc.Instance["Problem_NameMissing"],
+        ProfileProblem.NameTaken => Loc.Instance["Problem_NameTaken"],
+        ProfileProblem.NameTooLong => Loc.Instance["Problem_NameTooLong"],
+        _ => null,
+    };
 
     public bool HasNameProblem => NameProblem is not null;
 

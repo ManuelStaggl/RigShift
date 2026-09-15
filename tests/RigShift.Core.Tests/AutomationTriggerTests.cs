@@ -376,7 +376,7 @@ public sealed class AutomationTriggerTests
         GoneLongEnough(rule, Rig).ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Desk, TriggerReason.Ended));
     }
 
-[Fact]
+    [Fact]
     public void FullscreenApp_HoldsExitUntilItCloses_ReportedOnce()
     {
         AutomationRule rule = WheelbaseRule();
