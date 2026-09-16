@@ -1,0 +1,52 @@
+using System.Diagnostics;
+using RigShift.Core.Abstractions;
+using RigShift.Core.Games;
+using Serilog;
+
+namespace RigShift.Windows.Games;
+
+/// <summary>
+/// <see cref="IGameStarter"/> over the shell. A game that came from a store is started through the store's URI, not
+/// through its executable: overlay, anti-cheat and DRM expect the client to be in the chain, and some executables
+/// restart themselves through the client or refuse outright. The executable from the manifest is there to recognise
+/// the game, not to start it.
+/// </summary>
+public sealed class ShellGameStarter : IGameStarter
+{
+    private readonly ILogger _log;
+
+    public ShellGameStarter(ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        _log = log.ForContext<ShellGameStarter>();
+    }
+
+    public int? Start(GameLaunch launch)
+    {
+        ArgumentNullException.ThrowIfNull(launch);
+        if (launch.Uri is { Length: > 0 } uri)
+        {
+            using Process? client = Process.Start(new ProcessStartInfo { FileName = uri, UseShellExecute = true });
+            _log.Information("Started {Uri} (through the store client, process {ProcessId})", uri, client?.Id);
+            return null;
+        }
+
+        string file = Environment.ExpandEnvironmentVariables(launch.Target.Trim().Trim('"'));
+        var start = new ProcessStartInfo
+        {
+            FileName = file,
+            Arguments = launch.Arguments ?? string.Empty,
+            UseShellExecute = true,
+        };
+
+        // Many games look for their files next to the executable instead of their own folder.
+        if (Path.IsPathFullyQualified(file) && Path.GetDirectoryName(file) is { Length: > 0 } directory)
+        {
+            start.WorkingDirectory = directory;
+        }
+
+        using Process? process = Process.Start(start);
+        _log.Information("Started {File} (process {ProcessId})", file, process?.Id);
+        return process?.Id;
+    }
+}
