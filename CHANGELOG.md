@@ -15,6 +15,13 @@ All notable changes to this project are documented here. The format follows
   profile you do not keep puts Surround back too. Saving your current setup takes over a running grid. Build the grid
   once in the NVIDIA control panel; RigShift never forces a driver reload, because that closes running games. If the
   driver refuses, the message says what it answered.
+- `RigShift.exe surround` reports whether Surround is on and which displays form the grid. It changes nothing.
+
+### Fixed
+
+- Commands now reach RigShift from a Windows session of their own - over SSH, from a scheduled task, from a
+  service. Such a session has no desktop, and the display API refuses everything there; the command is handed to
+  the RigShift that does sit on the desktop and answered by it. Only your own user may connect, as before.
 
 ## [1.8.0] - 2026-09-15
 

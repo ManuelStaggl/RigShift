@@ -52,6 +52,44 @@ public sealed class CommandRunnerTests
         response.Output.ShouldBe($"  Desk{Environment.NewLine}  Rig");
     }
 
+    /// <summary>The report names the grid and its displays; a script reads this over the pipe from another session.</summary>
+    [Fact]
+    public async Task Surround_ReportsTheRunningGrid()
+    {
+        var surround = new FakeSurroundController
+        {
+            ActiveGrid = new SurroundGrid
+            {
+                Rows = 1,
+                Columns = 3,
+                Width = 1920,
+                Height = 1080,
+                RefreshRateHz = 60,
+                Displays = [new() { DisplayId = 0x80061086, Name = "CM27X3" }],
+            },
+        };
+
+        CliResponse response = await Runner(surround: surround).RunAsync(new CliRequest { Command = CliCommand.Surround }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldContain("Surround: on");
+        response.Output.ShouldContain("Grid 3x1");
+        response.Output.ShouldContain("as 5760x1080");
+        response.Output.ShouldContain("80061086");
+    }
+
+    /// <summary>On a machine without an NVIDIA driver the command says so instead of failing.</summary>
+    [Fact]
+    public async Task Surround_WithoutDriver_SaysSo()
+    {
+        var surround = new FakeSurroundController { Availability = SurroundAvailability.NoDriver };
+
+        CliResponse response = await Runner(surround: surround).RunAsync(new CliRequest { Command = CliCommand.Surround }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldContain("no NVIDIA graphics driver");
+    }
+
     [Fact]
     public async Task Status_NamesActiveProfileAndDisplays()
     {
@@ -233,6 +271,6 @@ public sealed class CommandRunnerTests
 
     private static ActiveProfileMatcher Matcher() => new(new TopologyPlanner(new TopologyPlannerOptions()));
 
-    private CommandRunner Runner(IProfileSwitcher? switcher = null) =>
-        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher);
+    private CommandRunner Runner(IProfileSwitcher? switcher = null, ISurroundController? surround = null) =>
+        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher, surround);
 }

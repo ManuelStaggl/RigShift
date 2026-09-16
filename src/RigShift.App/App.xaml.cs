@@ -356,7 +356,8 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<IAudioController>(),
             sp.GetRequiredService<ActiveProfileMatcher>(),
             Log.Logger,
-            sp.GetRequiredService<SwitchCoordinator>()));
+            sp.GetRequiredService<SwitchCoordinator>(),
+            sp.GetRequiredService<ISurroundController>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<UpdateService>();

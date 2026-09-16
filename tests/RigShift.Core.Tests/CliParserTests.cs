@@ -34,6 +34,7 @@ public sealed class CliParserTests
     [Theory]
     [InlineData("list", CliCommand.List)]
     [InlineData("status", CliCommand.Status)]
+    [InlineData("surround", CliCommand.Surround)]
     public void Parse_CommandsWithoutArguments(string command, CliCommand expected)
     {
         CliParser.Parse([command]).Request.ShouldNotBeNull().Command.ShouldBe(expected);

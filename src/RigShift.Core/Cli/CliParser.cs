@@ -12,6 +12,9 @@ public enum CliCommand
     Save,
     Status,
 
+    /// <summary>Read-only report on NVIDIA Surround (1.9.0).</summary>
+    Surround,
+
     /// <summary>Back to the previous profile, or to the default profile when nothing was active before (1.7.0).</summary>
     Toggle,
 }
@@ -100,11 +103,15 @@ public static class CliParser
 
         var list = new Command("list", "List all profiles; the active one is marked with *.");
         var status = new Command("status", "Show the active profile and the active displays.");
+        var surround = new Command("surround", "Show whether NVIDIA Surround is on and which displays form the grid.");
 
-        var root = new RootCommand("RigShift switches displays and audio between profiles.") { minimized, preview, previewBranding, previewTheme, apply, toggle, list, save, status };
+        var root = new RootCommand("RigShift switches displays and audio between profiles.")
+        {
+            minimized, preview, previewBranding, previewTheme, apply, toggle, list, save, status, surround,
+        };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
-        foreach (Command command in (Command[])[root, apply, toggle, list, save, status])
+        foreach (Command command in (Command[])[root, apply, toggle, list, save, status, surround])
         {
             command.SetAction(_ => CliExitCodes.Applied);
         }
@@ -144,6 +151,7 @@ public static class CliParser
             : chosen == save ? request with { Command = CliCommand.Save, ProfileName = parsed.GetValue(saveName) }
             : chosen == list ? request with { Command = CliCommand.List }
             : chosen == status ? request with { Command = CliCommand.Status }
+            : chosen == surround ? request with { Command = CliCommand.Surround }
             : request;
 
         return new CliParseResult(request, CliExitCodes.Applied, string.Empty);

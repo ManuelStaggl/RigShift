@@ -1,5 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text.Json;
 using System.Windows;
 using RigShift.Core.Cli;
@@ -9,7 +11,8 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Listens on <c>\\.\pipe\RigShift.&lt;SessionId&gt;</c> (current user only) for command lines of further <c>RigShift.exe</c> processes.
+/// Listens on <c>\\.\pipe\RigShift.&lt;SessionId&gt;</c> for command lines of further <c>RigShift.exe</c> processes.
+/// Only this user may connect, enforced by the pipe's own access list - see <see cref="OnlyThisUser"/>.
 /// Each connection is served on its own, so <c>status</c> still answers while an <c>apply</c> waits for confirmation.
 /// Commands run on the UI thread, like clicks in the window.
 /// </summary>
@@ -74,8 +77,8 @@ public sealed class CommandPipeServer : IDisposable
             NamedPipeServerStream server;
             try
             {
-                server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, MaxConnections,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                server = NamedPipeServerStreamAcl.Create(_pipeName, PipeDirection.InOut, MaxConnections,
+                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0, OnlyThisUser());
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -111,6 +114,27 @@ public sealed class CommandPipeServer : IDisposable
 
             _ = ServeAsync(server, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// An access list that lets only this Windows user in - nobody else, not even an administrator.
+    /// <see cref="PipeOptions.CurrentUserOnly"/> would be the short way to say that, but it compares the token's
+    /// <em>owner</em>, and an elevated process of the same user has <c>BUILTIN\Administrators</c> there. That locked out
+    /// exactly the case this pipe exists for: a command arriving over SSH or from a scheduled task, which has no
+    /// desktop of its own and must be answered by the instance that has one. The user SID is in both tokens, so an
+    /// access list keyed on it says what was meant all along.
+    /// </summary>
+    private static PipeSecurity OnlyThisUser()
+    {
+        using WindowsIdentity identity = WindowsIdentity.GetCurrent();
+        SecurityIdentifier user = identity.User ?? throw new InvalidOperationException("The current Windows identity has no user SID.");
+        var security = new PipeSecurity();
+
+        // Nothing else is granted, so the list starts and ends here: read, write, and the right to put up the next
+        // instance of the same pipe name for the following client.
+        security.AddAccessRule(new PipeAccessRule(
+            user, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
+        return security;
     }
 
     private async Task ServeAsync(NamedPipeServerStream server, CancellationToken cancellationToken)

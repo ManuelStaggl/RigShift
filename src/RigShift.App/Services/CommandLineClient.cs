@@ -15,8 +15,7 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// The short-lived <c>RigShift.exe &lt;command&gt;</c> process. It forwards the command to the tray app over the pipe
-/// and exits with the app's exit code; <c>list</c> and <c>status</c> are answered locally when no app runs
-///.
+/// and exits with the app's exit code; the read-only commands are answered locally when no app runs.
 /// </summary>
 internal static class CommandLineClient
 {
@@ -34,7 +33,7 @@ internal static class CommandLineClient
         Foreground.AllowAnyProcess();
         return Task.Run(async () =>
         {
-            PipeResponse? response = await SendAsync([], ConnectTimeout);
+            PipeResponse? response = await SendAsync(PipeProtocol.PipeName, [], ConnectTimeout);
             return response?.ExitCode ?? CliExitCodes.Failed;
         }).GetAwaiter().GetResult();
     }
@@ -43,19 +42,24 @@ internal static class CommandLineClient
     {
         try
         {
-            bool running = IsAppRunning();
-            if (!running && request.Command is CliCommand.List or CliCommand.Status)
+            string? pipe = FindRunningInstance();
+            if (pipe is null)
             {
-                return Print(await RunHeadlessAsync(request));
-            }
+                if (request.Command is CliCommand.List or CliCommand.Status or CliCommand.Surround)
+                {
+                    return Print(await RunHeadlessAsync(request));
+                }
 
-            if (!running && !StartTrayApp())
-            {
-                return Print(new CliResponse(CliExitCodes.Failed, "RigShift could not be started. See the log for details."));
+                if (!StartTrayApp())
+                {
+                    return Print(new CliResponse(CliExitCodes.Failed, "RigShift could not be started. See the log for details."));
+                }
+
+                pipe = PipeProtocol.PipeName;
             }
 
             Foreground.AllowAnyProcess(); // The confirmation window must be able to take the focus.
-            PipeResponse? response = await SendAsync(args, ConnectTimeout);
+            PipeResponse? response = await SendAsync(pipe, args, ConnectTimeout);
             return response is null
                 ? Print(new CliResponse(CliExitCodes.Failed, "RigShift did not respond. See the log for details."))
                 : Print(new CliResponse(response.ExitCode, response.Output));
@@ -72,16 +76,54 @@ internal static class CommandLineClient
         return response.ExitCode;
     }
 
-    private static bool IsAppRunning()
+    /// <summary>
+    /// The pipe of a running RigShift, our own Windows session first. Looking for the pipe rather than for the
+    /// single-instance mutex matters because the mutex is session-local: a command sent over SSH, from a scheduled
+    /// task or from a service runs in a session without a desktop, where the display API refuses everything. Handing
+    /// it to the instance that does sit on the desktop is the only way such a command can be answered at all.
+    /// Only this user's instance will accept us; the pipe's access list on the server side sees to that.
+    /// </summary>
+    private static string? FindRunningInstance()
     {
-        if (Mutex.TryOpenExisting(Program.SingleInstanceMutex, out Mutex? mutex))
+        string own = PipeProtocol.PipeName;
+        List<string> found;
+        try
         {
-            mutex.Dispose();
-            return true;
+            found = [.. Directory.GetFiles(PipeDirectory)
+                .Select(Path.GetFileName)
+                .Where(name => name is not null && name.StartsWith(PipePrefix, StringComparison.Ordinal))
+                .Select(name => name!)
+                .Order(StringComparer.Ordinal)];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Logger.Warning(ex, "The list of named pipes could not be read; falling back to this session");
+            return Mutex.TryOpenExisting(Program.SingleInstanceMutex, out Mutex? mutex) ? Keep(mutex, own) : null;
         }
 
-        return false;
+        if (found.Contains(own, StringComparer.Ordinal))
+        {
+            return own;
+        }
+
+        if (found.Count == 0)
+        {
+            return null;
+        }
+
+        // Another session holds the only instance - the usual case for a command that arrives without a desktop.
+        Logger.Information("No RigShift in this session; forwarding to {Pipe}", found[0]);
+        return found[0];
     }
+
+    private static string Keep(Mutex mutex, string pipe)
+    {
+        mutex.Dispose();
+        return pipe;
+    }
+
+    private const string PipeDirectory = @"\\.\pipe\";
+    private const string PipePrefix = "RigShift.";
 
     private static async Task<CliResponse> RunHeadlessAsync(CliRequest request)
     {
@@ -91,7 +133,9 @@ internal static class CommandLineClient
             new CcdDisplayConfigurator(log, TimeProvider.System),
             new PolicyConfigAudioController(log),
             new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())),
-            log);
+            log,
+            switcher: null,
+            new NvSurroundController(new CcdDisplayConfigurator(log, TimeProvider.System), log));
         return await runner.RunAsync(request, CancellationToken.None);
     }
 
@@ -119,11 +163,13 @@ internal static class CommandLineClient
         }
     }
 
-    private static async Task<PipeResponse?> SendAsync(IReadOnlyList<string> args, TimeSpan connectTimeout)
+    private static async Task<PipeResponse?> SendAsync(string pipeName, IReadOnlyList<string> args, TimeSpan connectTimeout)
     {
         try
         {
-            await using var pipe = new NamedPipeClientStream(".", PipeProtocol.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+            // No CurrentUserOnly: it compares token owners, which differ between an elevated and a plain process of
+            // the same user. Who may connect is decided by the pipe's access list on the server side.
+            await using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             using (var connect = new CancellationTokenSource(connectTimeout))
             {
                 await pipe.ConnectAsync(connect.Token);

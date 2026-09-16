@@ -30,6 +30,7 @@ public sealed class CommandRunner
     private readonly IAudioController _audio;
     private readonly ActiveProfileMatcher _matcher;
     private readonly IProfileSwitcher? _switcher;
+    private readonly ISurroundController? _surround;
     private readonly ILogger _log;
 
     public CommandRunner(
@@ -38,7 +39,8 @@ public sealed class CommandRunner
         IAudioController audio,
         ActiveProfileMatcher matcher,
         ILogger log,
-        IProfileSwitcher? switcher = null)
+        IProfileSwitcher? switcher = null,
+        ISurroundController? surround = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(display);
@@ -51,6 +53,7 @@ public sealed class CommandRunner
         _audio = audio;
         _matcher = matcher;
         _switcher = switcher;
+        _surround = surround;
         _log = log.ForContext<CommandRunner>();
     }
 
@@ -68,6 +71,7 @@ public sealed class CommandRunner
             {
                 CliCommand.List => await ListAsync(cancellationToken),
                 CliCommand.Status => await StatusAsync(cancellationToken),
+                CliCommand.Surround => await SurroundAsync(cancellationToken),
                 CliCommand.Apply => await ApplyAsync(request, cancellationToken),
                 CliCommand.Toggle => await ToggleAsync(request, cancellationToken),
                 CliCommand.Save => await SaveAsync(request.ProfileName ?? string.Empty, cancellationToken),
@@ -116,6 +120,51 @@ public sealed class CommandRunner
         foreach (DisplayAssignment display in ProfileEditing.CurrentArrangement(snapshot, [], DisplayNames.Known(profiles)))
         {
             text.AppendLine().Append("  ").Append(Describe(display));
+        }
+
+        return new CliResponse(CliExitCodes.Applied, text.ToString());
+    }
+
+    /// <summary>
+    /// Reads the Surround state and changes nothing. Worth its own command rather than a line in <c>status</c>: scripts
+    /// parse that output, and this one only says something on NVIDIA machines.
+    /// </summary>
+    private async Task<CliResponse> SurroundAsync(CancellationToken cancellationToken)
+    {
+        if (_surround is null)
+        {
+            return new CliResponse(CliExitCodes.Failed, "Surround cannot be read in this process.");
+        }
+
+        SurroundState state = await _surround.QueryAsync(cancellationToken);
+        var text = new StringBuilder();
+        text.Append("Surround: ").Append(state.Availability switch
+        {
+            SurroundAvailability.NoDriver => "no NVIDIA graphics driver",
+            SurroundAvailability.Unknown => "state unreadable",
+            _ => state.IsActive ? "on" : "off",
+        });
+        if (state.Message is { } message)
+        {
+            text.Append(" (").Append(message).Append(')');
+        }
+
+        foreach (SurroundGrid grid in state.Grids)
+        {
+            text.AppendLine().Append(CultureInfo.InvariantCulture,
+                $"  Grid {grid.Columns}x{grid.Rows}: {grid.Displays.Count} displays of {grid.Width}x{grid.Height}");
+            if (grid.RefreshRateHz > 0)
+            {
+                text.Append(CultureInfo.InvariantCulture, $" at {grid.RefreshRateHz} Hz");
+            }
+
+            text.Append(CultureInfo.InvariantCulture, $" as {grid.TotalWidth}x{grid.TotalHeight}");
+        }
+
+        IReadOnlyList<SurroundDisplay> displays = await _surround.ListDisplaysAsync(cancellationToken);
+        foreach (SurroundDisplay display in displays)
+        {
+            text.AppendLine().Append(CultureInfo.InvariantCulture, $"  Display {display.DisplayId:X8} {display.Name ?? "(no name)"}");
         }
 
         return new CliResponse(CliExitCodes.Applied, text.ToString());
