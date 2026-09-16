@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-16
+
+### Added
+
+- **Games.** A game entry brackets a whole evening: switch to its profile, start the wheel software, SimHub and
+  Crew Chief in the order you set, put their windows back where they belong, launch the game, and when you quit,
+  close the tools again and go wherever you want - stay, back to the profile from before, or on to another one. The
+  switch is the one you already know, with its countdown and its rollback; RigShift never ends the game itself.
+- **Your installed games are found for you.** The picker lists what Steam and Epic have on this machine, read from
+  their own files on disk - no sign-in, no account. A game can also be any executable. Store games start through
+  Steam or Epic, so overlay, anti-cheat and DRM see what they expect.
+- **The session ends when you are done, not between two races.** For sims whose interface outlives the sim -
+  iRacing, Assetto Corsa with Content Manager, rFactor 2, Automobilista 2, DCS - the session hangs on the interface.
+  For everything else, on the game itself. Known sims come prefilled.
+- **Window positions per game.** Capture where SimHub, Crew Chief and the overlays belong once; every session puts
+  them back, on the screens the profile has just set up.
+- **Start a game your way:** the Play button, the tray menu, a keyboard shortcut, a `rigshift://play/<name>` link,
+  `RigShift.exe play <name>`, or a desktop shortcut that carries the game’s own name and icon.
+  `RigShift.exe games` lists what is configured. And if you start the game from Steam yourself, RigShift can
+  notice and run the session anyway.
+
 ## [1.9.0] - 2026-09-16
 
 ### Added
