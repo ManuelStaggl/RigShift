@@ -427,4 +427,12 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gesichert</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gesichert {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gesichert {1}</value></data>
+  <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
+  <data name="SaveBar_Problem" xml:space="preserve"><value>{0} Problem</value></data>
+  <data name="SaveBar_Problems" xml:space="preserve"><value>{0} Probleme</value></data>
+  <data name="Common_Discard" xml:space="preserve"><value>Verwerfen</value></data>
+  <data name="Topology_Description" xml:space="preserve"><value>{0} Bildschirme: {1}</value></data>
+  <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (Hauptanzeige)</value></data>
+  <data name="Topology_Empty" xml:space="preserve"><value>Keine Bildschirme</value></data>
+  <data name="Topology_Missing" xml:space="preserve"><value>fehlt</value></data>
 </root>

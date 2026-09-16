@@ -42,7 +42,7 @@ public static class LiveRegion
         DependencyProperty[] watched = element switch
         {
             System.Windows.Controls.TextBlock => [System.Windows.Controls.TextBlock.TextProperty, UIElement.VisibilityProperty],
-            InfoBar => [InfoBar.MessageProperty, InfoBar.IsOpenProperty],
+            Wpf.Ui.Controls.InfoBar => [Wpf.Ui.Controls.InfoBar.MessageProperty, Wpf.Ui.Controls.InfoBar.IsOpenProperty],
             _ => [UIElement.VisibilityProperty],
         };
 
@@ -70,7 +70,7 @@ public static class LiveRegion
         element.Dispatcher.InvokeAsync(
             () =>
             {
-                if (element.IsVisible && element is not InfoBar { IsOpen: false })
+                if (element.IsVisible && element is not Wpf.Ui.Controls.InfoBar { IsOpen: false })
                 {
                     UIElementAutomationPeer.CreatePeerForElement(element)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
                 }

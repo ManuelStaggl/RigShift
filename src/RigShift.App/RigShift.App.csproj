@@ -38,6 +38,12 @@
     <InternalsVisibleTo Include="RigShift.App.Tests" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <!-- Developer aids (component gallery) stay out of release builds. -->
+    <Page Remove="ViewsDebug**" />
+    <Compile Remove="ViewsDebug**" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Brand package 1.0: only the assets the app uses. -->
     <Resource Include="Assets\Brand\*.ico;Assets\Brand\*.png" />

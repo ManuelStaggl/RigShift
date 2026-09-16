@@ -427,4 +427,12 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Not saved</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 icon, saved {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} icons, saved {1}</value></data>
+  <data name="SaveBar_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="SaveBar_Problem" xml:space="preserve"><value>{0} problem</value></data>
+  <data name="SaveBar_Problems" xml:space="preserve"><value>{0} problems</value></data>
+  <data name="Common_Discard" xml:space="preserve"><value>Discard</value></data>
+  <data name="Topology_Description" xml:space="preserve"><value>{0} displays: {1}</value></data>
+  <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (main display)</value></data>
+  <data name="Topology_Empty" xml:space="preserve"><value>No displays</value></data>
+  <data name="Topology_Missing" xml:space="preserve"><value>missing</value></data>
 </root>

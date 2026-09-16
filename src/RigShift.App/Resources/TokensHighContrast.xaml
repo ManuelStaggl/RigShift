@@ -1,0 +1,77 @@
+<!--
+  High contrast: the same RigShift keys as Tokens.xaml, taken from the Windows system colors. The WPF-UI keys are
+  not overridden here – its high contrast theme supplies them. BrandTheme reloads this dictionary whenever the
+  system colors change.
+-->
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+  <SolidColorBrush x:Key="RigShift.Brush.Chrome" Color="{x:Static SystemColors.WindowColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Page" Color="{x:Static SystemColors.WindowColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Layer" Color="{x:Static SystemColors.WindowColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.LayerHover" Color="{x:Static SystemColors.ControlColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Selected" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.OnSelected" Color="{x:Static SystemColors.HighlightTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Line" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.LineStrong" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.TextPrimary" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.TextSecondary" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.TextDisabled" Color="{x:Static SystemColors.GrayTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Accent" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.AccentHover" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.AccentPressed" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.AccentRing" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.OnAccent" Color="{x:Static SystemColors.HighlightTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Ok" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Warn" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.Error" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayFill" Color="{x:Static SystemColors.ControlColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayFillOff" Color="{x:Static SystemColors.WindowColor}" />
+  <DrawingBrush
+    x:Key="RigShift.Brush.Hatch"
+    TileMode="Tile"
+    Viewport="0,0,6,6"
+    ViewportUnits="Absolute"
+    Viewbox="0,0,6,6"
+    ViewboxUnits="Absolute">
+    <DrawingBrush.Drawing>
+      <GeometryDrawing>
+        <GeometryDrawing.Pen>
+          <Pen Brush="{x:Static SystemColors.WindowTextBrush}" Thickness="1" />
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <LineGeometry StartPoint="0,6" EndPoint="6,0" />
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <FontFamily x:Key="RigShift.Font.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="RigShift.Font.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontFamily x:Key="RigShift.Font.Small">Segoe UI Variable Small, Segoe UI</FontFamily>
+  <FontFamily x:Key="RigShift.Font.Mono">Cascadia Mono, Consolas</FontFamily>
+  <sys:Double x:Key="RigShift.Type.Caption.Size">12</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Caption.LineHeight">16</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Body.Size">14</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Body.LineHeight">20</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Subtitle.Size">20</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Subtitle.LineHeight">28</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Title.Size">28</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Title.LineHeight">36</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Mono.Size">12</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Mono.LineHeight">16</sys:Double>
+  <FontWeight x:Key="RigShift.Type.Weight.Regular">Normal</FontWeight>
+  <FontWeight x:Key="RigShift.Type.Weight.Strong">SemiBold</FontWeight>
+
+  <CornerRadius x:Key="RigShift.Radius.Control">6</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Card">12</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Window">12</CornerRadius>
+  <sys:Double x:Key="RigShift.Space.1">4</sys:Double>
+  <sys:Double x:Key="RigShift.Space.2">8</sys:Double>
+  <sys:Double x:Key="RigShift.Space.3">12</sys:Double>
+  <sys:Double x:Key="RigShift.Space.4">16</sys:Double>
+  <sys:Double x:Key="RigShift.Space.6">24</sys:Double>
+  <sys:Double x:Key="RigShift.Space.8">32</sys:Double>
+</ResourceDictionary>

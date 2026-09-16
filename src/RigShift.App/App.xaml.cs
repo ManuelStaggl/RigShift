@@ -122,6 +122,15 @@ public partial class App : Application, IAppShell
         try
         {
             ApplyWindowsTheme();
+#if DEBUG
+            // Developer aid: the component gallery as PNG; needs the resources only, so nothing else starts.
+            if (_request.PreviewGallery is { } galleryDirectory)
+            {
+                GalleryPreview.Write(galleryDirectory);
+                Shutdown();
+                return;
+            }
+#endif
 
             // A plain container: the app has no hosted services, configuration or Microsoft.Extensions.Logging users,
             // and every service logs through Serilog directly (analysis finding A-05).
@@ -270,38 +279,23 @@ public partial class App : Application, IAppShell
         base.OnExit(e);
     }
 
-    private void ApplyWindowsTheme()
+    private static void ApplyWindowsTheme()
     {
-        ApplicationTheme theme = ApplicationThemeManager.GetSystemTheme() switch
-        {
-            SystemTheme.HC1 or SystemTheme.HC2 or SystemTheme.HCBlack or SystemTheme.HCWhite => ApplicationTheme.HighContrast,
-            SystemTheme.Dark or SystemTheme.Glow or SystemTheme.CapturedMotion => ApplicationTheme.Dark,
-            _ => ApplicationTheme.Light,
-        };
-
-        // Debug builds only: --preview-theme for screenshots; ignored in release builds.
-        theme = _request.PreviewTheme switch
-        {
-#if DEBUG
-            "light" => ApplicationTheme.Light,
-            "dark" => ApplicationTheme.Dark,
-#endif
-            _ => theme,
-        };
-        // BrandTheme applies the Windows accent after each theme change. Every open window's theme watcher reports the same
-        // change (after an RDP reconnect twice in the log, finding R-01), so a repeat is skipped. High contrast is always
-        // applied: its colors can change without the theme changing.
-        ApplicationTheme applied = theme;
+        // One theme, dark; only high contrast comes from Windows. A window's theme watcher may still report the light
+        // theme – it is put back. Every open window's watcher reports the same change (after an RDP reconnect twice in the
+        // log, finding R-01), so a repeat is skipped. High contrast is always applied: its colors can change without the
+        // theme changing.
+        ApplicationTheme applied = ThemeFor(ApplicationThemeManager.GetSystemTheme());
         ApplicationThemeManager.Changed += (current, _) =>
         {
-#if DEBUG
-            // Each window's theme watcher applies the Windows theme when it attaches; a forced preview theme wins.
-            if (_request.PreviewTheme is "light" or "dark" && current != theme)
+            ApplicationTheme wanted = ThemeFor(ApplicationThemeManager.GetSystemTheme());
+            if (current != wanted)
             {
-                ApplicationThemeManager.Apply(theme, updateAccent: false);
+                Log.Debug("App theme {Theme} reported, applying {Wanted} instead", current, wanted);
+                ApplicationThemeManager.Apply(wanted, updateAccent: false);
                 return;
             }
-#endif
+
             if (current == applied && current != ApplicationTheme.HighContrast)
             {
                 Log.Debug("App theme {Theme} reported again, nothing to do", current);
@@ -312,9 +306,15 @@ public partial class App : Application, IAppShell
             Log.Information("App theme changed to {Theme} (Windows reports {SystemTheme})", current, ApplicationThemeManager.GetSystemTheme());
             BrandTheme.Apply(current);
         };
-        ApplicationThemeManager.Apply(theme, updateAccent: false);
-        BrandTheme.Apply(theme);
+        ApplicationThemeManager.Apply(applied, updateAccent: false);
+        BrandTheme.Apply(applied);
     }
+
+    private static ApplicationTheme ThemeFor(SystemTheme system) => system switch
+    {
+        SystemTheme.HC1 or SystemTheme.HC2 or SystemTheme.HCBlack or SystemTheme.HCWhite => ApplicationTheme.HighContrast,
+        _ => ApplicationTheme.Dark,
+    };
 
 #if DEBUG
     private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web);

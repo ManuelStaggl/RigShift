@@ -7,9 +7,11 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <!-- Replaced at startup by the Windows theme (light, dark or high contrast). -->
+        <!-- One theme, dark; BrandTheme swaps in the high contrast theme and tokens when Windows uses one. -->
         <ui:ThemesDictionary Theme="Dark" />
         <ui:ControlsDictionary />
+        <ResourceDictionary Source="Resources/Tokens.xaml" />
+        <ResourceDictionary Source="Resources/Controls.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 

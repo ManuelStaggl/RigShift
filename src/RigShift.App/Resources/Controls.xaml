@@ -1,0 +1,715 @@
+<!--
+  Component styles of RigShift 3.0 on the tokens in Tokens.xaml. Explicit keys throughout – an implicit TextBlock style
+  would leak into every WPF-UI template. Fonts and the text color are inherited from the window; every style that
+  sits on a page background sets its foreground anyway (WPF-UI draws ui:TextBlock too dark otherwise).
+-->
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
+  xmlns:loc="clr-namespace:RigShift.App.Localization">
+
+  <!-- Keyboard focus: a 2 px accent ring outside the control. -->
+  <Style x:Key="RigShift.FocusVisual">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle
+            Margin="-3"
+            RadiusX="8"
+            RadiusY="8"
+            SnapsToDevicePixels="True"
+            Stroke="{DynamicResource RigShift.Brush.Accent}"
+            StrokeThickness="2" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Text roles (spec 7.2) ===== -->
+  <Style x:Key="RigShift.Text.Body" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="RigShift.Text.BodyStrong" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style x:Key="RigShift.Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+  </Style>
+  <Style x:Key="RigShift.Text.CaptionStrong" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <!-- Field label: caption above the field, no colon. -->
+  <Style x:Key="RigShift.Text.Label" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+  <Style x:Key="RigShift.Text.Subtitle" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Display}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="LineHeight" Value="28" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style x:Key="RigShift.Text.Title" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Subtitle}">
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="LineHeight" Value="36" />
+  </Style>
+  <!-- Values: resolutions, refresh rates, hotkeys, process names, paths, times. -->
+  <Style x:Key="RigShift.Text.Mono" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="TextWrapping" Value="NoWrap" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style x:Key="RigShift.Text.MonoSecondary" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Mono}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+  </Style>
+
+  <!-- ===== Buttons (spec 7.3): one template, the rank sets fills through Interaction.* ===== -->
+  <ControlTemplate x:Key="RigShift.ButtonTemplate" TargetType="ButtonBase">
+    <Border
+      x:Name="Root"
+      Padding="{TemplateBinding Padding}"
+      Background="{TemplateBinding Background}"
+      BorderBrush="{TemplateBinding BorderBrush}"
+      BorderThickness="{TemplateBinding BorderThickness}"
+      CornerRadius="{DynamicResource RigShift.Radius.Control}"
+      SnapsToDevicePixels="True">
+      <ContentPresenter
+        x:Name="Content"
+        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+        RecognizesAccessKey="True"
+        TextElement.Foreground="{TemplateBinding Foreground}" />
+    </Border>
+    <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.HoverBackground), RelativeSource={RelativeSource TemplatedParent}}" />
+        <Setter TargetName="Content" Property="TextElement.Foreground" Value="{Binding Path=(controls:Interaction.HoverForeground), RelativeSource={RelativeSource TemplatedParent}}" />
+      </Trigger>
+      <Trigger Property="IsPressed" Value="True">
+        <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.PressedBackground), RelativeSource={RelativeSource TemplatedParent}}" />
+      </Trigger>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+      </Trigger>
+    </ControlTemplate.Triggers>
+  </ControlTemplate>
+
+  <!-- Secondary: the default rank. -->
+  <Style x:Key="RigShift.Button" TargetType="Button">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.Selected}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+    <Setter Property="Template" Value="{StaticResource RigShift.ButtonTemplate}" />
+  </Style>
+  <!-- Primary: the one accent button of a view (R-ACT-1). -->
+  <Style x:Key="RigShift.Button.Primary" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.AccentHover}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.AccentPressed}" />
+  </Style>
+  <!-- Ghost: quiet, for tertiary actions and toolbars. -->
+  <Style x:Key="RigShift.Button.Ghost" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.Selected}" />
+  </Style>
+  <!-- Icon buttons: 32 × 32, ghost or outlined. The content is a ui:SymbolIcon; the AutomationProperties.Name carries the meaning. -->
+  <Style x:Key="RigShift.Button.Icon" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style x:Key="RigShift.Button.IconOutlined" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <!-- Destructive: secondary look with red text, only in dialogs (R-ACT-3). -->
+  <Style x:Key="RigShift.Button.Danger" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Error}" />
+  </Style>
+  <!-- Link: underlined text, accent only on hover (R-COL-1: links are not accent). -->
+  <Style x:Key="RigShift.Link" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
+    <Setter Property="Height" Value="Auto" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="Transparent" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="Transparent" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <TextBlock
+            x:Name="Text"
+            Foreground="{TemplateBinding Foreground}"
+            Text="{TemplateBinding Content}"
+            TextDecorations="Underline" />
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Text" Property="Foreground" Value="{Binding Path=(controls:Interaction.HoverForeground), RelativeSource={RelativeSource TemplatedParent}}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Field (spec 7.3): 32 high, page background, strong line; focus = accent edge + 40 % ring ===== -->
+  <Style x:Key="RigShift.Field" TargetType="TextBox">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Page}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="SelectionOpacity" Value="0.4" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="AllowDrop" Value="True" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Grid>
+            <Border
+              x:Name="Ring"
+              Margin="-2"
+              BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
+              BorderThickness="2"
+              CornerRadius="8"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Root"
+              Padding="{TemplateBinding Padding}"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              SnapsToDevicePixels="True">
+              <ScrollViewer
+                x:Name="PART_ContentHost"
+                Margin="0"
+                Padding="0"
+                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                Focusable="False" />
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="controls:Interaction.IsInvalid" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="Validation.HasError" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="RigShift.Field.Mono" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+  <!-- Caption under a field with the validation reason. -->
+  <Style x:Key="RigShift.Text.FieldError" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+    <Setter Property="Margin" Value="0,4,0,0" />
+  </Style>
+  <!-- Select: the WPF-UI ComboBox on the tokens, sized like a field. -->
+  <Style x:Key="RigShift.Select" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="10,0,6,0" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+  </Style>
+  <!-- Toggle 36 × 20 and the check box on the WPF-UI templates; the tokens color them. -->
+  <Style x:Key="RigShift.Toggle" TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+  </Style>
+  <Style x:Key="RigShift.Check" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="Padding" Value="10,0,0,0" />
+  </Style>
+
+  <!-- ===== Segment: one of three ("Leave · Off · On"), a ListBox with equal cells ===== -->
+  <Style x:Key="RigShift.Segment" TargetType="ListBox">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Cycle" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <UniformGrid Rows="1" />
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBox">
+          <Border
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            ClipToBounds="True"
+            CornerRadius="{DynamicResource RigShift.Radius.Control}"
+            SnapsToDevicePixels="True">
+            <!-- The last cell's divider is pushed under the edge. -->
+            <ItemsPresenter Margin="0,0,-1,0" />
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemContainerStyle">
+      <Setter.Value>
+        <Style TargetType="ListBoxItem">
+          <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+          <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+          <Setter Property="FontSize" Value="14" />
+          <Setter Property="Padding" Value="8,0" />
+          <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="ListBoxItem">
+                <Border
+                  x:Name="Root"
+                  Padding="{TemplateBinding Padding}"
+                  Background="Transparent"
+                  BorderBrush="{DynamicResource RigShift.Brush.Line}"
+                  BorderThickness="0,0,1,0"
+                  SnapsToDevicePixels="True">
+                  <ContentPresenter
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    TextElement.Foreground="{TemplateBinding Foreground}" />
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+                  </Trigger>
+                  <Trigger Property="IsSelected" Value="True">
+                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
+                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnSelected}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                  </Trigger>
+                  <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                    <Setter TargetName="Root" Property="BorderThickness" Value="1" />
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Chip (22 high): a fact, in caption or mono ===== -->
+  <Style x:Key="RigShift.Chip" TargetType="ContentControl">
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Border
+            Padding="{TemplateBinding Padding}"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RigShift.Radius.Control}"
+            SnapsToDevicePixels="True">
+            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="RigShift.Chip.Mono" TargetType="ContentControl" BasedOn="{StaticResource RigShift.Chip}">
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
+  </Style>
+
+  <!-- ===== Card: layer surface, 12 radius, thin line; 16 padding (spec 7.3) ===== -->
+  <Style x:Key="RigShift.Card" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource RigShift.Radius.Card}" />
+    <Setter Property="Padding" Value="16" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+  <!-- Hairline between rows and groups. -->
+  <Style x:Key="RigShift.Divider" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+  <!-- Surface under a topology picture: chrome, dashed line, 12 radius. -->
+  <Style x:Key="RigShift.TopologyPanel" TargetType="ContentControl">
+    <Setter Property="Padding" Value="16,12,16,16" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <Rectangle
+              Fill="{DynamicResource RigShift.Brush.Chrome}"
+              RadiusX="12"
+              RadiusY="12"
+              SnapsToDevicePixels="True"
+              Stroke="{DynamicResource RigShift.Brush.Line}"
+              StrokeDashArray="4 3"
+              StrokeThickness="1" />
+            <ContentPresenter Margin="{TemplateBinding Padding}" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Master list and navigation rows (R-NAV-1/2, R-ACT-4: rows carry no buttons) ===== -->
+  <Style x:Key="RigShift.List" TargetType="ListBox">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+    <Setter Property="KeyboardNavigation.TabNavigation" Value="Once" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBox">
+          <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False">
+            <ItemsPresenter />
+          </ScrollViewer>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <ControlTemplate x:Key="RigShift.RowTemplate" TargetType="ListBoxItem">
+    <Grid>
+      <Border
+        x:Name="Root"
+        Padding="{TemplateBinding Padding}"
+        Background="{TemplateBinding Background}"
+        BorderBrush="{TemplateBinding BorderBrush}"
+        BorderThickness="{TemplateBinding BorderThickness}"
+        CornerRadius="{Binding Path=(controls:Interaction.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
+        SnapsToDevicePixels="True">
+        <ContentPresenter
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Center"
+          TextElement.Foreground="{TemplateBinding Foreground}" />
+      </Border>
+      <!-- Accent bar of the selected row (R-COL-1). -->
+      <Rectangle
+        x:Name="Bar"
+        Width="3"
+        Margin="0,8"
+        HorizontalAlignment="Left"
+        Fill="{DynamicResource RigShift.Brush.Accent}"
+        RadiusX="1.5"
+        RadiusY="1.5"
+        Visibility="Collapsed" />
+      <Border
+        x:Name="Focus"
+        Margin="2"
+        BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+        BorderThickness="2"
+        CornerRadius="{DynamicResource RigShift.Radius.Control}"
+        IsHitTestVisible="False"
+        Visibility="Collapsed" />
+    </Grid>
+    <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+      </Trigger>
+      <Trigger Property="IsSelected" Value="True">
+        <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
+        <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnSelected}" />
+      </Trigger>
+      <Trigger Property="IsKeyboardFocused" Value="True">
+        <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
+      </Trigger>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+      </Trigger>
+    </ControlTemplate.Triggers>
+  </ControlTemplate>
+  <!-- Master list row: 56 high, hairline below, 3 px bar when selected. -->
+  <Style x:Key="RigShift.ListRow" TargetType="ListBoxItem">
+    <Setter Property="Height" Value="56" />
+    <Setter Property="Padding" Value="16,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template" Value="{StaticResource RigShift.RowTemplate}" />
+  </Style>
+  <!-- Navigation entry: 36 high, 6 radius, symbol 16 + text; the page sets the content. -->
+  <Style x:Key="RigShift.NavItem" TargetType="ListBoxItem" BasedOn="{StaticResource RigShift.ListRow}">
+    <Setter Property="Height" Value="36" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="Margin" Value="0,0,0,2" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="controls:Interaction.CornerRadius" Value="6" />
+  </Style>
+
+  <!-- ===== Status line: dot + caption; the color never stands alone (R-COL-2) ===== -->
+  <Style TargetType="controls:StatusLine">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:StatusLine">
+          <Grid HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Ellipse
+              Width="8"
+              Height="8"
+              Margin="0,0,8,0"
+              VerticalAlignment="Center"
+              Fill="{TemplateBinding DotBrush}" />
+            <TextBlock
+              Grid.Column="1"
+              VerticalAlignment="Center"
+              Foreground="{TemplateBinding Foreground}"
+              Style="{StaticResource RigShift.Text.Caption}"
+              Text="{TemplateBinding Text}"
+              TextTrimming="CharacterEllipsis"
+              TextWrapping="NoWrap" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="Kind" Value="Ok">
+        <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Ok}" />
+      </Trigger>
+      <Trigger Property="Kind" Value="Warn">
+        <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Warn}" />
+      </Trigger>
+      <Trigger Property="Kind" Value="Error">
+        <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+      </Trigger>
+      <Trigger Property="Kind" Value="Accent">
+        <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===== Info bar: 40 high, 3 px edge, symbol, text, optional action ===== -->
+  <Style TargetType="controls:InfoBar">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="EdgeBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="Symbol" Value="Info16" />
+    <Setter Property="Padding" Value="12,8,12,8" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:InfoBar">
+          <Border
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RigShift.Radius.Control}"
+            SnapsToDevicePixels="True">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Border
+                Grid.Column="0"
+                Margin="-1,-1,0,-1"
+                Background="{TemplateBinding EdgeBrush}"
+                CornerRadius="6,0,0,6" />
+              <ui:SymbolIcon
+                Grid.Column="1"
+                Margin="12,0,10,0"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Foreground="{TemplateBinding EdgeBrush}"
+                Symbol="{TemplateBinding Symbol}" />
+              <TextBlock
+                Grid.Column="2"
+                Margin="0,8,12,8"
+                VerticalAlignment="Center"
+                Foreground="{TemplateBinding Foreground}"
+                Style="{StaticResource RigShift.Text.Body}"
+                Text="{TemplateBinding Text}" />
+              <ContentPresenter
+                Grid.Column="3"
+                Margin="0,0,12,0"
+                VerticalAlignment="Center"
+                Content="{TemplateBinding Action}" />
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="Kind" Value="Warn">
+        <Setter Property="EdgeBrush" Value="{DynamicResource RigShift.Brush.Warn}" />
+        <Setter Property="Symbol" Value="Warning16" />
+      </Trigger>
+      <Trigger Property="Kind" Value="Error">
+        <Setter Property="EdgeBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+        <Setter Property="Symbol" Value="ErrorCircle16" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===== Save bar: 48 high at the bottom of a detail; Save is the primary while it shows (R-ACT-1) ===== -->
+  <Style TargetType="controls:SaveBar">
+    <Setter Property="Height" Value="48" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="Padding" Value="24,0" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:SaveBar">
+          <Border
+            Padding="{TemplateBinding Padding}"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="0,1,0,0"
+            SnapsToDevicePixels="True">
+            <DockPanel LastChildFill="False">
+              <ui:SymbolIcon
+                Margin="0,0,12,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                FontSize="16"
+                Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                Symbol="Info16" />
+              <TextBlock
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Style="{StaticResource RigShift.Text.Body}"
+                Text="{loc:Tr SaveBar_Unsaved}" />
+              <StackPanel
+                x:Name="Problems"
+                Margin="12,0,0,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <ui:SymbolIcon
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  FontSize="14"
+                  Foreground="{DynamicResource RigShift.Brush.Error}"
+                  Symbol="ErrorCircle16" />
+                <TextBlock
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource RigShift.Brush.Error}"
+                  Style="{StaticResource RigShift.Text.Body}"
+                  Text="{TemplateBinding ProblemsText}" />
+              </StackPanel>
+              <Button
+                Margin="8,0,0,0"
+                Command="{TemplateBinding SaveCommand}"
+                Content="{loc:Tr Common_Save}"
+                DockPanel.Dock="Right"
+                IsDefault="True"
+                IsEnabled="{TemplateBinding CanSave}"
+                Style="{StaticResource RigShift.Button.Primary}" />
+              <Button
+                Command="{TemplateBinding DiscardCommand}"
+                Content="{loc:Tr Common_Discard}"
+                DockPanel.Dock="Right"
+                Style="{StaticResource RigShift.Button}" />
+            </DockPanel>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="CanSave" Value="True">
+              <Setter TargetName="Problems" Property="Visibility" Value="Collapsed" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Progress line: 2 px, indeterminate, accent – the only motion besides the countdown (spec 7.6) ===== -->
+  <Style TargetType="controls:ProgressLine">
+    <Setter Property="Height" Value="2" />
+    <Setter Property="TrackBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="BarBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+  </Style>
+</ResourceDictionary>
