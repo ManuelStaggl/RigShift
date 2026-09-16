@@ -26,6 +26,7 @@ public sealed class SwitchOrchestrator
     private readonly IDisplayConfigurator _display;
     private readonly IPowerController _power;
     private readonly IWindowRescuer _windows;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly ISwitchConfirmation _confirmation;
     private readonly TopologyPlanner _planner;
     private readonly SwitchOptions _options;
@@ -46,6 +47,7 @@ public sealed class SwitchOrchestrator
         IDuckingPreference ducking,
         IDuckingMemory duckingMemory,
         IWindowRescuer windows,
+        IDesktopIcons desktopIcons,
         ISurroundController surround,
         ISwitchConfirmation confirmation,
         ISwitchJournal journal,
@@ -62,6 +64,7 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(ducking);
         ArgumentNullException.ThrowIfNull(duckingMemory);
         ArgumentNullException.ThrowIfNull(windows);
+        ArgumentNullException.ThrowIfNull(desktopIcons);
         ArgumentNullException.ThrowIfNull(surround);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(journal);
@@ -73,6 +76,7 @@ public sealed class SwitchOrchestrator
         _display = display;
         _power = power;
         _windows = windows;
+        _desktopIcons = desktopIcons;
         _confirmation = confirmation;
         _journal = journal;
         _planner = planner;
@@ -290,6 +294,7 @@ public sealed class SwitchOrchestrator
 
         // Windows move only once the switch stays: a rejected one would leave them moved without a way back (B-14).
         await RescueWindowsAsync(cancellationToken);
+        await RestoreDesktopIconsAsync(profile, cancellationToken);
 
         // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
         // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
@@ -897,6 +902,77 @@ public sealed class SwitchOrchestrator
     /// After every successful apply (switch, rollback, restore, catch-up): windows left on a display that is off now
     /// move to the primary display. Failures are logged and never fail the switch.
     /// </summary>
+    /// <summary>
+    /// Puts the desktop symbols back where this profile wants them. Runs after the windows and under the same rule: only
+    /// once the switch is staying, because a rejected switch must not leave the desktop rearranged.
+    ///
+    /// Explorer lays the symbols out itself when the arrangement changes, and it does so a moment after the change – so
+    /// one attempt can be undone again right after it. Each pass therefore checks whether what it placed is still in
+    /// place and repeats while something moved. Never throws: a desktop that cannot be tidied is a log line, not a
+    /// failed switch.
+    /// </summary>
+    private async Task RestoreDesktopIconsAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        if (profile.DesktopIcons is not { IsEmpty: false } wanted)
+        {
+            return;
+        }
+
+        try
+        {
+            for (int attempt = 1; attempt <= _options.DesktopIconAttempts; attempt++)
+            {
+                await Task.Delay(_options.DesktopIconDelay, _time, cancellationToken);
+                DesktopIconResult result = _desktopIcons.Restore(wanted);
+                if (result.Outcome != DesktopIconOutcome.Restored)
+                {
+                    _log.Information("Desktop symbols for {Profile}: {Outcome}", profile.Name, result.Outcome);
+                    return;
+                }
+
+                _log.Information("Desktop symbols for {Profile}: {Placed} placed, {Missing} gone (attempt {Attempt})",
+                    profile.Name, result.Placed, result.Missing, attempt);
+
+                // What the shell actually made of it – with "align to grid" it snaps to the nearest cell, so comparing
+                // against the wish would never agree. The next pass only has to notice that Explorer moved them again.
+                DesktopIconLayout? settled = _desktopIcons.Capture();
+                if (settled is null || attempt == _options.DesktopIconAttempts)
+                {
+                    return;
+                }
+
+                await Task.Delay(_options.DesktopIconDelay, _time, cancellationToken);
+                if (!Moved(settled, _desktopIcons.Capture()))
+                {
+                    return;
+                }
+
+                _log.Information("Desktop symbols for {Profile} moved again, putting them back once more", profile.Name);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Restoring the desktop symbols failed");
+        }
+    }
+
+    /// <summary>Whether any symbol sits somewhere else than it did in <paramref name="settled"/>.</summary>
+    private static bool Moved(DesktopIconLayout settled, DesktopIconLayout? now)
+    {
+        if (now is null)
+        {
+            return false;
+        }
+
+        Dictionary<string, DesktopIcon> current = new(StringComparer.OrdinalIgnoreCase);
+        foreach (DesktopIcon icon in now.Icons)
+        {
+            current[icon.Item] = icon;
+        }
+
+        return settled.Icons.Any(icon => current.TryGetValue(icon.Item, out DesktopIcon? at) && (at.X != icon.X || at.Y != icon.Y));
+    }
+
     private async Task RescueWindowsAsync(CancellationToken cancellationToken)
     {
         try

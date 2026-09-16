@@ -420,4 +420,11 @@
   <data name="Common_Save" xml:space="preserve"><value>_Speichern</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Leeren</value></data>
+  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole</value></data>
+  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows würfelt sie beim Bildschirmwechsel durcheinander. Ordne sie bei aktivem Profil und sichere sie hier.</value></data>
+  <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Positionen sichern</value></data>
+  <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Vergessen</value></data>
+  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gesichert</value></data>
+  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gesichert {1}</value></data>
+  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gesichert {1}</value></data>
 </root>

@@ -113,3 +113,17 @@ QUERY_USER_NOTIFICATION_STATE
 IsWindow
 GetWindowText
 GetWindowTextLength
+
+// Desktop icon positions per profile. The shell owns the layout since Windows 10 1809: talking to the desktop
+// SysListView32 directly is ignored, IFolderView is the supported way (docs/desktop-icons.md).
+IShellWindows
+ShellWindows
+IFolderView
+IFolderView2
+IShellFolder
+_SVGIO
+FOLDERFLAGS
+SHGetDesktopFolder
+SHGDNF
+ILFree
+StrRetToStrW

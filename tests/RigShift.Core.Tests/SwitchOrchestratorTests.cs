@@ -875,6 +875,64 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_Applied_PutsTheDesktopSymbolsBack()
+    {
+        Profile rig = Rig() with { DesktopIcons = Layout };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        DesktopIcons.Restores.ShouldBe(1);
+        DesktopIcons.Capture().ShouldNotBeNull().Icons.ShouldBe(Layout.Icons);
+    }
+
+    [Fact]
+    public async Task Switch_WithoutSavedSymbols_LeavesTheDesktopAlone()
+    {
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        DesktopIcons.Restores.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Switch_WhenExplorerMovesTheSymbolsAgain_PutsThemBackOnceMore()
+    {
+        // Explorer lays the desktop out itself a moment after the arrangement changed, which undoes the first attempt.
+        DesktopIcons.MovesAfterRestore = 1;
+        Profile rig = Rig() with { DesktopIcons = Layout };
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        DesktopIcons.Restores.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Switch_WhenWindowsArrangesTheSymbols_StopsAfterOneAttempt()
+    {
+        // "Auto arrange icons" overrides every position, so trying again only wastes time.
+        DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
+        Profile rig = Rig() with { DesktopIcons = Layout };
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        DesktopIcons.Restores.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Switch_RolledBack_LeavesTheDesktopSymbolsAlone()
+    {
+        // Same rule as the windows: a switch the user rejects must not leave the desktop rearranged.
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        Profile rig = Rig(confirm: true) with { DesktopIcons = Layout };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        DesktopIcons.Restores.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Switch_RolledBack_MovesNoWindows()
     {
         _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
@@ -1237,7 +1295,21 @@ public sealed class SwitchOrchestratorTests
         _journal.Written.ShouldBeEmpty();
     }
 
+    /// <summary>The desktop the switch tidies up; tests that care about it reach in here.</summary>
+    private FakeDesktopIcons DesktopIcons { get; } = new();
+
+    /// <summary>A desktop layout to hand a profile: one shortcut and the recycle bin.</summary>
+    private static readonly DesktopIconLayout Layout = new()
+    {
+        Icons =
+        [
+            new DesktopIcon { Item = @"C:\Users\sim\Desktop\SimHub.lnk", X = 20, Y = 20 },
+            new DesktopIcon { Item = "::{645FF040-5081-101B-9F08-00AA002F954E}", X = 20, Y = 140 },
+        ],
+        CapturedAt = DateTimeOffset.UnixEpoch,
+    };
+
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _surround, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, DesktopIcons, _surround, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
             options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

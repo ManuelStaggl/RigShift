@@ -420,4 +420,11 @@
   <data name="Common_Save" xml:space="preserve"><value>_Save</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktop icons</value></data>
+  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows reshuffles them when the screens change. Arrange them with this profile active, then save them here.</value></data>
+  <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Save positions</value></data>
+  <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Forget</value></data>
+  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Not saved</value></data>
+  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 icon, saved {1}</value></data>
+  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} icons, saved {1}</value></data>
 </root>

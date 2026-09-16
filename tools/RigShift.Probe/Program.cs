@@ -82,6 +82,19 @@ switch (command)
         });
         break;
 
+    case "desktop-icons":
+        // Read-only: where the desktop symbols sit right now.
+        RigShift.Core.Profiles.DesktopIconLayout? desktop = new RigShift.Windows.Shell.DesktopIcons(log).Capture();
+        Print(desktop is null ? new { Reachable = false, Icons = (object?)null } : new { Reachable = true, Icons = (object?)desktop.Icons });
+        break;
+
+    case "desktop-icons-restore" when args.Length >= 2:
+        // Changes something: reads the layout from a JSON file written by "desktop-icons" and puts the symbols there.
+        var wanted = System.Text.Json.JsonSerializer.Deserialize<RigShift.Core.Profiles.DesktopIconLayout>(
+            File.ReadAllText(args[1]), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Print(new RigShift.Windows.Shell.DesktopIcons(log).Restore(wanted!));
+        break;
+
     case "usb":
         var usb = new RigShift.Windows.Apps.UsbDeviceList();
         Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
@@ -144,7 +157,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | desktop-icons | desktop-icons-restore <file> | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 

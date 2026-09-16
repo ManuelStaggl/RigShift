@@ -166,6 +166,6 @@ public sealed class SwitchOrchestratorSurroundTests
     };
 
     private SwitchOrchestrator Create(FakeDisplayConfigurator display) =>
-        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _surround, _confirmation, _journal,
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, new FakeDesktopIcons(), _surround, _confirmation, _journal,
             new TopologyPlanner(new TopologyPlannerOptions()), new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

@@ -17,6 +17,7 @@ public sealed class ProfileDialogs
 {
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly IAudioController _audio;
     private readonly SettingsService _settings;
     private readonly HotkeyService _hotkeys;
@@ -32,6 +33,7 @@ public sealed class ProfileDialogs
         SettingsService settings,
         HotkeyService hotkeys,
         IUsbDeviceList usbDevices,
+        IDesktopIcons desktopIcons,
         ISurroundController surround,
         IServiceProvider services,
         ILogger log)
@@ -43,6 +45,7 @@ public sealed class ProfileDialogs
         _settings = settings;
         _hotkeys = hotkeys;
         _usbDevices = usbDevices;
+        _desktopIcons = desktopIcons;
         _surround = surround;
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
@@ -240,7 +243,7 @@ public sealed class ProfileDialogs
         var viewModel = new ProfileEditorViewModel(
             profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
             [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
-            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, _catalog, _display, _hotkeys, _log);
+            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, _catalog, _display, _desktopIcons, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };

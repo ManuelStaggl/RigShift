@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-16
+
+### Added
+
+- **Desktop icon positions per profile.** Windows keeps a single icon layout for every arrangement, so switching
+  between your desk and your rig leaves the symbols scattered and you sort them by hand. A profile can now carry its
+  own layout: arrange the desktop while that profile is up, press **Save positions** in the profile editor, and every
+  switch to it puts the symbols back. Symbols that are gone are skipped, new ones keep their place, and a switch you
+  do not keep leaves the desktop alone. With "Auto arrange icons" on, Windows decides and RigShift says so.
+
 ## [2.1.2] - 2026-09-16
 
 ### Fixed

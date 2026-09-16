@@ -28,6 +28,7 @@ internal sealed class AppTestHost : IDisposable
             new FakeDuckingPreference(),
             new InMemoryDuckingMemory(),
             Substitute.For<IWindowRescuer>(),
+            Substitute.For<IDesktopIcons>(),
             Surround,
             Confirmation,
             new InMemorySwitchJournal(),

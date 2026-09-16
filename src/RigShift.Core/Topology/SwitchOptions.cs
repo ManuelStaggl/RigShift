@@ -45,6 +45,15 @@ public sealed record SwitchOptions
     /// </summary>
     public TimeSpan WindowRescueDelay { get; init; } = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    /// How long to wait before each attempt at the desktop symbols. Explorer rearranges them itself a moment after the
+    /// arrangement changed, so the first attempt can be overwritten again.
+    /// </summary>
+    public TimeSpan DesktopIconDelay { get; init; } = TimeSpan.FromSeconds(2);
+
+    /// <summary>How often to put the desktop symbols back while Explorer keeps moving them.</summary>
+    public int DesktopIconAttempts { get; init; } = 3;
+
     /// <summary>Interval for checking whether the device the apps wait for is connected.</summary>
     public TimeSpan DevicePollInterval { get; init; } = TimeSpan.FromSeconds(1);
 }

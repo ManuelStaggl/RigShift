@@ -71,6 +71,14 @@ public sealed record Profile
     /// <summary>Don't lower other sounds during calls while this profile is active (Windows communications setting).</summary>
     public bool DisableCommunicationsDucking { get; init; }
 
+    /// <summary>
+    /// Where the desktop symbols belong in this profile, or <c>null</c> to leave them alone. Windows keeps one icon
+    /// layout for all arrangements and reshuffles it whenever the main display or its resolution changes, so the way
+    /// back is per profile or not at all.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DesktopIconLayout? DesktopIcons { get; init; }
+
     /// <summary>Longer names push the badges and buttons off the profile card (analysis finding I-06).</summary>
     public const int MaxNameLength = 60;
 

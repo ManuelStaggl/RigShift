@@ -39,6 +39,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly Profile _initial;
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
 
@@ -54,6 +55,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         SurroundState surround,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
+        IDesktopIcons desktopIcons,
         HotkeyService hotkeys,
         ILogger log)
     {
@@ -101,6 +103,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
         FillAppsWaitChoices(_savedWaitDeviceId);
 
+        _desktopIcons = desktopIcons;
+        DesktopIcons = profile.DesktopIcons;
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
         FillSurroundChoices(surround, profile.Surround);
@@ -138,6 +142,42 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     [ObservableProperty]
     public partial bool KeepAwake { get; set; }
+
+    /// <summary>
+    /// Where the desktop symbols belong in this profile, or <c>null</c> to leave them alone. Captured on demand and not
+    /// on every save: the positions are only right while this profile's arrangement is the one on screen, and saving an
+    /// unrelated change from the other arrangement would quietly overwrite good ones.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DesktopIconsText))]
+    [NotifyPropertyChangedFor(nameof(HasDesktopIcons))]
+    public partial DesktopIconLayout? DesktopIcons { get; set; }
+
+    public bool HasDesktopIcons => DesktopIcons is { IsEmpty: false };
+
+    public string DesktopIconsText => DesktopIcons is { IsEmpty: false } layout
+        ? Loc.Format(
+            layout.Icons.Count == 1 ? "Editor_DesktopIconsSavedOne" : "Editor_DesktopIconsSaved",
+            layout.Icons.Count,
+            layout.CapturedAt.ToLocalTime().ToString("g", Loc.Instance.Culture))
+        : Loc.Instance["Editor_DesktopIconsNone"];
+
+    [RelayCommand]
+    private void CaptureDesktopIcons()
+    {
+        if (_desktopIcons.Capture() is { IsEmpty: false } layout)
+        {
+            DesktopIcons = layout;
+            _log.Information("Desktop symbols captured for {Profile}: {Count}", Name, layout.Icons.Count);
+        }
+        else
+        {
+            _log.Warning("Desktop symbols not captured for {Profile}: the desktop reported none", Name);
+        }
+    }
+
+    [RelayCommand]
+    private void ClearDesktopIcons() => DesktopIcons = null;
 
     [ObservableProperty]
     public partial bool DisableCommunicationsDucking { get; set; }
@@ -491,6 +531,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         AppsWaitForUsbDeviceName = SelectedAppsWaitDevice?.Key is { } waitId && _usbDeviceNames.TryGetValue(waitId, out string? waitName) ? waitName : null,
         KeepAwake = KeepAwake,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
+        DesktopIcons = DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = BuildSurround(),
     };
 

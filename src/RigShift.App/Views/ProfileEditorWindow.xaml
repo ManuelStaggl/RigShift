@@ -302,6 +302,23 @@
         <CheckBox Content="{loc:Tr Editor_KeepAwake}" IsChecked="{Binding KeepAwake}" ToolTip="{loc:Tr Editor_KeepAwakeHint}" />
         <TextBlock Margin="0,4,0,0" Style="{StaticResource Caption}" Text="{loc:Tr Editor_PowerHint}" />
 
+        <!-- Desktop symbols: captured on demand, because they are only right while this profile's screens are up. -->
+        <TextBlock Margin="0,16,0,2" Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_DesktopIcons}" />
+        <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Editor_DesktopIconsHint}" />
+        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+          <ui:Button Command="{Binding CaptureDesktopIconsCommand}" Content="{loc:Tr Editor_DesktopIconsCapture}" />
+          <ui:Button
+            Margin="8,0,0,0"
+            Command="{Binding ClearDesktopIconsCommand}"
+            Content="{loc:Tr Editor_DesktopIconsClear}"
+            Visibility="{Binding HasDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
+          <TextBlock
+            Margin="12,0,0,0"
+            VerticalAlignment="Center"
+            Style="{StaticResource Caption}"
+            Text="{Binding DesktopIconsText}" />
+        </StackPanel>
+
         <Grid Margin="0,24,0,8">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
