@@ -164,6 +164,18 @@ public partial class App : Application, IAppShell
                 AppPickerWindow.Pick(null, null, () => System.Text.Json.JsonSerializer.Deserialize<List<Windows.Apps.DiscoveredApp>>(
                     System.IO.File.ReadAllText(demoApps), PreviewJson) ?? []);
             }
+
+            // Developer aid: the game picker and the window capture, which otherwise only open from inside the editor.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMEPICKER") is { Length: > 0 })
+            {
+                _ = Views.GamePickerWindow.PickAsync(null, Services.GetRequiredService<GameDialogs>());
+            }
+
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
+            {
+                _ = Dispatcher.InvokeAsync(() =>
+                    Views.WindowCaptureWindow.Capture(null, Services.GetRequiredService<GameDialogs>(), null));
+            }
 #endif
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) =>

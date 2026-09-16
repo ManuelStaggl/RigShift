@@ -61,9 +61,25 @@ public sealed class GameDialogs
 
     public Task<GameEntry?> EditAsync(GameEntry game) => ShowAsync(game, isNew: false);
 
+#if DEBUG
+    private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web)
+    {
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
+    };
+#endif
+
     /// <summary>The installed games of every known source, read off the disk.</summary>
     public Task<IReadOnlyList<InstalledGame>> FindInstalledAsync() => Task.Run(() =>
     {
+#if DEBUG
+        // Developer aid: a demo library (JSON array of name and launch) for screenshots on a machine without stores.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMES") is { Length: > 0 } demoGames)
+        {
+            return (IReadOnlyList<InstalledGame>)(System.Text.Json.JsonSerializer.Deserialize<List<InstalledGame>>(
+                File.ReadAllText(demoGames), PreviewJson) ?? []);
+        }
+#endif
+
         try
         {
             return _library.Find();
