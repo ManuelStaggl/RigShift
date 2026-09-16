@@ -46,6 +46,12 @@ public enum PlanWarningKind
     /// <summary>The display was matched by EDID instead of device path (port or cable changed).</summary>
     MatchedByEdidFallback,
 
+    /// <summary>
+    /// The display was matched by its name because neither path nor EDID found it – a monitor can report a different
+    /// hardware ID per input (HDMI vs DisplayPort), which leaves nothing else to go by.
+    /// </summary>
+    MatchedByNameFallback,
+
     /// <summary>No display in the plan is marked primary; the OS will pick one.</summary>
     NoPrimary,
 

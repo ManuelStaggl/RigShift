@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>2.1.1</Version>
+    <Version>2.1.2</Version>
     <Authors>Manuel Staggl</Authors>
     <Product>RigShift</Product>
     <Copyright>Copyright © 2026 Manuel Staggl</Copyright>

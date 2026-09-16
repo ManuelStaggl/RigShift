@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-09-16
+
+### Fixed
+
+- A monitor that reports a different hardware ID on each of its inputs was no longer found after the cable moved from
+  HDMI to DisplayPort: the profile said "display missing" although it was connected and idle. When neither the device
+  path nor the EDID finds a display, RigShift now matches it by its name, as long as that name is unique among both
+  the profile's displays and the connected ones - two identical monitors stay ambiguous, as before.
+
 ## [2.1.1] - 2026-09-16
 
 ### Fixed

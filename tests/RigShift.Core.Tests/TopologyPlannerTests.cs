@@ -37,6 +37,41 @@ public sealed class TopologyPlannerTests
     }
 
     [Fact]
+    public void Plan_MatchesByName_WhenPathAndEdidBothChanged_AndWarns()
+    {
+        // HW: the Odyssey G93SC reports one hardware ID over HDMI and another over DisplayPort, and its profile entry
+        // was written without an EDID at all. Neither the path nor the EDID finds it after the cable swap.
+        DisplayIdentity onDisplayPort = Ultrawide with
+        {
+            TargetDevicePath = @"\?\DISPLAY#SAM0002#OTHERPORT&7",
+            EdidManufacturerId = 0x4C2D,
+            EdidProductCodeId = 0x0002,
+        };
+        Profile profile = Profile("Rig", [UltrawideMode with { Identity = Ultrawide with { EdidManufacturerId = 0, EdidProductCodeId = 0 } }]);
+
+        TopologyPlan plan = _planner.Plan(profile, Snapshot(Attached(onDisplayPort)));
+
+        plan.Resolved.Single().Target.Identity.ShouldBe(onDisplayPort);
+        plan.Warnings.Single().Kind.ShouldBe(PlanWarningKind.MatchedByNameFallback);
+    }
+
+    [Fact]
+    public void Plan_DoesNotMatchByName_WhenTwoDisplaysShareIt()
+    {
+        // Two identical monitors: the name says nothing, so this stays as ambiguous as the EDID pass leaves it.
+        DisplayIdentity twin = Desk4K with { FriendlyName = "Ultrawide 49", TargetDevicePath = @"\?\DISPLAY#AUS0002#OTHER&3" };
+        Profile profile = Profile("Rig", [
+            UltrawideMode with { Identity = Ultrawide with { EdidManufacturerId = 0, EdidProductCodeId = 0, TargetDevicePath = @"\?\DISPLAY#GONE#1" } },
+            UltrawideMode with { Identity = Ultrawide with { EdidManufacturerId = 0, EdidProductCodeId = 0, TargetDevicePath = @"\?\DISPLAY#GONE#2" } },
+        ]);
+
+        TopologyPlan plan = _planner.Plan(profile, Snapshot(Attached(twin)));
+
+        plan.Resolved.ShouldBeEmpty();
+        plan.Missing.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void Plan_MatchesByEdid_WhenPortChanged_AndWarns()
     {
         DisplayIdentity movedPort = Ultrawide with { TargetDevicePath = @"\\?\DISPLAY#SAM0001#OTHERPORT&9" };

@@ -29,6 +29,7 @@ public sealed class TopologyPlanner
         IReadOnlyList<DisplayAssignment> assignments = profile.Displays;
         var matches = new AttachedDisplay?[assignments.Count];
         var matchedByEdid = new bool[assignments.Count];
+        var matchedByName = new bool[assignments.Count];
         var claimed = new HashSet<AttachedDisplay>(ReferenceEqualityComparer.Instance);
 
         // Pass 1: device paths. Runs for all assignments first so that an EDID match can never steal
@@ -87,6 +88,52 @@ public sealed class TopologyPlanner
             }
         }
 
+        // Pass 3: the monitor's name. A display can answer its inputs with different hardware IDs – the Odyssey G93SC
+        // reports one EDID over HDMI and another over DisplayPort – so after a cable swap neither the path nor the EDID
+        // finds it again, and profiles written before this even stored an empty EDID. Only accepted when the name is
+        // unique on both sides, so two identical monitors stay as ambiguous as they are for the EDID pass.
+        for (int i = 0; i < assignments.Count; i++)
+        {
+            if (matches[i] is not null)
+            {
+                continue;
+            }
+
+            string wantedName = assignments[i].Identity.FriendlyName;
+            if (string.IsNullOrWhiteSpace(wantedName))
+            {
+                continue;
+            }
+
+            // Monitors of the same model report the same name, so the name may only decide where the EDID cannot:
+            // where it is unknown, or where no other unmatched display of the profile shares it. Otherwise this would
+            // guess between two identical monitors, which is exactly what the EDID pass refuses to do.
+            if (HasEdidTwin(assignments, matches, i))
+            {
+                continue;
+            }
+
+            int sameName = Enumerable.Range(0, assignments.Count)
+                .Count(j => matches[j] is null && SameName(assignments[j].Identity.FriendlyName, wantedName));
+            List<AttachedDisplay> candidates = NameCandidates(wantedName, snapshot, claimed);
+            if (sameName > 1 || candidates.Count != 1)
+            {
+                if (sameName > 1 && candidates.Count > 0)
+                {
+                    warnings.Add(new PlanWarning(
+                        PlanWarningKind.AmbiguousTwin,
+                        string.Create(CultureInfo.InvariantCulture,
+                            $"{DisplayNames.Of(assignments[i])} was not matched by name: {sameName} displays of the profile share it, {candidates.Count} candidate(s).")));
+                }
+
+                continue;
+            }
+
+            matches[i] = candidates[0];
+            matchedByName[i] = true;
+            Claim(candidates[0], snapshot, claimed);
+        }
+
         var resolved = new List<PlannedDisplay>();
         var missing = new List<MissingDisplay>();
 
@@ -112,6 +159,13 @@ public sealed class TopologyPlanner
                         PlanWarningKind.MatchedByEdidFallback,
                         string.Create(CultureInfo.InvariantCulture,
                             $"{DisplayNames.Of(assignment)} was matched by EDID at {match.Identity.TargetDevicePath} (port or cable changed).")));
+                }
+                else if (matchedByName[i])
+                {
+                    warnings.Add(new PlanWarning(
+                        PlanWarningKind.MatchedByNameFallback,
+                        string.Create(CultureInfo.InvariantCulture,
+                            $"{DisplayNames.Of(assignment)} was matched by name at {match.Identity.TargetDevicePath} (input, port or cable changed).")));
                 }
             }
         }
@@ -164,6 +218,46 @@ public sealed class TopologyPlanner
 
         return candidates;
     }
+
+    /// <summary>
+    /// Displays that call themselves <paramref name="wantedName"/>, one entry per target and the available one first –
+    /// the same rule the EDID pass uses, so a stale target never wins over a live one.
+    /// </summary>
+    private static List<AttachedDisplay> NameCandidates(string wantedName, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+    {
+        List<AttachedDisplay> candidates = snapshot.Displays
+            .Where(d => !claimed.Contains(d) && SameName(d.Identity.FriendlyName, wantedName))
+            .GroupBy(d => d.Identity.TargetDevicePath, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.OrderByDescending(d => d.IsAvailable).First())
+            .ToList();
+
+        if (candidates.Count > 1)
+        {
+            candidates = [.. candidates.Where(d => d.IsAvailable)];
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
+    /// Whether another display of the profile that is still unmatched carries the same known EDID – then the two are
+    /// identical monitors and nothing but their port tells them apart. An unknown EDID (0/0) is not an identity and
+    /// never makes a twin.
+    /// </summary>
+    private static bool HasEdidTwin(IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, int index)
+    {
+        DisplayIdentity wanted = assignments[index].Identity;
+        if (wanted.EdidManufacturerId == 0 && wanted.EdidProductCodeId == 0)
+        {
+            return false;
+        }
+
+        return Enumerable.Range(0, assignments.Count)
+            .Any(j => j != index && matches[j] is null && SameEdid(assignments[j].Identity, wanted));
+    }
+
+    private static bool SameName(string a, string b) =>
+        !string.IsNullOrWhiteSpace(a) && string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
 
     private static bool SameEdid(DisplayIdentity a, DisplayIdentity b) =>
         (a.EdidManufacturerId != 0 || a.EdidProductCodeId != 0)
