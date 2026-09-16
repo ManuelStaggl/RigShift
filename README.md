@@ -10,7 +10,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 RigShift switches a Windows PC between your desk and your sim rig: display layout, sound and apps in one step, by
-hotkey, from the tray, or automatically when the wheelbase turns on.
+hotkey, from the tray, or automatically when the wheelbase turns on. Or it does the whole evening for you – one click
+starts the sim with the right screens, its tools and their windows, and puts everything back when you quit.
 
 **[Download](https://github.com/ManuelStaggl/RigShift/releases/latest)** · Windows 10/11 · free, no admin rights ·
 [Changelog](CHANGELOG.md)
@@ -28,6 +29,9 @@ hotkey, from the tray, or automatically when the wheelbase turns on.
   HDR, plus playback and microphone device with volume.
 - **Automation.** A rule switches to the rig when your wheelbase (any USB device) connects and back when it is gone,
   after a delay you choose.
+- **Games.** A game entry brackets a whole session: switch to its profile, start SimHub and Crew Chief, put their
+  windows back where they belong, launch the sim from Steam or Epic, and clean up when it ends. Start it from the tray,
+  a hotkey or its own desktop shortcut – or let RigShift notice when you start the game from Steam yourself.
 - **Apps.** Start SimHub, Crew Chief or anything else with a profile and close what you do not need.
 - **One atomic switch.** Windows gets the whole layout at once, so the switch either works or nothing changes. No
   picture afterwards? It reverts on its own.
@@ -37,6 +41,8 @@ hotkey, from the tray, or automatically when the wheelbase turns on.
 
 | | |
 |---|---|
+| <img alt="Games page" src="docs/screenshots/games-dark.png" width="400"> | <img alt="Game editor" src="docs/screenshots/game-editor-dark.png" width="400"> |
+| **Games** – one click for the sim, its profile, its tools and the way back. | **Game editor** – launcher, profile, tools with their order, window positions and what happens when you quit. |
 | <img alt="Automation page" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Profile editor" src="docs/screenshots/profile-editor-dark.png" width="400"> |
 | **Automation** – to the rig when wheelbase and pedals are on, back when they are off. | **Profile editor** – displays, refresh rate, HDR, hotkey, audio and apps. |
 | <img alt="Tray popup" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog" src="docs/screenshots/confirmation-dark.png" width="400"> |
@@ -54,10 +60,12 @@ the next start (Settings). Data lives in `%AppData%\RigShift`.
 
 ## Stream Deck and button boxes
 
-- **Hotkey action:** give the profile a keyboard shortcut. **Settings → Back to the previous profile** gives you one
-  key for both directions.
-- **Website action:** `rigshift://apply/Rig` or `rigshift://toggle`. Links always ask for confirmation.
-- **Open action:** **⋯ → Create desktop shortcut** on a profile.
+- **Hotkey action:** give the profile or the game a keyboard shortcut. **Settings → Back to the previous profile**
+  gives you one key for both directions.
+- **Website action:** `rigshift://apply/Rig`, `rigshift://toggle` or `rigshift://play/iRacing`. Links always ask for
+  confirmation.
+- **Open action:** **⋯ → Create desktop shortcut** on a profile or a game. A game's shortcut carries the game's name
+  and its icon.
 
 ## Command line
 
@@ -67,10 +75,12 @@ RigShift.exe toggle [--no-confirm] [--dry-run]
 RigShift.exe save <name>
 RigShift.exe list
 RigShift.exe status
+RigShift.exe games
+RigShift.exe play <name>
 ```
 
-Exit codes: 0 applied, 1 failed, 2 blocked (required display missing), 3 not confirmed and reverted, 4 profile not
-found, 5 invalid arguments. RigShift.exe is a GUI program; use `start /wait` (cmd) or `Start-Process -Wait -NoNewWindow`
+Exit codes: 0 applied, 1 failed, 2 blocked (required display missing), 3 not confirmed and reverted, 4 profile or game
+not found, 5 invalid arguments. RigShift.exe is a GUI program; use `start /wait` (cmd) or `Start-Process -Wait -NoNewWindow`
 (PowerShell) to see its output.
 
 ## Requirements

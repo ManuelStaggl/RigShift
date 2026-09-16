@@ -7,7 +7,7 @@ RigShift is meant to stay small: switch into the rig and back, reliably. Release
 
 - Head-budget limits for AMD and Intel cards, once community reports show where they are. Today the warning
   ("this card may not drive all of these displays") is NVIDIA-only.
-- Fixes and small improvements from user reports. Releases are batched; hotfixes ship on their own.
+- Fixes and small improvements from user reports. Whatever is finished is released; there is no release train.
 
 ## Under consideration
 
@@ -20,7 +20,8 @@ Ideas that come up regularly and are not ruled out, but need a real use case bef
 
 Reviewed and dropped, because they do not belong to the core or are covered by what exists:
 
-- Game or process triggers with per-game templates (the switch came too late, while the game was already starting).
+- Switching on any process start: watching for a game that is already launching is too late. A game entry starts the
+  game itself, which is early enough, and it can also pick up a game you started from Steam yourself.
 - Power plan, wallpaper, taskbar or DPI scaling per profile.
 - Per-app volume and audio-only profiles.
 - Local HTTP API, Home Assistant / MQTT: the CLI, hotkeys and `rigshift://` links cover scripts and Stream Deck.

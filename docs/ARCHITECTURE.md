@@ -4,11 +4,11 @@
 
 | Project | Target | Role |
 |---|---|---|
-| `src/RigShift.Core` | `net10.0` | Domain: profiles, topology planning, switch orchestration, automation rules, CLI parsing and command runner, pipe protocol, settings and JSON profile store, release notes, legacy import parsing. **No Win32, no UI.** |
-| `src/RigShift.Windows` | `net10.0-windows10.0.26100.0` | OS adapters: CCD API, Core Audio + `IPolicyConfig`, communications ducking, app launcher, USB device list and power check, keep-awake, window rescue, autostart, `rigshift://` registration, shortcuts. CsWin32-generated interop. |
+| `src/RigShift.Core` | `net10.0` | Domain: profiles, topology planning, switch orchestration, game entries and sessions, automation rules, CLI parsing and command runner, pipe protocol, settings and the JSON profile and game stores, release notes, legacy import parsing. **No Win32, no UI.** |
+| `src/RigShift.Windows` | `net10.0-windows10.0.26100.0` | OS adapters: CCD API, NVAPI (Surround), Core Audio + `IPolicyConfig`, communications ducking, app launcher, installed-game detection and launching, window placement, USB device list and power check, keep-awake, window rescue, autostart, `rigshift://` registration, shortcuts. CsWin32-generated interop. |
 | `src/RigShift.App` | `net10.0-windows10.0.26100.0` | WPF tray app (WPF-UI, H.NotifyIcon), DI host, CLI entry point, single instance + pipe server, display change watcher, hotkeys, automation service, Velopack updates. |
 | `tests/RigShift.Core.Tests` | `net10.0` | xunit v3 + Shouldly + NSubstitute. Runs on any OS. |
-| `tests/RigShift.Windows.Tests` | `net10.0-windows10.0.26100.0` | CCD struct layout, path building, legacy import. |
+| `tests/RigShift.Windows.Tests` | `net10.0-windows10.0.26100.0` | CCD struct layout, path building, legacy import, store detection against a fake install folder. |
 | `tests/RigShift.App.Tests` | `net10.0-windows10.0.26100.0` | App services without UI automation: switch coordinator, pipe server, settings, automation service, diagnostics report. |
 
 Dependencies point inward only: `App → Windows → Core`. Core defines the interfaces; Windows implements them;
@@ -25,6 +25,15 @@ App composes them.
 - **`TopologyPlan`** – the result of matching a profile against a snapshot: resolved, missing, warnings,
   `IsBlocked`, `ShouldRetryLater`. Shown to the user instead of raw error codes.
 - **`SwitchResult`** – outcome of a switch (`Applied`, `AppliedPartially`, `RolledBack`, `Blocked`, `Failed`, `DryRun`).
+- **`GameEntry`** – a game and everything that belongs to a session of it: how it is launched (executable, Steam app
+  id, Epic app name), the profile to switch to first, the companion programs, saved window positions, a hotkey, and
+  what happens when it ends. Deliberately not a `Profile`: a profile is a state of the machine, a game has a start and
+  an end.
+- **`GameSessionRunner`** – one session: apply the profile (the same `SwitchOrchestrator`), start the programs before
+  the game, put the helper windows back, start the game, learn its process name, wait for it to end, stop the
+  programs, run the exit action. RigShift never ends the game itself – unsaved progress, and anti-cheat drivers take a
+  dim view of anyone touching their process. What counts as "ended" is a choice (`SessionEnd`): iRacing's interface
+  outlives the sim, so hanging the session on the sim would end it between two races.
 - **`AutomationRule`** – USB device trigger: switch to a profile once all of the rule's devices are connected, and
   after a delay per rule switch to a profile or back once one of them is gone. `AutomationTrigger` decides from polled
   device ids (pure logic); rules of 1.3 with a single `usbDeviceId` are migrated on load.
@@ -60,8 +69,13 @@ and the decisions in `docs/decisions/`.
 | `IUsbPowerCheck` | `UsbPowerCheck` | Read-only: USB selective suspend of the active scheme on AC (`PowerReadACValueIndex`) and `Device Parameters` flags under `HKLM\…\Enum\USB`. `UsbPowerSaving.ShouldWarn` (Core) decides whether the Automation page warns. |
 | `IWindowRescuer` | `WindowRescuer` | After every successful apply (+1 s): `EnumWindows`, visible/uncloaked/non-tool windows that `MonitorFromRect` places on no monitor move to the primary work area via `SetWindowPlacement`. Geometry in `WindowGeometry` (Core). |
 | `IDuckingPreference` | `RegistryDuckingPreference` | HKCU `Software\Microsoft\Multimedia\Audio\UserDuckingPreference` (undocumented; 3 = do nothing, missing = reduce by 80 %). The previous value is kept by `IDuckingMemory` (`SettingsDuckingMemory`, App). |
+| `IGameLibrary` | `GameLibrary` (Steam + Epic) | Installed games from the stores' own manifests on disk – no sign-in, no token, no account. Steam's `libraryfolders.vdf` and `appmanifest_*.acf` are parsed by `ValveDataFormat`, Epic's by its JSON manifests. |
+| `IGameStarter` | `ShellGameStarter` | Starts a store game through `steam://rungameid/` or `com.epicgames.launcher://`, never the executable: overlay, anti-cheat and DRM expect the client in the chain. Only a direct executable hands back the game's own process id. |
+| `IGameProcesses` | `SystemGameProcesses` | Read-only listing and waiting. `GameProcessLearner` (Core) works out which new process is the game, filtered by the install folder. |
+| `IWindowLayout` | `WindowLayoutManager` | Captures and restores window positions (`SetWindowPlacement`), for the helper windows around a game. |
 | `IAutostart` | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
 | `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. Settings: `JsonSettingsStore` (Core). |
+| `IGameStore` | `JsonGameStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\games.json`, one file rather than one per game: games are few and are always shown as a list. |
 | `ISwitchConfirmation` | `WpfSwitchConfirmation` in `RigShift.App` | Countdown window "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |
 
 There is no device notification listener. Display changes reach the app through `DisplayChangeWatcher`
@@ -71,10 +85,15 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
 ## Process model
 
 - Single instance via named mutex; a second instance forwards its CLI arguments over the named pipe
-  `\\.\pipe\RigShift.<SessionId>` (one per Windows session, current user only) and exits with the result code.
-- CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | list | save <name> | status`.
-  Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back, 4 unknown profile,
-  5 invalid arguments.
+  `\\.\pipe\RigShift.<SessionId>` (one per Windows session) and exits with the result code. A command that arrives in
+  a session without a desktop – over SSH, from a scheduled task – is forwarded to the one listening instance, which
+  does sit on the desktop; the display API refuses everything else there. Who may connect is decided by the pipe's
+  access list on this user's SID, not by `CurrentUserOnly`, whose owner comparison already fails for an SSH session
+  of an administrator.
+- CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | toggle | list | save <name> | status | surround |
+  games | play <name>`. Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back,
+  4 unknown profile or game, 5 invalid arguments. `play` returns as soon as the session started – it outlives the
+  command by hours.
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).
 - Data lives in `%AppData%\RigShift` because Velopack installs into `%LocalAppData%\RigShift` and deletes that
   folder on uninstall.
