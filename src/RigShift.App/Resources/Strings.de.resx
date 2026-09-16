@@ -29,6 +29,7 @@
   <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Wechsle …</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
+  <data name="Tray_PlayGame" xml:space="preserve"><value>{0} starten</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anzeigeeinstellungen beibehalten?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
@@ -112,6 +113,7 @@
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Shortcut_Description" xml:space="preserve"><value>Auf das RigShift-Profil „{0}“ umschalten</value></data>
+  <data name="Shortcut_GameDescription" xml:space="preserve"><value>Das Spiel „{0}“ mit RigShift starten</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>„{0}“ gespeichert.</value></data>
   <data name="Status_Duplicated" xml:space="preserve"><value>„{0}“ angelegt.</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>

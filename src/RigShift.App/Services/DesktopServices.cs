@@ -13,6 +13,7 @@ using RigShift.App.ViewModels;
 using RigShift.App.Views;
 using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using RigShift.Windows.Ui;
@@ -88,6 +89,8 @@ public sealed class TrayIconService : IDisposable
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
     private readonly AutomationService _automation;
+    private readonly GameCatalog _games;
+    private readonly GameSessionService _sessions;
     private static readonly TimeSpan ErrorNotificationInterval = TimeSpan.FromSeconds(30);
 
     private readonly ILogger _log;
@@ -105,14 +108,24 @@ public sealed class TrayIconService : IDisposable
         UpdateService updates,
         HotkeyService hotkeys,
         AutomationService automation,
+        GameCatalog games,
+        GameSessionService sessions,
         SwitchOptions switchOptions,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(switchOptions);
         ArgumentNullException.ThrowIfNull(hotkeys);
         ArgumentNullException.ThrowIfNull(automation);
+        ArgumentNullException.ThrowIfNull(games);
+        ArgumentNullException.ThrowIfNull(sessions);
         _automation = automation;
+        _games = games;
+        _sessions = sessions;
         automation.Changed += (_, _) => RebuildMenu();
+
+        // A game that runs is not startable again, and a game added on the page belongs in the menu right away.
+        games.Changed += (_, _) => RebuildMenu();
+        sessions.SessionChanged += (_, _) => RebuildMenu();
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(popupViewModel);
@@ -363,6 +376,25 @@ public sealed class TrayIconService : IDisposable
         if (_catalog.Items.Count == 0)
         {
             menu.Items.Add(new MenuItem { Header = Loc.Instance["Tray_NoProfiles"], IsEnabled = false });
+        }
+
+        // Games below the profiles, each starting its session. Flat rather than in a submenu: starting a race is the
+        // one thing the tray is there for, and nobody has dozens of games configured.
+        if (_games.Items.Count > 0)
+        {
+            menu.Items.Add(new Separator());
+            foreach (GameItem item in _games.Items)
+            {
+                GameEntry game = item.Game;
+                var entry = new MenuItem
+                {
+                    Header = Loc.Format("Tray_PlayGame", item.Name),
+                    IsEnabled = !_sessions.IsRunning(game.Id),
+                    InputGestureText = game.Hotkey is { } gameHotkey ? HotkeyFormat.Format(gameHotkey) : string.Empty,
+                };
+                entry.Click += (_, _) => _sessions.Start(game);
+                menu.Items.Add(entry);
+            }
         }
 
         menu.Items.Add(new Separator());
