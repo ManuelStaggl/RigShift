@@ -41,6 +41,42 @@ public sealed class JsonProfileStoreTests : IDisposable
         result.Displays[1].IsOptional.ShouldBeTrue();
     }
 
+    /// <summary>A profile without a Surround setting must stay one: null means "leave Surround alone".</summary>
+    [Fact]
+    public async Task SaveThenLoad_KeepsTheSurroundGrid_AndLeavesItNullWhenUnset()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Profile rig = Rig() with
+        {
+            Surround = new SurroundSetting
+            {
+                Enabled = true,
+                Grid = new SurroundGrid
+                {
+                    Rows = 1,
+                    Columns = 3,
+                    Width = 1920,
+                    Height = 1080,
+                    RefreshRateHz = 60,
+                    Displays = new List<SurroundDisplay> { new() { DisplayId = 0x80061086, Name = "CM27X3" } },
+                },
+            },
+        };
+        Profile desk = Rig() with { Id = Guid.NewGuid(), Name = "Desk" };
+
+        await store.SaveAsync(rig, Ct);
+        await store.SaveAsync(desk, Ct);
+        IReadOnlyList<Profile> loaded = (await store.LoadAllAsync(Ct)).Profiles;
+
+        Profile result = loaded.Single(p => p.Id == rig.Id);
+        result.Surround.ShouldBeEquivalentTo(rig.Surround);
+        loaded.Single(p => p.Id == desk.Id).Surround.ShouldBeNull();
+
+        // The computed sizes are not written: they would come back as unknown keys on a later read.
+        string json = await File.ReadAllTextAsync(Path.Combine(_directory, rig.Id.ToString("D") + ".json"), Ct);
+        json.ShouldNotContain("totalWidth");
+    }
+
     [Fact]
     public async Task Save_WritesVersionedReadableJson()
     {

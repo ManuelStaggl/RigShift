@@ -21,6 +21,7 @@ public sealed class ProfileDialogs
     private readonly SettingsService _settings;
     private readonly HotkeyService _hotkeys;
     private readonly IUsbDeviceList _usbDevices;
+    private readonly ISurroundController _surround;
     private readonly IServiceProvider _services;
     private readonly ILogger _log;
 
@@ -31,6 +32,7 @@ public sealed class ProfileDialogs
         SettingsService settings,
         HotkeyService hotkeys,
         IUsbDeviceList usbDevices,
+        ISurroundController surround,
         IServiceProvider services,
         ILogger log)
     {
@@ -41,6 +43,7 @@ public sealed class ProfileDialogs
         _settings = settings;
         _hotkeys = hotkeys;
         _usbDevices = usbDevices;
+        _surround = surround;
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
@@ -65,7 +68,15 @@ public sealed class ProfileDialogs
         AudioEndpoint? defaultPlayback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
         Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, _catalog.KnownDisplayNames);
 
-        return await ShowAsync(profile, isNew: true, playback);
+        // A running Surround grid is part of "the arrangement as it is now" - without it the profile could never
+        // reproduce the wide display it just recorded.
+        SurroundState surround = await ReadSurroundAsync();
+        if (surround.Grids.Count > 0)
+        {
+            profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
+        }
+
+        return await ShowAsync(profile, isNew: true, playback, surround);
     }
 
     /// <summary>The setup assistant; remembers that it was shown.</summary>
@@ -205,15 +216,31 @@ public sealed class ProfileDialogs
         }
     }
 
-    private async Task<Profile?> ShowAsync(Profile profile, bool isNew, IReadOnlyList<AudioDeviceInfo> playback)
+    /// <summary>The Surround state, or "no driver" when it cannot be read - the editor then simply hides the section.</summary>
+    private async Task<SurroundState> ReadSurroundAsync()
     {
+        try
+        {
+            return await _surround.QueryAsync(CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        {
+            _log.Warning(ex, "Surround state could not be read for the editor");
+            return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
+        }
+    }
+
+    private async Task<Profile?> ShowAsync(
+        Profile profile, bool isNew, IReadOnlyList<AudioDeviceInfo> playback, SurroundState? surround = null)
+    {
+        surround ??= await ReadSurroundAsync();
         IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
         Core.Settings.AppSettings settings = _settings.Current;
         var viewModel = new ProfileEditorViewModel(
             profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
             [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
-            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, _catalog, _display, _hotkeys, _log);
+            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, _catalog, _display, _hotkeys, _log);
 
         MainWindow main = _services.GetRequiredService<MainWindow>();
         var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };

@@ -29,6 +29,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly string? _savedWaitDeviceId;
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
+    private SurroundGrid? _surroundGrid;
+
+    private const string SurroundUnchanged = "unchanged";
+    private const string SurroundOff = "off";
+    private const string SurroundOn = "on";
 
     private readonly Profile _original;
     private readonly Profile _initial;
@@ -46,6 +51,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         IReadOnlyDictionary<string, string>? usbDeviceNames,
         IReadOnlyList<RuleDevice> knownUsbDevices,
         bool confirmationEnabled,
+        SurroundState surround,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         HotkeyService hotkeys,
@@ -97,6 +103,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
+        FillSurroundChoices(surround, profile.Surround);
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
@@ -134,6 +141,19 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     [ObservableProperty]
     public partial bool DisableCommunicationsDucking { get; set; }
+
+    /// <summary>"Leave alone", "off", and "on" once a grid is known. Empty on a machine Surround is no topic for.</summary>
+    public ObservableCollection<Choice> SurroundChoices { get; } = [];
+
+    [ObservableProperty]
+    public partial Choice? SelectedSurround { get; set; }
+
+    /// <summary>The grid in words, or why there is none to switch on.</summary>
+    [ObservableProperty]
+    public partial string SurroundHint { get; private set; } = string.Empty;
+
+    /// <summary>False hides the whole section: a machine without an NVIDIA card has nothing to say here.</summary>
+    public bool ShowSurround { get; private set; }
 
     /// <summary>"Don't wait", the connected USB devices, and the saved device when it is not connected.</summary>
     public ObservableCollection<Choice> AppsWaitDeviceChoices { get; } = [];
@@ -392,6 +412,53 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     /// Same source and naming as the automation page; the saved device and every other known device stay selectable while
     /// they are not connected (finding HW-08).
     /// </summary>
+    /// <summary>
+    /// Surround has three answers per profile: leave it alone (the default, and what every profile before 1.9 means),
+    /// switch it off, or run this grid. There is no grid editor: a grid is built once in the NVIDIA control panel and
+    /// taken over from there, because the driver needs a reload to create one and that closes running games.
+    /// </summary>
+    private void FillSurroundChoices(SurroundState state, SurroundSetting? saved)
+    {
+        // Nothing to offer without an NVIDIA driver - unless the profile already carries a setting from another machine.
+        ShowSurround = state.Availability == SurroundAvailability.Available || saved is not null;
+        if (!ShowSurround)
+        {
+            return;
+        }
+
+        _surroundGrid = saved?.Grid ?? (state.Grids.Count > 0 ? state.Grids[0] : null);
+        SurroundChoices.Add(new Choice(SurroundUnchanged, Loc.Instance["Editor_SurroundUnchanged"]));
+        SurroundChoices.Add(new Choice(SurroundOff, Loc.Instance["Editor_SurroundOff"]));
+        if (_surroundGrid is not null)
+        {
+            SurroundChoices.Add(new Choice(SurroundOn, Loc.Instance["Editor_SurroundOn"]));
+        }
+
+        string wanted = saved is null ? SurroundUnchanged : saved.Enabled ? SurroundOn : SurroundOff;
+        SelectedSurround = SurroundChoices.FirstOrDefault(c => c.Key == wanted) ?? SurroundChoices[0];
+        SurroundHint = SurroundHintFor(state);
+    }
+
+    private string SurroundHintFor(SurroundState state)
+    {
+        if (_surroundGrid is { } grid)
+        {
+            return Loc.Format(
+                "Editor_SurroundGrid", grid.Displays.Count, grid.Width, grid.Height, grid.TotalWidth, grid.TotalHeight);
+        }
+
+        return state.Availability == SurroundAvailability.Available
+            ? Loc.Instance["Editor_SurroundNoGrid"]
+            : Loc.Instance["Editor_SurroundNoDriver"];
+    }
+
+    private SurroundSetting? BuildSurround() => SelectedSurround?.Key switch
+    {
+        SurroundOff => new SurroundSetting { Enabled = false },
+        SurroundOn when _surroundGrid is { } grid => new SurroundSetting { Enabled = true, Grid = grid },
+        _ => null,
+    };
+
     private void FillAppsWaitChoices(string? selectedKey)
     {
         RuleDevice[] saved = _savedWaitDeviceId is null ? [] : [new RuleDevice { Id = _savedWaitDeviceId, Name = _savedWaitDeviceName }];
@@ -424,6 +491,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         AppsWaitForUsbDeviceName = SelectedAppsWaitDevice?.Key is { } waitId && _usbDeviceNames.TryGetValue(waitId, out string? waitName) ? waitName : null,
         KeepAwake = KeepAwake,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
+        Surround = BuildSurround(),
     };
 
     /// <summary>Record equality compares lists by reference, so displays and apps are compared item by item.</summary>

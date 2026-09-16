@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RigShift.Core.Profiles;
 
 /// <summary>
@@ -36,12 +38,15 @@ public sealed record SurroundGrid
     public required IReadOnlyList<SurroundDisplay> Displays { get; init; }
 
     /// <summary>Grid width in pixels, ignoring bezel correction.</summary>
+    [JsonIgnore]
     public int TotalWidth => Width * Columns;
 
     /// <summary>Grid height in pixels, ignoring bezel correction.</summary>
+    [JsonIgnore]
     public int TotalHeight => Height * Rows;
 
     /// <summary>Whether the grid describes as many cells as it has displays.</summary>
+    [JsonIgnore]
     public bool IsComplete => Rows > 0 && Columns > 0 && Displays.Count == Rows * Columns;
 }
 

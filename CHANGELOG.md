@@ -10,6 +10,11 @@ All notable changes to this project are documented here. The format follows
 
 - If RigShift is killed or the machine loses power between changing your screens and the confirmation, the next start
   offers to put the previous layout back. Until now that rollback lived only in the running process.
+- **NVIDIA Surround** per profile: leave it as it is, switch it off, or run the grid the profile carries. Surround is
+  set before the arrangement, so it goes through the same countdown and the same rollback as everything else - a
+  profile you do not keep puts Surround back too. Saving your current setup takes over a running grid. Build the grid
+  once in the NVIDIA control panel; RigShift never forces a driver reload, because that closes running games. If the
+  driver refuses, the message says what it answered.
 
 ## [1.8.0] - 2026-09-15
 

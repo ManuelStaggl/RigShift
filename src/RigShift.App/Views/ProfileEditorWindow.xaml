@@ -274,6 +274,21 @@
             ItemsSource="{Binding CommunicationsAudioSlots}" />
         </Expander>
 
+        <!-- Hidden without an NVIDIA card: nothing here would mean anything then. -->
+        <StackPanel Visibility="{Binding ShowSurround, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
+          <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Surround}" />
+          <ComboBox
+            Width="220"
+            HorizontalAlignment="Left"
+            ItemsSource="{Binding SurroundChoices}"
+            SelectedItem="{Binding SelectedSurround}" />
+          <TextBlock
+            Margin="0,6,0,0"
+            Style="{StaticResource Caption}"
+            Text="{Binding SurroundHint}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+
         <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Editor_Behavior}" />
         <!-- Seconds come from the settings only (analysis decision O-01). -->
         <CheckBox Content="{loc:Tr Editor_SwitchWithoutAsking}" IsChecked="{Binding SwitchWithoutAsking}" IsEnabled="{Binding ConfirmationEnabled}" />

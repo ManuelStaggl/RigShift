@@ -333,4 +333,11 @@
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Save your desk setup as it is now</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Switch to your rig and save it too</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: a USB device that switches automatically</value></data>
+  <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
+  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Leave as it is</value></data>
+  <data name="Editor_SurroundOff" xml:space="preserve"><value>Off</value></data>
+  <data name="Editor_SurroundOn" xml:space="preserve"><value>On</value></data>
+  <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} displays at {1}x{2} as one {3}x{4} display.</value></data>
+  <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround is off right now. Set the grid up once in the NVIDIA control panel, then save the profile again to take it over.</value></data>
+  <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>No NVIDIA graphics driver was found on this PC.</value></data>
 </root>

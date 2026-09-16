@@ -333,4 +333,11 @@
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Den Schreibtisch-Aufbau so speichern, wie er gerade ist</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und ihn ebenfalls speichern</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: ein USB-Gerät, das automatisch umschaltet</value></data>
+  <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
+  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>So lassen</value></data>
+  <data name="Editor_SurroundOff" xml:space="preserve"><value>Aus</value></data>
+  <data name="Editor_SurroundOn" xml:space="preserve"><value>Ein</value></data>
+  <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} Bildschirme mit je {1}x{2} als ein Bildschirm mit {3}x{4}.</value></data>
+  <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround ist gerade aus. Richte das Raster einmal in der NVIDIA-Systemsteuerung ein und speichere das Profil dann erneut.</value></data>
+  <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>Auf diesem PC wurde kein NVIDIA-Grafiktreiber gefunden.</value></data>
 </root>
