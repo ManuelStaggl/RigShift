@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-16
+
+### Added
+
+- **Find installed games** on the games page adds several games in one go: tick what you want from the list of
+  what Steam and Epic have installed, and the entries are there. Profile and tools follow afterwards. On an empty
+  page it is the one big button - the picker used to sit inside the editor, where nobody found it.
+- Games show **their own icon** - in the list, in the picker and on a desktop shortcut. A symbol you pick yourself
+  still wins, and where there is neither, a game symbol stands in.
+
+### Changed
+
+- The game editor labels its fields the way the profile editor does: the wait after a program no longer shows a
+  bare "0" with nothing saying what it counts.
+- The seconds in **Settings → Confirm after switching** say that they are seconds.
+- A game without a profile says so under the box ("starts its tools but leaves your screens as they are"), instead
+  of only ever explaining the other case.
+
 ## [2.0.0] - 2026-09-16
 
 ### Added
