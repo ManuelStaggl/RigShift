@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using Serilog;
@@ -17,11 +18,21 @@ public interface IProfileSwitcher
     Task<SwitchResult?> SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken);
 }
 
+/// <summary>Runs game sessions for the command line and the tray menu. The app implements it with its session service.</summary>
+public interface IGamePlayer
+{
+    /// <summary>True while a session for this game is running.</summary>
+    bool IsRunning(Guid gameId);
+
+    /// <returns><c>false</c> when a session for this game is already running, so nothing was started a second time.</returns>
+    bool Play(GameEntry game);
+}
+
 public sealed record CliResponse(int ExitCode, string Output);
 
 /// <summary>
 /// Executes <see cref="CliRequest"/>s. Runs inside the tray app (all commands) and headless in a short-lived process
-/// (<c>list</c>, <c>status</c> – no switcher). Output is English on purpose: scripts parse it.
+/// (<c>list</c>, <c>status</c>, <c>games</c> – no switcher, no player). Output is English on purpose: scripts parse it.
 /// </summary>
 public sealed class CommandRunner
 {
@@ -31,6 +42,8 @@ public sealed class CommandRunner
     private readonly ActiveProfileMatcher _matcher;
     private readonly IProfileSwitcher? _switcher;
     private readonly ISurroundController? _surround;
+    private readonly IGameStore? _games;
+    private readonly IGamePlayer? _player;
     private readonly ILogger _log;
 
     public CommandRunner(
@@ -40,7 +53,9 @@ public sealed class CommandRunner
         ActiveProfileMatcher matcher,
         ILogger log,
         IProfileSwitcher? switcher = null,
-        ISurroundController? surround = null)
+        ISurroundController? surround = null,
+        IGameStore? games = null,
+        IGamePlayer? player = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(display);
@@ -54,6 +69,8 @@ public sealed class CommandRunner
         _matcher = matcher;
         _switcher = switcher;
         _surround = surround;
+        _games = games;
+        _player = player;
         _log = log.ForContext<CommandRunner>();
     }
 
@@ -63,7 +80,7 @@ public sealed class CommandRunner
     public async Task<CliResponse> RunAsync(CliRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        _log.Information("CLI command {Command} {Profile}", request.Command, request.ProfileName);
+        _log.Information("CLI command {Command} {Name}", request.Command, request.ProfileName ?? request.GameName);
 
         try
         {
@@ -75,6 +92,8 @@ public sealed class CommandRunner
                 CliCommand.Apply => await ApplyAsync(request, cancellationToken),
                 CliCommand.Toggle => await ToggleAsync(request, cancellationToken),
                 CliCommand.Save => await SaveAsync(request.ProfileName ?? string.Empty, cancellationToken),
+                CliCommand.Games => await GamesAsync(cancellationToken),
+                CliCommand.Play => await PlayAsync(request.GameName ?? string.Empty, cancellationToken),
                 _ => new CliResponse(CliExitCodes.InvalidArguments, "No command given."),
             };
         }
@@ -256,6 +275,53 @@ public sealed class CommandRunner
         string verb = existing is null ? "Saved" : "Updated";
         return new CliResponse(CliExitCodes.Applied, string.Create(CultureInfo.InvariantCulture,
             $"{verb} profile '{profile.Name}' with {profile.Displays.Count} display(s)."));
+    }
+
+    /// <summary>
+    /// The configured games, a running one marked with <c>*</c> – the same shape as <c>list</c>, so a script can read
+    /// both the same way. Without a player (headless call, no app running) nothing can be running, so nothing is marked.
+    /// </summary>
+    private async Task<CliResponse> GamesAsync(CancellationToken cancellationToken)
+    {
+        if (_games is null)
+        {
+            return new CliResponse(CliExitCodes.Failed, "Games cannot be read in this process.");
+        }
+
+        GameLoadResult loaded = await _games.LoadAllAsync(cancellationToken);
+        if (!loaded.IsComplete)
+        {
+            // An empty list would be a lie here, exactly as on the games page.
+            return new CliResponse(CliExitCodes.Failed, $"Games could not be read: {loaded.Unreadable}");
+        }
+
+        return loaded.Games.Count == 0
+            ? new CliResponse(CliExitCodes.Applied, "No games.")
+            : new CliResponse(CliExitCodes.Applied, string.Join(Environment.NewLine,
+                loaded.Games.Select(g => (_player?.IsRunning(g.Id) == true ? "* " : "  ") + g.Name)));
+    }
+
+    /// <summary>
+    /// Starts a game session and returns at once: the session outlives the command by hours, so waiting for it would
+    /// leave a console process hanging around for the whole evening.
+    /// </summary>
+    private async Task<CliResponse> PlayAsync(string name, CancellationToken cancellationToken)
+    {
+        if (_games is null || _player is null)
+        {
+            return new CliResponse(CliExitCodes.Failed, "Starting a game needs the RigShift app, which is not running.");
+        }
+
+        GameLoadResult loaded = await _games.LoadAllAsync(cancellationToken);
+        if (GameEditing.FindByName(loaded.Games, name) is not { } game)
+        {
+            string available = loaded.Games.Count == 0 ? "none" : string.Join(", ", loaded.Games.Select(g => g.Name));
+            return new CliResponse(CliExitCodes.ProfileNotFound, $"Game '{name}' not found. Available: {available}.");
+        }
+
+        return _player.Play(game)
+            ? new CliResponse(CliExitCodes.Applied, $"Started '{game.Name}'.")
+            : new CliResponse(CliExitCodes.Failed, $"'{game.Name}' is already running.");
     }
 
     private async Task<AudioEndpoint?> DefaultPlaybackAsync(CancellationToken cancellationToken)

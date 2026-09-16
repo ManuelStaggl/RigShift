@@ -17,6 +17,7 @@ public static class CliExitCodes
     /// <summary>The switch was not confirmed and the previous arrangement was restored.</summary>
     public const int RolledBack = 3;
 
+    /// <summary>The named profile or game does not exist.</summary>
     public const int ProfileNotFound = 4;
 
     /// <summary>Unknown command or missing argument.</summary>

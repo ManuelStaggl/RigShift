@@ -375,7 +375,9 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<ActiveProfileMatcher>(),
             Log.Logger,
             sp.GetRequiredService<SwitchCoordinator>(),
-            sp.GetRequiredService<ISurroundController>()));
+            sp.GetRequiredService<ISurroundController>(),
+            sp.GetRequiredService<IGameStore>(),
+            sp.GetRequiredService<GameSessionService>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<UpdateService>();

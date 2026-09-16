@@ -45,7 +45,7 @@ internal static class CommandLineClient
             string? pipe = FindRunningInstance();
             if (pipe is null)
             {
-                if (request.Command is CliCommand.List or CliCommand.Status or CliCommand.Surround)
+                if (request.Command is CliCommand.List or CliCommand.Status or CliCommand.Surround or CliCommand.Games)
                 {
                     return Print(await RunHeadlessAsync(request));
                 }
@@ -135,7 +135,9 @@ internal static class CommandLineClient
             new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())),
             log,
             switcher: null,
-            new NvSurroundController(new CcdDisplayConfigurator(log, TimeProvider.System), log));
+            new NvSurroundController(new CcdDisplayConfigurator(log, TimeProvider.System), log),
+            new JsonGameStore(App.Paths.DataDirectory, log, TimeProvider.System),
+            player: null);
         return await runner.RunAsync(request, CancellationToken.None);
     }
 

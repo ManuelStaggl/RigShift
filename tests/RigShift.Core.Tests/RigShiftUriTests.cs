@@ -17,6 +17,14 @@ public sealed class RigShiftUriTests
     }
 
     [Theory]
+    [InlineData("rigshift://play/iRacing", "iRacing")]
+    [InlineData("RIGSHIFT://Play/Assetto%20Corsa", "Assetto Corsa")]
+    public void ToArguments_PlayLink_BecomesPlayCommand(string uri, string name)
+    {
+        RigShiftUri.ToArguments(uri).ShouldBe(["play", name, "--from-link"]);
+    }
+
+    [Theory]
     [InlineData("rigshift://toggle")]
     [InlineData("rigshift://toggle/")]
     [InlineData("RIGSHIFT://Toggle")]
@@ -31,6 +39,9 @@ public sealed class RigShiftUriTests
     [InlineData("rigshift://apply/")]
     [InlineData("rigshift://apply")]
     [InlineData("rigshift://save/Rig")]
+    [InlineData("rigshift://play/")]
+    [InlineData("rigshift://play")]
+    [InlineData("rigshift://play/iRacing/extra")]
     [InlineData("rigshift://apply/Rig/extra")]
     [InlineData("rigshift://apply/Rig?no-confirm=1")]
     [InlineData("rigshift://apply/Rig#x")]

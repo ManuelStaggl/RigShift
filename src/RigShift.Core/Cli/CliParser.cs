@@ -17,6 +17,12 @@ public enum CliCommand
 
     /// <summary>Back to the previous profile, or to the default profile when nothing was active before (1.7.0).</summary>
     Toggle,
+
+    /// <summary>List the configured games (v2).</summary>
+    Games,
+
+    /// <summary>Run a game session: profile, companion programs, then the game itself (v2).</summary>
+    Play,
 }
 
 /// <summary>What <c>RigShift.exe</c> was asked to do.</summary>
@@ -25,6 +31,9 @@ public sealed record CliRequest
     public CliCommand Command { get; init; }
 
     public string? ProfileName { get; init; }
+
+    /// <summary>Name of the game for <see cref="CliCommand.Play"/>; its own field, because a game is not a profile.</summary>
+    public string? GameName { get; init; }
 
     public bool NoConfirm { get; init; }
 
@@ -55,7 +64,7 @@ public sealed record CliParseResult(CliRequest? Request, int ExitCode, string Ou
 /// <summary>
 /// Command line of <c>RigShift.exe</c>:
 /// <c>apply &lt;name&gt; [--no-confirm] [--dry-run]</c>, <c>toggle [--no-confirm] [--dry-run]</c>, <c>list</c>,
-/// <c>save &lt;name&gt;</c>, <c>status</c>.
+/// <c>save &lt;name&gt;</c>, <c>status</c>, <c>games</c>, <c>play &lt;name&gt;</c>.
 /// </summary>
 public static class CliParser
 {
@@ -101,17 +110,26 @@ public static class CliParser
         var saveName = new Argument<string>("name") { Description = "Profile name. An existing profile with this name is updated." };
         var save = new Command("save", "Save the current display arrangement and default audio device as a profile.") { saveName };
 
+        var playName = new Argument<string>("name") { Description = "Game name (not case-sensitive)." };
+        var playFromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
+        var play = new Command("play", "Start a game: switch to its profile, bring its programs up, then start the game.")
+        {
+            playName, playFromLink,
+        };
+
+        var games = new Command("games", "List all games; one whose session is running is marked with *.");
+
         var list = new Command("list", "List all profiles; the active one is marked with *.");
         var status = new Command("status", "Show the active profile and the active displays.");
         var surround = new Command("surround", "Show whether NVIDIA Surround is on and which displays form the grid.");
 
         var root = new RootCommand("RigShift switches displays and audio between profiles.")
         {
-            minimized, preview, previewBranding, previewTheme, apply, toggle, list, save, status, surround,
+            minimized, preview, previewBranding, previewTheme, apply, toggle, list, save, status, surround, games, play,
         };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
-        foreach (Command command in (Command[])[root, apply, toggle, list, save, status, surround])
+        foreach (Command command in (Command[])[root, apply, toggle, list, save, status, surround, games, play])
         {
             command.SetAction(_ => CliExitCodes.Applied);
         }
@@ -152,6 +170,13 @@ public static class CliParser
             : chosen == list ? request with { Command = CliCommand.List }
             : chosen == status ? request with { Command = CliCommand.Status }
             : chosen == surround ? request with { Command = CliCommand.Surround }
+            : chosen == games ? request with { Command = CliCommand.Games }
+            : chosen == play ? request with
+            {
+                Command = CliCommand.Play,
+                GameName = parsed.GetValue(playName),
+                FromLink = parsed.GetValue(playFromLink),
+            }
             : request;
 
         return new CliParseResult(request, CliExitCodes.Applied, string.Empty);

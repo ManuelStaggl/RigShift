@@ -35,6 +35,7 @@ public sealed class CliParserTests
     [InlineData("list", CliCommand.List)]
     [InlineData("status", CliCommand.Status)]
     [InlineData("surround", CliCommand.Surround)]
+    [InlineData("games", CliCommand.Games)]
     public void Parse_CommandsWithoutArguments(string command, CliCommand expected)
     {
         CliParser.Parse([command]).Request.ShouldNotBeNull().Command.ShouldBe(expected);
@@ -67,8 +68,20 @@ public sealed class CliParserTests
         request.ProfileName.ShouldBe("Desk");
     }
 
+    [Fact]
+    public void Parse_Play_TakesTheGameName()
+    {
+        CliRequest request = CliParser.Parse(["play", "iRacing", "--from-link"]).Request.ShouldNotBeNull();
+
+        request.Command.ShouldBe(CliCommand.Play);
+        request.GameName.ShouldBe("iRacing");
+        request.ProfileName.ShouldBeNull();
+        request.FromLink.ShouldBeTrue();
+    }
+
     [Theory]
     [InlineData("apply")]
+    [InlineData("play")]
     [InlineData("frobnicate")]
     public void Parse_InvalidArguments_ReturnsUsageText(string command)
     {

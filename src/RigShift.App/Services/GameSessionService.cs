@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Windows.Threading;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Cli;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
@@ -12,7 +13,7 @@ namespace RigShift.App.Services;
 /// Runs game sessions and watches for games that were started elsewhere. One session per game at a time – pressing
 /// Play twice must not switch the profile twice and start two sets of companion apps.
 /// </summary>
-public sealed class GameSessionService : IDisposable
+public sealed class GameSessionService : IGamePlayer, IDisposable
 {
     private readonly GameCatalog _catalog;
     private readonly ProfileCatalog _profiles;
@@ -85,23 +86,28 @@ public sealed class GameSessionService : IDisposable
     /// Runs the game. Does nothing when a session for it is already running – pressing Play twice must not switch
     /// twice.
     /// </summary>
-    public void Start(GameEntry game, bool alreadyRunning = false)
+    /// <returns><c>false</c> when a session for it was already running, so nothing was started.</returns>
+    public bool Start(GameEntry game, bool alreadyRunning = false)
     {
         ArgumentNullException.ThrowIfNull(game);
         if (_running.ContainsKey(game.Id))
         {
             _log.Information("Game {Game} is already running, ignoring the second start", game.Name);
-            return;
+            return false;
         }
 
         Task session = RunAsync(game, alreadyRunning);
         if (!_running.TryAdd(game.Id, session))
         {
-            return;
+            return false;
         }
 
         Raise(game, running: true, status: null);
+        return true;
     }
+
+    /// <summary>The command line and the tray menu start a game through here.</summary>
+    bool IGamePlayer.Play(GameEntry game) => Start(game);
 
     private async Task RunAsync(GameEntry game, bool alreadyRunning)
     {

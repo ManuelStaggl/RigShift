@@ -1,6 +1,7 @@
 using NSubstitute;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
+using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
@@ -265,12 +266,118 @@ public sealed class CommandRunnerTests
         _store.Profiles.Count.ShouldBe(2);
     }
 
+    [Fact]
+    public async Task Games_MarksTheRunningSession()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.AddRange([Game("iRacing"), Game("Le Mans Ultimate")]);
+        var player = Substitute.For<IGamePlayer>();
+        player.IsRunning(games.Games[1].Id).Returns(true);
+
+        CliResponse response = await Runner(games: games, player: player)
+            .RunAsync(new CliRequest { Command = CliCommand.Games }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldBe($"  iRacing{Environment.NewLine}* Le Mans Ultimate");
+    }
+
+    [Fact]
+    public async Task Games_WithoutGames_SaysSo()
+    {
+        CliResponse response = await Runner(games: new InMemoryGameStore())
+            .RunAsync(new CliRequest { Command = CliCommand.Games }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldBe("No games.");
+    }
+
+    /// <summary>An empty list would claim there are no games when the file simply could not be read.</summary>
+    [Fact]
+    public async Task Games_UnreadableFile_Fails()
+    {
+        var games = new InMemoryGameStore { Unreadable = "games.json is locked" };
+
+        CliResponse response = await Runner(games: games)
+            .RunAsync(new CliRequest { Command = CliCommand.Games }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("games.json is locked");
+    }
+
+    [Fact]
+    public async Task Play_StartsTheSessionAndReturnsAtOnce()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.Add(Game("iRacing"));
+        var player = Substitute.For<IGamePlayer>();
+        player.Play(Arg.Any<GameEntry>()).Returns(true);
+
+        CliResponse response = await Runner(games: games, player: player)
+            .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iracing" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        player.Received(1).Play(Arg.Is<GameEntry>(g => g.Name == "iRacing"));
+    }
+
+    [Fact]
+    public async Task Play_AlreadyRunning_Fails()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.Add(Game("iRacing"));
+        var player = Substitute.For<IGamePlayer>();
+        player.Play(Arg.Any<GameEntry>()).Returns(false);
+
+        CliResponse response = await Runner(games: games, player: player)
+            .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iRacing" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("already running");
+    }
+
+    [Fact]
+    public async Task Play_UnknownGame_ListsTheKnownOnes()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.Add(Game("iRacing"));
+
+        CliResponse response = await Runner(games: games, player: Substitute.For<IGamePlayer>())
+            .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "Solitaire" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.ProfileNotFound);
+        response.Output.ShouldContain("iRacing");
+    }
+
+    /// <summary>Headless, without a running app, there is nobody who could run a session.</summary>
+    [Fact]
+    public async Task Play_WithoutAPlayer_Fails()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.Add(Game("iRacing"));
+
+        CliResponse response = await Runner(games: games)
+            .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iRacing" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("not running");
+    }
+
+    private static GameEntry Game(string name) => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = name,
+        Launch = new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410" },
+    };
+
     private static CliRequest Apply(string name) => new() { Command = CliCommand.Apply, ProfileName = name };
 
     private static TopologyPlan EmptyPlan(Profile profile) => new() { Profile = profile, Resolved = [], Missing = [], Warnings = [] };
 
     private static ActiveProfileMatcher Matcher() => new(new TopologyPlanner(new TopologyPlannerOptions()));
 
-    private CommandRunner Runner(IProfileSwitcher? switcher = null, ISurroundController? surround = null) =>
-        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher, surround);
+    private CommandRunner Runner(
+        IProfileSwitcher? switcher = null,
+        ISurroundController? surround = null,
+        IGameStore? games = null,
+        IGamePlayer? player = null) =>
+        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher, surround, games, player);
 }

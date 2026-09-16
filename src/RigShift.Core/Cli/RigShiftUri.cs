@@ -1,10 +1,11 @@
 namespace RigShift.Core.Cli;
 
 /// <summary>
-/// The <c>rigshift://apply/&lt;name&gt;</c> and <c>rigshift://toggle</c> links: Windows starts
-/// <c>RigShift.exe "&lt;uri&gt;"</c>, which becomes <c>apply &lt;name&gt; --from-link</c> or <c>toggle --from-link</c>.
-/// Only switching exists – a link on a web page must not be able to save or change profiles – and it always asks for
-/// confirmation, even when confirmation is turned off.
+/// The <c>rigshift://apply/&lt;name&gt;</c>, <c>rigshift://toggle</c> and <c>rigshift://play/&lt;name&gt;</c> links:
+/// Windows starts <c>RigShift.exe "&lt;uri&gt;"</c>, which becomes <c>apply &lt;name&gt; --from-link</c>,
+/// <c>toggle --from-link</c> or <c>play &lt;name&gt; --from-link</c>. Only switching and starting a configured game
+/// exist – a link on a web page must not be able to save or change profiles, and it can only reach what the user set
+/// up here – and a switch always asks for confirmation, even when confirmation is turned off.
 /// </summary>
 public static class RigShiftUri
 {
@@ -37,11 +38,14 @@ public static class RigShiftUri
             return path.Length == 0 ? ["toggle", FromLinkOption] : null;
         }
 
-        if (!string.Equals(parsed.Host, "apply", StringComparison.OrdinalIgnoreCase))
+        string? command = string.Equals(parsed.Host, "apply", StringComparison.OrdinalIgnoreCase) ? "apply"
+            : string.Equals(parsed.Host, "play", StringComparison.OrdinalIgnoreCase) ? "play"
+            : null;
+        if (command is null)
         {
             return null;
         }
 
-        return path.Length == 0 || path.Contains('/', StringComparison.Ordinal) ? null : ["apply", path, FromLinkOption];
+        return path.Length == 0 || path.Contains('/', StringComparison.Ordinal) ? null : [command, path, FromLinkOption];
     }
 }
