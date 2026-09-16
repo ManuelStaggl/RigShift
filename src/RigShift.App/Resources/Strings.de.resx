@@ -489,4 +489,29 @@
   <data name="Unsaved_Title" xml:space="preserve"><value>Änderungen an „{0}“ speichern?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Ungespeicherte Änderungen gehen sonst verloren.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="List_NewInstalled" xml:space="preserve"><value>Installierte Spiele suchen …</value></data>
+  <data name="List_NewProgram" xml:space="preserve"><value>Programm wählen …</value></data>
+  <data name="Games_NoSelection" xml:space="preserve"><value>Wähle links ein Spiel, oder lege mit „Neu“ eines an.</value></data>
+  <data name="Detail_PlayTip" xml:space="preserve"><value>Schaltet das Profil um, startet Tools und Spiel (Strg+Eingabe)</value></data>
+  <data name="Game_OpenGameTab" xml:space="preserve"><value>Tab Spiel</value></data>
+  <data name="GameTab_Game" xml:space="preserve"><value>Spiel</value></data>
+  <data name="GameTab_Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="GameTab_Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="GameTab_Windows" xml:space="preserve"><value>Fenster</value></data>
+  <data name="GameTab_End" xml:space="preserve"><value>Ende</value></data>
+  <data name="Game_GameIntro" xml:space="preserve"><value>Woher das Spiel kommt und woran RigShift erkennt, dass es läuft.</value></data>
+  <data name="Game_ProfileIntro" xml:space="preserve"><value>Wird vor dem Spiel angewendet, damit die Tools auf den richtigen Bildschirmen landen.</value></data>
+  <data name="Game_ToolsIntro" xml:space="preserve"><value>Laufen mit der Sitzung. Radsoftware vor dem Spiel; SimHub und Crew Chief hängen sich an die laufende Sitzung.</value></data>
+  <data name="Game_EndIntro" xml:space="preserve"><value>Was passiert, wenn die Sitzung vorbei ist.</value></data>
+  <data name="Game_ExitLabel" xml:space="preserve"><value>Bildschirme am Ende</value></data>
+  <data name="Game_StopAppsHint" xml:space="preserve"><value>Tools, die für diese Sitzung gestartet wurden, werden wieder beendet.</value></data>
+  <data name="Game_AddTool" xml:space="preserve"><value>Tool</value></data>
+  <data name="Game_ShortcutHint" xml:space="preserve"><value>Mit Spiel-Symbol; startet die ganze Sitzung.</value></data>
+  <data name="Game_ProcessNotRecognised" xml:space="preserve"><value>Beim letzten Start wurde kein Prozess erkannt. Ohne Endung, wie im Task-Manager.</value></data>
+  <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools starten, Bildschirme bleiben wie sie sind</value></data>
+  <data name="Game_RunningSince" xml:space="preserve"><value>Läuft seit {0}</value></data>
+  <data name="Game_LastEnded" xml:space="preserve"><value>Bereit · zuletzt {0} · beendet</value></data>
+  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Letzte Sitzung: kein Spielprozess erkannt – im Tab Spiel eintragen</value></data>
+  <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Prozess wird beim ersten Start gelernt</value></data>
+  <data name="Problem_LaunchMissing" xml:space="preserve"><value>Wähle, was das Spiel startet.</value></data>
 </root>

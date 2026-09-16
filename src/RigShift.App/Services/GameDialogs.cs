@@ -18,7 +18,7 @@ namespace RigShift.App.Services;
 /// <param name="Skipped">Games that were picked but already configured.</param>
 public sealed record AddedGames(IReadOnlyList<GameEntry> Added, int Skipped);
 
-/// <summary>Opens the game editor, the installed-games picker, the window capture and the delete confirmation.</summary>
+/// <summary>Builds the game detail's editor and opens the pickers, the window capture and the delete confirmation.</summary>
 public sealed class GameDialogs
 {
     private readonly GameCatalog _catalog;
@@ -51,20 +51,32 @@ public sealed class GameDialogs
         _log = log.ForContext<GameDialogs>();
     }
 
-    /// <returns>The saved game, or <c>null</c> if cancelled.</returns>
-    public Task<GameEntry?> CreateAsync()
+    /// <summary>The detail's editor for a game: profiles for the choice, the USB devices the tools can wait for.</summary>
+    public async Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew)
     {
-        string name = ProfileEditing.UniqueName(Loc.Instance["Games_NewName"], _catalog.Games.Select(g => g.Name));
-        var game = new GameEntry
+        ArgumentNullException.ThrowIfNull(game);
+        IReadOnlyList<UsbDevice> connected;
+        try
         {
-            Id = Guid.NewGuid(),
-            Name = name,
-            Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = string.Empty },
-        };
-        return ShowAsync(game, isNew: true);
-    }
+            connected = await Task.Run(_usbDevices.ConnectedDevices);
+        }
+        catch (Exception ex) when (ex is Win32Exception or COMException)
+        {
+            _log.Warning(ex, "USB devices could not be listed for the game editor");
+            connected = [];
+        }
 
-    public Task<GameEntry?> EditAsync(GameEntry game) => ShowAsync(game, isNew: false);
+        IEnumerable<RuleDevice> saved = _catalog.Games
+            .Select(g => new RuleDevice { Id = g.AppsWaitForUsbDeviceId, Name = g.AppsWaitForUsbDeviceName })
+            .Concat(_profiles.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }));
+
+        var windowsNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var devices = new System.Collections.ObjectModel.ObservableCollection<Choice>();
+        UsbDeviceChoices.Fill(devices, windowsNames, connected, saved, _settings.Current.UsbDeviceNames);
+        IReadOnlyList<Choice> choices = [new Choice(null, Loc.Instance["Editor_AppsWaitNone"]), .. devices];
+
+        return new GameEditorViewModel(game, isNew, _profiles.Profiles, _catalog.Games, choices, windowsNames, _catalog, _hotkeys, _log);
+    }
 
     /// <summary>
     /// Adds installed games straight from the picker, without the editor: five sims should not mean five trips
@@ -101,6 +113,20 @@ public sealed class GameDialogs
         }
 
         return new AddedGames(added, skipped);
+    }
+
+    /// <summary>The single-choice picker for the "Starts" field of the "Game" tab; <c>null</c> when cancelled.</summary>
+    public Task<PickedGame?> PickGameAsync() => GamePickerWindow.PickAsync(System.Windows.Application.Current.MainWindow, this);
+
+    /// <summary>A program from the file dialog, for "+ New → Choose a program"; <c>null</c> when cancelled.</summary>
+    public static string? PickExecutable()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = Loc.Instance["App_FileFilter"],
+            Title = Loc.Instance["List_NewProgram"].Replace("_", string.Empty, StringComparison.Ordinal).TrimEnd('…', ' '),
+        };
+        return dialog.ShowDialog(System.Windows.Application.Current.MainWindow) == true ? dialog.FileName : null;
     }
 
 #if DEBUG
@@ -147,6 +173,7 @@ public sealed class GameDialogs
         }
     }
 
+    /// <summary>Delete is destructive: red button, centred on the main window (R-ACT-3).</summary>
     public static async Task<bool> ConfirmDeleteAsync(string name)
     {
         var dialog = new MessageBox
@@ -154,65 +181,15 @@ public sealed class GameDialogs
             Title = Loc.Instance["Games_DeleteTitle"],
             Content = Loc.Format("Games_DeleteText", name),
             PrimaryButtonText = Loc.Instance["Common_Delete"],
+            PrimaryButtonAppearance = ControlAppearance.Danger,
             CloseButtonText = Loc.Instance["Common_Cancel"],
         };
+        if (System.Windows.Application.Current?.MainWindow is { IsVisible: true } owner)
+        {
+            dialog.Owner = owner;
+            dialog.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
+        }
+
         return await dialog.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
-
-    private async Task<GameEntry?> ShowAsync(GameEntry game, bool isNew)
-    {
-        IReadOnlyList<string> otherNames = [.. _catalog.Games.Where(g => g.Id != game.Id).Select(g => g.Name)];
-        var model = new GameEditorViewModel(game, _profiles.Profiles, otherNames, isNew);
-        FillUsbDevices(model, game);
-
-        var window = new GameEditorWindow(model, this) { Owner = System.Windows.Application.Current.MainWindow };
-
-        // The editor records key combinations; the global hotkeys must not swallow them while it is open.
-        _hotkeys.Suspend();
-        try
-        {
-            if (window.ShowDialog() != true)
-            {
-                return null;
-            }
-        }
-        finally
-        {
-            _hotkeys.Resume();
-        }
-
-        GameEntry saved = model.ToGame();
-        await _catalog.SaveAsync(saved, CancellationToken.None);
-        _log.Information("Game {Game} saved", saved.Name);
-        return saved;
-    }
-
-    private void FillUsbDevices(GameEditorViewModel model, GameEntry game)
-    {
-        IReadOnlyList<UsbDevice> connected;
-        try
-        {
-            connected = _usbDevices.ConnectedDevices();
-        }
-        catch (Exception ex) when (ex is Win32Exception or COMException)
-        {
-            _log.Warning(ex, "USB devices could not be listed for the game editor");
-            connected = [];
-        }
-
-        IEnumerable<RuleDevice> saved = _catalog.Games
-            .Select(g => new RuleDevice { Id = g.AppsWaitForUsbDeviceId, Name = g.AppsWaitForUsbDeviceName })
-            .Concat(_profiles.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }));
-
-        model.UsbDevices.Add(new Choice(null, Loc.Instance["Editor_AppsWaitNone"]));
-        var devices = new System.Collections.ObjectModel.ObservableCollection<Choice>();
-        UsbDeviceChoices.Fill(devices, model.UsbWindowsNames, connected, saved, _settings.Current.UsbDeviceNames);
-        foreach (Choice device in devices)
-        {
-            model.UsbDevices.Add(device);
-        }
-
-        string? waitFor = UsbDeviceIds.Normalize(game.AppsWaitForUsbDeviceId);
-        model.SelectedUsbDevice = model.UsbDevices.FirstOrDefault(c => c.Key == waitFor) ?? model.UsbDevices[0];
     }
 }

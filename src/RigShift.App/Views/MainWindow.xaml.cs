@@ -49,7 +49,7 @@ public partial class MainWindow : FluentWindow
 
     public void ShowPage(Type? page) => _ = ShowPageAsync(page);
 
-    /// <summary>Leaving the profiles page with unsaved changes asks first (R-NAV-3); "cancel" keeps the page.</summary>
+    /// <summary>Leaving the profiles or games page with unsaved changes asks first (R-NAV-3); "cancel" keeps the page.</summary>
     private async Task ShowPageAsync(Type? page)
     {
         Type target = page ?? _page;
@@ -57,6 +57,13 @@ public partial class MainWindow : FluentWindow
             && !await _services.GetRequiredService<ViewModels.ProfilesViewModel>().ConfirmLeaveAsync())
         {
             SyncNav(typeof(ProfilesPage));
+            return;
+        }
+
+        if (IsLoaded && PageHost.Content is GamesPage && target != typeof(GamesPage)
+            && !await _services.GetRequiredService<ViewModels.GamesViewModel>().ConfirmLeaveAsync())
+        {
+            SyncNav(typeof(GamesPage));
             return;
         }
 

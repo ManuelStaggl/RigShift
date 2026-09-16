@@ -1,13 +1,14 @@
 using System.IO;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>A game as shown on the games page and in the tray menu.</summary>
+/// <summary>A game as shown in the games list, the tray popup and the tray menu.</summary>
 /// <param name="profileName">Name of the profile the game switches to, or <c>null</c> when it switches nothing.</param>
 public sealed partial class GameItem(GameEntry game, string? profileName = null) : ObservableObject
 {
@@ -22,7 +23,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
     public bool HasIcon => IconKey is not null;
 
     /// <summary>
-    /// The game's own icon, filled in after the card is up (<see cref="Services.GameIcons"/>). A symbol the user
+    /// The game's own icon, filled in after the list is up (<see cref="Services.GameIcons"/>). A symbol the user
     /// picked wins over it: that choice was deliberate.
     /// </summary>
     [ObservableProperty]
@@ -31,12 +32,12 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     public bool HasGameIcon => IconKey is null && GameIcon is not null;
 
-    /// <summary>Neither a symbol nor an icon: the card still needs something, or it looks unfinished.</summary>
+    /// <summary>Neither a symbol nor an icon: the row still needs something, or it looks unfinished.</summary>
     public bool HasFallbackIcon => IconKey is null && GameIcon is null;
 
     public string AccessibleName => IsRunning ? $"{Name}, {Loc.Instance["Game_Running"]}" : Name;
 
-    /// <summary>"Steam · Rig" under the name: where the game comes from and what it switches to.</summary>
+    /// <summary>"Steam · Rig" under the name in the tray popup: where the game comes from and what it switches to.</summary>
     public string SourceText
     {
         get
@@ -68,7 +69,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     public bool HasWindows => WindowsLine is not null;
 
-    /// <summary>The companion programs' own icons, read when the card first shows them.</summary>
+    /// <summary>The companion programs' own icons, read when the popup first shows them.</summary>
     public IReadOnlyList<ImageSource> AppIcons => _appIcons ??= Game.Apps
         .Select(app => Services.AppIcons.Load(app.Path))
         .OfType<ImageSource>()
@@ -79,12 +80,28 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
     [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(CanPlay))]
     public partial bool IsRunning { get; set; }
 
-    /// <summary>Play is off while a session runs: starting twice would switch twice and start two sets of apps.</summary>
-    public bool CanPlay => !IsRunning;
+    /// <summary>Play is off while a session runs: starting twice would switch twice and start two sets of apps (R-FLOW-4).</summary>
+    public bool CanPlay => !IsRunning && !IsNew;
 
     /// <summary>Last result or "running"; <c>null</c> when nothing has happened yet.</summary>
     [ObservableProperty]
     public partial string? StatusText { get; set; }
+
+    /// <summary>A game that exists only in the detail so far ("New game" at the top of the list).</summary>
+    public bool IsNew { get; init; }
+
+    /// <summary>The status line under the name in the list: running, ready with the last session, learning, failed.</summary>
+    [ObservableProperty]
+    public partial StatusKind ListKind { get; private set; } = StatusKind.Neutral;
+
+    [ObservableProperty]
+    public partial string ListStatus { get; private set; } = string.Empty;
+
+    public void SetStatus(StatusKind kind, string text)
+    {
+        ListKind = kind;
+        ListStatus = text;
+    }
 
     private static string AppName(AppAction app) =>
         app.Name ?? (Path.GetFileNameWithoutExtension(app.Path) is { Length: > 0 } name ? name : app.Path);

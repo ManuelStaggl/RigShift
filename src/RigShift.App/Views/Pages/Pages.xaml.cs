@@ -242,23 +242,137 @@ public partial class AboutPage : Page
 
 public partial class GamesPage : Page
 {
-    public GamesPage(GamesViewModel viewModel)
+    private const ModifierKeys RequiredModifiers = ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows;
+
+    private readonly GamesViewModel _viewModel;
+    private readonly GameDialogs _dialogs;
+
+    public GamesPage(GamesViewModel viewModel, GameDialogs dialogs)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(dialogs);
+        _viewModel = viewModel;
+        _dialogs = dialogs;
         DataContext = viewModel;
         InitializeComponent();
-        Loaded += async (_, _) => await viewModel.LoadAsync();
+        viewModel.FocusNameRequested += (_, _) => FocusName();
+        PreviewKeyDown += OnPagePreviewKeyDown;
     }
 
-    /// <summary>The "more" button opens its context menu on click and Enter, not only on right click.</summary>
-    private void OnMoreClick(object sender, RoutedEventArgs e)
+    /// <summary>F2 edits the name (R-NAV-5).</summary>
+    private void OnPagePreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (sender is FrameworkElement { ContextMenu: { } menu } button)
+        if (e.Key == Key.F2 && Keyboard.Modifiers == ModifierKeys.None && _viewModel.HasSelection)
+        {
+            e.Handled = true;
+            FocusName();
+        }
+    }
+
+    private void FocusName()
+    {
+        NameBox.Focus();
+        NameBox.SelectAll();
+    }
+
+    /// <summary>Buttons with a menu open it on click and Enter, not only on right click.</summary>
+    private static void OpenMenu(FrameworkElement button, object? dataContext)
+    {
+        if (button.ContextMenu is { } menu)
         {
             menu.PlacementTarget = button;
             menu.Placement = PlacementMode.Bottom;
-            menu.DataContext = button.DataContext;
+            menu.DataContext = dataContext;
             menu.IsOpen = true;
+        }
+    }
+
+    private void OnNewClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
+
+    private void OnMoreClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
+
+    private void OnIconClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel.Editor);
+
+    /// <summary>"Choose…" on the Game tab: an installed game or a program.</summary>
+    private async void OnPickGame(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.Editor is not { } editor || await _dialogs.PickGameAsync() is not { } picked)
+        {
+            return;
+        }
+
+        if (picked.Installed is { } installed)
+        {
+            editor.SetLaunch(installed);
+        }
+        else if (picked.ExecutablePath is { } path)
+        {
+            editor.SetExecutable(path);
+        }
+    }
+
+    private void OnCaptureWindows(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.Editor is { } editor && WindowCaptureWindow.Capture(Window.GetWindow(this), _dialogs, editor.WindowLayout) is { } captured)
+        {
+            editor.WindowLayout = captured;
+        }
+    }
+
+    /// <summary>A new tool starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
+    private void OnAddApp(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.Editor is { } editor && AppPickerWindow.Pick(Window.GetWindow(this), null) is { } picked)
+        {
+            editor.AddApp(picked.Path, picked.Name);
+        }
+    }
+
+    private void OnBrowseApp(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AppEditItem item } && AppPickerWindow.Pick(Window.GetWindow(this), item.Path) is { } picked)
+        {
+            item.SetPicked(picked.Path, picked.Name);
+        }
+    }
+
+    private void OnHotkeyGotFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.BeginHotkeyRecording();
+
+    private void OnHotkeyLostFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.EndHotkeyRecording();
+
+    /// <summary>Same rules as the profile editor: Tab, Esc and Enter keep their meaning, Backspace/Delete clear the field.</summary>
+    private void OnHotkeyKeyDown(object sender, KeyEventArgs e)
+    {
+        if (_viewModel.Editor is not { } editor)
+        {
+            return;
+        }
+
+        Key key = e.Key switch
+        {
+            Key.System => e.SystemKey,
+            Key.ImeProcessed => e.ImeProcessedKey,
+            _ => e.Key,
+        };
+        ModifierKeys modifiers = Keyboard.Modifiers;
+        bool plain = (modifiers & RequiredModifiers) == ModifierKeys.None;
+
+        if (plain && key is Key.Tab or Key.Escape or Key.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        if (plain && key is Key.Back or Key.Delete)
+        {
+            editor.ClearHotkeyCommand.Execute(null);
+            return;
+        }
+
+        int virtualKey = KeyInterop.VirtualKeyFromKey(key);
+        if (virtualKey != 0 && !Core.Profiles.Hotkey.IsModifierKey(virtualKey))
+        {
+            editor.RecordHotkey(HotkeyFormat.FromWpf(modifiers), virtualKey);
         }
     }
 }

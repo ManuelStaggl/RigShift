@@ -828,6 +828,145 @@
     </Setter>
   </Style>
 
+  <!-- Step variant (games): "1 Game → 2 Profile → …" – number in mono, arrow between the tabs (spec 7.3, TabStrip).
+       The TabControl sets AlternationCount, so the first tab knows it has no arrow in front; the number is the Tag. -->
+  <Style x:Key="RigShift.Tab.Step" TargetType="TabItem" BasedOn="{StaticResource RigShift.Tab}">
+    <Setter Property="Margin" Value="0,0,8,0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TabItem">
+          <Grid Background="Transparent" SnapsToDevicePixels="True">
+            <StackPanel Margin="{TemplateBinding Padding}" Orientation="Horizontal" VerticalAlignment="Center">
+              <ui:SymbolIcon
+                x:Name="Arrow"
+                Margin="0,0,8,0"
+                VerticalAlignment="Center"
+                FontSize="12"
+                Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                Symbol="ArrowRight12" />
+              <TextBlock
+                Margin="0,0,6,0"
+                VerticalAlignment="Center"
+                FontFamily="{DynamicResource RigShift.Font.Mono}"
+                FontSize="12"
+                Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                Text="{TemplateBinding Tag}" />
+              <ContentPresenter
+                x:Name="Header"
+                ContentSource="Header"
+                TextElement.Foreground="{TemplateBinding Foreground}"
+                VerticalAlignment="Center" />
+              <Ellipse
+                x:Name="Dot"
+                Width="6"
+                Height="6"
+                Margin="6,0,0,0"
+                VerticalAlignment="Center"
+                Fill="{DynamicResource RigShift.Brush.Error}"
+                Visibility="Collapsed" />
+            </StackPanel>
+            <Rectangle
+              x:Name="Underline"
+              Height="2"
+              Margin="20,0,0,0"
+              VerticalAlignment="Bottom"
+              Fill="{DynamicResource RigShift.Brush.Accent}"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Focus"
+              Margin="-4,2"
+              BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+              BorderThickness="2"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              IsHitTestVisible="False"
+              Visibility="Collapsed" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+              <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Underline" Property="Margin" Value="0" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+              <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="controls:Interaction.IsInvalid" Value="True">
+              <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Option row (52 high): a radio circle, then the content; the chosen row carries the accent line (F5, profile choice). -->
+  <Style x:Key="RigShift.OptionList" TargetType="ListBox" BasedOn="{StaticResource RigShift.List}">
+    <Setter Property="ItemContainerStyle">
+      <Setter.Value>
+        <Style TargetType="ListBoxItem">
+          <Setter Property="Height" Value="52" />
+          <Setter Property="Margin" Value="0,0,0,8" />
+          <Setter Property="Padding" Value="12,0" />
+          <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+          <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+          <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+          <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="ListBoxItem">
+                <Border
+                  x:Name="Root"
+                  Padding="{TemplateBinding Padding}"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RigShift.Radius.Control}"
+                  SnapsToDevicePixels="True">
+                  <DockPanel>
+                    <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" DockPanel.Dock="Left">
+                      <Ellipse x:Name="Ring" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1" />
+                      <Ellipse
+                        x:Name="Mark"
+                        Width="10"
+                        Height="10"
+                        Fill="{DynamicResource RigShift.Brush.Accent}"
+                        Visibility="Collapsed" />
+                    </Grid>
+                    <ContentPresenter VerticalAlignment="Center" />
+                  </DockPanel>
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+                  </Trigger>
+                  <Trigger Property="IsSelected" Value="True">
+                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                    <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
+                    <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                  </Trigger>
+                  <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter TargetName="Root" Property="BorderThickness" Value="2" />
+                    <Setter TargetName="Root" Property="Padding" Value="11,0" />
+                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- Device chip (28 high): connected dot, name, remove (component DeviceChip). -->
   <Style x:Key="RigShift.DeviceChip" TargetType="Border">
     <Setter Property="Height" Value="28" />

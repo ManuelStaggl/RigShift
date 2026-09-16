@@ -62,6 +62,9 @@ public sealed partial class GameCatalog : ObservableObject
 
     public GameEntry? Find(Guid id) => _games.FirstOrDefault(g => g.Id == id);
 
+    /// <summary>The name of the profile a game switches to, for the detail head; <c>null</c> when it is gone.</summary>
+    public string? ProfileNameOf(Guid profileId) => _profiles.Find(profileId)?.Name;
+
     public async Task ReloadAsync(CancellationToken cancellationToken)
     {
         try

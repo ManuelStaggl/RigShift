@@ -21,7 +21,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     private readonly Func<GameSessionRunner> _runner;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
-    private readonly ConcurrentDictionary<Guid, Task> _running = new();
+    private readonly ConcurrentDictionary<Guid, RunningSession> _running = new();
 
     /// <summary>Process names of games seen running, so one start fires the automatic session once, not every five seconds.</summary>
     private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
@@ -61,6 +61,9 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     public bool IsRunning(Guid gameId) => _running.ContainsKey(gameId);
 
+    /// <summary>When the running session of this game started, or <c>null</c> when none runs.</summary>
+    public DateTimeOffset? RunningSince(Guid gameId) => _running.TryGetValue(gameId, out RunningSession? session) ? session.StartedAt : null;
+
     /// <summary>
     /// Starts watching for games that run without RigShift having started them. Games that already run when this is
     /// called only set the starting point – switching the whole machine because the app was started while a game was
@@ -96,13 +99,14 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
             return false;
         }
 
-        Task session = RunAsync(game, alreadyRunning);
+        var session = new RunningSession(_time.GetUtcNow());
         if (!_running.TryAdd(game.Id, session))
         {
             return false;
         }
 
-        Raise(game, running: true, status: null);
+        session.Task = RunAsync(game, alreadyRunning);
+        Raise(game, running: true, status: null, outcome: null);
         return true;
     }
 
@@ -118,16 +122,16 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
             GameSessionResult result = await Task.Run(
                 () => runner.RunAsync(game, alreadyRunning, _stopping.Token), CancellationToken.None);
             _log.Information("Game {Game} finished as {Outcome}", game.Name, result.Outcome);
-            await _dispatcher.InvokeAsync(() => Finish(game, GameMessages.Describe(result)));
+            await _dispatcher.InvokeAsync(() => Finish(game, GameMessages.Describe(result), result.Outcome));
         }
         catch (OperationCanceledException)
         {
-            await _dispatcher.InvokeAsync(() => Finish(game, null));
+            await _dispatcher.InvokeAsync(() => Finish(game, null, null));
         }
         catch (Exception ex)
         {
             _log.Error(ex, "Game {Game} failed", game.Name);
-            await _dispatcher.InvokeAsync(() => Finish(game, ex.Message));
+            await _dispatcher.InvokeAsync(() => Finish(game, ex.Message, GameSessionOutcome.StartFailed));
         }
         finally
         {
@@ -138,7 +142,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     private void OnProcessLearned(object? sender, GameProcessLearned learned) =>
         _dispatcher.BeginInvoke(() => _catalog.RememberProcessNameAsync(learned.GameId, learned.ProcessName, CancellationToken.None));
 
-    private void Finish(GameEntry game, string? status)
+    private void Finish(GameEntry game, string? status, GameSessionOutcome? outcome)
     {
         _running.TryRemove(game.Id, out _);
 
@@ -148,7 +152,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
             _seen.Remove(name);
         }
 
-        Raise(game, running: false, status);
+        Raise(game, running: false, status, outcome);
         _ = _profiles.RefreshActiveAsync(CancellationToken.None);
     }
 
@@ -199,8 +203,15 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         return names;
     }
 
-    private void Raise(GameEntry game, bool running, string? status) =>
-        SessionChanged?.Invoke(this, new GameSessionEvent(game.Id, running, status));
+    private void Raise(GameEntry game, bool running, string? status, GameSessionOutcome? outcome) =>
+        SessionChanged?.Invoke(this, new GameSessionEvent(game.Id, running, status, outcome, _time.GetUtcNow()));
+
+    private sealed class RunningSession(DateTimeOffset startedAt)
+    {
+        public DateTimeOffset StartedAt { get; } = startedAt;
+
+        public Task? Task { get; set; }
+    }
 
     public void Dispose()
     {
@@ -214,7 +225,13 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 /// <param name="GameId">The game it belongs to.</param>
 /// <param name="IsRunning">Whether the session runs now.</param>
 /// <param name="Status">What to show on the card, or <c>null</c> for nothing.</param>
-public sealed record GameSessionEvent(Guid GameId, bool IsRunning, string? Status);
+/// <param name="Outcome">How the session ended; <c>null</c> while it runs or when RigShift itself stopped it.</param>
+/// <param name="At">When it happened.</param>
+public sealed record GameSessionEvent(Guid GameId, bool IsRunning, string? Status, GameSessionOutcome? Outcome, DateTimeOffset At)
+{
+    /// <summary>The session ended without the game having run to its end (profile, start or recognition failed).</summary>
+    public bool Failed => Outcome is { } outcome && outcome != GameSessionOutcome.Ended;
+}
 
 /// <summary>User-facing texts for game session results.</summary>
 public static class GameMessages

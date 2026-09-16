@@ -489,4 +489,29 @@
   <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to "{0}"?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="List_NewInstalled" xml:space="preserve"><value>Find installed games…</value></data>
+  <data name="List_NewProgram" xml:space="preserve"><value>Choose a program…</value></data>
+  <data name="Games_NoSelection" xml:space="preserve"><value>Pick a game on the left, or add one with "New".</value></data>
+  <data name="Detail_PlayTip" xml:space="preserve"><value>Switches the profile, starts the tools and the game (Ctrl+Enter)</value></data>
+  <data name="Game_OpenGameTab" xml:space="preserve"><value>Game tab</value></data>
+  <data name="GameTab_Game" xml:space="preserve"><value>Game</value></data>
+  <data name="GameTab_Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="GameTab_Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="GameTab_Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="GameTab_End" xml:space="preserve"><value>End</value></data>
+  <data name="Game_GameIntro" xml:space="preserve"><value>Where the game comes from and how RigShift knows it is running.</value></data>
+  <data name="Game_ProfileIntro" xml:space="preserve"><value>Applied before the game, so the tools land on the right screens.</value></data>
+  <data name="Game_ToolsIntro" xml:space="preserve"><value>Run with the session. Wheel software before the game; SimHub and Crew Chief attach to the running session.</value></data>
+  <data name="Game_EndIntro" xml:space="preserve"><value>What happens once the session is over.</value></data>
+  <data name="Game_ExitLabel" xml:space="preserve"><value>Screens at the end</value></data>
+  <data name="Game_StopAppsHint" xml:space="preserve"><value>Tools that were started for this session are ended again.</value></data>
+  <data name="Game_AddTool" xml:space="preserve"><value>Tool</value></data>
+  <data name="Game_ShortcutHint" xml:space="preserve"><value>With the game’s icon; starts the whole session.</value></data>
+  <data name="Game_ProcessNotRecognised" xml:space="preserve"><value>No process was recognised on the last start. Without extension, as Task Manager shows it.</value></data>
+  <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools start, the screens stay as they are</value></data>
+  <data name="Game_RunningSince" xml:space="preserve"><value>Running since {0}</value></data>
+  <data name="Game_LastEnded" xml:space="preserve"><value>Ready · last {0} · ended</value></data>
+  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognised – enter it on the Game tab</value></data>
+  <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Process is learned on the first start</value></data>
+  <data name="Problem_LaunchMissing" xml:space="preserve"><value>Choose what starts the game.</value></data>
 </root>

@@ -216,6 +216,16 @@ public partial class App : Application, IAppShell
 
                 // First start: guide through the first two profiles. Queued, so startup finishes before the dialog blocks.
 #if DEBUG
+                // Developer aid: the games page in its states as PNG, rendered from the visual tree (works over disconnected RDP).
+                if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE") is { Length: > 0 } pageDirectory)
+                {
+                    _ = Dispatcher.InvokeAsync(async () =>
+                    {
+                        await PagePreview.WriteGamesAsync(Services, pageDirectory);
+                        Quit();
+                    });
+                }
+
                 // Developer aid: the assistant at a later step with demo profiles (second, trigger, done).
                 if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep previewStep))
                 {
