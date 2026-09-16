@@ -1,6 +1,7 @@
 using NSubstitute;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
@@ -33,6 +34,30 @@ public sealed class SwitchCoordinatorTests : IDisposable
         answer.SetResult(ConfirmationResult.Confirmed);
         (await first).ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
         _host.Coordinator.IsSwitching.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Switch_WhenAListenerThrows_StillFreesTheGateForTheNextSwitch()
+    {
+        // The tray rebuilt its icon on IsSwitching and threw when a game session raised it from a background thread.
+        // That left the gate taken, and every later switch was refused as "another switch is running" until restart.
+        bool thrown = false;
+        _host.Coordinator.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching) && !thrown)
+            {
+                thrown = true;
+                throw new InvalidOperationException("the calling thread cannot access this object");
+            }
+        };
+
+        // The game session takes this path (IProfileSwitcher), which passes the exception on to its caller.
+        IProfileSwitcher switcher = _host.Coordinator;
+        await Should.ThrowAsync<InvalidOperationException>(() => switcher.SwitchAsync(Rig(), SwitchRequest.Default, CancellationToken.None));
+
+        _host.Coordinator.IsSwitching.ShouldBeFalse();
+        SwitchResult? second = await _host.Coordinator.SwitchAsync(Rig(), SwitchRequest.Default);
+        second.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
     }
 
     [Fact]

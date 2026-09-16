@@ -121,11 +121,11 @@ public sealed class TrayIconService : IDisposable
         _automation = automation;
         _games = games;
         _sessions = sessions;
-        automation.Changed += (_, _) => RebuildMenu();
+        automation.Changed += (_, _) => OnUi(RebuildMenu);
 
         // A game that runs is not startable again, and a game added on the page belongs in the menu right away.
-        games.Changed += (_, _) => RebuildMenu();
-        sessions.SessionChanged += (_, _) => RebuildMenu();
+        games.Changed += (_, _) => OnUi(RebuildMenu);
+        sessions.SessionChanged += (_, _) => OnUi(RebuildMenu);
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(popupViewModel);
@@ -165,33 +165,33 @@ public sealed class TrayIconService : IDisposable
             popup.Resources.MergedDictionaries.Remove(nudge);
             _log.Debug("Tray popup resources refreshed for theme {Theme}", theme);
         });
-        catalog.Changed += (_, _) => Refresh();
-        Loc.Instance.PropertyChanged += (_, _) => Refresh();
-        coordinator.SwitchCompleted += (_, record) =>
+        catalog.Changed += (_, _) => OnUi(Refresh);
+        Loc.Instance.PropertyChanged += (_, _) => OnUi(Refresh);
+        coordinator.SwitchCompleted += (_, record) => OnUi(() =>
         {
             profiles.ShowSwitchResult(record);
 
             // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
             Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked);
-        };
-        coordinator.AppsCompleted += (_, record) =>
+        });
+        coordinator.AppsCompleted += (_, record) => OnUi(() =>
         {
             if (SwitchMessages.ForAppsNotification(record) is { } apps)
             {
                 Notify(apps);
             }
-        };
-        coordinator.WaitingForDisplays += (_, names) => _icon.Dispatcher.InvokeAsync(() => Notify((
+        });
+        coordinator.WaitingForDisplays += (_, names) => OnUi(() => Notify((
             Loc.Instance["Result_WaitingTitle"],
             Loc.Format("Result_WaitingText", string.Join(", ", names), (int)switchOptions.MissingDisplayWaitBudget.TotalSeconds),
             NotificationIcon.Info)));
-        coordinator.BusyRejected += (_, _) => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info));
+        coordinator.BusyRejected += (_, _) => OnUi(() => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info)));
         _updates = updates;
-        updates.UpdateReady += (_, version) => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true);
-        updates.UpdateAvailable += (_, version) => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true);
-        updates.StateChanged += (_, _) => RebuildMenu();
+        updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true));
+        updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true));
+        updates.StateChanged += (_, _) => OnUi(RebuildMenu);
         hotkeys.RegistrationFailed += (_, names) =>
-            Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning));
+            OnUi(() => Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning)));
 
         // Update notifications and switch problems lead to the about page (install the update, recent switches, log).
         _icon.TrayBalloonTipClicked += (_, _) =>
@@ -203,7 +203,7 @@ public sealed class TrayIconService : IDisposable
         _icon.TrayBalloonTipClosed += (_, _) => _notificationClick = null;
 
         // Windows restored a profile's displays by itself: a click applies audio, apps and the rest (finding HW-15).
-        coordinator.RestoredByWindows += (_, restored) => Notify(
+        coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(
             (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NotificationIcon.Info),
             async () =>
             {
@@ -214,12 +214,12 @@ public sealed class TrayIconService : IDisposable
                 }
 
                 await _coordinator.SwitchAsync(restored, new SwitchRequest { KeepDisplays = true });
-            });
+            }));
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
             {
-                UpdateIcon();
+                OnUi(UpdateIcon);
             }
         };
 
@@ -345,6 +345,24 @@ public sealed class TrayIconService : IDisposable
     {
         _notificationClick = click;
         _icon.ShowNotification(message.Title, message.Text, message.Icon);
+    }
+
+    /// <summary>
+    /// Runs a tray update on the UI thread. Everything below touches WPF objects – the tray icon, its menu, its
+    /// notifications – but the events that ask for it arrive from wherever their sender runs: a game session applies
+    /// its profile on a background thread, and the switch coordinator raises its events there. Calling straight into
+    /// WPF from that thread throws "the calling thread cannot access this object", which aborted the game start.
+    /// </summary>
+    private void OnUi(Action update)
+    {
+        if (_icon.Dispatcher.CheckAccess())
+        {
+            update();
+        }
+        else
+        {
+            _icon.Dispatcher.InvokeAsync(update);
+        }
     }
 
     private void Refresh()

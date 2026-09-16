@@ -184,11 +184,13 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             return null;
         }
 
-        IsSwitching = true;
         DateTimeOffset started = _time.GetLocalNow();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Token, cancellationToken);
         try
         {
+            // Inside the try on purpose: the setter runs foreign handlers, and one that throws used to leave the gate
+            // taken for good – every later switch was refused as "another switch is running" until RigShift restarted.
+            IsSwitching = true;
             SwitchRequest effective = request with { DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
             Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
             _current = running;
@@ -247,10 +249,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             return;
         }
 
-        IsSwitching = true;
         DateTimeOffset started = _time.GetLocalNow();
         try
         {
+            IsSwitching = true;
+
             // The active profile does not decide: when the missing display connects, Windows itself may restore whatever
             // layout its database holds for that set of monitors (M5 2026-09-13 20:17: spacedesk connected → Desk).
             Task<SwitchResult?> running = Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, _stopping.Token), CancellationToken.None);

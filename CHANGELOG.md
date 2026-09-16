@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-09-16
+
+### Fixed
+
+- Starting a game failed with "the profile could not be applied, the game was not started", and from then on every
+  switch was refused as "another switch is running" until RigShift was restarted. A game session applies its profile
+  on a background thread, and the tray icon updated itself straight from there instead of on the UI thread.
+
 ## [2.1.0] - 2026-09-16
 
 ### Added
