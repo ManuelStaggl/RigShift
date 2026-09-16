@@ -120,6 +120,11 @@
                         CommandParameter="{Binding}"
                         Header="{loc:Tr Profile_Duplicate}"
                         Icon="{ui:SymbolIcon Copy24}" />
+                      <MenuItem
+                        Command="{Binding PlacementTarget.Tag.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        CommandParameter="{Binding}"
+                        Header="{loc:Tr Profile_Shortcut}"
+                        Icon="{ui:SymbolIcon Link24}" />
                       <Separator />
                       <MenuItem
                         Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"

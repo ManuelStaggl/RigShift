@@ -92,6 +92,41 @@ public sealed partial class GamesViewModel : ObservableObject
         await RunStoreActionAsync(() => _catalog.SaveAsync(copy, CancellationToken.None), Loc.Format("Status_Duplicated", copy.Name));
     }
 
+    /// <summary>
+    /// A desktop shortcut that starts the whole session. Unlike a profile's it carries the game's own name and icon –
+    /// it stands next to the game's other shortcuts and should look like one, not like a RigShift setting.
+    /// </summary>
+    [RelayCommand]
+    private void CreateShortcut(GameItem? item)
+    {
+        if (item is null || Environment.ProcessPath is not { } executable)
+        {
+            return;
+        }
+
+        string title = Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
+        string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
+
+        // No icon found is the fallback, not the error case: the shortcut then shows the RigShift symbol.
+        string? icon = Windows.Games.GameExecutable.Find(item.Game.Launch, _log);
+        try
+        {
+            Windows.Shell.ShortcutWriter.Create(
+                file,
+                executable,
+                "play " + Core.Cli.CommandLineArguments.Quote(item.Name),
+                Loc.Format("Shortcut_GameDescription", item.Name),
+                icon);
+            _log.Information("Shortcut {File} created for game {Game} with icon {Icon}", file, item.Name, icon ?? "(RigShift)");
+            ShowStatus(Loc.Format("Status_ShortcutCreated", title));
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or UnauthorizedAccessException or IOException)
+        {
+            _log.Error(ex, "Shortcut {File} could not be created", file);
+            ShowStatus(Loc.Format("Status_Error", ex.Message), Wpf.Ui.Controls.InfoBarSeverity.Error);
+        }
+    }
+
     [RelayCommand]
     private async Task DeleteAsync(GameItem? item)
     {

@@ -9,7 +9,12 @@ namespace RigShift.Windows.Shell;
 public static class ShortcutWriter
 {
     /// <param name="file">Full path of the <c>.lnk</c> file; an existing file is replaced.</param>
-    public static void Create(string file, string target, string arguments, string description)
+    /// <param name="iconFile">
+    /// File to take the icon from, <c>null</c> for <paramref name="target"/>'s own. A game shortcut points here at the
+    /// game's executable, so the desktop shows the game rather than RigShift.
+    /// </param>
+    /// <param name="iconIndex">Index of the icon inside <paramref name="iconFile"/>; the first one is what a game has.</param>
+    public static void Create(string file, string target, string arguments, string description, string? iconFile = null, int iconIndex = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(file);
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
@@ -23,7 +28,7 @@ public static class ShortcutWriter
             shellLink.SetPath(target);
             shellLink.SetArguments(arguments);
             shellLink.SetDescription(description);
-            shellLink.SetIconLocation(target, 0);
+            shellLink.SetIconLocation(iconFile is { Length: > 0 } ? iconFile : target, iconIndex);
             shellLink.SetWorkingDirectory(Path.GetDirectoryName(target) ?? string.Empty);
             ((IPersistFile)link).Save(file, fRemember: true);
         }
