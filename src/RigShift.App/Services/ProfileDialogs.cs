@@ -12,7 +12,15 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Services;
 
-/// <summary>Opens the profile editor and the delete confirmation.</summary>
+/// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
+public enum UnsavedChoice
+{
+    Save,
+    Discard,
+    Cancel,
+}
+
+/// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
 public sealed class ProfileDialogs
 {
     private readonly ProfileCatalog _catalog;
@@ -51,9 +59,8 @@ public sealed class ProfileDialogs
         _log = log.ForContext<ProfileDialogs>();
     }
 
-    /// <summary>Editor pre-filled with the active displays and the default playback device.</summary>
-    /// <returns>The saved profile, or <c>null</c> if cancelled.</returns>
-    public async Task<Profile?> CreateFromCurrentAsync()
+    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3, R-FLOW-3).</summary>
+    public async Task<Profile> NewFromCurrentAsync()
     {
         DisplaySnapshot snapshot;
         try
@@ -79,7 +86,25 @@ public sealed class ProfileDialogs
             profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
         }
 
-        return await ShowAsync(profile, isNew: true, playback, surround);
+        return profile;
+    }
+
+    /// <summary>The detail's editor for a profile: audio and USB lists, Surround and the profile's rules from the settings.</summary>
+    public async Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
+        IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
+        IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
+        SurroundState surround = await ReadSurroundAsync();
+        Core.Settings.AppSettings settings = _settings.Current;
+        var rules = new ProfileRulesEditor(
+            profile.Id, settings.AutomationRules ?? [], _catalog.Profiles, settings.DefaultProfileId, usbDevices, settings.UsbDeviceNames,
+            _services.GetRequiredService<IUsbPowerCheck>(), _log);
+        return new ProfileEditorViewModel(
+            profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
+            [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
+            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, rules, _catalog, _display, _desktopIcons, _hotkeys, _settings, _log);
     }
 
     /// <summary>The setup assistant; remembers that it was shown.</summary>
@@ -119,10 +144,6 @@ public sealed class ProfileDialogs
 
         window.ShowDialog();
     }
-
-    /// <returns>The saved profile, or <c>null</c> if cancelled.</returns>
-    public async Task<Profile?> EditAsync(Profile profile) =>
-        await ShowAsync(profile, isNew: false, await ListAudioAsync(AudioDirection.Render));
 
     /// <summary>Delete is destructive: red button, centred on the window it came from (analysis finding I-15).</summary>
     public static async Task<bool> ConfirmDeleteAsync(string name)
@@ -188,19 +209,27 @@ public sealed class ProfileDialogs
         return await box.ShowDialogAsync() == MessageBoxResult.Primary;
     }
 
-    /// <summary>Asked when the editor closes with unsaved changes (analysis finding I-11). True: discard them.</summary>
-    public static async Task<bool> ConfirmDiscardAsync(System.Windows.Window owner)
+    /// <summary>
+    /// Asked when the selection or the navigation leaves a profile with unsaved changes (R-NAV-3): "Save changes to X?"
+    /// with Save, Discard and Cancel. Save is the primary button: the changes were made on purpose.
+    /// </summary>
+    public static async Task<UnsavedChoice> ConfirmUnsavedAsync(string name)
     {
         var box = new MessageBox
         {
-            Title = Loc.Instance["Editor_DiscardTitle"],
-            Content = Loc.Instance["Editor_DiscardText"],
-            PrimaryButtonText = Loc.Instance["Editor_Discard"],
-            PrimaryButtonAppearance = ControlAppearance.Danger,
-            CloseButtonText = Loc.Instance["Editor_KeepEditing"],
+            Title = Loc.Format("Unsaved_Title", name),
+            Content = Loc.Instance["Unsaved_Text"],
+            PrimaryButtonText = Loc.Instance["Common_Save"].Replace("_", string.Empty, StringComparison.Ordinal),
+            SecondaryButtonText = Loc.Instance["Common_Discard"],
+            CloseButtonText = Loc.Instance["Common_Cancel"],
         };
-        SetOwner(box, owner);
-        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+        SetOwner(box, ActiveWindow());
+        return await box.ShowDialogAsync() switch
+        {
+            MessageBoxResult.Primary => UnsavedChoice.Save,
+            MessageBoxResult.Secondary => UnsavedChoice.Discard,
+            _ => UnsavedChoice.Cancel,
+        };
     }
 
     private static System.Windows.Window? ActiveWindow()
@@ -230,34 +259,6 @@ public sealed class ProfileDialogs
         {
             _log.Warning(ex, "Surround state could not be read for the editor");
             return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
-        }
-    }
-
-    private async Task<Profile?> ShowAsync(
-        Profile profile, bool isNew, IReadOnlyList<AudioDeviceInfo> playback, SurroundState? surround = null)
-    {
-        surround ??= await ReadSurroundAsync();
-        IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
-        IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
-        Core.Settings.AppSettings settings = _settings.Current;
-        var viewModel = new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
-            [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
-            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, _catalog, _display, _desktopIcons, _hotkeys, _log);
-
-        MainWindow main = _services.GetRequiredService<MainWindow>();
-        var window = new ProfileEditorWindow(viewModel) { Owner = main.IsVisible ? main : null };
-
-        // Recording a hotkey RigShift holds would switch right away, and the "taken" check would see our own.
-        _hotkeys.Suspend();
-        try
-        {
-            return window.ShowDialog() == true ? viewModel.Saved : null;
-        }
-        finally
-        {
-            _hotkeys.Resume();
-            viewModel.Dispose();
         }
     }
 

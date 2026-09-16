@@ -1,10 +1,12 @@
 using System.IO;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
+using RigShift.Core.Topology;
 
 namespace RigShift.App.ViewModels;
 
@@ -64,6 +66,25 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
 
     [ObservableProperty]
     public partial string? CheckMessage { get; set; }
+
+    /// <summary>A profile that exists only in the detail so far ("New profile" at the top of the list, F3).</summary>
+    public bool IsNew { get; init; }
+
+    /// <summary>The S-size picture in the master list (R-NAV-2).</summary>
+    public IReadOnlyList<TopologyDisplay> Topology { get; } = Services.TopologyDisplays.From(profile.Displays);
+
+    /// <summary>The status line under the name in the list: active, ready, ready with optional displays missing, blocked.</summary>
+    [ObservableProperty]
+    public partial StatusKind ListKind { get; private set; } = StatusKind.Neutral;
+
+    [ObservableProperty]
+    public partial string ListStatus { get; private set; } = string.Empty;
+
+    public void SetStatus(StatusKind kind, string text)
+    {
+        ListKind = kind;
+        ListStatus = text;
+    }
 
     private static string Describe(DisplayAssignment display)
     {

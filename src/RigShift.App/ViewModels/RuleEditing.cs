@@ -349,7 +349,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
 {
     private readonly Guid _profileId;
     private readonly IReadOnlyList<AutomationRule> _others;
-    private readonly IReadOnlyList<AutomationRule> _initial;
+    private IReadOnlyList<AutomationRule> _initial;
     private readonly IReadOnlyList<Profile> _profiles;
     private readonly Guid? _defaultProfileId;
     private readonly IReadOnlyList<UsbDevice> _connected;
@@ -402,6 +402,9 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
 
     /// <summary>All rules for the settings: the other profiles' rules as they were, then this profile's.</summary>
     public IReadOnlyList<AutomationRule> Merge() => [.. _others, .. Build()];
+
+    /// <summary>After a save: the rules as they stand are the ones on disk.</summary>
+    public void MarkSaved() => _initial = Build();
 
     /// <summary>New texts after a language change, same rules.</summary>
     public void Relabel() => Rebuild(Build());

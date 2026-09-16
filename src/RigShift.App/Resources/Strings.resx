@@ -99,7 +99,6 @@
   <data name="About_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Profiles_SaveCurrent" xml:space="preserve"><value>_Save current arrangement</value></data>
   <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile…</value></data>
   <data name="Profile_Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="Profile_More" xml:space="preserve"><value>More actions</value></data>
@@ -120,10 +119,7 @@
   <data name="Status_Deleted" xml:space="preserve"><value>“{0}” deleted.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Shortcut “{0}” created on the desktop. It also works as a Stream Deck action.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Error: {0}</value></data>
-  <data name="Editor_TitleNew" xml:space="preserve"><value>New profile</value></data>
-  <data name="Editor_TitleEdit" xml:space="preserve"><value>Edit profile</value></data>
   <data name="Editor_NewName" xml:space="preserve"><value>New profile</value></data>
-  <data name="Editor_ProblemsTitle" xml:space="preserve"><value>Not ready to save</value></data>
   <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
   <data name="Editor_Icon" xml:space="preserve"><value>Icon</value></data>
   <data name="Icon_Desk" xml:space="preserve"><value>Desk</value></data>
@@ -149,7 +145,6 @@
   <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>e.g. Left</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Remove display</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
-  <data name="Editor_Save" xml:space="preserve"><value>_Save</value></data>
   <data name="Audio_Playback" xml:space="preserve"><value>Playback</value></data>
   <data name="Audio_PlaybackComms" xml:space="preserve"><value>Playback for calls</value></data>
   <data name="Audio_Recording" xml:space="preserve"><value>Recording</value></data>
@@ -267,10 +262,6 @@
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls</value></data>
   <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Windows communications setting. Discord may need to rejoin the call.</value></data>
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Devices for calls</value></data>
-  <data name="Editor_DiscardTitle" xml:space="preserve"><value>Discard changes?</value></data>
-  <data name="Editor_DiscardText" xml:space="preserve"><value>This profile has unsaved changes.</value></data>
-  <data name="Editor_Discard" xml:space="preserve"><value>Discard</value></data>
-  <data name="Editor_KeepEditing" xml:space="preserve"><value>Keep editing</value></data>
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows may turn this device off</value></data>
   <data name="Automation_PowerSavingText" xml:space="preserve"><value>USB power saving is on for this device. Windows may cut its power to save energy, and pedals or a wheelbase can then drop out while driving.</value></data>
   <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>How to turn it off</value></data>
@@ -458,4 +449,44 @@
   <data name="Time_MinutesAgo" xml:space="preserve"><value>{0} min ago</value></data>
   <data name="Time_Today" xml:space="preserve"><value>today {0}</value></data>
   <data name="Time_Yesterday" xml:space="preserve"><value>yesterday {0}</value></data>
+  <data name="List_New" xml:space="preserve"><value>New</value></data>
+  <data name="List_NewFromCurrent" xml:space="preserve"><value>From the current arrangement</value></data>
+  <data name="List_Assistant" xml:space="preserve"><value>Setup assistant</value></data>
+  <data name="List_EmptyTitle" xml:space="preserve"><value>No profiles yet</value></data>
+  <data name="List_EmptyText" xml:space="preserve"><value>Save the current arrangement with "New", or let the assistant guide you.</value></data>
+  <data name="List_Unsaved" xml:space="preserve"><value>Not saved yet</value></data>
+  <data name="List_Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="List_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="List_OptionalMissing" xml:space="preserve"><value>Ready · {0} missing (optional)</value></data>
+  <data name="List_Blocked" xml:space="preserve"><value>Blocked: {0} missing</value></data>
+  <data name="Detail_NoSelection" xml:space="preserve"><value>Pick a profile on the left, or create one with "New".</value></data>
+  <data name="Detail_TestTip" xml:space="preserve"><value>Checks without switching whether every display is there.</value></data>
+  <data name="Detail_SwitchTip" xml:space="preserve"><value>Switches to this profile.</value></data>
+  <data name="Tab_Displays" xml:space="preserve"><value>Displays</value></data>
+  <data name="Tab_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Tab_Apps" xml:space="preserve"><value>Apps</value></data>
+  <data name="Tab_Triggers" xml:space="preserve"><value>Triggers</value></data>
+  <data name="Tab_Behavior" xml:space="preserve"><value>Behavior</value></data>
+  <data name="Displays_ClickHint" xml:space="preserve"><value>Click a display to edit it</value></data>
+  <data name="Displays_OpenSettings" xml:space="preserve"><value>Windows display settings</value></data>
+  <data name="Displays_NoneSelected" xml:space="preserve"><value>No display chosen. Click one in the arrangement to edit its name, refresh rate and HDR.</value></data>
+  <data name="Audio_Intro" xml:space="preserve"><value>Applies while the profile is active. Devices that are not connected right now stay selectable.</value></data>
+  <data name="Apps_ProfileIntro" xml:space="preserve"><value>Run while the profile is active, in this order from top to bottom.</value></data>
+  <data name="Trigger_Intro" xml:space="preserve"><value>Everything that brings the PC into this profile.</value></data>
+  <data name="Trigger_RuleTitle" xml:space="preserve"><value>When these devices are connected</value></data>
+  <data name="Trigger_AddRule" xml:space="preserve"><value>USB rule</value></data>
+  <data name="Trigger_AddDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="Trigger_Shortcut" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Create on the desktop</value></data>
+  <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>
+  <data name="Trigger_Command" xml:space="preserve"><value>Command · also for Stream Deck</value></data>
+  <data name="Trigger_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Trigger_Copied" xml:space="preserve"><value>Command copied.</value></data>
+  <data name="Behavior_Intro" xml:space="preserve"><value>How the PC behaves while the profile is active.</value></data>
+  <data name="Profile_SetDefault" xml:space="preserve"><value>Make default</value></data>
+  <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create shortcut</value></data>
+  <data name="Status_Tested" xml:space="preserve"><value>Tested: {0}</value></data>
+  <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to "{0}"?</value></data>
+  <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
 </root>

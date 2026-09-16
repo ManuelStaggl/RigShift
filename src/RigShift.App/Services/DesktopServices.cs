@@ -419,7 +419,7 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Command(Loc.Instance["Tray_SaveCurrent"], () =>
         {
             _shell.ShowMainWindow(typeof(ProfilesPage));
-            _profiles.SaveCurrentCommand.Execute(null);
+            _profiles.NewFromCurrentCommand.Execute(null);
         }));
         menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
         menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));

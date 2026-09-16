@@ -5,216 +5,1173 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance vm:ProfilesViewModel}"
   Title="{loc:Tr Nav_Profiles}"
-  ScrollViewer.CanContentScroll="False">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Style="{StaticResource PageContent}">
-      <!-- Same header as Displays and Automation: title left, actions right. The assistant is icon-only so the header fits at the narrowest width. -->
-      <Grid Margin="0,0,0,16">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <ui:TextBlock Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Profiles}" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal">
-          <ui:Button
-            Margin="0,0,8,0"
-            VerticalAlignment="Stretch"
-            AutomationProperties.Name="{loc:Tr Profiles_SetupAssistant}"
-            Command="{Binding SetupAssistantCommand}"
-            Icon="{ui:SymbolIcon Wand24}"
-            ToolTip="{loc:Tr Profiles_SetupAssistant}" />
-          <ui:Button Command="{Binding SaveCurrentCommand}" Content="{loc:Tr Profiles_SaveCurrent}" />
-        </StackPanel>
-      </Grid>
-
-      <!-- Visible while any switch runs, from the page, the tray, a hotkey or an automation rule (analysis finding I-04). -->
-      <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">
-        <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True" />
-        <TextBlock
-          Margin="8,0,0,0"
-          VerticalAlignment="Center"
-          controls:LiveRegion.IsLive="True"
-          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-          Text="{loc:Tr Tray_Switching}" />
+  Background="{DynamicResource RigShift.Brush.Page}"
+  FocusManager.IsFocusScope="False">
+  <Page.InputBindings>
+    <KeyBinding Command="{Binding SaveCommand}" Gesture="Ctrl+S" />
+    <KeyBinding Command="{Binding NewFromCurrentCommand}" Gesture="Ctrl+N" />
+    <KeyBinding Command="{Binding SwitchCommand}" Gesture="Ctrl+Enter" />
+  </Page.InputBindings>
+  <Page.Resources>
+    <!-- One-off texts are hidden while empty. -->
+    <Style x:Key="OptionalCaption" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
+      <Setter Property="Margin" Value="0,8,0,0" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
+          <Setter Property="Visibility" Value="Collapsed" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="">
+          <Setter Property="Visibility" Value="Collapsed" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <DataTemplate x:Key="AudioSlotTemplate" DataType="{x:Type vm:AudioSlot}">
+      <StackPanel Margin="0,0,0,16">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{Binding Label}" />
+        <ComboBox
+          AutomationProperties.Name="{Binding Label}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding Choices}"
+          SelectedItem="{Binding Selected}"
+          Style="{StaticResource RigShift.Select}" />
+        <Grid Margin="0,8,0,0" IsEnabled="{Binding HasDevice}" Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="44" />
+          </Grid.ColumnDefinitions>
+          <CheckBox
+            VerticalAlignment="Center"
+            AutomationProperties.HelpText="{Binding Label}"
+            Content="{loc:Tr Audio_SetVolume}"
+            IsChecked="{Binding SetVolume}"
+            Style="{StaticResource RigShift.Check}" />
+          <Slider
+            Grid.Column="1"
+            Margin="12,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.HelpText="{Binding Label}"
+            AutomationProperties.Name="{loc:Tr Audio_SetVolume}"
+            IsEnabled="{Binding SetVolume}"
+            IsSnapToTickEnabled="True"
+            LargeChange="10"
+            Maximum="100"
+            Minimum="0"
+            SmallChange="1"
+            TickFrequency="1"
+            Value="{Binding Volume}" />
+          <TextBlock
+            Grid.Column="2"
+            VerticalAlignment="Center"
+            Style="{StaticResource RigShift.Text.Mono}"
+            Text="{Binding VolumeText}"
+            TextAlignment="Right" />
+        </Grid>
       </StackPanel>
+    </DataTemplate>
+  </Page.Resources>
 
-      <!-- TwoWay: InfoBar.IsOpen does not bind two-way by default, and closing with X must reach the view model. -->
-      <ui:InfoBar
-        Margin="0,0,0,16"
-        IsClosable="True"
-        IsOpen="{Binding IsStatusOpen, Mode=TwoWay}"
-        Message="{Binding StatusMessage}"
-        Severity="{Binding StatusSeverity}"
-        controls:LiveRegion.IsLive="True" />
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="280" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
 
-      <ui:InfoBar
-        Margin="0,0,0,16"
-        Title="{loc:Tr Profiles_EmptyTitle}"
-        Message="{Binding Catalog.EmptyMessage}"
-        IsOpen="{Binding Catalog.IsEmpty}"
-        IsClosable="False"
-        Severity="Informational" />
-
-      <ui:InfoBar
-        Margin="0,0,0,16"
-        Title="{loc:Tr Profiles_UnreadableTitle}"
-        Message="{Binding Catalog.UnreadableFilesMessage}"
-        IsOpen="{Binding Catalog.HasUnreadableFiles}"
-        IsClosable="False"
-        Severity="Warning" />
-
-      <ItemsControl ItemsSource="{Binding Catalog.Items}" Focusable="False">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <!-- One action on the card, "Switch"; everything else in the "…" menu (user decision P-01). -->
-            <ui:Card Margin="0,0,0,4" Padding="16">
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <controls:ProfileIcon
-                  Width="24"
-                  Height="24"
+    <!-- ===== Master list (R-NAV-2, R-ACT-4, R-ACT-5) ===== -->
+    <Border
+      Grid.Column="0"
+      BorderBrush="{DynamicResource RigShift.Brush.Line}"
+      BorderThickness="0,0,1,0">
+      <DockPanel>
+        <Button
+          x:Name="NewButton"
+          Height="44"
+          Padding="16,0"
+          HorizontalContentAlignment="Stretch"
+          AutomationProperties.Name="{loc:Tr List_New}"
+          Click="OnNewClick"
+          DockPanel.Dock="Top"
+          Style="{StaticResource RigShift.Button.Ghost}"
+          Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+          controls:Interaction.CornerRadius="0">
+          <DockPanel>
+            <ui:SymbolIcon Margin="0,0,10,0" VerticalAlignment="Center" DockPanel.Dock="Left" FontSize="16" Symbol="Add16" />
+            <ui:SymbolIcon VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="ChevronDown12" />
+            <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
+          </DockPanel>
+          <Button.ContextMenu>
+            <ContextMenu>
+              <MenuItem Command="{Binding NewFromCurrentCommand}" Header="{loc:Tr List_NewFromCurrent}" />
+              <MenuItem Command="{Binding SetupAssistantCommand}" Header="{loc:Tr List_Assistant}" />
+            </ContextMenu>
+          </Button.ContextMenu>
+        </Button>
+        <Border DockPanel.Dock="Top" Style="{StaticResource RigShift.Divider}" />
+        <StackPanel
+          Margin="16,24"
+          DockPanel.Dock="Top"
+          Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr List_EmptyTitle}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            Style="{StaticResource RigShift.Text.Caption}"
+            Text="{loc:Tr List_EmptyText}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+        <ListBox
+          x:Name="List"
+          AutomationProperties.Name="{loc:Tr Nav_Profiles}"
+          ItemsSource="{Binding Items}"
+          SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+          Style="{StaticResource RigShift.List}">
+          <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem" BasedOn="{StaticResource RigShift.ListRow}">
+              <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}" />
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:ProfileItem}">
+              <DockPanel>
+                <controls:DisplayTopology
+                  Width="64"
+                  Height="28"
                   Margin="0,0,12,0"
                   VerticalAlignment="Center"
-                  IconKey="{Binding IconKey}"
-                  IsFilled="{Binding IsActive}"
-                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                  Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                  <ui:TextBlock
-                    FontTypography="Subtitle"
-                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                  Displays="{Binding Topology}"
+                  DockPanel.Dock="Left"
+                  Size="S" />
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock
+                    Style="{StaticResource RigShift.Text.BodyStrong}"
                     Text="{Binding Name}"
                     TextTrimming="CharacterEllipsis"
-                    ToolTip="{Binding Name}" />
-                  <TextBlock Style="{StaticResource StatusText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
+                    TextWrapping="NoWrap" />
+                  <controls:StatusLine
+                    Margin="0,2,0,0"
+                    Kind="{Binding ListKind}"
+                    Text="{Binding ListStatus}" />
                 </StackPanel>
+              </DockPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
 
-                <ui:Button
-                  Grid.Column="2"
-                  Margin="12,0,8,0"
+    <!-- ===== Detail ===== -->
+    <Grid Grid.Column="1">
+      <!-- Empty: nothing selected (only while there are no profiles). -->
+      <TextBlock
+        Margin="24"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Style="{StaticResource RigShift.Text.Caption}"
+        Text="{loc:Tr Detail_NoSelection}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
+
+      <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <controls:InfoBar
+          Grid.Row="0"
+          Margin="24,12,24,0"
+          Kind="Warn"
+          Text="{Binding Catalog.UnreadableFilesMessage}"
+          Visibility="{Binding Catalog.HasUnreadableFiles, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Head (72): picture S, name (F2), chips, status line; actions right (R-ACT-1…3). -->
+        <Border
+          Grid.Row="1"
+          BorderBrush="{DynamicResource RigShift.Brush.Line}"
+          BorderThickness="0,0,0,1">
+          <Grid Height="72" Margin="24,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <controls:DisplayTopology
+              Grid.Column="0"
+              Width="64"
+              Height="28"
+              Margin="0,0,16,0"
+              VerticalAlignment="Center"
+              Displays="{Binding Editor.TopologyDisplays}"
+              Size="S" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <DockPanel LastChildFill="False">
+                <Button
+                  x:Name="IconButton"
+                  Margin="0,0,4,0"
                   VerticalAlignment="Center"
-                  Appearance="Primary"
-                  AutomationProperties.HelpText="{Binding Name}"
-                  Command="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                  CommandParameter="{Binding}"
-                  Content="{loc:Tr Profile_Apply}"
-                  IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=Page}}" />
-                <ui:Button
-                  Grid.Column="3"
-                  VerticalAlignment="Stretch"
-                  AutomationProperties.HelpText="{Binding Name}"
-                  AutomationProperties.Name="{loc:Tr Profile_More}"
-                  Click="OnMoreClick"
-                  Icon="{ui:SymbolIcon MoreHorizontal24}"
-                  Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Page}}"
-                  ToolTip="{loc:Tr Profile_More}">
-                  <ui:Button.ContextMenu>
-                    <ContextMenu>
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.CheckCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Profile_Check}"
-                        Icon="{ui:SymbolIcon DocumentSearch24}"
-                        IsEnabled="{Binding PlacementTarget.Tag.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Profile_Edit}"
-                        Icon="{ui:SymbolIcon Edit24}" />
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.DuplicateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Profile_Duplicate}"
-                        Icon="{ui:SymbolIcon Copy24}" />
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.ToggleDefaultCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Settings_DefaultProfile}"
-                        IsCheckable="False"
-                        IsChecked="{Binding IsDefault, Mode=OneWay}" />
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Profile_Shortcut}"
-                        Icon="{ui:SymbolIcon Link24}" />
-                      <Separator />
-                      <MenuItem
-                        Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                        CommandParameter="{Binding}"
-                        Header="{loc:Tr Profile_Delete}"
-                        Icon="{ui:SymbolIcon Delete24}" />
+                  AutomationProperties.Name="{loc:Tr Editor_Icon}"
+                  Click="OnIconClick"
+                  DockPanel.Dock="Left"
+                  Style="{StaticResource RigShift.Button.Icon}"
+                  ToolTip="{loc:Tr Editor_Icon}">
+                  <controls:ProfileIcon
+                    Width="20"
+                    Height="20"
+                    IconKey="{Binding Editor.SelectedIcon.Key}"
+                    TextElement.Foreground="{DynamicResource RigShift.Brush.TextSecondary}" />
+                  <Button.ContextMenu>
+                    <ContextMenu ItemsSource="{Binding IconChoices}">
+                      <ContextMenu.ItemContainerStyle>
+                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                          <Setter Property="Header" Value="{Binding Name}" />
+                          <Setter Property="Command" Value="{Binding DataContext.ChooseIconCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                          <Setter Property="CommandParameter" Value="{Binding}" />
+                          <Setter Property="Icon">
+                            <Setter.Value>
+                              <controls:ProfileIcon Width="16" Height="16" IconKey="{Binding Key}" />
+                            </Setter.Value>
+                          </Setter>
+                        </Style>
+                      </ContextMenu.ItemContainerStyle>
                     </ContextMenu>
-                  </ui:Button.ContextMenu>
-                </ui:Button>
+                  </Button.ContextMenu>
+                </Button>
+                <ContentControl
+                  Margin="10,0,0,0"
+                  VerticalAlignment="Center"
+                  Content="{loc:Tr Profile_Active}"
+                  DockPanel.Dock="Right"
+                  Style="{StaticResource RigShift.Chip}"
+                  Visibility="{Binding IsSelectedActive, Converter={StaticResource BoolToVisibility}}" />
+                <ContentControl
+                  Margin="10,0,0,0"
+                  VerticalAlignment="Center"
+                  Content="{loc:Tr Profile_Default}"
+                  DockPanel.Dock="Right"
+                  Style="{StaticResource RigShift.Chip}"
+                  Visibility="{Binding IsSelectedDefault, Converter={StaticResource BoolToVisibility}}" />
+                <TextBox
+                  x:Name="NameBox"
+                  MinWidth="160"
+                  MaxWidth="480"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{loc:Tr Editor_Name}"
+                  DockPanel.Dock="Left"
+                  MaxLength="60"
+                  Style="{StaticResource RigShift.Field.Title}"
+                  Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
+                  ToolTip="{loc:Tr Editor_Name}"
+                  controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
+              </DockPanel>
+              <controls:StatusLine
+                Margin="0,4,0,0"
+                Kind="{Binding HeadStatusKind}"
+                Text="{Binding HeadStatusText}"
+                Visibility="{Binding Editor.HasNameProblem, Converter={StaticResource InverseBoolToVisibility}}"
+                controls:LiveRegion.IsLive="True" />
+              <TextBlock
+                Margin="0,4,0,0"
+                Style="{StaticResource RigShift.Text.FieldError}"
+                Text="{Binding Editor.NameProblem}"
+                Visibility="{Binding Editor.HasNameProblem, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <StackPanel
+              Grid.Column="2"
+              Margin="16,0,0,0"
+              VerticalAlignment="Center"
+              Orientation="Horizontal">
+              <Button
+                Margin="0,0,8,0"
+                Command="{Binding TestCommand}"
+                Content="{loc:Tr Profile_Check}"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr Detail_TestTip}" />
+              <!-- Save is the primary action while the save bar is visible; the switch button steps back (R-ACT-1). -->
+              <Button
+                Margin="0,0,8,0"
+                Command="{Binding SwitchCommand}"
+                Content="{loc:Tr Profile_Apply}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                ToolTip="{loc:Tr Detail_SwitchTip}"
+                Visibility="{Binding Editor.IsDirty, Converter={StaticResource InverseBoolToVisibility}}" />
+              <Button
+                Margin="0,0,8,0"
+                Command="{Binding SwitchCommand}"
+                Content="{loc:Tr Profile_Apply}"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr Detail_SwitchTip}"
+                Visibility="{Binding Editor.IsDirty, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                AutomationProperties.Name="{loc:Tr Profile_More}"
+                Click="OnMoreClick"
+                Style="{StaticResource RigShift.Button.IconOutlined}"
+                ToolTip="{loc:Tr Profile_More}">
+                <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
+                <Button.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Command="{Binding DuplicateCommand}" Header="{loc:Tr Profile_Duplicate}" />
+                    <MenuItem
+                      Command="{Binding ToggleDefaultCommand}"
+                      Header="{loc:Tr Profile_SetDefault}"
+                      IsCheckable="False"
+                      IsChecked="{Binding IsSelectedDefault, Mode=OneWay}" />
+                    <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}" />
+                    <Separator />
+                    <MenuItem
+                      Command="{Binding DeleteCommand}"
+                      Foreground="{DynamicResource RigShift.Brush.Error}"
+                      Header="{loc:Tr Profile_Delete}" />
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </Border>
+        <controls:ProgressLine Grid.Row="2" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,8,0,0">
-                  <ItemsControl ItemsSource="{Binding DisplayLines}" Focusable="False">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+        <!-- Test and switch results, store errors (R-FLOW-2). -->
+        <controls:InfoBar
+          Grid.Row="3"
+          Margin="24,12,24,0"
+          Kind="{Binding DetailKind}"
+          Text="{Binding DetailMessage}"
+          Visibility="{Binding HasDetailMessage, Converter={StaticResource BoolToVisibility}}"
+          controls:LiveRegion.IsLive="True">
+          <controls:InfoBar.Action>
+            <Button
+              Height="28"
+              Width="28"
+              AutomationProperties.Name="{loc:Tr Common_Close}"
+              Command="{Binding CloseDetailMessageCommand}"
+              Style="{StaticResource RigShift.Button.Icon}"
+              ToolTip="{loc:Tr Common_Close}">
+              <ui:SymbolIcon FontSize="12" Symbol="Dismiss12" />
+            </Button>
+          </controls:InfoBar.Action>
+        </controls:InfoBar>
 
-                  <Grid Margin="0,4,0,0" Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <!-- The programs' own icons; a generic apps symbol only when none could be read. -->
-                    <ItemsControl VerticalAlignment="Center" Focusable="False" ItemsSource="{Binding AppIcons}">
-                      <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                          <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                      </ItemsControl.ItemsPanel>
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                          <Image Width="16" Height="16" Margin="0,0,6,0" Source="{Binding}" />
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                      <ItemsControl.Style>
-                        <Style TargetType="ItemsControl">
+        <!-- Tabs in editing order (F4). -->
+        <TabControl
+          x:Name="Tabs"
+          Grid.Row="4"
+          Margin="0,4,0,0"
+          Style="{StaticResource RigShift.Tabs}">
+          <TabItem
+            Header="{loc:Tr Tab_Displays}"
+            Style="{StaticResource RigShift.Tab}"
+            controls:Interaction.IsInvalid="{Binding Editor.HasDisplaysProblem}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="24" DataContext="{Binding Editor}">
+                <controls:InfoBar
+                  Margin="0,0,0,12"
+                  Kind="Error"
+                  Text="{Binding DisplaysProblem}"
+                  Visibility="{Binding HasDisplaysProblem, Converter={StaticResource BoolToVisibility}}" />
+                <controls:InfoBar
+                  Margin="0,0,0,12"
+                  Kind="Warn"
+                  Text="{Binding WarningText}"
+                  Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}" />
+
+                <ContentControl Style="{StaticResource RigShift.TopologyPanel}">
+                  <StackPanel>
+                    <DockPanel LastChildFill="False">
+                      <TextBlock
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Left"
+                        Style="{StaticResource RigShift.Text.Caption}"
+                        Text="{loc:Tr Displays_ClickHint}" />
+                      <Button
+                        Height="28"
+                        Margin="8,0,0,0"
+                        Command="{Binding DataContext.OpenDisplaySettingsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource RigShift.Button.Ghost}"
+                        ToolTip="{loc:Tr Editor_DisplaysHint}">
+                        <StackPanel Orientation="Horizontal">
+                          <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Open16" />
+                          <TextBlock Text="{loc:Tr Displays_OpenSettings}" />
+                        </StackPanel>
+                      </Button>
+                      <Button
+                        Height="28"
+                        Command="{Binding TakeCurrentCommand}"
+                        Content="{loc:Tr Editor_TakeCurrent}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource RigShift.Button}"
+                        ToolTip="{loc:Tr Editor_DisplaysHint}" />
+                    </DockPanel>
+                    <controls:DisplayTopology
+                      Height="190"
+                      Margin="0,12,0,0"
+                      Displays="{Binding TopologyDisplays}"
+                      SelectedKey="{Binding SelectedDisplayKey, Mode=TwoWay}"
+                      Size="L" />
+                  </StackPanel>
+                </ContentControl>
+                <TextBlock
+                  AutomationProperties.LiveSetting="Polite"
+                  Style="{StaticResource OptionalCaption}"
+                  Text="{Binding ArrangementNote}" />
+
+                <!-- Properties of the chosen display. -->
+                <Border
+                  Margin="0,16,0,0"
+                  Padding="16,12"
+                  DataContext="{Binding SelectedDisplay}"
+                  Style="{StaticResource RigShift.Card}"
+                  Visibility="{Binding DataContext.HasSelectedDisplay, RelativeSource={RelativeSource AncestorType=StackPanel}, Converter={StaticResource BoolToVisibility}}">
+                  <StackPanel>
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="104" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="116" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                        <TextBlock
+                          Style="{StaticResource RigShift.Text.BodyStrong}"
+                          Text="{Binding ModelName}"
+                          TextTrimming="CharacterEllipsis"
+                          TextWrapping="NoWrap" />
+                        <TextBlock
+                          Style="{StaticResource RigShift.Text.MonoSecondary}"
+                          Text="{Binding ResolutionText}"
+                          TextTrimming="CharacterEllipsis"
+                          TextWrapping="NoWrap"
+                          ToolTip="{Binding ModeText}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2">
+                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_CustomName}" />
+                        <TextBox
+                          AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                          MaxLength="40"
+                          Style="{StaticResource RigShift.Field}"
+                          Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
+                          ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="4">
+                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
+                        <ComboBox
+                          AutomationProperties.Name="{loc:Tr Editor_RefreshRate}"
+                          DisplayMemberPath="Text"
+                          ItemsSource="{Binding RefreshChoices}"
+                          SelectedItem="{Binding SelectedRefresh}"
+                          Style="{StaticResource RigShift.Select}"
+                          ToolTip="{loc:Tr Editor_RefreshRateHint}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="6">
+                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="HDR" />
+                        <ComboBox
+                          AutomationProperties.Name="HDR"
+                          DisplayMemberPath="Text"
+                          ItemsSource="{Binding HdrChoices}"
+                          SelectedItem="{Binding SelectedHdr}"
+                          Style="{StaticResource RigShift.Select}"
+                          ToolTip="{loc:Tr Editor_HdrHint}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="8" VerticalAlignment="Bottom">
+                        <RadioButton
+                          AutomationProperties.HelpText="{Binding Name}"
+                          Content="{loc:Tr Editor_Primary}"
+                          GroupName="PrimaryDisplay"
+                          IsChecked="{Binding IsPrimary}" />
+                        <CheckBox
+                          AutomationProperties.HelpText="{Binding Name}"
+                          Content="{loc:Tr Editor_Optional}"
+                          IsChecked="{Binding IsOptional}"
+                          IsEnabled="{Binding CanBeOptional}"
+                          Style="{StaticResource RigShift.Check}" />
+                      </StackPanel>
+                      <Button
+                        Grid.Column="10"
+                        VerticalAlignment="Bottom"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        AutomationProperties.Name="{loc:Tr Editor_Remove}"
+                        Command="{Binding DataContext.Editor.RemoveDisplayCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                        CommandParameter="{Binding}"
+                        Style="{StaticResource RigShift.Button.Icon}"
+                        ToolTip="{loc:Tr Editor_Remove}">
+                        <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                      </Button>
+                    </Grid>
+                    <TextBlock
+                      Margin="0,8,0,0"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{loc:Tr Editor_RefreshRatesUnknown}"
+                      Visibility="{Binding RatesUnknown, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Switching HDR froze a test PC over HDMI, also from the Windows settings (finding HW-12). -->
+                    <TextBlock
+                      Margin="0,8,0,0"
+                      Foreground="{DynamicResource RigShift.Brush.Warn}"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{loc:Tr Editor_HdrWarning}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding SwitchesHdr, Converter={StaticResource BoolToVisibility}}" />
+                  </StackPanel>
+                </Border>
+                <Border
+                  MinHeight="56"
+                  Margin="0,16,0,0"
+                  Padding="16,12"
+                  Style="{StaticResource RigShift.Card}"
+                  Visibility="{Binding HasSelectedDisplay, Converter={StaticResource InverseBoolToVisibility}}">
+                  <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource RigShift.Text.Caption}"
+                    Text="{loc:Tr Displays_NoneSelected}"
+                    TextWrapping="Wrap" />
+                </Border>
+
+                <StackPanel Margin="0,20,0,0" Orientation="Horizontal">
+                  <!-- Hidden without an NVIDIA card: nothing here would mean anything then. -->
+                  <StackPanel
+                    Width="240"
+                    Margin="0,0,24,0"
+                    Visibility="{Binding ShowSurround, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Surround}" />
+                    <ListBox
+                      AutomationProperties.Name="{loc:Tr Editor_Surround}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding SurroundChoices}"
+                      SelectedItem="{Binding SelectedSurround}"
+                      Style="{StaticResource RigShift.Segment}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Text="{Binding SurroundHint}"
+                      TextWrapping="Wrap">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
                           <Style.Triggers>
-                            <DataTrigger Binding="{Binding AppIcons.Count}" Value="0">
-                              <Setter Property="Template">
-                                <Setter.Value>
-                                  <ControlTemplate>
-                                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Apps24" />
-                                  </ControlTemplate>
-                                </Setter.Value>
-                              </Setter>
+                            <DataTrigger Binding="{Binding SurroundHintIsError}" Value="True">
+                              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
                             </DataTrigger>
                           </Style.Triggers>
                         </Style>
-                      </ItemsControl.Style>
-                    </ItemsControl>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </StackPanel>
+                  <!-- Desktop symbols: captured on demand, because they are only right while this profile's screens are up. -->
+                  <StackPanel Width="420">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_DesktopIcons}" />
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock
+                        Height="32"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        LineHeight="32"
+                        Style="{StaticResource RigShift.Text.MonoSecondary}"
+                        Text="{Binding DesktopIconsText}" />
+                      <Button
+                        Command="{Binding CaptureDesktopIconsCommand}"
+                        Content="{loc:Tr Editor_DesktopIconsCapture}"
+                        Style="{StaticResource RigShift.Button}" />
+                      <Button
+                        Margin="8,0,0,0"
+                        Command="{Binding ClearDesktopIconsCommand}"
+                        Content="{loc:Tr Editor_DesktopIconsClear}"
+                        Style="{StaticResource RigShift.Button.Ghost}"
+                        Visibility="{Binding HasDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
                     <TextBlock
-                      Grid.Column="1"
-                      AutomationProperties.Name="{loc:Tr Editor_Apps}"
-                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                      Text="{Binding AppsLine}"
+                      Margin="0,4,0,0"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{loc:Tr Editor_DesktopIconsHint}"
                       TextWrapping="Wrap" />
-                  </Grid>
-
-                  <TextBlock Margin="0,8,0,0" controls:LiveRegion.IsLive="True" Style="{StaticResource StatusText}" Text="{Binding CheckMessage}" />
+                  </StackPanel>
                 </StackPanel>
-              </Grid>
-            </ui:Card>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </StackPanel>
-  </ScrollViewer>
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+
+          <TabItem Header="{loc:Tr Tab_Audio}" Style="{StaticResource RigShift.Tab}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="24" DataContext="{Binding Editor}">
+                <TextBlock
+                  Margin="0,0,0,16"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Audio_Intro}" />
+                <StackPanel Orientation="Horizontal">
+                  <ItemsControl
+                    Width="360"
+                    Focusable="False"
+                    ItemTemplate="{StaticResource AudioSlotTemplate}"
+                    ItemsSource="{Binding AudioSlots}" />
+                  <StackPanel Width="360" Margin="24,0,0,0">
+                    <!-- Call devices follow playback and recording unless set here (analysis decision O-02). -->
+                    <Expander IsExpanded="{Binding ShowCommunicationsAudio, Mode=OneTime}">
+                      <Expander.Header>
+                        <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr Editor_AudioAdvanced}" />
+                      </Expander.Header>
+                      <ItemsControl
+                        Margin="0,12,0,0"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource AudioSlotTemplate}"
+                        ItemsSource="{Binding CommunicationsAudioSlots}" />
+                    </Expander>
+                    <CheckBox
+                      Margin="0,16,0,0"
+                      Content="{loc:Tr Editor_DisableDucking}"
+                      IsChecked="{Binding DisableCommunicationsDucking}"
+                      Style="{StaticResource RigShift.Check}" />
+                    <TextBlock
+                      Margin="28,2,0,0"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{loc:Tr Editor_DisableDuckingHint}"
+                      TextWrapping="Wrap" />
+                  </StackPanel>
+                </StackPanel>
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+
+          <TabItem
+            Header="{loc:Tr Tab_Apps}"
+            Style="{StaticResource RigShift.Tab}"
+            controls:Interaction.IsInvalid="{Binding Editor.HasAppsProblem}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="24" DataContext="{Binding Editor}">
+                <TextBlock
+                  Margin="0,0,0,16"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Apps_ProfileIntro}" />
+                <StackPanel Width="320" HorizontalAlignment="Left">
+                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_AppsWaitDevice}" />
+                  <ComboBox
+                    AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
+                    AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding AppsWaitDeviceChoices}"
+                    SelectedItem="{Binding SelectedAppsWaitDevice}"
+                    Style="{StaticResource RigShift.Select}" />
+                  <TextBlock
+                    Margin="0,4,0,0"
+                    Style="{StaticResource RigShift.Text.Caption}"
+                    Text="{loc:Tr Editor_AppsWaitHint}"
+                    TextWrapping="Wrap" />
+                </StackPanel>
+                <controls:InfoBar
+                  Margin="0,16,0,0"
+                  Kind="Error"
+                  Text="{Binding AppsProblem}"
+                  Visibility="{Binding HasAppsProblem, Converter={StaticResource BoolToVisibility}}" />
+                <ItemsControl
+                  Margin="0,16,0,0"
+                  Focusable="False"
+                  ItemsSource="{Binding Apps}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:AppEditItem}">
+                      <Border
+                        Margin="0,0,0,8"
+                        Padding="16,10"
+                        Style="{StaticResource RigShift.Card}">
+                        <StackPanel>
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
+                            <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
+                              <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
+                                <ui:SymbolIcon.Style>
+                                  <Style TargetType="ui:SymbolIcon">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                      <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                      </DataTrigger>
+                                    </Style.Triggers>
+                                  </Style>
+                                </ui:SymbolIcon.Style>
+                              </ui:SymbolIcon>
+                              <Image Source="{Binding Icon}" />
+                            </Grid>
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                              <TextBlock
+                                Style="{StaticResource RigShift.Text.Body}"
+                                Text="{Binding DisplayName}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                              <TextBlock
+                                Text="{Binding Path}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                ToolTip="{Binding Path}">
+                                <TextBlock.Style>
+                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.MonoSecondary}">
+                                    <Style.Triggers>
+                                      <DataTrigger Binding="{Binding PathMissing}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+                                      </DataTrigger>
+                                    </Style.Triggers>
+                                  </Style>
+                                </TextBlock.Style>
+                              </TextBlock>
+                            </StackPanel>
+                            <ComboBox
+                              Grid.Column="2"
+                              Width="120"
+                              Height="28"
+                              MinHeight="28"
+                              VerticalAlignment="Center"
+                              AutomationProperties.Name="{loc:Tr App_Action}"
+                              DisplayMemberPath="Name"
+                              ItemsSource="{Binding KindChoices}"
+                              SelectedItem="{Binding SelectedKind}"
+                              Style="{StaticResource RigShift.Select}" />
+                            <ui:NumberBox
+                              Grid.Column="3"
+                              Width="64"
+                              Margin="8,0,0,0"
+                              VerticalAlignment="Center"
+                              AutomationProperties.Name="{loc:Tr App_Wait}"
+                              ClearButtonEnabled="False"
+                              MaxDecimalPlaces="0"
+                              Maximum="300"
+                              Minimum="0"
+                              PlaceholderText="0"
+                              SmallChange="1"
+                              SpinButtonPlacementMode="Hidden"
+                              ToolTip="{loc:Tr App_Wait}"
+                              Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock
+                              Grid.Column="4"
+                              Margin="6,0,8,0"
+                              VerticalAlignment="Center"
+                              Style="{StaticResource RigShift.Text.Caption}"
+                              Text="s" />
+                            <Button
+                              Grid.Column="5"
+                              AutomationProperties.Name="{loc:Tr App_MoveUp}"
+                              Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              CommandParameter="{Binding}"
+                              Style="{StaticResource RigShift.Button.Icon}"
+                              ToolTip="{loc:Tr App_MoveUp}">
+                              <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
+                            </Button>
+                            <Button
+                              Grid.Column="6"
+                              AutomationProperties.Name="{loc:Tr App_MoveDown}"
+                              Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              CommandParameter="{Binding}"
+                              Style="{StaticResource RigShift.Button.Icon}"
+                              ToolTip="{loc:Tr App_MoveDown}">
+                              <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
+                            </Button>
+                            <Button
+                              Grid.Column="7"
+                              AutomationProperties.Name="{loc:Tr App_Remove}"
+                              Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              CommandParameter="{Binding}"
+                              Style="{StaticResource RigShift.Button.Icon}"
+                              ToolTip="{loc:Tr App_Remove}">
+                              <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                            </Button>
+                          </Grid>
+                          <Grid Margin="32,8,0,0" Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
+                              <TextBox
+                                Height="28"
+                                AutomationProperties.Name="{loc:Tr App_Arguments}"
+                                Style="{StaticResource RigShift.Field.Mono}"
+                                Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <Button
+                              Grid.Column="1"
+                              Height="28"
+                              Margin="8,0,0,0"
+                              VerticalAlignment="Bottom"
+                              Click="OnBrowseApp"
+                              Content="{loc:Tr App_Browse}"
+                              Style="{StaticResource RigShift.Button.Ghost}" />
+                          </Grid>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button
+                  HorizontalAlignment="Left"
+                  Click="OnAddApp"
+                  Style="{StaticResource RigShift.Button}">
+                  <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Add16" />
+                    <TextBlock Text="{loc:Tr App_Path}" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+
+          <TabItem
+            Header="{loc:Tr Tab_Triggers}"
+            Style="{StaticResource RigShift.Tab}"
+            controls:Interaction.IsInvalid="{Binding Editor.HasHotkeyProblem}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="24" DataContext="{Binding Editor}">
+                <TextBlock
+                  Margin="0,0,0,16"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Trigger_Intro}" />
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="300" />
+                  </Grid.ColumnDefinitions>
+
+                  <!-- USB rules of this profile (R-OBJ-1), saved with it. -->
+                  <StackPanel Grid.Column="0" DataContext="{Binding Rules}">
+                    <ItemsControl Focusable="False" ItemsSource="{Binding Rules}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:RuleCard}">
+                          <Border Margin="0,0,0,12" Style="{StaticResource RigShift.Card}">
+                            <StackPanel>
+                              <DockPanel>
+                                <Button
+                                  AutomationProperties.HelpText="{Binding DevicesText}"
+                                  AutomationProperties.Name="{loc:Tr Automation_Delete}"
+                                  Command="{Binding DataContext.RemoveRuleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                  CommandParameter="{Binding}"
+                                  DockPanel.Dock="Right"
+                                  Style="{StaticResource RigShift.Button.Icon}"
+                                  ToolTip="{loc:Tr Automation_Delete}">
+                                  <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                                </Button>
+                                <ui:SymbolIcon
+                                  Margin="0,0,8,0"
+                                  VerticalAlignment="Center"
+                                  DockPanel.Dock="Left"
+                                  FontSize="16"
+                                  Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                                  Symbol="UsbPlug20" />
+                                <TextBlock
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource RigShift.Text.BodyStrong}"
+                                  Text="{loc:Tr Trigger_RuleTitle}" />
+                              </DockPanel>
+                              <WrapPanel Margin="0,12,0,0">
+                                <ItemsControl Focusable="False" ItemsSource="{Binding Devices}">
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:RuleDeviceSlot}">
+                                      <Border
+                                        Margin="0,0,8,8"
+                                        Style="{StaticResource RigShift.DeviceChip}"
+                                        Visibility="{Binding HasDevice, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel Orientation="Horizontal">
+                                          <Ellipse
+                                            Width="8"
+                                            Height="8"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="{loc:Tr Automation_NameConnected}">
+                                            <Ellipse.Style>
+                                              <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+                                                <Setter Property="ToolTip" Value="{loc:Tr Automation_NameNotConnected}" />
+                                                <Style.Triggers>
+                                                  <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource RigShift.Brush.Ok}" />
+                                                    <Setter Property="ToolTip" Value="{loc:Tr Automation_NameConnected}" />
+                                                  </DataTrigger>
+                                                </Style.Triggers>
+                                              </Style>
+                                            </Ellipse.Style>
+                                          </Ellipse>
+                                          <TextBlock
+                                            VerticalAlignment="Center"
+                                            Style="{StaticResource RigShift.Text.Body}"
+                                            Text="{Binding Name}" />
+                                          <Button
+                                            Width="24"
+                                            Height="24"
+                                            Margin="4,0,0,0"
+                                            AutomationProperties.HelpText="{Binding Name}"
+                                            AutomationProperties.Name="{loc:Tr Automation_RemoveDevice}"
+                                            Command="{Binding Card.RemoveDeviceCommand}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource RigShift.Button.Icon}"
+                                            ToolTip="{loc:Tr Automation_RemoveDevice}">
+                                            <ui:SymbolIcon FontSize="10" Symbol="Dismiss12" />
+                                          </Button>
+                                        </StackPanel>
+                                      </Border>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button
+                                  Height="28"
+                                  Margin="0,0,0,8"
+                                  Padding="8,0"
+                                  AutomationProperties.HelpText="{loc:Tr Automation_AddDeviceHint}"
+                                  Click="OnAddDeviceClick"
+                                  Style="{StaticResource RigShift.Button.Ghost}"
+                                  ToolTip="{loc:Tr Automation_AddDeviceHint}">
+                                  <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="12" Symbol="Add12" />
+                                    <TextBlock Text="{loc:Tr Trigger_AddDevice}" />
+                                  </StackPanel>
+                                  <Button.ContextMenu>
+                                    <ContextMenu ItemsSource="{Binding AvailableDevices}">
+                                      <ContextMenu.ItemContainerStyle>
+                                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                          <Setter Property="Header" Value="{Binding Name}" />
+                                          <Setter Property="Command" Value="{Binding DataContext.AddDeviceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                          <Setter Property="CommandParameter" Value="{Binding}" />
+                                        </Style>
+                                      </ContextMenu.ItemContainerStyle>
+                                    </ContextMenu>
+                                  </Button.ContextMenu>
+                                </Button>
+                              </WrapPanel>
+                              <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition Width="*" />
+                                  <ColumnDefinition Width="12" />
+                                  <ColumnDefinition Width="140" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" MaxWidth="320" HorizontalAlignment="Left">
+                                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_DeviceGone}" />
+                                  <ComboBox
+                                    AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
+                                    DisplayMemberPath="Name"
+                                    ItemsSource="{Binding Owner.ExitChoices}"
+                                    SelectedItem="{Binding SelectedExit}"
+                                    Style="{StaticResource RigShift.Select}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" ToolTip="{loc:Tr Automation_ExitDelayHint}">
+                                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_ExitDelay}" />
+                                  <ui:NumberBox
+                                    AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
+                                    AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
+                                    ClearButtonEnabled="False"
+                                    MaxDecimalPlaces="0"
+                                    Maximum="600"
+                                    Minimum="0"
+                                    PlaceholderText="0"
+                                    SmallChange="5"
+                                    SpinButtonPlacementMode="Hidden"
+                                    Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                              </Grid>
+                              <CheckBox
+                                Margin="0,12,0,0"
+                                Content="{loc:Tr Automation_SkipConfirmation}"
+                                IsChecked="{Binding SkipConfirmation}"
+                                Style="{StaticResource RigShift.Check}" />
+                              <TextBlock
+                                Margin="28,2,0,0"
+                                Style="{StaticResource RigShift.Text.Caption}"
+                                Text="{loc:Tr Automation_SkipConfirmationHint}"
+                                TextWrapping="Wrap" />
+                              <TextBlock
+                                Margin="0,8,0,0"
+                                Foreground="{DynamicResource RigShift.Brush.Warn}"
+                                Style="{StaticResource RigShift.Text.Caption}"
+                                Text="{loc:Tr Automation_DuplicateDevice}"
+                                TextWrapping="Wrap"
+                                Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
+                              <TextBlock
+                                Margin="0,8,0,0"
+                                Foreground="{DynamicResource RigShift.Brush.Warn}"
+                                Style="{StaticResource RigShift.Text.Caption}"
+                                Text="{loc:Tr Automation_PowerSavingText}"
+                                TextWrapping="Wrap"
+                                ToolTip="{loc:Tr Automation_PowerSavingTitle}"
+                                Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button
+                      HorizontalAlignment="Left"
+                      Command="{Binding AddRuleCommand}"
+                      Style="{StaticResource RigShift.Button}">
+                      <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Add16" />
+                        <TextBlock Text="{loc:Tr Trigger_AddRule}" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Hotkey}" />
+                    <DockPanel>
+                      <Button
+                        Margin="8,0,0,0"
+                        AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
+                        Command="{Binding ClearHotkeyCommand}"
+                        DockPanel.Dock="Right"
+                        IsEnabled="{Binding HasHotkey}"
+                        Style="{StaticResource RigShift.Button.IconOutlined}"
+                        ToolTip="{loc:Tr Editor_HotkeyClear}">
+                        <ui:SymbolIcon FontSize="12" Symbol="Dismiss12" />
+                      </Button>
+                      <TextBox
+                        x:Name="HotkeyBox"
+                        AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
+                        AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
+                        GotKeyboardFocus="OnHotkeyGotFocus"
+                        IsReadOnly="True"
+                        IsReadOnlyCaretVisible="False"
+                        LostKeyboardFocus="OnHotkeyLostFocus"
+                        PreviewKeyDown="OnHotkeyKeyDown"
+                        Style="{StaticResource RigShift.Field.Mono}"
+                        Text="{Binding HotkeyText, Mode=OneWay}"
+                        ToolTip="{loc:Tr Hotkey_RecordTip}"
+                        controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />
+                    </DockPanel>
+                    <TextBlock
+                      AutomationProperties.LiveSetting="Polite"
+                      Style="{StaticResource RigShift.Text.FieldError}"
+                      Text="{Binding HotkeyProblem}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasHotkeyProblem, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      AutomationProperties.LiveSetting="Polite"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{Binding HotkeyHint}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasHotkeyProblem, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                    <TextBlock
+                      Margin="0,16,0,4"
+                      Style="{StaticResource RigShift.Text.Label}"
+                      Text="{loc:Tr Trigger_Shortcut}" />
+                    <Button
+                      HorizontalAlignment="Left"
+                      Command="{Binding DataContext.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                      Style="{StaticResource RigShift.Button}">
+                      <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Link16" />
+                        <TextBlock Text="{loc:Tr Trigger_ShortcutCreate}" />
+                      </StackPanel>
+                    </Button>
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{loc:Tr Trigger_ShortcutHint}"
+                      TextWrapping="Wrap" />
+
+                    <TextBlock
+                      Margin="0,16,0,4"
+                      Style="{StaticResource RigShift.Text.Label}"
+                      Text="{loc:Tr Trigger_Command}" />
+                    <DockPanel>
+                      <Button
+                        Margin="8,0,0,0"
+                        AutomationProperties.Name="{loc:Tr Trigger_Copy}"
+                        Command="{Binding DataContext.CopyCommandCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource RigShift.Button.IconOutlined}"
+                        ToolTip="{loc:Tr Trigger_Copy}">
+                        <ui:SymbolIcon FontSize="16" Symbol="Copy16" />
+                      </Button>
+                      <TextBox
+                        AutomationProperties.Name="{loc:Tr Trigger_Command}"
+                        FontSize="12"
+                        Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                        IsReadOnly="True"
+                        Style="{StaticResource RigShift.Field.Mono}"
+                        Text="{Binding CommandText, Mode=OneWay}" />
+                    </DockPanel>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+
+          <TabItem Header="{loc:Tr Tab_Behavior}" Style="{StaticResource RigShift.Tab}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="24" DataContext="{Binding Editor}">
+                <TextBlock
+                  Margin="0,0,0,16"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Behavior_Intro}" />
+                <!-- Seconds come from the settings only (analysis decision O-01). -->
+                <CheckBox
+                  Content="{loc:Tr Editor_SwitchWithoutAsking}"
+                  IsChecked="{Binding SwitchWithoutAsking}"
+                  IsEnabled="{Binding ConfirmationEnabled}"
+                  Style="{StaticResource RigShift.Check}" />
+                <!-- Off in the settings, the checkbox changes nothing; say where the setting is (finding HW-02). -->
+                <TextBlock
+                  Margin="28,2,0,0"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Editor_ConfirmationOff}"
+                  TextWrapping="Wrap"
+                  Visibility="{Binding ConfirmationDisabled, Converter={StaticResource BoolToVisibility}}" />
+                <CheckBox
+                  Margin="0,16,0,0"
+                  Content="{loc:Tr Editor_KeepAwake}"
+                  IsChecked="{Binding KeepAwake}"
+                  Style="{StaticResource RigShift.Check}" />
+                <TextBlock
+                  Margin="28,2,0,0"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Editor_KeepAwakeHint}"
+                  TextWrapping="Wrap" />
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+        </TabControl>
+
+        <!-- "'X' saved", three seconds (F3 step 4). -->
+        <TextBlock
+          Grid.Row="5"
+          Height="28"
+          Margin="24,0"
+          VerticalAlignment="Center"
+          LineHeight="28"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{Binding StatusMessage}"
+          Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVisibility}}"
+          controls:LiveRegion.IsLive="True" />
+
+        <controls:SaveBar
+          Grid.Row="6"
+          DiscardCommand="{Binding DiscardCommand}"
+          ProblemCount="{Binding Editor.ProblemCount}"
+          SaveCommand="{Binding SaveCommand}"
+          Visibility="{Binding Editor.IsDirty, Converter={StaticResource BoolToVisibility}}" />
+      </Grid>
+    </Grid>
+  </Grid>
 </Page>

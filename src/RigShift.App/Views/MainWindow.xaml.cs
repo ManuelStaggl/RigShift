@@ -47,22 +47,26 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => ShowPage(_page);
     }
 
-    public void ShowPage(Type? page)
+    public void ShowPage(Type? page) => _ = ShowPageAsync(page);
+
+    /// <summary>Leaving the profiles page with unsaved changes asks first (R-NAV-3); "cancel" keeps the page.</summary>
+    private async Task ShowPageAsync(Type? page)
     {
-        _page = page ?? _page;
+        Type target = page ?? _page;
+        if (IsLoaded && PageHost.Content is ProfilesPage && target != typeof(ProfilesPage)
+            && !await _services.GetRequiredService<ViewModels.ProfilesViewModel>().ConfirmLeaveAsync())
+        {
+            SyncNav(typeof(ProfilesPage));
+            return;
+        }
+
+        _page = target;
         if (!IsLoaded)
         {
             return;
         }
 
-        if (_navItems.TryGetValue(_page, out ListBoxItem? item) && !item.IsSelected)
-        {
-            _syncingNav = true;
-            NavTop.SelectedItem = NavTop.Items.Contains(item) ? item : null;
-            NavBottom.SelectedItem = NavBottom.Items.Contains(item) ? item : null;
-            _syncingNav = false;
-        }
-
+        SyncNav(_page);
         if (PageHost.Content?.GetType() != _page)
         {
             PageHost.Navigate(_services.GetRequiredService(_page));
@@ -70,6 +74,17 @@ public partial class MainWindow : FluentWindow
             {
                 PageHost.RemoveBackEntry();
             }
+        }
+    }
+
+    private void SyncNav(Type page)
+    {
+        if (_navItems.TryGetValue(page, out ListBoxItem? item) && !item.IsSelected)
+        {
+            _syncingNav = true;
+            NavTop.SelectedItem = NavTop.Items.Contains(item) ? item : null;
+            NavBottom.SelectedItem = NavBottom.Items.Contains(item) ? item : null;
+            _syncingNav = false;
         }
     }
 

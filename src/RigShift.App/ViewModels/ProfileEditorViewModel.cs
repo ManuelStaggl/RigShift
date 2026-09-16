@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,15 +15,15 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// Editor for one profile: name, icon, whether it asks after switching, which displays take part (primary, optional) and
-/// audio. Resolutions and positions are not editable; they come from "use current arrangement". Refresh rate and HDR are chosen per display (section 6, item 10); display names only on the Displays page.
+/// The detail of one profile on the profiles page: seeing and editing are the same view (R-NAV-3). Every change is
+/// validated at once; the save bar shows the problem count, and saving writes the profile and its USB rules together.
+/// Resolutions and positions are not editable; they come from "use current arrangement" (docs/display-topology.md).
 /// </summary>
 public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposable
 {
     private static readonly IReadOnlyList<DisplayAssignment> NoDisplays = [];
     private static readonly IReadOnlyList<AppAction> NoApps = [];
 
-    private readonly bool _isNew;
     private readonly IReadOnlyList<UsbDevice> _usbDevices;
     private readonly IReadOnlyDictionary<string, string>? _customUsbNames;
     private readonly IReadOnlyList<RuleDevice> _knownUsbDevices;
@@ -30,17 +31,20 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
     private SurroundGrid? _surroundGrid;
+    private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private bool _loading = true;
 
     private const string SurroundUnchanged = "unchanged";
     private const string SurroundOff = "off";
     private const string SurroundOn = "on";
 
     private readonly Profile _original;
-    private readonly Profile _initial;
+    private Profile _initial;
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
     private readonly IDesktopIcons _desktopIcons;
     private readonly HotkeyService _hotkeys;
+    private readonly SettingsService _settings;
     private readonly ILogger _log;
 
     public ProfileEditorViewModel(
@@ -53,20 +57,24 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         IReadOnlyList<RuleDevice> knownUsbDevices,
         bool confirmationEnabled,
         SurroundState surround,
+        ProfileRulesEditor rules,
         ProfileCatalog catalog,
         IDisplayConfigurator display,
         IDesktopIcons desktopIcons,
         HotkeyService hotkeys,
+        SettingsService settings,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(log);
 
         _original = profile;
         _catalog = catalog;
         _display = display;
         _hotkeys = hotkeys;
-        _isNew = isNew;
+        _settings = settings;
+        IsNew = isNew;
         _usbDevices = usbDevices;
         _customUsbNames = usbDeviceNames;
         _knownUsbDevices = knownUsbDevices;
@@ -75,9 +83,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
         HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        Rules = rules;
         _log = log.ForContext<ProfileEditorViewModel>();
 
-        Title = Loc.Instance[isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
         Name = profile.Name;
         FillIconChoices(ProfileIcons.Normalize(profile.Icon));
         SwitchWithoutAsking = profile.SwitchWithoutAsking;
@@ -95,6 +103,10 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             new AudioSlot("Audio_RecordingComms", "Audio_SameAsRecording", recordingDevices, audio.RecordingCommunications),
         ];
         ShowCommunicationsAudio = audio.PlaybackCommunications is not null || audio.RecordingCommunications is not null;
+        foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
+        {
+            slot.PropertyChanged += OnPartChanged;
+        }
 
         foreach (AppAction app in profile.Apps)
         {
@@ -111,16 +123,30 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
+        _loading = false;
+
+        Displays.CollectionChanged += OnDisplaysChanged;
+        Apps.CollectionChanged += OnAppsChanged;
+        foreach (AppEditItem app in Apps)
+        {
+            app.PropertyChanged += OnPartChanged;
+        }
+
+        rules.Changed += OnPartChanged;
 
         // Texts built here follow a language change while the editor is open (I-13); Dispose unsubscribes.
         Loc.Instance.PropertyChanged += OnLanguageChanged;
+        Recalculate();
     }
 
-    /// <summary>True: saved, close the window. False: cancelled.</summary>
-    public event EventHandler<bool>? CloseRequested;
+    public Guid Id => _original.Id;
 
+    /// <summary>Not saved yet: the save bar stays until the first save, and switching is not possible (F3).</summary>
     [ObservableProperty]
-    public partial string Title { get; private set; }
+    public partial bool IsNew { get; private set; }
+
+    /// <summary>The USB rules of this profile, saved with it (R-OBJ-1).</summary>
+    public ProfileRulesEditor Rules { get; }
 
     public ObservableCollection<Choice> IconChoices { get; } = [];
 
@@ -129,14 +155,72 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     /// <summary>Playback and recording.</summary>
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
 
-    /// <summary>Call devices, under "Advanced"; by default they follow playback and recording (analysis decision O-02).</summary>
+    /// <summary>Call devices, under "Devices for calls"; by default they follow playback and recording (analysis decision O-02).</summary>
     public IReadOnlyList<AudioSlot> CommunicationsAudioSlots { get; }
 
-    /// <summary>"Advanced" starts open only when the profile already sets a call device, so nothing set stays hidden.</summary>
+    /// <summary>The call devices start open only when the profile already sets one, so nothing set stays hidden.</summary>
     public bool ShowCommunicationsAudio { get; }
 
-    /// <summary>Anything differs from the profile as opened (analysis finding I-11).</summary>
-    public bool HasChanges => !SameProfile(Build(), _initial);
+    /// <summary>Anything differs from the profile on disk, or the profile is not on disk yet.</summary>
+    [ObservableProperty]
+    public partial bool IsDirty { get; private set; }
+
+    /// <summary>Validation problems as they stand; the save bar disables Save while there are any.</summary>
+    [ObservableProperty]
+    public partial int ProblemCount { get; private set; }
+
+    /// <summary>The name's problem, shown under the name field in the detail head.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNameProblem))]
+    public partial string? NameProblem { get; private set; }
+
+    public bool HasNameProblem => NameProblem is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDisplaysProblem))]
+    public partial string? DisplaysProblem { get; private set; }
+
+    public bool HasDisplaysProblem => DisplaysProblem is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasHotkeyProblem))]
+    public partial string? HotkeyProblem { get; private set; }
+
+    public bool HasHotkeyProblem => HotkeyProblem is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAppsProblem))]
+    public partial string? AppsProblem { get; private set; }
+
+    public bool HasAppsProblem => AppsProblem is not null;
+
+    /// <summary>What the planner would warn about (head budget, EDID fallback, twins); one bar above the topology.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWarning))]
+    public partial string? WarningText { get; private set; }
+
+    public bool HasWarning => WarningText is not null;
+
+    /// <summary>A save that failed on disk; cleared by the next successful save.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    public partial string? ErrorMessage { get; private set; }
+
+    public bool HasError => ErrorMessage is not null;
+
+    /// <summary>The picture of this profile's displays: size S in the list and head, size L on the displays tab.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<TopologyDisplay> TopologyDisplays { get; private set; } = [];
+
+    /// <summary>Key (device path) of the display chosen in the picture; its properties are edited in the card below.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedDisplay), nameof(HasSelectedDisplay))]
+    public partial string? SelectedDisplayKey { get; set; }
+
+    public DisplayEditItem? SelectedDisplay =>
+        Displays.FirstOrDefault(d => string.Equals(d.Key, SelectedDisplayKey, StringComparison.OrdinalIgnoreCase));
+
+    public bool HasSelectedDisplay => SelectedDisplay is not null;
 
     public ObservableCollection<AppEditItem> Apps { get; } = [];
 
@@ -192,6 +276,10 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     [ObservableProperty]
     public partial string SurroundHint { get; private set; } = string.Empty;
 
+    /// <summary>The hint is a problem when the profile wants Surround on but there is no grid to switch to.</summary>
+    [ObservableProperty]
+    public partial bool SurroundHintIsError { get; private set; }
+
     /// <summary>False hides the whole section: a machine without an NVIDIA card has nothing to say here.</summary>
     public bool ShowSurround { get; private set; }
 
@@ -203,14 +291,24 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     private readonly Dictionary<string, string> _usbDeviceNames = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>The profile as saved, after <see cref="CloseRequested"/> with <c>true</c>.</summary>
-    public Profile? Saved { get; private set; }
-
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CommandText))]
     public partial string Name { get; set; }
+
+    /// <summary>The URL that switches to this profile from a shortcut, a Stream Deck or the command line.</summary>
+    public string CommandText => "rigshift://apply/" + Uri.EscapeDataString(Name.Trim());
 
     [ObservableProperty]
     public partial Choice? SelectedIcon { get; set; }
+
+    [RelayCommand]
+    private void ChooseIcon(Choice? icon)
+    {
+        if (icon is not null)
+        {
+            SelectedIcon = icon;
+        }
+    }
 
     [ObservableProperty]
     public partial bool SwitchWithoutAsking { get; set; }
@@ -227,7 +325,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
     public partial Hotkey? Hotkey { get; set; }
 
-    public string HotkeyText => Hotkey is null ? string.Empty : HotkeyFormat.Format(Hotkey);
+    /// <summary>The combination, or the placeholder while there is none (the field is read-only, so it has no placeholder of its own).</summary>
+    public string HotkeyText => Hotkey is null ? Loc.Instance["Editor_HotkeyPlaceholder"] : HotkeyFormat.Format(Hotkey);
 
     public bool HasHotkey => Hotkey is not null;
 
@@ -235,13 +334,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     public partial string HotkeyHint { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasProblems))]
-    public partial string? Problems { get; set; }
-
-    public bool HasProblems => !string.IsNullOrEmpty(Problems);
-
-    [ObservableProperty]
     public partial string? ArrangementNote { get; set; }
+
+    /// <summary>Recording a hotkey RigShift holds would switch right away, so they rest while the field has the focus.</summary>
+    public void BeginHotkeyRecording() => _hotkeys.Suspend();
+
+    public void EndHotkeyRecording() => _hotkeys.Resume();
 
     internal void MakePrimary(DisplayEditItem item)
     {
@@ -256,6 +354,20 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         {
             Displays[i].Sync(updated[i]);
         }
+
+        OnDisplaysEdited();
+    }
+
+    /// <summary>A display's property changed (rate, HDR, optional, name): picture and validation follow.</summary>
+    internal void OnDisplaysEdited()
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        UpdateTopology();
+        Recalculate();
     }
 
     /// <summary>A key combination pressed in the hotkey field; without Ctrl, Alt or Win it only shows a hint.</summary>
@@ -265,6 +377,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         if (!hotkey.IsValid)
         {
             SetHotkeyHint("Editor_HotkeyNeedsModifier");
+            return;
+        }
+
+        // Hotkeys are suspended while the field has the focus, so this sees only other applications.
+        if (!_hotkeys.IsAvailable(hotkey))
+        {
+            SetHotkeyHint("Problem_HotkeyInUse");
             return;
         }
 
@@ -292,12 +411,34 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     }
 
     [RelayCommand]
-    private void Remove(DisplayEditItem? item)
+    private void MoveAppUp(AppEditItem? item) => MoveApp(item, -1);
+
+    [RelayCommand]
+    private void MoveAppDown(AppEditItem? item) => MoveApp(item, 1);
+
+    private void MoveApp(AppEditItem? item, int offset)
     {
-        if (item is not null)
+        int index = item is null ? -1 : Apps.IndexOf(item);
+        int target = index + offset;
+        if (index >= 0 && target >= 0 && target < Apps.Count)
         {
-            Displays.Remove(item);
-            ArrangementNote = null;
+            Apps.Move(index, target);
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveDisplay(DisplayEditItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        Displays.Remove(item);
+        ArrangementNote = null;
+        if (SelectedDisplay is null)
+        {
+            SelectedDisplayKey = null;
         }
     }
 
@@ -315,50 +456,85 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "Current arrangement could not be read");
-            Problems = ex.Message;
+            ErrorMessage = ex.Message;
         }
     }
 
-    [RelayCommand]
-    private async Task SaveAsync()
+    /// <summary>The planner's view of this profile against the live displays: missing ones in the picture, warnings above it.</summary>
+    public void ShowPlan(TopologyPlan? plan)
     {
+        _missingDisplays = plan is null
+            ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            : plan.Missing.Select(m => m.Assignment.Identity.TargetDevicePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        WarningText = plan is null || plan.Warnings.Count == 0
+            ? null
+            : string.Join(" ", plan.Warnings.Select(w => w.Kind).Distinct().Select(kind => Loc.Instance["Warning_" + kind]));
+        UpdateTopology();
+    }
+
+    /// <summary>Writes the profile and its USB rules. False: a problem remains or the disk said no; the detail shows why.</summary>
+    public async Task<bool> SaveAsync()
+    {
+        Recalculate();
+        if (ProblemCount > 0)
+        {
+            return false;
+        }
+
         Profile profile = Build();
-        IReadOnlyList<ProfileProblem> problems = ProfileEditing.Validate(profile, _catalog.Profiles);
-        if (problems.Count > 0)
-        {
-            Problems = string.Join(Environment.NewLine, problems.Select(p => Loc.Instance["Problem_" + p]));
-            return;
-        }
-
-        // Hotkeys are suspended while the editor is open, so this sees only other applications.
-        if (profile.Hotkey is { } hotkey && !_hotkeys.IsAvailable(hotkey))
-        {
-            Problems = Loc.Instance["Problem_HotkeyInUse"];
-            return;
-        }
-
         try
         {
             await _catalog.SaveAsync(profile, CancellationToken.None);
-            Saved = profile;
-            CloseRequested?.Invoke(this, true);
+            if (Rules.IsDirty)
+            {
+                IReadOnlyList<AutomationRule> rules = Rules.Merge();
+                await _settings.UpdateAsync(s => s with { AutomationRules = rules }, CancellationToken.None);
+                Rules.MarkSaved();
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Profile {Profile} could not be saved", profile.Name);
-            Problems = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            return false;
         }
-    }
 
-    [RelayCommand]
-    private void Cancel() => CloseRequested?.Invoke(this, false);
+        _initial = profile;
+        ErrorMessage = null;
+        IsNew = false;
+        Recalculate();
+        _log.Information("Profile {Profile} saved from the detail", profile.Name);
+        return true;
+    }
 
     private void SetDisplays(IEnumerable<DisplayAssignment> displays)
     {
+        Displays.CollectionChanged -= OnDisplaysChanged;
+        foreach (DisplayEditItem old in Displays)
+        {
+            old.PropertyChanged -= OnPartChanged;
+        }
+
         Displays.Clear();
         foreach (DisplayAssignment display in displays)
         {
-            Displays.Add(new DisplayEditItem(this, display));
+            var item = new DisplayEditItem(this, display);
+            item.PropertyChanged += OnPartChanged;
+            Displays.Add(item);
+        }
+
+        Displays.CollectionChanged += OnDisplaysChanged;
+        if (SelectedDisplay is null)
+        {
+            SelectedDisplayKey = Displays.FirstOrDefault(d => d.IsPrimary)?.Key ?? Displays.FirstOrDefault()?.Key;
+        }
+
+        OnPropertyChanged(nameof(SelectedDisplay));
+        OnPropertyChanged(nameof(HasSelectedDisplay));
+        UpdateTopology();
+        if (!_loading)
+        {
+            Recalculate();
         }
 
         _ = LoadRefreshRatesAsync();
@@ -399,7 +575,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         await _catalog.RememberRefreshRatesAsync(found, CancellationToken.None);
     }
 
-    public void Dispose() => Loc.Instance.PropertyChanged -= OnLanguageChanged;
+    public void Dispose()
+    {
+        Loc.Instance.PropertyChanged -= OnLanguageChanged;
+        Rules.Changed -= OnPartChanged;
+    }
 
     private void SetHotkeyHint(string key)
     {
@@ -407,34 +587,122 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         HotkeyHint = Loc.Instance[key];
     }
 
+    private void OnDisplaysChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (DisplayEditItem item in e.OldItems?.OfType<DisplayEditItem>() ?? [])
+        {
+            item.PropertyChanged -= OnPartChanged;
+        }
+
+        foreach (DisplayEditItem item in e.NewItems?.OfType<DisplayEditItem>() ?? [])
+        {
+            item.PropertyChanged += OnPartChanged;
+        }
+
+        OnPropertyChanged(nameof(SelectedDisplay));
+        OnPropertyChanged(nameof(HasSelectedDisplay));
+        OnDisplaysEdited();
+    }
+
+    private void OnAppsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (AppEditItem item in e.OldItems?.OfType<AppEditItem>() ?? [])
+        {
+            item.PropertyChanged -= OnPartChanged;
+        }
+
+        foreach (AppEditItem item in e.NewItems?.OfType<AppEditItem>() ?? [])
+        {
+            item.PropertyChanged += OnPartChanged;
+        }
+
+        Recalculate();
+    }
+
+    private void OnPartChanged(object? sender, EventArgs e) => Recalculate();
+
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.PropertyName is nameof(Name) or nameof(SelectedIcon) or nameof(SwitchWithoutAsking) or nameof(Hotkey)
+            or nameof(KeepAwake) or nameof(DisableCommunicationsDucking) or nameof(DesktopIcons) or nameof(SelectedSurround)
+            or nameof(SelectedAppsWaitDevice))
+        {
+            Recalculate();
+        }
+    }
+
+    /// <summary>Validation and the dirty flag after every change; cheap enough to run on each keystroke.</summary>
+    private void Recalculate()
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        Profile built = Build();
+        IReadOnlyList<ProfileProblem> problems = ProfileEditing.Validate(built, _catalog.Profiles);
+        ProblemCount = problems.Count;
+        NameProblem = TextOf(problems, ProfileProblem.NameMissing, ProfileProblem.NameTooLong, ProfileProblem.NameTaken);
+        DisplaysProblem = TextOf(problems, ProfileProblem.NoDisplays, ProfileProblem.NoSinglePrimary, ProfileProblem.PrimaryIsOptional);
+        HotkeyProblem = TextOf(problems, ProfileProblem.HotkeyInvalid, ProfileProblem.HotkeyTaken);
+        AppsProblem = TextOf(problems, ProfileProblem.AppPathMissing);
+        IsDirty = IsNew || Rules.IsDirty || !SameProfile(built, _initial);
+        UpdateSurroundHint();
+    }
+
+    private static string? TextOf(IReadOnlyList<ProfileProblem> problems, params ProfileProblem[] kinds)
+    {
+        List<string> texts = kinds.Where(problems.Contains).Select(p => Loc.Instance["Problem_" + p]).ToList();
+        return texts.Count == 0 ? null : string.Join(" ", texts);
+    }
+
+    private void UpdateTopology() => TopologyDisplays = Services.TopologyDisplays.From(Displays.Select(d => d.Assignment), _missingDisplays);
+
     /// <summary>
-    /// Rebuilds the texts made in code and keeps every selection by key. One-off messages (problems, "took N displays")
+    /// Rebuilds the texts made in code and keeps every selection by key. One-off messages (errors, "took N displays")
     /// are cleared rather than translated; they come back with the next action.
     /// </summary>
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Title = Loc.Instance[_isNew ? "Editor_TitleNew" : "Editor_TitleEdit"];
         HotkeyHint = Loc.Instance[_hotkeyHintKey];
         OnPropertyChanged(nameof(HotkeyText));
-        Problems = null;
+        OnPropertyChanged(nameof(DesktopIconsText));
+        ErrorMessage = null;
         ArrangementNote = null;
 
-        FillIconChoices(SelectedIcon?.Key);
-        FillAppsWaitChoices(SelectedAppsWaitDevice?.Key);
-        foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
+        _loading = true;
+        try
         {
-            slot.Relabel();
+            FillIconChoices(SelectedIcon?.Key);
+            FillAppsWaitChoices(SelectedAppsWaitDevice?.Key);
+            string? surround = SelectedSurround?.Key;
+            SurroundChoices.Clear();
+            FillSurroundChoices(_surroundState, _original.Surround, surround);
+            foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
+            {
+                slot.Relabel();
+            }
+
+            foreach (DisplayEditItem display in Displays)
+            {
+                display.Relabel();
+            }
+
+            foreach (AppEditItem app in Apps)
+            {
+                app.Relabel();
+            }
+
+            Rules.Relabel();
+        }
+        finally
+        {
+            _loading = false;
         }
 
-        foreach (DisplayEditItem display in Displays)
-        {
-            display.Relabel();
-        }
-
-        foreach (AppEditItem app in Apps)
-        {
-            app.Relabel();
-        }
+        UpdateTopology();
+        Recalculate();
     }
 
     private void FillIconChoices(string? selectedKey)
@@ -448,17 +716,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == selectedKey) ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
     }
 
-    /// <summary>
-    /// Same source and naming as the automation page; the saved device and every other known device stay selectable while
-    /// they are not connected (finding HW-08).
-    /// </summary>
+    private SurroundState _surroundState = SurroundState.Unavailable(SurroundAvailability.Unknown, string.Empty);
+
     /// <summary>
     /// Surround has three answers per profile: leave it alone (the default, and what every profile before 1.9 means),
     /// switch it off, or run this grid. There is no grid editor: a grid is built once in the NVIDIA control panel and
     /// taken over from there, because the driver needs a reload to create one and that closes running games.
     /// </summary>
-    private void FillSurroundChoices(SurroundState state, SurroundSetting? saved)
+    private void FillSurroundChoices(SurroundState state, SurroundSetting? saved, string? selectedKey = null)
     {
+        _surroundState = state;
         // Nothing to offer without an NVIDIA driver - unless the profile already carries a setting from another machine.
         ShowSurround = state.Availability == SurroundAvailability.Available || saved is not null;
         if (!ShowSurround)
@@ -469,27 +736,32 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _surroundGrid = saved?.Grid ?? (state.Grids.Count > 0 ? state.Grids[0] : null);
         SurroundChoices.Add(new Choice(SurroundUnchanged, Loc.Instance["Editor_SurroundUnchanged"]));
         SurroundChoices.Add(new Choice(SurroundOff, Loc.Instance["Editor_SurroundOff"]));
-        if (_surroundGrid is not null)
-        {
-            SurroundChoices.Add(new Choice(SurroundOn, Loc.Instance["Editor_SurroundOn"]));
-        }
+        SurroundChoices.Add(new Choice(SurroundOn, Loc.Instance["Editor_SurroundOn"]));
 
-        string wanted = saved is null ? SurroundUnchanged : saved.Enabled ? SurroundOn : SurroundOff;
+        string wanted = selectedKey ?? (saved is null ? SurroundUnchanged : saved.Enabled ? SurroundOn : SurroundOff);
         SelectedSurround = SurroundChoices.FirstOrDefault(c => c.Key == wanted) ?? SurroundChoices[0];
-        SurroundHint = SurroundHintFor(state);
+        UpdateSurroundHint();
     }
 
-    private string SurroundHintFor(SurroundState state)
+    private void UpdateSurroundHint()
     {
-        if (_surroundGrid is { } grid)
+        if (!ShowSurround)
         {
-            return Loc.Format(
-                "Editor_SurroundGrid", grid.Displays.Count, grid.Width, grid.Height, grid.TotalWidth, grid.TotalHeight);
+            return;
         }
 
-        return state.Availability == SurroundAvailability.Available
+        bool wantsOn = SelectedSurround?.Key == SurroundOn;
+        if (_surroundGrid is { } grid)
+        {
+            SurroundHint = Loc.Format("Editor_SurroundGrid", grid.Displays.Count, grid.Width, grid.Height, grid.TotalWidth, grid.TotalHeight);
+            SurroundHintIsError = false;
+            return;
+        }
+
+        SurroundHint = _surroundState.Availability == SurroundAvailability.Available
             ? Loc.Instance["Editor_SurroundNoGrid"]
             : Loc.Instance["Editor_SurroundNoDriver"];
+        SurroundHintIsError = wantsOn;
     }
 
     private SurroundSetting? BuildSurround() => SelectedSurround?.Key switch
@@ -549,7 +821,7 @@ public sealed record RefreshChoice(RefreshRate Rate)
 
 public sealed record HdrChoice(bool? Value, string Text);
 
-/// <summary>One display row in the editor.</summary>
+/// <summary>One display of the profile: chosen in the picture, edited in the card under it.</summary>
 public sealed partial class DisplayEditItem : ObservableObject
 {
     private readonly ProfileEditorViewModel _owner;
@@ -559,16 +831,30 @@ public sealed partial class DisplayEditItem : ObservableObject
     {
         _owner = owner;
         Assignment = assignment;
+        CustomName = assignment.CustomName ?? string.Empty;
         Sync(assignment);
     }
 
     public DisplayAssignment Assignment { get; private set; }
 
-    /// <summary>"Name · Model"; the name is edited on the Displays page only (analysis decision O-05).</summary>
+    /// <summary>The device path; what the picture reports as the selected key.</summary>
+    public string Key => Assignment.Identity.TargetDevicePath;
+
+    /// <summary>"Name · Model", as the switch messages call it.</summary>
     public string Name => SwitchMessages.NameOf(Assignment);
+
+    /// <summary>The monitor as Windows calls it, under the name in the card.</summary>
+    public string ModelName => DisplayNames.Of(Assignment.Identity);
 
     [ObservableProperty]
     public partial string ModeText { get; private set; } = string.Empty;
+
+    /// <summary>"3840 × 2160", under the model name in the card; the position is in the picture.</summary>
+    public string ResolutionText => string.Create(Loc.Instance.Culture, $"{Assignment.Width} × {Assignment.Height}");
+
+    /// <summary>The user's name for this monitor; saved with the profile and carried to every profile with the same monitor.</summary>
+    [ObservableProperty]
+    public partial string CustomName { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanBeOptional))]
@@ -615,6 +901,7 @@ public sealed partial class DisplayEditItem : ObservableObject
         }
 
         Sync(Assignment);
+        OnPropertyChanged(nameof(Name));
     }
 
     private static HdrChoice[] NewHdrChoices() =>
@@ -672,11 +959,22 @@ public sealed partial class DisplayEditItem : ObservableObject
         }
     }
 
+    partial void OnCustomNameChanged(string value)
+    {
+        if (!_syncing)
+        {
+            Assignment = Assignment with { CustomName = DisplayNames.Normalize(value) };
+            OnPropertyChanged(nameof(Name));
+            _owner.OnDisplaysEdited();
+        }
+    }
+
     partial void OnSelectedRefreshChanged(RefreshChoice? value)
     {
         if (!_syncing && value is not null)
         {
             Assignment = Assignment with { RefreshNumerator = value.Rate.Numerator, RefreshDenominator = value.Rate.Denominator };
+            _owner.OnDisplaysEdited();
         }
     }
 
@@ -685,6 +983,7 @@ public sealed partial class DisplayEditItem : ObservableObject
         if (!_syncing && value is not null)
         {
             Assignment = Assignment with { Hdr = value.Value };
+            _owner.OnDisplaysEdited();
         }
     }
 
@@ -701,6 +1000,7 @@ public sealed partial class DisplayEditItem : ObservableObject
         if (!_syncing)
         {
             Assignment = Assignment with { IsOptional = value };
+            _owner.OnDisplaysEdited();
         }
     }
 }
@@ -736,7 +1036,14 @@ public sealed partial class AppEditItem : ObservableObject
         Path = path;
         _pickedPath = name is null ? null : path;
         _pickedName = name;
+        OnPropertyChanged(nameof(DisplayName));
     }
+
+    /// <summary>The picked name, else the file name: the row's first line.</summary>
+    public string DisplayName =>
+        _pickedName is not null && string.Equals(Path.Trim(), _pickedPath, StringComparison.OrdinalIgnoreCase)
+            ? _pickedName
+            : System.IO.Path.GetFileNameWithoutExtension(Path) is { Length: > 0 } file ? file : Loc.Instance["App_Path"];
 
     public ObservableCollection<Choice> KindChoices { get; } = [];
 
@@ -785,8 +1092,11 @@ public sealed partial class AppEditItem : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Icon))]
+    [NotifyPropertyChangedFor(nameof(Icon), nameof(DisplayName), nameof(PathMissing))]
     public partial string Path { get; set; }
+
+    /// <summary>The path points to no file: the row shows it in red (component AppRow).</summary>
+    public bool PathMissing => string.IsNullOrWhiteSpace(Path) || !File.Exists(Environment.ExpandEnvironmentVariables(Path.Trim()));
 
     /// <summary>The program's own icon; <c>null</c> while the path is not a file with one.</summary>
     public System.Windows.Media.ImageSource? Icon => AppIcons.Load(Path);

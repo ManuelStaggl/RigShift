@@ -25,6 +25,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     private readonly SwitchCoordinator _coordinator;
     private readonly SettingsService _settings;
     private readonly ProfileDialogs _dialogs;
+    private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
@@ -36,6 +37,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         SwitchCoordinator coordinator,
         SettingsService settings,
         ProfileDialogs dialogs,
+        ProfilesViewModel profiles,
         DisplayChangeWatcher watcher,
         IAppShell shell,
         TimeProvider time,
@@ -50,6 +52,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         _coordinator = coordinator;
         _settings = settings;
         _dialogs = dialogs;
+        _profiles = profiles;
         _shell = shell;
         _time = time;
         _log = log.ForContext<OverviewViewModel>();
@@ -182,13 +185,12 @@ public sealed partial class OverviewViewModel : ObservableObject
     [RelayCommand]
     private void SetupManually() => _shell.ShowMainWindow(typeof(Views.Pages.ProfilesPage));
 
+    /// <summary>"Save the current arrangement as a profile": the profiles page with a new, unsaved profile (F3).</summary>
     [RelayCommand]
-    private async Task SaveCurrentAsync()
+    private Task SaveCurrentAsync()
     {
-        if (await _dialogs.CreateFromCurrentAsync() is { } saved)
-        {
-            _log.Information("Profile {Name} saved from the overview", saved.Name);
-        }
+        _shell.ShowMainWindow(typeof(Views.Pages.ProfilesPage));
+        return _profiles.NewFromCurrentCommand.ExecuteAsync(null);
     }
 
     /// <summary>The active displays as the picture draws them, with the user's names.</summary>
