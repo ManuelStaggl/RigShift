@@ -33,6 +33,13 @@ public sealed record GameEntry
     /// </summary>
     public IReadOnlyList<AppAction> Apps { get; set; } = [];
 
+    /// <summary>
+    /// Where the helper windows belong, applied after the programs before the game were started and before the game
+    /// itself – dragging SimHub and Crew Chief back into place after every switch is exactly the chore this is for.
+    /// <c>null</c> when nothing was captured.
+    /// </summary>
+    public WindowLayout? WindowLayout { get; init; }
+
     /// <summary>USB device (<c>VID_xxxx&amp;PID_xxxx</c>) the apps wait for, e.g. the wheelbase; <c>null</c> to start right away.</summary>
     public string? AppsWaitForUsbDeviceId { get; init; }
 

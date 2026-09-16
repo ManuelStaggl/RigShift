@@ -19,10 +19,12 @@ public sealed class GameSessionRunner
     private readonly IProfileSwitcher _switcher;
     private readonly Func<Guid, Profile?> _profile;
     private readonly AppRunner _apps;
+    private readonly WindowLayoutRestorer? _layout;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
     /// <param name="profile">Looks a profile up by id; <c>null</c> when it was deleted in the meantime.</param>
+    /// <param name="windows">Restores saved window positions; <c>null</c> leaves windows where they are.</param>
     public GameSessionRunner(
         IGameStarter starter,
         IGameProcesses processes,
@@ -32,7 +34,8 @@ public sealed class GameSessionRunner
         IUsbDeviceList usbDevices,
         SwitchOptions options,
         TimeProvider time,
-        ILogger log)
+        ILogger log,
+        IWindowLayout? windows = null)
     {
         ArgumentNullException.ThrowIfNull(starter);
         ArgumentNullException.ThrowIfNull(processes);
@@ -52,6 +55,7 @@ public sealed class GameSessionRunner
         _log = log.ForContext<GameSessionRunner>();
         _learner = new GameProcessLearner(processes, time, _log);
         _apps = new AppRunner(apps, usbDevices, options, time, _log);
+        _layout = windows is null ? null : new WindowLayoutRestorer(windows, time, _log);
     }
 
     /// <summary>Raised with the learned process name so the caller can keep it in the entry; never raised twice for one session.</summary>
@@ -80,6 +84,10 @@ public sealed class GameSessionRunner
         // Wheelbase software, Trading Paints and anything else the game must already see when it comes up.
         AppsOutcome apps = await _apps.Start(AppPlan.For(game, AppTiming.BeforeGame));
 
+        // Before the game, not after: the tools are dragged into place while the desktop is still visible, and the
+        // arrangement they are placed on is the one the profile just applied.
+        WindowLayoutResult? layout = await RestoreWindowsAsync(game, cancellationToken);
+
         int? processId = null;
         string? learned = null;
         if (!alreadyRunning)
@@ -92,7 +100,7 @@ public sealed class GameSessionRunner
             catch (Exception ex)
             {
                 _log.Error(ex, "Game {Game} could not be started", game.Name);
-                return new GameSessionResult(GameSessionOutcome.StartFailed, applied, apps);
+                return new GameSessionResult(GameSessionOutcome.StartFailed, applied, apps, Windows: layout);
             }
 
             if (processId is null && game.Launch.KnownProcessName() is null)
@@ -102,7 +110,7 @@ public sealed class GameSessionRunner
                 if (found is null)
                 {
                     _log.Warning("Game {Game}: no process could be recognised, the session ends here", game.Name);
-                    return new GameSessionResult(GameSessionOutcome.NotRecognised, applied, apps);
+                    return new GameSessionResult(GameSessionOutcome.NotRecognised, applied, apps, Windows: layout);
                 }
 
                 processId = found.Id;
@@ -120,7 +128,29 @@ public sealed class GameSessionRunner
 
         await EndAppsAsync(game, cancellationToken);
         SwitchOutcome? exit = await RunExitActionAsync(game, cancellationToken);
-        return new GameSessionResult(GameSessionOutcome.Ended, applied, apps, exit, learned);
+        return new GameSessionResult(GameSessionOutcome.Ended, applied, apps, exit, learned, layout);
+    }
+
+    /// <summary>
+    /// Puts the helper windows back, if the entry saved any. Never fails the session: a window that could not be
+    /// moved is annoying, not a reason to leave the game unstarted.
+    /// </summary>
+    private async Task<WindowLayoutResult?> RestoreWindowsAsync(GameEntry game, CancellationToken cancellationToken)
+    {
+        if (_layout is null || game.WindowLayout is not { IsEmpty: false } layout)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _layout.RestoreAsync(layout, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Game {Game}: the window positions could not be restored", game.Name);
+            return null;
+        }
     }
 
     private async Task<SwitchOutcome?> ApplyProfileAsync(GameEntry game, CancellationToken cancellationToken)
@@ -242,12 +272,14 @@ public sealed record GameProcessLearned(Guid GameId, string ProcessName);
 /// <param name="Apps">What the companion apps did, or <c>null</c> when the session ended before them.</param>
 /// <param name="Exit">What the exit action did, or <c>null</c> for "stay".</param>
 /// <param name="LearnedProcessName">The process name this session learned, if any.</param>
+/// <param name="Windows">What became of the saved window positions, or <c>null</c> when the entry has none.</param>
 public sealed record GameSessionResult(
     GameSessionOutcome Outcome,
     SwitchOutcome? Profile,
     AppsOutcome? Apps,
     SwitchOutcome? Exit = null,
-    string? LearnedProcessName = null);
+    string? LearnedProcessName = null,
+    WindowLayoutResult? Windows = null);
 
 public enum GameSessionOutcome
 {

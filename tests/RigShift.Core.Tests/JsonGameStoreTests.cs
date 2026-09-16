@@ -2,6 +2,7 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
+using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -61,6 +62,44 @@ public sealed class JsonGameStoreTests : IDisposable
 
         IReadOnlyList<GameEntry> games = (await store.LoadAllAsync(Ct)).Games;
         games.Select(g => g.Name).ShouldBe(["Automobilista 2", "iRacing (VR)"]);
+    }
+
+    /// <summary>The window positions are the point of the feature; a rectangle that does not survive the file is useless.</summary>
+    [Fact]
+    public async Task SaveThenLoad_RoundTripsTheWindowLayout()
+    {
+        var store = new JsonGameStore(_directory, Logger.None);
+        GameEntry game = Iracing() with
+        {
+            WindowLayout = new WindowLayout
+            {
+                CapturedAt = new DateTimeOffset(2026, 9, 16, 20, 15, 0, TimeSpan.Zero),
+                // A List, like the deserializer creates: Shouldly compares the collection type too.
+                Windows = new List<WindowPlacement>
+                {
+                    new()
+                    {
+                        ProcessName = "SimHubWPF",
+                        Title = "SimHub 9.4.2",
+                        Bounds = new PixelRect(3840, 0, 4640, 600),
+                        State = WindowState.Normal,
+                    },
+                    new()
+                    {
+                        ProcessName = "CrewChiefV4",
+                        Bounds = new PixelRect(-1920, 100, -1120, 700),
+                        State = WindowState.Minimized,
+                    },
+                },
+            },
+        };
+
+        await store.SaveAsync(game, Ct);
+        GameEntry loaded = (await store.LoadAllAsync(Ct)).Games.Single();
+
+        loaded.WindowLayout.ShouldBeEquivalentTo(game.WindowLayout);
+        // A window on a screen left of the primary one has negative coordinates; those must survive as well.
+        loaded.WindowLayout!.Windows[1].Bounds.Left.ShouldBe(-1920);
     }
 
     [Fact]

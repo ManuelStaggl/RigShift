@@ -37,9 +37,9 @@ public sealed class GameSessionRunnerTests
             .Returns(Result(SwitchOutcome.Applied));
     }
 
-    private GameSessionRunner Runner() => new(
+    private GameSessionRunner Runner(FakeWindowLayout? desktop = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, Logger.None);
+        _apps, _usb, new SwitchOptions(), _time, Logger.None, desktop);
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {
@@ -350,6 +350,60 @@ public sealed class GameSessionRunnerTests
             _apps.StopAsync(@"C:\SimHub\SimHubWPF.exe", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
             _apps.StopAsync(@"C:\Fanatec\FanaLab.exe", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
         });
+    }
+
+    /// <summary>
+    /// The tools are dragged into place while the desktop is still there, so the layout goes back before the game
+    /// starts – and on the arrangement the profile just applied, which is what makes the saved coordinates valid.
+    /// </summary>
+    [Fact]
+    public async Task Run_PutsTheHelperWindowsBackBeforeStartingTheGame()
+    {
+        var desktop = new FakeWindowLayout();
+        desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub 9.4.2", new PixelRect(0, 0, 800, 600), WindowState.Normal));
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe" } },
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement>
+                {
+                    new() { ProcessName = "SimHubWPF", Title = "SimHub 9.4.2", Bounds = new PixelRect(3840, 0, 4640, 600) },
+                },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(4711);
+
+        GameSessionResult result = await Runner(desktop).RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Windows.ShouldBe(new WindowLayoutResult(1, 0, 0));
+        desktop.Placed.Single().Bounds.Left.ShouldBe(3840);
+        Received.InOrder(() =>
+        {
+            _apps.Start(@"C:\SimHub\SimHubWPF.exe", null);
+            _starter.Start(Arg.Any<GameLaunch>());
+        });
+    }
+
+    /// <summary>A window that cannot be moved is annoying, not a reason to leave the game unstarted.</summary>
+    [Fact]
+    public async Task Run_StartsTheGameEvenWhenNoWindowCouldBePlaced()
+    {
+        var desktop = new FakeWindowLayout();
+        GameEntry game = Game() with
+        {
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement> { new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(0, 0, 800, 600) } },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(4711);
+
+        GameSessionResult result = await Runner(desktop).RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        result.Windows!.Missing.ShouldBe(1);
+        _starter.Received(1).Start(Arg.Any<GameLaunch>());
     }
 
     /// <summary>A profile that was deleted must not stop the game from starting.</summary>
