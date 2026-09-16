@@ -105,6 +105,10 @@
   <data name="Profile_Shortcut" xml:space="preserve"><value>Verknüpfung auf dem Desktop erstellen</value></data>
   <data name="Profile_Delete" xml:space="preserve"><value>Löschen</value></data>
   <data name="Profile_CopyName" xml:space="preserve"><value>{0} (Kopie)</value></data>
+  <data name="Interrupted_Title" xml:space="preserve"><value>Unterbrochenes Umschalten</value></data>
+  <data name="Interrupted_Text" xml:space="preserve"><value>RigShift wurde beim Umschalten auf „{0}“ beendet, das Umschalten wurde also nie bestätigt. Die vorherige Anordnung wiederherstellen?</value></data>
+  <data name="Interrupted_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
+  <data name="Interrupted_Keep" xml:space="preserve"><value>So lassen</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Shortcut_Description" xml:space="preserve"><value>Auf das RigShift-Profil „{0}“ umschalten</value></data>

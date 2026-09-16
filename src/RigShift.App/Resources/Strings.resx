@@ -105,6 +105,10 @@
   <data name="Profile_Shortcut" xml:space="preserve"><value>Create desktop shortcut</value></data>
   <data name="Profile_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Profile_CopyName" xml:space="preserve"><value>{0} (copy)</value></data>
+  <data name="Interrupted_Title" xml:space="preserve"><value>Unfinished switch</value></data>
+  <data name="Interrupted_Text" xml:space="preserve"><value>RigShift ended while switching to “{0}”, so the switch was never confirmed. Restore the layout from before?</value></data>
+  <data name="Interrupted_Restore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Interrupted_Keep" xml:space="preserve"><value>Keep as is</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Delete profile?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>“{0}” will be deleted. This cannot be undone.</value></data>
   <data name="Shortcut_Description" xml:space="preserve"><value>Switch to the RigShift profile “{0}”</value></data>

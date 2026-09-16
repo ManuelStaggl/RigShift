@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- If RigShift is killed or the machine loses power between changing your screens and the confirmation, the next start
+  offers to put the previous layout back. Until now that rollback lived only in the running process.
+
 ## [1.8.0] - 2026-09-15
 
 ### Changed

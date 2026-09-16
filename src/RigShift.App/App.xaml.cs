@@ -194,6 +194,7 @@ public partial class App : Application, IAppShell
             }
 
             KeepAwakeForActiveProfile(catalog);
+            await OfferInterruptedRestoreAsync();
             await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
         }
         catch (Exception ex)
@@ -202,6 +203,35 @@ public partial class App : Application, IAppShell
             MessageBox.Show(ex.Message, "RigShift", MessageBoxButton.OK, MessageBoxImage.Error);
             Quit();
         }
+    }
+
+    /// <summary>
+    /// A switch that was recorded but never finished means RigShift died between changing the screens and the
+    /// confirmation – the one case the in-process rollback cannot cover. Offer the way back, queued so startup finishes
+    /// before the question blocks.
+    /// </summary>
+    private async Task OfferInterruptedRestoreAsync()
+    {
+        ISwitchJournal journal = Services.GetRequiredService<ISwitchJournal>();
+        if (await journal.ReadAsync(CancellationToken.None) is not { } interrupted)
+        {
+            return;
+        }
+
+        Log.Warning("Found an unfinished switch to {Profile} started {Started:u}", interrupted.TargetProfileName, interrupted.StartedUtc);
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            if (await ProfileDialogs.ConfirmRestoreInterruptedAsync(interrupted.TargetProfileName))
+            {
+                // Without asking again: the user just answered, and a second countdown on top would only confuse.
+                await Services.GetRequiredService<SwitchCoordinator>()
+                    .SwitchAsync(interrupted.Previous, new SwitchRequest { SkipConfirmation = true });
+            }
+            else
+            {
+                await journal.ClearAsync(CancellationToken.None);
+            }
+        });
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -304,6 +334,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
         services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
+        services.AddSingleton<ISwitchJournal>(_ => new JsonSwitchJournal(Paths.DataDirectory, Log.Logger));
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());
         services.AddSingleton<TopologyPlanner>();

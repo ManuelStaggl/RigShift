@@ -125,6 +125,24 @@ public sealed class ProfileDialogs
         return await box.ShowDialogAsync() == MessageBoxResult.Primary;
     }
 
+    /// <summary>
+    /// Asks whether to undo a switch that never finished, e.g. because RigShift was killed between the apply and the
+    /// confirmation. The answer is the user's: their screens may look right by now (Windows restored them, or they
+    /// sorted it out by hand), and in that case putting the old layout back would be the disruptive move.
+    /// </summary>
+    public static async Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName)
+    {
+        var box = new MessageBox
+        {
+            Title = Loc.Instance["Interrupted_Title"],
+            Content = Loc.Format("Interrupted_Text", targetProfileName),
+            PrimaryButtonText = Loc.Instance["Interrupted_Restore"],
+            CloseButtonText = Loc.Instance["Interrupted_Keep"],
+        };
+        SetOwner(box, ActiveWindow());
+        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
+    }
+
     /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
     public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName)

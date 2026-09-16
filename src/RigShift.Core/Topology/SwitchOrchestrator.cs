@@ -31,6 +31,7 @@ public sealed class SwitchOrchestrator
     private readonly SwitchOptions _options;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
+    private readonly ISwitchJournal _journal;
     private readonly AudioSwitcher _audioSwitcher;
     private readonly AppRunner _appRunner;
     private readonly DuckingSwitcher _duckingSwitcher;
@@ -45,6 +46,7 @@ public sealed class SwitchOrchestrator
         IDuckingMemory duckingMemory,
         IWindowRescuer windows,
         ISwitchConfirmation confirmation,
+        ISwitchJournal journal,
         TopologyPlanner planner,
         SwitchOptions options,
         TimeProvider time,
@@ -59,6 +61,7 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(duckingMemory);
         ArgumentNullException.ThrowIfNull(windows);
         ArgumentNullException.ThrowIfNull(confirmation);
+        ArgumentNullException.ThrowIfNull(journal);
         ArgumentNullException.ThrowIfNull(planner);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(time);
@@ -68,6 +71,7 @@ public sealed class SwitchOrchestrator
         _power = power;
         _windows = windows;
         _confirmation = confirmation;
+        _journal = journal;
         _planner = planner;
         _options = options;
         _time = time;
@@ -125,7 +129,7 @@ public sealed class SwitchOrchestrator
         if (BlockReason(plan) is { } blocked)
         {
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
-            return Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
+            return await Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
         }
 
         // Waiting for a sleeping display may have used up most of the budget; a display that wakes late and then answers
@@ -146,12 +150,21 @@ public sealed class SwitchOrchestrator
         bool? keepAwakeBefore = confirm ? _power.IsKeepingAwake : null;
         DuckingSwitcher.DuckingRestore? duckingRestore = confirm ? await _duckingSwitcher.CaptureAsync(profile, cancellationToken) : null;
 
+        // From here on the screens change. Record the way back before the first apply, not after: the crash this guards
+        // against can happen in between (plan point 22).
+        await _journal.BeginAsync(new InterruptedSwitch
+        {
+            Previous = PreviousTopology(before),
+            TargetProfileName = profile.Name,
+            StartedUtc = _time.GetUtcNow(),
+        }, cancellationToken);
+
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
             SwitchNote restored = await RestoreAfterFailureAsync(before, cancellationToken);
-            return Finish(new SwitchResult
+            return await Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
                 Plan = applied.Plan,
@@ -234,7 +247,7 @@ public sealed class SwitchOrchestrator
         SwitchOutcome outcome = modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
-        return Finish(new SwitchResult
+        return await Finish(new SwitchResult
         {
             Outcome = outcome,
             Plan = plan,
@@ -266,7 +279,7 @@ public sealed class SwitchOrchestrator
         Task<AppsOutcome> appsRun = _appRunner.Start(profile);
         AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
         _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
-        return Finish(new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun }, started);
+        return await Finish(new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun }, started);
     }
 
     /// <summary>
@@ -283,7 +296,7 @@ public sealed class SwitchOrchestrator
         TopologyPlan plan = _planner.Plan(profile, snapshot);
         LogPlan(plan);
         _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
-        return Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
+        return await Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
     }
 
     /// <summary>
@@ -384,7 +397,7 @@ public sealed class SwitchOrchestrator
         // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
         SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, cancellationToken);
 
-        return Finish(new SwitchResult
+        return await Finish(new SwitchResult
         {
             Outcome = outcome,
             Plan = modes.Plan,
@@ -421,7 +434,7 @@ public sealed class SwitchOrchestrator
             string message = string.Create(CultureInfo.InvariantCulture,
                 $"Switch was not confirmed ({answer}) and restoring the previous topology failed: {rolledBack.Message}");
             _log.Error("Rollback failed: {Reason}", rolledBack.Message);
-            return Finish(new SwitchResult
+            return await Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
                 Plan = plan,
@@ -435,7 +448,7 @@ public sealed class SwitchOrchestrator
 
         _log.Information("Previous topology restored after {Attempts} attempts; switch rolled back after {Seconds:0.0} s",
             rolledBack.Attempts, _time.GetElapsedTime(started).TotalSeconds);
-        return Finish(new SwitchResult
+        return await Finish(new SwitchResult
         {
             Outcome = SwitchOutcome.RolledBack,
             Plan = plan,
@@ -865,8 +878,17 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    private SwitchResult Finish(SwitchResult result, long started) =>
-        result with { Duration = _time.GetElapsedTime(started) };
+    /// <summary>
+    /// Every way out of a switch passes here, so this is where the journal entry goes again – whether the switch was
+    /// applied, blocked, failed or rolled back. Only an exception leaves it behind, and that is the case the next start
+    /// should ask about. Clearing a record this switch never wrote is harmless: the app reads it once at startup,
+    /// before any switch can run.
+    /// </summary>
+    private async Task<SwitchResult> Finish(SwitchResult result, long started)
+    {
+        await _journal.ClearAsync(CancellationToken.None);
+        return result with { Duration = _time.GetElapsedTime(started) };
+    }
 
     private sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message, bool UsedDatabaseModes);
 

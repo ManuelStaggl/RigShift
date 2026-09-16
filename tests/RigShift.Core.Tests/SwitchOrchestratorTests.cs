@@ -29,6 +29,7 @@ public sealed class SwitchOrchestratorTests
     private readonly InMemoryDuckingMemory _duckingMemory = new();
     private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
+    private readonly InMemorySwitchJournal _journal = new();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -1192,7 +1193,50 @@ public sealed class SwitchOrchestratorTests
     };
 
     // The rescue delay is zero unless a test sets it, so waits measured elsewhere stay exact.
+    /// <summary>
+    /// The way back is recorded before the screens change and dropped once the switch is over – whatever it ended as.
+    /// Only a process that dies in between leaves the record, and that is the case it exists for (plan point 22).
+    /// </summary>
+    [Fact]
+    public async Task Switch_RecordsThePreviousTopologyAndDropsItWhenDone()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        InterruptedSwitch recorded = _journal.Written.ShouldHaveSingleItem();
+        recorded.TargetProfileName.ShouldBe("Rig");
+        recorded.Previous.Displays.ShouldNotBeEmpty();
+        _journal.Entry.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Switch_NotConfirmed_DropsTheRecordAfterTheRollback()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        _journal.Written.ShouldHaveSingleItem();
+        _journal.Entry.ShouldBeNull();
+    }
+
+    /// <summary>A blocked switch never touches the screens, so it must not leave a record asking to undo anything.</summary>
+    [Fact]
+    public async Task Switch_Blocked_RecordsNothing()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Blocked);
+        display.Applied.ShouldBeEmpty();
+        _journal.Written.ShouldBeEmpty();
+    }
+
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _confirmation, new TopologyPlanner(new TopologyPlannerOptions()),
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
             options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

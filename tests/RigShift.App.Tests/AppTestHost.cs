@@ -29,6 +29,7 @@ internal sealed class AppTestHost : IDisposable
             new InMemoryDuckingMemory(),
             Substitute.For<IWindowRescuer>(),
             Confirmation,
+            new InMemorySwitchJournal(),
             planner,
             new SwitchOptions { WindowRescueDelay = TimeSpan.Zero },
             new AutoAdvanceTimeProvider(),
