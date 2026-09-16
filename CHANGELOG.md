@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-16
+
 ### Added
 
 - If RigShift is killed or the machine loses power between changing your screens and the confirmation, the next start
