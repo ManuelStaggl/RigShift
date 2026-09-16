@@ -40,6 +40,10 @@
           Icon="{ui:SymbolIcon Layer24}"
           TargetPageType="{x:Type pages:ProfilesPage}" />
         <ui:NavigationViewItem
+          Content="{loc:Tr Nav_Games}"
+          Icon="{ui:SymbolIcon Games24}"
+          TargetPageType="{x:Type pages:GamesPage}" />
+        <ui:NavigationViewItem
           Content="{loc:Tr Nav_Displays}"
           Icon="{ui:SymbolIcon DesktopMac24}"
           TargetPageType="{x:Type pages:DisplaysPage}" />

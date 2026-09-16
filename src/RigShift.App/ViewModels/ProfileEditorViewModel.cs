@@ -667,12 +667,18 @@ public sealed partial class DisplayEditItem : ObservableObject
 /// <summary>One app entry in the editor.</summary>
 public sealed partial class AppEditItem : ObservableObject
 {
-    public AppEditItem(AppAction action)
+    /// <param name="showWhen">
+    /// Offer "before / after the game". Only the game editor does: a profile has no game to be before or after.
+    /// </param>
+    public AppEditItem(AppAction action, bool showWhen = false)
     {
         ArgumentNullException.ThrowIfNull(action);
 
+        ShowWhen = showWhen;
         FillKindChoices();
+        FillWhenChoices();
         SelectedKind = KindChoices[action.Kind == AppActionKind.Stop ? 1 : 0];
+        SelectedWhen = WhenChoices[action.When == AppTiming.AfterGame ? 1 : 0];
         Path = action.Path;
         _pickedPath = action.Name is null ? null : action.Path;
         _pickedName = action.Name;
@@ -701,12 +707,26 @@ public sealed partial class AppEditItem : ObservableObject
     /// <summary>Arguments only apply when starting.</summary>
     public bool IsStart => SelectedKind?.Key != nameof(AppActionKind.Stop);
 
+    public ObservableCollection<Choice> WhenChoices { get; } = [];
+
+    /// <summary>Only shown in the game editor; a profile ignores it.</summary>
+    public bool ShowWhen { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAfterGame))]
+    public partial Choice? SelectedWhen { get; set; }
+
+    public bool IsAfterGame => SelectedWhen?.Key == nameof(AppTiming.AfterGame);
+
     /// <summary>New texts after a language change, same selection.</summary>
     internal void Relabel()
     {
         bool start = IsStart;
+        bool after = IsAfterGame;
         FillKindChoices();
+        FillWhenChoices();
         SelectedKind = KindChoices[start ? 0 : 1];
+        SelectedWhen = WhenChoices[after ? 1 : 0];
     }
 
     private void FillKindChoices()
@@ -714,6 +734,13 @@ public sealed partial class AppEditItem : ObservableObject
         KindChoices.Clear();
         KindChoices.Add(new Choice(nameof(AppActionKind.Start), Loc.Instance["App_Start"]));
         KindChoices.Add(new Choice(nameof(AppActionKind.Stop), Loc.Instance["App_Stop"]));
+    }
+
+    private void FillWhenChoices()
+    {
+        WhenChoices.Clear();
+        WhenChoices.Add(new Choice(nameof(AppTiming.BeforeGame), Loc.Instance["App_BeforeGame"]));
+        WhenChoices.Add(new Choice(nameof(AppTiming.AfterGame), Loc.Instance["App_AfterGame"]));
     }
 
     [ObservableProperty]
@@ -736,6 +763,7 @@ public sealed partial class AppEditItem : ObservableObject
         Name = _pickedName is not null && string.Equals(Path.Trim(), _pickedPath, StringComparison.OrdinalIgnoreCase) ? _pickedName : null,
         Arguments = IsStart && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
         WaitSeconds = (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
+        When = IsAfterGame ? AppTiming.AfterGame : AppTiming.BeforeGame,
     };
 }
 

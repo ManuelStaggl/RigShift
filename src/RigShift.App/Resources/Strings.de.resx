@@ -340,4 +340,70 @@
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} Bildschirme mit je {1}x{2} als ein Bildschirm mit {3}x{4}.</value></data>
   <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround ist gerade aus. Richte das Raster einmal in der NVIDIA-Systemsteuerung ein und speichere das Profil dann erneut.</value></data>
   <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>Auf diesem PC wurde kein NVIDIA-Grafiktreiber gefunden.</value></data>
+  <data name="Nav_Games" xml:space="preserve"><value>Spiele</value></data>
+  <data name="Games_Intro" xml:space="preserve"><value>Ein Spiel schaltet den PC um, startet seine Tools und stellt danach alles zurück.</value></data>
+  <data name="Games_Add" xml:space="preserve"><value>Spiel _hinzufügen</value></data>
+  <data name="Games_Edit" xml:space="preserve"><value>Spiel bearbeiten</value></data>
+  <data name="Games_NewName" xml:space="preserve"><value>Neues Spiel</value></data>
+  <data name="Games_EmptyTitle" xml:space="preserve"><value>Noch keine Spiele</value></data>
+  <data name="Games_EmptyText" xml:space="preserve"><value>Leg ein Spiel an, um es zusammen mit seinem Profil, seinen Tools und deren Fensterpositionen zu starten.</value></data>
+  <data name="Games_DeleteTitle" xml:space="preserve"><value>Spiel löschen?</value></data>
+  <data name="Games_DeleteText" xml:space="preserve"><value>„{0}“ wird entfernt. Das Spiel selbst bleibt installiert.</value></data>
+  <data name="Game_Play" xml:space="preserve"><value>Starten</value></data>
+  <data name="Game_Running" xml:space="preserve"><value>Läuft</value></data>
+  <data name="Game_SectionGame" xml:space="preserve"><value>Spiel</value></data>
+  <data name="Game_SectionProfile" xml:space="preserve"><value>Profil</value></data>
+  <data name="Game_SectionApps" xml:space="preserve"><value>Tools</value></data>
+  <data name="Game_SectionWindows" xml:space="preserve"><value>Fensterpositionen</value></data>
+  <data name="Game_SectionExit" xml:space="preserve"><value>Wenn das Spiel endet</value></data>
+  <data name="Game_SectionStart" xml:space="preserve"><value>Starten</value></data>
+  <data name="Game_Launch" xml:space="preserve"><value>Startet</value></data>
+  <data name="Game_LaunchPlaceholder" xml:space="preserve"><value>Noch kein Spiel gewählt</value></data>
+  <data name="Game_Choose" xml:space="preserve"><value>_Wählen…</value></data>
+  <data name="Game_ProcessName" xml:space="preserve"><value>Spielprozess</value></data>
+  <data name="Game_ProcessLearned" xml:space="preserve"><value>Wird beim ersten Start gelernt</value></data>
+  <data name="Game_ProcessNameHint" xml:space="preserve"><value>Ohne Endung, so wie ihn der Task-Manager zeigt. RigShift lernt ihn beim ersten Start; hier korrigieren, wenn er den Launcher statt das Spiel erwischt hat.</value></data>
+  <data name="Game_EndsWith" xml:space="preserve"><value>Sitzung endet mit</value></data>
+  <data name="Game_EndsWithGame" xml:space="preserve"><value>Dem Spiel</value></data>
+  <data name="Game_EndsWithLauncher" xml:space="preserve"><value>Dem Launcher</value></data>
+  <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher-Prozess</value></data>
+  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Für Sims, deren Menü den Sim überlebt, etwa iRacing: sonst würde die Sitzung bei jeder Rückkehr ins Menü enden.</value></data>
+  <data name="Game_NoProfile" xml:space="preserve"><value>Nichts umschalten</value></data>
+  <data name="Game_ProfileHint" xml:space="preserve"><value>Wird vor dem Spiel angewandt, damit die Tools auf den Bildschirmen dieses Profils landen.</value></data>
+  <data name="Game_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge. Lenkrad-Software will vor dem Spiel oben sein; SimHub und Crew Chief hängen sich an eine laufende Sitzung.</value></data>
+  <data name="Game_WindowsHint" xml:space="preserve"><value>Schieb deine Tools zurecht und speichere die Positionen hier. Sie werden vor dem Spielstart wiederhergestellt.</value></data>
+  <data name="Game_CaptureWindows" xml:space="preserve"><value>Positionen jetzt speichern…</value></data>
+  <data name="Game_WindowsNone" xml:space="preserve"><value>Keine Positionen gespeichert</value></data>
+  <data name="Game_WindowsSaved" xml:space="preserve"><value>{0} Fensterposition(en)</value></data>
+  <data name="Game_WindowsSavedAt" xml:space="preserve"><value>{0} Fenster, gespeichert am {1}</value></data>
+  <data name="Game_WindowsIncomplete" xml:space="preserve"><value>{0} Fenster gesetzt, {1} nicht</value></data>
+  <data name="Game_ExitStay" xml:space="preserve"><value>Bildschirme so lassen</value></data>
+  <data name="Game_ExitPrevious" xml:space="preserve"><value>Zurück zum vorherigen Profil</value></data>
+  <data name="Game_ExitProfile" xml:space="preserve"><value>Auf „{0}“ umschalten</value></data>
+  <data name="Game_StopApps" xml:space="preserve"><value>Tools wieder schließen</value></data>
+  <data name="Game_StartWithGame" xml:space="preserve"><value>Auch reagieren, wenn das Spiel woanders gestartet wird</value></data>
+  <data name="Game_StartWithGameHint" xml:space="preserve"><value>Starte es direkt aus Steam, RigShift macht den Rest. Braucht den Spielprozess, den der erste Start über RigShift lernt.</value></data>
+  <data name="GameOutcome_Ended" xml:space="preserve"><value>Spiel beendet</value></data>
+  <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Profil ließ sich nicht anwenden, das Spiel wurde nicht gestartet</value></data>
+  <data name="GameOutcome_StartFailed" xml:space="preserve"><value>Das Spiel ließ sich nicht starten</value></data>
+  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>Kein Spielprozess erkannt – im Eintrag eintragen</value></data>
+  <data name="GamePicker_Title" xml:space="preserve"><value>Spiel wählen</value></data>
+  <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
+  <data name="GamePicker_Empty" xml:space="preserve"><value>Kein installiertes Spiel gefunden. Für alles andere „Programm suchen“.</value></data>
+  <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Programm suchen…</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Fensterpositionen speichern</value></data>
+  <data name="Capture_Intro" xml:space="preserve"><value>Hak die Fenster an, die zu diesem Spiel gehören. Position, Größe und Zustand werden gespeichert.</value></data>
+  <data name="Capture_Save" xml:space="preserve"><value>_Speichern</value></data>
+  <data name="Capture_Chosen" xml:space="preserve"><value>{0} gewählt</value></data>
+  <data name="App_When" xml:space="preserve"><value>Wann</value></data>
+  <data name="App_BeforeGame" xml:space="preserve"><value>Vor dem Spiel</value></data>
+  <data name="App_AfterGame" xml:space="preserve"><value>Nach dem Spiel</value></data>
+  <data name="App_MoveUp" xml:space="preserve"><value>Nach oben</value></data>
+  <data name="App_MoveDown" xml:space="preserve"><value>Nach unten</value></data>
+  <data name="Editor_NameRequired" xml:space="preserve"><value>Gib einen Namen ein.</value></data>
+  <data name="Editor_NameTaken" xml:space="preserve"><value>Ein Spiel mit diesem Namen gibt es schon.</value></data>
+  <data name="Editor_IconNone" xml:space="preserve"><value>Kein Symbol</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>_Speichern</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Common_Clear" xml:space="preserve"><value>Leeren</value></data>
 </root>

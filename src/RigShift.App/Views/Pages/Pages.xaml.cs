@@ -152,3 +152,26 @@ public partial class AboutPage : Page
         InitializeComponent();
     }
 }
+
+public partial class GamesPage : Page
+{
+    public GamesPage(GamesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        DataContext = viewModel;
+        InitializeComponent();
+        Loaded += async (_, _) => await viewModel.LoadAsync();
+    }
+
+    /// <summary>The "more" button opens its context menu on click and Enter, not only on right click.</summary>
+    private void OnMoreClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { ContextMenu: { } menu } button)
+        {
+            menu.PlacementTarget = button;
+            menu.Placement = PlacementMode.Bottom;
+            menu.DataContext = button.DataContext;
+            menu.IsOpen = true;
+        }
+    }
+}

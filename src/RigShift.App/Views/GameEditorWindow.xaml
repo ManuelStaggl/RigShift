@@ -1,0 +1,309 @@
+<ui:FluentWindow
+  x:Class="RigShift.App.Views.GameEditorWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  Title="{Binding Title}"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
+  Width="720"
+  Height="760"
+  MinWidth="520"
+  MinHeight="420"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowCornerPreference="Round"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.Resources>
+    <BooleanToVisibilityConverter x:Key="Visible" />
+  </ui:FluentWindow.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Grid.Row="0" Title="{Binding Title}" ShowMaximize="False" ShowMinimize="False" />
+
+    <ScrollViewer Grid.Row="1" Margin="24,8,24,0" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+
+        <!-- The game -->
+        <ui:TextBlock FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionGame}" />
+        <Grid Margin="0,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ui:TextBox
+            x:Name="NameBox"
+            AutomationProperties.Name="{loc:Tr Editor_Name}"
+            PlaceholderText="{loc:Tr Editor_Name}"
+            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+          <ComboBox
+            Grid.Column="1"
+            Width="160"
+            Margin="8,0,0,0"
+            AutomationProperties.Name="{loc:Tr Editor_Icon}"
+            DisplayMemberPath="Name"
+            ItemsSource="{Binding IconChoices}"
+            SelectedItem="{Binding SelectedIcon}" />
+        </Grid>
+        <TextBlock
+          Margin="0,4,0,0"
+          Foreground="{DynamicResource SystemFillColorCautionBrush}"
+          Text="{Binding NameError}"
+          TextWrapping="Wrap" />
+
+        <Grid Margin="0,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ui:TextBox
+            AutomationProperties.Name="{loc:Tr Game_Launch}"
+            IsReadOnly="True"
+            PlaceholderText="{loc:Tr Game_LaunchPlaceholder}"
+            Text="{Binding LaunchDescription, Mode=OneWay}" />
+          <ui:Button Grid.Column="1" Margin="8,0,0,0" Click="OnPickGame" Content="{loc:Tr Game_Choose}" />
+        </Grid>
+
+        <Grid Margin="0,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Margin="0,0,4,0">
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Game_ProcessName}" />
+            <ui:TextBox
+              Margin="0,4,0,0"
+              AutomationProperties.Name="{loc:Tr Game_ProcessName}"
+              PlaceholderText="{loc:Tr Game_ProcessLearned}"
+              Text="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
+              ToolTip="{loc:Tr Game_ProcessNameHint}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Margin="4,0,0,0">
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Game_EndsWith}" />
+            <ComboBox
+              Margin="0,4,0,0"
+              AutomationProperties.Name="{loc:Tr Game_EndsWith}"
+              DisplayMemberPath="Name"
+              ItemsSource="{Binding EndChoices}"
+              SelectedItem="{Binding SelectedEnd}" />
+          </StackPanel>
+        </Grid>
+        <ui:TextBox
+          Margin="0,8,0,0"
+          AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
+          PlaceholderText="{loc:Tr Game_LauncherProcess}"
+          Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="{loc:Tr Game_LauncherProcessHint}"
+          Visibility="{Binding NeedsLauncherProcess, Converter={StaticResource Visible}}" />
+
+        <!-- The profile -->
+        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionProfile}" />
+        <ComboBox
+          Margin="0,8,0,0"
+          AutomationProperties.Name="{loc:Tr Game_SectionProfile}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding ProfileChoices}"
+          SelectedItem="{Binding SelectedProfile}" />
+        <TextBlock
+          Margin="0,4,0,0"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Game_ProfileHint}"
+          TextWrapping="Wrap" />
+
+        <!-- The companion apps -->
+        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionApps}" />
+        <TextBlock
+          Margin="0,4,0,0"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Game_AppsHint}"
+          TextWrapping="Wrap" />
+        <ItemsControl Margin="0,8,0,0" Focusable="False" ItemsSource="{Binding Apps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Margin="0,0,0,8" Padding="12" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="6">
+                <StackPanel>
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Source="{Binding Icon}" />
+                    <ui:TextBox
+                      Grid.Column="1"
+                      AutomationProperties.Name="{loc:Tr App_Path}"
+                      Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
+                    <ui:Button
+                      Grid.Column="2"
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Stretch"
+                      AutomationProperties.Name="{loc:Tr App_Browse}"
+                      Click="OnBrowseApp"
+                      Icon="{ui:SymbolIcon FolderOpen24}"
+                      ToolTip="{loc:Tr App_Browse}" />
+                    <ui:Button
+                      Grid.Column="3"
+                      Margin="4,0,0,0"
+                      VerticalAlignment="Stretch"
+                      AutomationProperties.Name="{loc:Tr App_MoveUp}"
+                      Command="{Binding DataContext.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}"
+                      Icon="{ui:SymbolIcon ArrowUp24}"
+                      ToolTip="{loc:Tr App_MoveUp}" />
+                    <ui:Button
+                      Grid.Column="4"
+                      Margin="4,0,0,0"
+                      VerticalAlignment="Stretch"
+                      AutomationProperties.Name="{loc:Tr App_MoveDown}"
+                      Command="{Binding DataContext.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}"
+                      Icon="{ui:SymbolIcon ArrowDown24}"
+                      ToolTip="{loc:Tr App_MoveDown}" />
+                    <ui:Button
+                      Grid.Column="5"
+                      Margin="4,0,0,0"
+                      VerticalAlignment="Stretch"
+                      AutomationProperties.Name="{loc:Tr App_Remove}"
+                      Command="{Binding DataContext.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}"
+                      Icon="{ui:SymbolIcon Delete24}"
+                      ToolTip="{loc:Tr App_Remove}" />
+                  </Grid>
+                  <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox
+                      Width="120"
+                      AutomationProperties.Name="{loc:Tr App_Action}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding KindChoices}"
+                      SelectedItem="{Binding SelectedKind}" />
+                    <ComboBox
+                      Grid.Column="1"
+                      Width="160"
+                      Margin="8,0,0,0"
+                      AutomationProperties.Name="{loc:Tr App_When}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding WhenChoices}"
+                      SelectedItem="{Binding SelectedWhen}"
+                      Visibility="{Binding ShowWhen, Converter={StaticResource Visible}}" />
+                    <ui:TextBox
+                      Grid.Column="2"
+                      Margin="8,0,0,0"
+                      AutomationProperties.Name="{loc:Tr App_Arguments}"
+                      PlaceholderText="{loc:Tr App_Arguments}"
+                      Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                      Visibility="{Binding IsStart, Converter={StaticResource Visible}}" />
+                    <ui:NumberBox
+                      Grid.Column="3"
+                      Width="110"
+                      Margin="8,0,0,0"
+                      AutomationProperties.Name="{loc:Tr App_Wait}"
+                      Maximum="300"
+                      Minimum="0"
+                      PlaceholderText="{loc:Tr App_Wait}"
+                      Value="{Binding WaitSeconds}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ui:Button Margin="0,4,0,0" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" />
+
+        <StackPanel Margin="0,12,0,0">
+          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsWaitDevice}" />
+          <ComboBox
+            Margin="0,4,0,0"
+            AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
+            DisplayMemberPath="Name"
+            ItemsSource="{Binding UsbDevices}"
+            SelectedItem="{Binding SelectedUsbDevice}" />
+        </StackPanel>
+
+        <!-- The window positions -->
+        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionWindows}" />
+        <TextBlock
+          Margin="0,4,0,0"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Game_WindowsHint}"
+          TextWrapping="Wrap" />
+        <Grid Margin="0,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding WindowsText}" TextWrapping="Wrap" />
+          <ui:Button Grid.Column="1" Margin="8,0,0,0" Click="OnCaptureWindows" Content="{loc:Tr Game_CaptureWindows}" />
+          <ui:Button
+            Grid.Column="2"
+            Margin="8,0,0,0"
+            Command="{Binding ClearWindowsCommand}"
+            Content="{loc:Tr Common_Clear}"
+            Visibility="{Binding HasWindows, Converter={StaticResource Visible}}" />
+        </Grid>
+
+        <!-- The end -->
+        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionExit}" />
+        <ComboBox
+          Margin="0,8,0,0"
+          AutomationProperties.Name="{loc:Tr Game_SectionExit}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding ExitChoices}"
+          SelectedItem="{Binding SelectedExit}" />
+        <CheckBox Margin="0,8,0,0" Content="{loc:Tr Game_StopApps}" IsChecked="{Binding StopApps}" />
+
+        <!-- Starting -->
+        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionStart}" />
+        <Grid Margin="0,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ui:TextBox
+            x:Name="HotkeyBox"
+            AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
+            GotKeyboardFocus="OnHotkeyGotFocus"
+            IsReadOnly="True"
+            LostKeyboardFocus="OnHotkeyLostFocus"
+            PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
+            PreviewKeyDown="OnHotkeyKeyDown"
+            Text="{Binding HotkeyText, Mode=OneWay}" />
+          <ui:Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding ClearHotkeyCommand}" Content="{loc:Tr Common_Clear}" />
+        </Grid>
+        <!-- The explanation is the tooltip, not a second paragraph under it (analysis finding G-08). -->
+        <CheckBox
+          Margin="0,12,0,16"
+          Content="{loc:Tr Game_StartWithGame}"
+          IsChecked="{Binding StartWithGame}"
+          ToolTip="{loc:Tr Game_StartWithGameHint}" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Margin="24,12,24,20" HorizontalAlignment="Right" Orientation="Horizontal">
+      <ui:Button
+        MinWidth="120"
+        Margin="0,0,8,0"
+        Appearance="Primary"
+        Click="OnSave"
+        Content="{loc:Tr Common_Save}"
+        IsDefault="True"
+        IsEnabled="{Binding CanSave}" />
+      <ui:Button MinWidth="120" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
+    </StackPanel>
+  </Grid>
+</ui:FluentWindow>

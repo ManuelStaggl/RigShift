@@ -9,6 +9,7 @@ using RigShift.App.Views;
 using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
+using RigShift.Core.Games;
 using RigShift.Core.Settings;
 using RigShift.Core.Storage;
 using RigShift.Core.Topology;
@@ -136,6 +137,11 @@ public partial class App : Application, IAppShell
             _tray.Start();
             Services.GetRequiredService<HotkeyService>().Start();
             Services.GetRequiredService<AutomationService>().Start();
+
+            // Games are loaded before the page is opened: the watcher for games started elsewhere needs them, and a
+            // game that already runs must only set the starting point, not trigger a switch.
+            await Services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
+            Services.GetRequiredService<GameSessionService>().StartWatching();
 
 #if DEBUG
             // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
@@ -362,6 +368,29 @@ public partial class App : Application, IAppShell
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<UpdateService>();
 
+        // Games (v2)
+        services.AddSingleton<IGameStore>(sp => new JsonGameStore(Paths.DataDirectory, Log.Logger, sp.GetRequiredService<TimeProvider>()));
+        services.AddSingleton<IGameLibrary, Windows.Games.GameLibrary>();
+        services.AddSingleton<IGameProcesses, Windows.Games.SystemGameProcesses>();
+        services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
+        services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
+        services.AddSingleton<GameCatalog>();
+        services.AddSingleton<GameDialogs>();
+
+        // A new runner per session: it keeps the state of exactly one run.
+        services.AddSingleton<Func<GameSessionRunner>>(sp => () => new GameSessionRunner(
+            sp.GetRequiredService<IGameStarter>(),
+            sp.GetRequiredService<IGameProcesses>(),
+            sp.GetRequiredService<SwitchCoordinator>(),
+            id => sp.GetRequiredService<ProfileCatalog>().Find(id),
+            sp.GetRequiredService<IAppLauncher>(),
+            sp.GetRequiredService<IUsbDeviceList>(),
+            sp.GetRequiredService<SwitchOptions>(),
+            sp.GetRequiredService<TimeProvider>(),
+            Log.Logger,
+            sp.GetRequiredService<IWindowLayout>()));
+        services.AddSingleton<GameSessionService>();
+
         // UI
         services.AddSingleton<TrayPopupViewModel>();
         services.AddSingleton<TrayPopupView>();
@@ -370,6 +399,8 @@ public partial class App : Application, IAppShell
         services.AddSingleton<DisplaysViewModel>();
         services.AddSingleton<AutomationViewModel>();
         services.AddSingleton<AboutViewModel>();
+        services.AddSingleton<GamesViewModel>();
+        services.AddSingleton<GamesPage>();
         services.AddSingleton<ProfilesPage>();
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<DisplaysPage>();
