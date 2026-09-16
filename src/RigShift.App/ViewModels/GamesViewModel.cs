@@ -57,6 +57,33 @@ public sealed partial class GamesViewModel : ObservableObject
         }
     }
 
+    /// <summary>Adds installed games in one go – the way in for anyone who has just installed RigShift.</summary>
+    [RelayCommand]
+    private async Task ScanAsync()
+    {
+        AddedGames result = await _dialogs.AddInstalledAsync();
+        if (result.Added.Count == 0 && result.Skipped == 0)
+        {
+            return;
+        }
+
+        string message = result.Added.Count switch
+        {
+            0 => string.Empty,
+            1 => Loc.Format("Games_AddedOne", result.Added[0].Name),
+            _ => Loc.Format("Games_Added", result.Added.Count),
+        };
+
+        if (result.Skipped > 0)
+        {
+            message = (message.Length > 0 ? message + " " : string.Empty) + Loc.Format("Games_AddedSkipped", result.Skipped);
+        }
+
+        ShowStatus(message, result.Added.Count == 0
+            ? Wpf.Ui.Controls.InfoBarSeverity.Informational
+            : Wpf.Ui.Controls.InfoBarSeverity.Success);
+    }
+
     [RelayCommand]
     private async Task EditAsync(GameItem? item)
     {
@@ -108,7 +135,7 @@ public sealed partial class GamesViewModel : ObservableObject
         string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
 
         // No icon found is the fallback, not the error case: the shortcut then shows the RigShift symbol.
-        string? icon = Windows.Games.GameExecutable.Find(item.Game.Launch, _log);
+        string? icon = Windows.Games.GameIconSource.Find(item.Game.Launch, _log);
         try
         {
             Windows.Shell.ShortcutWriter.Create(

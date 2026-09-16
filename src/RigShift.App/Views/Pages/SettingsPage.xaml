@@ -52,6 +52,12 @@
             ToolTip="{loc:Tr Settings_ConfirmSeconds}"
             IsEnabled="{Binding ConfirmEnabled}"
             Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
+          <!-- The box shows a bare number; without the unit it is anyone's guess what it counts. -->
+          <TextBlock
+            Margin="0,0,16,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Common_Seconds}" />
           <ui:ToggleSwitch VerticalAlignment="Center" AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" />
         </StackPanel>
       </ui:CardControl>

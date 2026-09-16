@@ -114,7 +114,7 @@
         <TextBlock
           Margin="0,4,0,0"
           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-          Text="{loc:Tr Game_ProfileHint}"
+          Text="{Binding ProfileHint}"
           TextWrapping="Wrap" />
 
         <!-- The companion apps -->
@@ -179,37 +179,51 @@
                       Icon="{ui:SymbolIcon Delete24}"
                       ToolTip="{loc:Tr App_Remove}" />
                   </Grid>
+                  <!-- Labels above the fields, as in the profile editor: a filled box hides its placeholder, and
+                       "0" on its own says nothing about what it counts. -->
                   <WrapPanel Margin="0,8,0,0">
-                    <ComboBox
-                      Width="120"
-                      Margin="0,8,8,0"
-                      AutomationProperties.Name="{loc:Tr App_Action}"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding KindChoices}"
-                      SelectedItem="{Binding SelectedKind}" />
-                    <ComboBox
+                    <StackPanel Width="120" Margin="0,8,12,0">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_Action}" />
+                      <ComboBox
+                        AutomationProperties.Name="{loc:Tr App_Action}"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding KindChoices}"
+                        SelectedItem="{Binding SelectedKind}" />
+                    </StackPanel>
+                    <StackPanel
                       Width="160"
-                      Margin="0,8,8,0"
-                      AutomationProperties.Name="{loc:Tr App_When}"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding WhenChoices}"
-                      SelectedItem="{Binding SelectedWhen}"
-                      Visibility="{Binding ShowWhen, Converter={StaticResource Visible}}" />
-                    <ui:TextBox
+                      Margin="0,8,12,0"
+                      Visibility="{Binding ShowWhen, Converter={StaticResource Visible}}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_When}" />
+                      <ComboBox
+                        AutomationProperties.Name="{loc:Tr App_When}"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding WhenChoices}"
+                        SelectedItem="{Binding SelectedWhen}" />
+                    </StackPanel>
+                    <StackPanel
                       Width="200"
-                      Margin="0,8,8,0"
-                      AutomationProperties.Name="{loc:Tr App_Arguments}"
-                      PlaceholderText="{loc:Tr App_Arguments}"
-                      Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
-                      Visibility="{Binding IsStart, Converter={StaticResource Visible}}" />
-                    <ui:NumberBox
-                      Width="110"
-                      Margin="0,8,0,0"
-                      AutomationProperties.Name="{loc:Tr App_Wait}"
-                      Maximum="300"
-                      Minimum="0"
-                      PlaceholderText="{loc:Tr App_Wait}"
-                      Value="{Binding WaitSeconds}" />
+                      Margin="0,8,12,0"
+                      Visibility="{Binding IsStart, Converter={StaticResource Visible}}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_Arguments}" />
+                      <ui:TextBox
+                        AutomationProperties.Name="{loc:Tr App_Arguments}"
+                        Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <!-- No fixed width: the label is the longest in the row and must not wrap, or its box drops a line. -->
+                    <StackPanel Margin="0,8,0,0">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr App_Wait}" />
+                      <ui:NumberBox
+                        Width="120"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="{loc:Tr App_Wait}"
+                        ClearButtonEnabled="False"
+                        MaxDecimalPlaces="0"
+                        Maximum="300"
+                        Minimum="0"
+                        SmallChange="1"
+                        Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
                   </WrapPanel>
                 </StackPanel>
               </ui:Card>

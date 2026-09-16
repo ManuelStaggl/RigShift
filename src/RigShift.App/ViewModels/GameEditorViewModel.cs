@@ -110,7 +110,17 @@ public sealed partial class GameEditorViewModel : ObservableObject
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProfileHint))]
     public partial Choice? SelectedProfile { get; set; }
+
+    /// <summary>
+    /// Without a profile the entry starts the game and its tools but leaves the screens alone. That is a legitimate
+    /// choice, and it is also what an entry looks like that nobody has finished – so the line under the box says which
+    /// of the two this is, instead of only ever explaining the other case.
+    /// </summary>
+    public string ProfileHint => SelectedProfile?.Key is null
+        ? Loc.Instance["Game_NoProfileHint"]
+        : Loc.Instance["Game_ProfileHint"];
 
     public ObservableCollection<Choice> EndChoices { get; } = [];
 
@@ -296,6 +306,7 @@ public sealed partial class GameEditorViewModel : ObservableObject
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(WindowsText));
         OnPropertyChanged(nameof(NameError));
+        OnPropertyChanged(nameof(ProfileHint));
     }
 
     private void FillChoices()

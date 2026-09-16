@@ -77,6 +77,7 @@
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Without confirmation, the previous settings come back.</value></data>
   <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Off: a display that stays dark is not reverted.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
+  <data name="Common_Seconds" xml:space="preserve"><value>seconds</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Same as Windows</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
@@ -345,6 +346,10 @@
   <data name="Nav_Games" xml:space="preserve"><value>Games</value></data>
   <data name="Games_Intro" xml:space="preserve"><value>A game switches the PC, brings its tools up and puts everything back when you are done.</value></data>
   <data name="Games_Add" xml:space="preserve"><value>_Add game</value></data>
+  <data name="Games_Scan" xml:space="preserve"><value>Find installed games</value></data>
+  <data name="Games_AddedOne" xml:space="preserve"><value>“{0}” added.</value></data>
+  <data name="Games_Added" xml:space="preserve"><value>{0} games added.</value></data>
+  <data name="Games_AddedSkipped" xml:space="preserve"><value>{0} of them were already in the list.</value></data>
   <data name="Games_Edit" xml:space="preserve"><value>Edit game</value></data>
   <data name="Games_NewName" xml:space="preserve"><value>New game</value></data>
   <data name="Games_EmptyTitle" xml:space="preserve"><value>No games yet</value></data>
@@ -372,6 +377,7 @@
   <data name="Game_LauncherProcessHint" xml:space="preserve"><value>For sims whose menu outlives the sim, such as iRacing: without this the session would end every time you go back to the menu.</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Don't switch anything</value></data>
   <data name="Game_ProfileHint" xml:space="preserve"><value>Applied before the game starts, so the tools land on the screens this profile sets up.</value></data>
+  <data name="Game_NoProfileHint" xml:space="preserve"><value>This game starts its tools but leaves your screens as they are.</value></data>
   <data name="Game_AppsHint" xml:space="preserve"><value>Run in this order. Wheel software wants to be up before the game; SimHub and Crew Chief attach to a running session.</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Arrange your tools as you like them, then save the positions here. They are put back before the game starts.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Save positions now…</value></data>
@@ -393,9 +399,12 @@
   <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognised – set it in the entry</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installed Steam and Epic games, read from this PC. No sign-in.</value></data>
+  <data name="GamePicker_TitleMany" xml:space="preserve"><value>Add games</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed Steam and Epic games, read from this PC. Tick everything you want to add; profile and tools follow afterwards.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>No installed game found. Use “Browse for program” for everything else.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Search installed games</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Browse for program…</value></data>
+  <data name="GamePicker_AddCount" xml:space="preserve"><value>Add ({0})</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Save window positions</value></data>
   <data name="Capture_Intro" xml:space="preserve"><value>Tick the windows that belong to this game. Their position, size and state are saved.</value></data>
   <data name="Capture_Save" xml:space="preserve"><value>_Save</value></data>

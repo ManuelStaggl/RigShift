@@ -42,7 +42,11 @@ public sealed partial class GameCatalog : ObservableObject
     public ObservableCollection<GameItem> Items { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGames))]
     public partial bool IsEmpty { get; set; }
+
+    /// <summary>The page header only offers the scan while there is a list; empty, the big button does it.</summary>
+    public bool HasGames => !IsEmpty;
 
     [ObservableProperty]
     public partial string? EmptyMessage { get; set; }
@@ -124,5 +128,18 @@ public sealed partial class GameCatalog : ObservableObject
         IsEmpty = Items.Count == 0;
         EmptyMessage = Loc.Instance["Games_EmptyText"];
         Changed?.Invoke(this, EventArgs.Empty);
+        _ = LoadIconsAsync([.. Items]);
+    }
+
+    /// <summary>
+    /// The games' own icons, after the cards are up: finding a store game's executable can mean walking its install
+    /// folder, and no list is worth blocking for an icon. Each item keeps its symbol until its icon arrives.
+    /// </summary>
+    private static async Task LoadIconsAsync(IReadOnlyList<GameItem> items)
+    {
+        foreach (GameItem item in items)
+        {
+            item.GameIcon = await GameIcons.LoadAsync(item.Game.Launch, Log.Logger);
+        }
     }
 }

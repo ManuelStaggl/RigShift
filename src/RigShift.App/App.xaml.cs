@@ -166,9 +166,18 @@ public partial class App : Application, IAppShell
             }
 
             // Developer aid: the game picker and the window capture, which otherwise only open from inside the editor.
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMEPICKER") is { Length: > 0 })
+            // "multi" opens the picker the way the games page does, with tick boxes for several games at once.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMEPICKER") is { Length: > 0 } picker)
             {
-                _ = Views.GamePickerWindow.PickAsync(null, Services.GetRequiredService<GameDialogs>());
+                GameDialogs dialogs = Services.GetRequiredService<GameDialogs>();
+                if (string.Equals(picker, "multi", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = Views.GamePickerWindow.PickManyAsync(null, dialogs);
+                }
+                else
+                {
+                    _ = Views.GamePickerWindow.PickAsync(null, dialogs);
+                }
             }
 
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })

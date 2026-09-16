@@ -77,6 +77,7 @@
   <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung wird zurückgeschaltet.</value></data>
   <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Aus: Ein dunkler Bildschirm wird nicht zurückgestellt.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
+  <data name="Common_Seconds" xml:space="preserve"><value>Sekunden</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
@@ -345,6 +346,10 @@
   <data name="Nav_Games" xml:space="preserve"><value>Spiele</value></data>
   <data name="Games_Intro" xml:space="preserve"><value>Ein Spiel schaltet den PC um, startet seine Tools und stellt danach alles zurück.</value></data>
   <data name="Games_Add" xml:space="preserve"><value>Spiel _hinzufügen</value></data>
+  <data name="Games_Scan" xml:space="preserve"><value>Installierte Spiele suchen</value></data>
+  <data name="Games_AddedOne" xml:space="preserve"><value>„{0}“ hinzugefügt.</value></data>
+  <data name="Games_Added" xml:space="preserve"><value>{0} Spiele hinzugefügt.</value></data>
+  <data name="Games_AddedSkipped" xml:space="preserve"><value>Davon standen {0} schon in der Liste.</value></data>
   <data name="Games_Edit" xml:space="preserve"><value>Spiel bearbeiten</value></data>
   <data name="Games_NewName" xml:space="preserve"><value>Neues Spiel</value></data>
   <data name="Games_EmptyTitle" xml:space="preserve"><value>Noch keine Spiele</value></data>
@@ -372,6 +377,7 @@
   <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Für Sims, deren Menü den Sim überlebt, etwa iRacing: sonst würde die Sitzung bei jeder Rückkehr ins Menü enden.</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Nichts umschalten</value></data>
   <data name="Game_ProfileHint" xml:space="preserve"><value>Wird vor dem Spiel angewandt, damit die Tools auf den Bildschirmen dieses Profils landen.</value></data>
+  <data name="Game_NoProfileHint" xml:space="preserve"><value>Dieses Spiel startet seine Tools, lässt die Bildschirme aber, wie sie sind.</value></data>
   <data name="Game_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge. Lenkrad-Software will vor dem Spiel oben sein; SimHub und Crew Chief hängen sich an eine laufende Sitzung.</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Schieb deine Tools zurecht und speichere die Positionen hier. Sie werden vor dem Spielstart wiederhergestellt.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Positionen jetzt speichern…</value></data>
@@ -393,9 +399,12 @@
   <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>Kein Spielprozess erkannt – im Eintrag eintragen</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Spiel wählen</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
+  <data name="GamePicker_TitleMany" xml:space="preserve"><value>Spiele hinzufügen</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Alles anhaken, was dazu soll; Profil und Tools kommen danach.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>Kein installiertes Spiel gefunden. Für alles andere „Programm suchen“.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Installierte Spiele durchsuchen</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Programm suchen…</value></data>
+  <data name="GamePicker_AddCount" xml:space="preserve"><value>Hinzufügen ({0})</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Fensterpositionen speichern</value></data>
   <data name="Capture_Intro" xml:space="preserve"><value>Hak die Fenster an, die zu diesem Spiel gehören. Position, Größe und Zustand werden gespeichert.</value></data>
   <data name="Capture_Save" xml:space="preserve"><value>_Speichern</value></data>

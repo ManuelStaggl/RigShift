@@ -4,7 +4,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="{loc:Tr GamePicker_Title}"
+  Title="{Binding WindowTitle}"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="620"
   Height="600"
@@ -26,12 +26,12 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="{loc:Tr GamePicker_Title}" ShowMaximize="False" ShowMinimize="False" />
+    <ui:TitleBar Grid.Row="0" Title="{Binding WindowTitle}" ShowMaximize="False" ShowMinimize="False" />
 
     <StackPanel Grid.Row="1" Margin="24,8,24,12">
       <TextBlock
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-        Text="{loc:Tr GamePicker_Intro}"
+        Text="{Binding Intro}"
         TextWrapping="Wrap" />
       <ui:TextBox
         x:Name="SearchBox"
@@ -56,16 +56,35 @@
           <DataTemplate>
             <Grid Margin="0,4">
               <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
+              <CheckBox
+                Margin="0,0,4,0"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="{Binding Name}"
+                IsChecked="{Binding IsChecked}"
+                Visibility="{Binding DataContext.IsMultiple, RelativeSource={RelativeSource AncestorType=ListBox}, Converter={StaticResource Visible}}" />
+              <!-- The game's own icon: it says more about the game than any symbol we could pick for it. -->
+              <Image
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                Margin="0,0,10,0"
+                VerticalAlignment="Center"
+                RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding Icon}"
+                Visibility="{Binding HasIcon, Converter={StaticResource Visible}}" />
               <TextBlock
+                Grid.Column="2"
                 VerticalAlignment="Center"
                 Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                 Text="{Binding Name}"
                 TextTrimming="CharacterEllipsis" />
               <Border
-                Grid.Column="1"
+                Grid.Column="3"
                 Margin="12,0,0,0"
                 Padding="8,2"
                 VerticalAlignment="Center"
@@ -94,13 +113,17 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <ui:Button HorizontalAlignment="Left" Click="OnBrowseFile" Content="{loc:Tr GamePicker_BrowseFile}" />
+      <ui:Button
+        HorizontalAlignment="Left"
+        Click="OnBrowseFile"
+        Content="{loc:Tr GamePicker_BrowseFile}"
+        Visibility="{Binding IsSingle, Converter={StaticResource Visible}}" />
       <StackPanel Grid.Column="1" Orientation="Horizontal">
         <ui:Button
           Margin="0,0,8,0"
           Appearance="Primary"
           Click="OnChoose"
-          Content="{loc:Tr AppPicker_Choose}"
+          Content="{Binding ChooseText}"
           IsDefault="True"
           IsEnabled="{Binding CanChoose}" />
         <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />

@@ -13,6 +13,11 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Services;
 
+/// <summary>What came out of adding installed games at once.</summary>
+/// <param name="Added">The entries that were created.</param>
+/// <param name="Skipped">Games that were picked but already configured.</param>
+public sealed record AddedGames(IReadOnlyList<GameEntry> Added, int Skipped);
+
 /// <summary>Opens the game editor, the installed-games picker, the window capture and the delete confirmation.</summary>
 public sealed class GameDialogs
 {
@@ -60,6 +65,43 @@ public sealed class GameDialogs
     }
 
     public Task<GameEntry?> EditAsync(GameEntry game) => ShowAsync(game, isNew: false);
+
+    /// <summary>
+    /// Adds installed games straight from the picker, without the editor: five sims should not mean five trips
+    /// through it. Profile and tools are set afterwards on the entry that is now there. Games that are already
+    /// configured are left alone – a second entry for the same game helps nobody.
+    /// </summary>
+    public async Task<AddedGames> AddInstalledAsync()
+    {
+        IReadOnlyList<InstalledGame> picked =
+            await GamePickerWindow.PickManyAsync(System.Windows.Application.Current.MainWindow, this);
+
+        var names = _catalog.Games.Select(g => g.Name).ToList();
+        var added = new List<GameEntry>();
+        int skipped = 0;
+        foreach (InstalledGame game in picked)
+        {
+            if (_catalog.Games.Any(g => g.Launch.Kind == game.Launch.Kind && g.Launch.Target == game.Launch.Target))
+            {
+                skipped++;
+                continue;
+            }
+
+            GameEntry entry = SimTemplates.Apply(new GameEntry
+            {
+                Id = Guid.NewGuid(),
+                Name = ProfileEditing.UniqueName(game.Name, names),
+                Launch = game.Launch,
+            });
+
+            await _catalog.SaveAsync(entry, CancellationToken.None);
+            names.Add(entry.Name);
+            added.Add(entry);
+            _log.Information("Game {Game} added from the installed games", entry.Name);
+        }
+
+        return new AddedGames(added, skipped);
+    }
 
 #if DEBUG
     private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web)

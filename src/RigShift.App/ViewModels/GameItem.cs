@@ -21,6 +21,19 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     public bool HasIcon => IconKey is not null;
 
+    /// <summary>
+    /// The game's own icon, filled in after the card is up (<see cref="Services.GameIcons"/>). A symbol the user
+    /// picked wins over it: that choice was deliberate.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGameIcon), nameof(HasFallbackIcon))]
+    public partial ImageSource? GameIcon { get; set; }
+
+    public bool HasGameIcon => IconKey is null && GameIcon is not null;
+
+    /// <summary>Neither a symbol nor an icon: the card still needs something, or it looks unfinished.</summary>
+    public bool HasFallbackIcon => IconKey is null && GameIcon is null;
+
     public string AccessibleName => IsRunning ? $"{Name}, {Loc.Instance["Game_Running"]}" : Name;
 
     /// <summary>"Steam · Rig" under the name: where the game comes from and what it switches to.</summary>

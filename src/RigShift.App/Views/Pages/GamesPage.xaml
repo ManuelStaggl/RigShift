@@ -17,7 +17,15 @@
         </Grid.ColumnDefinitions>
         <ui:TextBlock Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Games}" />
         <!-- Standard, not primary: the one accent per view belongs on "Play" (analysis findings G-03, G-04). -->
-        <ui:Button Grid.Column="1" Command="{Binding AddCommand}" Content="{loc:Tr Games_Add}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,8,0"
+            Command="{Binding ScanCommand}"
+            Content="{loc:Tr Games_Scan}"
+            Icon="{ui:SymbolIcon Search24}"
+            Visibility="{Binding Catalog.HasGames, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button Command="{Binding AddCommand}" Content="{loc:Tr Games_Add}" />
+        </StackPanel>
       </Grid>
 
       <TextBlock
@@ -41,6 +49,15 @@
         IsOpen="{Binding Catalog.IsEmpty}"
         Message="{Binding Catalog.EmptyMessage}"
         Severity="Informational" />
+
+      <!-- The way in for a fresh install: the picker is otherwise two levels deep, inside the editor. -->
+      <ui:Button
+        Margin="0,0,0,16"
+        Appearance="Primary"
+        Command="{Binding ScanCommand}"
+        Content="{loc:Tr Games_Scan}"
+        Icon="{ui:SymbolIcon Search24}"
+        Visibility="{Binding Catalog.IsEmpty, Converter={StaticResource BoolToVisibility}}" />
 
       <ui:InfoBar
         Margin="0,0,0,16"
@@ -76,6 +93,22 @@
                   IsFilled="{Binding IsRunning}"
                   TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                   Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+                <!-- The game's own icon where no symbol was picked, and a symbol where there is neither. -->
+                <Image
+                  Width="24"
+                  Height="24"
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"
+                  RenderOptions.BitmapScalingMode="HighQuality"
+                  Source="{Binding GameIcon}"
+                  Visibility="{Binding HasGameIcon, Converter={StaticResource BoolToVisibility}}" />
+                <ui:SymbolIcon
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"
+                  FontSize="22"
+                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                  Symbol="Games24"
+                  Visibility="{Binding HasFallbackIcon, Converter={StaticResource BoolToVisibility}}" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                   <ui:TextBlock
                     FontTypography="Subtitle"
