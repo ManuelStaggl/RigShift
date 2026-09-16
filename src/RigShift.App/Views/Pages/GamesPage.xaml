@@ -164,7 +164,7 @@
                       Margin="0,0,6,0"
                       FontSize="16"
                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                      Symbol="WindowAd24" />
+                      Symbol="Window24" />
                     <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding WindowsLine}" />
                   </StackPanel>
 

@@ -28,12 +28,20 @@
 
     <ui:TitleBar Grid.Row="0" Title="{loc:Tr GamePicker_Title}" ShowMaximize="False" ShowMinimize="False" />
 
-    <TextBlock
-      Grid.Row="1"
-      Margin="24,8,24,12"
-      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-      Text="{loc:Tr GamePicker_Intro}"
-      TextWrapping="Wrap" />
+    <StackPanel Grid.Row="1" Margin="24,8,24,12">
+      <TextBlock
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr GamePicker_Intro}"
+        TextWrapping="Wrap" />
+      <ui:TextBox
+        x:Name="SearchBox"
+        Margin="0,12,0,0"
+        AutomationProperties.Name="{loc:Tr GamePicker_Search}"
+        Icon="{ui:SymbolIcon Search24}"
+        PlaceholderText="{loc:Tr GamePicker_Search}"
+        PreviewKeyDown="OnSearchKeyDown"
+        Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+    </StackPanel>
 
     <Grid Grid.Row="2" Margin="24,0">
       <ListBox

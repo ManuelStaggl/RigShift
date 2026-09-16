@@ -27,7 +27,7 @@ public partial class GamePickerWindow : FluentWindow
         _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
-        Loaded += (_, _) => GameList.Focus();
+        Loaded += (_, _) => SearchBox.Focus();
     }
 
     public PickedGame? Chosen { get; private set; }
@@ -68,6 +68,24 @@ public partial class GamePickerWindow : FluentWindow
         }
     }
 
+    /// <summary>Arrow down leaves the search for the list, on the selected (or first) game.</summary>
+    private void OnSearchKeyDown(object sender, KeyEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        if (e.Key != Key.Down || _viewModel.Games.Count == 0)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        _viewModel.Selected ??= _viewModel.Games[0];
+        GameList.ScrollIntoView(_viewModel.Selected);
+        if (GameList.ItemContainerGenerator.ContainerFromItem(_viewModel.Selected) is ListBoxItem item)
+        {
+            item.Focus();
+        }
+    }
+
     private void OnListDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (e.OriginalSource is DependencyObject source
@@ -98,9 +116,18 @@ public partial class GamePickerWindow : FluentWindow
 /// <summary>The installed games, while they are still being looked for.</summary>
 public sealed partial class GamePickerViewModel : ObservableObject
 {
-    public GamePickerViewModel() => IsLoading = true;
+    private IReadOnlyList<InstalledGame> _all = [];
+
+    public GamePickerViewModel()
+    {
+        IsLoading = true;
+        Query = string.Empty;
+    }
 
     public ObservableCollection<InstalledGame> Games { get; } = [];
+
+    [ObservableProperty]
+    public partial string Query { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChoose))]
@@ -117,13 +144,27 @@ public sealed partial class GamePickerViewModel : ObservableObject
     public void Fill(IReadOnlyList<InstalledGame> found)
     {
         ArgumentNullException.ThrowIfNull(found);
+        _all = found;
+        IsLoading = false;
+        Filter();
+    }
+
+    partial void OnQueryChanged(string value) => Filter();
+
+    /// <summary>With a search, the best match is selected, so Enter takes it.</summary>
+    private void Filter()
+    {
+        InstalledGame? selected = Selected;
         Games.Clear();
-        foreach (InstalledGame game in found)
+        foreach (InstalledGame game in _all.Where(
+            g => Query.Length == 0 || g.Name.Contains(Query.Trim(), StringComparison.CurrentCultureIgnoreCase)))
         {
             Games.Add(game);
         }
 
-        IsLoading = false;
+        Selected = selected is not null && Games.Contains(selected) ? selected
+            : Query.Length > 0 && Games.Count > 0 ? Games[0]
+            : null;
         OnPropertyChanged(nameof(IsEmpty));
     }
 }

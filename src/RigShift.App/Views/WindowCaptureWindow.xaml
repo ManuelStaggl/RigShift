@@ -65,7 +65,13 @@
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{Binding ChosenText}" />
       <StackPanel Grid.Column="1" Orientation="Horizontal">
-        <ui:Button Margin="0,0,8,0" Appearance="Primary" Click="OnSave" Content="{loc:Tr Capture_Save}" IsDefault="True" />
+        <ui:Button
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          Click="OnSave"
+          Content="{loc:Tr Capture_Save}"
+          IsDefault="True"
+          IsEnabled="{Binding CanSave}" />
         <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />
       </StackPanel>
     </Grid>

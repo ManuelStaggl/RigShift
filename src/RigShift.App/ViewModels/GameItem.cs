@@ -46,9 +46,11 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     public bool HasApps => AppsLine is not null;
 
-    /// <summary>"3 windows saved"; <c>null</c> when the entry has no layout.</summary>
+    /// <summary>"3 window positions"; <c>null</c> when the entry has no layout.</summary>
     public string? WindowsLine => Game.WindowLayout is { IsEmpty: false } layout
-        ? Loc.Format("Game_WindowsSaved", layout.Windows.Count)
+        ? layout.Windows.Count == 1
+            ? Loc.Instance["Game_WindowsSavedOne"]
+            : Loc.Format("Game_WindowsSaved", layout.Windows.Count)
         : null;
 
     public bool HasWindows => WindowsLine is not null;

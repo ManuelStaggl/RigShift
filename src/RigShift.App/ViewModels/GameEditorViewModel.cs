@@ -61,7 +61,7 @@ public sealed partial class GameEditorViewModel : ObservableObject
     public string Title => IsNew ? Loc.Instance["Games_Add"] : Loc.Instance["Games_Edit"];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSave), nameof(NameError))]
+    [NotifyPropertyChangedFor(nameof(CanSave), nameof(NameError), nameof(HasNameError))]
     public partial string Name { get; set; }
 
     /// <summary>What the game is started with: a program path, or the store's id.</summary>
@@ -141,7 +141,10 @@ public sealed partial class GameEditorViewModel : ObservableObject
     };
 
     public string WindowsText => WindowLayout is { IsEmpty: false } layout
-        ? Loc.Format("Game_WindowsSavedAt", layout.Windows.Count, layout.CapturedAt.ToLocalTime().ToString("g", Loc.Instance.Culture))
+        ? Loc.Format(
+            layout.Windows.Count == 1 ? "Game_WindowsSavedAtOne" : "Game_WindowsSavedAt",
+            layout.Windows.Count,
+            layout.CapturedAt.ToLocalTime().ToString("g", Loc.Instance.Culture))
         : Loc.Instance["Game_WindowsNone"];
 
     public bool HasWindows => WindowLayout is { IsEmpty: false };
@@ -151,6 +154,9 @@ public sealed partial class GameEditorViewModel : ObservableObject
         : _otherNames.Contains(Name.Trim(), StringComparer.CurrentCultureIgnoreCase)
             ? Loc.Instance["Editor_NameTaken"]
             : null;
+
+    /// <summary>Without it the empty error line would leave a gap under the name box.</summary>
+    public bool HasNameError => NameError is not null;
 
     public bool CanSave => NameError is null && !string.IsNullOrWhiteSpace(LaunchTarget);
 

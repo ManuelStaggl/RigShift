@@ -66,7 +66,11 @@ public sealed partial class WindowCaptureViewModel : ObservableObject
             bool chosen = current?.Windows.Any(w =>
                 string.Equals(w.ProcessName, window.ProcessName, StringComparison.OrdinalIgnoreCase)) ?? false;
             var row = new CaptureRow(window) { IsChosen = chosen };
-            row.PropertyChanged += (_, _) => OnPropertyChanged(nameof(ChosenText));
+            row.PropertyChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(ChosenText));
+                OnPropertyChanged(nameof(CanSave));
+            };
             Windows.Add(row);
         }
     }
@@ -74,6 +78,9 @@ public sealed partial class WindowCaptureViewModel : ObservableObject
     public ObservableCollection<CaptureRow> Windows { get; } = [];
 
     public string ChosenText => Loc.Format("Capture_Chosen", Windows.Count(w => w.IsChosen));
+
+    /// <summary>Saving nothing would only clear the positions, and the editor has a button for that.</summary>
+    public bool CanSave => Windows.Any(w => w.IsChosen);
 
     public WindowLayout ToLayout() => new()
     {

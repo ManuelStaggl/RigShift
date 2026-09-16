@@ -8,7 +8,7 @@
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="720"
   Height="760"
-  MinWidth="520"
+  MinWidth="560"
   MinHeight="420"
   ExtendsContentIntoTitleBar="True"
   ShowInTaskbar="False"
@@ -27,11 +27,12 @@
 
     <ui:TitleBar Grid.Row="0" Title="{Binding Title}" ShowMaximize="False" ShowMinimize="False" />
 
-    <ScrollViewer Grid.Row="1" Margin="24,8,24,0" VerticalScrollBarVisibility="Auto">
-      <StackPanel>
+    <!-- The padding belongs inside, so the scroll bar sits at the window edge and not on top of the fields. -->
+    <ScrollViewer Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="24,8,24,16">
 
         <!-- The game -->
-        <ui:TextBlock FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionGame}" />
+        <ui:TextBlock Margin="0,0,0,8" Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionGame}" />
         <Grid Margin="0,8,0,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -55,7 +56,8 @@
           Margin="0,4,0,0"
           Foreground="{DynamicResource SystemFillColorCautionBrush}"
           Text="{Binding NameError}"
-          TextWrapping="Wrap" />
+          TextWrapping="Wrap"
+          Visibility="{Binding HasNameError, Converter={StaticResource Visible}}" />
 
         <Grid Margin="0,8,0,0">
           <Grid.ColumnDefinitions>
@@ -76,34 +78,33 @@
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
           <StackPanel Margin="0,0,4,0">
-            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Game_ProcessName}" />
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Game_ProcessName}" />
             <ui:TextBox
-              Margin="0,4,0,0"
               AutomationProperties.Name="{loc:Tr Game_ProcessName}"
               PlaceholderText="{loc:Tr Game_ProcessLearned}"
               Text="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
               ToolTip="{loc:Tr Game_ProcessNameHint}" />
           </StackPanel>
           <StackPanel Grid.Column="1" Margin="4,0,0,0">
-            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Game_EndsWith}" />
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Game_EndsWith}" />
             <ComboBox
-              Margin="0,4,0,0"
               AutomationProperties.Name="{loc:Tr Game_EndsWith}"
               DisplayMemberPath="Name"
               ItemsSource="{Binding EndChoices}"
               SelectedItem="{Binding SelectedEnd}" />
           </StackPanel>
         </Grid>
-        <ui:TextBox
-          Margin="0,8,0,0"
-          AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
-          PlaceholderText="{loc:Tr Game_LauncherProcess}"
-          Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}"
-          ToolTip="{loc:Tr Game_LauncherProcessHint}"
-          Visibility="{Binding NeedsLauncherProcess, Converter={StaticResource Visible}}" />
+        <StackPanel Margin="0,8,0,0" Visibility="{Binding NeedsLauncherProcess, Converter={StaticResource Visible}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Game_LauncherProcess}" />
+          <ui:TextBox
+            AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
+            PlaceholderText="{loc:Tr Game_LauncherProcess}"
+            Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}"
+            ToolTip="{loc:Tr Game_LauncherProcessHint}" />
+        </StackPanel>
 
         <!-- The profile -->
-        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionProfile}" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionProfile}" />
         <ComboBox
           Margin="0,8,0,0"
           AutomationProperties.Name="{loc:Tr Game_SectionProfile}"
@@ -117,7 +118,7 @@
           TextWrapping="Wrap" />
 
         <!-- The companion apps -->
-        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionApps}" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionApps}" />
         <TextBlock
           Margin="0,4,0,0"
           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -126,7 +127,7 @@
         <ItemsControl Margin="0,8,0,0" Focusable="False" ItemsSource="{Binding Apps}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Margin="0,0,0,8" Padding="12" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="6">
+              <ui:Card Margin="0,0,0,8" Padding="12">
                 <StackPanel>
                   <Grid>
                     <Grid.ColumnDefinitions>
@@ -178,56 +179,48 @@
                       Icon="{ui:SymbolIcon Delete24}"
                       ToolTip="{loc:Tr App_Remove}" />
                   </Grid>
-                  <Grid Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                  <WrapPanel Margin="0,8,0,0">
                     <ComboBox
                       Width="120"
+                      Margin="0,8,8,0"
                       AutomationProperties.Name="{loc:Tr App_Action}"
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding KindChoices}"
                       SelectedItem="{Binding SelectedKind}" />
                     <ComboBox
-                      Grid.Column="1"
                       Width="160"
-                      Margin="8,0,0,0"
+                      Margin="0,8,8,0"
                       AutomationProperties.Name="{loc:Tr App_When}"
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding WhenChoices}"
                       SelectedItem="{Binding SelectedWhen}"
                       Visibility="{Binding ShowWhen, Converter={StaticResource Visible}}" />
                     <ui:TextBox
-                      Grid.Column="2"
-                      Margin="8,0,0,0"
+                      Width="200"
+                      Margin="0,8,8,0"
                       AutomationProperties.Name="{loc:Tr App_Arguments}"
                       PlaceholderText="{loc:Tr App_Arguments}"
                       Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
                       Visibility="{Binding IsStart, Converter={StaticResource Visible}}" />
                     <ui:NumberBox
-                      Grid.Column="3"
                       Width="110"
-                      Margin="8,0,0,0"
+                      Margin="0,8,0,0"
                       AutomationProperties.Name="{loc:Tr App_Wait}"
                       Maximum="300"
                       Minimum="0"
                       PlaceholderText="{loc:Tr App_Wait}"
                       Value="{Binding WaitSeconds}" />
-                  </Grid>
+                  </WrapPanel>
                 </StackPanel>
-              </Border>
+              </ui:Card>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <ui:Button Margin="0,4,0,0" Click="OnAddApp" Content="{loc:Tr Editor_AddApp}" />
 
         <StackPanel Margin="0,12,0,0">
-          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Editor_AppsWaitDevice}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_AppsWaitDevice}" />
           <ComboBox
-            Margin="0,4,0,0"
             AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
             DisplayMemberPath="Name"
             ItemsSource="{Binding UsbDevices}"
@@ -235,7 +228,7 @@
         </StackPanel>
 
         <!-- The window positions -->
-        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionWindows}" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionWindows}" />
         <TextBlock
           Margin="0,4,0,0"
           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -258,7 +251,7 @@
         </Grid>
 
         <!-- The end -->
-        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionExit}" />
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionExit}" />
         <ComboBox
           Margin="0,8,0,0"
           AutomationProperties.Name="{loc:Tr Game_SectionExit}"
@@ -268,15 +261,18 @@
         <CheckBox Margin="0,8,0,0" Content="{loc:Tr Game_StopApps}" IsChecked="{Binding StopApps}" />
 
         <!-- Starting -->
-        <ui:TextBlock Margin="0,24,0,8" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Game_SectionStart}" />
-        <Grid Margin="0,8,0,0">
+        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr Game_SectionStart}" />
+        <TextBlock Margin="0,8,0,4" Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_Hotkey}" />
+        <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <ui:TextBox
             x:Name="HotkeyBox"
+            AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
             AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
+            ToolTip="{loc:Tr Hotkey_RecordTip}"
             GotKeyboardFocus="OnHotkeyGotFocus"
             IsReadOnly="True"
             LostKeyboardFocus="OnHotkeyLostFocus"
@@ -294,16 +290,18 @@
       </StackPanel>
     </ScrollViewer>
 
-    <StackPanel Grid.Row="2" Margin="24,12,24,20" HorizontalAlignment="Right" Orientation="Horizontal">
-      <ui:Button
-        MinWidth="120"
-        Margin="0,0,8,0"
-        Appearance="Primary"
-        Click="OnSave"
-        Content="{loc:Tr Common_Save}"
-        IsDefault="True"
-        IsEnabled="{Binding CanSave}" />
-      <ui:Button MinWidth="120" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
-    </StackPanel>
+    <Border Grid.Row="2" Padding="24,12" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+        <ui:Button
+          MinWidth="120"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          Click="OnSave"
+          Content="{loc:Tr Common_Save}"
+          IsDefault="True"
+          IsEnabled="{Binding CanSave}" />
+        <ui:Button MinWidth="120" Content="{loc:Tr Common_Cancel}" IsCancel="True" />
+      </StackPanel>
+    </Border>
   </Grid>
 </ui:FluentWindow>

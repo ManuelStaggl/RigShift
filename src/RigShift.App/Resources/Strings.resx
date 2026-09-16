@@ -374,8 +374,10 @@
   <data name="Game_WindowsHint" xml:space="preserve"><value>Arrange your tools as you like them, then save the positions here. They are put back before the game starts.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Save positions now…</value></data>
   <data name="Game_WindowsNone" xml:space="preserve"><value>No positions saved</value></data>
-  <data name="Game_WindowsSaved" xml:space="preserve"><value>{0} window position(s)</value></data>
-  <data name="Game_WindowsSavedAt" xml:space="preserve"><value>{0} window(s), saved {1}</value></data>
+  <data name="Game_WindowsSavedOne" xml:space="preserve"><value>1 window position</value></data>
+  <data name="Game_WindowsSaved" xml:space="preserve"><value>{0} window positions</value></data>
+  <data name="Game_WindowsSavedAtOne" xml:space="preserve"><value>1 window, saved {1}</value></data>
+  <data name="Game_WindowsSavedAt" xml:space="preserve"><value>{0} windows, saved {1}</value></data>
   <data name="Game_WindowsIncomplete" xml:space="preserve"><value>{0} window(s) placed, {1} not</value></data>
   <data name="Game_ExitStay" xml:space="preserve"><value>Leave the screens as they are</value></data>
   <data name="Game_ExitPrevious" xml:space="preserve"><value>Back to the previous profile</value></data>
@@ -390,6 +392,7 @@
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installed Steam and Epic games, read from this PC. No sign-in.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>No installed game found. Use “Browse for program” for everything else.</value></data>
+  <data name="GamePicker_Search" xml:space="preserve"><value>Search installed games</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Browse for program…</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Save window positions</value></data>
   <data name="Capture_Intro" xml:space="preserve"><value>Tick the windows that belong to this game. Their position, size and state are saved.</value></data>

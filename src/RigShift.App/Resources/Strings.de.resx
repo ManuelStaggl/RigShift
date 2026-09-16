@@ -374,7 +374,9 @@
   <data name="Game_WindowsHint" xml:space="preserve"><value>Schieb deine Tools zurecht und speichere die Positionen hier. Sie werden vor dem Spielstart wiederhergestellt.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Positionen jetzt speichern…</value></data>
   <data name="Game_WindowsNone" xml:space="preserve"><value>Keine Positionen gespeichert</value></data>
-  <data name="Game_WindowsSaved" xml:space="preserve"><value>{0} Fensterposition(en)</value></data>
+  <data name="Game_WindowsSavedOne" xml:space="preserve"><value>1 Fensterposition</value></data>
+  <data name="Game_WindowsSaved" xml:space="preserve"><value>{0} Fensterpositionen</value></data>
+  <data name="Game_WindowsSavedAtOne" xml:space="preserve"><value>1 Fenster, gespeichert am {1}</value></data>
   <data name="Game_WindowsSavedAt" xml:space="preserve"><value>{0} Fenster, gespeichert am {1}</value></data>
   <data name="Game_WindowsIncomplete" xml:space="preserve"><value>{0} Fenster gesetzt, {1} nicht</value></data>
   <data name="Game_ExitStay" xml:space="preserve"><value>Bildschirme so lassen</value></data>
@@ -390,6 +392,7 @@
   <data name="GamePicker_Title" xml:space="preserve"><value>Spiel wählen</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>Kein installiertes Spiel gefunden. Für alles andere „Programm suchen“.</value></data>
+  <data name="GamePicker_Search" xml:space="preserve"><value>Installierte Spiele durchsuchen</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Programm suchen…</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Fensterpositionen speichern</value></data>
   <data name="Capture_Intro" xml:space="preserve"><value>Hak die Fenster an, die zu diesem Spiel gehören. Position, Größe und Zustand werden gespeichert.</value></data>
