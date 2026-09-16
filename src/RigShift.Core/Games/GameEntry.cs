@@ -42,6 +42,21 @@ public sealed record GameEntry
     /// <summary>What happens when the game ends. Default <see cref="GameExitKind.Stay"/> – see <see cref="GameExitAction"/>.</summary>
     public GameExitAction Exit { get; set; } = GameExitAction.Stay;
 
+    /// <summary>
+    /// What counts as "the game is over". iRacing is the reason this is a choice: its interface
+    /// (<c>iRacingUI</c>) stays open all evening while the sim itself (<c>iRacingSim64DX11</c>) starts at "Go
+    /// Racing" and ends again on every return to the menu. Hanging the session on the sim would end it between two
+    /// races; hanging it on the interface ends it when the user is really done. Assetto Corsa with Content Manager,
+    /// rFactor 2, Automobilista 2 and DCS are built the same way.
+    /// </summary>
+    public SessionEnd EndsWith { get; set; } = SessionEnd.GameProcess;
+
+    /// <summary>
+    /// Process name of the launcher or interface for <see cref="SessionEnd.LauncherProcess"/>, without extension.
+    /// Prefilled from <see cref="SimTemplates"/> where the game is a known sim.
+    /// </summary>
+    public string? LauncherProcessName { get; init; }
+
     /// <summary>System-wide key combination that starts this game while the tray app runs; <c>null</c> for none.</summary>
     public Hotkey? Hotkey { get; init; }
 
@@ -131,6 +146,19 @@ public sealed record GameExitAction
     /// game ended is the more unpleasant failure case, so it is never the default.
     /// </summary>
     public static GameExitAction Stay { get; } = new() { Kind = GameExitKind.Stay };
+}
+
+/// <summary>What the end of a game session hangs on.</summary>
+public enum SessionEnd
+{
+    /// <summary>The game's own process ended. Right for everything that is one program.</summary>
+    GameProcess,
+
+    /// <summary>
+    /// The launcher or interface ended. Right for sims whose menu outlives the sim – otherwise the session would end
+    /// every time the user goes back to the menu between two races.
+    /// </summary>
+    LauncherProcess,
 }
 
 public enum GameExitKind

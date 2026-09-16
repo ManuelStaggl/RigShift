@@ -16,6 +16,27 @@ public sealed record AppAction
 
     /// <summary>Seconds to wait after this entry before the next one runs.</summary>
     public int WaitSeconds { get; init; }
+
+    /// <summary>
+    /// For a game entry: whether this program runs before or after the game itself. Ignored in a profile, which has
+    /// no game to be before or after. <see cref="AppTiming.BeforeGame"/> is 0 so that every app written before 1.10
+    /// keeps its meaning.
+    /// </summary>
+    public AppTiming When { get; init; }
+}
+
+/// <summary>
+/// When an app runs relative to the game. Sim racing needs both: wheelbase software wants to be up before anything
+/// else sees the device, while SimHub and Crew Chief attach to a session that already runs and therefore come after
+/// the sim – Crew Chief has to be there before you get in the car, not before the sim starts.
+/// </summary>
+public enum AppTiming
+{
+    /// <summary>Before the game starts – wheelbase software, Trading Paints, anything the game must already see.</summary>
+    BeforeGame,
+
+    /// <summary>After the game started – SimHub, Crew Chief, overlays, anything that attaches to a running session.</summary>
+    AfterGame,
 }
 
 public enum AppActionKind

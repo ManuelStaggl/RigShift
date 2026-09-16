@@ -77,7 +77,8 @@ public sealed class GameSessionRunner
             return new GameSessionResult(GameSessionOutcome.ProfileFailed, outcome, null);
         }
 
-        AppsOutcome apps = await _apps.Start(AppPlan.For(game));
+        // Wheelbase software, Trading Paints and anything else the game must already see when it comes up.
+        AppsOutcome apps = await _apps.Start(AppPlan.For(game, AppTiming.BeforeGame));
 
         int? processId = null;
         string? learned = null;
@@ -96,7 +97,8 @@ public sealed class GameSessionRunner
 
             if (processId is null && game.Launch.KnownProcessName() is null)
             {
-                RunningProcess? found = await _learner.LearnAsync(before, game.Launch.InstallFolder, cancellationToken);
+                RunningProcess? found = await _learner.LearnAsync(
+                    before, game.Launch.InstallFolder, cancellationToken, game.LauncherProcessName);
                 if (found is null)
                 {
                     _log.Warning("Game {Game}: no process could be recognised, the session ends here", game.Name);
@@ -108,6 +110,10 @@ public sealed class GameSessionRunner
                 ProcessLearned?.Invoke(this, new GameProcessLearned(game.Id, found.Name));
             }
         }
+
+        // SimHub, Crew Chief and the overlays attach to a session that already runs, so they come after the game.
+        AppsOutcome afterwards = await _apps.Start(AppPlan.For(game, AppTiming.AfterGame));
+        apps = Worse(apps, afterwards);
 
         await WaitForEndAsync(game, processId, learned, cancellationToken);
         _log.Information("Game {Game} ended after {Minutes:0.0} min", game.Name, _time.GetElapsedTime(started).TotalMinutes);
@@ -141,27 +147,54 @@ public sealed class GameSessionRunner
     }
 
     /// <summary>
-    /// Waits for the game to end. With a process id that is exact; otherwise the known name is polled, which is the
-    /// case for a game that was already running when we noticed it.
+    /// Waits for the session to end. For a sim whose interface outlives it – iRacing, Assetto Corsa with Content
+    /// Manager – that is the launcher's process, not the sim's: hanging on the sim would end the session on every
+    /// return to the menu between two races. Otherwise the game's own process decides, exactly where a process id
+    /// is at hand and by polling the name where it is not.
     /// </summary>
     private async Task WaitForEndAsync(GameEntry game, int? processId, string? learned, CancellationToken cancellationToken)
     {
+        if (game.EndsWith == SessionEnd.LauncherProcess && game.LauncherProcessName is { Length: > 0 } launcher)
+        {
+            _log.Information("Game {Game}: the session ends when {Launcher} does", game.Name, launcher);
+            await PollUntilGoneAsync(launcher, cancellationToken);
+            return;
+        }
+
         if (processId is { } id)
         {
             await _processes.WaitForExitAsync(id, cancellationToken);
             return;
         }
 
-        string? name = learned ?? game.Launch.KnownProcessName();
-        if (name is null)
+        if ((learned ?? game.Launch.KnownProcessName()) is { } name)
         {
-            return;
+            await PollUntilGoneAsync(name, cancellationToken);
         }
+    }
 
-        while (_processes.IsRunning(name))
+    private async Task PollUntilGoneAsync(string processName, CancellationToken cancellationToken)
+    {
+        while (_processes.IsRunning(processName))
         {
             await Task.Delay(GameProcessLearner.PollInterval, _time, cancellationToken);
         }
+    }
+
+    /// <summary>The less good of two app outcomes, so one failing group is not hidden by the other succeeding.</summary>
+    private static AppsOutcome Worse(AppsOutcome first, AppsOutcome second)
+    {
+        static int Rank(AppsOutcome outcome) => outcome switch
+        {
+            AppsOutcome.NotConfigured => 0,
+            AppsOutcome.Applied => 1,
+            AppsOutcome.Incomplete => 2,
+            AppsOutcome.DeviceMissing => 3,
+            AppsOutcome.Cancelled => 4,
+            _ => 5,
+        };
+
+        return Rank(second) > Rank(first) ? second : first;
     }
 
     private async Task EndAppsAsync(GameEntry game, CancellationToken cancellationToken)
@@ -173,7 +206,7 @@ public sealed class GameSessionRunner
             return;
         }
 
-        AppPlan stop = AppPlan.For(game).OnlyStopActions();
+        AppPlan stop = AppPlan.StopWhatWasStarted(game);
         if (stop.Apps.Count > 0)
         {
             await _apps.Start(stop).WaitAsync(cancellationToken);

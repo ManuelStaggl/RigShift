@@ -112,6 +112,24 @@ public sealed class GameProcessLearnerTests
         (await learner.LearnAsync(before, installFolder: null, Ct))!.Name.ShouldBe("SomeGame");
     }
 
+    /// <summary>
+    /// iRacing's interface runs from the same folder and starts first, so without being told to ignore it, it
+    /// would be the answer instead of the sim.
+    /// </summary>
+    [Fact]
+    public async Task Learn_IgnoresTheLauncherItWasToldAbout()
+    {
+        var processes = new FakeGameProcesses();
+        var learner = new GameProcessLearner(processes, new AutoAdvanceTimeProvider(), Logger.None);
+        IReadOnlySet<int> before = learner.Snapshot();
+        processes.Running.Add(Process(20, "iRacingUI", InstallFolder + @"\ui\iRacingUI.exe", startedSecondsIn: 1));
+        processes.Running.Add(Process(21, "iRacingSim64DX11", InstallFolder + @"\iRacingSim64DX11.exe", startedSecondsIn: 20));
+
+        RunningProcess? game = await learner.LearnAsync(before, InstallFolder, Ct, ignoreProcessName: "iRacingUI");
+
+        game!.Name.ShouldBe("iRacingSim64DX11");
+    }
+
     [Fact]
     public void IsFromInstallFolder_MatchesOnlyBelowTheFolder()
     {

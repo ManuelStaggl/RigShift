@@ -87,8 +87,10 @@ public sealed class ProcessAppLauncher : IAppLauncher
                 {
                     if (!process.HasExited)
                     {
-                        process.Kill();
-                        _log.Information("Ended process {ProcessId} ({Name})", process.Id, process.ProcessName);
+                        // With its children: sim tools run background agents (telemetry upload, livery sync) that
+                        // outlive the window and would keep the device or the port busy for the next session.
+                        process.Kill(entireProcessTree: true);
+                        _log.Information("Ended process {ProcessId} ({Name}) and its children", process.Id, process.ProcessName);
                     }
                 }
                 catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or NotSupportedException)

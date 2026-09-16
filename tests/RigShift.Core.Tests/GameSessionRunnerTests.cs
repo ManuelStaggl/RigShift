@@ -255,6 +255,103 @@ public sealed class GameSessionRunnerTests
         await _switcher.DidNotReceive().SwitchAsync(Arg.Any<Profile>(), Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>
+    /// Wheelbase software has to be up before the game sees the device; SimHub and Crew Chief attach to a session
+    /// that already runs and would find nothing if they started first.
+    /// </summary>
+    [Fact]
+    public async Task Run_StartsTheAppsBeforeAndAfterTheGameInThatOrder()
+    {
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction>
+            {
+                new() { Kind = AppActionKind.Start, Path = @"C:\Fanatec\FanaLab.exe", When = AppTiming.BeforeGame },
+                new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame },
+                new() { Kind = AppActionKind.Start, Path = @"C:\CrewChief\CrewChiefV4.exe", When = AppTiming.AfterGame },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(4711);
+
+        await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        Received.InOrder(() =>
+        {
+            _apps.Start(@"C:\Fanatec\FanaLab.exe", null);
+            _starter.Start(Arg.Any<GameLaunch>());
+            _apps.Start(@"C:\SimHub\SimHubWPF.exe", null);
+            _apps.Start(@"C:\CrewChief\CrewChiefV4.exe", null);
+        });
+    }
+
+    /// <summary>Waiting half a minute for a wheelbase must not hold up Crew Chief once the game already runs.</summary>
+    [Fact]
+    public async Task Run_OnlyTheAppsBeforeTheGameWaitForTheUsbDevice()
+    {
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame } },
+            AppsWaitForUsbDeviceId = "VID_16D0&PID_0D5A",
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(4711);
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Apps.ShouldBe(AppsOutcome.Applied);
+        _apps.Received().Start(@"C:\SimHub\SimHubWPF.exe", null);
+    }
+
+    /// <summary>
+    /// iRacing: hanging the session on the sim would end it on every return to the menu between two races, so it
+    /// hangs on the interface instead.
+    /// </summary>
+    [Fact]
+    public async Task Run_ForASimWhoseInterfaceOutlivesIt_WaitsForTheInterface()
+    {
+        GameEntry game = Game(new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410", ProcessName = "iRacingSim64DX11" })
+            with
+        { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+        _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
+        // The session keeps waiting while the interface is up; only its end ends the session.
+        _processes.OnIsRunning = call =>
+        {
+            if (call >= 3)
+            {
+                _processes.Running.Clear();
+            }
+        };
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _processes.IsRunningCalls.ShouldBeGreaterThan(1);
+    }
+
+    /// <summary>A dashboard has to go down before the wheelbase software it talks to.</summary>
+    [Fact]
+    public async Task Run_EndsTheAppsInReverseOrder()
+    {
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction>
+            {
+                new() { Kind = AppActionKind.Start, Path = @"C:\Fanatec\FanaLab.exe", When = AppTiming.BeforeGame },
+                new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(4711);
+        _apps.IsRunning(Arg.Any<string>()).Returns(false, false, true, true);
+
+        await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        Received.InOrder(() =>
+        {
+            _apps.StopAsync(@"C:\SimHub\SimHubWPF.exe", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            _apps.StopAsync(@"C:\Fanatec\FanaLab.exe", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+        });
+    }
+
     /// <summary>A profile that was deleted must not stop the game from starting.</summary>
     [Fact]
     public async Task Run_WithAProfileThatIsGone_StartsTheGameAnyway()

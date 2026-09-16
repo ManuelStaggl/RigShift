@@ -20,14 +20,30 @@ internal sealed record AppPlan(
     public static AppPlan For(Profile profile) => new(
         profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName);
 
-    public static AppPlan For(GameEntry game) => new(
-        game.Name, game.Apps, game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName);
+    /// <summary>
+    /// The apps of a game that run at <paramref name="when"/>. Only the ones before the game wait for the USB
+    /// device: once the game runs, waiting half a minute for a wheelbase would hold up Crew Chief for no reason.
+    /// </summary>
+    public static AppPlan For(GameEntry game, AppTiming when) => new(
+        game.Name,
+        [.. game.Apps.Where(a => a.When == when)],
+        when == AppTiming.BeforeGame ? game.AppsWaitForUsbDeviceId : null,
+        when == AppTiming.BeforeGame ? game.AppsWaitForUsbDeviceName : null);
 
-    /// <summary>The same apps, but only the ones to end – what a game's exit runs.</summary>
-    public AppPlan OnlyStopActions() => this with
+    /// <summary>
+    /// Everything a game started, turned into actions that end it again – what a game's exit runs. In reverse order,
+    /// so a dashboard goes down before the wheelbase software it talks to.
+    /// </summary>
+    public static AppPlan StopWhatWasStarted(GameEntry game)
     {
-        Apps = [.. Apps.Where(a => a.Kind == AppActionKind.Start).Select(a => a with { Kind = AppActionKind.Stop, WaitSeconds = 0 })],
-        WaitForUsbDeviceId = null,
-        WaitForUsbDeviceName = null,
-    };
+        ArgumentNullException.ThrowIfNull(game);
+        return new AppPlan(
+            game.Name,
+            [.. game.Apps
+                .Where(a => a.Kind == AppActionKind.Start)
+                .Reverse()
+                .Select(a => a with { Kind = AppActionKind.Stop, WaitSeconds = 0 })],
+            null,
+            null);
+    }
 }

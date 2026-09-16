@@ -47,8 +47,13 @@ public sealed class GameProcessLearner(IGameProcesses processes, TimeProvider ti
     /// The game's folder. Processes running from it are the game; everything else is the store client, an overlay or
     /// a helper. Without a folder every new process qualifies, which is why the caller then has to ask the user.
     /// </param>
+    /// <param name="ignoreProcessName">
+    /// A launcher or interface that is known to sit in front of the game and to run from the same folder, such as
+    /// iRacing's. Without this it would be the answer, being both new and the first to start.
+    /// </param>
     /// <returns>The game's process, or <c>null</c> when nothing showed up in time.</returns>
-    public async Task<RunningProcess?> LearnAsync(IReadOnlySet<int> before, string? installFolder, CancellationToken cancellationToken)
+    public async Task<RunningProcess?> LearnAsync(
+        IReadOnlySet<int> before, string? installFolder, CancellationToken cancellationToken, string? ignoreProcessName = null)
     {
         ArgumentNullException.ThrowIfNull(before);
         DateTimeOffset deadline = _time.GetUtcNow() + Timeout;
@@ -57,7 +62,7 @@ public sealed class GameProcessLearner(IGameProcesses processes, TimeProvider ti
 
         while (true)
         {
-            foreach (RunningProcess process in Candidates(before, installFolder))
+            foreach (RunningProcess process in Candidates(before, installFolder, ignoreProcessName))
             {
                 if (candidates.TryAdd(process.Id, process))
                 {
@@ -100,14 +105,18 @@ public sealed class GameProcessLearner(IGameProcesses processes, TimeProvider ti
         return game;
     }
 
-    private IEnumerable<RunningProcess> Candidates(IReadOnlySet<int> before, string? installFolder)
+    private IEnumerable<RunningProcess> Candidates(IReadOnlySet<int> before, string? installFolder, string? ignoreProcessName)
     {
         foreach (RunningProcess process in _processes.List())
         {
-            if (!before.Contains(process.Id) && IsFromInstallFolder(process, installFolder))
+            if (before.Contains(process.Id)
+                || string.Equals(process.Name, ignoreProcessName, StringComparison.OrdinalIgnoreCase)
+                || !IsFromInstallFolder(process, installFolder))
             {
-                yield return process;
+                continue;
             }
+
+            yield return process;
         }
     }
 

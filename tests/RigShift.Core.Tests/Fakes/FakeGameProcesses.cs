@@ -24,7 +24,17 @@ internal sealed class FakeGameProcesses : IGameProcesses
         return [.. _running];
     }
 
+    /// <summary>Called with the number of <see cref="IsRunning"/> calls so far, before the answer is given.</summary>
+    public Action<int>? OnIsRunning { get; set; }
+
+    public int IsRunningCalls { get; private set; }
+
     public Task WaitForExitAsync(int processId, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public bool IsRunning(string processName) => _running.Exists(p => string.Equals(p.Name, processName, StringComparison.OrdinalIgnoreCase));
+    public bool IsRunning(string processName)
+    {
+        IsRunningCalls++;
+        OnIsRunning?.Invoke(IsRunningCalls);
+        return _running.Exists(p => string.Equals(p.Name, processName, StringComparison.OrdinalIgnoreCase));
+    }
 }
