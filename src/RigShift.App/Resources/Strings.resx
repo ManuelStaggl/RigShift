@@ -435,4 +435,27 @@
   <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (main display)</value></data>
   <data name="Topology_Empty" xml:space="preserve"><value>No displays</value></data>
   <data name="Topology_Missing" xml:space="preserve"><value>missing</value></data>
+  <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Overview_Now" xml:space="preserve"><value>Showing now</value></data>
+  <data name="Overview_Empty" xml:space="preserve"><value>No active display. Details are in the log.</value></data>
+  <data name="Overview_ActiveProfile" xml:space="preserve"><value>Active profile</value></data>
+  <data name="Overview_NoActiveHint" xml:space="preserve"><value>No saved profile matches this arrangement.</value></data>
+  <data name="Overview_SwitchedAgo" xml:space="preserve"><value>Switched {0} · {1}</value></data>
+  <data name="Overview_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile</value></data>
+  <data name="Overview_SetupTitle" xml:space="preserve"><value>Set up RigShift</value></data>
+  <data name="Overview_SetupText" xml:space="preserve"><value>Save two setups, optionally a USB device as trigger. Takes three minutes.</value></data>
+  <data name="Overview_SetupStart" xml:space="preserve"><value>Start assistant</value></data>
+  <data name="Overview_SetupManual" xml:space="preserve"><value>Set up by hand</value></data>
+  <data name="Overview_Displays" xml:space="preserve"><value>Displays</value></data>
+  <data name="Overview_DisplaysHint" xml:space="preserve"><value>Names appear in profiles, rules and messages. Enter saves.</value></data>
+  <data name="Overview_ColDisplay" xml:space="preserve"><value>Display</value></data>
+  <data name="Overview_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="Overview_ColMode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Overview_ColName" xml:space="preserve"><value>Name</value></data>
+  <data name="Overview_ColProfiles" xml:space="preserve"><value>In profiles</value></data>
+  <data name="Overview_History" xml:space="preserve"><value>Recent switches</value></data>
+  <data name="Time_JustNow" xml:space="preserve"><value>just now</value></data>
+  <data name="Time_MinutesAgo" xml:space="preserve"><value>{0} min ago</value></data>
+  <data name="Time_Today" xml:space="preserve"><value>today {0}</value></data>
+  <data name="Time_Yesterday" xml:space="preserve"><value>yesterday {0}</value></data>
 </root>

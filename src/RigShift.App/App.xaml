@@ -3,6 +3,7 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
   ShutdownMode="OnExplicitShutdown">
   <Application.Resources>
     <ResourceDictionary>
@@ -14,6 +15,7 @@
         <ResourceDictionary Source="Resources/Controls.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+      <controls:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
 
       <!-- Layout of the Windows settings: content 24 from the edge and at most 1000 wide, cards 4 apart within a group,
            groups 24 apart under a 14 px semibold heading, one line of caption text below a card's header. -->

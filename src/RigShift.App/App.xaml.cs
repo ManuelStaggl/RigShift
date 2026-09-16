@@ -420,14 +420,14 @@ public partial class App : Application, IAppShell
         services.AddSingleton<TrayPopupView>();
         services.AddSingleton<ProfilesViewModel>();
         services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<DisplaysViewModel>();
+        services.AddSingleton<OverviewViewModel>();
         services.AddSingleton<AutomationViewModel>();
         services.AddSingleton<AboutViewModel>();
         services.AddSingleton<GamesViewModel>();
         services.AddSingleton<GamesPage>();
         services.AddSingleton<ProfilesPage>();
         services.AddSingleton<SettingsPage>();
-        services.AddSingleton<DisplaysPage>();
+        services.AddSingleton<OverviewPage>();
         services.AddSingleton<AutomationPage>();
         services.AddSingleton<AboutPage>();
         services.AddSingleton<MainWindow>();

@@ -1,0 +1,254 @@
+<Page
+  x:Class="RigShift.App.Views.Pages.OverviewPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  d:DataContext="{d:DesignInstance vm:OverviewViewModel}"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  Background="{DynamicResource RigShift.Brush.Page}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_Overview}" />
+
+      <controls:InfoBar
+        Margin="0,12,0,0"
+        Kind="Error"
+        Text="{Binding ErrorMessage}"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+      <!-- Live picture and the active profile (or the setup card while there are no profiles). -->
+      <Grid Margin="0,20,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="24" />
+          <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+
+        <ContentControl Grid.Column="0" Style="{StaticResource RigShift.TopologyPanel}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <DockPanel Grid.Row="0" LastChildFill="False">
+              <TextBlock
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{loc:Tr Overview_Now}" />
+              <Button
+                Height="28"
+                Command="{Binding IdentifyCommand}"
+                Content="{loc:Tr Displays_Identify}"
+                DockPanel.Dock="Right"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr Displays_IdentifyTip}" />
+            </DockPanel>
+            <controls:DisplayTopology
+              Grid.Row="1"
+              Height="150"
+              Margin="0,12,0,0"
+              Displays="{Binding LiveTopology}"
+              Size="M"
+              Visibility="{Binding IsEmpty, Converter={StaticResource InverseBoolToVisibility}}" />
+            <TextBlock
+              Grid.Row="1"
+              Margin="0,12,0,0"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Style="{StaticResource RigShift.Text.Body}"
+              Text="{loc:Tr Overview_Empty}"
+              Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+          </Grid>
+        </ContentControl>
+
+        <!-- Active profile -->
+        <Border
+          Grid.Column="2"
+          Style="{StaticResource RigShift.Card}"
+          Visibility="{Binding HasProfiles, Converter={StaticResource BoolToVisibility}}">
+          <DockPanel>
+            <TextBlock
+              DockPanel.Dock="Top"
+              Style="{StaticResource RigShift.Text.Caption}"
+              Text="{loc:Tr Overview_ActiveProfile}" />
+            <StackPanel
+              Margin="0,6,0,0"
+              DockPanel.Dock="Top"
+              Orientation="Horizontal">
+              <controls:ProfileIcon
+                Width="20"
+                Height="20"
+                Margin="0,0,10,0"
+                VerticalAlignment="Center"
+                TextElement.Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                IconKey="{Binding ActiveIconKey}" />
+              <TextBlock
+                VerticalAlignment="Center"
+                Style="{StaticResource RigShift.Text.Subtitle}"
+                Text="{Binding ActiveName}"
+                TextTrimming="CharacterEllipsis"
+                TextWrapping="NoWrap" />
+            </StackPanel>
+            <StackPanel
+              Margin="0,8,0,0"
+              DockPanel.Dock="Top"
+              Orientation="Horizontal">
+              <ContentControl
+                Content="{Binding ActiveHotkey}"
+                Style="{StaticResource RigShift.Chip.Mono}"
+                Visibility="{Binding HasActiveHotkey, Converter={StaticResource BoolToVisibility}}" />
+              <ContentControl
+                Margin="6,0,0,0"
+                Content="{loc:Tr Profile_Default}"
+                Style="{StaticResource RigShift.Chip}"
+                Visibility="{Binding ActiveIsDefault, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <Button
+              Margin="-8,4,0,-4"
+              HorizontalAlignment="Left"
+              Height="28"
+              Padding="8,0"
+              Command="{Binding SaveCurrentCommand}"
+              DockPanel.Dock="Bottom"
+              Style="{StaticResource RigShift.Button.Ghost}">
+              <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Add16" />
+                <TextBlock Text="{loc:Tr Overview_SaveCurrent}" />
+              </StackPanel>
+            </Button>
+            <Border
+              Margin="0,10,0,6"
+              DockPanel.Dock="Bottom"
+              Style="{StaticResource RigShift.Divider}" />
+            <controls:StatusLine
+              VerticalAlignment="Bottom"
+              DockPanel.Dock="Bottom"
+              Kind="{Binding ActiveStatusKind}"
+              Text="{Binding ActiveStatusText}" />
+            <Border />
+          </DockPanel>
+        </Border>
+
+        <!-- First start: no profiles yet -->
+        <Border
+          Grid.Column="2"
+          Style="{StaticResource RigShift.Card}"
+          Visibility="{Binding HasProfiles, Converter={StaticResource InverseBoolToVisibility}}">
+          <DockPanel>
+            <TextBlock
+              DockPanel.Dock="Top"
+              Style="{StaticResource RigShift.Text.BodyStrong}"
+              Text="{loc:Tr Overview_SetupTitle}" />
+            <TextBlock
+              Margin="0,4,0,0"
+              DockPanel.Dock="Top"
+              Style="{StaticResource RigShift.Text.Caption}"
+              Text="{loc:Tr Overview_SetupText}" />
+            <Button
+              Margin="0,8,0,0"
+              Command="{Binding SetupManuallyCommand}"
+              Content="{loc:Tr Overview_SetupManual}"
+              DockPanel.Dock="Bottom"
+              Style="{StaticResource RigShift.Button.Ghost}" />
+            <Button
+              Command="{Binding SetupAssistantCommand}"
+              Content="{loc:Tr Overview_SetupStart}"
+              DockPanel.Dock="Bottom"
+              Style="{StaticResource RigShift.Button.Primary}" />
+            <Border />
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <!-- Displays: names are saved on Enter or when the field loses focus (F6). -->
+      <StackPanel Margin="0,24,0,0" Orientation="Horizontal">
+        <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_Displays}" />
+        <TextBlock
+          Margin="12,0,0,0"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{loc:Tr Overview_DisplaysHint}" />
+      </StackPanel>
+      <Grid Height="28" Margin="0,4,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="36" />
+          <ColumnDefinition Width="166" />
+          <ColumnDefinition Width="206" />
+          <ColumnDefinition Width="186" />
+          <ColumnDefinition Width="216" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_ColDisplay}" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColStatus}" />
+        <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColMode}" />
+        <TextBlock Grid.Column="4" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColName}" />
+        <TextBlock Grid.Column="5" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColProfiles}" />
+      </Grid>
+      <ItemsControl ItemsSource="{Binding Displays}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:DisplayCard}">
+            <Border Height="36" Style="{StaticResource RigShift.Divider}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="36" />
+                  <ColumnDefinition Width="166" />
+                  <ColumnDefinition Width="206" />
+                  <ColumnDefinition Width="186" />
+                  <ColumnDefinition Width="216" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding NumberText}" />
+                <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ModelName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                <controls:StatusLine Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" Kind="{Binding StateKind}" Text="{Binding StateText}" />
+                <TextBlock Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding ModeText}" />
+                <TextBox
+                  Grid.Column="4"
+                  Width="180"
+                  Height="28"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{loc:Tr Overview_ColName}"
+                  KeyDown="OnNameKeyDown"
+                  LostFocus="OnNameLostFocus"
+                  MaxLength="40"
+                  Style="{StaticResource RigShift.Field}"
+                  Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Grid.Column="5" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding ProfilesText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Recent switches: same wording as the toast (R-FLOW-2). -->
+      <StackPanel Margin="0,24,0,0" Visibility="{Binding HasHistory, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_History}" />
+        <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding History}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:HistoryRow}">
+              <Border Height="32" Style="{StaticResource RigShift.Divider}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="126" />
+                    <ColumnDefinition Width="166" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding TimeText}" />
+                  <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ProfileName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                  <controls:StatusLine Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" Kind="{Binding Kind}" Text="{Binding ResultText}" />
+                  <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding DurationText}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

@@ -435,4 +435,27 @@
   <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (Hauptanzeige)</value></data>
   <data name="Topology_Empty" xml:space="preserve"><value>Keine Bildschirme</value></data>
   <data name="Topology_Missing" xml:space="preserve"><value>fehlt</value></data>
+  <data name="Nav_Overview" xml:space="preserve"><value>Übersicht</value></data>
+  <data name="Overview_Now" xml:space="preserve"><value>Jetzt angezeigt</value></data>
+  <data name="Overview_Empty" xml:space="preserve"><value>Kein aktiver Bildschirm. Details stehen im Log.</value></data>
+  <data name="Overview_ActiveProfile" xml:space="preserve"><value>Aktives Profil</value></data>
+  <data name="Overview_NoActiveHint" xml:space="preserve"><value>Kein Profil passt zur aktuellen Anordnung.</value></data>
+  <data name="Overview_SwitchedAgo" xml:space="preserve"><value>Umgeschaltet {0} · {1}</value></data>
+  <data name="Overview_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern</value></data>
+  <data name="Overview_SetupTitle" xml:space="preserve"><value>RigShift einrichten</value></data>
+  <data name="Overview_SetupText" xml:space="preserve"><value>Zwei Aufbauten speichern, optional ein USB-Gerät als Auslöser. Dauert drei Minuten.</value></data>
+  <data name="Overview_SetupStart" xml:space="preserve"><value>Assistent starten</value></data>
+  <data name="Overview_SetupManual" xml:space="preserve"><value>Selbst einrichten</value></data>
+  <data name="Overview_Displays" xml:space="preserve"><value>Bildschirme</value></data>
+  <data name="Overview_DisplaysHint" xml:space="preserve"><value>Namen erscheinen in Profilen, Regeln und Meldungen. Enter speichert.</value></data>
+  <data name="Overview_ColDisplay" xml:space="preserve"><value>Bildschirm</value></data>
+  <data name="Overview_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="Overview_ColMode" xml:space="preserve"><value>Modus</value></data>
+  <data name="Overview_ColName" xml:space="preserve"><value>Name</value></data>
+  <data name="Overview_ColProfiles" xml:space="preserve"><value>In Profilen</value></data>
+  <data name="Overview_History" xml:space="preserve"><value>Letzte Wechsel</value></data>
+  <data name="Time_JustNow" xml:space="preserve"><value>gerade eben</value></data>
+  <data name="Time_MinutesAgo" xml:space="preserve"><value>vor {0} Min.</value></data>
+  <data name="Time_Today" xml:space="preserve"><value>heute {0}</value></data>
+  <data name="Time_Yesterday" xml:space="preserve"><value>gestern {0}</value></data>
 </root>

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Profiles;
@@ -6,14 +7,14 @@ using RigShift.Core.Topology;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>One attached monitor on the displays page. The name is saved when the field loses focus or on Enter.</summary>
+/// <summary>One attached monitor in the overview's table. The name is saved when the field loses focus or on Enter.</summary>
 public sealed partial class DisplayCard : ObservableObject
 {
-    private readonly DisplaysViewModel _owner;
+    private readonly OverviewViewModel _owner;
     private readonly DisplayIdentity _identity;
     private string? _savedName;
 
-    public DisplayCard(DisplaysViewModel owner, AttachedDisplay display, int? number, string? customName, string profilesText)
+    public DisplayCard(OverviewViewModel owner, AttachedDisplay display, int? number, string? customName, string profilesText)
     {
         ArgumentNullException.ThrowIfNull(display);
 
@@ -25,13 +26,14 @@ public sealed partial class DisplayCard : ObservableObject
         Mode = display.ActiveMode;
         ProfilesText = profilesText;
 
-        string state = display.IsActive
-            ? Loc.Instance[display.ActiveMode?.IsPrimary == true ? "Displays_StatePrimary" : "Displays_StateActive"]
-            : Loc.Instance[display.IsAvailable ? "Displays_StateOff" : "Displays_StateNotReady"];
-        DetailsText = Mode is { } mode
-            ? state + " · " + Loc.Format("Displays_Mode", mode.Width, mode.Height,
-                RefreshRate.Of(mode).Hertz.ToString("0.##", Loc.Instance.Culture))
-            : state;
+        (StateKind, StateText) = display.IsActive
+            ? (StatusKind.Ok, Loc.Instance[display.ActiveMode?.IsPrimary == true ? "Displays_StatePrimary" : "Displays_StateActive"])
+            : display.IsAvailable
+                ? (StatusKind.Neutral, Loc.Instance["Displays_StateOff"])
+                : (StatusKind.Error, Loc.Instance["Displays_StateNotReady"]);
+        ModeText = Mode is { } mode
+            ? Loc.Format("Displays_Mode", mode.Width, mode.Height, RefreshRate.Of(mode).Hertz.ToString("0.##", Loc.Instance.Culture))
+            : "—";
     }
 
     public string TargetDevicePath => _identity.TargetDevicePath;
@@ -47,7 +49,12 @@ public sealed partial class DisplayCard : ObservableObject
 
     public string Name => SwitchMessages.NameOf(DisplayNames.Normalize(CustomName), _identity);
 
-    public string DetailsText { get; }
+    public StatusKind StateKind { get; }
+
+    public string StateText { get; }
+
+    /// <summary>"3840 × 2160 @ 165 Hz", or a dash while the display is not in use.</summary>
+    public string ModeText { get; }
 
     public string ProfilesText { get; }
 
