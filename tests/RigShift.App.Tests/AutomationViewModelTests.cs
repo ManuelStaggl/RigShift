@@ -52,7 +52,7 @@ public sealed class AutomationViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task AddDevice_PicksAnotherDevice_RemoveGoesBackToOne()
+    public async Task AddDevice_PicksAnotherDevice_RemoveEmptiesTheRule()
     {
         AutomationViewModel viewModel = await CreateAsync(RuleFor(Wheelbase));
         RuleCard card = viewModel.Rules[0];
@@ -63,10 +63,15 @@ public sealed class AutomationViewModelTests : IDisposable
         card.DevicesText.ShouldBe("Wheelbase + Dongle");
 
         card.RemoveDeviceCommand.Execute(card.Devices[0]);
+        await viewModel.PendingSave;
+        card.ToRule().Devices.ShouldNotBeNull().ShouldHaveSingleItem().Id.ShouldBe(Dongle);
+
+        // Removing the last device keeps the rule with one empty slot (the trigger tab's chips allow that).
         card.RemoveDeviceCommand.Execute(card.Devices[0]);
         await viewModel.PendingSave;
-
-        card.ToRule().Devices.ShouldNotBeNull().ShouldHaveSingleItem().Id.ShouldBe(Dongle);
+        card.ToRule().Devices.ShouldNotBeNull().ShouldBeEmpty();
+        card.HasDevices.ShouldBeFalse();
+        card.Devices.ShouldHaveSingleItem().SelectedDevice.ShouldBeNull();
     }
 
     [Fact]
@@ -153,7 +158,7 @@ public sealed class AutomationViewModelTests : IDisposable
         Profile desk = Profile("Desk", []);
         Profile tv = Profile("TV", []);
 
-        AutomationViewModel.NewRuleProfiles([tv, desk, _rig], desk.Id).ShouldBe((tv.Id, desk.Id));
+        RuleExits.NewRuleProfiles([tv, desk, _rig], desk.Id).ShouldBe((tv.Id, desk.Id));
     }
 
     [Fact]
@@ -161,8 +166,8 @@ public sealed class AutomationViewModelTests : IDisposable
     {
         Profile desk = Profile("Desk", []);
 
-        AutomationViewModel.NewRuleProfiles([desk, _rig], null).ShouldBe((_rig.Id, desk.Id));
-        AutomationViewModel.NewRuleProfiles([_rig], Guid.NewGuid()).ShouldBe((_rig.Id, _rig.Id));
+        RuleExits.NewRuleProfiles([desk, _rig], null).ShouldBe((_rig.Id, desk.Id));
+        RuleExits.NewRuleProfiles([_rig], Guid.NewGuid()).ShouldBe((_rig.Id, _rig.Id));
     }
 
     [Fact]
