@@ -1,3 +1,5 @@
+using RigShift.Core.Abstractions;
+
 namespace RigShift.Core.Topology;
 
 /// <summary>Outcome of one profile switch, surfaced to the UI (toast/status) and to the CLI exit code.</summary>
@@ -21,6 +23,12 @@ public sealed record SwitchResult
 
     /// <summary>Audio is judged separately: an audio problem never fails the display switch.</summary>
     public AudioOutcome Audio { get; init; } = AudioOutcome.NotConfigured;
+
+    /// <summary>
+    /// What happened to NVIDIA Surround. Unlike audio this one can stop a switch: a grid that was not built means the
+    /// arrangement the profile describes does not exist.
+    /// </summary>
+    public SurroundOutcome Surround { get; init; } = SurroundOutcome.NotConfigured;
 
     /// <summary>
     /// Apps are judged separately too; they only run after a confirmed switch. <see cref="AppsOutcome.Pending"/> when they

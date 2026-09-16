@@ -12,7 +12,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 
-// Usage: RigShift.Probe snapshot [--raw] | rates | audio | apps | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
+// Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | apps | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>
 // Output may contain device paths and endpoint IDs of this machine – do not paste it into public issues unredacted.
 
 var jsonOptions = new JsonSerializerOptions
@@ -56,6 +56,22 @@ switch (command)
         }
 
         break;
+
+    case "surround":
+        {
+            // Read-only: what the graphics driver reports about NVIDIA Surround, and which display ids it offers.
+            using var surround = new NvSurroundController(display, log);
+            SurroundState state = await surround.QueryAsync(CancellationToken.None);
+            Print(new
+            {
+                state.Availability,
+                state.IsActive,
+                state.Message,
+                state.Grids,
+                Displays = await surround.ListDisplaysAsync(CancellationToken.None),
+            });
+            break;
+        }
 
     case "audio":
         var audio = new PolicyConfigAudioController(log);
@@ -128,7 +144,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 

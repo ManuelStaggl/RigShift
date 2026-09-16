@@ -30,6 +30,7 @@ public sealed class SwitchOrchestratorTests
     private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
     private readonly InMemorySwitchJournal _journal = new();
+    private readonly FakeSurroundController _surround = new();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -1237,6 +1238,6 @@ public sealed class SwitchOrchestratorTests
     }
 
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
-        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
+        new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, _surround, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
             options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
 }

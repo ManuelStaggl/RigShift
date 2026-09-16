@@ -28,6 +28,7 @@ internal sealed class AppTestHost : IDisposable
             new FakeDuckingPreference(),
             new InMemoryDuckingMemory(),
             Substitute.For<IWindowRescuer>(),
+            Surround,
             Confirmation,
             new InMemorySwitchJournal(),
             planner,
@@ -48,6 +49,8 @@ internal sealed class AppTestHost : IDisposable
     public IFullscreenCheck Fullscreen { get; } = Substitute.For<IFullscreenCheck>();
 
     public ISwitchConfirmation Confirmation { get; } = Substitute.For<ISwitchConfirmation>();
+
+    public FakeSurroundController Surround { get; } = new();
 
     public SettingsService Settings { get; }
 

@@ -35,6 +35,7 @@ public sealed class SwitchOrchestrator
     private readonly AudioSwitcher _audioSwitcher;
     private readonly AppRunner _appRunner;
     private readonly DuckingSwitcher _duckingSwitcher;
+    private readonly SurroundSwitcher _surroundSwitcher;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -45,6 +46,7 @@ public sealed class SwitchOrchestrator
         IDuckingPreference ducking,
         IDuckingMemory duckingMemory,
         IWindowRescuer windows,
+        ISurroundController surround,
         ISwitchConfirmation confirmation,
         ISwitchJournal journal,
         TopologyPlanner planner,
@@ -60,6 +62,7 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(ducking);
         ArgumentNullException.ThrowIfNull(duckingMemory);
         ArgumentNullException.ThrowIfNull(windows);
+        ArgumentNullException.ThrowIfNull(surround);
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(journal);
         ArgumentNullException.ThrowIfNull(planner);
@@ -79,6 +82,7 @@ public sealed class SwitchOrchestrator
         _audioSwitcher = new AudioSwitcher(audio, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
+        _surroundSwitcher = new SurroundSwitcher(surround, _log);
     }
 
     /// <summary>
@@ -110,7 +114,57 @@ public sealed class SwitchOrchestrator
         _ = CancelPendingAppsAsync();
 
         DisplaySnapshot before = await _display.QueryAsync(cancellationToken);
-        TopologyPlan plan = _planner.Plan(profile, before);
+        SurroundSetting? surroundBefore = await _surroundSwitcher.CaptureAsync(profile, cancellationToken);
+        DisplaySnapshot planFrom = before;
+        bool recorded = false;
+
+        // Record the way back before the first change, not after: the crash this guards against can happen in between
+        // (plan point 22). A switch that never gets that far leaves no record at all.
+        async Task RecordAsync(CancellationToken token)
+        {
+            if (!recorded)
+            {
+                recorded = true;
+                await _journal.BeginAsync(
+                    new InterruptedSwitch
+                    {
+                        Previous = PreviousTopology(before) with { Surround = surroundBefore },
+                        TargetProfileName = profile.Name,
+                        StartedUtc = _time.GetUtcNow(),
+                    },
+                    token);
+            }
+        }
+
+        // Surround first: switching it on or off turns several monitors into one wide one and back, so it decides which
+        // displays the arrangement can address at all - planning before it would plan against displays about to vanish.
+        SurroundApplyResult surround = SurroundApplyResult.NotConfigured;
+        if (profile.Surround is not null)
+        {
+            await RecordAsync(cancellationToken);
+            surround = await _surroundSwitcher.SwitchAsync(profile, cancellationToken);
+            if (surround.Outcome == SurroundOutcome.Failed)
+            {
+                // Nothing else was touched yet, so this is a block, not a half-finished switch.
+                return await Finish(
+                    new SwitchResult
+                    {
+                        Outcome = SwitchOutcome.Blocked,
+                        Plan = _planner.Plan(profile, before),
+                        Surround = surround.Outcome,
+                        Message = surround.Message,
+                    },
+                    started);
+            }
+
+            if (surround.Outcome == SurroundOutcome.Changed)
+            {
+                // Plan against what exists now. `before` stays the state to return to, which is the one before Surround.
+                planFrom = await _display.QueryAsync(cancellationToken);
+            }
+        }
+
+        TopologyPlan plan = _planner.Plan(profile, planFrom);
         LogPlan(plan);
 
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
@@ -129,7 +183,10 @@ public sealed class SwitchOrchestrator
         if (BlockReason(plan) is { } blocked)
         {
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
-            return await Finish(new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Message = blocked }, started);
+            await _surroundSwitcher.RestoreAsync(surroundBefore, cancellationToken);
+            return await Finish(
+                new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Surround = surround.Outcome, Message = blocked },
+                started);
         }
 
         // Waiting for a sleeping display may have used up most of the budget; a display that wakes late and then answers
@@ -150,20 +207,12 @@ public sealed class SwitchOrchestrator
         bool? keepAwakeBefore = confirm ? _power.IsKeepingAwake : null;
         DuckingSwitcher.DuckingRestore? duckingRestore = confirm ? await _duckingSwitcher.CaptureAsync(profile, cancellationToken) : null;
 
-        // From here on the screens change. Record the way back before the first apply, not after: the crash this guards
-        // against can happen in between (plan point 22).
-        await _journal.BeginAsync(new InterruptedSwitch
-        {
-            Previous = PreviousTopology(before),
-            TargetProfileName = profile.Name,
-            StartedUtc = _time.GetUtcNow(),
-        }, cancellationToken);
-
+        await RecordAsync(cancellationToken);
         ApplyOutcome applied = await ApplyWithRetryAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
-            SwitchNote restored = await RestoreAfterFailureAsync(before, cancellationToken);
+            SwitchNote restored = await RestoreAfterFailureAsync(before, surroundBefore, cancellationToken);
             return await Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
@@ -171,6 +220,7 @@ public sealed class SwitchOrchestrator
                 Attempts = applied.Attempts,
                 LastNativeError = applied.LastNativeError,
                 Message = applied.Message,
+                Surround = surround.Outcome,
                 Note = restored,
             }, started);
         }
@@ -224,6 +274,9 @@ public sealed class SwitchOrchestrator
 
                 RestoreKeepAwake(keepAwakeBefore);
                 await _duckingSwitcher.RestoreAsync(duckingRestore, rollbackToken);
+
+                // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
+                await _surroundSwitcher.RestoreAsync(surroundBefore, rollbackToken);
                 SwitchResult rolledBack = await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, rollbackToken);
                 if (cancelled)
                 {
@@ -256,6 +309,7 @@ public sealed class SwitchOrchestrator
             Audio = audio,
             Apps = apps,
             AppsCompletion = appsRun,
+            Surround = surround.Outcome,
             Note = modes.Note,
         }, started);
     }
@@ -395,7 +449,7 @@ public sealed class SwitchOrchestrator
             profile.Name, outcome, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
 
         // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
-        SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, cancellationToken);
+        SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, null, cancellationToken);
 
         return await Finish(new SwitchResult
         {
@@ -464,8 +518,12 @@ public sealed class SwitchOrchestrator
     /// A failed attempt may leave displays dark (Windows usually reverts on its own, but not reliably). If a display
     /// that was active before is no longer active, re-apply the previous topology.
     /// </summary>
-    private async Task<SwitchNote> RestoreAfterFailureAsync(DisplaySnapshot before, CancellationToken cancellationToken)
+    private async Task<SwitchNote> RestoreAfterFailureAsync(
+        DisplaySnapshot before, SurroundSetting? surroundBefore, CancellationToken cancellationToken)
     {
+        // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
+        await _surroundSwitcher.RestoreAsync(surroundBefore, cancellationToken);
+
         DisplaySnapshot now;
         try
         {
