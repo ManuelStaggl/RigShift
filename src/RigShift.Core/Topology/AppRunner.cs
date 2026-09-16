@@ -56,21 +56,23 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    public Task<AppsOutcome> Start(Profile profile)
+    public Task<AppsOutcome> Start(Profile profile) => Start(AppPlan.For(profile));
+
+    public Task<AppsOutcome> Start(AppPlan plan)
     {
-        if (profile.Apps.Count == 0)
+        if (plan.Apps.Count == 0)
         {
             return SwitchResult.NoApps;
         }
 
         var cancellation = new CancellationTokenSource();
         CancellationToken token = cancellation.Token;
-        Task<AppsOutcome> run = Task.Run(() => RunAppsAsync(profile, token), CancellationToken.None);
+        Task<AppsOutcome> run = Task.Run(() => RunAppsAsync(plan, token), CancellationToken.None);
         PendingApps? previous;
         lock (_appsLock)
         {
             previous = _pendingApps;
-            _pendingApps = new PendingApps(profile.Name, run, cancellation);
+            _pendingApps = new PendingApps(plan.Name, run, cancellation);
         }
 
         if (previous is not null)
@@ -82,26 +84,26 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
     }
 
     /// <summary>Runs after the switch result on its own cancellation; never throws.</summary>
-    private async Task<AppsOutcome> RunAppsAsync(Profile profile, CancellationToken cancellationToken)
+    private async Task<AppsOutcome> RunAppsAsync(AppPlan plan, CancellationToken cancellationToken)
     {
         long startedAt = _time.GetTimestamp();
         try
         {
             // Wheel software and games want to see the device when they start; without it they start anyway.
-            bool deviceMissing = !await WaitForAppsDeviceAsync(profile, cancellationToken);
-            AppsOutcome started = await RunAppActionsAsync(profile.Apps, cancellationToken);
+            bool deviceMissing = !await WaitForAppsDeviceAsync(plan, cancellationToken);
+            AppsOutcome started = await RunAppActionsAsync(plan.Apps, cancellationToken);
             AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
-            _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", profile.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
+            _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", plan.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
             return outcome;
         }
         catch (OperationCanceledException)
         {
-            _log.Information("Apps for {Profile} cancelled after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(startedAt).TotalSeconds);
+            _log.Information("Apps for {Profile} cancelled after {Seconds:0.0} s", plan.Name, _time.GetElapsedTime(startedAt).TotalSeconds);
             return AppsOutcome.Cancelled;
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Apps for {Profile} failed", profile.Name);
+            _log.Error(ex, "Apps for {Profile} failed", plan.Name);
             return AppsOutcome.Incomplete;
         }
     }
@@ -161,15 +163,15 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
     /// <summary>
     /// Polls for the device the profile's apps wait for, up to its wait time. True when it is there or none is set.
     /// </summary>
-    private async Task<bool> WaitForAppsDeviceAsync(Profile profile, CancellationToken cancellationToken)
+    private async Task<bool> WaitForAppsDeviceAsync(AppPlan plan, CancellationToken cancellationToken)
     {
-        if (UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId) is not { } deviceId)
+        if (UsbDeviceIds.Normalize(plan.WaitForUsbDeviceId) is not { } deviceId)
         {
             return true;
         }
 
         const int seconds = Profile.AppsDeviceWaitSeconds;
-        string name = profile.AppsWaitForUsbDeviceName ?? deviceId;
+        string name = plan.WaitForUsbDeviceName ?? deviceId;
         DateTimeOffset deadline = _time.GetUtcNow() + TimeSpan.FromSeconds(seconds);
         long started = _time.GetTimestamp();
         bool waited = false;
