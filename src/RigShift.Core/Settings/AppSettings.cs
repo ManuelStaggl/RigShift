@@ -78,8 +78,20 @@ public sealed record AppSettings
     /// <summary>Frame width the field-of-view dialog last used for triples, in millimetres; <c>null</c> = the dialog's default.</summary>
     public int? FovBezelMm { get; init; }
 
-    /// <summary>The field-of-view dialog was last used for three screens. <c>false</c> is the default for files without the key.</summary>
+    /// <summary>The field-of-view page was last used for three screens. <c>false</c> is the default for files without the key.</summary>
     public bool FovTriple { get; init; }
+
+    /// <summary>Side angle the user measured, in whole degrees; <c>null</c> lets the page calculate the ideal one.</summary>
+    public int? FovAngleDegrees { get; init; }
+
+    /// <summary>The comfort slack is switched on. <c>false</c> is the default for files without the key.</summary>
+    public bool FovComfort { get; init; }
+
+    /// <summary>Curvature radius in millimetres per display, keyed by its target device path; a missing entry is flat.</summary>
+    public IReadOnlyDictionary<string, int>? FovCurvatureMm { get; init; }
+
+    /// <summary>How far the eye sits above the middle of the screen, in centimetres; only used for the hint it prints.</summary>
+    public int? FovVerticalOffsetCm { get; init; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>
