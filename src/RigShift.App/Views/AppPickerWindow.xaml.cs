@@ -97,6 +97,12 @@ public partial class AppPickerWindow : FluentWindow
     }
 
     /// <summary>Programs without a Start menu entry, e.g. a tool unpacked into a folder.</summary>
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        BrandWindow.ApplyChrome(this);
+    }
+
     private void OnBrowseFile(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog

@@ -98,10 +98,7 @@ public partial class MainWindow : FluentWindow
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        // Dark caption and frame from DWM without the system theme watcher – RigShift has one theme.
-        WindowBackgroundManager.UpdateBackground(this, ApplicationTheme.Dark, WindowBackdropType.None);
-        // That call assigns WPF-UI's own dark grey to Background; put the brand chrome back.
-        SetResourceReference(BackgroundProperty, "RigShift.Brush.Chrome");
+        BrandWindow.ApplyChrome(this);
     }
 
     protected override void OnClosing(CancelEventArgs e)

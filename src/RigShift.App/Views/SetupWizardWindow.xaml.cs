@@ -35,6 +35,12 @@ public partial class SetupWizardWindow : FluentWindow
         };
     }
 
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        BrandWindow.ApplyChrome(this);
+    }
+
     private async void OnDisplaysChanged(object? sender, EventArgs e) => await _viewModel.RefreshDisplaysAsync();
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)

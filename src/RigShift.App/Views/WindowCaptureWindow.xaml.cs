@@ -24,6 +24,12 @@ public partial class WindowCaptureWindow : FluentWindow
         InitializeComponent();
     }
 
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        BrandWindow.ApplyChrome(this);
+    }
+
     public WindowLayout? Captured { get; private set; }
 
     /// <returns>The captured layout, or <c>null</c> if cancelled.</returns>

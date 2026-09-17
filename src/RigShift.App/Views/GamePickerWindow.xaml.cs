@@ -33,6 +33,12 @@ public partial class GamePickerWindow : FluentWindow
         Loaded += (_, _) => SearchBox.Focus();
     }
 
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        BrandWindow.ApplyChrome(this);
+    }
+
     public PickedGame? Chosen { get; private set; }
 
     /// <returns>The chosen game, or <c>null</c> if cancelled.</returns>

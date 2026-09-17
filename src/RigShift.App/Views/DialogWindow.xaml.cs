@@ -84,9 +84,7 @@ public partial class DialogWindow : FluentWindow
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        // Dark caption and frame from DWM; the call also overwrites Background, so put the brand surface back.
-        WindowBackgroundManager.UpdateBackground(this, ApplicationTheme.Dark, WindowBackdropType.None);
-        SetResourceReference(BackgroundProperty, "RigShift.Brush.Page");
+        BrandWindow.ApplyChrome(this, "RigShift.Brush.Page");
     }
 
     protected override void OnClosed(EventArgs e)

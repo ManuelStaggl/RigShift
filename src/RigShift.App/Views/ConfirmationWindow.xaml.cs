@@ -94,9 +94,7 @@ public partial class ConfirmationWindow : FluentWindow
             Log.Warning("Global Esc hotkey for the confirmation window could not be registered; Esc works only while the window has focus");
         }
 
-        // Dark caption and frame from DWM; the call also overwrites Background, so put the brand surface back.
-        WindowBackgroundManager.UpdateBackground(this, ApplicationTheme.Dark, WindowBackdropType.None);
-        SetResourceReference(BackgroundProperty, "RigShift.Brush.Page");
+        BrandWindow.ApplyChrome(this, "RigShift.Brush.Page");
     }
 
     private void OnContentRendered(object? sender, EventArgs e)
