@@ -43,6 +43,14 @@
                 DockPanel.Dock="Right"
                 Style="{StaticResource RigShift.Button}"
                 ToolTip="{loc:Tr Displays_IdentifyTip}" />
+              <Button
+                Height="28"
+                Margin="0,0,8,0"
+                Command="{Binding FovCommand}"
+                Content="{loc:Tr Fov_Button}"
+                DockPanel.Dock="Right"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr Fov_ButtonTip}" />
             </DockPanel>
             <controls:DisplayTopology
               Grid.Row="1"

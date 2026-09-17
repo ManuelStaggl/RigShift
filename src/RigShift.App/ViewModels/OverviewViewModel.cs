@@ -27,6 +27,8 @@ public sealed partial class OverviewViewModel : ObservableObject
     private readonly ProfileDialogs _dialogs;
     private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
+    private readonly IDisplaySizeReader _sizes;
+    private IReadOnlyList<AttachedDisplay> _attached = [];
     private readonly TimeProvider _time;
     private readonly ILogger _log;
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
@@ -40,6 +42,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         ProfilesViewModel profiles,
         DisplayChangeWatcher watcher,
         IAppShell shell,
+        IDisplaySizeReader sizes,
         TimeProvider time,
         ILogger log)
     {
@@ -54,6 +57,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         _dialogs = dialogs;
         _profiles = profiles;
         _shell = shell;
+        _sizes = sizes;
         _time = time;
         _log = log.ForContext<OverviewViewModel>();
 
@@ -149,6 +153,7 @@ public sealed partial class OverviewViewModel : ObservableObject
             DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
             IReadOnlyDictionary<string, string> names = _catalog.KnownDisplayNames;
             Displays.Clear();
+            _attached = snapshot.Displays;
             IReadOnlyList<(AttachedDisplay Display, int? Number)> numbered = DisplayNumbers.Assign(snapshot.Displays);
             foreach ((AttachedDisplay attached, int? shown) in numbered)
             {
@@ -176,6 +181,15 @@ public sealed partial class OverviewViewModel : ObservableObject
             .ToList();
         _log.Information("Identifying {Count} displays", shown.Count);
         Views.IdentifyWindow.ShowAll(shown);
+    }
+
+    /// <summary>The field-of-view dialog over the active displays; the size comes from each display's EDID.</summary>
+    [RelayCommand]
+    private void Fov()
+    {
+        var viewModel = new FovViewModel(_attached, _catalog.KnownDisplayNames, _sizes, _settings, _log);
+        _log.Information("FOV dialog opened with {Count} active displays", viewModel.Displays.Count);
+        Views.FovWindow.Show(System.Windows.Application.Current.MainWindow, viewModel, _log);
     }
 
     [RelayCommand]

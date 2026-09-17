@@ -1,0 +1,204 @@
+<ui:FluentWindow
+  x:Class="RigShift.App.Views.FovWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  Title="{loc:Tr Fov_Title}"
+  Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
+  Width="520"
+  Background="{DynamicResource RigShift.Brush.Page}"
+  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
+  ExtendsContentIntoTitleBar="True"
+  MinWidth="0"
+  MinHeight="0"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="None"
+  WindowCornerPreference="Round"
+  WindowStartupLocation="CenterOwner"
+  TextOptions.TextFormattingMode="Display">
+  <StackPanel Margin="24">
+    <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Fov_Title}" />
+    <TextBlock
+      Margin="0,4,0,0"
+      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+      Style="{StaticResource RigShift.Text.Body}"
+      Text="{loc:Tr Fov_Intro}"
+      TextWrapping="Wrap" />
+
+    <!-- Inputs: display, size, distance, layout. -->
+    <Grid Margin="0,20,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="16" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Display}" />
+        <ComboBox
+          AutomationProperties.Name="{loc:Tr Fov_Display}"
+          DisplayMemberPath="Name"
+          IsEnabled="{Binding HasDisplays}"
+          ItemsSource="{Binding Displays}"
+          SelectedItem="{Binding SelectedDisplay}"
+          Style="{StaticResource RigShift.Select}" />
+        <TextBlock
+          Margin="0,4,0,0"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{Binding SizeText}"
+          TextWrapping="Wrap" />
+      </StackPanel>
+
+      <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,16,0,0">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Diagonal}" />
+        <ui:NumberBox
+          AutomationProperties.Name="{loc:Tr Fov_Diagonal}"
+          ClearButtonEnabled="False"
+          MaxDecimalPlaces="1"
+          Maximum="120"
+          Minimum="5"
+          SmallChange="0.5"
+          SpinButtonPlacementMode="Hidden"
+          Style="{StaticResource RigShift.Number}"
+          ToolTip="{loc:Tr Fov_DiagonalTip}"
+          Value="{Binding DiagonalInches, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,16,0,0">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Distance}" />
+        <ui:NumberBox
+          AutomationProperties.Name="{loc:Tr Fov_Distance}"
+          ClearButtonEnabled="False"
+          MaxDecimalPlaces="0"
+          Maximum="300"
+          Minimum="20"
+          SmallChange="1"
+          SpinButtonPlacementMode="Hidden"
+          Style="{StaticResource RigShift.Number}"
+          ToolTip="{loc:Tr Fov_DistanceTip}"
+          Value="{Binding DistanceCm, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,16,0,0">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Layout}" />
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            Content="{loc:Tr Fov_Single}"
+            GroupName="FovLayout"
+            IsChecked="{Binding IsSingle}"
+            Style="{StaticResource RigShift.Radio}" />
+          <RadioButton
+            Margin="16,0,0,0"
+            Content="{loc:Tr Fov_Triple}"
+            GroupName="FovLayout"
+            IsChecked="{Binding IsTriple}"
+            Style="{StaticResource RigShift.Radio}" />
+        </StackPanel>
+      </StackPanel>
+
+      <StackPanel
+        Grid.Row="2"
+        Grid.Column="2"
+        Margin="0,16,0,0"
+        Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Bezel}" />
+        <ui:NumberBox
+          AutomationProperties.Name="{loc:Tr Fov_Bezel}"
+          ClearButtonEnabled="False"
+          MaxDecimalPlaces="0"
+          Maximum="100"
+          Minimum="0"
+          SmallChange="1"
+          SpinButtonPlacementMode="Hidden"
+          Style="{StaticResource RigShift.Number}"
+          ToolTip="{loc:Tr Fov_BezelTip}"
+          Value="{Binding BezelMm, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Results: the angles themselves, then what each sim wants. -->
+    <Border Margin="0,20,0,0" Style="{StaticResource RigShift.Card}">
+      <UniformGrid Columns="4">
+        <StackPanel>
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Vertical}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding VerticalText}" />
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Horizontal}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding HorizontalText}" />
+        </StackPanel>
+        <StackPanel Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Angle}" ToolTip="{loc:Tr Fov_AngleTip}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding TripleAngleText}" />
+        </StackPanel>
+        <StackPanel Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Total}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding TripleTotalText}" />
+        </StackPanel>
+      </UniformGrid>
+    </Border>
+
+    <TextBlock
+      Margin="0,20,0,0"
+      Style="{StaticResource RigShift.Text.CaptionStrong}"
+      Text="{loc:Tr Fov_PerGame}" />
+    <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding GameRows}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate DataType="{x:Type vm:FovGameRow}">
+          <Border Height="32" Style="{StaticResource RigShift.Divider}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="56" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding Game}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding KindText}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Mono}" Text="{Binding ValueText}" TextAlignment="Right" />
+              <Button
+                Grid.Column="3"
+                Height="28"
+                Margin="12,0,0,0"
+                Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                CommandParameter="{Binding}"
+                Content="{loc:Tr Fov_Copy}"
+                Style="{StaticResource RigShift.Button.Ghost}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <TextBlock
+      Margin="0,12,0,0"
+      Style="{StaticResource RigShift.Text.Caption}"
+      Text="{loc:Tr Fov_Note}"
+      TextWrapping="Wrap" />
+
+    <DockPanel Margin="0,20,0,0" LastChildFill="False">
+      <TextBlock
+        VerticalAlignment="Center"
+        DockPanel.Dock="Left"
+        Style="{StaticResource RigShift.Text.Caption}"
+        Text="{Binding CopyStatus}" />
+      <Button
+        Content="{loc:Tr Common_Close}"
+        DockPanel.Dock="Right"
+        IsCancel="True"
+        IsDefault="True"
+        Style="{StaticResource RigShift.Button}" />
+    </DockPanel>
+  </StackPanel>
+</ui:FluentWindow>

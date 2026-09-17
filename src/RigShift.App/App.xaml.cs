@@ -421,6 +421,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
         services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
         services.AddSingleton<IDesktopIcons, Windows.Shell.DesktopIcons>();
+        services.AddSingleton<IDisplaySizeReader, Windows.Display.EdidDisplaySizeReader>();
         services.AddSingleton<ISurroundController, NvSurroundController>();
         services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
         services.AddSingleton<ISwitchJournal>(_ => new JsonSwitchJournal(Paths.DataDirectory, Log.Logger));

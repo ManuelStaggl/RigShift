@@ -71,6 +71,15 @@ public sealed record AppSettings
 
     /// <summary>The ducking value from before a profile that disables ducking; only meaningful with <see cref="HasDuckingMemory"/>.</summary>
     public int? DuckingBeforeProfiles { get; set; }
+
+    /// <summary>Eye distance the field-of-view dialog last used, in centimetres; <c>null</c> = the dialog's default.</summary>
+    public int? FovDistanceCm { get; init; }
+
+    /// <summary>Frame width the field-of-view dialog last used for triples, in millimetres; <c>null</c> = the dialog's default.</summary>
+    public int? FovBezelMm { get; init; }
+
+    /// <summary>The field-of-view dialog was last used for three screens. <c>false</c> is the default for files without the key.</summary>
+    public bool FovTriple { get; init; }
 }
 
 /// <summary>Loads and saves <see cref="AppSettings"/>. A missing or unreadable file yields defaults, never an exception.</summary>

@@ -481,4 +481,33 @@
   <data name="Setup_Now" xml:space="preserve"><value>On screen now</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
+  <data name="Fov_Button" xml:space="preserve"><value>FOV</value></data>
+  <data name="Fov_ButtonTip" xml:space="preserve"><value>Field of view for your sims, from this display's size.</value></data>
+  <data name="Fov_Title" xml:space="preserve"><value>Field of view</value></data>
+  <data name="Fov_Intro" xml:space="preserve"><value>The size comes from the display. Measure the distance from your eyes to the screen and copy the value into your sim.</value></data>
+  <data name="Fov_Display" xml:space="preserve"><value>Display</value></data>
+  <data name="Fov_SizeMeasured" xml:space="preserve"><value>{0}, reported by the display</value></data>
+  <data name="Fov_SizeTyped" xml:space="preserve"><value>{0}, from the diagonal you typed</value></data>
+  <data name="Fov_Diagonal" xml:space="preserve"><value>Diagonal (inches)</value></data>
+  <data name="Fov_DiagonalTip" xml:space="preserve"><value>Pre-filled from the display; change it if the display reports a wrong size.</value></data>
+  <data name="Fov_Distance" xml:space="preserve"><value>Eye distance (cm)</value></data>
+  <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the centre screen, measured with a tape.</value></data>
+  <data name="Fov_Layout" xml:space="preserve"><value>Screens</value></data>
+  <data name="Fov_Single" xml:space="preserve"><value>One</value></data>
+  <data name="Fov_Triple" xml:space="preserve"><value>Three</value></data>
+  <data name="Fov_Bezel" xml:space="preserve"><value>Bezel (mm)</value></data>
+  <data name="Fov_BezelTip" xml:space="preserve"><value>Width of one frame; two of them sit between neighbouring pictures.</value></data>
+  <data name="Fov_Vertical" xml:space="preserve"><value>Vertical</value></data>
+  <data name="Fov_Horizontal" xml:space="preserve"><value>Horizontal</value></data>
+  <data name="Fov_Angle" xml:space="preserve"><value>Side angle</value></data>
+  <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in.</value></data>
+  <data name="Fov_Total" xml:space="preserve"><value>All three</value></data>
+  <data name="Fov_PerGame" xml:space="preserve"><value>Value per sim</value></data>
+  <data name="Fov_Kind_Vertical" xml:space="preserve"><value>vertical</value></data>
+  <data name="Fov_Kind_HorizontalPerScreen" xml:space="preserve"><value>horizontal, per screen</value></data>
+  <data name="Fov_Kind_HorizontalTotal" xml:space="preserve"><value>horizontal, all screens</value></data>
+  <data name="Fov_Kind_DoubleVertical" xml:space="preserve"><value>vertical × 2</value></data>
+  <data name="Fov_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Fov_Copied" xml:space="preserve"><value>{0}: copied.</value></data>
+  <data name="Fov_Note" xml:space="preserve"><value>Curved screens count as flat. Sims with a vertical value keep it on triples; the side angle goes into the sim's own triple setting.</value></data>
 </root>
