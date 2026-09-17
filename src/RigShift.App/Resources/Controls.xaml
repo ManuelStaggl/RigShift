@@ -213,9 +213,9 @@
               BorderThickness="2"
               CornerRadius="8"
               Visibility="Collapsed" />
+            <!-- No padding here: a TextBox lays out its own Padding around the text, so a second one would double it. -->
             <Border
               x:Name="Root"
-              Padding="{TemplateBinding Padding}"
               Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}"
@@ -259,7 +259,7 @@
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Display}" />
     <Setter Property="FontSize" Value="20" />
     <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="Padding" Value="12,0" />
     <Setter Property="Margin" Value="-7,0,0,0" />
     <Style.Triggers>
       <Trigger Property="IsKeyboardFocusWithin" Value="True">
@@ -275,22 +275,222 @@
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
     <Setter Property="Margin" Value="0,4,0,0" />
   </Style>
-  <!-- Select: the WPF-UI ComboBox on the tokens, sized like a field. -->
-  <Style x:Key="RigShift.Select" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+  <!-- ===== Select: own template, so the text sits on the field's baseline and never runs into the chevron ===== -->
+  <ControlTemplate x:Key="RigShift.SelectToggleTemplate" TargetType="ToggleButton">
+    <Border Background="Transparent" />
+  </ControlTemplate>
+  <!-- A row of the drop down; a long entry ends in an ellipsis instead of widening the list past its cap. -->
+  <Style x:Key="RigShift.SelectItem" TargetType="ComboBoxItem">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="11,0" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBoxItem">
+          <Border
+            x:Name="Root"
+            MinHeight="{TemplateBinding MinHeight}"
+            Margin="4,1"
+            Padding="{TemplateBinding Padding}"
+            Background="Transparent"
+            CornerRadius="{DynamicResource RigShift.Radius.Control}"
+            SnapsToDevicePixels="True">
+            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}">
+              <ContentPresenter.Resources>
+                <Style TargetType="TextBlock">
+                  <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                  <Setter Property="TextWrapping" Value="NoWrap" />
+                </Style>
+              </ContentPresenter.Resources>
+            </ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+            </Trigger>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnSelected}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="RigShift.Select" TargetType="ComboBox">
     <Setter Property="Height" Value="32" />
     <Setter Property="MinHeight" Value="32" />
-    <Setter Property="Padding" Value="10,0,6,0" />
-    <Setter Property="FontSize" Value="14" />
+    <Setter Property="MinWidth" Value="72" />
+    <!-- Left inset 11 like the field (1 border + 10); the chevron owns the right end. -->
+    <Setter Property="Padding" Value="11,0,6,0" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Page}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="MaxDropDownHeight" Value="360" />
+    <Setter Property="ItemContainerStyle" Value="{StaticResource RigShift.SelectItem}" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBox">
+          <Grid>
+            <Border
+              x:Name="Ring"
+              Margin="-2"
+              BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
+              BorderThickness="2"
+              CornerRadius="8"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Root"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              SnapsToDevicePixels="True">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ContentPresenter
+                  x:Name="Selection"
+                  Grid.Column="0"
+                  Margin="{TemplateBinding Padding}"
+                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                  VerticalAlignment="Center"
+                  Content="{TemplateBinding SelectionBoxItem}"
+                  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                  IsHitTestVisible="False"
+                  TextElement.Foreground="{TemplateBinding Foreground}">
+                  <ContentPresenter.Resources>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                      <Setter Property="TextWrapping" Value="NoWrap" />
+                    </Style>
+                  </ContentPresenter.Resources>
+                </ContentPresenter>
+                <Path
+                  x:Name="Chevron"
+                  Grid.Column="1"
+                  Width="10"
+                  Height="6"
+                  Margin="0,1,11,0"
+                  VerticalAlignment="Center"
+                  Data="M 0,0 L 5,5 L 10,0"
+                  IsHitTestVisible="False"
+                  Stretch="None"
+                  Stroke="{DynamicResource RigShift.Brush.TextSecondary}"
+                  StrokeEndLineCap="Round"
+                  StrokeLineJoin="Round"
+                  StrokeStartLineCap="Round"
+                  StrokeThickness="1.4" />
+              </Grid>
+            </Border>
+            <ToggleButton
+              x:Name="Toggle"
+              ClickMode="Press"
+              Focusable="False"
+              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+              Template="{StaticResource RigShift.SelectToggleTemplate}" />
+            <Popup
+              x:Name="PART_Popup"
+              MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+              MaxWidth="560"
+              AllowsTransparency="True"
+              Focusable="False"
+              IsOpen="{TemplateBinding IsDropDownOpen}"
+              Placement="Bottom"
+              PopupAnimation="None"
+              VerticalOffset="4">
+              <Border
+                MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                Padding="0,4"
+                Background="{DynamicResource RigShift.Brush.Layer}"
+                BorderBrush="{DynamicResource RigShift.Brush.Line}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RigShift.Radius.Card}"
+                SnapsToDevicePixels="True">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                  <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chevron" Property="Stroke" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+            </Trigger>
+            <Trigger Property="IsDropDownOpen" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="controls:Interaction.IsInvalid" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="Validation.HasError" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+              <Setter TargetName="Chevron" Property="Opacity" Value="0.45" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
   <!-- Toggle 36 × 20 and the check box on the WPF-UI templates; the tokens color them. -->
   <Style x:Key="RigShift.Toggle" TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
   </Style>
+  <!-- A long label wraps; without this the text is cut at the column's edge (the box content is always a string). -->
+  <DataTemplate x:Key="RigShift.WrappingLabel">
+    <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+  </DataTemplate>
   <Style x:Key="RigShift.Check" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="MinHeight" Value="24" />
     <Setter Property="Padding" Value="10,0,0,0" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
+  </Style>
+  <!-- Number box on the field's measurements; the WPF-UI default is a few pixels taller than a text field. -->
+  <Style x:Key="RigShift.Number" TargetType="ui:NumberBox" BasedOn="{StaticResource {x:Type ui:NumberBox}}">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+  </Style>
+  <Style x:Key="RigShift.Radio" TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="MinHeight" Value="24" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
   </Style>
 
   <!-- ===== Segment: one of three ("Leave · Off · On"), a ListBox with equal cells ===== -->
@@ -681,12 +881,8 @@
             BorderThickness="1"
             CornerRadius="{DynamicResource RigShift.Radius.Card}"
             SnapsToDevicePixels="True">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+            <controls:AdaptiveColumns Gap="16">
+              <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="180">
                 <TextBlock
                   Foreground="{TemplateBinding Foreground}"
                   Style="{StaticResource RigShift.Text.Body}"
@@ -698,8 +894,8 @@
                   Text="{TemplateBinding Caption}"
                   TextWrapping="Wrap" />
               </StackPanel>
-              <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
-            </Grid>
+              <ContentPresenter VerticalAlignment="Center" />
+            </controls:AdaptiveColumns>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="Caption" Value="">

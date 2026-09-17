@@ -120,6 +120,7 @@ public sealed class DisplayTopology : FrameworkElement
             TopologyRect rect = rects[i];
             var bounds = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             _tiles[i].Labels.Visibility = rect.ShowLabel ? Visibility.Visible : Visibility.Collapsed;
+            _tiles[i].FitLabels(bounds.Width);
             _tiles[i].Root.Measure(bounds.Size);
             _tiles[i].Root.Arrange(bounds);
         }
@@ -294,6 +295,18 @@ public sealed class DisplayTopology : FrameworkElement
             };
             Labels.Children.Add(name);
             Labels.Children.Add(mode);
+            NameLabel = name;
+            NameFull = name.Text ?? string.Empty;
+            // "1 - Left - CM27X3" -> "1 - Left": a small tile drops the model before it drops letters.
+            int lastDot = NameFull.LastIndexOf(" · ", StringComparison.Ordinal);
+            NameShort = lastDot > 0 && NameFull.IndexOf(" · ", StringComparison.Ordinal) != lastDot
+                ? NameFull[..lastDot]
+                : string.Empty;
+            ModeLabel = mode;
+            ModeFull = mode.Text ?? string.Empty;
+            // "1920 x 1080 @ 100 Hz" -> "1920 x 1080": a small tile shows the resolution rather than half a number.
+            int at = ModeFull.IndexOf(" @ ", StringComparison.Ordinal);
+            ModeShort = at > 0 ? ModeFull[..at] : string.Empty;
 
             Root = new Grid { Background = Brushes.Transparent };
             Root.Children.Add(shape);
@@ -322,6 +335,40 @@ public sealed class DisplayTopology : FrameworkElement
         public Rectangle Ring { get; }
 
         public StackPanel Labels { get; }
+
+        private TextBlock NameLabel { get; }
+
+        private string NameFull { get; }
+
+        private string NameShort { get; }
+
+        private TextBlock ModeLabel { get; }
+
+        private string ModeFull { get; }
+
+        private string ModeShort { get; }
+
+        /// <summary>Picks the longest form of each label that fits the tile, so none is cut mid-word or mid-number.</summary>
+        public void FitLabels(double width)
+        {
+            Fit(NameLabel, NameFull, NameShort, width);
+            Fit(ModeLabel, ModeFull, ModeShort, width);
+        }
+
+        private static void Fit(TextBlock label, string full, string shorter, double width)
+        {
+            if (shorter.Length == 0)
+            {
+                return;
+            }
+
+            label.Text = full;
+            label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            if (label.DesiredSize.Width > width)
+            {
+                label.Text = shorter;
+            }
+        }
     }
 
     private sealed class TopologyAutomationPeer(DisplayTopology owner) : FrameworkElementAutomationPeer(owner)

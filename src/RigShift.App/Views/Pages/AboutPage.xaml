@@ -15,54 +15,38 @@
     <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
       <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_About}" />
 
-      <Grid Margin="0,20,0,0">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="24" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+      <controls:AdaptiveColumns Margin="0,20,0,0" Gap="24">
 
         <!-- Version and update -->
-        <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource RigShift.Card}">
+        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
           <StackPanel>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <Image
-                Grid.Column="0"
-                Width="36"
-                Height="36"
-                Margin="0,0,16,0"
-                VerticalAlignment="Center"
-                Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
-              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{Binding VersionText}" TextWrapping="Wrap" />
-                <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Tagline}" />
-              </StackPanel>
+            <controls:AdaptiveColumns Gap="16">
+              <DockPanel controls:AdaptiveColumns.MinColumnWidth="180">
+                <Image
+                  Width="36"
+                  Height="36"
+                  Margin="0,0,16,0"
+                  VerticalAlignment="Center"
+                  DockPanel.Dock="Left"
+                  Source="{StaticResource RigShift.Image.AppIcon}" />
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{Binding VersionText}" TextWrapping="Wrap" />
+                  <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Tagline}" />
+                </StackPanel>
+              </DockPanel>
               <Button
-                Grid.Column="2"
-                Margin="16,0,0,0"
                 VerticalAlignment="Center"
                 Command="{Binding InstallUpdateNowCommand}"
                 Content="{loc:Tr Settings_RestartToUpdate}"
                 Style="{StaticResource RigShift.Button.Primary}"
                 Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
               <Button
-                Grid.Column="2"
-                Margin="16,0,0,0"
                 VerticalAlignment="Center"
                 Command="{Binding CheckForUpdatesCommand}"
                 Content="{loc:Tr Settings_CheckUpdates}"
                 Style="{StaticResource RigShift.Button}"
                 Visibility="{Binding IsUpdateInstallable, Converter={StaticResource InverseBoolToVisibility}}" />
-            </Grid>
+            </controls:AdaptiveColumns>
 
             <controls:InfoBar
               Margin="0,12,0,0"
@@ -110,14 +94,10 @@
         </Border>
 
         <!-- Diagnostics -->
-        <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource RigShift.Card}">
+        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
           <StackPanel>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+            <controls:AdaptiveColumns Gap="16">
+              <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
                 <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Diagnostics}" />
                 <TextBlock
                   Style="{StaticResource RigShift.Text.Caption}"
@@ -129,14 +109,13 @@
                   Text="{Binding CopyStatus}" />
               </StackPanel>
               <Button
-                Grid.Column="1"
                 VerticalAlignment="Center"
                 Command="{Binding CopyDiagnosticsCommand}"
                 Content="{loc:Tr About_Copy}"
                 Style="{StaticResource RigShift.Button}"
                 ToolTip="{loc:Tr About_CopyHint}" />
-            </Grid>
-            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+            </controls:AdaptiveColumns>
+            <WrapPanel Margin="0,12,0,0">
               <Button
                 Height="28"
                 Command="{Binding OpenLogFolderCommand}"
@@ -156,18 +135,18 @@
                   <TextBlock Text="{loc:Tr About_Profiles}" />
                 </StackPanel>
               </Button>
-            </StackPanel>
+            </WrapPanel>
           </StackPanel>
         </Border>
 
+      </controls:AdaptiveColumns>
+
+      <controls:AdaptiveColumns Margin="0,24,0,0" Gap="24">
+
         <!-- Backup -->
-        <Border Grid.Row="1" Grid.Column="0" Margin="0,24,0,0" Style="{StaticResource RigShift.Card}">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
+          <controls:AdaptiveColumns Gap="16">
+            <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
               <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Backup}" />
               <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
               <TextBlock
@@ -175,7 +154,7 @@
                 Style="{StaticResource RigShift.Text.Caption}"
                 Text="{Binding BackupStatus}" />
             </StackPanel>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
               <Button
                 Command="{Binding SaveBackupCommand}"
                 Content="{loc:Tr About_SaveBackup}"
@@ -186,11 +165,11 @@
                 Content="{loc:Tr About_RestoreBackup}"
                 Style="{StaticResource RigShift.Button}" />
             </StackPanel>
-          </Grid>
+          </controls:AdaptiveColumns>
         </Border>
 
         <!-- Links -->
-        <Border Grid.Row="1" Grid.Column="2" Margin="0,24,0,0" Style="{StaticResource RigShift.Card}">
+        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
           <StackPanel>
             <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Links}" />
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Copyright}" TextWrapping="Wrap" />
@@ -219,7 +198,7 @@
             </WrapPanel>
           </StackPanel>
         </Border>
-      </Grid>
+      </controls:AdaptiveColumns>
     </StackPanel>
   </ScrollViewer>
 </Page>

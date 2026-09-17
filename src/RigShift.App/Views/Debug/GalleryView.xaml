@@ -20,6 +20,19 @@
     <TextBlock Style="{StaticResource RigShift.Text.Title}" Text="Komponenten 3.0" />
     <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Debug-Galerie: Tokens, Typografie und Komponenten aus Controls.xaml, gerendert ohne Fenster." />
 
+    <TextBlock Style="{StaticResource Section}" Text="Marke" />
+    <StackPanel Orientation="Horizontal">
+      <Image Width="128" Height="128" Source="{StaticResource RigShift.Image.AppIcon}" />
+      <Image Width="48" Height="48" Margin="24,0,0,0" VerticalAlignment="Center" Source="{StaticResource RigShift.Image.AppIcon}" />
+      <Image Width="36" Height="36" Margin="16,0,0,0" VerticalAlignment="Center" Source="{StaticResource RigShift.Image.AppIcon}" />
+      <Image Width="18" Height="18" Margin="16,0,0,0" VerticalAlignment="Center" Source="{StaticResource RigShift.Image.AppIcon}" />
+      <TextBlock
+        Margin="24,0,0,0"
+        VerticalAlignment="Center"
+        Style="{StaticResource RigShift.Text.Caption}"
+        Text="Vektor (Brand.xaml) – 128 · 48 · 36 · 18 px" />
+    </StackPanel>
+
     <TextBlock Style="{StaticResource Section}" Text="Typografie" />
     <StackPanel Orientation="Horizontal">
       <StackPanel Width="360">
@@ -92,6 +105,11 @@
           <ComboBoxItem Content="Headset (Arctis Nova Pro)" />
           <ComboBoxItem Content="Lautsprecher" />
         </ComboBox>
+      </StackPanel>
+      <StackPanel Width="180" Margin="16,0,0,0">
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Auf Gerät warten" />
+        <!-- Bound like the pages do it: items are objects, the text comes from DisplayMemberPath. -->
+        <ComboBox x:Name="WaitSelect" DisplayMemberPath="Name" SelectedIndex="0" Style="{StaticResource RigShift.Select}" />
       </StackPanel>
       <StackPanel Width="200" Margin="16,0,0,0">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="NVIDIA Surround" />

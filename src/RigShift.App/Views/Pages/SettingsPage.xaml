@@ -21,15 +21,10 @@
         Text="{Binding Devices.ErrorMessage}"
         Visibility="{Binding Devices.HasError, Converter={StaticResource BoolToVisibility}}" />
 
-      <Grid Margin="0,20,0,0">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="32" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+      <controls:AdaptiveColumns Margin="0,20,0,0" Gap="32">
 
         <!-- Left column: switching and the app itself -->
-        <StackPanel Grid.Column="0">
+        <StackPanel controls:AdaptiveColumns.MinColumnWidth="360">
           <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupSwitching}" />
 
           <controls:SettingRow
@@ -95,6 +90,7 @@
               Minimum="1"
               SmallChange="1"
               SpinButtonPlacementMode="Hidden"
+              Style="{StaticResource RigShift.Number}"
               Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
           </controls:SettingRow>
 
@@ -129,7 +125,7 @@
         </StackPanel>
 
         <!-- Right column: the USB devices rules and profiles use; names are saved on Enter or on leaving (F6). -->
-        <StackPanel Grid.Column="2">
+        <StackPanel controls:AdaptiveColumns.MinColumnWidth="360">
           <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupDevices}" />
 
           <controls:SettingRow
@@ -146,12 +142,8 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:UsbNameCard}">
                 <Border Margin="0,8,0,0" MinHeight="52" Padding="16,8" Style="{StaticResource RigShift.Card}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                  <controls:AdaptiveColumns Gap="16">
+                    <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
                       <TextBlock
                         Style="{StaticResource RigShift.Text.Body}"
                         Text="{Binding WindowsName}"
@@ -167,7 +159,7 @@
                           TextWrapping="NoWrap" />
                       </StackPanel>
                     </StackPanel>
-                    <Grid Grid.Column="1" Width="180" VerticalAlignment="Center">
+                    <Grid Width="180" VerticalAlignment="Center">
                       <TextBox
                         AutomationProperties.HelpText="{Binding WindowsName}"
                         AutomationProperties.Name="{loc:Tr Editor_CustomName}"
@@ -193,7 +185,7 @@
                         </TextBlock.Visibility>
                       </TextBlock>
                     </Grid>
-                  </Grid>
+                  </controls:AdaptiveColumns>
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -205,7 +197,7 @@
             Text="{loc:Tr Settings_DevicesHint}"
             TextWrapping="Wrap" />
         </StackPanel>
-      </Grid>
+      </controls:AdaptiveColumns>
     </StackPanel>
   </ScrollViewer>
 </Page>

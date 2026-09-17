@@ -42,7 +42,17 @@ public partial class GalleryView : UserControl
         Rows.Items.Add(Row("Sim Rig", Rig, StatusKind.Ok, "Bereit · Dash fehlt (optional)"));
         Rows.Items.Add(Row("Rig · Dreifach", States, StatusKind.Error, "Blockiert: Surround-Raster fehlt"));
         Rows.SelectedIndex = 1;
+
+        WaitSelect.ItemsSource = new[]
+        {
+            new Choice("Wheel · Fanatec ClubSport DD (nicht verbunden)"),
+            new Choice("Nicht warten"),
+        };
+        WaitSelect.SelectedIndex = 0;
     }
+
+    /// <summary>Stands in for the view models the pages bind to: the select shows <see cref="Name"/>, not ToString.</summary>
+    private sealed record Choice(string Name);
 
     private static ListBoxItem Row(string name, TopologyDisplay[] displays, StatusKind kind, string status)
     {

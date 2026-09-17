@@ -22,14 +22,9 @@
         Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
 
       <!-- Live picture and the active profile (or the setup card while there are no profiles). -->
-      <Grid Margin="0,20,0,0">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="24" />
-          <ColumnDefinition Width="320" />
-        </Grid.ColumnDefinitions>
+      <controls:AdaptiveColumns Margin="0,20,0,0" Gap="24">
 
-        <ContentControl Grid.Column="0" Style="{StaticResource RigShift.TopologyPanel}">
+        <ContentControl Style="{StaticResource RigShift.TopologyPanel}" controls:AdaptiveColumns.MinColumnWidth="360">
           <Grid>
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto" />
@@ -69,7 +64,7 @@
 
         <!-- Active profile -->
         <Border
-          Grid.Column="2"
+          Width="320"
           Style="{StaticResource RigShift.Card}"
           Visibility="{Binding HasProfiles, Converter={StaticResource BoolToVisibility}}">
           <DockPanel>
@@ -137,7 +132,7 @@
 
         <!-- First start: no profiles yet -->
         <Border
-          Grid.Column="2"
+          Width="320"
           Style="{StaticResource RigShift.Card}"
           Visibility="{Binding HasProfiles, Converter={StaticResource InverseBoolToVisibility}}">
           <DockPanel>
@@ -164,24 +159,26 @@
             <Border />
           </DockPanel>
         </Border>
-      </Grid>
+      </controls:AdaptiveColumns>
 
       <!-- Displays: names are saved on Enter or when the field loses focus (F6). -->
-      <StackPanel Margin="0,24,0,0" Orientation="Horizontal">
-        <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_Displays}" />
+      <DockPanel Margin="0,24,0,0">
+        <TextBlock DockPanel.Dock="Left" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_Displays}" />
         <TextBlock
           Margin="12,0,0,0"
           Style="{StaticResource RigShift.Text.Caption}"
-          Text="{loc:Tr Overview_DisplaysHint}" />
-      </StackPanel>
+          Text="{loc:Tr Overview_DisplaysHint}"
+          TextTrimming="CharacterEllipsis"
+          TextWrapping="NoWrap" />
+      </DockPanel>
       <Grid Height="28" Margin="0,4,0,0">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="36" />
-          <ColumnDefinition Width="166" />
-          <ColumnDefinition Width="206" />
-          <ColumnDefinition Width="186" />
-          <ColumnDefinition Width="216" />
-          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" MinWidth="110" />
+          <ColumnDefinition Width="210" />
+          <ColumnDefinition Width="165" />
+          <ColumnDefinition Width="196" />
+          <ColumnDefinition Width="*" MinWidth="90" />
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_ColDisplay}" />
         <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColStatus}" />
@@ -196,16 +193,16 @@
               <Grid>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="36" />
-                  <ColumnDefinition Width="166" />
-                  <ColumnDefinition Width="206" />
-                  <ColumnDefinition Width="186" />
-                  <ColumnDefinition Width="216" />
-                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" MinWidth="110" />
+                  <ColumnDefinition Width="210" />
+                  <ColumnDefinition Width="165" />
+                  <ColumnDefinition Width="196" />
+                  <ColumnDefinition Width="*" MinWidth="90" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding NumberText}" />
-                <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ModelName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ModelName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ModelName}" />
                 <controls:StatusLine Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" Kind="{Binding StateKind}" Text="{Binding StateText}" />
-                <TextBlock Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding ModeText}" />
+                <TextBlock Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding ModeText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ModeText}" />
                 <TextBox
                   Grid.Column="4"
                   Width="180"

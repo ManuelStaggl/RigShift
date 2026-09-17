@@ -385,32 +385,37 @@
 
                 <ContentControl Style="{StaticResource RigShift.TopologyPanel}">
                   <StackPanel>
-                    <DockPanel LastChildFill="False">
+                    <!-- The hint gives way first: when the row grows too narrow the buttons move to a line of
+                         their own instead of being squeezed to nothing. -->
+                    <controls:AdaptiveColumns Gap="8">
                       <TextBlock
                         VerticalAlignment="Center"
-                        DockPanel.Dock="Left"
                         Style="{StaticResource RigShift.Text.Caption}"
-                        Text="{loc:Tr Displays_ClickHint}" />
-                      <Button
-                        Height="28"
-                        Margin="8,0,0,0"
-                        Command="{Binding DataContext.OpenDisplaySettingsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource RigShift.Button.Ghost}"
-                        ToolTip="{loc:Tr Editor_DisplaysHint}">
-                        <StackPanel Orientation="Horizontal">
-                          <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Open16" />
-                          <TextBlock Text="{loc:Tr Displays_OpenSettings}" />
-                        </StackPanel>
-                      </Button>
-                      <Button
-                        Height="28"
-                        Command="{Binding TakeCurrentCommand}"
-                        Content="{loc:Tr Editor_TakeCurrent}"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource RigShift.Button}"
-                        ToolTip="{loc:Tr Editor_DisplaysHint}" />
-                    </DockPanel>
+                        Text="{loc:Tr Displays_ClickHint}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap"
+                        ToolTip="{loc:Tr Displays_ClickHint}"
+                        controls:AdaptiveColumns.MinColumnWidth="220" />
+                      <StackPanel Orientation="Horizontal">
+                        <Button
+                          Height="28"
+                          Command="{Binding TakeCurrentCommand}"
+                          Content="{loc:Tr Editor_TakeCurrent}"
+                          Style="{StaticResource RigShift.Button}"
+                          ToolTip="{loc:Tr Editor_DisplaysHint}" />
+                        <Button
+                          Height="28"
+                          Margin="8,0,0,0"
+                          Command="{Binding DataContext.OpenDisplaySettingsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                          Style="{StaticResource RigShift.Button.Ghost}"
+                          ToolTip="{loc:Tr Editor_DisplaysHint}">
+                          <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Open16" />
+                            <TextBlock Text="{loc:Tr Displays_OpenSettings}" />
+                          </StackPanel>
+                        </Button>
+                      </StackPanel>
+                    </controls:AdaptiveColumns>
                     <controls:DisplayTopology
                       Height="190"
                       Margin="0,12,0,0"
@@ -432,22 +437,24 @@
                   Style="{StaticResource RigShift.Card}"
                   Visibility="{Binding DataContext.HasSelectedDisplay, RelativeSource={RelativeSource AncestorType=StackPanel}, Converter={StaticResource BoolToVisibility}}">
                   <StackPanel>
-                    <Grid>
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="150" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="150" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="104" />
-                        <ColumnDefinition Width="16" />
-                        <!-- 140, not the mockup's 116: "Unchanged" and "Unverändert" need it in the app's font. -->
-                        <ColumnDefinition Width="140" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                      </Grid.ColumnDefinitions>
-                      <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                    <!-- One row while it fits; narrow windows push the later fields onto a second line
+                         instead of cutting HDR and the two switches off at the card's edge. -->
+                    <DockPanel>
+                      <!-- Remove stays at the card's right edge and never takes part in the wrapping. -->
+                      <Button
+                        Margin="4,0,0,8"
+                        VerticalAlignment="Bottom"
+                        AutomationProperties.HelpText="{Binding Name}"
+                        AutomationProperties.Name="{loc:Tr Editor_Remove}"
+                        Command="{Binding DataContext.Editor.RemoveDisplayCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                        CommandParameter="{Binding}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource RigShift.Button.Icon}"
+                        ToolTip="{loc:Tr Editor_Remove}">
+                        <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                      </Button>
+                      <WrapPanel Margin="0,0,-8,-8">
+                      <StackPanel Width="150" Margin="0,0,8,8" VerticalAlignment="Bottom">
                         <TextBlock
                           Style="{StaticResource RigShift.Text.BodyStrong}"
                           Text="{Binding ModelName}"
@@ -460,7 +467,7 @@
                           TextWrapping="NoWrap"
                           ToolTip="{Binding ModeText}" />
                       </StackPanel>
-                      <StackPanel Grid.Column="2">
+                      <StackPanel Width="150" Margin="0,0,8,8">
                         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_CustomName}" />
                         <TextBox
                           AutomationProperties.Name="{loc:Tr Editor_CustomName}"
@@ -469,7 +476,7 @@
                           Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
                           ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
                       </StackPanel>
-                      <StackPanel Grid.Column="4">
+                      <StackPanel Width="104" Margin="0,0,8,8">
                         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
                         <ComboBox
                           AutomationProperties.Name="{loc:Tr Editor_RefreshRate}"
@@ -479,7 +486,7 @@
                           Style="{StaticResource RigShift.Select}"
                           ToolTip="{loc:Tr Editor_RefreshRateHint}" />
                       </StackPanel>
-                      <StackPanel Grid.Column="6">
+                      <StackPanel Width="140" Margin="0,0,8,8">
                         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="HDR" />
                         <ComboBox
                           AutomationProperties.Name="HDR"
@@ -489,12 +496,13 @@
                           Style="{StaticResource RigShift.Select}"
                           ToolTip="{loc:Tr Editor_HdrHint}" />
                       </StackPanel>
-                      <StackPanel Grid.Column="8" VerticalAlignment="Bottom">
+                      <StackPanel Margin="0,0,0,8" VerticalAlignment="Bottom">
                         <RadioButton
                           AutomationProperties.HelpText="{Binding Name}"
                           Content="{loc:Tr Editor_Primary}"
                           GroupName="PrimaryDisplay"
-                          IsChecked="{Binding IsPrimary}" />
+                          IsChecked="{Binding IsPrimary}"
+                          Style="{StaticResource RigShift.Radio}" />
                         <CheckBox
                           AutomationProperties.HelpText="{Binding Name}"
                           Content="{loc:Tr Editor_Optional}"
@@ -502,18 +510,8 @@
                           IsEnabled="{Binding CanBeOptional}"
                           Style="{StaticResource RigShift.Check}" />
                       </StackPanel>
-                      <Button
-                        Grid.Column="10"
-                        VerticalAlignment="Bottom"
-                        AutomationProperties.HelpText="{Binding Name}"
-                        AutomationProperties.Name="{loc:Tr Editor_Remove}"
-                        Command="{Binding DataContext.Editor.RemoveDisplayCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                        CommandParameter="{Binding}"
-                        Style="{StaticResource RigShift.Button.Icon}"
-                        ToolTip="{loc:Tr Editor_Remove}">
-                        <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
-                      </Button>
-                    </Grid>
+                      </WrapPanel>
+                    </DockPanel>
                     <TextBlock
                       Margin="0,8,0,0"
                       Style="{StaticResource RigShift.Text.Caption}"
@@ -542,11 +540,10 @@
                     TextWrapping="Wrap" />
                 </Border>
 
-                <StackPanel Margin="0,20,0,0" Orientation="Horizontal">
+                <controls:AdaptiveColumns Margin="0,20,0,0" Gap="24">
                   <!-- Hidden without an NVIDIA card: nothing here would mean anything then. -->
                   <StackPanel
                     Width="240"
-                    Margin="0,0,24,0"
                     Visibility="{Binding ShowSurround, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Surround}" />
                     <ListBox
@@ -598,7 +595,7 @@
                       Text="{loc:Tr Editor_DesktopIconsHint}"
                       TextWrapping="Wrap" />
                   </StackPanel>
-                </StackPanel>
+                </controls:AdaptiveColumns>
               </StackPanel>
             </ScrollViewer>
           </TabItem>
@@ -610,13 +607,13 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Audio_Intro}" />
-                <StackPanel Orientation="Horizontal">
+                <controls:AdaptiveColumns Gap="24">
                   <ItemsControl
                     Width="360"
                     Focusable="False"
                     ItemTemplate="{StaticResource AudioSlotTemplate}"
                     ItemsSource="{Binding AudioSlots}" />
-                  <StackPanel Width="360" Margin="24,0,0,0">
+                  <StackPanel Width="360">
                     <!-- Call devices follow playback and recording unless set here (analysis decision O-02). -->
                     <Expander IsExpanded="{Binding ShowCommunicationsAudio, Mode=OneTime}">
                       <Expander.Header>
@@ -639,7 +636,7 @@
                       Text="{loc:Tr Editor_DisableDuckingHint}"
                       TextWrapping="Wrap" />
                   </StackPanel>
-                </StackPanel>
+                </controls:AdaptiveColumns>
               </StackPanel>
             </ScrollViewer>
           </TabItem>
@@ -758,6 +755,7 @@
                               PlaceholderText="0"
                               SmallChange="1"
                               SpinButtonPlacementMode="Hidden"
+                              Style="{StaticResource RigShift.Number}"
                               ToolTip="{loc:Tr App_Wait}"
                               Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock
@@ -844,15 +842,10 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Trigger_Intro}" />
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="24" />
-                    <ColumnDefinition Width="300" />
-                  </Grid.ColumnDefinitions>
+                <controls:AdaptiveColumns Gap="24">
 
                   <!-- USB rules of this profile (R-OBJ-1), saved with it. -->
-                  <StackPanel Grid.Column="0" DataContext="{Binding Rules}">
+                  <StackPanel controls:AdaptiveColumns.MinColumnWidth="330" DataContext="{Binding Rules}">
                     <ItemsControl Focusable="False" ItemsSource="{Binding Rules}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:RuleCard}">
@@ -960,13 +953,8 @@
                                   </Button.ContextMenu>
                                 </Button>
                               </WrapPanel>
-                              <Grid Margin="0,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                  <ColumnDefinition Width="*" />
-                                  <ColumnDefinition Width="12" />
-                                  <ColumnDefinition Width="140" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" MaxWidth="320" HorizontalAlignment="Left">
+                              <controls:AdaptiveColumns Margin="0,4,0,0" Gap="12">
+                                <StackPanel MaxWidth="320" controls:AdaptiveColumns.MinColumnWidth="180">
                                   <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_DeviceGone}" />
                                   <ComboBox
                                     AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
@@ -975,7 +963,7 @@
                                     SelectedItem="{Binding SelectedExit}"
                                     Style="{StaticResource RigShift.Select}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2" ToolTip="{loc:Tr Automation_ExitDelayHint}">
+                                <StackPanel Width="140" ToolTip="{loc:Tr Automation_ExitDelayHint}">
                                   <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_ExitDelay}" />
                                   <ui:NumberBox
                                     AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
@@ -987,9 +975,10 @@
                                     PlaceholderText="0"
                                     SmallChange="5"
                                     SpinButtonPlacementMode="Hidden"
+                                    Style="{StaticResource RigShift.Number}"
                                     Value="{Binding ExitDelaySeconds, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
-                              </Grid>
+                              </controls:AdaptiveColumns>
                               <CheckBox
                                 Margin="0,12,0,0"
                                 Content="{loc:Tr Automation_SkipConfirmation}"
@@ -1031,7 +1020,7 @@
                     </Button>
                   </StackPanel>
 
-                  <StackPanel Grid.Column="2">
+                  <StackPanel Width="300">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Hotkey}" />
                     <DockPanel>
                       <Button
@@ -1114,7 +1103,7 @@
                         Text="{Binding CommandText, Mode=OneWay}" />
                     </DockPanel>
                   </StackPanel>
-                </Grid>
+                </controls:AdaptiveColumns>
               </StackPanel>
             </ScrollViewer>
           </TabItem>

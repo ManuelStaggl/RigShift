@@ -347,15 +347,9 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_GameIntro}" />
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="400" />
-                    <ColumnDefinition Width="24" />
-                    <ColumnDefinition Width="320" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
+                <controls:AdaptiveColumns Gap="24">
 
-                  <StackPanel Grid.Column="0">
+                  <StackPanel Width="400">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_Launch}" />
                     <DockPanel>
                       <Button
@@ -466,7 +460,7 @@
                       TextWrapping="Wrap" />
                   </StackPanel>
 
-                  <StackPanel Grid.Column="2">
+                  <StackPanel Width="320">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Hotkey}" />
                     <DockPanel>
                       <Button
@@ -549,7 +543,7 @@
                         Text="{Binding CommandText, Mode=OneWay}" />
                     </DockPanel>
                   </StackPanel>
-                </Grid>
+                </controls:AdaptiveColumns>
               </StackPanel>
             </ScrollViewer>
           </TabItem>
@@ -727,6 +721,7 @@
                               PlaceholderText="0"
                               SmallChange="1"
                               SpinButtonPlacementMode="Hidden"
+                              Style="{StaticResource RigShift.Number}"
                               ToolTip="{loc:Tr App_Wait}"
                               Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock
@@ -812,25 +807,26 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_WindowsHint}"
                   TextWrapping="Wrap" />
-                <StackPanel Orientation="Horizontal">
+                <WrapPanel>
                   <TextBlock
                     Height="32"
-                    Margin="0,0,12,0"
+                    Margin="0,0,12,8"
                     VerticalAlignment="Center"
                     LineHeight="32"
                     Style="{StaticResource RigShift.Text.Body}"
                     Text="{Binding WindowsText}" />
                   <Button
+                    Margin="0,0,0,8"
                     Click="OnCaptureWindows"
                     Content="{loc:Tr Game_CaptureWindows}"
                     Style="{StaticResource RigShift.Button}" />
                   <Button
-                    Margin="8,0,0,0"
+                    Margin="8,0,0,8"
                     Command="{Binding ClearWindowsCommand}"
                     Content="{loc:Tr Common_Clear}"
                     Style="{StaticResource RigShift.Button.Ghost}"
                     Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
+                </WrapPanel>
               </StackPanel>
             </ScrollViewer>
           </TabItem>
