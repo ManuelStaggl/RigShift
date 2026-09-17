@@ -481,33 +481,86 @@
   <data name="Setup_Now" xml:space="preserve"><value>On screen now</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
-  <data name="Fov_Button" xml:space="preserve"><value>FOV</value></data>
-  <data name="Fov_ButtonTip" xml:space="preserve"><value>Field of view for your sims, from this display's size.</value></data>
-  <data name="Fov_Title" xml:space="preserve"><value>Field of view</value></data>
-  <data name="Fov_Intro" xml:space="preserve"><value>The size comes from the display. Measure the distance from your eyes to the screen and copy the value into your sim.</value></data>
+  <data name="Nav_Fov" xml:space="preserve"><value>Field of view</value></data>
+  <data name="Fov_Intro" xml:space="preserve"><value>The size comes from the display. Say how far your eyes are and how the rig stands – every sim then gets the number it wants.</value></data>
+  <data name="Fov_Rig" xml:space="preserve"><value>Your rig</value></data>
   <data name="Fov_Display" xml:space="preserve"><value>Display</value></data>
   <data name="Fov_SizeMeasured" xml:space="preserve"><value>{0}, reported by the display</value></data>
   <data name="Fov_SizeTyped" xml:space="preserve"><value>{0}, from the diagonal you typed</value></data>
   <data name="Fov_Diagonal" xml:space="preserve"><value>Diagonal (inches)</value></data>
   <data name="Fov_DiagonalTip" xml:space="preserve"><value>Pre-filled from the display; change it if the display reports a wrong size.</value></data>
   <data name="Fov_Distance" xml:space="preserve"><value>Eye distance (cm)</value></data>
-  <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the centre screen, measured with a tape.</value></data>
+  <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the centre screen, sitting as you drive. Set the seat first.</value></data>
+  <data name="Fov_Curvature" xml:space="preserve"><value>Curvature</value></data>
+  <data name="Fov_CurvatureTip" xml:space="preserve"><value>No display reports its curve, so pick it once – it is remembered for that display. Known models come pre-filled.</value></data>
+  <data name="Fov_Flat" xml:space="preserve"><value>Flat</value></data>
+  <data name="Fov_Radius" xml:space="preserve"><value>{0}R</value></data>
+  <data name="Fov_RadiusOwn" xml:space="preserve"><value>Other radius</value></data>
   <data name="Fov_Layout" xml:space="preserve"><value>Screens</value></data>
   <data name="Fov_Single" xml:space="preserve"><value>One</value></data>
   <data name="Fov_Triple" xml:space="preserve"><value>Three</value></data>
   <data name="Fov_Bezel" xml:space="preserve"><value>Bezel (mm)</value></data>
-  <data name="Fov_BezelTip" xml:space="preserve"><value>Width of one frame; two of them sit between neighbouring pictures.</value></data>
+  <data name="Fov_BezelTip" xml:space="preserve"><value>Width of one frame, picture edge to case edge; two of them sit between neighbouring pictures.</value></data>
+  <data name="Fov_AngleAuto" xml:space="preserve"><value>Calculate the side angle</value></data>
+  <data name="Fov_Angle" xml:space="preserve"><value>Side angle</value></data>
+  <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in. Calculated, it is the angle that continues the centre picture seamlessly.</value></data>
+  <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rigs usually stand already: switch the calculation off and type the angle the side screens really have.</value></data>
+  <data name="Fov_Comfort" xml:space="preserve"><value>A little extra room</value></data>
+  <data name="Fov_ComfortTip" xml:space="preserve"><value>Adds 5°, at most a tenth of the angle, to every sim value – the margin the guides call comfortable. The geometry stays as it is.</value></data>
+  <data name="Fov_Offset" xml:space="preserve"><value>Eyes above the middle (cm)</value></data>
+  <data name="Fov_OffsetTip" xml:space="preserve"><value>Changes no angle; it only decides whether the hint below appears.</value></data>
+  <data name="Fov_OffsetHint" xml:space="preserve"><value>Sitting above the middle of the picture: shift the horizon in the sim (iRacing “Shift horizon”, ACC “Height”) instead of changing the angle.</value></data>
+  <data name="Fov_TopView" xml:space="preserve"><value>From above</value></data>
+  <data name="Fov_DiagramSummary" xml:space="preserve"><value>{0} cm · {1} · {2}</value></data>
   <data name="Fov_Vertical" xml:space="preserve"><value>Vertical</value></data>
   <data name="Fov_Horizontal" xml:space="preserve"><value>Horizontal</value></data>
-  <data name="Fov_Angle" xml:space="preserve"><value>Side angle</value></data>
-  <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in.</value></data>
-  <data name="Fov_Total" xml:space="preserve"><value>All three</value></data>
+  <data name="Fov_HorizontalTrue" xml:space="preserve"><value>Really seen</value></data>
+  <data name="Fov_HorizontalTrueTip" xml:space="preserve"><value>What the curved picture covers for your eye. Sims render a flat picture, so they get the other number.</value></data>
+  <data name="Fov_Total" xml:space="preserve"><value>Edge to edge</value></data>
+  <data name="Fov_TotalTip" xml:space="preserve"><value>From the left outer edge to the right one, frames included.</value></data>
+  <data name="Fov_OuterEdge" xml:space="preserve"><value>Outer edges apart</value></data>
+  <data name="Fov_OuterEdgeTip" xml:space="preserve"><value>Distance between the two outer picture edges – check it with a tape measure.</value></data>
+  <data name="Fov_Ppd" xml:space="preserve"><value>Pixels per degree</value></data>
+  <data name="Fov_PpdTip" xml:space="preserve"><value>60 matches 20/20 vision; under 40 the picture gets soft.</value></data>
   <data name="Fov_PerGame" xml:space="preserve"><value>Value per sim</value></data>
   <data name="Fov_Kind_Vertical" xml:space="preserve"><value>vertical</value></data>
   <data name="Fov_Kind_HorizontalPerScreen" xml:space="preserve"><value>horizontal, per screen</value></data>
   <data name="Fov_Kind_HorizontalTotal" xml:space="preserve"><value>horizontal, all screens</value></data>
   <data name="Fov_Kind_DoubleVertical" xml:space="preserve"><value>vertical × 2</value></data>
+  <data name="Fov_Kind_Multiplier" xml:space="preserve"><value>multiplier</value></data>
+  <data name="Fov_Kind_Slider" xml:space="preserve"><value>slider</value></data>
+  <data name="Fov_Kind_Offset" xml:space="preserve"><value>offset</value></data>
+  <data name="Fov_Kind_Radians" xml:space="preserve"><value>radians, 4:3</value></data>
+  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Likely – only one source says so.</value></data>
+  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unclear – the sources disagree, so try both.</value></data>
+  <data name="Fov_Alternative" xml:space="preserve"><value>or {0}</value></data>
+  <data name="Fov_NoNativeTriple" xml:space="preserve"><value>No triple rendering: one wide picture. Stand the screens flat, or use the sim's projection correction.</value></data>
   <data name="Fov_Copy" xml:space="preserve"><value>Copy</value></data>
-  <data name="Fov_Copied" xml:space="preserve"><value>{0}: copied.</value></data>
-  <data name="Fov_Note" xml:space="preserve"><value>Curved screens count as flat. Sims with a vertical value keep it on triples; the side angle goes into the sim's own triple setting.</value></data>
+  <data name="Fov_Copied" xml:space="preserve"><value>Copied: {0}</value></data>
+  <data name="Fov_Where" xml:space="preserve"><value>Where it goes</value></data>
+  <data name="Fov_Measure" xml:space="preserve"><value>Measuring: set the seat first, then the tape from the bridge of your nose to the middle of the centre screen. The bezel is one frame, picture edge to case edge.</value></data>
+  <data name="Fov_Vr" xml:space="preserve"><value>In VR none of this is needed – the headset knows its own geometry.</value></data>
+  <data name="Fov_Warn_Curve" xml:space="preserve"><value>Your eyes are inside the curve of the screen; move back.</value></data>
+  <data name="Fov_Warn_Triple" xml:space="preserve"><value>At that angle the side screens would reach past your eyes.</value></data>
+  <data name="Fov_Warn_Angle" xml:space="preserve"><value>Over 65° the side screens are hard to build, and some sims stop taking the angle.</value></data>
+  <data name="Fov_Warn_CurvedTriple" xml:space="preserve"><value>Strongly curved screens only meet without a kink when your eyes sit on the radius.</value></data>
+  <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} pixels per degree – under 40 the picture gets soft.</value></data>
+  <data name="Fov_Where_AssettoCorsa" xml:space="preserve"><value>Options › View › Field of View, or cfg\camera_onboard.ini [MODE] FOV. Whole degrees, 10–120, standard 56.</value></data>
+  <data name="Fov_Where_Acc" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 54; in triple mode the slider is greyed out.</value></data>
+  <data name="Fov_Where_AccEvo" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 55.</value></data>
+  <data name="Fov_Where_Ams2" xml:space="preserve"><value>Options › Camera › Field of View, for every camera. Horizontal at the aspect ratio being rendered; 35–120 at 16:9.</value></data>
+  <data name="Fov_Where_ProjectCars" xml:space="preserve"><value>Options › Camera › Field of View. Counts like Automobilista 2.</value></data>
+  <data name="Fov_Where_RFactor2" xml:space="preserve"><value>Settings › Graphics › Vertical FOV, or player.JSON “Vertical FOV Degrees”.</value></data>
+  <data name="Fov_Where_LeMansUltimate" xml:space="preserve"><value>Settings › Graphics › Visuals › Vertical FOV. 10–100, standard 49.</value></data>
+  <data name="Fov_Where_RaceRoom" xml:space="preserve"><value>Options › Video › Field of View, or graphics_options.xml. A multiplier of RaceRoom's own base angle, steps of 0.1 from 0.5 up.</value></data>
+  <data name="Fov_Where_IRacing" xml:space="preserve"><value>Options › Graphics › Field of view when driving, or app.ini [View] drivingCamFOV. Decimals allowed.</value></data>
+  <data name="Fov_Where_BeamNg" xml:space="preserve"><value>Options › Camera, per camera mode. Ctrl+click the slider to type an exact value. 10–120, standard 65.</value></data>
+  <data name="Fov_Where_Ets2" xml:space="preserve"><value>F4 › Seat Adjustment, or config.cfg r_multimon_fov_horizontal.</value></data>
+  <data name="Fov_Where_F1" xml:space="preserve"><value>During a race: Settings › Camera Customisation. Steps away from the game's own base, −20…+20.</value></data>
+  <data name="Fov_Where_Wrc" xml:space="preserve"><value>Settings › Display and Graphics › Camera FOV (Head Cam). The slider runs 0–100 over 18°–68°.</value></data>
+  <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV, or hardware_settings_config.xml – the file wants twice the vertical angle.</value></data>
+  <data name="Fov_Where_Forza" xml:space="preserve"><value>Settings › Gameplay &amp; HUD › Camera › Custom Camera FOV. 25–65.</value></data>
+  <data name="Fov_Where_Rennsport" xml:space="preserve"><value>Options › Gameplay › Edit Gameplay Cameras, per car. 60–170.</value></data>
+  <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimetres itself.</value></data>
+  <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radians, three decimals.</value></data>
 </root>

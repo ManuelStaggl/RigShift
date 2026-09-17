@@ -242,6 +242,18 @@ public partial class OverviewPage : Page
     }
 }
 
+/// <summary>The field of view page; the displays are read when the page is shown.</summary>
+public partial class FovPage : Page
+{
+    public FovPage(FovViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        DataContext = viewModel;
+        InitializeComponent();
+        Loaded += (_, _) => viewModel.RefreshCommand.Execute(null);
+    }
+}
+
 public partial class AboutPage : Page
 {
     public AboutPage(AboutViewModel viewModel)

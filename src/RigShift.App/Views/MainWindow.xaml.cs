@@ -15,7 +15,7 @@ namespace RigShift.App.Views;
 
 /// <summary>
 /// Main window: title bar, the navigation rail on the left and one page on the right. Closing only hides it – RigShift
-/// keeps running in the tray. Ctrl+1…5 jump to the five pages (R-NAV-5).
+/// keeps running in the tray. Ctrl+1…6 jump to the six pages (R-NAV-5).
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
@@ -35,8 +35,9 @@ public partial class MainWindow : FluentWindow
         AddNav(NavTop, typeof(OverviewPage), SymbolRegular.Home16, "Nav_Overview", Key.D1);
         AddNav(NavTop, typeof(ProfilesPage), SymbolRegular.Desktop16, "Nav_Profiles", Key.D2);
         AddNav(NavTop, typeof(GamesPage), SymbolRegular.Games16, "Nav_Games", Key.D3);
-        AddNav(NavBottom, typeof(SettingsPage), SymbolRegular.Settings16, "Nav_Settings", Key.D4);
-        AddNav(NavBottom, typeof(AboutPage), SymbolRegular.QuestionCircle16, "Nav_About", Key.D5);
+        AddNav(NavTop, typeof(FovPage), SymbolRegular.Eye16, "Nav_Fov", Key.D4);
+        AddNav(NavBottom, typeof(SettingsPage), SymbolRegular.Settings16, "Nav_Settings", Key.D5);
+        AddNav(NavBottom, typeof(AboutPage), SymbolRegular.QuestionCircle16, "Nav_About", Key.D6);
 
         Progress.SetBinding(VisibilityProperty, new Binding(nameof(SwitchCoordinator.IsSwitching))
         {
@@ -47,7 +48,11 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => ShowPage(_page);
     }
 
-    public void ShowPage(Type? page) => _ = ShowPageAsync(page);
+    public void ShowPage(Type? page) => _ = ShowPageAsync(page).ContinueWith(
+        t => Serilog.Log.Error(t.Exception!, "Page {Page} could not be shown", page),
+        System.Threading.CancellationToken.None,
+        TaskContinuationOptions.OnlyOnFaulted,
+        TaskScheduler.FromCurrentSynchronizationContext());
 
     /// <summary>Leaving the profiles or games page with unsaved changes asks first (R-NAV-3); "cancel" keeps the page.</summary>
     private async Task ShowPageAsync(Type? page)

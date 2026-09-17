@@ -1,12 +1,11 @@
 using System.IO;
 using NSubstitute;
 using RigShift.App.Localization;
-using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Fov;
-using RigShift.Core.Settings;
 using RigShift.Core.Tests;
+using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
@@ -16,99 +15,179 @@ namespace RigShift.App.Tests;
 
 public sealed class FovViewModelTests : IDisposable
 {
-    private readonly string _directory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "rigshift-app-tests", Guid.NewGuid().ToString("N")));
-    private readonly SettingsService _settings;
+    /// <summary>A curved 49-inch panel whose model name is in the table.</summary>
+    private static readonly RigShift.Core.Profiles.DisplayIdentity OledG9 =
+        TestDisplays.Identity(TestDisplays.Gpu, @"\\?\DISPLAY#SAM0009#TEST&9", 0x4C2D, 0x0009, "Odyssey G93SC");
+
+    private readonly List<AppTestHost> _hosts = [];
+    private readonly AppTestHost _host;
     private readonly IDisplaySizeReader _sizes = Substitute.For<IDisplaySizeReader>();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     public FovViewModelTests()
     {
-        _settings = new SettingsService(new JsonSettingsStore(Path.Combine(_directory, "settings.json"), Logger.None), Substitute.For<IAutostart>());
+        _host = Host(
+            TestDisplays.Attached(TestDisplays.Desk4K, activeMode: TestDisplays.Mode(TestDisplays.Desk4K, 2560, 1440, 165, primary: true)),
+            TestDisplays.Attached(TestDisplays.Ultrawide, activeMode: TestDisplays.Mode(TestDisplays.Ultrawide, 5120, 1440, 240, x: 2560)),
+            TestDisplays.Attached(TestDisplays.Tablet));
     }
 
-    private static AttachedDisplay Attached(RigShift.Core.Profiles.DisplayAssignment mode, bool active = true) => new()
-    {
-        Identity = mode.Identity,
-        IsAvailable = true,
-        IsActive = active,
-        ActiveMode = active ? mode : null,
-        NativeHandle = new object(),
-    };
-
     [Fact]
-    public void Constructor_PicksThePrimaryDisplay_TakesItsSizeFromTheEdid()
+    public async Task Refresh_PicksThePrimaryDisplay_AndTakesItsSizeFromTheEdid()
     {
         _sizes.Read(TestDisplays.Desk4K).Returns(new ScreenSize(598, 336));
-        var viewModel = new FovViewModel(
-            [Attached(TestDisplays.Mode(TestDisplays.Ultrawide, 5120, 1440, 240)), Attached(TestDisplays.Mode(TestDisplays.Desk4K, 3840, 2160, 60, primary: true)), Attached(TestDisplays.Mode(TestDisplays.Tablet, 1920, 1080, 60), active: false)],
-            new Dictionary<string, string> { [TestDisplays.Desk4K.TargetDevicePath] = "Main" },
-            _sizes, _settings, Logger.None);
+        FovViewModel viewModel = Create();
 
+        await viewModel.RefreshAsync();
+
+        // The inactive tablet is not offered.
         viewModel.Displays.Count.ShouldBe(2);
-        viewModel.SelectedDisplay.ShouldNotBeNull().Name.ShouldStartWith("Main");
+        viewModel.SelectedDisplay.ShouldNotBeNull().Identity.ShouldBe(TestDisplays.Desk4K);
         viewModel.SizeIsMeasured.ShouldBeTrue();
         viewModel.DiagonalInches.ShouldBe(27.0, 0.05);
         viewModel.DistanceCm.ShouldBe(FovViewModel.DefaultDistanceCm);
-        viewModel.IsTriple.ShouldBeFalse();
         viewModel.VerticalText.ShouldBe(Degrees(31.3));
         viewModel.HorizontalText.ShouldBe(Degrees(53.0));
-        viewModel.TripleAngleText.ShouldBe("—");
-        viewModel.GameRows.Single(r => r.Game == "Assetto Corsa Competizione").ValueText.ShouldBe("31");
+        viewModel.HasTrueHorizontal.ShouldBeFalse();
+        viewModel.SimRows.Single(r => r.Id == "Acc").Value.ShouldBe("31");
+        viewModel.PixelDensityText.ShouldBe(48.3.ToString("0.0", Loc.Instance.Culture));
     }
 
     [Fact]
-    public void NoEdidSize_FallsBackTo27InchesWithTheResolutionsAspect_TypedDiagonalScales()
+    public async Task NoEdidSize_FallsBackTo27InchesWithTheResolutionsAspect_TypedDiagonalScales()
     {
-        var viewModel = new FovViewModel(
-            [Attached(TestDisplays.Mode(TestDisplays.Ultrawide, 5120, 1440, 240, primary: true))],
-            new Dictionary<string, string>(), _sizes, _settings, Logger.None);
+        FovViewModel viewModel = Create();
+        await viewModel.RefreshAsync();
+
+        viewModel.SelectedDisplay = viewModel.Displays.Single(d => d.Identity == TestDisplays.Ultrawide);
 
         viewModel.SizeIsMeasured.ShouldBeFalse();
-        viewModel.DiagonalInches.ShouldBe(27.0, 0.05);
         (viewModel.CurrentScreen.WidthMm / viewModel.CurrentScreen.HeightMm).ShouldBe(32.0 / 9, 0.001);
 
         viewModel.DiagonalInches = 49;
         viewModel.CurrentScreen.DiagonalInches.ShouldBe(49, 0.001);
-        viewModel.HorizontalText.ShouldBe(Degrees(FovCalculator.Calculate(new FovInput(viewModel.CurrentScreen, 600, false)).HorizontalDegrees));
     }
 
     [Fact]
-    public async Task Triples_ShowAngleAndTotal_InputsAreRemembered()
+    public async Task Triples_ShowTheAngleAndTheTotal_AndFillTheSimsOwnFields()
     {
         _sizes.Read(TestDisplays.Desk4K).Returns(new ScreenSize(598, 336));
-        var viewModel = new FovViewModel(
-            [Attached(TestDisplays.Mode(TestDisplays.Desk4K, 3840, 2160, 60, primary: true))],
-            new Dictionary<string, string>(), _sizes, _settings, Logger.None);
+        FovViewModel viewModel = Create();
+        await viewModel.RefreshAsync();
 
         viewModel.IsTriple = true;
         viewModel.BezelMm = 10;
         viewModel.DistanceCm = 60;
 
         viewModel.IsSingle.ShouldBeFalse();
-        viewModel.TripleAngleText.ShouldBe(Degrees(54.5));
-        viewModel.TripleTotalText.ShouldBe(Degrees(158.9));
-        viewModel.GameRows.Single(r => r.Game == "iRacing").ValueText.ShouldBe("159");
+        viewModel.AngleText.ShouldBe(Degrees(54.5));
+        viewModel.TotalText.ShouldBe(Degrees(162.0));
+        viewModel.SimRows.Single(r => r.Id == "IRacing").Value.ShouldBe("158.9");
+        viewModel.SimRows.Single(r => r.Id == "Ams2").Fields.ShouldNotBeEmpty();
 
-        await viewModel.SaveInputsAsync(Ct);
+        // A sim without triple rendering says so instead of pretending.
+        viewModel.SimRows.Single(r => r.Id == "Wrc").HasWideHint.ShouldBeTrue();
+    }
 
-        _settings.Current.FovTriple.ShouldBeTrue();
-        _settings.Current.FovBezelMm.ShouldBe(10);
-        _settings.Current.FovDistanceCm.ShouldBe(60);
+    [Fact]
+    public async Task ManualAngle_OverridesTheCalculatedOne()
+    {
+        _sizes.Read(TestDisplays.Desk4K).Returns(new ScreenSize(598, 336));
+        FovViewModel viewModel = Create();
+        await viewModel.RefreshAsync();
 
-        var again = new FovViewModel([Attached(TestDisplays.Mode(TestDisplays.Desk4K, 3840, 2160, 60, primary: true))], new Dictionary<string, string>(), _sizes, _settings, Logger.None);
+        viewModel.IsTriple = true;
+        viewModel.BezelMm = 7;
+        viewModel.AngleIsAutomatic = false;
+        viewModel.AngleDegrees = 45;
+
+        viewModel.AngleIsManual.ShouldBeTrue();
+        viewModel.AngleText.ShouldBe(Degrees(45));
+        viewModel.TotalText.ShouldBe(Degrees(153.6));
+    }
+
+    [Fact]
+    public async Task Curvature_ComesFromTheModel_AndIsRememberedPerDisplay()
+    {
+        _sizes.Read(OledG9).Returns(new ScreenSize(1193, 336));
+        AppTestHost host = Host(TestDisplays.Attached(OledG9, activeMode: TestDisplays.Mode(OledG9, 5120, 1440, 240, primary: true)));
+        FovViewModel viewModel = Create(host);
+
+        await viewModel.RefreshAsync();
+
+        // The OLED G9 is 1800R, not the 1000R of the older one.
+        viewModel.SelectedCurvature.ShouldNotBeNull().Key.ShouldBe("1800");
+        viewModel.HasTrueHorizontal.ShouldBeTrue();
+
+        viewModel.SelectedCurvature = viewModel.CurvatureChoices.Single(c => c.Key == "1000");
+        await WaitForSettingsAsync(host, s => s.FovCurvatureMm is not null);
+
+        host.Settings.Current.FovCurvatureMm.ShouldNotBeNull()[OledG9.TargetDevicePath].ShouldBe(1000);
+    }
+
+    [Fact]
+    public async Task Inputs_AreRememberedAndReadBackByTheNextPage()
+    {
+        _sizes.Read(TestDisplays.Desk4K).Returns(new ScreenSize(598, 336));
+        FovViewModel viewModel = Create();
+        await viewModel.RefreshAsync();
+
+        viewModel.IsTriple = true;
+        viewModel.BezelMm = 12;
+        viewModel.DistanceCm = 70;
+        viewModel.Comfort = true;
+        await WaitForSettingsAsync(s => s.FovComfort && s.FovBezelMm == 12);
+
+        FovViewModel again = Create();
         again.IsTriple.ShouldBeTrue();
-        again.BezelMm.ShouldBe(10);
+        again.BezelMm.ShouldBe(12);
+        again.DistanceCm.ShouldBe(70);
+        again.Comfort.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Warnings_AppearWhenTheArrangementCannotBeBuilt()
+    {
+        _sizes.Read(TestDisplays.Desk4K).Returns(new ScreenSize(598, 336));
+        FovViewModel viewModel = Create();
+        await viewModel.RefreshAsync();
+
+        viewModel.HasWarnings.ShouldBeFalse();
+
+        viewModel.IsTriple = true;
+        viewModel.DistanceCm = 35;
+
+        viewModel.HasWarnings.ShouldBeTrue();
+        viewModel.Warnings.ShouldContain(Loc.Instance["Fov_Warn_Angle"]);
+    }
+
+    private AppTestHost Host(params AttachedDisplay[] displays)
+    {
+        var host = new AppTestHost(new FakeDisplayConfigurator(TestDisplays.Snapshot(displays)));
+        _hosts.Add(host);
+        return host;
+    }
+
+    private FovViewModel Create() => Create(_host);
+
+    private FovViewModel Create(AppTestHost host) =>
+        new(host.Display, host.Catalog, _sizes, host.Settings, watcher: null, Logger.None);
+
+    private Task WaitForSettingsAsync(Func<RigShift.Core.Settings.AppSettings, bool> until) => WaitForSettingsAsync(_host, until);
+
+    /// <summary>The page saves while the user types, so a test waits for the write instead of racing it.</summary>
+    private static async Task WaitForSettingsAsync(AppTestHost host, Func<RigShift.Core.Settings.AppSettings, bool> until)
+    {
+        for (int i = 0; i < 100 && !until(host.Settings.Current); i++)
+        {
+            await Task.Delay(10, Ct);
+        }
+
+        until(host.Settings.Current).ShouldBeTrue();
     }
 
     private static string Degrees(double value) => value.ToString("0.0", Loc.Instance.Culture) + "°";
 
-    public void Dispose()
-    {
-        _settings.Dispose();
-        if (Directory.Exists(_directory))
-        {
-            Directory.Delete(_directory, recursive: true);
-        }
-    }
+    public void Dispose() => _hosts.ForEach(h => h.Dispose());
 }

@@ -487,12 +487,14 @@ public partial class App : Application, IAppShell
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<OverviewViewModel>();
         services.AddSingleton<AboutViewModel>();
+        services.AddSingleton<FovViewModel>();
         services.AddSingleton<GamesViewModel>();
         services.AddSingleton<GamesPage>();
         services.AddSingleton<ProfilesPage>();
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<OverviewPage>();
         services.AddSingleton<AboutPage>();
+        services.AddSingleton<FovPage>();
         services.AddSingleton<MainWindow>();
     }
 

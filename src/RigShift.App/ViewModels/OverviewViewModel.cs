@@ -183,15 +183,6 @@ public sealed partial class OverviewViewModel : ObservableObject
         Views.IdentifyWindow.ShowAll(shown);
     }
 
-    /// <summary>The field-of-view dialog over the active displays; the size comes from each display's EDID.</summary>
-    [RelayCommand]
-    private void Fov()
-    {
-        var viewModel = new FovViewModel(_attached, _catalog.KnownDisplayNames, _sizes, _settings, _log);
-        _log.Information("FOV dialog opened with {Count} active displays", viewModel.Displays.Count);
-        Views.FovWindow.Show(System.Windows.Application.Current.MainWindow, viewModel, _log);
-    }
-
     [RelayCommand]
     private Task SetupAssistantAsync() => _dialogs.ShowSetupAssistantAsync();
 
