@@ -110,7 +110,7 @@
           <ui:ImageIcon
             Width="18"
             Height="18"
-            Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
+            Source="{StaticResource RigShift.Image.AppIcon}" />
         </ui:TitleBar.Icon>
       </ui:TitleBar>
       <!-- What this window is for, beside the name; the title bar itself takes no second line of text. -->

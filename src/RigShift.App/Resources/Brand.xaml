@@ -1,0 +1,88 @@
+<!--
+  The brand mark as vector, traced 1:1 from the brand package (02-app-icons/light/rigshift-app-light-256.svg).
+  The .ico stays the Windows application icon; inside the app a DrawingImage is used instead, because a WPF Image
+  scales a fixed icon frame and turns soft at 18, 36 or 48 px – on every DPI step the mark stays sharp this way.
+-->
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- The brand blue, diagonal as in the package; on the light plate. -->
+  <LinearGradientBrush x:Key="RigShift.Brand.Blue" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#00A6F6" />
+    <GradientStop Offset="0.55" Color="#0078D4" />
+    <GradientStop Offset="1" Color="#0047ED" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="RigShift.Brand.Charcoal" Color="#0F172A" />
+  <SolidColorBrush x:Key="RigShift.Brand.Plate" Color="#F8FAFC" />
+
+  <DrawingImage x:Key="RigShift.Image.AppIcon">
+    <DrawingImage.Drawing>
+      <DrawingGroup>
+        <!-- The rounded plate holds the 256 box, so every size keeps the same optical margin. -->
+        <GeometryDrawing Brush="{StaticResource RigShift.Brand.Plate}">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="1,1,254,254" RadiusX="52.48" RadiusY="52.48" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <DrawingGroup>
+          <DrawingGroup.Transform>
+            <TransformGroup>
+              <ScaleTransform ScaleX="0.87466667" ScaleY="0.87466667" />
+              <TranslateTransform X="23.04" Y="48.64" />
+            </TransformGroup>
+          </DrawingGroup.Transform>
+          <!-- Left screen -->
+          <GeometryDrawing Geometry="M76,60 L17,55 Q10,54 10,61 V124 Q10,130 17,129 L74,124">
+            <GeometryDrawing.Pen>
+              <Pen
+                Brush="{StaticResource RigShift.Brand.Charcoal}"
+                EndLineCap="Round"
+                LineJoin="Round"
+                StartLineCap="Round"
+                Thickness="10" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <!-- Right screen -->
+          <GeometryDrawing Geometry="M153,63 L222,55 Q230,54 230,62 V124 Q230,130 222,129 L166,123">
+            <GeometryDrawing.Pen>
+              <Pen
+                Brush="{StaticResource RigShift.Brand.Blue}"
+                EndLineCap="Round"
+                LineJoin="Round"
+                StartLineCap="Round"
+                Thickness="10" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <!-- Stands -->
+          <GeometryDrawing Geometry="M47,127 V140 M32,143 L64,138">
+            <GeometryDrawing.Pen>
+              <Pen
+                Brush="{StaticResource RigShift.Brand.Charcoal}"
+                EndLineCap="Round"
+                LineJoin="Round"
+                StartLineCap="Round"
+                Thickness="10" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Geometry="M191,127 V140 M176,138 L207,144">
+            <GeometryDrawing.Pen>
+              <Pen
+                Brush="{StaticResource RigShift.Brand.Blue}"
+                EndLineCap="Round"
+                LineJoin="Round"
+                StartLineCap="Round"
+                Thickness="10" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <!-- Arrow, wheel and shifter -->
+          <GeometryDrawing Brush="{StaticResource RigShift.Brand.Blue}" Geometry="F1 M141,9 L177,40 L141,71 V52 C109,49 83,60 76,88 C67,68 75,44 97,32 C110,25 124,24 141,25 Z" />
+          <GeometryDrawing Brush="{StaticResource RigShift.Brand.Blue}" Geometry="F1 M89,62 H137 V72 H82 Z" />
+          <GeometryDrawing Brush="{StaticResource RigShift.Brand.Blue}" Geometry="F1 M41,116 C77,92 97,83 116,83 L88,114 Z M124,83 C145,84 167,95 199,116 L151,114 Z" />
+          <GeometryDrawing Brush="{StaticResource RigShift.Brand.Blue}" Geometry="F1 M119,88 H123 L125,95 H117 Z M116,99 H126 L129,109 H113 Z M111,114 H131 L135,130 H107 Z" />
+          <GeometryDrawing Brush="{StaticResource RigShift.Brand.Charcoal}" Geometry="F1 M105,122 V139 C133,142 145,135 148,122 C160,149 139,162 105,160 V174 L77,148 Z" />
+        </DrawingGroup>
+      </DrawingGroup>
+    </DrawingImage.Drawing>
+  </DrawingImage>
+</ResourceDictionary>

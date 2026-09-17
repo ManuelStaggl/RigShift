@@ -12,6 +12,7 @@
         <ui:ThemesDictionary Theme="Dark" />
         <ui:ControlsDictionary />
         <ResourceDictionary Source="Resources/Tokens.xaml" />
+        <ResourceDictionary Source="Resources/Brand.xaml" />
         <ResourceDictionary Source="Resources/Controls.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />

@@ -37,7 +37,7 @@
         <ui:ImageIcon
           Width="18"
           Height="18"
-          Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
+          Source="{StaticResource RigShift.Image.AppIcon}" />
       </ui:TitleBar.Icon>
     </ui:TitleBar>
 
