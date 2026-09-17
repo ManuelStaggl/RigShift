@@ -131,9 +131,9 @@
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
   <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Refresh rate. The display lists its rates only while it is switched on.</value></data>
   <data name="Editor_HdrHint" xml:space="preserve"><value>HDR after switching. Displays without HDR stay as they are.</value></data>
-  <data name="Hdr_Unchanged" xml:space="preserve"><value>HDR unchanged</value></data>
-  <data name="Hdr_On" xml:space="preserve"><value>HDR on</value></data>
-  <data name="Hdr_Off" xml:space="preserve"><value>HDR off</value></data>
+  <data name="Hdr_Unchanged" xml:space="preserve"><value>Unchanged</value></data>
+  <data name="Hdr_On" xml:space="preserve"><value>On</value></data>
+  <data name="Hdr_Off" xml:space="preserve"><value>Off</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Main display</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional</value></data>
   <data name="Editor_CustomName" xml:space="preserve"><value>Name</value></data>
@@ -286,7 +286,7 @@
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Switch to your rig and save it too</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: a USB device that switches automatically</value></data>
   <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
-  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Leave as it is</value></data>
+  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Leave</value></data>
   <data name="Editor_SurroundOff" xml:space="preserve"><value>Off</value></data>
   <data name="Editor_SurroundOn" xml:space="preserve"><value>On</value></data>
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} displays at {1}x{2} as one {3}x{4} display.</value></data>

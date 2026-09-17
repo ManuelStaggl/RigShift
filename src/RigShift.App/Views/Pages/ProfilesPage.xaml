@@ -440,7 +440,8 @@
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="104" />
                         <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="116" />
+                        <!-- 140, not the mockup's 116: "Unchanged" and "Unverändert" need it in the app's font. -->
+                        <ColumnDefinition Width="140" />
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />

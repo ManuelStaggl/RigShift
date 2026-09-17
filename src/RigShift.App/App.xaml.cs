@@ -397,7 +397,20 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IProfileStore>(sp => new JsonProfileStore(Paths.Profiles, Log.Logger, sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton(_ => new JsonSettingsStore(Paths.SettingsFile, Log.Logger));
         services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", Log.Logger));
+#if DEBUG
+        // Developer aid: demo profiles whose monitors are not on this machine, so the pages can be shown in a working state.
+        string? previewActive = Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DISPLAYS");
+        if (previewActive is { Length: > 0 })
+        {
+            services.AddSingleton<IDisplayConfigurator>(sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), previewActive));
+        }
+        else
+        {
+            services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
+        }
+#else
         services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
+#endif
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
         services.AddSingleton<IPowerController, Windows.Power.PowerController>();

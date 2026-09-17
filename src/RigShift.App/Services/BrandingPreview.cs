@@ -21,8 +21,9 @@ internal static class BrandingPreview
         ArgumentNullException.ThrowIfNull(viewModel);
         Directory.CreateDirectory(directory);
 
-        // Show the active row style even on a machine where no profile matches the connected displays.
-        if (viewModel.Catalog.Items.LastOrDefault() is { } item)
+        // Show the active row style even on a machine where no profile matches the connected displays. With
+        // RIGSHIFT_PREVIEW_DISPLAYS one already does, and marking a second one would put two check marks in the popup.
+        if (!viewModel.Catalog.Items.Any(i => i.IsActive) && viewModel.Catalog.Items.LastOrDefault() is { } item)
         {
             item.IsActive = true;
         }

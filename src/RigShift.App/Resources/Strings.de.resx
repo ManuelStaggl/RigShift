@@ -131,9 +131,9 @@
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Bildwiederholrate</value></data>
   <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Bildwiederholrate. Der Bildschirm meldet seine Raten nur, solange er eingeschaltet ist.</value></data>
   <data name="Editor_HdrHint" xml:space="preserve"><value>HDR nach dem Umschalten. Bildschirme ohne HDR bleiben, wie sie sind.</value></data>
-  <data name="Hdr_Unchanged" xml:space="preserve"><value>HDR unverändert</value></data>
-  <data name="Hdr_On" xml:space="preserve"><value>HDR an</value></data>
-  <data name="Hdr_Off" xml:space="preserve"><value>HDR aus</value></data>
+  <data name="Hdr_Unchanged" xml:space="preserve"><value>Unverändert</value></data>
+  <data name="Hdr_On" xml:space="preserve"><value>An</value></data>
+  <data name="Hdr_Off" xml:space="preserve"><value>Aus</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
   <data name="Editor_Optional" xml:space="preserve"><value>Optional</value></data>
   <data name="Editor_CustomName" xml:space="preserve"><value>Name</value></data>
@@ -286,7 +286,7 @@
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und ihn ebenfalls speichern</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: ein USB-Gerät, das automatisch umschaltet</value></data>
   <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
-  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>So lassen</value></data>
+  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Lassen</value></data>
   <data name="Editor_SurroundOff" xml:space="preserve"><value>Aus</value></data>
   <data name="Editor_SurroundOn" xml:space="preserve"><value>Ein</value></data>
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} Bildschirme mit je {1}x{2} als ein Bildschirm mit {3}x{4}.</value></data>
