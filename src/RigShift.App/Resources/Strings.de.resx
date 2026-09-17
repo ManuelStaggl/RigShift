@@ -6,9 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profile</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="Profiles_EmptyTitle" xml:space="preserve"><value>Keine Profile gefunden</value></data>
   <data name="Profiles_EmptyText" xml:space="preserve"><value>Noch keine Profile. Speichere die aktuelle Anordnung, um eines anzulegen.</value></data>
-  <data name="Profiles_UnreadableTitle" xml:space="preserve"><value>Einige Profile konnten nicht geladen werden</value></data>
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) konnten nicht gelesen werden: {1}. Details stehen im Log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Testen</value></data>
@@ -33,7 +31,6 @@
   <data name="Tray_PlayGame" xml:space="preserve"><value>{0} spielen</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anordnung behalten?</value></data>
-  <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
   <data name="Confirm_Hint" xml:space="preserve"><value>Sonst kommt in {0} s die vorherige Anordnung zurück. Enter behält, Esc setzt zurück – von jedem Bildschirm aus.</value></data>
   <data name="Confirm_Keep" xml:space="preserve"><value>Behalten</value></data>
   <data name="Confirm_Revert" xml:space="preserve"><value>Zurücksetzen</value></data>
@@ -75,10 +72,7 @@
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Tastenkürzel, das zum zuvor aktiven Profil schaltet.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
-  <data name="Settings_ConfirmTimeoutHint" xml:space="preserve"><value>Ohne Bestätigung wird zurückgeschaltet.</value></data>
-  <data name="Settings_ConfirmOffHint" xml:space="preserve"><value>Aus: Ein dunkler Bildschirm wird nicht zurückgestellt.</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
-  <data name="Common_Seconds" xml:space="preserve"><value>Sekunden</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
   <data name="Settings_Version" xml:space="preserve"><value>RigShift {0}</value></data>
@@ -101,7 +95,6 @@
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Tray_SaveCurrent" xml:space="preserve"><value>Anordnung als Profil speichern …</value></data>
-  <data name="Profile_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="Profile_More" xml:space="preserve"><value>Weitere Aktionen</value></data>
   <data name="Profile_Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
   <data name="Profile_Shortcut" xml:space="preserve"><value>Verknüpfung auf dem Desktop erstellen</value></data>
@@ -159,10 +152,6 @@
   <data name="Problem_NameMissing" xml:space="preserve"><value>Gib einen Namen ein.</value></data>
   <data name="Problem_NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 60 Zeichen lang sein.</value></data>
   <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
-  <data name="Problem_NoDisplays" xml:space="preserve"><value>Das Profil braucht mindestens einen Bildschirm.</value></data>
-  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Wähle eine Hauptanzeige.</value></data>
-  <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>Die Hauptanzeige kann nicht optional sein.</value></data>
-  <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
@@ -176,15 +165,11 @@
   <data name="Audio_SetVolume" xml:space="preserve"><value>Lautstärke festlegen</value></data>
   <data name="Audio_VolumeValue" xml:space="preserve"><value>{0} %</value></data>
   <data name="Editor_Apps" xml:space="preserve"><value>Apps</value></data>
-  <data name="Editor_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge, sobald der Wechsel bestätigt ist.</value></data>
-  <data name="Editor_AddApp" xml:space="preserve"><value>App _hinzufügen</value></data>
   <data name="Editor_KeepAwake" xml:space="preserve"><value>PC wach halten</value></data>
-  <data name="Editor_PowerHint" xml:space="preserve"><value>Ton- und Wach-Einstellungen gelten, solange das Profil aktiv ist.</value></data>
   <data name="App_Start" xml:space="preserve"><value>Starten</value></data>
   <data name="App_Stop" xml:space="preserve"><value>Beenden</value></data>
   <data name="App_Action" xml:space="preserve"><value>Aktion</value></data>
   <data name="App_Path" xml:space="preserve"><value>App</value></data>
-  <data name="App_PathPlaceholder" xml:space="preserve"><value>Pfad zur .exe-Datei</value></data>
   <data name="App_Browse" xml:space="preserve"><value>App auswählen</value></data>
   <data name="App_Arguments" xml:space="preserve"><value>Argumente</value></data>
   <data name="App_Wait" xml:space="preserve"><value>Danach warten (Sekunden)</value></data>
@@ -197,23 +182,15 @@
   <data name="App_FileFilter" xml:space="preserve"><value>Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App eine Datei.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
-  <data name="Nav_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Hilfe</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Erkennen</value></data>
-  <data name="Displays_Refresh" xml:space="preserve"><value>_Aktualisieren</value></data>
-  <data name="Displays_Hint" xml:space="preserve"><value>Namen erscheinen in Profilen und Meldungen.</value></data>
-  <data name="Displays_Empty" xml:space="preserve"><value>Keine Bildschirme gefunden.</value></data>
   <data name="Displays_StateActive" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Aktiv · Hauptanzeige</value></data>
   <data name="Displays_StateOff" xml:space="preserve"><value>Verbunden, nicht in Verwendung</value></data>
   <data name="Displays_StateNotReady" xml:space="preserve"><value>Nicht bereit</value></data>
   <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz</value></data>
-  <data name="Displays_InProfiles" xml:space="preserve"><value>In Profilen: {0}</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Noch in keinem Profil</value></data>
-  <data name="About_Troubleshooting" xml:space="preserve"><value>Fehlersuche</value></data>
-  <data name="About_History" xml:space="preserve"><value>Letzte Wechsel</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
-  <data name="About_CopyDiagnostics" xml:space="preserve"><value>Diagnose-Infos kopieren</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt; Protokolldateien sind nicht anonymisiert – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
@@ -234,14 +211,8 @@
   <data name="About_Kofi" xml:space="preserve"><value>Spendier mir einen Kaffee</value></data>
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
-  <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
-  <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, wenn USB-Geräte verbunden werden, und zurück, wenn sie fehlen.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
-  <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
-  <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
-  <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>
-  <data name="Automation_Profile" xml:space="preserve"><value>Umschalten auf</value></data>
   <data name="Automation_ExitStay" xml:space="preserve"><value>Im Profil bleiben</value></data>
   <data name="Automation_ExitBack" xml:space="preserve"><value>Zurück zum vorigen Profil</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
@@ -254,7 +225,6 @@
   <data name="Automation_DeviceConnects" xml:space="preserve"><value>Wenn ein USB-Gerät verbunden wird</value></data>
   <data name="Automation_DeviceGone" xml:space="preserve"><value>Wenn ein Gerät getrennt oder ausgeschaltet wird</value></data>
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
-  <data name="Automation_RefreshDevices" xml:space="preserve"><value>Geräte aktualisieren</value></data>
   <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Eine andere Regel nutzt dieselben Geräte. Werden sie verbunden, schalten beide Regeln um, nacheinander.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>Die Einstellung konnte nicht gespeichert werden. Details stehen im Log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
@@ -266,7 +236,6 @@
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Geräte für Anrufe</value></data>
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows darf dieses Gerät abschalten</value></data>
   <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen – Pedale oder Wheelbase fallen dann während der Fahrt aus.</value></data>
-  <data name="Automation_PowerSavingHelp" xml:space="preserve"><value>So schaltest du es ab</value></data>
   <data name="Automation_DeleteTitle" xml:space="preserve"><value>Regel löschen?</value></data>
   <data name="Automation_DeleteText" xml:space="preserve"><value>Die Regel für „{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>Diese Regel wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
@@ -275,12 +244,8 @@
   <data name="Automation_AddDevice" xml:space="preserve"><value>Gerät hinzufügen</value></data>
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
   <data name="Automation_RemoveDevice" xml:space="preserve"><value>Gerät entfernen</value></data>
-  <data name="Automation_NamesTitle" xml:space="preserve"><value>USB-Gerätenamen</value></data>
-  <data name="Automation_NamesHint" xml:space="preserve"><value>Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>
-  <data name="Automation_NamesEmpty" xml:space="preserve"><value>Sobald eine Regel oder ein Profil ein USB-Gerät nutzt, kannst du es hier benennen.</value></data>
   <data name="Automation_NameConnected" xml:space="preserve"><value>Verbunden</value></data>
   <data name="Automation_NameNotConnected" xml:space="preserve"><value>Nicht verbunden</value></data>
-  <data name="Profiles_SetupAssistant" xml:space="preserve"><value>Einrichtungsassistent</value></data>
   <data name="Setup_Title" xml:space="preserve"><value>RigShift einrichten</value></data>
   <data name="Setup_StepCounter" xml:space="preserve"><value>Schritt {0} von {1}</value></data>
   <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Willkommen bei RigShift</value></data>
@@ -297,34 +262,25 @@
   <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen</value></data>
-  <data name="Setup_DisplaysNow" xml:space="preserve"><value>Gerade aktive Bildschirme</value></data>
   <data name="Setup_NoDisplays" xml:space="preserve"><value>Kein aktiver Bildschirm gefunden. Details stehen im Log.</value></data>
-  <data name="Setup_SameTitle" xml:space="preserve"><value>Noch der erste Aufbau</value></data>
   <data name="Setup_SameText" xml:space="preserve"><value>Windows zeigt noch dieselben Bildschirme wie beim ersten Aufbau. Ändere zuerst die Bildschirme, dann speichern.</value></data>
   <data name="Setup_DetailsLater" xml:space="preserve"><value>Tastenkürzel, Apps, HDR und Bildwiederholrate lassen sich später im Profileditor einstellen.</value></data>
   <data name="Setup_Detected" xml:space="preserve"><value>Erkannt: {0}</value></data>
   <data name="Setup_RuleText" xml:space="preserve"><value>Wenn {0} eingeschaltet wird, schaltet RigShift auf „{1}“. Beim Ausschalten zurück auf „{2}“.</value></data>
   <data name="Setup_Start" xml:space="preserve"><value>Start</value></data>
   <data name="Setup_SkipAll" xml:space="preserve"><value>Selbst einrichten</value></data>
-  <data name="Setup_Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="Setup_SaveContinue" xml:space="preserve"><value>Speichern und weiter</value></data>
   <data name="Setup_NoTrigger" xml:space="preserve"><value>Überspringen</value></data>
   <data name="Setup_CreateRule" xml:space="preserve"><value>Regel anlegen</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Fertig</value></data>
   <data name="Hotkey_RecordTip" xml:space="preserve"><value>Klicken, dann Strg, Alt oder Win mit einer weiteren Taste drücken. Rücktaste entfernt es.</value></data>
   <data name="Displays_IdentifyTip" xml:space="preserve"><value>Zeigt die Windows-Nummer auf jedem Bildschirm.</value></data>
-  <data name="Automation_Rules" xml:space="preserve"><value>Regeln</value></data>
   <data name="Automation_NoDevice" xml:space="preserve"><value>Kein Gerät</value></data>
-  <data name="Automation_NamePlaceholder" xml:space="preserve"><value>z. B. Lenkrad</value></data>
   <data name="About_Diagnostics" xml:space="preserve"><value>Diagnose-Infos</value></data>
   <data name="About_DiagnosticsHint" xml:space="preserve"><value>Für ein GitHub-Issue, ohne deinen Benutzernamen.</value></data>
   <data name="About_Copy" xml:space="preserve"><value>Kopieren</value></data>
-  <data name="About_Folders" xml:space="preserve"><value>Ordner</value></data>
-  <data name="About_FoldersHint" xml:space="preserve"><value>Protokolldateien und Profile.</value></data>
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profile</value></data>
-  <data name="Editor_General" xml:space="preserve"><value>Allgemein</value></data>
-  <data name="Editor_Behavior" xml:space="preserve"><value>Verhalten</value></data>
   <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>Kein Standby, Bildschirmschoner oder Bildschirm-Aus.</value></data>
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Den Schreibtisch-Aufbau so speichern, wie er gerade ist</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und ihn ebenfalls speichern</value></data>
@@ -337,13 +293,11 @@
   <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround ist gerade aus. Richte das Raster einmal in der NVIDIA-Systemsteuerung ein und speichere das Profil dann erneut.</value></data>
   <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>Auf diesem PC wurde kein NVIDIA-Grafiktreiber gefunden.</value></data>
   <data name="Nav_Games" xml:space="preserve"><value>Spiele</value></data>
-  <data name="Games_Intro" xml:space="preserve"><value>Ein Spiel schaltet den PC um, startet seine Tools und stellt danach alles zurück.</value></data>
   <data name="Games_Add" xml:space="preserve"><value>Spiel _hinzufügen</value></data>
   <data name="Games_Scan" xml:space="preserve"><value>Installierte Spiele suchen</value></data>
   <data name="Games_AddedOne" xml:space="preserve"><value>„{0}“ hinzugefügt.</value></data>
   <data name="Games_Added" xml:space="preserve"><value>{0} Spiele hinzugefügt.</value></data>
   <data name="Games_AddedSkipped" xml:space="preserve"><value>Davon standen {0} schon in der Liste.</value></data>
-  <data name="Games_Edit" xml:space="preserve"><value>Spiel bearbeiten</value></data>
   <data name="Games_NewName" xml:space="preserve"><value>Neues Spiel</value></data>
   <data name="Games_EmptyTitle" xml:space="preserve"><value>Noch keine Spiele</value></data>
   <data name="Games_EmptyText" xml:space="preserve"><value>Leg ein Spiel an, um es zusammen mit seinem Profil, seinen Tools und deren Fensterpositionen zu starten.</value></data>
@@ -351,12 +305,6 @@
   <data name="Games_DeleteText" xml:space="preserve"><value>„{0}“ wird entfernt. Das Spiel selbst bleibt installiert.</value></data>
   <data name="Game_Play" xml:space="preserve"><value>Spielen</value></data>
   <data name="Game_Running" xml:space="preserve"><value>Läuft</value></data>
-  <data name="Game_SectionGame" xml:space="preserve"><value>Spiel</value></data>
-  <data name="Game_SectionProfile" xml:space="preserve"><value>Profil</value></data>
-  <data name="Game_SectionApps" xml:space="preserve"><value>Tools</value></data>
-  <data name="Game_SectionWindows" xml:space="preserve"><value>Fensterpositionen</value></data>
-  <data name="Game_SectionExit" xml:space="preserve"><value>Wenn das Spiel endet</value></data>
-  <data name="Game_SectionStart" xml:space="preserve"><value>Starten</value></data>
   <data name="Game_Launch" xml:space="preserve"><value>Startet</value></data>
   <data name="Game_LaunchPlaceholder" xml:space="preserve"><value>Noch kein Spiel gewählt</value></data>
   <data name="Game_Choose" xml:space="preserve"><value>_Wählen…</value></data>
@@ -369,9 +317,6 @@
   <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher-Prozess</value></data>
   <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Für Sims, deren Menü den Sim überlebt, etwa iRacing: sonst würde die Sitzung bei jeder Rückkehr ins Menü enden.</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Nichts umschalten</value></data>
-  <data name="Game_ProfileHint" xml:space="preserve"><value>Wird vor dem Spiel angewandt, damit die Tools auf den Bildschirmen dieses Profils landen.</value></data>
-  <data name="Game_NoProfileHint" xml:space="preserve"><value>Dieses Spiel startet seine Tools, lässt die Bildschirme aber, wie sie sind.</value></data>
-  <data name="Game_AppsHint" xml:space="preserve"><value>Laufen in dieser Reihenfolge. Lenkrad-Software will vor dem Spiel oben sein; SimHub und Crew Chief hängen sich an eine laufende Sitzung.</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Schieb deine Tools zurecht und speichere die Positionen hier. Sie werden vor dem Spielstart wiederhergestellt.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Positionen jetzt speichern…</value></data>
   <data name="Game_WindowsNone" xml:space="preserve"><value>Keine Positionen gespeichert</value></data>
@@ -407,8 +352,6 @@
   <data name="App_AfterGame" xml:space="preserve"><value>Nach dem Spiel</value></data>
   <data name="App_MoveUp" xml:space="preserve"><value>Nach oben</value></data>
   <data name="App_MoveDown" xml:space="preserve"><value>Nach unten</value></data>
-  <data name="Editor_NameRequired" xml:space="preserve"><value>Gib einen Namen ein.</value></data>
-  <data name="Editor_NameTaken" xml:space="preserve"><value>Ein Spiel mit diesem Namen gibt es schon.</value></data>
   <data name="Editor_IconNone" xml:space="preserve"><value>Kein Symbol</value></data>
   <data name="Common_Save" xml:space="preserve"><value>_Speichern</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
