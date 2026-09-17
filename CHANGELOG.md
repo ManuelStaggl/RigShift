@@ -6,6 +6,37 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-09-17
+
+The whole interface was redrawn around what you actually do: pick a profile, look at it, change one thing, switch.
+Nothing was taken away and no file changes format - profiles, games, rules and settings carry over untouched.
+
+### Changed
+
+- **One window instead of a list and a dialog.** Profiles and games sit in a list on the left and open right beside it,
+  so you see what a profile holds while you edit it. Changes collect in a save bar at the bottom - save or discard,
+  nothing is written behind your back, and leaving an edited profile asks first.
+- **A profile in five tabs**: displays, audio, apps, triggers, behavior. A game in the five steps of its session:
+  game, profile, tools, windows, end. A problem shows up as a dot on the tab it belongs to.
+- **Your arrangement as a picture.** Every profile, every list row, the tray and the confirmation show the screens to
+  scale, in their real positions, with the main display marked and missing ones hatched. Click a screen to edit it.
+- **The USB rules moved onto the profile they switch to**, under **Triggers**, together with that profile's hotkey and
+  its desktop shortcut. The separate automation page is gone; pausing all rules is now a switch in the settings and in
+  the tray menu.
+- **An overview page** opens on what is on right now: the active profile, every display with its mode and status,
+  and the switches before this one.
+- **Settings in three groups** - switching, app, devices - with every USB device the rules know by name in one table.
+  Help is four cards: diagnostics to copy, backup as a ZIP, the links, and what is new.
+- **A setup assistant with its steps in view**, so you always see where you are and what is left.
+- **The tray popup** now shows each profile with its arrangement, its hotkey and a check mark on the active one, your
+  games below it, and during a switch what it is switching to.
+- Colors, spacing and type follow the RigShift brand and the Windows accent color; the window frame is painted in the
+  brand navy.
+
+### Fixed
+
+- "Unchanged", "Leave" and "Before the game" no longer sit cut off in their fields.
+
 ## [2.2.0] - 2026-09-16
 
 ### Added

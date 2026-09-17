@@ -17,18 +17,15 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 [Changelog](CHANGELOG.md)
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/profiles-light.png">
-    <img alt="RigShift with a Desk and a Sim Rig profile" src="docs/screenshots/profiles-dark.png" width="820">
-  </picture>
+  <img alt="RigShift with a Desk and a Sim Rig profile" src="docs/screenshots/profiles-dark.png" width="860">
 </p>
 
 ## Features
 
 - **Profiles.** Each profile stores which monitors are on, their layout, main display, resolution, refresh rate and
   HDR, plus playback and microphone device with volume.
-- **Automation.** A rule switches to the rig when your wheelbase (any USB device) connects and back when it is gone,
-  after a delay you choose.
+- **Triggers.** Every profile carries its own way in: a hotkey, a desktop shortcut, and a USB rule that switches to the
+  rig when your wheelbase connects and back when it is gone, after a delay you choose.
 - **Games.** A game entry brackets a whole session: switch to its profile, start SimHub and Crew Chief, put their
   windows back where they belong, launch the sim from Steam or Epic, and clean up when it ends. Start it from the tray,
   a hotkey or its own desktop shortcut – or let RigShift notice when you start the game from Steam yourself.
@@ -45,31 +42,31 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 
 | | |
 |---|---|
-| <img alt="Games page" src="docs/screenshots/games-dark.png" width="400"> | <img alt="Game editor" src="docs/screenshots/game-editor-dark.png" width="400"> |
-| **Games** – one click for the sim, its profile, its tools and the way back. | **Game editor** – launcher, profile, tools with their order, window positions and what happens when you quit. |
-| <img alt="Automation page" src="docs/screenshots/automation-dark.png" width="400"> | <img alt="Profile editor" src="docs/screenshots/profile-editor-dark.png" width="400"> |
-| **Automation** – to the rig when wheelbase and pedals are on, back when they are off. | **Profile editor** – displays, refresh rate, HDR, hotkey, audio and apps. |
+| <img alt="Games page" src="docs/screenshots/games-dark.png" width="400"> | <img alt="The tools of a game session" src="docs/screenshots/game-editor-dark.png" width="400"> |
+| **Games** – one click for the sim, its profile, its tools and the way back. | **Five steps** – launcher, profile, tools with their order, window positions and what happens when you quit. |
+| <img alt="Triggers of a profile" src="docs/screenshots/triggers-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
+| **Triggers** – to the rig when wheelbase and pedals are on, back when they are off. | **Settings** – default profile, countdown, language, updates, and a name for every device. |
 | <img alt="Tray popup" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog" src="docs/screenshots/confirmation-dark.png" width="400"> |
-| **Tray** – switch from the notification area. | **Safety net** – keep the new layout or it reverts after a countdown. |
+| **Tray** – switch or start a sim from the notification area. | **Safety net** – keep the new layout or it reverts after a countdown. |
 
 ## Getting started
 
 1. Download `RigShift-win-Setup.exe` from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
    and run it (a portable ZIP is attached too). RigShift installs per user and starts in the tray.
 2. The setup assistant saves your desk, then your rig after you rearrange the displays, and can add a wheelbase rule.
-3. Later, arrange displays in the Windows settings and click **Save current arrangement**, or edit any profile.
+3. Later, arrange displays in the Windows settings and pick **New → From the current arrangement**, or edit any profile.
 
 RigShift is not code-signed, so SmartScreen may warn on first start: **More info → Run anyway**. Updates install on
 the next start (Settings). Data lives in `%AppData%\RigShift`.
 
 ## Stream Deck and button boxes
 
-- **Hotkey action:** give the profile or the game a keyboard shortcut. **Settings → Back to the previous profile**
-  gives you one key for both directions.
+- **Hotkey action:** give the profile or the game a keyboard shortcut under **Triggers**. **Settings → Previous
+  profile** gives you one key for both directions.
 - **Website action:** `rigshift://apply/Rig`, `rigshift://toggle` or `rigshift://play/iRacing`. Links always ask for
   confirmation.
-- **Open action:** **⋯ → Create desktop shortcut** on a profile or a game. A game's shortcut carries the game's name
-  and its icon.
+- **Open action:** **Triggers → Create on the desktop**, or **⋯ → Create shortcut** on a profile or a game. A game's
+  shortcut carries the game's name and its icon.
 
 ## Command line
 
@@ -96,7 +93,7 @@ welcome.
 
 - A monitor counts as missing while it sleeps: [Monitors in standby](docs/monitor-standby.md).
 - Wheelbase or pedals drop off USB: [USB power saving](docs/usb-power-saving.md).
-- Something else: **About & help → Copy diagnostic info** and [open an issue](https://github.com/ManuelStaggl/RigShift/issues/new).
+- Something else: **Help → Diagnostic info → Copy** and [open an issue](https://github.com/ManuelStaggl/RigShift/issues/new).
 
 Ideas and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/ROADMAP.md).
 If RigShift saves you time, you can [buy me a coffee](https://ko-fi.com/filthyjoker).
