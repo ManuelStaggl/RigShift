@@ -347,7 +347,7 @@
   <data name="Games_EmptyText" xml:space="preserve"><value>Leg ein Spiel an, um es zusammen mit seinem Profil, seinen Tools und deren Fensterpositionen zu starten.</value></data>
   <data name="Games_DeleteTitle" xml:space="preserve"><value>Spiel löschen?</value></data>
   <data name="Games_DeleteText" xml:space="preserve"><value>„{0}“ wird entfernt. Das Spiel selbst bleibt installiert.</value></data>
-  <data name="Game_Play" xml:space="preserve"><value>Starten</value></data>
+  <data name="Game_Play" xml:space="preserve"><value>Spielen</value></data>
   <data name="Game_Running" xml:space="preserve"><value>Läuft</value></data>
   <data name="Game_SectionGame" xml:space="preserve"><value>Spiel</value></data>
   <data name="Game_SectionProfile" xml:space="preserve"><value>Profil</value></data>
@@ -501,7 +501,7 @@
   <data name="GameTab_End" xml:space="preserve"><value>Ende</value></data>
   <data name="Game_GameIntro" xml:space="preserve"><value>Woher das Spiel kommt und woran RigShift erkennt, dass es läuft.</value></data>
   <data name="Game_ProfileIntro" xml:space="preserve"><value>Wird vor dem Spiel angewendet, damit die Tools auf den richtigen Bildschirmen landen.</value></data>
-  <data name="Game_ToolsIntro" xml:space="preserve"><value>Laufen mit der Sitzung. Radsoftware vor dem Spiel; SimHub und Crew Chief hängen sich an die laufende Sitzung.</value></data>
+  <data name="Game_ToolsIntro" xml:space="preserve"><value>Laufen mit der Sitzung. Reihenfolge von oben nach unten.</value></data>
   <data name="Game_EndIntro" xml:space="preserve"><value>Was passiert, wenn die Sitzung vorbei ist.</value></data>
   <data name="Game_ExitLabel" xml:space="preserve"><value>Bildschirme am Ende</value></data>
   <data name="Game_StopAppsHint" xml:space="preserve"><value>Tools, die für diese Sitzung gestartet wurden, werden wieder beendet.</value></data>

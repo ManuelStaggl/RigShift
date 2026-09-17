@@ -87,7 +87,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         SelectedUsbDevice = UsbDevices.FirstOrDefault(c => c.Key == waitFor) ?? UsbDevices.FirstOrDefault();
 
         FillChoices();
-        SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == game.ProfileId?.ToString()) ?? ProfileOptions[0];
+        SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == game.ProfileId?.ToString()) ?? NoProfileOption;
         SelectedEnd = EndChoices.First(c => c.Key == game.EndsWith.ToString());
         SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == ExitKeyOf(game.Exit)) ?? ExitChoices[0];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(game.Icon)) ?? IconChoices[0];
@@ -229,11 +229,13 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     /// <summary>Windows' own name per device id, saved with the id so a disconnected device still reads as a name.</summary>
     public IReadOnlyDictionary<string, string> UsbWindowsNames { get; }
 
-    /// <summary>"Don't switch anything" first, then every profile with its picture (tab "Profile").</summary>
+    /// <summary>Every profile with its picture, then "Don't switch anything" last (tab "Profile").</summary>
     public ObservableCollection<ProfileOption> ProfileOptions { get; } = [];
 
     [ObservableProperty]
     public partial ProfileOption? SelectedProfile { get; set; }
+
+    private ProfileOption NoProfileOption => ProfileOptions.First(o => o.Key is null);
 
     public ObservableCollection<Choice> EndChoices { get; } = [];
 
@@ -556,7 +558,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         try
         {
             FillChoices();
-            SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == profile) ?? ProfileOptions[0];
+            SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == profile) ?? NoProfileOption;
             SelectedEnd = EndChoices.FirstOrDefault(c => c.Key == end) ?? EndChoices[0];
             SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == exit) ?? ExitChoices[0];
             SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == icon) ?? IconChoices[0];
@@ -580,12 +582,13 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     private void FillChoices()
     {
         ProfileOptions.Clear();
-        ProfileOptions.Add(new ProfileOption(null, Loc.Instance["Game_NoProfile"], [], Loc.Instance["Game_NoProfileSub"]));
         foreach (Profile profile in _profiles)
         {
             ProfileOptions.Add(new ProfileOption(
                 profile.Id.ToString(), profile.Name, TopologyDisplays.From(profile.Displays), DescribeProfile(profile)));
         }
+
+        ProfileOptions.Add(new ProfileOption(null, Loc.Instance["Game_NoProfile"], [], Loc.Instance["Game_NoProfileSub"]));
 
         EndChoices.Clear();
         EndChoices.Add(new Choice(nameof(SessionEnd.GameProcess), Loc.Instance["Game_EndsWithGame"]));

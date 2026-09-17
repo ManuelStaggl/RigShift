@@ -812,14 +812,13 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_WindowsHint}"
                   TextWrapping="Wrap" />
-                <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr GameTab_Windows}" />
                 <StackPanel Orientation="Horizontal">
                   <TextBlock
                     Height="32"
                     Margin="0,0,12,0"
                     VerticalAlignment="Center"
                     LineHeight="32"
-                    Style="{StaticResource RigShift.Text.MonoSecondary}"
+                    Style="{StaticResource RigShift.Text.Body}"
                     Text="{Binding WindowsText}" />
                   <Button
                     Click="OnCaptureWindows"

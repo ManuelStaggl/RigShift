@@ -501,7 +501,7 @@
   <data name="GameTab_End" xml:space="preserve"><value>End</value></data>
   <data name="Game_GameIntro" xml:space="preserve"><value>Where the game comes from and how RigShift knows it is running.</value></data>
   <data name="Game_ProfileIntro" xml:space="preserve"><value>Applied before the game, so the tools land on the right screens.</value></data>
-  <data name="Game_ToolsIntro" xml:space="preserve"><value>Run with the session. Wheel software before the game; SimHub and Crew Chief attach to the running session.</value></data>
+  <data name="Game_ToolsIntro" xml:space="preserve"><value>Run with the session. In order from top to bottom.</value></data>
   <data name="Game_EndIntro" xml:space="preserve"><value>What happens once the session is over.</value></data>
   <data name="Game_ExitLabel" xml:space="preserve"><value>Screens at the end</value></data>
   <data name="Game_StopAppsHint" xml:space="preserve"><value>Tools that were started for this session are ended again.</value></data>
