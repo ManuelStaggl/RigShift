@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-09-17
+
+### Fixed
+
+- **Text in drop downs sat above the middle of its box** and started a few pixels further left than in a text field.
+  Both now sit on the same baseline and the same inset, and a long entry ends in an ellipsis instead of running under
+  the arrow.
+- **Text in a text field sat too far from the left edge**: the field's padding was counted twice.
+- **Cut off text at the window's smallest width.** Two column layouts now put their second column underneath instead
+  of running off the page - the display's properties, audio, triggers, the settings groups and the help cards. A
+  checkbox or radio button with a long label wraps instead of being clipped.
+- **The arrangement's tiles** drop the refresh rate, and then the monitor model, rather than cutting a number in half.
+- **The overview's display table** keeps its last column at every window width.
+- **The setup assistant and the pickers had a grey title bar and side rail** instead of the brand navy.
+- **The app icon inside the app** is drawn as vector now, so it stays sharp in the title bar, the help card and the
+  assistant at every scaling.
+
 ## [3.0.0] - 2026-09-17
 
 The whole interface was redrawn around what you actually do: pick a profile, look at it, change one thing, switch.
