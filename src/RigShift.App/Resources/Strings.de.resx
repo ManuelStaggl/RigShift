@@ -196,7 +196,7 @@
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App eine Datei.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
   <data name="Nav_Displays" xml:space="preserve"><value>Bildschirme</value></data>
-  <data name="Nav_About" xml:space="preserve"><value>Über &amp; Hilfe</value></data>
+  <data name="Nav_About" xml:space="preserve"><value>Hilfe</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Erkennen</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Aktualisieren</value></data>
   <data name="Displays_Hint" xml:space="preserve"><value>Namen erscheinen in Profilen und Meldungen.</value></data>
@@ -514,4 +514,14 @@
   <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Letzte Sitzung: kein Spielprozess erkannt – im Tab Spiel eintragen</value></data>
   <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Prozess wird beim ersten Start gelernt</value></data>
   <data name="Problem_LaunchMissing" xml:space="preserve"><value>Wähle, was das Spiel startet.</value></data>
+  <data name="Settings_GroupSwitching" xml:space="preserve"><value>Umschalten</value></data>
+  <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
+  <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
+  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Gilt beim Start, wenn kein Profil erkannt wird.</value></data>
+  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne Bestätigung kommt die vorherige Anordnung zurück.</value></data>
+  <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
+  <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Tray-Menü.</value></data>
+  <data name="Settings_DevicesHint" xml:space="preserve"><value>Geräte erscheinen hier, sobald eine Regel oder ein Profil sie verwendet. Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>
+  <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
+  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
 </root>

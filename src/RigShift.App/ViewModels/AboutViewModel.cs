@@ -50,7 +50,6 @@ public sealed partial class AboutViewModel : ObservableObject
         _settings = settings;
         _log = log.ForContext<AboutViewModel>();
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
-        _coordinator.History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasHistory));
         RefreshUpdateStatus();
 
         // Version, update status and the history rows are built in code; re-read them on a language change (I-13).
@@ -178,10 +177,8 @@ public sealed partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<RigShift.Core.Updates.ReleaseNoteLine> ReleaseNoteLines { get; set; } = [];
 
-    public ObservableCollection<SwitchRecord> History => _coordinator.History;
-
-    /// <summary>The history section is shown only once there is something in it.</summary>
-    public bool HasHistory => History.Count > 0;
+    /// <summary>The recent switches go into the diagnostic report; the page for reading them is the overview.</summary>
+    private ObservableCollection<SwitchRecord> History => _coordinator.History;
 
     [ObservableProperty]
     public partial string? CopyStatus { get; set; }

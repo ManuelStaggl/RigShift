@@ -651,6 +651,54 @@
     </Style.Triggers>
   </Style>
 
+  <!-- ===== Setting row: 52 high card, title and caption left, the control right ===== -->
+  <Style TargetType="controls:SettingRow">
+    <Setter Property="MinHeight" Value="52" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="Padding" Value="16,8" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:SettingRow">
+          <Border
+            Padding="{TemplateBinding Padding}"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RigShift.Radius.Card}"
+            SnapsToDevicePixels="True">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock
+                  Foreground="{TemplateBinding Foreground}"
+                  Style="{StaticResource RigShift.Text.Body}"
+                  Text="{TemplateBinding Title}"
+                  TextWrapping="Wrap" />
+                <TextBlock
+                  x:Name="CaptionText"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{TemplateBinding Caption}"
+                  TextWrapping="Wrap" />
+              </StackPanel>
+              <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Caption" Value="">
+              <Setter TargetName="CaptionText" Property="Visibility" Value="Collapsed" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- ===== Save bar: 48 high at the bottom of a detail; Save is the primary while it shows (R-ACT-1) ===== -->
   <Style TargetType="controls:SaveBar">
     <Setter Property="Height" Value="48" />

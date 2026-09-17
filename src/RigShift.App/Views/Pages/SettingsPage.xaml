@@ -5,116 +5,207 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="{loc:Tr Nav_Settings}"
-  ScrollViewer.CanContentScroll="False">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Style="{StaticResource PageContent}">
-      <ui:TextBlock Margin="0,0,0,16" Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_Settings}" />
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  d:DataContext="{d:DesignInstance vm:SettingsViewModel}"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  Background="{DynamicResource RigShift.Brush.Page}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_Settings}" />
 
-      <!-- Headers as wrapping TextBlocks: a plain string header is cut off in a narrow window (analysis finding I-09). -->
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Star24, FontSize=20}">
-        <ui:CardControl.Header>
-          <TextBlock Text="{loc:Tr Settings_DefaultProfile}" TextWrapping="Wrap" />
-        </ui:CardControl.Header>
-        <ComboBox
-          MinWidth="200"
-          AutomationProperties.Name="{loc:Tr Settings_DefaultProfile}"
-          DisplayMemberPath="Name"
-          ItemsSource="{Binding ProfileChoices}"
-          SelectedItem="{Binding SelectedDefaultProfile}" />
-      </ui:CardControl>
+      <controls:InfoBar
+        Margin="0,12,0,0"
+        Kind="Error"
+        Text="{Binding Devices.ErrorMessage}"
+        Visibility="{Binding Devices.HasError, Converter={StaticResource BoolToVisibility}}" />
 
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Power24, FontSize=20}">
-        <ui:CardControl.Header>
-          <TextBlock Text="{loc:Tr Settings_Autostart}" TextWrapping="Wrap" />
-        </ui:CardControl.Header>
-        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_Autostart}" IsChecked="{Binding StartWithWindows}" />
-      </ui:CardControl>
+      <Grid Margin="0,20,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="32" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Window24, FontSize=20}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{loc:Tr Settings_ConfirmTimeout}" TextWrapping="Wrap" />
-            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource Caption}" Text="{Binding ConfirmHint}" />
-          </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:NumberBox
-            Width="120"
-            Margin="0,0,16,0"
-            VerticalAlignment="Center"
-            AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"
-            ClearButtonEnabled="False"
-            MaxDecimalPlaces="0"
-            Maximum="120"
-            Minimum="1"
-            SmallChange="1"
-            ToolTip="{loc:Tr Settings_ConfirmSeconds}"
-            IsEnabled="{Binding ConfirmEnabled}"
-            Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
-          <!-- The box shows a bare number; without the unit it is anyone's guess what it counts. -->
+        <!-- Left column: switching and the app itself -->
+        <StackPanel Grid.Column="0">
+          <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupSwitching}" />
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_DefaultProfileHint}"
+            Title="{loc:Tr Settings_DefaultProfile}">
+            <ComboBox
+              Width="220"
+              AutomationProperties.Name="{loc:Tr Settings_DefaultProfile}"
+              DisplayMemberPath="Name"
+              ItemsSource="{Binding ProfileChoices}"
+              SelectedItem="{Binding SelectedDefaultProfile}"
+              Style="{StaticResource RigShift.Select}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{Binding ToggleHotkeyHint}"
+            Title="{loc:Tr Settings_ToggleHotkey}">
+            <StackPanel Orientation="Horizontal">
+              <TextBox
+                Width="180"
+                AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
+                AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
+                GotKeyboardFocus="OnToggleHotkeyGotFocus"
+                IsReadOnly="True"
+                IsReadOnlyCaretVisible="False"
+                LostKeyboardFocus="OnToggleHotkeyLostFocus"
+                PreviewKeyDown="OnToggleHotkeyKeyDown"
+                Style="{StaticResource RigShift.Field.Mono}"
+                Text="{Binding ToggleHotkeyText, Mode=OneWay}"
+                ToolTip="{loc:Tr Hotkey_RecordTip}" />
+              <Button
+                Margin="8,0,0,0"
+                AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
+                Command="{Binding ClearToggleHotkeyCommand}"
+                IsEnabled="{Binding HasToggleHotkey}"
+                Style="{StaticResource RigShift.Button.Icon}"
+                ToolTip="{loc:Tr Editor_HotkeyClear}">
+                <ui:SymbolIcon FontSize="16" Symbol="Dismiss16" />
+              </Button>
+            </StackPanel>
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_ConfirmHint}"
+            Title="{loc:Tr Settings_ConfirmTimeout}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}"
+              IsChecked="{Binding ConfirmEnabled}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_ConfirmSeconds}">
+            <ui:NumberBox
+              Width="100"
+              AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"
+              ClearButtonEnabled="False"
+              IsEnabled="{Binding ConfirmEnabled}"
+              MaxDecimalPlaces="0"
+              Maximum="120"
+              Minimum="1"
+              SmallChange="1"
+              SpinButtonPlacementMode="Hidden"
+              Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
+          </controls:SettingRow>
+
+          <TextBlock Margin="0,24,0,0" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupApp}" />
+
+          <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_Autostart}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_Autostart}"
+              IsChecked="{Binding StartWithWindows}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_Language}">
+            <ComboBox
+              Width="220"
+              AutomationProperties.Name="{loc:Tr Settings_Language}"
+              DisplayMemberPath="Name"
+              ItemsSource="{Binding LanguageChoices}"
+              SelectedItem="{Binding SelectedLanguage}"
+              Style="{StaticResource RigShift.Select}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_AutoUpdateHint}"
+            Title="{loc:Tr Settings_AutoUpdate}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}"
+              IsChecked="{Binding InstallUpdatesAutomatically}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+        </StackPanel>
+
+        <!-- Right column: the USB devices rules and profiles use; names are saved on Enter or on leaving (F6). -->
+        <StackPanel Grid.Column="2">
+          <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupDevices}" />
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_PauseRulesHint}"
+            Title="{loc:Tr Settings_PauseRules}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_PauseRules}"
+              IsChecked="{Binding Devices.IsPaused}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+
+          <ItemsControl Focusable="False" ItemsSource="{Binding Devices.NamedDevices}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:UsbNameCard}">
+                <Border Margin="0,8,0,0" MinHeight="52" Padding="16,8" Style="{StaticResource RigShift.Card}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                      <TextBlock
+                        Style="{StaticResource RigShift.Text.Body}"
+                        Text="{Binding WindowsName}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="NoWrap" />
+                      <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                        <controls:StatusLine Kind="{Binding StateKind}" Text="{Binding StateText}" />
+                        <TextBlock
+                          Margin="8,0,0,0"
+                          Style="{StaticResource RigShift.Text.MonoSecondary}"
+                          Text="{Binding Id}"
+                          TextTrimming="CharacterEllipsis"
+                          TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </StackPanel>
+                    <Grid Grid.Column="1" Width="180" VerticalAlignment="Center">
+                      <TextBox
+                        AutomationProperties.HelpText="{Binding WindowsName}"
+                        AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                        KeyDown="OnDeviceNameKeyDown"
+                        LostFocus="OnDeviceNameLostFocus"
+                        MaxLength="40"
+                        Style="{StaticResource RigShift.Field}"
+                        Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
+                      <!-- The empty field would not say what it is for; the hint sits behind the text. -->
+                      <TextBlock
+                        Margin="11,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                        IsHitTestVisible="False"
+                        Style="{StaticResource RigShift.Text.Body}"
+                        Text="{loc:Tr Editor_CustomName}">
+                        <TextBlock.Visibility>
+                          <Binding Path="CustomName">
+                            <Binding.Converter>
+                              <controls:EmptyToVisibilityConverter />
+                            </Binding.Converter>
+                          </Binding>
+                        </TextBlock.Visibility>
+                      </TextBlock>
+                    </Grid>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
           <TextBlock
-            Margin="0,0,16,0"
-            VerticalAlignment="Center"
-            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-            Text="{loc:Tr Common_Seconds}" />
-          <ui:ToggleSwitch VerticalAlignment="Center" AutomationProperties.Name="{loc:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" />
+            Margin="0,12,0,0"
+            Style="{StaticResource RigShift.Text.Caption}"
+            Text="{loc:Tr Settings_DevicesHint}"
+            TextWrapping="Wrap" />
         </StackPanel>
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon ArrowSwap24, FontSize=20}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{loc:Tr Settings_ToggleHotkey}" TextWrapping="Wrap" />
-            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource Caption}" Text="{Binding ToggleHotkeyHint}" />
-          </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:TextBox
-            Width="200"
-            AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
-            AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
-            ClearButtonEnabled="False"
-            GotKeyboardFocus="OnToggleHotkeyGotFocus"
-            IsReadOnly="True"
-            IsReadOnlyCaretVisible="False"
-            LostKeyboardFocus="OnToggleHotkeyLostFocus"
-            PlaceholderText="{loc:Tr Editor_HotkeyPlaceholder}"
-            PreviewKeyDown="OnToggleHotkeyKeyDown"
-            Text="{Binding ToggleHotkeyText, Mode=OneWay}"
-            ToolTip="{loc:Tr Hotkey_RecordTip}" />
-          <ui:Button
-            Margin="8,0,0,0"
-            VerticalAlignment="Stretch"
-            AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
-            Command="{Binding ClearToggleHotkeyCommand}"
-            Icon="{ui:SymbolIcon Dismiss24}"
-            IsEnabled="{Binding HasToggleHotkey}"
-            ToolTip="{loc:Tr Editor_HotkeyClear}" />
-        </StackPanel>
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon LocalLanguage24, FontSize=20}">
-        <ui:CardControl.Header>
-          <TextBlock Text="{loc:Tr Settings_Language}" TextWrapping="Wrap" />
-        </ui:CardControl.Header>
-        <ComboBox
-          MinWidth="200"
-          AutomationProperties.Name="{loc:Tr Settings_Language}"
-          DisplayMemberPath="Name"
-          ItemsSource="{Binding LanguageChoices}"
-          SelectedItem="{Binding SelectedLanguage}" />
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon ArrowDownload24, FontSize=20}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{loc:Tr Settings_AutoUpdate}" TextWrapping="Wrap" />
-            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Settings_AutoUpdateHint}" />
-          </StackPanel>
-        </ui:CardControl.Header>
-        <ui:ToggleSwitch AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}" IsChecked="{Binding InstallUpdatesAutomatically}" />
-      </ui:CardControl>
+      </Grid>
     </StackPanel>
   </ScrollViewer>
 </Page>

@@ -139,6 +139,34 @@ public partial class SettingsPage : Page
         Loaded += (_, _) => viewModel.Load();
     }
 
+    private async void OnDeviceNameLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: UsbNameCard card })
+        {
+            await card.SaveNameAsync();
+        }
+    }
+
+    /// <summary>Enter saves, Esc puts the saved name back (F6).</summary>
+    private async void OnDeviceNameKeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: UsbNameCard card })
+        {
+            return;
+        }
+
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            await card.SaveNameAsync();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            card.CustomName = card.SavedName ?? string.Empty;
+        }
+    }
+
     private void OnToggleHotkeyGotFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.BeginHotkeyRecording();
 
     private void OnToggleHotkeyLostFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.EndHotkeyRecording();
@@ -193,40 +221,23 @@ public partial class OverviewPage : Page
         }
     }
 
+    /// <summary>Enter saves, Esc puts the saved name back (F6).</summary>
     private async void OnNameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == System.Windows.Input.Key.Enter && sender is FrameworkElement { DataContext: DisplayCard card })
+        if (sender is not FrameworkElement { DataContext: DisplayCard card })
+        {
+            return;
+        }
+
+        if (e.Key == System.Windows.Input.Key.Enter)
         {
             e.Handled = true;
             await card.SaveNameAsync();
         }
-    }
-}
-
-public partial class AutomationPage : Page
-{
-    public AutomationPage(AutomationViewModel viewModel)
-    {
-        ArgumentNullException.ThrowIfNull(viewModel);
-        DataContext = viewModel;
-        InitializeComponent();
-        Loaded += (_, _) => viewModel.Load();
-    }
-
-    private async void OnNameLostFocus(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: UsbNameCard card })
-        {
-            await card.SaveNameAsync();
-        }
-    }
-
-    private async void OnNameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.Key == System.Windows.Input.Key.Enter && sender is FrameworkElement { DataContext: UsbNameCard card })
+        else if (e.Key == System.Windows.Input.Key.Escape)
         {
             e.Handled = true;
-            await card.SaveNameAsync();
+            card.CustomName = card.SavedName ?? string.Empty;
         }
     }
 }

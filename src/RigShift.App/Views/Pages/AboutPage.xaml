@@ -5,153 +5,221 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  Title="{loc:Tr Nav_About}"
-  ScrollViewer.CanContentScroll="False">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
-    <StackPanel Style="{StaticResource PageContent}">
-      <ui:TextBlock Margin="0,0,0,16" Style="{StaticResource PageTitle}" Text="{loc:Tr Nav_About}" />
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  d:DataContext="{d:DesignInstance vm:AboutViewModel}"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  Background="{DynamicResource RigShift.Brush.Page}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_About}" />
 
-      <!-- Like the About section in the Windows settings: version and update in the header, links and license inside. -->
-      <ui:CardExpander HorizontalContentAlignment="Stretch" AutomationProperties.Name="{Binding VersionText}" IsExpanded="{Binding ShowReleaseNotes, Mode=OneWay}">
-        <ui:CardExpander.Icon>
-          <ui:ImageIcon Width="20" Height="20" Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
-        </ui:CardExpander.Icon>
-        <ui:CardExpander.Header>
+      <Grid Margin="0,20,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="24" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Version and update -->
+        <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource RigShift.Card}">
+          <StackPanel>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Image
+                Grid.Column="0"
+                Width="36"
+                Height="36"
+                Margin="0,0,16,0"
+                VerticalAlignment="Center"
+                Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{Binding VersionText}" TextWrapping="Wrap" />
+                <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Tagline}" />
+              </StackPanel>
+              <Button
+                Grid.Column="2"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding InstallUpdateNowCommand}"
+                Content="{loc:Tr Settings_RestartToUpdate}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                Grid.Column="2"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding CheckForUpdatesCommand}"
+                Content="{loc:Tr Settings_CheckUpdates}"
+                Style="{StaticResource RigShift.Button}"
+                Visibility="{Binding IsUpdateInstallable, Converter={StaticResource InverseBoolToVisibility}}" />
+            </Grid>
+
+            <controls:InfoBar
+              Margin="0,12,0,0"
+              controls:LiveRegion.IsLive="True"
+              Text="{Binding UpdateStatusText}" />
+
+            <!-- Height-limited: a full changelog section used to make the card huge (hardware test of 1.3.1). -->
+            <StackPanel Margin="0,12,0,0" Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr About_WhatsNew}" />
+              <ScrollViewer
+                MaxHeight="160"
+                Margin="0,4,0,0"
+                Focusable="False"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <ItemsControl Focusable="False" ItemsSource="{Binding ReleaseNoteLines}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Text}" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                          <Style BasedOn="{StaticResource RigShift.Text.Caption}" TargetType="TextBlock">
+                            <Setter Property="Margin" Value="0,2,0,0" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding IsHeading}" Value="True">
+                                <Setter Property="Margin" Value="0,8,0,0" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                      </TextBlock>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+              <Button
+                Margin="0,8,0,0"
+                HorizontalAlignment="Left"
+                Command="{Binding OpenReleaseNotesCommand}"
+                Content="{loc:Tr Settings_ReleaseNotesLink}"
+                Style="{StaticResource RigShift.Link}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Diagnostics -->
+        <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource RigShift.Card}">
+          <StackPanel>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Diagnostics}" />
+                <TextBlock
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr About_DiagnosticsHint}"
+                  TextWrapping="Wrap" />
+                <TextBlock
+                  controls:LiveRegion.IsLive="True"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{Binding CopyStatus}" />
+              </StackPanel>
+              <Button
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Command="{Binding CopyDiagnosticsCommand}"
+                Content="{loc:Tr About_Copy}"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr About_CopyHint}" />
+            </Grid>
+            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+              <Button
+                Height="28"
+                Command="{Binding OpenLogFolderCommand}"
+                Style="{StaticResource RigShift.Button.Ghost}">
+                <StackPanel Orientation="Horizontal">
+                  <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open16" />
+                  <TextBlock Text="{loc:Tr About_Logs}" />
+                </StackPanel>
+              </Button>
+              <Button
+                Height="28"
+                Margin="8,0,0,0"
+                Command="{Binding OpenProfileFolderCommand}"
+                Style="{StaticResource RigShift.Button.Ghost}">
+                <StackPanel Orientation="Horizontal">
+                  <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open16" />
+                  <TextBlock Text="{loc:Tr About_Profiles}" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Backup -->
+        <Border Grid.Row="1" Grid.Column="0" Margin="0,24,0,0" Style="{StaticResource RigShift.Card}">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock Text="{Binding VersionText}" TextWrapping="Wrap" />
-              <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource Caption}" Text="{Binding UpdateStatusText}" />
+            <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+              <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Backup}" />
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
+              <TextBlock
+                controls:LiveRegion.IsLive="True"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{Binding BackupStatus}" />
             </StackPanel>
-            <StackPanel Grid.Column="1" Margin="16,0,8,0" VerticalAlignment="Center" Orientation="Horizontal">
-              <ui:Button
-                Margin="0,0,8,0"
-                Appearance="Primary"
-                Command="{Binding InstallUpdateNowCommand}"
-                Content="{loc:Tr Settings_RestartToUpdate}"
-                Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
-              <ui:Button Command="{Binding CheckForUpdatesCommand}" Content="{loc:Tr Settings_CheckUpdates}" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+              <Button
+                Command="{Binding SaveBackupCommand}"
+                Content="{loc:Tr About_SaveBackup}"
+                Style="{StaticResource RigShift.Button}" />
+              <Button
+                Margin="8,0,0,0"
+                Command="{Binding RestoreBackupCommand}"
+                Content="{loc:Tr About_RestoreBackup}"
+                Style="{StaticResource RigShift.Button}" />
             </StackPanel>
           </Grid>
-        </ui:CardExpander.Header>
+        </Border>
 
-        <StackPanel>
-          <StackPanel Margin="0,0,0,12" Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
-            <TextBlock Style="{StaticResource FieldLabel}" FontWeight="SemiBold" Text="{loc:Tr About_WhatsNew}" />
-            <!-- Height-limited: a full changelog section used to make the card huge (hardware test of 1.3.1). -->
-            <ScrollViewer MaxHeight="200" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-              <ItemsControl Focusable="False" ItemsSource="{Binding ReleaseNoteLines}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                          <Setter Property="Margin" Value="0,2,0,0" />
-                          <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsHeading}" Value="True">
-                              <Setter Property="Margin" Value="0,8,0,0" />
-                              <Setter Property="FontWeight" Value="SemiBold" />
-                              <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </ScrollViewer>
-            <ui:HyperlinkButton Margin="-12,4,0,0" Command="{Binding OpenReleaseNotesCommand}" Content="{loc:Tr Settings_ReleaseNotesLink}" />
-          </StackPanel>
-
-          <WrapPanel Margin="-12,0,0,0">
-            <ui:HyperlinkButton Command="{Binding OpenRepositoryCommand}" Content="{loc:Tr About_Repository}" />
-            <ui:HyperlinkButton Command="{Binding ReportProblemCommand}" Content="{loc:Tr About_ReportProblem}" />
-            <ui:HyperlinkButton Command="{Binding OpenLicenseCommand}" Content="{loc:Tr About_License}" />
-            <ui:HyperlinkButton Command="{Binding OpenKofiCommand}" Content="{loc:Tr About_Kofi}" ToolTip="{loc:Tr About_KofiHint}" />
-          </WrapPanel>
-          <TextBlock Margin="0,8,0,0" Style="{StaticResource Caption}" Text="{loc:Tr About_Copyright}" />
-        </StackPanel>
-      </ui:CardExpander>
-
-      <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr About_Troubleshooting}" />
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Copy24, FontSize=20}">
-        <ui:CardControl.Header>
+        <!-- Links -->
+        <Border Grid.Row="1" Grid.Column="2" Margin="0,24,0,0" Style="{StaticResource RigShift.Card}">
           <StackPanel>
-            <TextBlock Text="{loc:Tr About_Diagnostics}" TextWrapping="Wrap" />
-            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr About_DiagnosticsHint}" />
-            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource StatusText}" Text="{Binding CopyStatus}" />
+            <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Links}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Copyright}" TextWrapping="Wrap" />
+            <WrapPanel Margin="0,12,0,0">
+              <Button
+                Margin="0,0,16,4"
+                Command="{Binding OpenRepositoryCommand}"
+                Content="{loc:Tr About_Repository}"
+                Style="{StaticResource RigShift.Link}" />
+              <Button
+                Margin="0,0,16,4"
+                Command="{Binding ReportProblemCommand}"
+                Content="{loc:Tr About_ReportProblem}"
+                Style="{StaticResource RigShift.Link}" />
+              <Button
+                Margin="0,0,16,4"
+                Command="{Binding OpenLicenseCommand}"
+                Content="{loc:Tr About_License}"
+                Style="{StaticResource RigShift.Link}" />
+              <Button
+                Margin="0,0,16,4"
+                Command="{Binding OpenKofiCommand}"
+                Content="{loc:Tr About_Kofi}"
+                Style="{StaticResource RigShift.Link}"
+                ToolTip="{loc:Tr About_KofiHint}" />
+            </WrapPanel>
           </StackPanel>
-        </ui:CardControl.Header>
-        <ui:Button Command="{Binding CopyDiagnosticsCommand}" Content="{loc:Tr About_Copy}" ToolTip="{loc:Tr About_CopyHint}" />
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon FolderOpen24, FontSize=20}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{loc:Tr About_Folders}" TextWrapping="Wrap" />
-            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr About_FoldersHint}" />
-          </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:Button Margin="0,0,8,0" Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr About_Logs}" />
-          <ui:Button Command="{Binding OpenProfileFolderCommand}" Content="{loc:Tr About_Profiles}" />
-        </StackPanel>
-      </ui:CardControl>
-
-      <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Archive24, FontSize=20}">
-        <ui:CardControl.Header>
-          <StackPanel>
-            <TextBlock Text="{loc:Tr About_Backup}" TextWrapping="Wrap" />
-            <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr About_BackupHint}" />
-            <TextBlock controls:LiveRegion.IsLive="True" Style="{StaticResource StatusText}" Text="{Binding BackupStatus}" />
-          </StackPanel>
-        </ui:CardControl.Header>
-        <StackPanel Orientation="Horizontal">
-          <ui:Button Margin="0,0,8,0" Command="{Binding SaveBackupCommand}" Content="{loc:Tr About_SaveBackup}" />
-          <ui:Button Command="{Binding RestoreBackupCommand}" Content="{loc:Tr About_RestoreBackup}" />
-        </StackPanel>
-      </ui:CardControl>
-
-      <StackPanel Visibility="{Binding HasHistory, Converter={StaticResource BoolToVisibility}}">
-        <ui:TextBlock Style="{StaticResource SectionHeader}" Text="{loc:Tr About_History}" />
-        <ui:Card Padding="16">
-          <ItemsControl Focusable="False" ItemsSource="{Binding History}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid Margin="0,4">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" MinWidth="80" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <ui:SymbolIcon
-                    Margin="0,0,12,0"
-                    VerticalAlignment="Top"
-                    FontSize="16"
-                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                    Symbol="{Binding Symbol}" />
-                  <TextBlock Grid.Column="1" Margin="0,0,12,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TimeText}" />
-                  <StackPanel Grid.Column="2">
-                    <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap">
-                      <Run FontWeight="SemiBold" Text="{Binding ProfileName, Mode=OneWay}" />
-                      <Run Text="·" />
-                      <Run Text="{Binding OutcomeText, Mode=OneWay}" />
-                    </TextBlock>
-                    <TextBlock Style="{StaticResource Caption}" Text="{Binding Details}" Visibility="{Binding HasDetails, Converter={StaticResource BoolToVisibility}}" />
-                  </StackPanel>
-                  <TextBlock Grid.Column="3" Margin="12,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding DurationText}" />
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ui:Card>
-      </StackPanel>
+        </Border>
+      </Grid>
     </StackPanel>
   </ScrollViewer>
 </Page>

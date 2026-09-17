@@ -21,23 +21,26 @@ public sealed partial class SettingsViewModel : ObservableObject
     private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, ILogger log)
+    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
         _settings = settings;
         _catalog = catalog;
         _hotkeys = hotkeys;
+        Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
         ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
-            OnPropertyChanged(nameof(ConfirmHint));
             ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
             Load();
         };
     }
+
+    /// <summary>The device group: the USB devices rules and profiles use, and the pause switch.</summary>
+    public UsbDevicesViewModel Devices { get; }
 
     public ObservableCollection<Choice> ProfileChoices { get; } = [];
 
@@ -54,13 +57,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// writes the seconds shown below, so there is no second value that could contradict it.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ConfirmHint))]
     public partial bool ConfirmEnabled { get; set; }
 
     [ObservableProperty]
     public partial double? ConfirmTimeoutSeconds { get; set; }
-
-    public string ConfirmHint => Loc.Instance[ConfirmEnabled ? "Settings_ConfirmTimeoutHint" : "Settings_ConfirmOffHint"];
 
     [ObservableProperty]
     public partial Choice? SelectedLanguage { get; set; }
@@ -147,6 +147,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             StartWithWindows = _settings.Autostart.IsEnabled;
             ToggleHotkey = current.ToggleHotkey;
+            Devices.Refresh();
         }
         finally
         {

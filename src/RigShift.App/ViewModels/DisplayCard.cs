@@ -62,6 +62,9 @@ public sealed partial class DisplayCard : ObservableObject
     [NotifyPropertyChangedFor(nameof(Name))]
     public partial string CustomName { get; set; }
 
+    /// <summary>The name on disk; Esc puts it back into the field.</summary>
+    internal string? SavedName => _savedName;
+
     internal async Task SaveNameAsync()
     {
         string? name = DisplayNames.Normalize(CustomName);

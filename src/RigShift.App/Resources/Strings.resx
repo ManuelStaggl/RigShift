@@ -196,7 +196,7 @@
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a file for every app.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
   <data name="Nav_Displays" xml:space="preserve"><value>Displays</value></data>
-  <data name="Nav_About" xml:space="preserve"><value>About &amp; help</value></data>
+  <data name="Nav_About" xml:space="preserve"><value>Help</value></data>
   <data name="Displays_Identify" xml:space="preserve"><value>_Identify</value></data>
   <data name="Displays_Refresh" xml:space="preserve"><value>_Refresh</value></data>
   <data name="Displays_Hint" xml:space="preserve"><value>Names appear in profiles and notifications.</value></data>
@@ -514,4 +514,14 @@
   <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognised – enter it on the Game tab</value></data>
   <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Process is learned on the first start</value></data>
   <data name="Problem_LaunchMissing" xml:space="preserve"><value>Choose what starts the game.</value></data>
+  <data name="Settings_GroupSwitching" xml:space="preserve"><value>Switching</value></data>
+  <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
+  <data name="Settings_GroupDevices" xml:space="preserve"><value>Devices</value></data>
+  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Used at start when no profile is recognised.</value></data>
+  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Without a confirmation the previous arrangement comes back.</value></data>
+  <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
+  <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
+  <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>
+  <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
+  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
 </root>
