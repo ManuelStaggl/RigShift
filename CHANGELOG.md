@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-09-17
+
+### Added
+
+- **Field of view from your displays.** The overview has an **FOV** button: pick a display, and its picture size
+  comes from the monitor itself, so you only measure the distance from your eyes to the screen. The dialog shows the
+  vertical and horizontal angle, for triples the side angle and the combined width, and the number each sim wants
+  the way it counts – vertical for Assetto Corsa, ACC, AC EVO, Le Mans Ultimate and RaceRoom, horizontal for
+  Automobilista 2 and iRacing, doubled for the F1 games – with a **Copy** button per line. A monitor that reports no
+  size (remote sessions, virtual displays) falls back to a diagonal you type. Distance, layout and bezel are
+  remembered.
+
 ## [3.0.1] - 2026-09-17
 
 ### Fixed
