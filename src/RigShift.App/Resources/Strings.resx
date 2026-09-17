@@ -28,6 +28,7 @@
   <data name="Tray_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Switching…</value></data>
+  <data name="Tray_SwitchingTo" xml:space="preserve"><value>Switching to {0}…</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>No profiles</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>Play {0}</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>No profile active</value></data>
@@ -84,7 +85,7 @@
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (development build)</value></data>
   <data name="Settings_CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Restart and install</value></data>
-  <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Restart and install version {0}</value></data>
+  <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Restart and install {0}</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates are only available in the installed version.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Not checked for updates yet.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Checking for updates…</value></data>
@@ -99,7 +100,7 @@
   <data name="About_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile…</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save arrangement as profile…</value></data>
   <data name="Profile_Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="Profile_More" xml:space="preserve"><value>More actions</value></data>
   <data name="Profile_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
@@ -236,7 +237,7 @@
   <data name="Nav_Automation" xml:space="preserve"><value>Automation</value></data>
   <data name="Automation_Hint" xml:space="preserve"><value>Switch profiles when USB devices connect, and back when they are gone.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>_Add rule</value></data>
-  <data name="Automation_Pause" xml:space="preserve"><value>Pause automation</value></data>
+  <data name="Automation_Pause" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Automation is paused. No rule switches until you turn it back on.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>No rules yet. Add a rule, pick a USB device and the profile it should switch to.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Create a profile first – rules switch to profiles.</value></data>

@@ -536,6 +536,18 @@
     <Setter Property="controls:Interaction.CornerRadius" Value="6" />
   </Style>
 
+  <!-- Tray popup row (component TrayRow): 44 high for a profile, 36 for a game or an action; no border, radius 6. -->
+  <Style x:Key="RigShift.TrayRow" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
+    <Setter Property="Height" Value="44" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style x:Key="RigShift.TrayRow.Small" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+    <Setter Property="Height" Value="36" />
+  </Style>
+
   <!-- ===== Status line: dot + caption; the color never stands alone (R-COL-2) ===== -->
   <Style TargetType="controls:StatusLine">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />

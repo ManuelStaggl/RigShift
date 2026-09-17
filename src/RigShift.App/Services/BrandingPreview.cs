@@ -27,6 +27,15 @@ internal static class BrandingPreview
             item.IsActive = true;
         }
 
+        // RIGSHIFT_PREVIEW_TRAY=busy: the popup during a switch, which no screenshot on this server could produce
+        // otherwise – applying a profile needs the real displays.
+        if (string.Equals(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY"), "busy", StringComparison.OrdinalIgnoreCase)
+            && viewModel.Catalog.Items.FirstOrDefault(i => !i.IsActive) is { } target)
+        {
+            viewModel.Coordinator.SwitchingProfile = target.Profile;
+            viewModel.Coordinator.IsSwitching = true;
+        }
+
         WriteSheet(Path.Combine(directory, "tray-icons-dark-taskbar.png"), lightTaskbar: false);
         WriteSheet(Path.Combine(directory, "tray-icons-light-taskbar.png"), lightTaskbar: true);
 

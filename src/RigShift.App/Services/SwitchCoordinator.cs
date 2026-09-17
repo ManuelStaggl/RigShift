@@ -70,6 +70,10 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     public partial bool IsSwitching { get; set; }
 
+    /// <summary>Where the running switch goes, so the tray can name it ("Switching to Sim Rig …"); null while idle.</summary>
+    [ObservableProperty]
+    public partial Profile? SwitchingProfile { get; set; }
+
     public bool IsIdle => !IsSwitching;
 
     public void Dispose()
@@ -190,6 +194,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         {
             // Inside the try on purpose: the setter runs foreign handlers, and one that throws used to leave the gate
             // taken for good – every later switch was refused as "another switch is running" until RigShift restarted.
+            // The name first: a handler of IsSwitching already wants to say where the switch goes.
+            SwitchingProfile = profile;
             IsSwitching = true;
             SwitchRequest effective = request with { DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
             Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
@@ -228,6 +234,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         finally
         {
             IsSwitching = false;
+            SwitchingProfile = null;
             _gate.Release();
         }
     }
@@ -252,6 +259,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         DateTimeOffset started = _time.GetLocalNow();
         try
         {
+            SwitchingProfile = pending.Profile;
             IsSwitching = true;
 
             // The active profile does not decide: when the missing display connects, Windows itself may restore whatever
@@ -283,6 +291,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         finally
         {
             IsSwitching = false;
+            SwitchingProfile = null;
             _gate.Release();
         }
     }

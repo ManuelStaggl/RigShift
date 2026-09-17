@@ -466,6 +466,9 @@ public partial class App : Application, IAppShell
         services.AddSingleton<TrayPopupViewModel>();
         services.AddSingleton<TrayPopupView>();
         services.AddSingleton<ProfilesViewModel>();
+
+        // The tray popup only needs the page view model when "save arrangement" is clicked.
+        services.AddSingleton<Func<ProfilesViewModel>>(sp => sp.GetRequiredService<ProfilesViewModel>);
         services.AddSingleton<UsbDevicesViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<OverviewViewModel>();

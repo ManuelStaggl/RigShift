@@ -4,95 +4,243 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
-  xmlns:loc="clr-namespace:RigShift.App.Localization">
-  <!-- Built like the Windows flyouts: the list starts at the top, rows are flat, the active row is marked by accent text and a check mark. -->
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance vm:TrayPopupViewModel}">
+  <!--
+    The daily face of RigShift: profiles with their pictures, then the games, then the three actions. No header and
+    no settings – everything that is not switching or starting belongs in the window.
+  -->
   <UserControl.Resources>
-    <Style x:Key="TrayRowButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
-      <Setter Property="Appearance" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Margin" Value="0,1" />
-      <Setter Property="Padding" Value="12,8" />
-      <Setter Property="HorizontalAlignment" Value="Stretch" />
-      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="CornerRadius" Value="4" />
+    <!-- The active profile keeps its surface while the pointer is elsewhere; the check mark says it, not the color. -->
+    <Style x:Key="ProfileRow" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsActive}" Value="True">
+          <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
+        </DataTrigger>
+      </Style.Triggers>
     </Style>
+    <Style x:Key="RowText" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+      <Setter Property="Grid.Column" Value="1" />
+      <Setter Property="Margin" Value="12,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style x:Key="RowValue" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.MonoSecondary}">
+      <Setter Property="Grid.Column" Value="2" />
+      <Setter Property="Margin" Value="12,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- The game's symbol: a picked one, else its own icon, else the generic glyph. -->
+    <DataTemplate x:Key="GameGlyph" DataType="{x:Type vm:GameItem}">
+      <Grid Width="20" Height="20">
+        <controls:ProfileIcon
+          IconKey="{Binding IconKey}"
+          IsFilled="{Binding IsRunning}"
+          TextElement.Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+          Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+        <Image
+          RenderOptions.BitmapScalingMode="HighQuality"
+          Source="{Binding GameIcon}"
+          Visibility="{Binding HasGameIcon, Converter={StaticResource BoolToVisibility}}" />
+        <ui:SymbolIcon
+          FontSize="20"
+          Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+          Symbol="Games20"
+          Visibility="{Binding HasFallbackIcon, Converter={StaticResource BoolToVisibility}}" />
+      </Grid>
+    </DataTemplate>
   </UserControl.Resources>
 
+  <!-- The margin carries the shadow (spec 7.3); without it the effect would be clipped at the popup's edge. -->
   <Border
     Width="320"
-    Padding="4,12,4,4"
-    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
-    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+    Margin="12"
+    Padding="6"
+    Background="{DynamicResource RigShift.Brush.Chrome}"
+    BorderBrush="{DynamicResource RigShift.Brush.Line}"
     BorderThickness="1"
-    CornerRadius="8">
+    CornerRadius="{DynamicResource RigShift.Radius.Card}">
+    <Border.Effect>
+      <DropShadowEffect
+        BlurRadius="24"
+        Direction="270"
+        Opacity="0.5"
+        ShadowDepth="8"
+        Color="Black" />
+    </Border.Effect>
     <StackPanel>
-      <ui:TextBlock Margin="12,0,12,4" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="RigShift" />
+      <!-- A running switch: where it goes, the one moving element of the popup, and every row disabled below. -->
+      <StackPanel Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock
+          Height="32"
+          Margin="10,0"
+          VerticalAlignment="Center"
+          controls:LiveRegion.IsLive="True"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{Binding SwitchingText}"
+          TextTrimming="CharacterEllipsis" />
+        <controls:ProgressLine
+          Height="2"
+          Margin="10,0,10,6"
+          BarBrush="{DynamicResource RigShift.Brush.Accent}"
+          TrackBrush="{DynamicResource RigShift.Brush.Line}" />
+      </StackPanel>
 
       <TextBlock
-        Margin="12,0,12,4"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Margin="10,10"
+        Style="{StaticResource RigShift.Text.Caption}"
         Text="{Binding StatusText}"
         TextWrapping="Wrap"
         Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
 
       <!-- Scrolls instead of growing past the screen with many profiles (analysis finding I-05); MaxHeight set in code. -->
-      <ScrollViewer x:Name="ProfileList" Margin="0,4,0,0" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer
+        x:Name="ProfileList"
+        Focusable="False"
+        HorizontalScrollBarVisibility="Disabled"
+        IsEnabled="{Binding Coordinator.IsIdle}"
+        VerticalScrollBarVisibility="Auto">
         <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
           <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <ui:Button
+            <DataTemplate DataType="{x:Type vm:ProfileItem}">
+              <Button
                 AutomationProperties.Name="{Binding AccessibleName}"
                 Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
-                IsEnabled="{Binding DataContext.Coordinator.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                <ui:Button.Style>
-                  <Style TargetType="ui:Button" BasedOn="{StaticResource TrayRowButton}">
-                    <Style.Triggers>
-                      <DataTrigger Binding="{Binding IsActive}" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
-                        <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                      </DataTrigger>
-                    </Style.Triggers>
-                  </Style>
-                </ui:Button.Style>
+                Style="{StaticResource ProfileRow}">
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="56" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
-                  <controls:ProfileIcon Width="20" Height="20" VerticalAlignment="Center" IconKey="{Binding IconKey}" IsFilled="{Binding IsActive}" />
-                  <TextBlock
-                    Grid.Column="1"
-                    Margin="12,0,0,0"
+                  <controls:DisplayTopology
+                    Width="56"
+                    Height="24"
                     VerticalAlignment="Center"
-                    Text="{Binding Name}"
-                    TextTrimming="CharacterEllipsis" />
+                    Displays="{Binding Topology}"
+                    Size="XS" />
+                  <TextBlock Text="{Binding Name}">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock" BasedOn="{StaticResource RowText}">
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsActive}" Value="True">
+                            <Setter Property="FontWeight" Value="{DynamicResource RigShift.Type.Weight.Strong}" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Style="{StaticResource RowValue}" Text="{Binding HotkeyText}" />
                   <ui:SymbolIcon
-                    Grid.Column="2"
-                    Margin="12,0,0,0"
+                    Grid.Column="3"
+                    Margin="8,0,0,0"
                     VerticalAlignment="Center"
-                    FontSize="16"
+                    FontSize="14"
+                    Foreground="{DynamicResource RigShift.Brush.Accent}"
                     Symbol="Checkmark24"
                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
-              </ui:Button>
+              </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </ScrollViewer>
 
-      <TextBlock
-        Margin="12,6,12,0"
-        controls:LiveRegion.IsLive="True"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-        Text="{loc:Tr Tray_Switching}"
-        Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
+      <!-- Games: starting a race is the second thing the tray is for; a running one says so instead of its hotkey. -->
+      <StackPanel IsEnabled="{Binding Coordinator.IsIdle}" Visibility="{Binding Games.HasGames, Converter={StaticResource BoolToVisibility}}">
+        <Border Margin="10,6" Style="{StaticResource RigShift.Divider}" />
+        <ItemsControl Focusable="False" ItemsSource="{Binding Games.Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:GameItem}">
+              <Button
+                AutomationProperties.Name="{Binding PlayText}"
+                Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                CommandParameter="{Binding}"
+                IsEnabled="{Binding CanPlay}"
+                Style="{StaticResource RigShift.TrayRow.Small}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="56" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <ContentPresenter
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="{Binding}"
+                    ContentTemplate="{StaticResource GameGlyph}" />
+                  <TextBlock Style="{StaticResource RowText}" Text="{Binding PlayText}" />
+                  <TextBlock
+                    Style="{StaticResource RowValue}"
+                    Text="{Binding HotkeyText}"
+                    Visibility="{Binding ShowsHotkey, Converter={StaticResource BoolToVisibility}}" />
+                  <TextBlock
+                    Grid.Column="2"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource RigShift.Brush.Accent}"
+                    Style="{StaticResource RigShift.Text.Caption}"
+                    Text="{loc:Tr Game_Running}"
+                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
 
-      <Separator Margin="4,8" />
-      <ui:Button Command="{Binding OpenCommand}" Content="{loc:Tr Tray_Open}" Icon="{ui:SymbolIcon Window24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
-      <ui:Button Command="{Binding SettingsCommand}" Content="{loc:Tr Tray_Settings}" Icon="{ui:SymbolIcon Settings24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
-      <ui:Button Command="{Binding ExitCommand}" Content="{loc:Tr Tray_Exit}" Icon="{ui:SymbolIcon Power24}" Style="{StaticResource TrayRowButton}" HorizontalContentAlignment="Left" />
+      <Border Margin="10,6" Style="{StaticResource RigShift.Divider}" />
+      <Button Command="{Binding SaveCurrentCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="56" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <ui:SymbolIcon
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="16"
+            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+            Symbol="Add24" />
+          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_SaveCurrent}" />
+        </Grid>
+      </Button>
+      <Button Command="{Binding OpenCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="56" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <ui:SymbolIcon
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="16"
+            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+            Symbol="Open24" />
+          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_Open}" />
+        </Grid>
+      </Button>
+      <Button Command="{Binding ExitCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="56" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <ui:SymbolIcon
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="16"
+            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+            Symbol="Power24" />
+          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_Exit}" />
+        </Grid>
+      </Button>
     </StackPanel>
   </Border>
 </UserControl>

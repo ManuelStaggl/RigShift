@@ -28,8 +28,9 @@
   <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Wechsle …</value></data>
+  <data name="Tray_SwitchingTo" xml:space="preserve"><value>Wechselt zu {0} …</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
-  <data name="Tray_PlayGame" xml:space="preserve"><value>{0} starten</value></data>
+  <data name="Tray_PlayGame" xml:space="preserve"><value>{0} spielen</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anordnung behalten?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
@@ -84,7 +85,7 @@
   <data name="Settings_VersionDev" xml:space="preserve"><value>RigShift {0} (Entwicklungs-Build)</value></data>
   <data name="Settings_CheckUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Neu starten und installieren</value></data>
-  <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Neu starten und Version {0} installieren</value></data>
+  <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Neu starten und {0} installieren</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates gibt es nur in der installierten Version.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Noch nicht nach Updates gesucht.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Suche nach Updates …</value></data>
@@ -99,7 +100,7 @@
   <data name="About_WhatsNew" xml:space="preserve"><value>Was ist neu</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
-  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Aktuelle Anordnung als Profil speichern …</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Anordnung als Profil speichern …</value></data>
   <data name="Profile_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="Profile_More" xml:space="preserve"><value>Weitere Aktionen</value></data>
   <data name="Profile_Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
@@ -236,7 +237,7 @@
   <data name="Nav_Automation" xml:space="preserve"><value>Automatik</value></data>
   <data name="Automation_Hint" xml:space="preserve"><value>Profile umschalten, wenn USB-Geräte verbunden werden, und zurück, wenn sie fehlen.</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>Regel _hinzufügen</value></data>
-  <data name="Automation_Pause" xml:space="preserve"><value>Automatik pausieren</value></data>
+  <data name="Automation_Pause" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Automation_Paused" xml:space="preserve"><value>Die Automatik ist pausiert. Keine Regel schaltet, bis du sie wieder einschaltest.</value></data>
   <data name="Automation_Empty" xml:space="preserve"><value>Noch keine Regeln. Füge eine Regel hinzu und wähle ein USB-Gerät und das Profil, auf das umgeschaltet wird.</value></data>
   <data name="Automation_NoProfiles" xml:space="preserve"><value>Lege zuerst ein Profil an – Regeln schalten auf Profile um.</value></data>

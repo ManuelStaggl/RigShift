@@ -37,6 +37,15 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     public string AccessibleName => IsRunning ? $"{Name}, {Loc.Instance["Game_Running"]}" : Name;
 
+    /// <summary>"Play iRacing": the tray row is an action, not a name.</summary>
+    public string PlayText => Loc.Format("Tray_PlayGame", Name);
+
+    /// <summary>"Ctrl+Alt+F5" for the tray row; empty without a hotkey.</summary>
+    public string HotkeyText => Game.Hotkey is { } hotkey ? Services.HotkeyFormat.Format(hotkey) : string.Empty;
+
+    /// <summary>The tray row shows either "running" or the hotkey, never both.</summary>
+    public bool ShowsHotkey => !IsRunning && HotkeyText.Length > 0;
+
     /// <summary>"Steam · Rig" under the name in the tray popup: where the game comes from and what it switches to.</summary>
     public string SourceText
     {
@@ -77,7 +86,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
 
     /// <summary>A session for this game is running right now.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(CanPlay))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(CanPlay), nameof(ShowsHotkey))]
     public partial bool IsRunning { get; set; }
 
     /// <summary>Play is off while a session runs: starting twice would switch twice and start two sets of apps (R-FLOW-4).</summary>
