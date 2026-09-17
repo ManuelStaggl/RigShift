@@ -4,6 +4,7 @@ using System.Windows.Automation.Peers;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using RigShift.App.Localization;
+using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Windows.Ui;
@@ -33,14 +34,19 @@ public partial class ConfirmationWindow : FluentWindow
     private HwndSource? _source;
     private nint _hwnd;
     private int _remaining;
+    private readonly int _total;
     private bool _closing;
 
-    private ConfirmationWindow(Profile profile, TimeSpan timeout, CancellationToken cancellationToken)
+    private ConfirmationWindow(ConfirmationView view, TimeSpan timeout, CancellationToken cancellationToken)
     {
         InitializeComponent();
-        ProfileText.Text = profile.Name;
-        _profileId = profile.Id;
-        _remaining = Math.Max(1, (int)Math.Ceiling(timeout.TotalSeconds));
+        BeforeTopology.Displays = view.BeforeTopology;
+        BeforeName.Text = view.BeforeName;
+        AfterTopology.Displays = view.AfterTopology;
+        AfterName.Text = view.AfterName;
+        _profileId = view.ProfileId;
+        _total = Math.Max(1, (int)Math.Ceiling(timeout.TotalSeconds));
+        _remaining = _total;
         UpdateCountdown();
 
         _timer.Tick += OnTick;
@@ -49,9 +55,9 @@ public partial class ConfirmationWindow : FluentWindow
         _cancellation = cancellationToken.Register(() => Dispatcher.InvokeAsync(() => Finish(ConfirmationResult.Cancelled)));
     }
 
-    public static Task<ConfirmationResult> ShowAsync(Profile profile, TimeSpan timeout, CancellationToken cancellationToken)
+    public static Task<ConfirmationResult> ShowAsync(ConfirmationView view, TimeSpan timeout, CancellationToken cancellationToken)
     {
-        var window = new ConfirmationWindow(profile, timeout, cancellationToken);
+        var window = new ConfirmationWindow(view, timeout, cancellationToken);
         s_open = window;
         window.Show();
         return window._result.Task;
@@ -88,7 +94,9 @@ public partial class ConfirmationWindow : FluentWindow
             Log.Warning("Global Esc hotkey for the confirmation window could not be registered; Esc works only while the window has focus");
         }
 
-        SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: false);
+        // Dark caption and frame from DWM; the call also overwrites Background, so put the brand surface back.
+        WindowBackgroundManager.UpdateBackground(this, ApplicationTheme.Dark, WindowBackdropType.None);
+        SetResourceReference(BackgroundProperty, "RigShift.Brush.Page");
     }
 
     private void OnContentRendered(object? sender, EventArgs e)
@@ -133,8 +141,9 @@ public partial class ConfirmationWindow : FluentWindow
 
     private void UpdateCountdown()
     {
-        CountdownText.Text = Loc.Format("Confirm_Countdown", _remaining);
-        UIElementAutomationPeer.CreatePeerForElement(CountdownText)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        Ring.SetRemaining(_remaining, _total);
+        HintText.Text = Loc.Format("Confirm_Hint", _remaining);
+        UIElementAutomationPeer.CreatePeerForElement(HintText)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }
 
     private void Finish(ConfirmationResult result)

@@ -142,72 +142,36 @@ public sealed class ProfileDialogs
             _log.Warning(ex, "Could not remember that the setup assistant was shown");
         }
 
+        _log.Information("Setup assistant opening at step {Step}", viewModel.Step);
         window.ShowDialog();
+        _log.Information("Setup assistant closed");
     }
 
-    /// <summary>Delete is destructive: red button, centred on the window it came from (analysis finding I-15).</summary>
-    public static async Task<bool> ConfirmDeleteAsync(string name)
-    {
-        var box = new MessageBox
-        {
-            Title = Loc.Instance["Profile_DeleteTitle"],
-            Content = Loc.Format("Profile_DeleteText", name),
-            PrimaryButtonText = Loc.Instance["Profile_Delete"],
-            PrimaryButtonAppearance = ControlAppearance.Danger,
-            CloseButtonText = Loc.Instance["Common_Cancel"],
-        };
-        SetOwner(box, ActiveWindow());
-        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
+    /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
+    public static async Task<bool> ConfirmDeleteAsync(string name) =>
+        await Ask(Loc.Instance["Profile_DeleteTitle"], Loc.Format("Profile_DeleteText", name), Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
 
     /// <summary>
     /// Asks whether to undo a switch that never finished, e.g. because RigShift was killed between the apply and the
     /// confirmation. The answer is the user's: their screens may look right by now (Windows restored them, or they
     /// sorted it out by hand), and in that case putting the old layout back would be the disruptive move.
     /// </summary>
-    public static async Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName)
-    {
-        var box = new MessageBox
-        {
-            Title = Loc.Instance["Interrupted_Title"],
-            Content = Loc.Format("Interrupted_Text", targetProfileName),
-            PrimaryButtonText = Loc.Instance["Interrupted_Restore"],
-            CloseButtonText = Loc.Instance["Interrupted_Keep"],
-        };
-        SetOwner(box, ActiveWindow());
-        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
+    public static async Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName) =>
+        await Ask(
+            Loc.Instance["Interrupted_Title"], Loc.Format("Interrupted_Text", targetProfileName),
+            Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
 
     /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
-    public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName)
-    {
-        var box = new MessageBox
-        {
-            Title = Loc.Instance["Automation_DeleteTitle"],
-            Content = deviceName is null ? Loc.Instance["Automation_DeleteTextNoDevice"] : Loc.Format("Automation_DeleteText", deviceName),
-            PrimaryButtonText = Loc.Instance["Profile_Delete"],
-            PrimaryButtonAppearance = ControlAppearance.Danger,
-            CloseButtonText = Loc.Instance["Common_Cancel"],
-        };
-        SetOwner(box, ActiveWindow());
-        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
+    public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName) =>
+        await Ask(
+            Loc.Instance["Automation_DeleteTitle"],
+            deviceName is null ? Loc.Instance["Automation_DeleteTextNoDevice"] : Loc.Format("Automation_DeleteText", deviceName),
+            Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
 
     /// <summary>Restoring a backup replaces everything: same style as deleting (1.7.0).</summary>
-    public static async Task<bool> ConfirmRestoreAsync(int profileCount)
-    {
-        var box = new MessageBox
-        {
-            Title = Loc.Instance["About_RestoreTitle"],
-            Content = Loc.Format("About_RestoreText", profileCount),
-            PrimaryButtonText = Loc.Instance["About_Restore"],
-            PrimaryButtonAppearance = ControlAppearance.Danger,
-            CloseButtonText = Loc.Instance["Common_Cancel"],
-        };
-        SetOwner(box, ActiveWindow());
-        return await box.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
+    public static async Task<bool> ConfirmRestoreAsync(int profileCount) =>
+        await Ask(Loc.Instance["About_RestoreTitle"], Loc.Format("About_RestoreText", profileCount), Loc.Instance["About_Restore"], DialogButtonKind.Danger);
 
     /// <summary>
     /// Asked when the selection or the navigation leaves a profile with unsaved changes (R-NAV-3): "Save changes to X?"
@@ -215,38 +179,32 @@ public sealed class ProfileDialogs
     /// </summary>
     public static async Task<UnsavedChoice> ConfirmUnsavedAsync(string name)
     {
-        var box = new MessageBox
+        int answer = await DialogWindow.AskAsync(
+            Loc.Format("Unsaved_Title", name),
+            Loc.Instance["Unsaved_Text"],
+            [
+                new DialogChoice(Loc.Instance["Common_Save"].Replace("_", string.Empty, StringComparison.Ordinal), DialogButtonKind.Primary, 1),
+                new DialogChoice(Loc.Instance["Common_Discard"], DialogButtonKind.Secondary, 2),
+                new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0);
+        return answer switch
         {
-            Title = Loc.Format("Unsaved_Title", name),
-            Content = Loc.Instance["Unsaved_Text"],
-            PrimaryButtonText = Loc.Instance["Common_Save"].Replace("_", string.Empty, StringComparison.Ordinal),
-            SecondaryButtonText = Loc.Instance["Common_Discard"],
-            CloseButtonText = Loc.Instance["Common_Cancel"],
-        };
-        SetOwner(box, ActiveWindow());
-        return await box.ShowDialogAsync() switch
-        {
-            MessageBoxResult.Primary => UnsavedChoice.Save,
-            MessageBoxResult.Secondary => UnsavedChoice.Discard,
+            1 => UnsavedChoice.Save,
+            2 => UnsavedChoice.Discard,
             _ => UnsavedChoice.Cancel,
         };
     }
 
-    private static System.Windows.Window? ActiveWindow()
-    {
-        System.Windows.Application? app = System.Windows.Application.Current;
-        return app?.Windows.OfType<System.Windows.Window>().FirstOrDefault(w => w.IsActive)
-            ?? (app?.MainWindow is { IsVisible: true } main ? main : null);
-    }
-
-    private static void SetOwner(MessageBox box, System.Windows.Window? owner)
-    {
-        if (owner is { IsVisible: true })
-        {
-            box.Owner = owner;
-            box.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
-        }
-    }
+    /// <summary>A yes/no question: the action first, the way out second (Windows order).</summary>
+    private static async Task<bool> Ask(string title, string message, string actionText, DialogButtonKind kind, string? cancelText = null) =>
+        await DialogWindow.AskAsync(
+            title, message,
+            [
+                new DialogChoice(actionText, kind, 1),
+                new DialogChoice(cancelText ?? Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0) == 1;
 
     /// <summary>The Surround state, or "no driver" when it cannot be read - the editor then simply hides the section.</summary>
     private async Task<SurroundState> ReadSurroundAsync()

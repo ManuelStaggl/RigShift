@@ -1,4 +1,5 @@
 using RigShift.Core.Profiles;
+using RigShift.Core.Topology;
 
 namespace RigShift.Core.Abstractions;
 
@@ -8,8 +9,9 @@ namespace RigShift.Core.Abstractions;
 /// </summary>
 public interface ISwitchConfirmation
 {
-    /// <summary>Resolves with <see cref="ConfirmationResult.TimedOut"/> when <paramref name="timeout"/> elapses without an answer.</summary>
-    Task<ConfirmationResult> ConfirmAsync(Profile profile, TimeSpan timeout, CancellationToken cancellationToken);
+    /// <param name="before">The arrangement the switch started from; the window shows it beside the new one.</param>
+    /// <returns>Resolves with <see cref="ConfirmationResult.TimedOut"/> when <paramref name="timeout"/> elapses without an answer.</returns>
+    Task<ConfirmationResult> ConfirmAsync(Profile profile, DisplaySnapshot before, TimeSpan timeout, CancellationToken cancellationToken);
 }
 
 public enum ConfirmationResult

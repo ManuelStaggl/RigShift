@@ -31,11 +31,11 @@
   <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>{0} starten</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
-  <data name="Confirm_Title" xml:space="preserve"><value>Diese Anzeigeeinstellungen beibehalten?</value></data>
+  <data name="Confirm_Title" xml:space="preserve"><value>Diese Anordnung behalten?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Rückkehr zu den vorherigen Einstellungen in {0} s.</value></data>
-  <data name="Confirm_Hint" xml:space="preserve"><value>Enter behält die neuen Einstellungen. Esc setzt zurück – von jedem Bildschirm aus.</value></data>
-  <data name="Confirm_Keep" xml:space="preserve"><value>_Beibehalten</value></data>
-  <data name="Confirm_Revert" xml:space="preserve"><value>_Zurücksetzen</value></data>
+  <data name="Confirm_Hint" xml:space="preserve"><value>Sonst kommt in {0} s die vorherige Anordnung zurück. Enter behält, Esc setzt zurück – von jedem Bildschirm aus.</value></data>
+  <data name="Confirm_Keep" xml:space="preserve"><value>Behalten</value></data>
+  <data name="Confirm_Revert" xml:space="preserve"><value>Zurücksetzen</value></data>
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} aktiv</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Bildschirme umgeschaltet.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
@@ -294,7 +294,7 @@
   <data name="Setup_DoneWithRule" xml:space="preserve"><value>Deine Regel ist aktiv: Gerät einschalten schaltet um, ausschalten zurück. Umschalten geht auch über das Tray-Symbol neben der Uhr.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
-  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen öffnen</value></data>
+  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen</value></data>
   <data name="Setup_DisplaysNow" xml:space="preserve"><value>Gerade aktive Bildschirme</value></data>
   <data name="Setup_NoDisplays" xml:space="preserve"><value>Kein aktiver Bildschirm gefunden. Details stehen im Log.</value></data>
   <data name="Setup_SameTitle" xml:space="preserve"><value>Noch der erste Aufbau</value></data>
@@ -524,4 +524,15 @@
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Geräte erscheinen hier, sobald eine Regel oder ein Profil sie verwendet. Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>
   <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="Confirm_Before" xml:space="preserve"><value>Vorherige Anordnung</value></data>
+  <data name="Setup_Subtitle" xml:space="preserve"><value>· Einrichten</value></data>
+  <data name="Setup_StepWelcome" xml:space="preserve"><value>Willkommen</value></data>
+  <data name="Setup_StepFirst" xml:space="preserve"><value>Erster Aufbau</value></data>
+  <data name="Setup_StepSecond" xml:space="preserve"><value>Zweiter Aufbau</value></data>
+  <data name="Setup_StepTrigger" xml:space="preserve"><value>Auslöser</value></data>
+  <data name="Setup_StepDone" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift schaltet Bildschirme, Hauptanzeige und Ton in einem Wechsel. Drei Schritte, drei Minuten.</value></data>
+  <data name="Setup_Now" xml:space="preserve"><value>Jetzt angezeigt</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="Setup_DifferentText" xml:space="preserve"><value>Anders als „{0}“ – kann gespeichert werden.</value></data>
 </root>

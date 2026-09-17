@@ -5,296 +5,469 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  d:DataContext="{d:DesignInstance vm:SetupWizardViewModel}"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
   Title="{loc:Tr Setup_Title}"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
-  Width="640"
-  Height="520"
-  MinWidth="440"
-  MinHeight="420"
+  Width="880"
+  Height="600"
+  MinWidth="720"
+  MinHeight="560"
+  Background="{DynamicResource RigShift.Brush.Chrome}"
+  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
   ExtendsContentIntoTitleBar="True"
   ShowInTaskbar="True"
-  WindowBackdropType="Mica"
+  WindowBackdropType="None"
   WindowCornerPreference="Round"
-  WindowStartupLocation="CenterOwner">
+  WindowStartupLocation="CenterOwner"
+  TextOptions.TextFormattingMode="Display">
   <ui:FluentWindow.Resources>
-    <!-- A numbered step on the welcome page. -->
-    <Style x:Key="StepNumber" TargetType="Border">
-      <Setter Property="Width" Value="24" />
-      <Setter Property="Height" Value="24" />
-      <Setter Property="Margin" Value="0,0,12,0" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="CornerRadius" Value="12" />
-      <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+    <!-- A 22 px numbered circle: filled once the step is done, outlined in the accent while it is the current one. -->
+    <Style x:Key="StepCircle" TargetType="Border">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+      <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
+    <Style x:Key="StepNumber" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Mono}">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    </Style>
+
+    <!-- One entry of the step list on the left. -->
+    <DataTemplate x:Key="StepRow" DataType="{x:Type vm:WizardStepItem}">
+      <Grid Height="36">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border x:Name="Circle" Style="{StaticResource StepCircle}">
+          <Grid>
+            <TextBlock
+              x:Name="Number"
+              Style="{StaticResource StepNumber}"
+              Text="{Binding Number}"
+              Visibility="{Binding IsDone, Converter={StaticResource InverseBoolToVisibility}}" />
+            <ui:SymbolIcon
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              FontSize="12"
+              Foreground="{DynamicResource RigShift.Brush.OnAccent}"
+              Symbol="Checkmark24"
+              Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+          </Grid>
+        </Border>
+        <TextBlock
+          x:Name="Label"
+          Grid.Column="1"
+          Margin="12,0,0,0"
+          VerticalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Body}"
+          Text="{Binding Text}"
+          TextTrimming="CharacterEllipsis" />
+      </Grid>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsDone}" Value="True">
+          <Setter TargetName="Circle" Property="Background" Value="{DynamicResource RigShift.Brush.Accent}" />
+          <Setter TargetName="Circle" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+          <Setter TargetName="Circle" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+          <Setter TargetName="Number" Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+          <Setter TargetName="Label" Property="FontWeight" Value="SemiBold" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsAhead}" Value="True">
+          <Setter TargetName="Number" Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+          <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
   </ui:FluentWindow.Resources>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="{loc:Tr Setup_Title}" ShowMaximize="False" ShowMinimize="False" />
+    <!-- Title bar: symbol, name and what this window is for (R-BRAND-1). -->
+    <Grid Grid.Row="0">
+      <ui:TitleBar
+        Height="40"
+        Title="RigShift"
+        FontWeight="SemiBold"
+        Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+        ShowMaximize="False"
+        ShowMinimize="False">
+        <ui:TitleBar.Icon>
+          <ui:ImageIcon
+            Width="18"
+            Height="18"
+            Source="pack://application:,,,/Assets/Brand/rigshift-app-light.ico" />
+        </ui:TitleBar.Icon>
+      </ui:TitleBar>
+      <!-- What this window is for, beside the name; the title bar itself takes no second line of text. -->
+      <TextBlock
+        Margin="108,0,0,0"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Center"
+        IsHitTestVisible="False"
+        Style="{StaticResource RigShift.Text.Caption}"
+        Text="{loc:Tr Setup_Subtitle}" />
+    </Grid>
 
-    <ScrollViewer Grid.Row="1" Focusable="False" VerticalScrollBarVisibility="Auto">
-      <StackPanel Margin="24,8,24,16">
-        <TextBlock Style="{StaticResource Caption}" Text="{Binding StepCounter}" />
-        <ui:TextBlock
-          x:Name="StepHeading"
-          Margin="0,4,0,8"
-          controls:LiveRegion.IsLive="True"
-          FontTypography="Subtitle"
-          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-          Text="{Binding StepTitle}"
-          TextWrapping="Wrap" />
-        <TextBlock Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding StepText}" TextWrapping="Wrap" />
-
-        <ui:InfoBar
-          Margin="0,0,0,16"
-          IsClosable="False"
-          IsOpen="{Binding HasError, Mode=OneWay}"
-          Message="{Binding ErrorMessage}"
-          Severity="Error" />
-
-        <!-- Welcome: what the next steps do. -->
-        <ui:Card Padding="16" Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}">
-          <StackPanel>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <Border Style="{StaticResource StepNumber}">
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="1" />
-              </Border>
-              <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Setup_WelcomeStep1}" TextWrapping="Wrap" />
-            </Grid>
-            <Grid Margin="0,12,0,0">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <Border Style="{StaticResource StepNumber}">
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="2" />
-              </Border>
-              <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Setup_WelcomeStep2}" TextWrapping="Wrap" />
-            </Grid>
-            <Grid Margin="0,12,0,0">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <Border Style="{StaticResource StepNumber}">
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="3" />
-              </Border>
-              <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr Setup_WelcomeStep3}" TextWrapping="Wrap" />
-            </Grid>
-          </StackPanel>
-        </ui:Card>
-
-        <!-- Profile steps: what Windows shows now, a name and the playback device. -->
-        <StackPanel Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}">
-          <ui:InfoBar
-            Margin="0,0,0,16"
-            Title="{loc:Tr Setup_SameTitle}"
-            IsClosable="False"
-            IsOpen="{Binding MatchesFirst, Mode=OneWay}"
-            Message="{loc:Tr Setup_SameText}"
-            Severity="Warning"
-            controls:LiveRegion.IsLive="True" />
-
-          <Grid Margin="0,0,0,4">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock VerticalAlignment="Bottom" Style="{StaticResource FieldLabel}" Text="{loc:Tr Setup_DisplaysNow}" />
-            <ui:HyperlinkButton Grid.Column="1" Command="{Binding OpenDisplaySettingsCommand}" Content="{loc:Tr Setup_OpenDisplaySettings}" />
-          </Grid>
-          <ui:Card Margin="0,0,0,16" Padding="16">
-            <StackPanel>
-              <ItemsControl Focusable="False" ItemsSource="{Binding DisplayLines}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <TextBlock Margin="0,2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding}" TextWrapping="Wrap" />
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-              <TextBlock
-                Style="{StaticResource Caption}"
-                Text="{loc:Tr Setup_NoDisplays}"
-                Visibility="{Binding HasNoDisplays, Converter={StaticResource BoolToVisibility}}" />
-            </StackPanel>
-          </ui:Card>
-
-          <WrapPanel>
-            <StackPanel Width="260" Margin="0,0,24,12">
-              <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Editor_Name}" />
-              <ui:TextBox
-                x:Name="NameBox"
-                AutomationProperties.Name="{loc:Tr Editor_Name}"
-                MaxLength="60"
-                Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" />
-              <TextBlock
-                Margin="0,4,0,0"
-                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                Text="{Binding NameProblem}"
-                TextWrapping="Wrap"
-                Visibility="{Binding HasNameProblem, Converter={StaticResource BoolToVisibility}}" />
-            </StackPanel>
-            <StackPanel Width="260" Margin="0,0,0,12">
-              <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Playback.Label}" />
-              <ComboBox
-                AutomationProperties.Name="{Binding Playback.Label}"
-                DisplayMemberPath="Name"
-                ItemsSource="{Binding Playback.Choices}"
-                SelectedItem="{Binding Playback.Selected}" />
-            </StackPanel>
-          </WrapPanel>
-          <TextBlock Style="{StaticResource Caption}" Text="{loc:Tr Setup_DetailsLater}" />
-        </StackPanel>
-
-        <!-- Trigger step: turn the device on, RigShift picks it. -->
-        <StackPanel Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}">
-          <ui:InfoBar
-            Margin="0,0,0,16"
-            IsClosable="False"
-            IsOpen="{Binding HasDetected, Mode=OneWay}"
-            Message="{Binding DetectedMessage}"
-            Severity="Success"
-            controls:LiveRegion.IsLive="True" />
-
-          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Automation_Device}" />
-          <ComboBox
-            Margin="0,0,0,8"
-            AutomationProperties.Name="{loc:Tr Automation_Device}"
-            DisplayMemberPath="Name"
-            ItemsSource="{Binding DeviceChoices}"
-            SelectedItem="{Binding SelectedDevice}" />
-          <TextBlock Margin="0,0,0,12" Style="{StaticResource Caption}" Text="{Binding RuleText}" />
-
-          <ui:InfoBar
-            Margin="0,0,0,8"
-            Title="{loc:Tr Automation_PowerSavingTitle}"
-            IsClosable="False"
-            IsOpen="{Binding HasPowerWarning, Mode=OneWay}"
-            Message="{loc:Tr Automation_PowerSavingText}"
-            Severity="Warning" />
-        </StackPanel>
-
-        <!-- Done: what was set up. -->
-        <StackPanel Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}">
-          <ItemsControl Focusable="False" ItemsSource="{Binding Summary}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <ui:Card Margin="0,0,0,4" Padding="16">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <controls:ProfileIcon
-                      Width="20"
-                      Height="20"
-                      Margin="0,2,12,0"
-                      VerticalAlignment="Top"
-                      IconKey="{Binding IconKey}"
-                      TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <StackPanel Grid.Column="1">
-                      <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextWrapping="Wrap" />
-                      <ItemsControl Focusable="False" ItemsSource="{Binding DisplayLines}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate>
-                            <TextBlock Style="{StaticResource Caption}" Text="{Binding}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
-                  </Grid>
-                </ui:Card>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <ui:Card Margin="0,0,0,4" Padding="16">
-            <ui:Card.Style>
-              <Style TargetType="ui:Card" BasedOn="{StaticResource {x:Type ui:Card}}">
-                <Style.Triggers>
-                  <DataTrigger Binding="{Binding RuleSummary}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                  </DataTrigger>
-                </Style.Triggers>
-              </Style>
-            </ui:Card.Style>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Top" FontSize="20" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Symbol="Flash24" />
-              <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding RuleSummary}" TextWrapping="Wrap" />
-            </Grid>
-          </ui:Card>
-        </StackPanel>
-      </StackPanel>
-    </ScrollViewer>
-
-    <Grid Grid.Row="2" Margin="24,16,24,20">
+    <Grid Grid.Row="1">
       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220" />
         <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <!-- Welcome -->
-      <ui:Button
-        HorizontalAlignment="Left"
-        Command="{Binding SkipCommand}"
-        Content="{loc:Tr Setup_SkipAll}"
-        Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}" />
-      <ui:Button
-        x:Name="StartButton"
-        Grid.Column="1"
-        MinWidth="120"
-        Appearance="Primary"
-        Command="{Binding StartCommand}"
-        Content="{loc:Tr Setup_Start}"
-        Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}" />
+      <!-- Step list: where the user is, and how much is left. -->
+      <DockPanel Grid.Column="0" Margin="16,24,16,16">
+        <Button
+          Command="{Binding SkipCommand}"
+          Content="{loc:Tr Setup_SkipAll}"
+          DockPanel.Dock="Bottom"
+          HorizontalAlignment="Left"
+          Style="{StaticResource RigShift.Button.Ghost}" />
+        <ItemsControl
+          DockPanel.Dock="Top"
+          Focusable="False"
+          ItemTemplate="{StaticResource StepRow}"
+          ItemsSource="{Binding StepList}" />
+        <Border />
+      </DockPanel>
 
-      <!-- Profile steps -->
-      <ui:Button
-        HorizontalAlignment="Left"
-        Command="{Binding SkipCommand}"
-        Content="{loc:Tr Setup_Close}"
-        Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}" />
-      <ui:Button
+      <!-- Page surface: lighter than the chrome, rounded at the top left, like the main window. -->
+      <Border
         Grid.Column="1"
-        MinWidth="120"
-        Appearance="Primary"
-        Command="{Binding SaveProfileCommand}"
-        Content="{loc:Tr Setup_SaveContinue}"
-        Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}" />
+        Background="{DynamicResource RigShift.Brush.Page}"
+        BorderBrush="{DynamicResource RigShift.Brush.Line}"
+        BorderThickness="1,1,0,0"
+        ClipToBounds="True"
+        CornerRadius="8,0,0,0"
+        SnapsToDevicePixels="True">
+        <Grid Margin="32,24,32,20">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
 
-      <!-- Trigger -->
-      <ui:Button
-        HorizontalAlignment="Left"
-        Command="{Binding SkipTriggerCommand}"
-        Content="{loc:Tr Setup_NoTrigger}"
-        Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
-      <ui:Button
-        Grid.Column="1"
-        MinWidth="120"
-        Appearance="Primary"
-        Command="{Binding CreateRuleCommand}"
-        Content="{loc:Tr Setup_CreateRule}"
-        Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
+          <!-- Welcome: the horizontal logo with the slogan, once in the whole app (R-BRAND-1). One block, centred. -->
+          <StackPanel
+            Grid.Row="0"
+            VerticalAlignment="Center"
+            Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}">
+            <Image
+              Width="400"
+              HorizontalAlignment="Center"
+              RenderOptions.BitmapScalingMode="HighQuality"
+              Source="pack://application:,,,/Assets/Brand/rigshift-horizontal-tagline.png"
+              Stretch="Uniform" />
+            <TextBlock
+              MaxWidth="440"
+              Margin="0,28,0,0"
+              HorizontalAlignment="Center"
+              Style="{StaticResource RigShift.Text.Caption}"
+              Text="{loc:Tr Setup_Tagline}"
+              TextAlignment="Center"
+              TextWrapping="Wrap" />
+            <ItemsControl
+              Width="400"
+              Margin="0,28,0,0"
+              HorizontalAlignment="Center"
+              Focusable="False"
+              ItemTemplate="{StaticResource StepRow}"
+              ItemsSource="{Binding WelcomeList}" />
+          </StackPanel>
 
-      <!-- Done -->
-      <ui:Button
-        Grid.Column="1"
-        MinWidth="120"
-        Appearance="Primary"
-        Command="{Binding SkipCommand}"
-        Content="{loc:Tr Setup_Finish}"
-        Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+          <ScrollViewer
+            Grid.Row="0"
+            Margin="0,0,-12,0"
+            Padding="0,0,12,0"
+            Focusable="False"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="{Binding IsWelcome, Converter={StaticResource InverseBoolToVisibility}}">
+            <StackPanel>
+              <!-- Heading of every step but the welcome one. -->
+              <StackPanel>
+                <ui:TextBlock
+                  x:Name="StepHeading"
+                  controls:LiveRegion.IsLive="True"
+                  FontTypography="Title"
+                  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+                  Text="{Binding StepTitle}"
+                  TextWrapping="Wrap" />
+                <TextBlock
+                  Margin="0,6,0,0"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{Binding StepText}"
+                  TextWrapping="Wrap" />
+              </StackPanel>
+
+              <controls:InfoBar
+                Margin="0,20,0,0"
+                Kind="Error"
+                Text="{Binding ErrorMessage}"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+              <!-- Profile steps: the live picture, a name and the playback device. -->
+              <StackPanel Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}">
+                <controls:InfoBar
+                  Margin="0,20,0,0"
+                  controls:LiveRegion.IsLive="True"
+                  Kind="Warn"
+                  Text="{loc:Tr Setup_SameText}"
+                  Visibility="{Binding MatchesFirst, Converter={StaticResource BoolToVisibility}}" />
+                <controls:InfoBar
+                  Margin="0,20,0,0"
+                  Kind="Info"
+                  Text="{Binding DifferentText}"
+                  Visibility="{Binding IsDifferent, Converter={StaticResource BoolToVisibility}}" />
+
+                <ContentControl Margin="0,20,0,0" Style="{StaticResource RigShift.TopologyPanel}">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" LastChildFill="False">
+                      <TextBlock
+                        DockPanel.Dock="Left"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource RigShift.Text.Caption}"
+                        Text="{loc:Tr Setup_Now}" />
+                      <Button
+                        Height="28"
+                        Command="{Binding OpenDisplaySettingsCommand}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource RigShift.Button.Ghost}">
+                        <StackPanel Orientation="Horizontal">
+                          <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open16" />
+                          <TextBlock Text="{loc:Tr Setup_OpenDisplaySettings}" />
+                        </StackPanel>
+                      </Button>
+                    </DockPanel>
+                    <controls:DisplayTopology
+                      Grid.Row="1"
+                      Height="115"
+                      Margin="0,12,0,0"
+                      Displays="{Binding Topology}"
+                      Size="M"
+                      Visibility="{Binding HasDisplays, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock
+                      Grid.Row="1"
+                      Margin="0,12,0,0"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Text="{loc:Tr Setup_NoDisplays}"
+                      Visibility="{Binding HasNoDisplays, Converter={StaticResource BoolToVisibility}}" />
+                  </Grid>
+                </ContentControl>
+
+                <Grid Margin="0,16,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="260" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Name}" />
+                    <TextBox
+                      x:Name="NameBox"
+                      AutomationProperties.Name="{loc:Tr Editor_Name}"
+                      MaxLength="60"
+                      Style="{StaticResource RigShift.Field}"
+                      Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Style="{StaticResource RigShift.Text.FieldError}"
+                      Text="{Binding NameProblem}"
+                      Visibility="{Binding HasNameProblem, Converter={StaticResource BoolToVisibility}}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{Binding Playback.Label}" />
+                    <ComboBox
+                      AutomationProperties.Name="{Binding Playback.Label}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Playback.Choices}"
+                      SelectedItem="{Binding Playback.Selected}"
+                      Style="{StaticResource RigShift.Select}" />
+                  </StackPanel>
+                </Grid>
+                <TextBlock
+                  Margin="0,12,0,0"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{loc:Tr Setup_DetailsLater}"
+                  TextWrapping="Wrap" />
+              </StackPanel>
+
+              <!-- Trigger step: turn the device on, RigShift picks it. -->
+              <StackPanel Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}">
+                <controls:InfoBar
+                  Margin="0,20,0,0"
+                  controls:LiveRegion.IsLive="True"
+                  Kind="Info"
+                  Text="{Binding DetectedMessage}"
+                  Visibility="{Binding HasDetected, Converter={StaticResource BoolToVisibility}}" />
+
+                <StackPanel Width="360" Margin="0,20,0,0" HorizontalAlignment="Left">
+                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_Device}" />
+                  <ComboBox
+                    AutomationProperties.Name="{loc:Tr Automation_Device}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding DeviceChoices}"
+                    SelectedItem="{Binding SelectedDevice}"
+                    Style="{StaticResource RigShift.Select}" />
+                </StackPanel>
+
+                <Border Margin="0,16,0,0" Style="{StaticResource RigShift.Card}">
+                  <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon
+                      Margin="0,0,12,0"
+                      VerticalAlignment="Top"
+                      FontSize="16"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                      Symbol="UsbPlug24" />
+                    <TextBlock
+                      MaxWidth="520"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Text="{Binding RuleText}"
+                      TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+
+                <controls:InfoBar
+                  Margin="0,16,0,0"
+                  Kind="Warn"
+                  Text="{loc:Tr Automation_PowerSavingText}"
+                  ToolTip="{loc:Tr Automation_PowerSavingTitle}"
+                  Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+
+              <!-- Done: the two profiles as cards and the rule as a sentence. -->
+              <StackPanel Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}">
+                <ItemsControl Margin="0,20,0,0" Focusable="False" ItemsSource="{Binding Summary}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Width="280" Margin="0,0,12,0" Style="{StaticResource RigShift.Card}">
+                        <StackPanel>
+                          <Border
+                            Height="60"
+                            Background="{DynamicResource RigShift.Brush.Chrome}"
+                            CornerRadius="4"
+                            SnapsToDevicePixels="True">
+                            <controls:DisplayTopology
+                              Width="200"
+                              Height="52"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Displays="{Binding Topology}"
+                              Size="S" />
+                          </Border>
+                          <TextBlock
+                            Margin="0,10,0,0"
+                            Style="{StaticResource RigShift.Text.BodyStrong}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+                          <ItemsControl Margin="0,2,0,0" Focusable="False" ItemsSource="{Binding DisplayLines}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <TextBlock
+                                  Style="{StaticResource RigShift.Text.Caption}"
+                                  Text="{Binding}"
+                                  TextTrimming="CharacterEllipsis" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border
+                  Margin="0,12,0,0"
+                  Padding="16,12"
+                  Style="{StaticResource RigShift.Card}"
+                  Visibility="{Binding HasRuleSummary, Converter={StaticResource BoolToVisibility}}">
+                  <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon
+                      Margin="0,0,12,0"
+                      VerticalAlignment="Top"
+                      FontSize="16"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                      Symbol="UsbPlug24" />
+                    <TextBlock
+                      MaxWidth="520"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Text="{Binding RuleSummary}"
+                      TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+
+          <!-- One row of actions: back on the left, the step's primary on the right (R-ACT-1). -->
+          <Grid Grid.Row="1" Margin="0,20,0,0">
+            <Button
+              HorizontalAlignment="Left"
+              Command="{Binding BackCommand}"
+              Content="{loc:Tr Common_Back}"
+              Style="{StaticResource RigShift.Button.Ghost}"
+              Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibility}}" />
+
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+              <Button
+                x:Name="StartButton"
+                MinWidth="120"
+                Command="{Binding StartCommand}"
+                Content="{loc:Tr Setup_Start}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                MinWidth="120"
+                Command="{Binding SaveProfileCommand}"
+                Content="{loc:Tr Setup_SaveContinue}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding IsProfileStep, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                Margin="0,0,8,0"
+                Command="{Binding SkipTriggerCommand}"
+                Content="{loc:Tr Setup_NoTrigger}"
+                Style="{StaticResource RigShift.Button}"
+                Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                MinWidth="120"
+                Command="{Binding CreateRuleCommand}"
+                Content="{loc:Tr Setup_CreateRule}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
+              <Button
+                MinWidth="120"
+                Command="{Binding SkipCommand}"
+                Content="{loc:Tr Setup_Finish}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+          </Grid>
+        </Grid>
+      </Border>
     </Grid>
   </Grid>
 </ui:FluentWindow>

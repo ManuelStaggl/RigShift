@@ -173,23 +173,14 @@ public sealed class GameDialogs
         }
     }
 
-    /// <summary>Delete is destructive: red button, centred on the main window (R-ACT-3).</summary>
-    public static async Task<bool> ConfirmDeleteAsync(string name)
-    {
-        var dialog = new MessageBox
-        {
-            Title = Loc.Instance["Games_DeleteTitle"],
-            Content = Loc.Format("Games_DeleteText", name),
-            PrimaryButtonText = Loc.Instance["Common_Delete"],
-            PrimaryButtonAppearance = ControlAppearance.Danger,
-            CloseButtonText = Loc.Instance["Common_Cancel"],
-        };
-        if (System.Windows.Application.Current?.MainWindow is { IsVisible: true } owner)
-        {
-            dialog.Owner = owner;
-            dialog.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
-        }
-
-        return await dialog.ShowDialogAsync() == MessageBoxResult.Primary;
-    }
+    /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
+    public static async Task<bool> ConfirmDeleteAsync(string name) =>
+        await DialogWindow.AskAsync(
+            Loc.Instance["Games_DeleteTitle"],
+            Loc.Format("Games_DeleteText", name),
+            [
+                new DialogChoice(Loc.Instance["Common_Delete"], DialogButtonKind.Danger, 1),
+                new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0) == 1;
 }

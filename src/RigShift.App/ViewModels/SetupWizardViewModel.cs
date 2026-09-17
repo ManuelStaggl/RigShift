@@ -24,6 +24,12 @@ public enum SetupStep
     Done,
 }
 
+/// <summary>One numbered line: an entry of the assistant's step list, or one of the three lines on the welcome step.</summary>
+/// <param name="IsDone">Behind the current step: the circle is filled and carries a check mark.</param>
+/// <param name="IsCurrent">The step the assistant is on: accent ring, bold label.</param>
+/// <param name="IsAhead">Still to come: number and label are dimmed. The welcome lines set none of the three.</param>
+public sealed record WizardStepItem(int Number, string Text, bool IsDone, bool IsCurrent, bool IsAhead);
+
 /// <summary>
 /// Setup assistant for first-time users: the first profile from the current
 /// arrangement, the second after the user has switched their displays, then an optional USB trigger between them.
@@ -47,6 +53,9 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private bool _hasUsbBaseline;
     private bool _polling;
 
+    /// <summary>The profile this step overwrites when the user came back to it; <c>null</c> while the step is new.</summary>
+    private Guid? _editingId;
+
     public SetupWizardViewModel(
         ProfileCatalog catalog,
         IDisplayConfigurator display,
@@ -67,15 +76,44 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _settings = settings;
         _log = log.ForContext<SetupWizardViewModel>();
         ProfileName = string.Empty;
+        RebuildLists();
+
+        // A method group: the weak event manager holds the handler's target weakly, a lambda's closure would be collected.
+        PropertyChangedEventManager.AddHandler(Loc.Instance, OnLanguageChanged, string.Empty);
+    }
+
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) => RebuildLists();
+
+    /// <summary>The two numbered lists; both carry translated text, so they are built, not bound to resources.</summary>
+    private void RebuildLists()
+    {
+        StepList.Clear();
+        for (int i = 0; i < 5; i++)
+        {
+            var step = (SetupStep)i;
+            StepList.Add(new WizardStepItem(i + 1, Loc.Instance[$"Setup_Step{step}"], i < (int)Step, step == Step, i > (int)Step));
+        }
+
+        WelcomeList.Clear();
+        for (int i = 1; i <= 3; i++)
+        {
+            WelcomeList.Add(new WizardStepItem(i, Loc.Instance[$"Setup_WelcomeStep{i}"], false, false, false));
+        }
     }
 
     /// <summary>Raised when the assistant is finished or skipped.</summary>
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary))]
-    [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand))]
+    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary), nameof(HasRuleSummary), nameof(CanGoBack), nameof(DifferentText))]
+    [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(BackCommand))]
     public partial SetupStep Step { get; private set; }
+
+    /// <summary>The five entries of the step list on the left, in order, with the current one marked.</summary>
+    public ObservableCollection<WizardStepItem> StepList { get; } = [];
+
+    /// <summary>The three numbered lines of the welcome step; plain numbers, no state.</summary>
+    public ObservableCollection<WizardStepItem> WelcomeList { get; } = [];
 
     public bool IsWelcome => Step == SetupStep.Welcome;
 
@@ -107,7 +145,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public partial string ProfileName { get; set; }
 
     // Cast to nullable: FirstOrDefault on the enum itself would turn "no name problem" into NameMissing (value 0).
-    public string? NameProblem => ProfileEditing.Validate(new Profile { Id = Guid.Empty, Name = ProfileName, Displays = _currentDisplays }, _catalog.Profiles)
+    public string? NameProblem => ProfileEditing.Validate(new Profile { Id = _editingId ?? Guid.Empty, Name = ProfileName, Displays = _currentDisplays }, _catalog.Profiles)
         .Select(p => (ProfileProblem?)p)
         .FirstOrDefault(p => p is ProfileProblem.NameMissing or ProfileProblem.NameTaken or ProfileProblem.NameTooLong) switch
     {
@@ -122,9 +160,13 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     /// <summary>The active displays, left to right, as the profile cards show them.</summary>
     public ObservableCollection<string> DisplayLines { get; } = [];
 
+    /// <summary>The same arrangement as the picture draws it (spec 7.5, size M).</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<TopologyDisplay> Topology { get; private set; } = [];
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand))]
-    [NotifyPropertyChangedFor(nameof(HasNoDisplays))]
+    [NotifyPropertyChangedFor(nameof(HasNoDisplays), nameof(IsDifferent))]
     public partial bool HasDisplays { get; private set; }
 
     public bool HasNoDisplays => !HasDisplays;
@@ -132,13 +174,20 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     /// <summary>On the second step: Windows still shows the first profile's arrangement, so both would be the same.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand))]
+    [NotifyPropertyChangedFor(nameof(IsDifferent))]
     public partial bool MatchesFirst { get; private set; }
+
+    /// <summary>The counterpart of <see cref="MatchesFirst"/>: the second arrangement differs, so it can be saved.</summary>
+    public bool IsDifferent => IsSecond && HasDisplays && !MatchesFirst;
+
+    public string DifferentText => Loc.Format("Setup_DifferentText", FirstProfile?.Name);
 
     [ObservableProperty]
     public partial AudioSlot? Playback { get; private set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(CreateRuleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(CreateRuleCommand), nameof(BackCommand))]
+    [NotifyPropertyChangedFor(nameof(CanGoBack))]
     public partial bool IsBusy { get; private set; }
 
     [ObservableProperty]
@@ -181,7 +230,54 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private async Task StartAsync()
     {
         _log.Information("Setup assistant started with {Count} existing profile(s)", _catalog.Profiles.Count);
-        await EnterProfileStepAsync(SetupStep.First, Loc.Instance["Setup_FirstName"]);
+        await EnterProfileStepAsync(SetupStep.First, Loc.Instance["Setup_FirstName"], FirstProfile);
+    }
+
+    /// <summary>Every step but the first can be left backwards; what a step already saved is then edited, not doubled.</summary>
+    public bool CanGoBack => Step != SetupStep.Welcome && !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
+    private async Task BackAsync()
+    {
+        switch (Step)
+        {
+            case SetupStep.First:
+                Step = SetupStep.Welcome;
+                break;
+            case SetupStep.Second:
+                await EnterProfileStepAsync(SetupStep.First, Loc.Instance["Setup_FirstName"], FirstProfile);
+                break;
+            case SetupStep.Trigger:
+                await EnterProfileStepAsync(SetupStep.Second, Loc.Instance["Setup_SecondName"], SecondProfile);
+                break;
+            case SetupStep.Done:
+                await RemoveCreatedRuleAsync();
+                EnterTrigger();
+                break;
+        }
+
+        _log.Information("Setup assistant went back to step {Step}", Step);
+    }
+
+    /// <summary>Going back past the rule undoes it: the trigger step would otherwise offer to create a second one.</summary>
+    private async Task RemoveCreatedRuleAsync()
+    {
+        if (CreatedRule is not { } rule)
+        {
+            return;
+        }
+
+        try
+        {
+            await _settings.UpdateAsync(
+                s => s with { AutomationRules = [.. (s.AutomationRules ?? []).Where(r => r.Id != rule.Id)] },
+                CancellationToken.None);
+            CreatedRule = null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Setup assistant could not remove the automation rule it created");
+        }
     }
 
     [RelayCommand]
@@ -221,6 +317,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             DisplayLines.Add(line);
         }
 
+        Topology = Services.TopologyDisplays.From(_currentDisplays);
         HasDisplays = _currentDisplays.Count > 0;
         MatchesFirst = Step == SetupStep.Second && FirstProfile is { } first && HasDisplays && _matcher.FindActive([first], snapshot) is not null;
         OnPropertyChanged(nameof(NameProblem));
@@ -241,6 +338,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             DisplaySnapshot snapshot = await QueryAsync();
             Profile profile = ProfileEditing.Capture(ProfileName, snapshot, new AudioAssignment { Playback = Playback?.Endpoint }, _catalog.KnownDisplayNames) with
             {
+                // Coming back to a step overwrites what it saved before instead of leaving a second profile behind.
+                Id = _editingId ?? Guid.NewGuid(),
                 Icon = Step == SetupStep.First ? ProfileIcons.Desk : ProfileIcons.Rig,
             };
 
@@ -259,7 +358,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             if (Step == SetupStep.First)
             {
                 FirstProfile = profile;
-                await EnterProfileStepAsync(SetupStep.Second, Loc.Instance["Setup_SecondName"]);
+                await EnterProfileStepAsync(SetupStep.Second, Loc.Instance["Setup_SecondName"], SecondProfile);
             }
             else
             {
@@ -388,10 +487,12 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         EnterDone();
     }
 
-    private async Task EnterProfileStepAsync(SetupStep step, string baseName)
+    /// <param name="existing">The profile this step already saved, when the user came back to it.</param>
+    private async Task EnterProfileStepAsync(SetupStep step, string baseName, Profile? existing = null)
     {
         Step = step;
-        ProfileName = ProfileEditing.UniqueName(baseName, _catalog.Profiles.Select(p => p.Name));
+        _editingId = existing?.Id;
+        ProfileName = existing?.Name ?? ProfileEditing.UniqueName(baseName, _catalog.Profiles.Select(p => p.Name));
         Playback = null;
         await RefreshDisplaysAsync();
     }
@@ -424,6 +525,10 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     /// <summary>What the created rule does, on the last step; <c>null</c> without a rule.</summary>
     public string? RuleSummary => CreatedRule is not null ? RuleText : null;
 
+    public bool HasRuleSummary => RuleSummary is not null;
+
+    partial void OnStepChanged(SetupStep value) => RebuildLists();
+
 #if DEBUG
     /// <summary>Developer aid: a later step with demo profiles made from the current arrangement; nothing is saved.</summary>
     internal async Task PreviewAsync(SetupStep step)
@@ -446,6 +551,9 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
                 break;
             case SetupStep.Done:
+                // Through the trigger step, so the rule sentence on the last step has a device to name.
+                EnterTrigger();
+                SelectedDevice = DeviceChoices.FirstOrDefault();
                 CreatedRule = new AutomationRule();
                 EnterDone();
                 break;

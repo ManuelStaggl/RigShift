@@ -3,46 +3,145 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   Title="RigShift"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
+  Width="520"
+  Height="340"
+  Background="{DynamicResource RigShift.Brush.Page}"
   ExtendsContentIntoTitleBar="True"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
   MinWidth="0"
   MinHeight="0"
   ResizeMode="NoResize"
   ShowInTaskbar="True"
-  SizeToContent="WidthAndHeight"
   Topmost="True"
-  WindowBackdropType="Mica"
+  WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="Manual">
-  <!-- No bottom margin: FluentWindow keeps the hidden caption height (about 40 px) below the content. -->
-  <StackPanel MinWidth="420" MaxWidth="560" Margin="32,32,32,0">
-    <ui:TextBlock FontTypography="Subtitle" Text="{loc:Tr Confirm_Title}" TextWrapping="Wrap" />
-    <ui:TextBlock x:Name="ProfileText" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-    <ui:TextBlock
-      x:Name="CountdownText"
-      Margin="0,16,0,0"
+  <Grid Margin="28,24,28,24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Question and the countdown as a ring: the seconds are the one number that matters here. -->
+    <Grid Grid.Row="0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock
+        VerticalAlignment="Center"
+        Style="{StaticResource RigShift.Text.Subtitle}"
+        Text="{loc:Tr Confirm_Title}"
+        TextWrapping="Wrap" />
+      <controls:CountdownRing
+        x:Name="Ring"
+        Grid.Column="1"
+        Width="72"
+        Height="72"
+        Margin="16,0,0,0" />
+    </Grid>
+
+    <!-- Before → after, the same picture the profile cards use (spec 7.5, size S without labels). -->
+    <Grid Grid.Row="1" Margin="0,20,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+        <Border
+          Width="176"
+          Height="72"
+          Background="{DynamicResource RigShift.Brush.Layer}"
+          BorderBrush="{DynamicResource RigShift.Brush.Line}"
+          BorderThickness="1"
+          CornerRadius="4"
+          SnapsToDevicePixels="True">
+          <controls:DisplayTopology
+            x:Name="BeforeTopology"
+            Width="160"
+            Height="60"
+            Size="S" />
+        </Border>
+        <TextBlock
+          x:Name="BeforeName"
+          Margin="0,8,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Caption}"
+          TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+
+      <ui:SymbolIcon
+        Grid.Column="2"
+        Margin="20,0,20,20"
+        VerticalAlignment="Center"
+        FontSize="20"
+        Foreground="{DynamicResource RigShift.Brush.Accent}"
+        Symbol="ArrowRight24" />
+
+      <StackPanel Grid.Column="3" VerticalAlignment="Center">
+        <Border
+          Width="176"
+          Height="72"
+          Background="{DynamicResource RigShift.Brush.Layer}"
+          BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+          BorderThickness="2"
+          CornerRadius="4"
+          SnapsToDevicePixels="True">
+          <controls:DisplayTopology
+            x:Name="AfterTopology"
+            Width="160"
+            Height="60"
+            Size="S" />
+        </Border>
+        <TextBlock
+          x:Name="AfterName"
+          Margin="0,8,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.BodyStrong}"
+          TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </Grid>
+
+    <TextBlock
+      x:Name="HintText"
+      Grid.Row="2"
+      Margin="0,20,0,0"
       AutomationProperties.LiveSetting="Assertive"
-      FontTypography="BodyStrong"
+      Style="{StaticResource RigShift.Text.Caption}"
       TextWrapping="Wrap" />
-    <ui:TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{loc:Tr Confirm_Hint}" TextWrapping="Wrap" />
+
     <!-- Windows order, as in its own "Keep these display settings?" dialog: the action first, the way back second. -->
-    <StackPanel Margin="0,24,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
-      <ui:Button
+    <StackPanel
+      Grid.Row="3"
+      Margin="0,16,0,0"
+      HorizontalAlignment="Right"
+      Orientation="Horizontal">
+      <Button
         x:Name="KeepButton"
-        MinWidth="120"
+        MinWidth="110"
         Margin="0,0,8,0"
-        Appearance="Primary"
         Click="OnKeep"
         Content="{loc:Tr Confirm_Keep}"
-        IsDefault="True" />
-      <ui:Button
+        IsDefault="True"
+        Style="{StaticResource RigShift.Button.Primary}" />
+      <Button
         x:Name="RevertButton"
-        MinWidth="120"
+        MinWidth="110"
         Click="OnRevert"
         Content="{loc:Tr Confirm_Revert}"
-        IsCancel="True" />
+        IsCancel="True"
+        Style="{StaticResource RigShift.Button}" />
     </StackPanel>
-  </StackPanel>
+  </Grid>
 </ui:FluentWindow>

@@ -131,7 +131,7 @@ public sealed class SwitchOrchestratorSurroundTests
     public async Task Switch_NotConfirmed_PutsSurroundBack()
     {
         _surround.ActiveGrid = TripleScreen;
-        _confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+        _confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
             .Returns(ConfirmationResult.Rejected);
         var display = new FakeDisplayConfigurator([DeskActive(), DeskActive(), DeskActive()]);
 

@@ -22,7 +22,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     public async Task Switch_WhileAnotherRuns_ReturnsNullAndRaisesBusyRejected()
     {
         var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _host.Confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(answer.Task);
+        _host.Confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
         bool busy = false;
         _host.Coordinator.BusyRejected += (_, _) => busy = true;
 
@@ -102,7 +102,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
 
         result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
         _host.Display.Applied.ShouldBeEmpty();
-        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default, default);
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
         _host.Coordinator.History[0].ProfileName.ShouldBe("Rig");
     }
 
@@ -156,10 +156,10 @@ public sealed class SwitchCoordinatorTests : IDisposable
     public async Task Stop_DuringConfirmation_RollsBackAndReturnsNull()
     {
         var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _host.Confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(async call =>
+        _host.Confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(async call =>
         {
             reached.SetResult();
-            await Task.Delay(Timeout.Infinite, call.ArgAt<CancellationToken>(2));
+            await Task.Delay(Timeout.Infinite, call.ArgAt<CancellationToken>(3));
             return ConfirmationResult.Confirmed;
         });
 
@@ -213,7 +213,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     public async Task Check_WhileSwitchRuns_IsNotBusy()
     {
         var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _host.Confirmation.ConfirmAsync(default!, default, default).ReturnsForAnyArgs(answer.Task);
+        _host.Confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
         bool busy = false;
         _host.Coordinator.BusyRejected += (_, _) => busy = true;
 

@@ -156,8 +156,9 @@ public partial class App : Application, IAppShell
             // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
             if (_request.PreviewConfirmation)
             {
-                var preview = new Core.Profiles.Profile { Id = Guid.Empty, Name = "Preview", Displays = [] };
-                ConfirmationResult answer = await ConfirmationWindow.ShowAsync(preview, TimeSpan.FromSeconds(10), CancellationToken.None);
+                // Two of the stored profiles, or the live arrangement twice, so both pictures show something.
+                ConfirmationResult answer = await ConfirmationWindow.ShowAsync(
+                    await PreviewConfirmationAsync(catalog), TimeSpan.FromSeconds(12), CancellationToken.None);
                 Log.Information("Confirmation preview answered {Answer}", answer);
             }
 
@@ -187,6 +188,14 @@ public partial class App : Application, IAppShell
                 {
                     _ = Views.GamePickerWindow.PickAsync(null, dialogs);
                 }
+            }
+
+            // Developer aid: the two question dialogs, which otherwise need a profile and a menu to reach.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialogKind)
+            {
+                _ = Dispatcher.InvokeAsync(() => string.Equals(dialogKind, "unsaved", StringComparison.OrdinalIgnoreCase)
+                    ? ProfileDialogs.ConfirmUnsavedAsync("Sim Rig").ContinueWith(_ => { }, TaskScheduler.Default)
+                    : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach").ContinueWith(_ => { }, TaskScheduler.Default));
             }
 
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
@@ -229,7 +238,18 @@ public partial class App : Application, IAppShell
                 // Developer aid: the assistant at a later step with demo profiles (second, trigger, done).
                 if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep previewStep))
                 {
-                    _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync(previewStep));
+                    // Logged, not discarded: a XAML error in the assistant would otherwise leave no trace at all.
+                    _ = Dispatcher.InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            await Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync(previewStep);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Setup assistant preview failed");
+                        }
+                    });
                 }
                 else
 #endif
@@ -328,6 +348,23 @@ public partial class App : Application, IAppShell
 
 #if DEBUG
     private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+
+    /// <summary>Developer aid: a filled confirmation view from the stored profiles, or from the live arrangement.</summary>
+    private async Task<RigShift.App.Services.ConfirmationView> PreviewConfirmationAsync(ProfileCatalog catalog)
+    {
+        IReadOnlyList<Core.Profiles.Profile> profiles = catalog.Profiles;
+        if (profiles.Count >= 2)
+        {
+            return new RigShift.App.Services.ConfirmationView(
+                profiles[1].Id,
+                RigShift.App.Services.TopologyDisplays.From(profiles[0].Displays), profiles[0].Name,
+                RigShift.App.Services.TopologyDisplays.From(profiles[1].Displays), profiles[1].Name);
+        }
+
+        Core.Topology.DisplaySnapshot now = await Services.GetRequiredService<IDisplayConfigurator>().QueryAsync(CancellationToken.None);
+        IReadOnlyList<Core.Topology.TopologyDisplay> live = RigShift.App.Services.TopologyDisplays.From(Core.Profiles.ProfileEditing.CurrentArrangement(now, []));
+        return new RigShift.App.Services.ConfirmationView(Guid.Empty, live, "Schreibtisch", live, "Sim Rig");
+    }
 
 #endif
     /// <summary>The keep-awake request ends with the process; after a restart it follows the profile that is still active.</summary>

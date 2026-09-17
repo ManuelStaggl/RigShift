@@ -249,7 +249,7 @@ public sealed class SwitchOrchestrator
             long askedAt = _time.GetTimestamp();
             try
             {
-                answer = await _confirmation.ConfirmAsync(profile, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
+                answer = await _confirmation.ConfirmAsync(profile, before, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

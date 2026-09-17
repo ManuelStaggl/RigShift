@@ -31,11 +31,11 @@
   <data name="Tray_NoProfiles" xml:space="preserve"><value>No profiles</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>Play {0}</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>No profile active</value></data>
-  <data name="Confirm_Title" xml:space="preserve"><value>Keep these display settings?</value></data>
+  <data name="Confirm_Title" xml:space="preserve"><value>Keep this arrangement?</value></data>
   <data name="Confirm_Countdown" xml:space="preserve"><value>Reverting to the previous settings in {0} s.</value></data>
-  <data name="Confirm_Hint" xml:space="preserve"><value>Enter keeps the new settings. Esc reverts – from any screen.</value></data>
-  <data name="Confirm_Keep" xml:space="preserve"><value>_Keep</value></data>
-  <data name="Confirm_Revert" xml:space="preserve"><value>_Revert</value></data>
+  <data name="Confirm_Hint" xml:space="preserve"><value>Otherwise the previous arrangement comes back in {0} s. Enter keeps, Esc reverts – from any screen.</value></data>
+  <data name="Confirm_Keep" xml:space="preserve"><value>Keep</value></data>
+  <data name="Confirm_Revert" xml:space="preserve"><value>Revert</value></data>
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} active</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Displays switched.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Switched without: {0}</value></data>
@@ -294,11 +294,11 @@
   <data name="Setup_DoneWithRule" xml:space="preserve"><value>Your rule is active: turn the device on to switch, off to switch back. You can also switch from the tray icon next to the clock.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Desk</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim rig</value></data>
-  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Open Windows display settings</value></data>
+  <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows display settings</value></data>
   <data name="Setup_DisplaysNow" xml:space="preserve"><value>Active displays right now</value></data>
   <data name="Setup_NoDisplays" xml:space="preserve"><value>No active display found. Details are in the log.</value></data>
   <data name="Setup_SameTitle" xml:space="preserve"><value>Still the first setup</value></data>
-  <data name="Setup_SameText" xml:space="preserve"><value>Windows still shows the same displays as your first setup. Change the displays first, then save.</value></data>
+  <data name="Setup_SameText" xml:space="preserve"><value>Windows still shows the same displays as the first setup. Change the displays first, then save.</value></data>
   <data name="Setup_DetailsLater" xml:space="preserve"><value>Keyboard shortcut, apps, HDR and refresh rate can be set later in the profile editor.</value></data>
   <data name="Setup_Detected" xml:space="preserve"><value>Detected: {0}</value></data>
   <data name="Setup_RuleText" xml:space="preserve"><value>When {0} turns on, RigShift switches to “{1}”. When it turns off, back to “{2}”.</value></data>
@@ -524,4 +524,15 @@
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>
   <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
   <data name="About_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="Confirm_Before" xml:space="preserve"><value>Previous arrangement</value></data>
+  <data name="Setup_Subtitle" xml:space="preserve"><value>· Setup</value></data>
+  <data name="Setup_StepWelcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="Setup_StepFirst" xml:space="preserve"><value>First setup</value></data>
+  <data name="Setup_StepSecond" xml:space="preserve"><value>Second setup</value></data>
+  <data name="Setup_StepTrigger" xml:space="preserve"><value>Trigger</value></data>
+  <data name="Setup_StepDone" xml:space="preserve"><value>Done</value></data>
+  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one shift. Three steps, three minutes.</value></data>
+  <data name="Setup_Now" xml:space="preserve"><value>On screen now</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
 </root>

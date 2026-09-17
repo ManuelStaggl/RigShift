@@ -153,6 +153,69 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _host.Settings.Current.AutomationRules.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task Back_FromSecondStep_EditsTheFirstProfileInsteadOfAddingOne()
+    {
+        await SaveFirstAsync();
+        _host.Display.SetSnapshot(RigActive());
+        await _viewModel.RefreshDisplaysAsync();
+
+        await _viewModel.BackCommand.ExecuteAsync(null);
+
+        _viewModel.Step.ShouldBe(SetupStep.First);
+        _viewModel.ProfileName.ShouldBe("Desk");
+        // Its own name is no longer taken by another profile, so the step can be saved again.
+        _viewModel.HasNameProblem.ShouldBeFalse();
+        _viewModel.SaveProfileCommand.CanExecute(null).ShouldBeTrue();
+
+        _viewModel.ProfileName = "Desk 2";
+        await _viewModel.SaveProfileCommand.ExecuteAsync(null);
+
+        Profile desk = _host.Catalog.Profiles.ShouldHaveSingleItem();
+        desk.Name.ShouldBe("Desk 2");
+        desk.Displays.ShouldHaveSingleItem().Identity.ShouldBe(Ultrawide);
+        _viewModel.Step.ShouldBe(SetupStep.Second);
+    }
+
+    [Fact]
+    public async Task Back_FromDone_RemovesTheRuleItCreated()
+    {
+        await SaveBothAsync();
+        _host.Usb.ConnectedDevices().Returns([new UsbDevice(Dongle, "Dongle"), new UsbDevice(Wheelbase, "Wheelbase")]);
+        _viewModel.PollUsb();
+        await _viewModel.CreateRuleCommand.ExecuteAsync(null);
+        _viewModel.Step.ShouldBe(SetupStep.Done);
+
+        await _viewModel.BackCommand.ExecuteAsync(null);
+
+        _viewModel.Step.ShouldBe(SetupStep.Trigger);
+        _viewModel.CreatedRule.ShouldBeNull();
+        _host.Settings.Current.AutomationRules.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Back_OnTheWelcomeStep_IsNotOffered()
+    {
+        _viewModel.CanGoBack.ShouldBeFalse();
+        _viewModel.BackCommand.CanExecute(null).ShouldBeFalse();
+
+        await _viewModel.StartCommand.ExecuteAsync(null);
+
+        _viewModel.CanGoBack.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task StepList_MarksTheStepsBehindAsDoneAndTheCurrentOne()
+    {
+        await SaveFirstAsync();
+
+        _viewModel.StepList.Count.ShouldBe(5);
+        _viewModel.StepList.Select(s => s.IsDone).ShouldBe([true, true, false, false, false]);
+        _viewModel.StepList.Select(s => s.IsCurrent).ShouldBe([false, false, true, false, false]);
+        _viewModel.StepList.Select(s => s.IsAhead).ShouldBe([false, false, false, true, true]);
+        _viewModel.StepList.Select(s => s.Number).ShouldBe([1, 2, 3, 4, 5]);
+    }
+
     public void Dispose() => _host.Dispose();
 
     private async Task SaveFirstAsync()
