@@ -112,6 +112,7 @@
   <data name="Interrupted_Keep" xml:space="preserve"><value>Keep as is</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Delete profile?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>“{0}” will be deleted. This cannot be undone.</value></data>
+  <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>“{0}” will be deleted, and so will this profile’s USB rules. This cannot be undone.</value></data>
   <data name="Shortcut_Description" xml:space="preserve"><value>Switch to the RigShift profile “{0}”</value></data>
   <data name="Shortcut_GameDescription" xml:space="preserve"><value>Start the game “{0}” with RigShift</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>“{0}” saved.</value></data>
@@ -290,8 +291,8 @@
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on again and RigShift picks it here, or choose it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
-  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Switch from the tray icon next to the clock. The Automation page switches when a USB device turns on.</value></data>
-  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Your rule is active: turn the device on to switch, off to switch back. You can also switch from the tray icon next to the clock.</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>From now on you switch from the tray icon next to the clock or with a hotkey. You can add a USB trigger later in the profile.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>From now on you switch from the tray icon next to the clock, with a hotkey, or with the device.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Desk</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows display settings</value></data>
@@ -488,6 +489,7 @@
   <data name="Status_Tested" xml:space="preserve"><value>Tested: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to "{0}"?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
+  <data name="Unsaved_TextSwitch" xml:space="preserve"><value>You are switching to “{0}”. Unsaved changes are lost otherwise.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="List_NewInstalled" xml:space="preserve"><value>Find installed games…</value></data>
   <data name="List_NewProgram" xml:space="preserve"><value>Choose a program…</value></data>

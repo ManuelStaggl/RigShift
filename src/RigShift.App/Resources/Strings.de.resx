@@ -112,6 +112,7 @@
   <data name="Interrupted_Keep" xml:space="preserve"><value>So lassen</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>„{0}“ wird gelöscht. Die USB-Regeln dieses Profils auch. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Shortcut_Description" xml:space="preserve"><value>Auf das RigShift-Profil „{0}“ umschalten</value></data>
   <data name="Shortcut_GameDescription" xml:space="preserve"><value>Das Spiel „{0}“ mit RigShift starten</value></data>
   <data name="Status_Saved" xml:space="preserve"><value>„{0}“ gespeichert.</value></data>
@@ -290,8 +291,8 @@
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Schalte es aus und wieder ein, dann wählt RigShift es hier aus – oder wähle es aus der Liste.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
-  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten kannst du über das Tray-Symbol neben der Uhr. Die Seite Automatik schaltet um, sobald ein USB-Gerät eingeschaltet wird.</value></data>
-  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Deine Regel ist aktiv: Gerät einschalten schaltet um, ausschalten zurück. Umschalten geht auch über das Tray-Symbol neben der Uhr.</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol neben der Uhr oder per Tastenkürzel. Einen USB-Auslöser kannst du später im Profil ergänzen.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol neben der Uhr, per Tastenkürzel oder über das Gerät.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen</value></data>
@@ -302,7 +303,7 @@
   <data name="Setup_DetailsLater" xml:space="preserve"><value>Tastenkürzel, Apps, HDR und Bildwiederholrate lassen sich später im Profileditor einstellen.</value></data>
   <data name="Setup_Detected" xml:space="preserve"><value>Erkannt: {0}</value></data>
   <data name="Setup_RuleText" xml:space="preserve"><value>Wenn {0} eingeschaltet wird, schaltet RigShift auf „{1}“. Beim Ausschalten zurück auf „{2}“.</value></data>
-  <data name="Setup_Start" xml:space="preserve"><value>Los geht’s</value></data>
+  <data name="Setup_Start" xml:space="preserve"><value>Start</value></data>
   <data name="Setup_SkipAll" xml:space="preserve"><value>Selbst einrichten</value></data>
   <data name="Setup_Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="Setup_SaveContinue" xml:space="preserve"><value>Speichern und weiter</value></data>
@@ -488,6 +489,7 @@
   <data name="Status_Tested" xml:space="preserve"><value>Getestet: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Änderungen an „{0}“ speichern?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Ungespeicherte Änderungen gehen sonst verloren.</value></data>
+  <data name="Unsaved_TextSwitch" xml:space="preserve"><value>Du wechselst zu „{0}“. Ungespeicherte Änderungen gehen sonst verloren.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="List_NewInstalled" xml:space="preserve"><value>Installierte Spiele suchen …</value></data>
   <data name="List_NewProgram" xml:space="preserve"><value>Programm wählen …</value></data>

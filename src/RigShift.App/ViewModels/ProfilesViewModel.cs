@@ -142,14 +142,16 @@ public sealed partial class ProfilesViewModel : ObservableObject
     public bool HasStatusMessage => StatusMessage is not null;
 
     /// <summary>Before the page is left or the window navigates: saves, discards or stays. False: stay.</summary>
-    public async Task<bool> ConfirmLeaveAsync()
+    /// <param name="targetName">The profile the user picked instead, when the dialog comes from the list.</param>
+    public async Task<bool> ConfirmLeaveAsync(string? targetName = null)
     {
         if (Editor is not { IsDirty: true } editor)
         {
             return true;
         }
 
-        switch (await ProfileDialogs.ConfirmUnsavedAsync(editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name))
+        switch (await ProfileDialogs.ConfirmUnsavedAsync(
+            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, targetName))
         {
             case UnsavedChoice.Save:
                 return await SaveCoreAsync();
@@ -269,7 +271,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (SelectedItem is not { } item || !await ProfileDialogs.ConfirmDeleteAsync(item.Name))
+        if (SelectedItem is not { } item || !await ProfileDialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
         {
             return;
         }
@@ -343,7 +345,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private async Task SelectAsync(ProfileItem? previous, ProfileItem? next)
     {
-        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync())
+        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next?.Name))
         {
             _reverting = true;
             SelectedItem = previous;

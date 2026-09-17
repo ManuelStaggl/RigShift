@@ -148,8 +148,12 @@ public sealed class ProfileDialogs
     }
 
     /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
-    public static async Task<bool> ConfirmDeleteAsync(string name) =>
-        await Ask(Loc.Instance["Profile_DeleteTitle"], Loc.Format("Profile_DeleteText", name), Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
+    /// <param name="ruleCount">USB rules that go with the profile; named in the question so the loss is no surprise.</param>
+    public static async Task<bool> ConfirmDeleteAsync(string name, int ruleCount = 0) =>
+        await Ask(
+            Loc.Instance["Profile_DeleteTitle"],
+            Loc.Format(ruleCount > 0 ? "Profile_DeleteTextWithRules" : "Profile_DeleteText", name),
+            Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
 
     /// <summary>
     /// Asks whether to undo a switch that never finished, e.g. because RigShift was killed between the apply and the
@@ -177,11 +181,12 @@ public sealed class ProfileDialogs
     /// Asked when the selection or the navigation leaves a profile with unsaved changes (R-NAV-3): "Save changes to X?"
     /// with Save, Discard and Cancel. Save is the primary button: the changes were made on purpose.
     /// </summary>
-    public static async Task<UnsavedChoice> ConfirmUnsavedAsync(string name)
+    /// <param name="targetName">What the user is switching to, when that is known; it explains why the dialog is here.</param>
+    public static async Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName = null)
     {
         int answer = await DialogWindow.AskAsync(
             Loc.Format("Unsaved_Title", name),
-            Loc.Instance["Unsaved_Text"],
+            targetName is null ? Loc.Instance["Unsaved_Text"] : Loc.Format("Unsaved_TextSwitch", targetName),
             [
                 new DialogChoice(Loc.Instance["Common_Save"].Replace("_", string.Empty, StringComparison.Ordinal), DialogButtonKind.Primary, 1),
                 new DialogChoice(Loc.Instance["Common_Discard"], DialogButtonKind.Secondary, 2),

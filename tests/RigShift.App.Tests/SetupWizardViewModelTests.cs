@@ -216,6 +216,40 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _viewModel.StepList.Select(s => s.Number).ShouldBe([1, 2, 3, 4, 5]);
     }
 
+    [Fact]
+    public async Task FirstStep_MakesItsProfileTheDefault()
+    {
+        await SaveFirstAsync();
+
+        _host.Settings.Current.DefaultProfileId.ShouldBe(_viewModel.FirstProfile.ShouldNotBeNull().Id);
+    }
+
+    [Fact]
+    public async Task FirstStep_WithADefaultProfileAlready_LeavesItAlone()
+    {
+        Profile existing = new() { Id = Guid.NewGuid(), Name = "Kept", Displays = [] };
+        await _host.Catalog.SaveAsync(existing, CancellationToken.None);
+        await _host.Catalog.ToggleDefaultAsync(existing, CancellationToken.None);
+
+        await SaveFirstAsync();
+
+        _host.Settings.Current.DefaultProfileId.ShouldBe(existing.Id);
+    }
+
+    [Fact]
+    public async Task DoneStep_ShowsBothProfilesWithTheirState()
+    {
+        await SaveBothAsync();
+        _viewModel.SkipTriggerCommand.Execute(null);
+
+        _viewModel.Summary.Count.ShouldBe(2);
+        _viewModel.Summary[0].IsDefault.ShouldBeTrue();
+        _viewModel.Summary[0].HasStatus.ShouldBeTrue();
+        // The second profile is the arrangement that is up right now, so it is the active one.
+        _viewModel.Summary[1].IsActive.ShouldBeTrue();
+        _viewModel.Summary[1].IsDefault.ShouldBeFalse();
+    }
+
     public void Dispose() => _host.Dispose();
 
     private async Task SaveFirstAsync()

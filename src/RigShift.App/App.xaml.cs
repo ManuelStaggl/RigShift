@@ -194,8 +194,8 @@ public partial class App : Application, IAppShell
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialogKind)
             {
                 _ = Dispatcher.InvokeAsync(() => string.Equals(dialogKind, "unsaved", StringComparison.OrdinalIgnoreCase)
-                    ? ProfileDialogs.ConfirmUnsavedAsync("Sim Rig").ContinueWith(_ => { }, TaskScheduler.Default)
-                    : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach").ContinueWith(_ => { }, TaskScheduler.Default));
+                    ? ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default)
+                    : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default));
             }
 
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })

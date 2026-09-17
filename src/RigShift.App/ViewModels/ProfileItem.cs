@@ -38,6 +38,9 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         _ => null,
     };
 
+    /// <summary>Whether <see cref="StatusText"/> says anything, for a caption that is hidden when it would be empty.</summary>
+    public bool HasStatus => StatusText is not null;
+
     /// <summary>Left to right, as the displays stand on the desk.</summary>
     public IReadOnlyList<string> DisplayLines { get; } = profile.Displays
         .OrderBy(d => d.PositionX)
@@ -57,11 +60,11 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         .ToList();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus))]
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus))]
     public partial bool IsDefault { get; set; }
 
     [ObservableProperty]

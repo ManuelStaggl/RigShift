@@ -384,16 +384,13 @@
                             Style="{StaticResource RigShift.Text.BodyStrong}"
                             Text="{Binding Name}"
                             TextTrimming="CharacterEllipsis" />
-                          <ItemsControl Margin="0,2,0,0" Focusable="False" ItemsSource="{Binding DisplayLines}">
-                            <ItemsControl.ItemTemplate>
-                              <DataTemplate>
-                                <TextBlock
-                                  Style="{StaticResource RigShift.Text.Caption}"
-                                  Text="{Binding}"
-                                  TextTrimming="CharacterEllipsis" />
-                              </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                          </ItemsControl>
+                          <!-- The card caption is the profile's state, as on the profile list: "Default · Active". -->
+                          <TextBlock
+                            Margin="0,2,0,0"
+                            Style="{StaticResource RigShift.Text.Caption}"
+                            Text="{Binding StatusText}"
+                            TextTrimming="CharacterEllipsis"
+                            Visibility="{Binding HasStatus, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                       </Border>
                     </DataTemplate>

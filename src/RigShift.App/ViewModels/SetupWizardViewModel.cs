@@ -358,6 +358,14 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             if (Step == SetupStep.First)
             {
                 FirstProfile = profile;
+
+                // The first arrangement becomes the default profile (F1): it is the one the user comes back to.
+                // Only when nothing is set yet – an assistant run on an existing setup must not take that over.
+                if (_settings.Current.DefaultProfileId is null)
+                {
+                    await _catalog.ToggleDefaultAsync(profile, CancellationToken.None);
+                }
+
                 await EnterProfileStepAsync(SetupStep.Second, Loc.Instance["Setup_SecondName"], SecondProfile);
             }
             else
@@ -513,7 +521,12 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         Summary.Clear();
         foreach (Profile profile in new[] { FirstProfile, SecondProfile }.OfType<Profile>())
         {
-            Summary.Add(new ProfileItem(profile, _settings.Current.UsbDeviceNames));
+            // The card caption is the profile's state, as everywhere else in the app: "Default · Active".
+            Summary.Add(new ProfileItem(profile, _settings.Current.UsbDeviceNames)
+            {
+                IsDefault = _settings.Current.DefaultProfileId == profile.Id,
+                IsActive = _catalog.ActiveProfile?.Id == profile.Id,
+            });
         }
 
         Step = SetupStep.Done;

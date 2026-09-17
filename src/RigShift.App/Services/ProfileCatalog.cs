@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using Serilog;
@@ -188,16 +189,30 @@ public sealed partial class ProfileCatalog : ObservableObject
         _log.Information("Default profile set to {Profile}", id is null ? "(none)" : profile.Name);
     }
 
-    /// <summary>Deletes the profile; if it was the default profile, there is no default afterwards.</summary>
+    /// <summary>How many USB rules belong to the profile and would go with it (F3, dialog text).</summary>
+    public int RuleCount(Guid profileId) => _settings.Current.AutomationRules?.Count(r => r.ProfileId == profileId) ?? 0;
+
+    /// <summary>
+    /// Deletes the profile; if it was the default profile, there is no default afterwards. Its USB rules go with it –
+    /// a rule that switches to a profile that no longer exists would keep firing into nothing. A rule of another
+    /// profile that only ends in this one keeps running and stays where it is instead.
+    /// </summary>
     public async Task DeleteAsync(Profile profile, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
         await _store.DeleteAsync(profile.Id, cancellationToken);
-        if (_settings.Current.DefaultProfileId == profile.Id)
-        {
-            await _settings.UpdateAsync(s => s with { DefaultProfileId = null }, cancellationToken);
-        }
+        await _settings.UpdateAsync(
+            s => s with
+            {
+                DefaultProfileId = s.DefaultProfileId == profile.Id ? null : s.DefaultProfileId,
+                AutomationRules = s.AutomationRules is null ? null : [.. s.AutomationRules
+                    .Where(r => r.ProfileId != profile.Id)
+                    .Select(r => r.OnExit == ExitAction.SwitchTo && r.ExitProfileId == profile.Id
+                        ? r with { OnExit = ExitAction.Stay, ExitProfileId = null }
+                        : r)],
+            },
+            cancellationToken);
 
         await ReloadAsync(cancellationToken);
     }
