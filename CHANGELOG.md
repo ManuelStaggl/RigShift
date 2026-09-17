@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-09-17
+
+### Added
+
+- **A page of its own for the field of view**, in place of the dialog: pick a display, add its curve, your eye
+  distance and how the rig stands, and every sim gets the number it asks for.
+- Curved panels are calculated as the arc they are: the value a sim renders and what the eye really covers are shown
+  side by side. The radius is remembered per display and pre-filled for known models.
+- Triple screens take a measured side angle instead of the ideal one, and report the total angle, how far apart the
+  outer edges stand, and the pixels Surround hides behind the frames.
+- Eighteen sims with their own conventions – degrees, multipliers, sliders, offsets or radians – each with where the
+  value goes, how well the convention is backed up, and the sim's own triple-screen fields ready to copy.
+- A top view of the rig that glides from one arrangement to the next while you type.
+- Pixels per degree, and warnings for arrangements that cannot be built.
+- An optional bit of slack on every sim value, for those who want a wider picture than the exact geometry.
+
+### Changed
+
+- The "FOV" button on the overview is gone; the page sits in the navigation between Games and Settings (Ctrl+4).
+  Settings and Help moved to Ctrl+5 and Ctrl+6.
+
 ## [3.1.0] - 2026-09-17
 
 ### Added

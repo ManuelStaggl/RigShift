@@ -38,8 +38,9 @@ starts the sim with the right screens, its tools and their windows, and puts eve
   picture afterwards? It reverts on its own.
 - **Made for real hardware.** Wakes sleeping monitors, waits for one that is off, tolerates optional screens such as a
   spacedesk tablet, and moves windows off screens that are now dark.
-- **Field of view.** Your monitors report their size, so the FOV dialog only asks how far away you sit and gives the
-  value for each sim – vertical, horizontal or doubled, single or triples – with a copy button.
+- **Field of view.** Your monitors report their size, so the page only asks for the curve, how far away you sit and
+  how the rig stands. Eighteen sims get the number they really want – degrees, a multiplier, a slider or radians –
+  with the triple-screen fields each one asks for, and a top view that follows every change.
 - **Control it your way.** Tray, hotkeys, Stream Deck, `rigshift://` links, command line. Backup and restore as a ZIP.
 
 | | |
