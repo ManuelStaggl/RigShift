@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.2.2] - 2026-09-18
+
+### Fixed
+
+- The rounded top left corner of the page area showed in a different shade, because the page covered its outline.
+
 ## [3.2.1] - 2026-09-18
 
 ### Fixed
