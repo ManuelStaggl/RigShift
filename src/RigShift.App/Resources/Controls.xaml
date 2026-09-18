@@ -405,8 +405,13 @@
                   StrokeThickness="1.4" />
               </Grid>
             </Border>
+            <!-- Stretch spelled out: the WPF-UI style for ToggleButton would shrink this empty template to nothing. -->
             <ToggleButton
               x:Name="Toggle"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              MinWidth="0"
+              MinHeight="0"
               ClickMode="Press"
               Focusable="False"
               IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
