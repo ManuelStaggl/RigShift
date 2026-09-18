@@ -73,6 +73,10 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     [ObservableProperty]
     public partial string? CheckMessage { get; set; }
 
+    /// <summary>The profile a running switch goes to; the tray keeps its tile bright and dims the rest.</summary>
+    [ObservableProperty]
+    public partial bool IsSwitchTarget { get; set; }
+
     /// <summary>A profile that exists only in the detail so far ("New profile" at the top of the list, F3).</summary>
     public bool IsNew { get; init; }
 

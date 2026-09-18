@@ -60,9 +60,16 @@
   <SolidColorBrush x:Key="RigShift.Brush.Error" Color="{StaticResource RigShift.Color.Error}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFill" Color="{StaticResource RigShift.Color.DisplayFill}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFillOff" Color="{StaticResource RigShift.Color.DisplayFillOff}" />
+  <!-- Display drawing (DisplayTopology): bezel, edge, screen gradient, stand, and the screen of a missing display. -->
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayBezel" Color="#0A111D" />
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayEdge" Color="#3A4A63" />
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayStand" Color="#1A2539" />
+  <LinearGradientBrush x:Key="RigShift.Brush.DisplayScreen" StartPoint="0,0" EndPoint="0,1"><GradientStop Offset="0" Color="#2C4062" /><GradientStop Offset="1" Color="#1B2A43" /></LinearGradientBrush>
+  <LinearGradientBrush x:Key="RigShift.Brush.DisplayScreenMissing" StartPoint="0,0" EndPoint="0,1"><GradientStop Offset="0" Color="#2A2F3A" /><GradientStop Offset="1" Color="#1D212A" /></LinearGradientBrush>
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayGloss" Color="#1AFFFFFF" />
   <SolidColorBrush x:Key="RigShift.Brush.HoverOverlay" Color="{StaticResource RigShift.Color.HoverOverlay}" />
   <SolidColorBrush x:Key="RigShift.Brush.PressedOverlay" Color="{StaticResource RigShift.Color.PressedOverlay}" />
-  <!-- Hatch for a missing display: 45° lines in the error color at 45 %. -->
+  <!-- Hatch for a missing display: 45° lines in the error color at 20 %. -->
   <DrawingBrush
     x:Key="RigShift.Brush.Hatch"
     TileMode="Tile"
@@ -70,7 +77,7 @@
     ViewportUnits="Absolute"
     Viewbox="0,0,6,6"
     ViewboxUnits="Absolute"
-    Opacity="0.45">
+    Opacity="0.2">
     <DrawingBrush.Drawing>
       <GeometryDrawing>
         <GeometryDrawing.Pen>

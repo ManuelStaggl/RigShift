@@ -11,236 +11,452 @@
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance vm:TrayPopupViewModel}">
   <!--
-    The daily face of RigShift: profiles with their pictures, then the games, then the three actions. No header and
-    no settings – everything that is not switching or starting belongs in the window.
+    The daily face of RigShift, modelled on the Windows 11 quick settings: a header with the window and the rule pause,
+    up to four profiles as tiles with their picture (more as compact rows), then the games. Keys: arrows, Enter,
+    digits 1–9. It rises from the taskbar when it opens.
   -->
   <UserControl.Resources>
-    <!-- The active profile keeps its surface while the pointer is elsewhere; the check mark says it, not the color. -->
-    <Style x:Key="ProfileRow" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+    <SolidColorBrush x:Key="Tray.Edge" Color="#17FFFFFF" />
+    <SolidColorBrush x:Key="Tray.TileRest" Color="#0BFFFFFF" />
+    <SolidColorBrush x:Key="Tray.TileEdge" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="Tray.ActiveFill" Color="#1A79B8FF" />
+
+    <!-- Profile tile: picture, name and hotkey; the active one carries the accent edge, a glow and "Active". -->
+    <Style x:Key="Tile" TargetType="Button">
+      <Setter Property="Height" Value="104" />
+      <Setter Property="Margin" Value="4" />
+      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+      <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid x:Name="Root">
+              <Border
+                x:Name="Glow"
+                Margin="-1"
+                BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+                BorderThickness="3"
+                CornerRadius="9"
+                Opacity="0">
+                <Border.Effect>
+                  <BlurEffect Radius="12" />
+                </Border.Effect>
+              </Border>
+              <Border
+                x:Name="Face"
+                Background="{StaticResource Tray.TileRest}"
+                BorderBrush="{StaticResource Tray.TileEdge}"
+                BorderThickness="1"
+                CornerRadius="8" />
+              <Border x:Name="Hover" Background="{DynamicResource RigShift.Brush.HoverOverlay}" CornerRadius="8" Opacity="0" />
+              <ContentPresenter Margin="12,10,12,10" />
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard>
+                    <Storyboard>
+                      <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+                    </Storyboard>
+                  </BeginStoryboard>
+                </Trigger.ExitActions>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Hover" Property="Background" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+              </Trigger>
+              <DataTrigger Binding="{Binding IsActive}" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="{StaticResource Tray.ActiveFill}" />
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                <Setter TargetName="Face" Property="BorderThickness" Value="1.5" />
+                <Setter TargetName="Glow" Property="Opacity" Value="0.35" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding IsSwitchTarget}" Value="True">
+                <Setter TargetName="Face" Property="Background" Value="{StaticResource Tray.ActiveFill}" />
+                <Setter TargetName="Face" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                <Setter TargetName="Face" Property="BorderThickness" Value="1.5" />
+                <Setter TargetName="Glow" Property="Opacity" Value="0.35" />
+              </DataTrigger>
+              <!-- A running switch dims every tile but its target. -->
+              <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                  <Condition Binding="{Binding DataContext.Coordinator.IsSwitching, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                  <Condition Binding="{Binding IsSwitchTarget}" Value="False" />
+                </MultiDataTrigger.Conditions>
+                <Setter TargetName="Root" Property="Opacity" Value="0.55" />
+                <Setter TargetName="Glow" Property="Opacity" Value="0" />
+              </MultiDataTrigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Compact row for five profiles and more, and for games. -->
+    <Style x:Key="Row" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+      <Setter Property="Height" Value="40" />
+      <Setter Property="Padding" Value="8,0" />
+      <Setter Property="Margin" Value="4,0" />
+      <Setter Property="Cursor" Value="Hand" />
       <Style.Triggers>
         <DataTrigger Binding="{Binding IsActive}" Value="True">
-          <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
+          <Setter Property="Background" Value="{StaticResource Tray.ActiveFill}" />
         </DataTrigger>
       </Style.Triggers>
     </Style>
-    <Style x:Key="RowText" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
-      <Setter Property="Grid.Column" Value="1" />
-      <Setter Property="Margin" Value="12,0,0,0" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+
+    <Style x:Key="HeaderButton" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}">
+      <Setter Property="Margin" Value="2,0,0,0" />
     </Style>
-    <Style x:Key="RowValue" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
-      <Setter Property="Grid.Column" Value="2" />
-      <Setter Property="Margin" Value="12,0,0,0" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
+
     <!-- The game's symbol: a picked one, else its own icon, else the generic glyph. -->
     <DataTemplate x:Key="GameGlyph" DataType="{x:Type vm:GameItem}">
-      <Grid Width="20" Height="20">
-        <controls:ProfileIcon
-          IconKey="{Binding IconKey}"
-          IsFilled="{Binding IsRunning}"
-          TextElement.Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
-          Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
-        <Image
-          RenderOptions.BitmapScalingMode="HighQuality"
-          Source="{Binding GameIcon}"
-          Visibility="{Binding HasGameIcon, Converter={StaticResource BoolToVisibility}}" />
-        <ui:SymbolIcon
-          FontSize="20"
-          Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-          Symbol="Games20"
-          Visibility="{Binding HasFallbackIcon, Converter={StaticResource BoolToVisibility}}" />
-      </Grid>
+      <Border Width="24" Height="24" Background="{DynamicResource RigShift.Brush.HoverOverlay}" CornerRadius="6" ClipToBounds="True">
+        <Grid>
+          <controls:ProfileIcon
+            Width="16"
+            Height="16"
+            IconKey="{Binding IconKey}"
+            IsFilled="{Binding IsRunning}"
+            TextElement.Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+            Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+          <Image
+            RenderOptions.BitmapScalingMode="HighQuality"
+            Source="{Binding GameIcon}"
+            Stretch="UniformToFill"
+            Visibility="{Binding HasGameIcon, Converter={StaticResource BoolToVisibility}}" />
+          <ui:SymbolIcon
+            FontSize="16"
+            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+            Symbol="Games20"
+            Visibility="{Binding HasFallbackIcon, Converter={StaticResource BoolToVisibility}}" />
+        </Grid>
+      </Border>
     </DataTemplate>
   </UserControl.Resources>
 
-  <!-- The margin carries the shadow (spec 7.3); without it the effect would be clipped at the popup's edge. -->
-  <Border
-    Width="320"
-    Margin="12"
-    Padding="6"
-    Background="{DynamicResource RigShift.Brush.Chrome}"
-    BorderBrush="{DynamicResource RigShift.Brush.Line}"
-    BorderThickness="1"
-    CornerRadius="{DynamicResource RigShift.Radius.Card}">
-    <Border.Effect>
-      <DropShadowEffect
-        BlurRadius="24"
-        Direction="270"
-        Opacity="0.5"
-        ShadowDepth="8"
-        Color="Black" />
-    </Border.Effect>
-    <StackPanel>
-      <!-- A running switch: where it goes, the one moving element of the popup, and every row disabled below. -->
-      <StackPanel Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}">
+  <!-- The margin carries the shadow; without it the effect would be clipped at the popup's edge. -->
+  <Grid x:Name="Flyout" Width="360" Margin="16,16,16,24">
+    <Border CornerRadius="{DynamicResource RigShift.Radius.Card}" Background="{DynamicResource RigShift.Brush.Chrome}" IsHitTestVisible="False">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="32" Direction="270" Opacity="0.55" ShadowDepth="10" Color="Black" />
+      </Border.Effect>
+    </Border>
+    <Border
+      Padding="0,0,0,8"
+      BorderBrush="{StaticResource Tray.Edge}"
+      BorderThickness="1"
+      CornerRadius="{DynamicResource RigShift.Radius.Card}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0.4,1">
+          <GradientStop Offset="0" Color="#FF18243A" />
+          <GradientStop Offset="1" Color="#FF111A2B" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <StackPanel>
+        <!-- Header: mark, name, open window, pause rules, more. -->
+        <DockPanel Height="48" Margin="16,0,8,0" LastChildFill="True">
+          <Image
+            Width="20"
+            Height="16"
+            VerticalAlignment="Center"
+            DockPanel.Dock="Left"
+            Source="{StaticResource RigShift.Image.AppMark}" />
+          <Button
+            AutomationProperties.Name="{loc:Tr Profile_More}"
+            Click="OnMoreClick"
+            DockPanel.Dock="Right"
+            Style="{StaticResource HeaderButton}"
+            ToolTip="{loc:Tr Profile_More}">
+            <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
+            <Button.ContextMenu>
+              <ContextMenu>
+                <MenuItem Command="{Binding SaveCurrentCommand}" Header="{loc:Tr Tray_SaveCurrent}">
+                  <MenuItem.Icon>
+                    <ui:SymbolIcon Symbol="DesktopArrowDown16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding ExitCommand}" Header="{loc:Tr Tray_Exit}">
+                  <MenuItem.Icon>
+                    <ui:SymbolIcon Symbol="Power20" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </Button.ContextMenu>
+          </Button>
+          <ToggleButton
+            AutomationProperties.Name="{loc:Tr Automation_Pause}"
+            Command="{Binding TogglePauseCommand}"
+            DockPanel.Dock="Right"
+            IsChecked="{Binding IsPaused, Mode=OneWay}"
+            ToolTip="{loc:Tr Automation_Pause}"
+            Visibility="{Binding HasRules, Converter={StaticResource BoolToVisibility}}">
+            <ToggleButton.Style>
+              <Style TargetType="ToggleButton">
+                <Setter Property="Width" Value="32" />
+                <Setter Property="Height" Value="32" />
+                <Setter Property="Margin" Value="2,0,0,0" />
+                <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+                <Setter Property="Template">
+                  <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                      <Border x:Name="Face" Background="Transparent" CornerRadius="{DynamicResource RigShift.Radius.Control}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="Face" Property="Background" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                          <Setter TargetName="Face" Property="Background" Value="{DynamicResource RigShift.Brush.Accent}" />
+                          <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </ToggleButton.Style>
+            <ui:SymbolIcon FontSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Symbol="Pause16" />
+          </ToggleButton>
+          <Button
+            AutomationProperties.Name="{loc:Tr Tray_Open}"
+            Command="{Binding OpenCommand}"
+            DockPanel.Dock="Right"
+            Style="{StaticResource HeaderButton}"
+            ToolTip="{loc:Tr Tray_Open}">
+            <ui:SymbolIcon FontSize="16" Symbol="Open16" />
+          </Button>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Style="{StaticResource RigShift.Text.BodyStrong}"
+            Text="RigShift" />
+        </DockPanel>
+
+        <!-- A running switch: where it goes, said for screen readers too. -->
         <TextBlock
-          Height="32"
-          Margin="10,0"
-          VerticalAlignment="Center"
+          Margin="16,0,16,6"
           controls:LiveRegion.IsLive="True"
+          Foreground="{DynamicResource RigShift.Brush.Accent}"
           Style="{StaticResource RigShift.Text.Caption}"
           Text="{Binding SwitchingText}"
-          TextTrimming="CharacterEllipsis" />
-        <controls:ProgressLine
-          Height="2"
-          Margin="10,0,10,6"
-          BarBrush="{DynamicResource RigShift.Brush.Accent}"
-          TrackBrush="{DynamicResource RigShift.Brush.Line}" />
-      </StackPanel>
+          TextTrimming="CharacterEllipsis"
+          Visibility="{Binding Coordinator.IsSwitching, Converter={StaticResource BoolToVisibility}}" />
 
-      <TextBlock
-        Margin="10,10"
-        Style="{StaticResource RigShift.Text.Caption}"
-        Text="{Binding StatusText}"
-        TextWrapping="Wrap"
-        Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
+        <TextBlock
+          Margin="16,4,16,12"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{Binding StatusText}"
+          TextWrapping="Wrap"
+          Visibility="{Binding HasStatusText, Converter={StaticResource BoolToVisibility}}" />
 
-      <!-- Scrolls instead of growing past the screen with many profiles (analysis finding I-05); MaxHeight set in code. -->
-      <ScrollViewer
-        x:Name="ProfileList"
-        Focusable="False"
-        HorizontalScrollBarVisibility="Disabled"
-        IsEnabled="{Binding Coordinator.IsIdle}"
-        VerticalScrollBarVisibility="Auto">
-        <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
+        <!-- Profiles -->
+        <DockPanel Margin="16,0,16,4" Visibility="{Binding HasStatusText, Converter={StaticResource InverseBoolToVisibility}}">
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Nav_Profiles}" />
+        </DockPanel>
+
+        <!-- Tiles: up to four profiles, two per row. -->
+        <ItemsControl
+          x:Name="Tiles"
+          Margin="4,0"
+          Focusable="False"
+          IsEnabled="{Binding Coordinator.IsIdle}"
+          ItemsSource="{Binding Catalog.Items}"
+          Visibility="{Binding UseTiles, Converter={StaticResource BoolToVisibility}}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="2" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileItem}">
               <Button
                 AutomationProperties.Name="{Binding AccessibleName}"
                 Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
-                Style="{StaticResource ProfileRow}">
+                Style="{StaticResource Tile}">
                 <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="56" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
                   <controls:DisplayTopology
-                    Width="56"
-                    Height="24"
-                    VerticalAlignment="Center"
+                    Margin="0,2,0,6"
                     Displays="{Binding Topology}"
-                    Size="XS" />
-                  <TextBlock Text="{Binding Name}">
-                    <TextBlock.Style>
-                      <Style TargetType="TextBlock" BasedOn="{StaticResource RowText}">
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsActive}" Value="True">
-                            <Setter Property="FontWeight" Value="{DynamicResource RigShift.Type.Weight.Strong}" />
-                          </DataTrigger>
-                        </Style.Triggers>
-                      </Style>
-                    </TextBlock.Style>
-                  </TextBlock>
-                  <TextBlock Style="{StaticResource RowValue}" Text="{Binding HotkeyText}" />
-                  <ui:SymbolIcon
-                    Grid.Column="3"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    FontSize="14"
-                    Foreground="{DynamicResource RigShift.Brush.Accent}"
-                    Symbol="Checkmark24"
-                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                    IsHitTestVisible="False"
+                    ShowLabels="False"
+                    Size="M" />
+                  <!-- "Active" in the corner of the active tile. -->
+                  <StackPanel
+                    Margin="0,-4,-4,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                    <Ellipse Width="7" Height="7" Margin="0,0,5,0" VerticalAlignment="Center" Fill="{DynamicResource RigShift.Brush.Accent}" />
+                    <TextBlock
+                      FontSize="11"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource RigShift.Brush.Accent}"
+                      Text="{loc:Tr Profile_Active}" />
+                  </StackPanel>
+                  <DockPanel Grid.Row="1">
+                    <TextBlock
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Center"
+                      DockPanel.Dock="Right"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Text="{Binding HotkeyText}" />
+                    <TextBlock
+                      Style="{StaticResource RigShift.Text.BodyStrong}"
+                      Text="{Binding Name}"
+                      TextTrimming="CharacterEllipsis"
+                      TextWrapping="NoWrap" />
+                  </DockPanel>
+                  <!-- Progress inside the target tile while the switch runs. -->
+                  <controls:ProgressLine
+                    Grid.Row="1"
+                    Height="3"
+                    Margin="0,0,0,-7"
+                    VerticalAlignment="Bottom"
+                    Visibility="{Binding IsSwitchTarget, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
               </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </ScrollViewer>
 
-      <!-- Games: starting a race is the second thing the tray is for; a running one says so instead of its hotkey. -->
-      <StackPanel IsEnabled="{Binding Coordinator.IsIdle}" Visibility="{Binding Games.HasGames, Converter={StaticResource BoolToVisibility}}">
-        <Border Margin="10,6" Style="{StaticResource RigShift.Divider}" />
-        <ItemsControl Focusable="False" ItemsSource="{Binding Games.Items}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="{x:Type vm:GameItem}">
-              <Button
-                AutomationProperties.Name="{Binding PlayText}"
-                Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                CommandParameter="{Binding}"
-                IsEnabled="{Binding CanPlay}"
-                Style="{StaticResource RigShift.TrayRow.Small}">
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="56" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <ContentPresenter
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Content="{Binding}"
-                    ContentTemplate="{StaticResource GameGlyph}" />
-                  <TextBlock Style="{StaticResource RowText}" Text="{Binding PlayText}" />
-                  <TextBlock
-                    Style="{StaticResource RowValue}"
-                    Text="{Binding HotkeyText}"
-                    Visibility="{Binding ShowsHotkey, Converter={StaticResource BoolToVisibility}}" />
-                  <TextBlock
-                    Grid.Column="2"
-                    Margin="12,0,0,0"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource RigShift.Brush.Accent}"
-                    Style="{StaticResource RigShift.Text.Caption}"
-                    Text="{loc:Tr Game_Running}"
-                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
-                </Grid>
-              </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <!-- Rows: five profiles and more; scrolls instead of growing past the screen (MaxHeight set in code). -->
+        <ScrollViewer
+          x:Name="ProfileList"
+          Focusable="False"
+          HorizontalScrollBarVisibility="Disabled"
+          IsEnabled="{Binding Coordinator.IsIdle}"
+          VerticalScrollBarVisibility="Auto"
+          Visibility="{Binding UseRows, Converter={StaticResource BoolToVisibility}}">
+          <ItemsControl Focusable="False" ItemsSource="{Binding Catalog.Items}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:ProfileItem}">
+                <Button
+                  AutomationProperties.Name="{Binding AccessibleName}"
+                  Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  CommandParameter="{Binding}"
+                  Style="{StaticResource Row}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="56" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <controls:DisplayTopology Width="56" Height="24" VerticalAlignment="Center" Displays="{Binding Topology}" Size="XS" />
+                    <TextBlock
+                      Grid.Column="1"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Text="{Binding Name}"
+                      TextTrimming="CharacterEllipsis"
+                      TextWrapping="NoWrap" />
+                    <TextBlock
+                      Grid.Column="2"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Style="{StaticResource RigShift.Text.Caption}"
+                      Text="{Binding HotkeyText}" />
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Games: icon and name; the play symbol shows on hover, a running game says so. -->
+        <StackPanel IsEnabled="{Binding Coordinator.IsIdle}" Visibility="{Binding Games.HasGames, Converter={StaticResource BoolToVisibility}}">
+          <Border Margin="16,8" Style="{StaticResource RigShift.Divider}" />
+          <TextBlock Margin="16,0,16,4" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Nav_Games}" />
+          <ItemsControl Focusable="False" ItemsSource="{Binding Games.Items}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:GameItem}">
+                <Button
+                  x:Name="GameRow"
+                  AutomationProperties.Name="{Binding PlayText}"
+                  Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  CommandParameter="{Binding}"
+                  IsEnabled="{Binding CanPlay}"
+                  Style="{StaticResource Row}"
+                  ToolTip="{Binding HotkeyText}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter VerticalAlignment="Center" Content="{Binding}" ContentTemplate="{StaticResource GameGlyph}" />
+                    <TextBlock
+                      Grid.Column="1"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Text="{Binding Name}"
+                      TextTrimming="CharacterEllipsis"
+                      TextWrapping="NoWrap" />
+                    <StackPanel
+                      Grid.Column="2"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Orientation="Horizontal"
+                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
+                      <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{DynamicResource RigShift.Brush.Ok}" />
+                      <TextBlock Foreground="{DynamicResource RigShift.Brush.Ok}" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Game_Running}" />
+                    </StackPanel>
+                    <Border
+                      x:Name="Play"
+                      Grid.Column="2"
+                      Width="28"
+                      Height="28"
+                      Margin="12,0,0,0"
+                      Background="{DynamicResource RigShift.Brush.Accent}"
+                      CornerRadius="14"
+                      Opacity="0">
+                      <ui:SymbolIcon FontSize="14" Foreground="{DynamicResource RigShift.Brush.OnAccent}" Symbol="Play16" Filled="True" />
+                    </Border>
+                  </Grid>
+                </Button>
+                <DataTemplate.Triggers>
+                  <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                      <Condition Binding="{Binding IsMouseOver, ElementName=GameRow}" Value="True" />
+                      <Condition Binding="{Binding IsRunning}" Value="False" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter TargetName="Play" Property="Opacity" Value="1" />
+                  </MultiDataTrigger>
+                  <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                      <Condition Binding="{Binding IsKeyboardFocused, ElementName=GameRow}" Value="True" />
+                      <Condition Binding="{Binding IsRunning}" Value="False" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter TargetName="Play" Property="Opacity" Value="1" />
+                  </MultiDataTrigger>
+                </DataTemplate.Triggers>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </StackPanel>
-
-      <Border Margin="10,6" Style="{StaticResource RigShift.Divider}" />
-      <Button Command="{Binding SaveCurrentCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="56" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <ui:SymbolIcon
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            FontSize="16"
-            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-            Symbol="Add24" />
-          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_SaveCurrent}" />
-        </Grid>
-      </Button>
-      <Button Command="{Binding OpenCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="56" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <ui:SymbolIcon
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            FontSize="16"
-            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-            Symbol="Open24" />
-          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_Open}" />
-        </Grid>
-      </Button>
-      <Button Command="{Binding ExitCommand}" Style="{StaticResource RigShift.TrayRow.Small}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="56" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <ui:SymbolIcon
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            FontSize="16"
-            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-            Symbol="Power24" />
-          <TextBlock Style="{StaticResource RowText}" Text="{loc:Tr Tray_Exit}" />
-        </Grid>
-      </Button>
-    </StackPanel>
-  </Border>
+    </Border>
+  </Grid>
 </UserControl>

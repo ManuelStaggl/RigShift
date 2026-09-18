@@ -15,6 +15,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 {
     private readonly IAppShell _shell;
     private readonly GameSessionService _sessions;
+    private readonly AutomationService? _automation;
 
     /// <summary>Resolved on the click, not in the constructor: the profiles page pulls in the whole window.</summary>
     private readonly Func<ProfilesViewModel> _profiles;
@@ -25,7 +26,8 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         GameSessionService sessions,
         SwitchCoordinator coordinator,
         Func<ProfilesViewModel> profiles,
-        IAppShell shell)
+        IAppShell shell,
+        AutomationService? automation = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(games);
@@ -37,6 +39,12 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         _sessions = sessions;
         _profiles = profiles;
         _shell = shell;
+        _automation = automation;
+        if (automation is not null)
+        {
+            automation.Changed += (_, _) => OnAutomationChanged();
+        }
+
         catalog.Changed += (_, _) => OnStatusChanged();
         Loc.Instance.PropertyChanged += (_, _) => OnStatusChanged();
 
@@ -59,6 +67,16 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     public string? StatusText => Catalog.IsEmpty ? Loc.Instance["Tray_NoProfiles"] : null;
 
     public bool HasStatusText => StatusText is not null;
+
+    /// <summary>Up to four profiles show as tiles with a picture; more as compact rows.</summary>
+    public bool UseTiles => Catalog.Items.Count is > 0 and <= 4;
+
+    public bool UseRows => Catalog.Items.Count > 4;
+
+    /// <summary>The pause switch in the header only shows when there is a rule to pause.</summary>
+    public bool HasRules => _automation?.Rules.Count > 0;
+
+    public bool IsPaused => _automation?.IsPaused == true;
 
     /// <summary>"Switching to Sim Rig …" above the progress line; the plain sentence when the target is unknown.</summary>
     public string SwitchingText => Coordinator.SwitchingProfile is { } profile
@@ -108,11 +126,44 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     [RelayCommand]
     private void Exit() => _shell.Quit();
 
+    [RelayCommand]
+    private async Task TogglePauseAsync()
+    {
+        if (_automation is not null)
+        {
+            await _automation.SetPausedAsync(!_automation.IsPaused);
+            OnAutomationChanged();
+        }
+    }
+
+    /// <summary>Digits 1–9 in the popup switch to the profile at that place.</summary>
+    public bool SwitchToNumber(int number)
+    {
+        if (!Coordinator.IsIdle || number < 1 || number > Catalog.Items.Count)
+        {
+            return false;
+        }
+
+        SwitchCommand.Execute(Catalog.Items[number - 1]);
+        return true;
+    }
+
+    private void OnAutomationChanged()
+    {
+        OnPropertyChanged(nameof(HasRules));
+        OnPropertyChanged(nameof(IsPaused));
+    }
+
     private void OnCoordinatorChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(SwitchCoordinator.SwitchingProfile) or nameof(SwitchCoordinator.IsSwitching))
         {
             OnPropertyChanged(nameof(SwitchingText));
+            Guid? target = Coordinator.IsSwitching ? Coordinator.SwitchingProfile?.Id : null;
+            foreach (ProfileItem item in Catalog.Items)
+            {
+                item.IsSwitchTarget = target is { } id && item.Profile.Id == id;
+            }
         }
     }
 
@@ -128,6 +179,8 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(HasStatusText));
+        OnPropertyChanged(nameof(UseTiles));
+        OnPropertyChanged(nameof(UseRows));
         OnPropertyChanged(nameof(SwitchingText));
     }
 }
