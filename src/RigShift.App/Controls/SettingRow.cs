@@ -15,6 +15,9 @@ public sealed class SettingRow : ContentControl
     public static readonly DependencyProperty CaptionProperty = DependencyProperty.Register(
         nameof(Caption), typeof(string), typeof(SettingRow), new PropertyMetadata(string.Empty));
 
+    public static readonly DependencyProperty IsCaptionErrorProperty = DependencyProperty.Register(
+        nameof(IsCaptionError), typeof(bool), typeof(SettingRow), new PropertyMetadata(false));
+
     static SettingRow()
     {
         DefaultStyleKeyProperty.OverrideMetadata(typeof(SettingRow), new FrameworkPropertyMetadata(typeof(SettingRow)));
@@ -31,5 +34,12 @@ public sealed class SettingRow : ContentControl
     {
         get => (string)GetValue(CaptionProperty);
         set => SetValue(CaptionProperty, value);
+    }
+
+    /// <summary>The caption tells why the setting cannot work (for example Surround without a grid).</summary>
+    public bool IsCaptionError
+    {
+        get => (bool)GetValue(IsCaptionErrorProperty);
+        set => SetValue(IsCaptionErrorProperty, value);
     }
 }

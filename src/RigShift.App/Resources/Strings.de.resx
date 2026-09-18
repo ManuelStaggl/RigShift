@@ -9,7 +9,6 @@
   <data name="Profiles_EmptyText" xml:space="preserve"><value>Noch keine Profile. Speichere die aktuelle Anordnung, um eines anzulegen.</value></data>
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) konnten nicht gelesen werden: {1}. Details stehen im Log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
-  <data name="Profile_Check" xml:space="preserve"><value>Testen</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Profile_Default" xml:space="preserve"><value>Standard</value></data>
   <data name="Profile_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
@@ -424,7 +423,6 @@
   <data name="Trigger_Shortcut" xml:space="preserve"><value>Verknüpfung</value></data>
   <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Auf dem Desktop anlegen</value></data>
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Funktioniert auch als Stream-Deck-Aktion.</value></data>
-  <data name="Trigger_Command" xml:space="preserve"><value>Befehl · auch für Stream Deck</value></data>
   <data name="Trigger_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Befehl kopiert.</value></data>
   <data name="Behavior_Intro" xml:space="preserve"><value>Wie sich der PC verhält, solange das Profil aktiv ist.</value></data>
@@ -564,6 +562,18 @@
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>Das Kameramenü; es nimmt die Breiten und den Augabstand selbst in Millimetern.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF-Launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radiant, drei Dezimalstellen.</value></data>
   <data name="App_Change" xml:space="preserve"><value>Ändern…</value></data>
-  <data name="App_WaitShort" xml:space="preserve"><value>Danach warten</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Warten (s)</value></data>
   <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>Beim Trennen</value></data>
+  <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="Profile_Reapply" xml:space="preserve"><value>Erneut anwenden</value></data>
+  <data name="List_BlockedShort" xml:space="preserve"><value>Blockiert</value></data>
+  <data name="Head_MissingOne" xml:space="preserve"><value>1 Bildschirm fehlt</value></data>
+  <data name="Head_MissingMany" xml:space="preserve"><value>{0} Bildschirme fehlen</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>Nicht angeschlossen: {0}. Umschalten geht wieder, sobald sie da sind.</value></data>
+  <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB-Geräte</value></data>
+  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet hierher, sobald alle Geräte einer Regel verbunden sind.</value></data>
+  <data name="Trigger_Command" xml:space="preserve"><value>Befehl</value></data>
+  <data name="Trigger_CommandHint" xml:space="preserve"><value>Für Stream Deck, Skripte oder die Konsole.</value></data>
+  <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>Keine Bestätigung nach dem Wechsel in dieses Profil.</value></data>
+  <data name="Game_WindowsTitle" xml:space="preserve"><value>Fensterpositionen</value></data>
 </root>

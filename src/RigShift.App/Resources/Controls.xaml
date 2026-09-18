@@ -1159,6 +1159,136 @@
             <Trigger Property="Caption" Value="">
               <Setter TargetName="CaptionText" Property="Visibility" Value="Collapsed" />
             </Trigger>
+            <Trigger Property="IsCaptionError" Value="True">
+              <Setter TargetName="CaptionText" Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Rows inside one card (a group of settings): no frame of their own, the card draws it; dividers go between. -->
+  <Style x:Key="RigShift.SettingRow.Inner" TargetType="controls:SettingRow" BasedOn="{StaticResource {x:Type controls:SettingRow}}">
+    <Setter Property="MinHeight" Value="44" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Padding" Value="0,8" />
+  </Style>
+  <!-- Card that holds a group of rows: 16 to the sides, the rows bring their own height. -->
+  <Style x:Key="RigShift.Card.Group" TargetType="Border" BasedOn="{StaticResource RigShift.Card}">
+    <Setter Property="Padding" Value="16,4" />
+  </Style>
+  <!-- Head of a card group: symbol, title and an optional caption; the right slot takes the card's actions. -->
+  <Style x:Key="RigShift.Text.CardTitle" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.BodyStrong}">
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!-- ===== Slider (B-05): 4 px rail, accent fill up to the thumb, 20 px thumb with an accent dot that grows on hover ===== -->
+  <Style x:Key="RigShift.SliderFill" TargetType="RepeatButton">
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RepeatButton">
+          <Grid Background="Transparent">
+            <Border Height="4" Background="{TemplateBinding Background}" CornerRadius="2" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="RigShift.SliderThumb" TargetType="Thumb">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Thumb">
+          <Grid>
+            <Ellipse
+              Fill="{DynamicResource RigShift.Brush.Layer}"
+              Stroke="{DynamicResource RigShift.Brush.LineStrong}"
+              StrokeThickness="1" />
+            <Ellipse
+              x:Name="Dot"
+              Width="12"
+              Height="12"
+              Fill="{DynamicResource RigShift.Brush.Accent}"
+              RenderTransformOrigin="0.5,0.5">
+              <Ellipse.RenderTransform>
+                <ScaleTransform x:Name="DotScale" />
+              </Ellipse.RenderTransform>
+            </Ellipse>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="1.17" Duration="{x:Static controls:Motion.Fast}" />
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="1.17" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsDragging" Value="True">
+              <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource RigShift.Brush.AccentPressed}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="RigShift.Slider" TargetType="Slider">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="IsMoveToPointEnabled" Value="True" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Slider">
+          <Grid VerticalAlignment="Center" Background="Transparent">
+            <Border
+              Height="4"
+              Margin="10,0"
+              Background="{DynamicResource RigShift.Brush.LineStrong}"
+              CornerRadius="2" />
+            <Track x:Name="PART_Track">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton
+                  x:Name="Fill"
+                  Margin="10,0,-10,0"
+                  Background="{DynamicResource RigShift.Brush.Accent}"
+                  Command="Slider.DecreaseLarge"
+                  Style="{StaticResource RigShift.SliderFill}" />
+              </Track.DecreaseRepeatButton>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton
+                  Background="Transparent"
+                  Command="Slider.IncreaseLarge"
+                  Style="{StaticResource RigShift.SliderFill}" />
+              </Track.IncreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb Style="{StaticResource RigShift.SliderThumb}" />
+              </Track.Thumb>
+            </Track>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Fill" Property="Background" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
@@ -1506,59 +1636,73 @@
     </Setter>
   </Style>
 
-  <!-- Option row (52 high): a radio circle, then the content; the chosen row carries the accent line (F5, profile choice). -->
-  <Style x:Key="RigShift.OptionList" TargetType="ListBox" BasedOn="{StaticResource RigShift.List}">
+  <!-- Option cards (G-03): side by side, 216 wide; the chosen card carries a 2 px accent edge and a check badge. -->
+  <Style x:Key="RigShift.OptionCards" TargetType="ListBox" BasedOn="{StaticResource RigShift.List}">
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <WrapPanel />
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
     <Setter Property="ItemContainerStyle">
       <Setter.Value>
         <Style TargetType="ListBoxItem">
-          <Setter Property="Height" Value="52" />
-          <Setter Property="Margin" Value="0,0,0,8" />
-          <Setter Property="Padding" Value="12,0" />
+          <Setter Property="Width" Value="216" />
+          <Setter Property="Margin" Value="0,0,12,12" />
+          <Setter Property="Padding" Value="16,16,16,14" />
           <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
           <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
           <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
           <Setter Property="HorizontalContentAlignment" Value="Stretch" />
           <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+          <Setter Property="Cursor" Value="Hand" />
           <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
           <Setter Property="Template">
             <Setter.Value>
               <ControlTemplate TargetType="ListBoxItem">
-                <Border
-                  x:Name="Root"
-                  Padding="{TemplateBinding Padding}"
-                  Background="{TemplateBinding Background}"
-                  BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="{DynamicResource RigShift.Radius.Card}"
-                  SnapsToDevicePixels="True">
-                  <DockPanel>
-                    <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" DockPanel.Dock="Left">
-                      <Ellipse x:Name="Ring" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1.5" />
-                      <Ellipse
-                        x:Name="Mark"
-                        Width="8"
-                        Height="8"
-                        Fill="{DynamicResource RigShift.Brush.OnAccent}"
-                        Visibility="Collapsed" />
-                    </Grid>
-                    <ContentPresenter VerticalAlignment="Center" />
-                  </DockPanel>
-                </Border>
+                <Grid>
+                  <Border
+                    x:Name="Root"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource RigShift.Radius.Card}"
+                    SnapsToDevicePixels="True" />
+                  <Border
+                    x:Name="Ring"
+                    BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+                    BorderThickness="2"
+                    CornerRadius="{DynamicResource RigShift.Radius.Card}"
+                    SnapsToDevicePixels="True"
+                    Visibility="Collapsed" />
+                  <ContentPresenter Margin="{TemplateBinding Padding}" />
+                  <Grid
+                    x:Name="Badge"
+                    Width="20"
+                    Height="20"
+                    Margin="0,10,10,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Visibility="Collapsed">
+                    <Ellipse Fill="{DynamicResource RigShift.Brush.Accent}" />
+                    <ui:SymbolIcon FontSize="12" Foreground="{DynamicResource RigShift.Brush.OnAccent}" Symbol="Checkmark12" />
+                  </Grid>
+                </Grid>
                 <ControlTemplate.Triggers>
                   <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
                   </Trigger>
                   <Trigger Property="IsSelected" Value="True">
-                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
-                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
-                    <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
-                    <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.Accent}" />
-                    <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Badge" Property="Visibility" Value="Visible" />
                   </Trigger>
                   <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter TargetName="Root" Property="BorderThickness" Value="2" />
-                    <Setter TargetName="Root" Property="Padding" Value="11,0" />
-                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+                    <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Ring" Property="Margin" Value="-4" />
+                    <Setter TargetName="Ring" Property="CornerRadius" Value="16" />
                   </Trigger>
                 </ControlTemplate.Triggers>
               </ControlTemplate>
@@ -1578,6 +1722,51 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="14" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- "+ Device" (B-07): a chip of the same height, dashed because it is a slot to fill, not a device. -->
+  <Style x:Key="RigShift.Button.AddChip" TargetType="Button">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="10,0,12,0" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Grid>
+            <Border x:Name="Fill" Background="Transparent" CornerRadius="14" />
+            <Rectangle
+              x:Name="Edge"
+              RadiusX="14"
+              RadiusY="14"
+              SnapsToDevicePixels="True"
+              Stroke="{DynamicResource RigShift.Brush.LineStrong}"
+              StrokeDashArray="3 2"
+              StrokeThickness="1" />
+            <ContentPresenter
+              Margin="{TemplateBinding Padding}"
+              VerticalAlignment="Center"
+              TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Fill" Property="Background" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
+              <Setter TargetName="Edge" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Fill" Property="Background" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- ===== Progress line: 2 px, indeterminate, accent ===== -->

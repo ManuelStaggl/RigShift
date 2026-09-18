@@ -124,6 +124,21 @@ public sealed partial class ProfilesViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsSelectedDefault { get; private set; }
 
+    /// <summary>Switching is the accent action only when it would change something: not while the profile is
+    /// already active and not while unsaved edits make Save the primary (B-03).</summary>
+    [ObservableProperty]
+    public partial bool SwitchIsPrimary { get; private set; }
+
+    [ObservableProperty]
+    public partial string SwitchLabel { get; private set; } = string.Empty;
+
+    /// <summary>The names of the missing displays; the head only counts them (P-01).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBlockedMessage))]
+    public partial string? BlockedMessage { get; private set; }
+
+    public bool HasBlockedMessage => BlockedMessage is not null;
+
     /// <summary>A test result, a switch result or a store error, as a bar above the tab content; closable.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDetailMessage))]
@@ -592,7 +607,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
         if (plan.IsBlocked)
         {
-            return (StatusKind.Error, Loc.Format("List_Blocked", Names(plan.Missing.Where(m => !m.Assignment.IsOptional))) + suffix);
+            return (StatusKind.Error, Loc.Instance["List_BlockedShort"] + suffix);
         }
 
         if (plan.Missing.Count > 0)
@@ -612,16 +627,21 @@ public sealed partial class ProfilesViewModel : ObservableObject
         ProfileItem? item = SelectedItem;
         IsSelectedActive = item is { IsNew: false, IsActive: true };
         IsSelectedDefault = item is { IsNew: false, IsDefault: true };
+        SwitchIsPrimary = !IsSelectedActive && Editor is { IsDirty: false };
+        SwitchLabel = Loc.Instance[IsSelectedActive ? "Profile_Reapply" : "Profile_Apply"];
         if (item is null || Editor is null)
         {
             HeadStatusKind = StatusKind.Neutral;
             HeadStatusText = string.Empty;
+            BlockedMessage = null;
             CanSwitch = false;
             TestCommand.NotifyCanExecuteChanged();
             return;
         }
 
         bool blocked = _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan) && plan.IsBlocked;
+        MissingDisplay[] missing = blocked ? plan!.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
+        BlockedMessage = missing.Length > 0 && !item.IsActive ? Loc.Format("Detail_BlockedNames", Names(missing)) : null;
         CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && !blocked;
         TestCommand.NotifyCanExecuteChanged();
 
@@ -644,6 +664,10 @@ public sealed partial class ProfilesViewModel : ObservableObject
         {
             text = Loc.Instance["SaveBar_Unsaved"];
             kind = StatusKind.Neutral;
+        }
+        else if (BlockedMessage is not null)
+        {
+            text = missing.Length == 1 ? Loc.Instance["Head_MissingOne"] : Loc.Format("Head_MissingMany", missing.Length);
         }
 
         if (Editor.Hotkey is { } hotkey)

@@ -52,37 +52,42 @@
       BorderBrush="{DynamicResource RigShift.Brush.Line}"
       BorderThickness="0,0,1,0">
       <DockPanel>
-        <Button
-          x:Name="NewButton"
-          Height="44"
-          Padding="16,0"
-          HorizontalContentAlignment="Stretch"
-          AutomationProperties.Name="{loc:Tr List_New}"
-          Click="OnNewClick"
-          DockPanel.Dock="Top"
-          Style="{StaticResource RigShift.Button.Ghost}"
-          Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
-          controls:Interaction.CornerRadius="0">
-          <DockPanel>
-            <ui:SymbolIcon Margin="0,0,10,0" VerticalAlignment="Center" DockPanel.Dock="Left" FontSize="16" Symbol="Add16" />
-            <ui:SymbolIcon VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="ChevronDown12" />
-            <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
-          </DockPanel>
-          <Button.ContextMenu>
-            <ContextMenu>
-              <MenuItem Command="{Binding AddInstalledCommand}" Header="{loc:Tr List_NewInstalled}">
-                <MenuItem.Icon>
-                  <ui:SymbolIcon Symbol="Search16" />
-                </MenuItem.Icon>
-              </MenuItem>
-              <MenuItem Command="{Binding AddProgramCommand}" Header="{loc:Tr List_NewProgram}">
-                <MenuItem.Icon>
-                  <ui:SymbolIcon Symbol="Apps16" />
-                </MenuItem.Icon>
-              </MenuItem>
-            </ContextMenu>
-          </Button.ContextMenu>
-        </Button>
+        <!-- Column head (B-01): the list's title and a compact "New" with its menu. -->
+        <DockPanel Height="52" Margin="16,0,12,0" DockPanel.Dock="Top">
+          <Button
+            x:Name="NewButton"
+            Height="32"
+            Padding="10,0"
+            VerticalAlignment="Center"
+            AutomationProperties.Name="{loc:Tr List_New}"
+            Click="OnNewClick"
+            DockPanel.Dock="Right"
+            Style="{StaticResource RigShift.Button}">
+            <StackPanel Orientation="Horizontal">
+              <ui:SymbolIcon Margin="0,0,6,0" VerticalAlignment="Center" FontSize="16" Symbol="Add16" />
+              <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
+              <ui:SymbolIcon Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="ChevronDown12" />
+            </StackPanel>
+            <Button.ContextMenu>
+              <ContextMenu>
+                <MenuItem Command="{Binding AddInstalledCommand}" Header="{loc:Tr List_NewInstalled}">
+                  <MenuItem.Icon>
+                    <ui:SymbolIcon Symbol="Search16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding AddProgramCommand}" Header="{loc:Tr List_NewProgram}">
+                  <MenuItem.Icon>
+                    <ui:SymbolIcon Symbol="Apps16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </Button.ContextMenu>
+          </Button>
+          <TextBlock
+            VerticalAlignment="Center"
+            Style="{StaticResource RigShift.Text.Section}"
+            Text="{loc:Tr Nav_Games}" />
+        </DockPanel>
         <Border DockPanel.Dock="Top" Style="{StaticResource RigShift.Divider}" />
         <StackPanel
           Margin="16,24"
@@ -250,6 +255,30 @@
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
                   ToolTip="{loc:Tr Editor_Name}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
+                <!-- The name is a field: a pencil shows it on hover (P-02). -->
+                <ui:SymbolIcon
+                  Margin="4,0,0,0"
+                  VerticalAlignment="Center"
+                  DockPanel.Dock="Left"
+                  FontSize="16"
+                  Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                  IsHitTestVisible="False"
+                  Symbol="Edit16">
+                  <ui:SymbolIcon.Style>
+                    <Style TargetType="ui:SymbolIcon">
+                      <Setter Property="Opacity" Value="0" />
+                      <Style.Triggers>
+                        <MultiDataTrigger>
+                          <MultiDataTrigger.Conditions>
+                            <Condition Binding="{Binding IsMouseOver, ElementName=NameBox}" Value="True" />
+                            <Condition Binding="{Binding IsKeyboardFocusWithin, ElementName=NameBox}" Value="False" />
+                          </MultiDataTrigger.Conditions>
+                          <Setter Property="Opacity" Value="1" />
+                        </MultiDataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </ui:SymbolIcon.Style>
+                </ui:SymbolIcon>
               </DockPanel>
               <controls:StatusLine
                 Margin="0,4,0,0"
@@ -365,203 +394,190 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_GameIntro}" />
-                <controls:AdaptiveColumns Gap="24">
-
-                  <StackPanel Width="400">
-                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_Launch}" />
-                    <DockPanel>
-                      <Button
-                        Margin="8,0,0,0"
-                        Click="OnPickGame"
-                        Content="{loc:Tr Game_Choose}"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource RigShift.Button}" />
-                      <Border
-                        Height="32"
-                        Padding="10,0"
-                        Background="{DynamicResource RigShift.Brush.Layer}"
-                        BorderThickness="1"
-                        CornerRadius="{DynamicResource RigShift.Radius.Control}"
-                        SnapsToDevicePixels="True">
-                        <Border.Style>
-                          <Style TargetType="Border">
-                            <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
-                            <Style.Triggers>
-                              <DataTrigger Binding="{Binding HasLaunchProblem}" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
-                              </DataTrigger>
-                            </Style.Triggers>
-                          </Style>
-                        </Border.Style>
-                        <DockPanel>
-                          <ContentControl
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            Content="{Binding LaunchKindText}"
-                            DockPanel.Dock="Left"
-                            Style="{StaticResource RigShift.Chip}"
-                            Visibility="{Binding HasLaunch, Converter={StaticResource BoolToVisibility}}" />
-                          <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource RigShift.Text.Value}"
-                            Text="{Binding LaunchText}"
-                            ToolTip="{Binding LaunchText}"
-                            Visibility="{Binding HasLaunch, Converter={StaticResource BoolToVisibility}}" />
-                          <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource RigShift.Text.Caption}"
-                            Text="{loc:Tr Game_LaunchPlaceholder}"
-                            Visibility="{Binding HasLaunch, Converter={StaticResource InverseBoolToVisibility}}" />
-                        </DockPanel>
-                      </Border>
-                    </DockPanel>
-                    <TextBlock
-                      AutomationProperties.LiveSetting="Polite"
-                      Style="{StaticResource RigShift.Text.FieldError}"
-                      Text="{Binding LaunchProblem}"
-                      Visibility="{Binding HasLaunchProblem, Converter={StaticResource BoolToVisibility}}" />
-
-                    <TextBlock Margin="0,16,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_ProcessName}" />
-                    <TextBox
-                      AutomationProperties.HelpText="{Binding ProcessHint}"
-                      AutomationProperties.Name="{loc:Tr Game_ProcessName}"
-                      Style="{StaticResource RigShift.Field.Value}"
-                      Text="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
-                      ToolTip="{loc:Tr Game_ProcessLearned}"
-                      controls:Interaction.IsInvalid="{Binding ProcessHintIsError}" />
-                    <TextBlock
-                      Margin="0,4,0,0"
-                      AutomationProperties.LiveSetting="Polite"
-                      Text="{Binding ProcessHint}"
-                      TextWrapping="Wrap">
-                      <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding ProcessHintIsError}" Value="True">
-                              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </TextBlock.Style>
-                    </TextBlock>
-
-                    <TextBlock Margin="0,16,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_EndsWith}" />
-                    <ComboBox
-                      AutomationProperties.Name="{loc:Tr Game_EndsWith}"
-                      DisplayMemberPath="Name"
-                      ItemsSource="{Binding EndChoices}"
-                      SelectedItem="{Binding SelectedEnd}"
-                      Style="{StaticResource RigShift.Select}" />
-                    <StackPanel Margin="0,12,0,0" Visibility="{Binding NeedsLauncherProcess, Converter={StaticResource BoolToVisibility}}">
-                      <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_LauncherProcess}" />
-                      <TextBox
-                        AutomationProperties.HelpText="{loc:Tr Game_LauncherProcessHint}"
-                        AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
-                        Style="{StaticResource RigShift.Field.Value}"
-                        Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}" />
-                      <TextBlock
-                        Margin="0,4,0,0"
-                        Style="{StaticResource RigShift.Text.Caption}"
-                        Text="{loc:Tr Game_LauncherProcessHint}"
-                        TextWrapping="Wrap" />
-                    </StackPanel>
-
-                    <CheckBox
-                      Margin="0,16,0,0"
-                      Content="{loc:Tr Game_StartWithGame}"
-                      IsChecked="{Binding StartWithGame}"
-                      Style="{StaticResource RigShift.Check}" />
-                    <TextBlock
-                      Margin="28,2,0,0"
-                      Style="{StaticResource RigShift.Text.Caption}"
-                      Text="{loc:Tr Game_StartWithGameHint}"
-                      TextWrapping="Wrap" />
-                  </StackPanel>
-
-                  <StackPanel Width="320">
-                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Hotkey}" />
-                    <DockPanel>
-                      <Button
-                        Margin="8,0,0,0"
-                        AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
-                        Command="{Binding ClearHotkeyCommand}"
-                        DockPanel.Dock="Right"
-                        IsEnabled="{Binding HasHotkey}"
-                        Style="{StaticResource RigShift.Button.IconOutlined}"
-                        ToolTip="{loc:Tr Editor_HotkeyClear}">
-                        <ui:SymbolIcon FontSize="12" Symbol="Dismiss12" />
-                      </Button>
-                      <TextBox
-                        x:Name="HotkeyBox"
-                        AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
-                        AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
-                        GotKeyboardFocus="OnHotkeyGotFocus"
-                        IsReadOnly="True"
-                        IsReadOnlyCaretVisible="False"
-                        LostKeyboardFocus="OnHotkeyLostFocus"
-                        PreviewKeyDown="OnHotkeyKeyDown"
-                        Style="{StaticResource RigShift.Field.Value}"
-                        Text="{Binding HotkeyText, Mode=OneWay}"
-                        ToolTip="{loc:Tr Hotkey_RecordTip}"
-                        controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />
-                    </DockPanel>
-                    <TextBlock
-                      AutomationProperties.LiveSetting="Polite"
-                      Style="{StaticResource RigShift.Text.FieldError}"
-                      Text="{Binding HotkeyProblem}"
-                      TextWrapping="Wrap"
-                      Visibility="{Binding HasHotkeyProblem, Converter={StaticResource BoolToVisibility}}" />
-                    <TextBlock
-                      Margin="0,4,0,0"
-                      AutomationProperties.LiveSetting="Polite"
-                      Style="{StaticResource RigShift.Text.Caption}"
-                      Text="{Binding HotkeyHint}"
-                      TextWrapping="Wrap"
-                      Visibility="{Binding HasHotkeyProblem, Converter={StaticResource InverseBoolToVisibility}}" />
-
-                    <TextBlock
-                      Margin="0,16,0,4"
-                      Style="{StaticResource RigShift.Text.Label}"
-                      Text="{loc:Tr Trigger_Shortcut}" />
+                <!-- What starts: the picked game or program with "Choose…" in one card. -->
+                <Border Padding="16,12">
+                  <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource RigShift.Card}">
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasLaunchProblem}" Value="True">
+                          <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Border.Style>
+                  <DockPanel>
                     <Button
-                      HorizontalAlignment="Left"
-                      Command="{Binding DataContext.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                      Style="{StaticResource RigShift.Button}">
-                      <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Link16" />
-                        <TextBlock Text="{loc:Tr Trigger_ShortcutCreate}" />
-                      </StackPanel>
-                    </Button>
-                    <TextBlock
-                      Margin="0,4,0,0"
-                      Style="{StaticResource RigShift.Text.Caption}"
-                      Text="{loc:Tr Game_ShortcutHint}"
-                      TextWrapping="Wrap" />
+                      Margin="16,0,0,0"
+                      VerticalAlignment="Center"
+                      Click="OnPickGame"
+                      Content="{loc:Tr Game_Choose}"
+                      DockPanel.Dock="Right"
+                      Style="{StaticResource RigShift.Button}" />
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="{loc:Tr Game_Launch}" />
+                      <DockPanel Margin="0,2,0,0" Visibility="{Binding HasLaunch, Converter={StaticResource BoolToVisibility}}">
+                        <ContentControl
+                          Margin="0,0,8,0"
+                          VerticalAlignment="Center"
+                          Content="{Binding LaunchKindText}"
+                          DockPanel.Dock="Left"
+                          Style="{StaticResource RigShift.Chip}" />
+                        <TextBlock
+                          VerticalAlignment="Center"
+                          Style="{StaticResource RigShift.Text.ValueSecondary}"
+                          Text="{Binding LaunchText}"
+                          TextTrimming="CharacterEllipsis"
+                          ToolTip="{Binding LaunchText}" />
+                      </DockPanel>
+                      <TextBlock
+                        Style="{StaticResource RigShift.Text.Caption}"
+                        Text="{loc:Tr Game_LaunchPlaceholder}"
+                        Visibility="{Binding HasLaunch, Converter={StaticResource InverseBoolToVisibility}}" />
+                      <TextBlock
+                        AutomationProperties.LiveSetting="Polite"
+                        Style="{StaticResource RigShift.Text.FieldError}"
+                        Text="{Binding LaunchProblem}"
+                        TextWrapping="Wrap"
+                        Visibility="{Binding HasLaunchProblem, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
 
-                    <TextBlock
-                      Margin="0,16,0,4"
-                      Style="{StaticResource RigShift.Text.Label}"
-                      Text="{loc:Tr Trigger_Command}" />
-                    <DockPanel>
-                      <Button
-                        Margin="8,0,0,0"
-                        AutomationProperties.Name="{loc:Tr Trigger_Copy}"
-                        Command="{Binding DataContext.CopyCommandCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource RigShift.Button.IconOutlined}"
-                        ToolTip="{loc:Tr Trigger_Copy}">
-                        <ui:SymbolIcon FontSize="16" Symbol="Copy16" />
-                      </Button>
+                <!-- How RigShift knows the session runs and when it ends. -->
+                <Border Margin="0,8,0,0" Style="{StaticResource RigShift.Card.Group}">
+                  <StackPanel>
+                    <controls:SettingRow
+                      Caption="{Binding ProcessHint}"
+                      IsCaptionError="{Binding ProcessHintIsError}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr Game_ProcessName}">
                       <TextBox
-                        AutomationProperties.Name="{loc:Tr Trigger_Command}"
-                        FontSize="12"
-                        Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-                        IsReadOnly="True"
+                        Width="240"
+                        AutomationProperties.HelpText="{Binding ProcessHint}"
+                        AutomationProperties.Name="{loc:Tr Game_ProcessName}"
                         Style="{StaticResource RigShift.Field.Value}"
-                        Text="{Binding CommandText, Mode=OneWay}" />
-                    </DockPanel>
+                        Text="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="{loc:Tr Game_ProcessLearned}"
+                        controls:Interaction.IsInvalid="{Binding ProcessHintIsError}" />
+                    </controls:SettingRow>
+                    <Border Style="{StaticResource RigShift.Divider}" />
+                    <controls:SettingRow Style="{StaticResource RigShift.SettingRow.Inner}" Title="{loc:Tr Game_EndsWith}">
+                      <ComboBox
+                        Width="240"
+                        AutomationProperties.Name="{loc:Tr Game_EndsWith}"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding EndChoices}"
+                        SelectedItem="{Binding SelectedEnd}"
+                        Style="{StaticResource RigShift.Select}" />
+                    </controls:SettingRow>
+                    <StackPanel Visibility="{Binding NeedsLauncherProcess, Converter={StaticResource BoolToVisibility}}">
+                      <Border Style="{StaticResource RigShift.Divider}" />
+                      <controls:SettingRow
+                        Caption="{loc:Tr Game_LauncherProcessHint}"
+                        Style="{StaticResource RigShift.SettingRow.Inner}"
+                        Title="{loc:Tr Game_LauncherProcess}">
+                        <TextBox
+                          Width="240"
+                          AutomationProperties.HelpText="{loc:Tr Game_LauncherProcessHint}"
+                          AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
+                          Style="{StaticResource RigShift.Field.Value}"
+                          Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}" />
+                      </controls:SettingRow>
+                    </StackPanel>
+                    <Border Style="{StaticResource RigShift.Divider}" />
+                    <controls:SettingRow
+                      Caption="{loc:Tr Game_StartWithGameHint}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr Game_StartWithGame}">
+                      <ui:ToggleSwitch
+                        AutomationProperties.Name="{loc:Tr Game_StartWithGame}"
+                        IsChecked="{Binding StartWithGame}"
+                        Style="{StaticResource RigShift.Toggle}" />
+                    </controls:SettingRow>
                   </StackPanel>
-                </controls:AdaptiveColumns>
+                </Border>
+
+                <!-- Everything that starts the session, as on the profile's Triggers tab. -->
+                <TextBlock Margin="0,24,0,8" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Tab_Triggers}" />
+                <controls:SettingRow Title="{loc:Tr Editor_Hotkey}">
+                  <controls:SettingRow.Style>
+                    <Style TargetType="controls:SettingRow" BasedOn="{StaticResource {x:Type controls:SettingRow}}">
+                      <Setter Property="Caption" Value="{Binding HotkeyHint}" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasHotkeyProblem}" Value="True">
+                          <Setter Property="Caption" Value="{Binding HotkeyProblem}" />
+                          <Setter Property="IsCaptionError" Value="True" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </controls:SettingRow.Style>
+                  <StackPanel Orientation="Horizontal">
+                    <TextBox
+                      x:Name="HotkeyBox"
+                      Width="200"
+                      AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
+                      AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
+                      GotKeyboardFocus="OnHotkeyGotFocus"
+                      IsReadOnly="True"
+                      IsReadOnlyCaretVisible="False"
+                      LostKeyboardFocus="OnHotkeyLostFocus"
+                      PreviewKeyDown="OnHotkeyKeyDown"
+                      Style="{StaticResource RigShift.Field.Value}"
+                      Text="{Binding HotkeyText, Mode=OneWay}"
+                      ToolTip="{loc:Tr Hotkey_RecordTip}"
+                      controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />
+                    <Button
+                      Margin="8,0,0,0"
+                      AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
+                      Command="{Binding ClearHotkeyCommand}"
+                      IsEnabled="{Binding HasHotkey}"
+                      Style="{StaticResource RigShift.Button.Icon}"
+                      ToolTip="{loc:Tr Editor_HotkeyClear}">
+                      <ui:SymbolIcon FontSize="16" Symbol="Dismiss16" />
+                    </Button>
+                  </StackPanel>
+                </controls:SettingRow>
+                <Border Margin="0,8,0,0" Style="{StaticResource RigShift.Card.Group}">
+                  <StackPanel>
+                    <controls:SettingRow
+                      Caption="{loc:Tr Game_ShortcutHint}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr Trigger_Shortcut}">
+                      <Button
+                        Command="{Binding DataContext.CreateShortcutCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                        Style="{StaticResource RigShift.Button}">
+                        <StackPanel Orientation="Horizontal">
+                          <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Link16" />
+                          <TextBlock Text="{loc:Tr Trigger_ShortcutCreate}" />
+                        </StackPanel>
+                      </Button>
+                    </controls:SettingRow>
+                    <Border Style="{StaticResource RigShift.Divider}" />
+                    <controls:SettingRow
+                      Caption="{loc:Tr Trigger_CommandHint}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr Trigger_Command}">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBox
+                          Width="240"
+                          AutomationProperties.Name="{loc:Tr Trigger_Command}"
+                          Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                          IsReadOnly="True"
+                          Style="{StaticResource RigShift.Field.Value}"
+                          Text="{Binding CommandText, Mode=OneWay}"
+                          ToolTip="{Binding CommandText, Mode=OneWay}" />
+                        <Button
+                          Margin="8,0,0,0"
+                          AutomationProperties.Name="{loc:Tr Trigger_Copy}"
+                          Command="{Binding DataContext.CopyCommandCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                          Style="{StaticResource RigShift.Button.Icon}"
+                          ToolTip="{loc:Tr Trigger_Copy}">
+                          <ui:SymbolIcon FontSize="16" Symbol="Copy16" />
+                        </Button>
+                      </StackPanel>
+                    </controls:SettingRow>
+                  </StackPanel>
+                </Border>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>
@@ -578,34 +594,39 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_ProfileIntro}" />
                 <ListBox
-                  Width="360"
-                  HorizontalAlignment="Left"
                   AutomationProperties.Name="{loc:Tr GameTab_Profile}"
                   ItemsSource="{Binding ProfileOptions}"
                   SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
-                  Style="{StaticResource RigShift.OptionList}">
+                  Style="{StaticResource RigShift.OptionCards}">
                   <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:ProfileOption}">
-                      <DockPanel>
-                        <Grid Width="56" Height="24" Margin="0,0,12,0" VerticalAlignment="Center" DockPanel.Dock="Left">
+                      <StackPanel>
+                        <!-- The arrangement as picture; "switch nothing" gets a symbol of its own in the same place. -->
+                        <Grid Height="48" Margin="0,0,0,12">
                           <controls:DisplayTopology
                             Displays="{Binding Topology}"
-                            Size="XS"
+                            Size="S"
                             Visibility="{Binding HasTopology, Converter={StaticResource BoolToVisibility}}" />
+                          <ui:SymbolIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="32"
+                            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                            Symbol="Desktop24"
+                            Visibility="{Binding HasTopology, Converter={StaticResource InverseBoolToVisibility}}" />
                         </Grid>
-                        <StackPanel VerticalAlignment="Center">
-                          <TextBlock
-                            Style="{StaticResource RigShift.Text.Body}"
-                            Text="{Binding Name}"
-                            TextTrimming="CharacterEllipsis"
-                            TextWrapping="NoWrap" />
-                          <TextBlock
-                            Style="{StaticResource RigShift.Text.Caption}"
-                            Text="{Binding Sub}"
-                            TextTrimming="CharacterEllipsis"
-                            TextWrapping="NoWrap" />
-                        </StackPanel>
-                      </DockPanel>
+                        <TextBlock
+                          Style="{StaticResource RigShift.Text.BodyStrong}"
+                          Text="{Binding Name}"
+                          TextTrimming="CharacterEllipsis"
+                          TextWrapping="NoWrap" />
+                        <TextBlock
+                          Style="{StaticResource RigShift.Text.Caption}"
+                          Text="{Binding Sub}"
+                          TextTrimming="CharacterEllipsis"
+                          TextWrapping="NoWrap"
+                          ToolTip="{Binding Sub}" />
+                      </StackPanel>
                     </DataTemplate>
                   </ListBox.ItemTemplate>
                 </ListBox>
@@ -629,21 +650,16 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_ToolsIntro}"
                   TextWrapping="Wrap" />
-                <StackPanel Width="320" HorizontalAlignment="Left">
-                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_AppsWaitDevice}" />
+                <controls:SettingRow Caption="{loc:Tr Editor_AppsWaitHint}" Title="{loc:Tr Editor_AppsWaitDevice}">
                   <ComboBox
+                    Width="260"
                     AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
                     AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding UsbDevices}"
                     SelectedItem="{Binding SelectedUsbDevice}"
                     Style="{StaticResource RigShift.Select}" />
-                  <TextBlock
-                    Margin="0,4,0,0"
-                    Style="{StaticResource RigShift.Text.Caption}"
-                    Text="{loc:Tr Editor_AppsWaitHint}"
-                    TextWrapping="Wrap" />
-                </StackPanel>
+                </controls:SettingRow>
                 <controls:InfoBar
                   Margin="0,16,0,0"
                   Kind="Error"
@@ -800,11 +816,6 @@
                                   Style="{StaticResource RigShift.Number}"
                                   ToolTip="{loc:Tr App_Wait}"
                                   Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock
-                                  Margin="6,0,0,0"
-                                  VerticalAlignment="Center"
-                                  Style="{StaticResource RigShift.Text.Caption}"
-                                  Text="s" />
                               </StackPanel>
                             </StackPanel>
                             <StackPanel
@@ -848,26 +859,20 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_WindowsHint}"
                   TextWrapping="Wrap" />
-                <WrapPanel>
-                  <TextBlock
-                    Height="32"
-                    Margin="0,0,12,8"
-                    VerticalAlignment="Center"
-                    LineHeight="32"
-                    Style="{StaticResource RigShift.Text.Body}"
-                    Text="{Binding WindowsText}" />
-                  <Button
-                    Margin="0,0,0,8"
-                    Click="OnCaptureWindows"
-                    Content="{loc:Tr Game_CaptureWindows}"
-                    Style="{StaticResource RigShift.Button}" />
-                  <Button
-                    Margin="8,0,0,8"
-                    Command="{Binding ClearWindowsCommand}"
-                    Content="{loc:Tr Common_Clear}"
-                    Style="{StaticResource RigShift.Button.Ghost}"
-                    Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}" />
-                </WrapPanel>
+                <controls:SettingRow Caption="{Binding WindowsText}" Title="{loc:Tr Game_WindowsTitle}">
+                  <StackPanel Orientation="Horizontal">
+                    <Button
+                      Command="{Binding ClearWindowsCommand}"
+                      Content="{loc:Tr Common_Clear}"
+                      Style="{StaticResource RigShift.Button.Ghost}"
+                      Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}" />
+                    <Button
+                      Margin="8,0,0,0"
+                      Click="OnCaptureWindows"
+                      Content="{loc:Tr Game_CaptureWindows}"
+                      Style="{StaticResource RigShift.Button}" />
+                  </StackPanel>
+                </controls:SettingRow>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>
@@ -883,25 +888,24 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_EndIntro}" />
-                <StackPanel Width="360" HorizontalAlignment="Left">
-                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Game_ExitLabel}" />
+                <controls:SettingRow Title="{loc:Tr Game_ExitLabel}">
                   <ComboBox
+                    Width="260"
                     AutomationProperties.Name="{loc:Tr Game_ExitLabel}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding ExitChoices}"
                     SelectedItem="{Binding SelectedExit}"
                     Style="{StaticResource RigShift.Select}" />
-                </StackPanel>
-                <CheckBox
-                  Margin="0,16,0,0"
-                  Content="{loc:Tr Game_StopApps}"
-                  IsChecked="{Binding StopApps}"
-                  Style="{StaticResource RigShift.Check}" />
-                <TextBlock
-                  Margin="28,2,0,0"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Game_StopAppsHint}"
-                  TextWrapping="Wrap" />
+                </controls:SettingRow>
+                <controls:SettingRow
+                  Margin="0,8,0,0"
+                  Caption="{loc:Tr Game_StopAppsHint}"
+                  Title="{loc:Tr Game_StopApps}">
+                  <ui:ToggleSwitch
+                    AutomationProperties.Name="{loc:Tr Game_StopApps}"
+                    IsChecked="{Binding StopApps}"
+                    Style="{StaticResource RigShift.Toggle}" />
+                </controls:SettingRow>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>

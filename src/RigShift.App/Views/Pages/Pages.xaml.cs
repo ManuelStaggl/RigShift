@@ -39,7 +39,7 @@ public partial class ProfilesPage : Page
         NameBox.SelectAll();
     }
 
-    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel);
+    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
     private void OnMoreClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
@@ -286,7 +286,7 @@ public partial class GamesPage : Page
         NameBox.SelectAll();
     }
 
-    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel);
+    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
     private void OnMoreClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 

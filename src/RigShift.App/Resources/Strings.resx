@@ -9,7 +9,6 @@
   <data name="Profiles_EmptyText" xml:space="preserve"><value>No profiles yet. Save the current arrangement to create one.</value></data>
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} file(s) could not be read: {1}. Details are in the log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Switch</value></data>
-  <data name="Profile_Check" xml:space="preserve"><value>Test</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Active</value></data>
   <data name="Profile_Default" xml:space="preserve"><value>Default</value></data>
   <data name="Profile_Primary" xml:space="preserve"><value>main display</value></data>
@@ -424,7 +423,6 @@
   <data name="Trigger_Shortcut" xml:space="preserve"><value>Shortcut</value></data>
   <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Create on the desktop</value></data>
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>
-  <data name="Trigger_Command" xml:space="preserve"><value>Command · also for Stream Deck</value></data>
   <data name="Trigger_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Command copied.</value></data>
   <data name="Behavior_Intro" xml:space="preserve"><value>How the PC behaves while the profile is active.</value></data>
@@ -564,6 +562,18 @@
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimetres itself.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radians, three decimals.</value></data>
   <data name="App_Change" xml:space="preserve"><value>Change…</value></data>
-  <data name="App_WaitShort" xml:space="preserve"><value>Wait after</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Wait (s)</value></data>
   <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>When disconnected</value></data>
+  <data name="Profile_Check" xml:space="preserve"><value>Check</value></data>
+  <data name="Profile_Reapply" xml:space="preserve"><value>Apply again</value></data>
+  <data name="List_BlockedShort" xml:space="preserve"><value>Blocked</value></data>
+  <data name="Head_MissingOne" xml:space="preserve"><value>1 display missing</value></data>
+  <data name="Head_MissingMany" xml:space="preserve"><value>{0} displays missing</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>Not connected: {0}. The profile can switch once they are back.</value></data>
+  <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
+  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches here as soon as every device of a rule is connected.</value></data>
+  <data name="Trigger_Command" xml:space="preserve"><value>Command</value></data>
+  <data name="Trigger_CommandHint" xml:space="preserve"><value>For Stream Deck, scripts or a terminal.</value></data>
+  <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>No confirmation after switching to this profile.</value></data>
+  <data name="Game_WindowsTitle" xml:space="preserve"><value>Window positions</value></data>
 </root>
