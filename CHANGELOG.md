@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-09-18
+
+### Fixed
+
+- Drop-down lists did not open on a click anywhere in the app since 3.0.0; only the keyboard could change them.
+
 ## [3.2.0] - 2026-09-17
 
 ### Added

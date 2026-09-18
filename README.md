@@ -52,6 +52,11 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 | <img alt="Tray popup" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog" src="docs/screenshots/confirmation-dark.png" width="400"> |
 | **Tray** – switch or start a sim from the notification area. | **Safety net** – keep the new layout or it reverts after a countdown. |
 
+<p align="center">
+  <img alt="Field of view page for a triple screen rig" src="docs/screenshots/fov-dark.png" width="820"><br>
+  <b>Field of view</b> – the rig from above and the right number for every sim.
+</p>
+
 ## Getting started
 
 1. Download `RigShift-win-Setup.exe` from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
