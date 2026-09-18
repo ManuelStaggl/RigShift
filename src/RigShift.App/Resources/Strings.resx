@@ -563,4 +563,7 @@
   <data name="Fov_Where_Rennsport" xml:space="preserve"><value>Options › Gameplay › Edit Gameplay Cameras, per car. 60–170.</value></data>
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimetres itself.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radians, three decimals.</value></data>
+  <data name="App_Change" xml:space="preserve"><value>Change…</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Wait after</value></data>
+  <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>When disconnected</value></data>
 </root>

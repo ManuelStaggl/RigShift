@@ -12,7 +12,7 @@
   mc:Ignorable="d"
   Background="{DynamicResource RigShift.Brush.Page}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
+    <StackPanel Margin="32,20,32,24" MaxWidth="1200">
       <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_About}" />
 
       <controls:AdaptiveColumns Margin="0,20,0,0" Gap="24">

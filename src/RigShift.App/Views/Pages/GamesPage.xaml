@@ -358,6 +358,8 @@
             Tag="1"
             controls:Interaction.IsInvalid="{Binding Editor.HasGameTabProblem}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -561,12 +563,15 @@
                   </StackPanel>
                 </controls:AdaptiveColumns>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
           <!-- 2 Profile -->
           <TabItem Header="{loc:Tr GameTab_Profile}" Style="{StaticResource RigShift.Tab.Step}" Tag="2">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -605,6 +610,7 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
@@ -615,6 +621,8 @@
             Tag="3"
             controls:Interaction.IsInvalid="{Binding Editor.HasAppsProblem}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -647,156 +655,170 @@
                   ItemsSource="{Binding Apps}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:AppEditItem}">
+                      <!-- Two rows so the name and path keep their room at the smallest window width: program and
+                           card actions on top, the settings of the action below. -->
                       <Border
                         Margin="0,0,0,8"
-                        Padding="16,10"
+                        Padding="16,12"
                         Style="{StaticResource RigShift.Card}">
-                        <StackPanel>
-                          <Grid>
-                            <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="*" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
-                              <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
-                                <ui:SymbolIcon.Style>
-                                  <Style TargetType="ui:SymbolIcon">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                      <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                      </DataTrigger>
-                                    </Style.Triggers>
-                                  </Style>
-                                </ui:SymbolIcon.Style>
-                              </ui:SymbolIcon>
-                              <Image Source="{Binding Icon}" />
-                            </Grid>
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
-                              <TextBlock
-                                Style="{StaticResource RigShift.Text.Body}"
-                                Text="{Binding DisplayName}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-                              <TextBlock
-                                Text="{Binding Path}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap"
-                                ToolTip="{Binding Path}">
-                                <TextBlock.Style>
-                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
-                                    <Style.Triggers>
-                                      <DataTrigger Binding="{Binding PathMissing}" Value="True">
-                                        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
-                                      </DataTrigger>
-                                    </Style.Triggers>
-                                  </Style>
-                                </TextBlock.Style>
-                              </TextBlock>
-                            </StackPanel>
-                            <ComboBox
-                              Grid.Column="2"
-                              Width="110"
-                              Height="28"
-                              MinHeight="28"
-                              VerticalAlignment="Center"
-                              AutomationProperties.Name="{loc:Tr App_Action}"
-                              DisplayMemberPath="Name"
-                              ItemsSource="{Binding KindChoices}"
-                              SelectedItem="{Binding SelectedKind}"
-                              Style="{StaticResource RigShift.Select}" />
-                            <ComboBox
-                              Grid.Column="3"
-                              Width="175"
-                              Height="28"
-                              MinHeight="28"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Center"
-                              AutomationProperties.Name="{loc:Tr App_When}"
-                              DisplayMemberPath="Name"
-                              ItemsSource="{Binding WhenChoices}"
-                              SelectedItem="{Binding SelectedWhen}"
-                              Style="{StaticResource RigShift.Select}" />
-                            <ui:NumberBox
-                              Grid.Column="4"
-                              Width="64"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Center"
-                              AutomationProperties.Name="{loc:Tr App_Wait}"
-                              ClearButtonEnabled="False"
-                              MaxDecimalPlaces="0"
-                              Maximum="300"
-                              Minimum="0"
-                              PlaceholderText="0"
-                              SmallChange="1"
-                              SpinButtonPlacementMode="Hidden"
-                              Style="{StaticResource RigShift.Number}"
-                              ToolTip="{loc:Tr App_Wait}"
-                              Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                              Grid.Column="5"
-                              Margin="6,0,8,0"
-                              VerticalAlignment="Center"
-                              Style="{StaticResource RigShift.Text.Caption}"
-                              Text="s" />
-                            <Button
-                              Grid.Column="6"
-                              AutomationProperties.Name="{loc:Tr App_MoveUp}"
-                              Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_MoveUp}">
-                              <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
-                            </Button>
-                            <Button
-                              Grid.Column="7"
-                              AutomationProperties.Name="{loc:Tr App_MoveDown}"
-                              Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_MoveDown}">
-                              <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
-                            </Button>
-                            <Button
-                              Grid.Column="8"
-                              AutomationProperties.Name="{loc:Tr App_Remove}"
-                              Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_Remove}">
-                              <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
-                            </Button>
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="160" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
+                          <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
+                              <ui:SymbolIcon.Style>
+                                <Style TargetType="ui:SymbolIcon">
+                                  <Setter Property="Visibility" Value="Collapsed" />
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                                      <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </ui:SymbolIcon.Style>
+                            </ui:SymbolIcon>
+                            <Image Source="{Binding Icon}" />
                           </Grid>
-                          <Grid Margin="32,8,0,0" Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
+                          <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock
+                              Style="{StaticResource RigShift.Text.BodyStrong}"
+                              Text="{Binding DisplayName}"
+                              TextTrimming="CharacterEllipsis"
+                              TextWrapping="NoWrap" />
+                            <TextBlock
+                              Text="{Binding Path}"
+                              TextTrimming="CharacterEllipsis"
+                              TextWrapping="NoWrap"
+                              ToolTip="{Binding Path}">
+                              <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PathMissing}" Value="True">
+                                      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </TextBlock.Style>
+                            </TextBlock>
+                          </StackPanel>
+                          <Button
+                            Grid.Column="2"
+                            Height="28"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            AutomationProperties.HelpText="{Binding DisplayName}"
+                            Click="OnBrowseApp"
+                            Content="{loc:Tr App_Change}"
+                            Style="{StaticResource RigShift.Button}"
+                            ToolTip="{loc:Tr App_Browse}" />
+                          <Button
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_MoveUp}"
+                            Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.Icon}"
+                            ToolTip="{loc:Tr App_MoveUp}">
+                            <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
+                          </Button>
+                          <Button
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_MoveDown}"
+                            Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.Icon}"
+                            ToolTip="{loc:Tr App_MoveDown}">
+                            <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
+                          </Button>
+                          <Button
+                            Grid.Column="5"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_Remove}"
+                            Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.IconDanger}"
+                            ToolTip="{loc:Tr App_Remove}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                          </Button>
+
+                          <Grid
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="5"
+                            Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="*" />
                               <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel>
+                            <StackPanel Margin="0,0,8,0">
+                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Action}" />
+                              <ComboBox
+                                Width="120"
+                                AutomationProperties.Name="{loc:Tr App_Action}"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding KindChoices}"
+                                SelectedItem="{Binding SelectedKind}"
+                                Style="{StaticResource RigShift.Select}" />
+                            </StackPanel>
+                              <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_When}" />
+                                <ComboBox
+                                  Width="175"
+                                  AutomationProperties.Name="{loc:Tr App_When}"
+                                  DisplayMemberPath="Name"
+                                  ItemsSource="{Binding WhenChoices}"
+                                  SelectedItem="{Binding SelectedWhen}"
+                                  Style="{StaticResource RigShift.Select}" />
+                              </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_WaitShort}" />
+                              <StackPanel Orientation="Horizontal">
+                                <ui:NumberBox
+                                  Width="64"
+                                  AutomationProperties.Name="{loc:Tr App_Wait}"
+                                  ClearButtonEnabled="False"
+                                  MaxDecimalPlaces="0"
+                                  Maximum="300"
+                                  Minimum="0"
+                                  PlaceholderText="0"
+                                  SmallChange="1"
+                                  SpinButtonPlacementMode="Hidden"
+                                  Style="{StaticResource RigShift.Number}"
+                                  ToolTip="{loc:Tr App_Wait}"
+                                  Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                  Margin="6,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource RigShift.Text.Caption}"
+                                  Text="s" />
+                              </StackPanel>
+                            </StackPanel>
+                            <StackPanel
+                              Grid.Column="3"
+                              Margin="8,0,0,0"
+                              Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
                               <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
                               <TextBox
-                                Height="28"
                                 AutomationProperties.Name="{loc:Tr App_Arguments}"
                                 Style="{StaticResource RigShift.Field.Value}"
                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
-                            <Button
-                              Grid.Column="1"
-                              Height="28"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Bottom"
-                              Click="OnBrowseApp"
-                              Content="{loc:Tr App_Browse}"
-                              Style="{StaticResource RigShift.Button.Ghost}" />
                           </Grid>
-                        </StackPanel>
+                        </Grid>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -811,12 +833,15 @@
                   </StackPanel>
                 </Button>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
           <!-- 4 Windows -->
           <TabItem Header="{loc:Tr GameTab_Windows}" Style="{StaticResource RigShift.Tab.Step}" Tag="4">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -844,12 +869,15 @@
                     Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}" />
                 </WrapPanel>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
           <!-- 5 End -->
           <TabItem Header="{loc:Tr GameTab_End}" Style="{StaticResource RigShift.Tab.Step}" Tag="5">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -875,6 +903,7 @@
                   Text="{loc:Tr Game_StopAppsHint}"
                   TextWrapping="Wrap" />
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
         </TabControl>

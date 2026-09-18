@@ -395,6 +395,8 @@
             Style="{StaticResource RigShift.Tab}"
             controls:Interaction.IsInvalid="{Binding Editor.HasDisplaysProblem}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <controls:InfoBar
                   Margin="0,0,0,12"
@@ -461,24 +463,22 @@
                   Style="{StaticResource RigShift.Card}"
                   Visibility="{Binding DataContext.HasSelectedDisplay, RelativeSource={RelativeSource AncestorType=StackPanel}, Converter={StaticResource BoolToVisibility}}">
                   <StackPanel>
-                    <!-- One row while it fits; narrow windows push the later fields onto a second line
-                         instead of cutting HDR and the two switches off at the card's edge. -->
-                    <DockPanel>
-                      <!-- Remove stays at the card's right edge and never takes part in the wrapping. -->
+                    <!-- Fixed rows: model and resolution with remove on top, the fields below. The two switches
+                         share the fields' row while it fits and move as one block to a row of their own when not. -->
+                    <DockPanel Margin="0,0,0,12">
                       <Button
-                        Margin="4,0,0,8"
-                        VerticalAlignment="Bottom"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Top"
                         AutomationProperties.HelpText="{Binding Name}"
                         AutomationProperties.Name="{loc:Tr Editor_Remove}"
                         Command="{Binding DataContext.Editor.RemoveDisplayCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
                         CommandParameter="{Binding}"
                         DockPanel.Dock="Right"
-                        Style="{StaticResource RigShift.Button.Icon}"
+                        Style="{StaticResource RigShift.Button.IconDanger}"
                         ToolTip="{loc:Tr Editor_Remove}">
                         <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
                       </Button>
-                      <WrapPanel Margin="0,0,-8,-8">
-                      <StackPanel Width="150" Margin="0,0,8,8" VerticalAlignment="Bottom">
+                      <StackPanel VerticalAlignment="Center">
                         <TextBlock
                           Style="{StaticResource RigShift.Text.BodyStrong}"
                           Text="{Binding ModelName}"
@@ -491,51 +491,68 @@
                           TextWrapping="NoWrap"
                           ToolTip="{Binding ModeText}" />
                       </StackPanel>
-                      <StackPanel Width="150" Margin="0,0,8,8">
-                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_CustomName}" />
-                        <TextBox
-                          AutomationProperties.Name="{loc:Tr Editor_CustomName}"
-                          MaxLength="40"
-                          Style="{StaticResource RigShift.Field}"
-                          Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
-                          ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
-                      </StackPanel>
-                      <StackPanel Width="104" Margin="0,0,8,8">
-                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
-                        <ComboBox
-                          AutomationProperties.Name="{loc:Tr Editor_RefreshRate}"
-                          DisplayMemberPath="Text"
-                          ItemsSource="{Binding RefreshChoices}"
-                          SelectedItem="{Binding SelectedRefresh}"
-                          Style="{StaticResource RigShift.Select}"
-                          ToolTip="{loc:Tr Editor_RefreshRateHint}" />
-                      </StackPanel>
-                      <StackPanel Width="140" Margin="0,0,8,8">
-                        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="HDR" />
-                        <ComboBox
-                          AutomationProperties.Name="HDR"
-                          DisplayMemberPath="Text"
-                          ItemsSource="{Binding HdrChoices}"
-                          SelectedItem="{Binding SelectedHdr}"
-                          Style="{StaticResource RigShift.Select}"
-                          ToolTip="{loc:Tr Editor_HdrHint}" />
-                      </StackPanel>
-                      <StackPanel Margin="0,0,0,8" VerticalAlignment="Bottom">
+                    </DockPanel>
+                    <controls:AdaptiveColumns Gap="24">
+                      <Grid Width="480">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="220" />
+                          <ColumnDefinition Width="8" />
+                          <ColumnDefinition Width="104" />
+                          <ColumnDefinition Width="8" />
+                          <ColumnDefinition Width="140" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                          <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_CustomName}" />
+                          <TextBox
+                            AutomationProperties.Name="{loc:Tr Editor_CustomName}"
+                            MaxLength="40"
+                            Style="{StaticResource RigShift.Field}"
+                            Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                          <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
+                          <ComboBox
+                            AutomationProperties.Name="{loc:Tr Editor_RefreshRate}"
+                            DisplayMemberPath="Text"
+                            ItemsSource="{Binding RefreshChoices}"
+                            SelectedItem="{Binding SelectedRefresh}"
+                            Style="{StaticResource RigShift.Select}"
+                            ToolTip="{loc:Tr Editor_RefreshRateHint}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                          <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="HDR" />
+                          <ComboBox
+                            AutomationProperties.Name="HDR"
+                            DisplayMemberPath="Text"
+                            ItemsSource="{Binding HdrChoices}"
+                            SelectedItem="{Binding SelectedHdr}"
+                            Style="{StaticResource RigShift.Select}"
+                            ToolTip="{loc:Tr Editor_HdrHint}" />
+                        </StackPanel>
+                      </Grid>
+                      <!-- Same height as a field and bottom-aligned, so the switches sit on the fields' centre line. -->
+                      <StackPanel
+                        Height="32"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
                         <RadioButton
+                          VerticalAlignment="Center"
                           AutomationProperties.HelpText="{Binding Name}"
                           Content="{loc:Tr Editor_Primary}"
                           GroupName="PrimaryDisplay"
                           IsChecked="{Binding IsPrimary}"
                           Style="{StaticResource RigShift.Radio}" />
                         <CheckBox
+                          Margin="24,0,0,0"
+                          VerticalAlignment="Center"
                           AutomationProperties.HelpText="{Binding Name}"
                           Content="{loc:Tr Editor_Optional}"
                           IsChecked="{Binding IsOptional}"
                           IsEnabled="{Binding CanBeOptional}"
                           Style="{StaticResource RigShift.Check}" />
                       </StackPanel>
-                      </WrapPanel>
-                    </DockPanel>
+                    </controls:AdaptiveColumns>
                     <TextBlock
                       Margin="0,8,0,0"
                       Style="{StaticResource RigShift.Text.Caption}"
@@ -621,11 +638,14 @@
                   </StackPanel>
                 </controls:AdaptiveColumns>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
           <TabItem Header="{loc:Tr Tab_Audio}" Style="{StaticResource RigShift.Tab}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -662,6 +682,7 @@
                   </StackPanel>
                 </controls:AdaptiveColumns>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
@@ -670,6 +691,8 @@
             Style="{StaticResource RigShift.Tab}"
             controls:Interaction.IsInvalid="{Binding Editor.HasAppsProblem}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -701,144 +724,160 @@
                   ItemsSource="{Binding Apps}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:AppEditItem}">
+                      <!-- Two rows so the name and path keep their room at the smallest window width: program and
+                           card actions on top, the settings of the action below. -->
                       <Border
                         Margin="0,0,0,8"
-                        Padding="16,10"
+                        Padding="16,12"
                         Style="{StaticResource RigShift.Card}">
-                        <StackPanel>
-                          <Grid>
-                            <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="*" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
-                            <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
-                              <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
-                                <ui:SymbolIcon.Style>
-                                  <Style TargetType="ui:SymbolIcon">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                      <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                      </DataTrigger>
-                                    </Style.Triggers>
-                                  </Style>
-                                </ui:SymbolIcon.Style>
-                              </ui:SymbolIcon>
-                              <Image Source="{Binding Icon}" />
-                            </Grid>
-                            <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
-                              <TextBlock
-                                Style="{StaticResource RigShift.Text.Body}"
-                                Text="{Binding DisplayName}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-                              <TextBlock
-                                Text="{Binding Path}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap"
-                                ToolTip="{Binding Path}">
-                                <TextBlock.Style>
-                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
-                                    <Style.Triggers>
-                                      <DataTrigger Binding="{Binding PathMissing}" Value="True">
-                                        <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
-                                      </DataTrigger>
-                                    </Style.Triggers>
-                                  </Style>
-                                </TextBlock.Style>
-                              </TextBlock>
-                            </StackPanel>
-                            <ComboBox
-                              Grid.Column="2"
-                              Width="120"
-                              Height="28"
-                              MinHeight="28"
-                              VerticalAlignment="Center"
-                              AutomationProperties.Name="{loc:Tr App_Action}"
-                              DisplayMemberPath="Name"
-                              ItemsSource="{Binding KindChoices}"
-                              SelectedItem="{Binding SelectedKind}"
-                              Style="{StaticResource RigShift.Select}" />
-                            <ui:NumberBox
-                              Grid.Column="3"
-                              Width="64"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Center"
-                              AutomationProperties.Name="{loc:Tr App_Wait}"
-                              ClearButtonEnabled="False"
-                              MaxDecimalPlaces="0"
-                              Maximum="300"
-                              Minimum="0"
-                              PlaceholderText="0"
-                              SmallChange="1"
-                              SpinButtonPlacementMode="Hidden"
-                              Style="{StaticResource RigShift.Number}"
-                              ToolTip="{loc:Tr App_Wait}"
-                              Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock
-                              Grid.Column="4"
-                              Margin="6,0,8,0"
-                              VerticalAlignment="Center"
-                              Style="{StaticResource RigShift.Text.Caption}"
-                              Text="s" />
-                            <Button
-                              Grid.Column="5"
-                              AutomationProperties.Name="{loc:Tr App_MoveUp}"
-                              Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_MoveUp}">
-                              <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
-                            </Button>
-                            <Button
-                              Grid.Column="6"
-                              AutomationProperties.Name="{loc:Tr App_MoveDown}"
-                              Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_MoveDown}">
-                              <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
-                            </Button>
-                            <Button
-                              Grid.Column="7"
-                              AutomationProperties.Name="{loc:Tr App_Remove}"
-                              Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                              CommandParameter="{Binding}"
-                              Style="{StaticResource RigShift.Button.Icon}"
-                              ToolTip="{loc:Tr App_Remove}">
-                              <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
-                            </Button>
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="160" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
+                          <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
+                              <ui:SymbolIcon.Style>
+                                <Style TargetType="ui:SymbolIcon">
+                                  <Setter Property="Visibility" Value="Collapsed" />
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                                      <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </ui:SymbolIcon.Style>
+                            </ui:SymbolIcon>
+                            <Image Source="{Binding Icon}" />
                           </Grid>
-                          <Grid Margin="32,8,0,0" Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
+                          <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock
+                              Style="{StaticResource RigShift.Text.BodyStrong}"
+                              Text="{Binding DisplayName}"
+                              TextTrimming="CharacterEllipsis"
+                              TextWrapping="NoWrap" />
+                            <TextBlock
+                              Text="{Binding Path}"
+                              TextTrimming="CharacterEllipsis"
+                              TextWrapping="NoWrap"
+                              ToolTip="{Binding Path}">
+                              <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PathMissing}" Value="True">
+                                      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </TextBlock.Style>
+                            </TextBlock>
+                          </StackPanel>
+                          <Button
+                            Grid.Column="2"
+                            Height="28"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            AutomationProperties.HelpText="{Binding DisplayName}"
+                            Click="OnBrowseApp"
+                            Content="{loc:Tr App_Change}"
+                            Style="{StaticResource RigShift.Button}"
+                            ToolTip="{loc:Tr App_Browse}" />
+                          <Button
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_MoveUp}"
+                            Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.Icon}"
+                            ToolTip="{loc:Tr App_MoveUp}">
+                            <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
+                          </Button>
+                          <Button
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_MoveDown}"
+                            Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.Icon}"
+                            ToolTip="{loc:Tr App_MoveDown}">
+                            <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
+                          </Button>
+                          <Button
+                            Grid.Column="5"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="{loc:Tr App_Remove}"
+                            Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource RigShift.Button.IconDanger}"
+                            ToolTip="{loc:Tr App_Remove}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                          </Button>
+
+                          <Grid
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="5"
+                            Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="*" />
                               <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel>
+                            <StackPanel Margin="0,0,8,0">
+                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Action}" />
+                              <ComboBox
+                                Width="120"
+                                AutomationProperties.Name="{loc:Tr App_Action}"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding KindChoices}"
+                                SelectedItem="{Binding SelectedKind}"
+                                Style="{StaticResource RigShift.Select}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_WaitShort}" />
+                              <StackPanel Orientation="Horizontal">
+                                <ui:NumberBox
+                                  Width="64"
+                                  AutomationProperties.Name="{loc:Tr App_Wait}"
+                                  ClearButtonEnabled="False"
+                                  MaxDecimalPlaces="0"
+                                  Maximum="300"
+                                  Minimum="0"
+                                  PlaceholderText="0"
+                                  SmallChange="1"
+                                  SpinButtonPlacementMode="Hidden"
+                                  Style="{StaticResource RigShift.Number}"
+                                  ToolTip="{loc:Tr App_Wait}"
+                                  Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                  Margin="6,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource RigShift.Text.Caption}"
+                                  Text="s" />
+                              </StackPanel>
+                            </StackPanel>
+                            <StackPanel
+                              Grid.Column="3"
+                              Margin="8,0,0,0"
+                              Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
                               <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
                               <TextBox
-                                Height="28"
                                 AutomationProperties.Name="{loc:Tr App_Arguments}"
                                 Style="{StaticResource RigShift.Field.Value}"
                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
-                            <Button
-                              Grid.Column="1"
-                              Height="28"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Bottom"
-                              Click="OnBrowseApp"
-                              Content="{loc:Tr App_Browse}"
-                              Style="{StaticResource RigShift.Button.Ghost}" />
                           </Grid>
-                        </StackPanel>
+                        </Grid>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -853,6 +892,7 @@
                   </StackPanel>
                 </Button>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
@@ -861,6 +901,8 @@
             Style="{StaticResource RigShift.Tab}"
             controls:Interaction.IsInvalid="{Binding Editor.HasHotkeyProblem}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -978,8 +1020,16 @@
                                 </Button>
                               </WrapPanel>
                               <controls:AdaptiveColumns Margin="0,4,0,0" Gap="12">
-                                <StackPanel MaxWidth="320" controls:AdaptiveColumns.MinColumnWidth="180">
-                                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_DeviceGone}" />
+                                <!-- Labels stay on one line so both fields share their top edge; the long wording is the tooltip. -->
+                                <StackPanel
+                                  MaxWidth="320"
+                                  ToolTip="{loc:Tr Automation_DeviceGone}"
+                                  controls:AdaptiveColumns.MinColumnWidth="180">
+                                  <TextBlock
+                                    Style="{StaticResource RigShift.Text.Label}"
+                                    Text="{loc:Tr Automation_DeviceGoneShort}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
                                   <ComboBox
                                     AutomationProperties.Name="{loc:Tr Automation_DeviceGone}"
                                     DisplayMemberPath="Name"
@@ -988,7 +1038,11 @@
                                     Style="{StaticResource RigShift.Select}" />
                                 </StackPanel>
                                 <StackPanel Width="140" ToolTip="{loc:Tr Automation_ExitDelayHint}">
-                                  <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Automation_ExitDelay}" />
+                                  <TextBlock
+                                    Style="{StaticResource RigShift.Text.Label}"
+                                    Text="{loc:Tr Automation_ExitDelay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
                                   <ui:NumberBox
                                     AutomationProperties.HelpText="{loc:Tr Automation_ExitDelayHint}"
                                     AutomationProperties.Name="{loc:Tr Automation_ExitDelay}"
@@ -1129,11 +1183,14 @@
                   </StackPanel>
                 </controls:AdaptiveColumns>
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
 
           <TabItem Header="{loc:Tr Tab_Behavior}" Style="{StaticResource RigShift.Tab}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
+              <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
                 <TextBlock
                   Margin="0,0,0,16"
@@ -1163,6 +1220,7 @@
                   Text="{loc:Tr Editor_KeepAwakeHint}"
                   TextWrapping="Wrap" />
               </StackPanel>
+              </controls:ContentColumn>
             </ScrollViewer>
           </TabItem>
         </TabControl>

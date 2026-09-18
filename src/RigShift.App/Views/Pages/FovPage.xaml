@@ -16,7 +16,7 @@
     <controls:EmptyToVisibilityConverter x:Key="EmptyToVisibility" />
   </Page.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
+    <StackPanel Margin="32,20,32,24" MaxWidth="1200">
       <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_Fov}" />
       <TextBlock
         Margin="0,4,0,0"
