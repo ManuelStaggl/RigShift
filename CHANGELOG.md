@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-09-18
+
+### Changed
+
+- **Profile and game tabs use the settings cards**: every option is a card with its title and a short explanation
+  on the left and the control on the right. Audio has one card each for playback, recording and calls with the
+  volume as a switch and slider; Triggers has three cards for USB devices, hotkey, and shortcut and command;
+  Behavior, Windows and End use switches instead of loose checkboxes.
+- The list columns have a title with a compact "New" button.
+- The profile head shows its state once: no more chips next to the status line, no second picture. An active
+  profile offers "Apply again" instead of the accent "Switch"; "Test" is now "Check".
+- A blocked profile says "3 displays missing" in the head and names them in a bar below; the list just says
+  "Blocked".
+- A pencil shows that profile and game names can be edited.
+- Game tab "Profile": the choices are cards side by side with the arrangement picture and a check mark.
+- USB device chips show a plug with a status dot; "+ Device" is a dashed chip of the same height.
+- New volume slider: a thicker rail filled in the accent colour and a thumb that grows on hover.
+- The display toolbar sits above the arrangement picture, the hint below the displays.
+
 ## [3.3.1] - 2026-09-18
 
 ### Fixed
