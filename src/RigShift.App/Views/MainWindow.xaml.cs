@@ -32,6 +32,9 @@ public partial class MainWindow : FluentWindow
         _shell = shell;
         InitializeComponent();
 
+        // The pages paint square backgrounds; without this they cover the rounded corner of the page surface.
+        PageHost.SizeChanged += (_, e) => PageHost.Clip = TopLeftRounded(e.NewSize, 7);
+
         AddNav(NavTop, typeof(OverviewPage), SymbolRegular.Home16, "Nav_Overview", Key.D1);
         AddNav(NavTop, typeof(ProfilesPage), SymbolRegular.Desktop16, "Nav_Profiles", Key.D2);
         AddNav(NavTop, typeof(GamesPage), SymbolRegular.Games16, "Nav_Games", Key.D3);
@@ -115,6 +118,23 @@ public partial class MainWindow : FluentWindow
         }
 
         base.OnClosing(e);
+    }
+
+    /// <summary>A rectangle of <paramref name="size"/> whose top left corner is an arc of <paramref name="radius"/>.</summary>
+    private static System.Windows.Media.StreamGeometry TopLeftRounded(Size size, double radius)
+    {
+        var geometry = new System.Windows.Media.StreamGeometry();
+        using (System.Windows.Media.StreamGeometryContext context = geometry.Open())
+        {
+            context.BeginFigure(new Point(0, radius), isFilled: true, isClosed: true);
+            context.ArcTo(new Point(radius, 0), new Size(radius, radius), 0, isLargeArc: false, System.Windows.Media.SweepDirection.Clockwise, isStroked: false, isSmoothJoin: false);
+            context.LineTo(new Point(size.Width, 0), isStroked: false, isSmoothJoin: false);
+            context.LineTo(new Point(size.Width, size.Height), isStroked: false, isSmoothJoin: false);
+            context.LineTo(new Point(0, size.Height), isStroked: false, isSmoothJoin: false);
+        }
+
+        geometry.Freeze();
+        return geometry;
     }
 
     private void AddNav(ListBox list, Type page, SymbolRegular symbol, string textKey, Key shortcut)
