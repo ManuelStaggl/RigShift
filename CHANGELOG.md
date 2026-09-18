@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-09-18
+
+### Changed
+
+- **Displays look like displays**: every arrangement picture draws bezel, screen and stand, a round number badge
+  like the Windows display settings and a star for the main display. Selected, hovered, optional and missing
+  displays are told apart at a glance, and switching profiles lets the displays glide into their new places.
+- **New tray flyout**: up to four profiles as tiles with their picture, a header with "Open" and the rule pause,
+  games with their icon and a play button on hover; digits 1–9 switch. It rises from the taskbar.
+- **Motion throughout the app**: hover and pressed fades, a selection pill that grows in, a sliding tab underline,
+  pages and tab content fade in, the save bar slides up, drop-down chevrons turn. All of it follows the Windows
+  setting "Animation effects".
+- **One clean typeface**: values such as resolutions, hotkeys and paths no longer use a monospaced font; small
+  text renders crisper, page titles and section headings are larger.
+- Controls reworked: a radio button with a real dot, a segmented control with a sliding pill, softer toggles,
+  pill-shaped chips, rounded list rows, drop-downs and menus with a shadow, menus with icons that stay inside the
+  window, disabled buttons that no longer look clickable, a filled red delete button in dialogs.
+
 ## [3.2.2] - 2026-09-18
 
 ### Fixed
