@@ -14,7 +14,7 @@ public enum DialogButtonKind
     /// <summary>The one accent button, for an action the user set out to do ("Save").</summary>
     Primary,
 
-    /// <summary>Destructive: secondary look with red text, never the accent (R-ACT-3).</summary>
+    /// <summary>Destructive: red fill, never the accent (R-ACT-3, D-03).</summary>
     Danger,
 }
 

@@ -10,14 +10,16 @@
   Height="600"
   MinWidth="420"
   MinHeight="380"
+  Background="{DynamicResource RigShift.Brush.Page}"
+  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
   ExtendsContentIntoTitleBar="True"
   ShowInTaskbar="False"
-  WindowBackdropType="Mica"
+  WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner">
-  <ui:FluentWindow.Resources>
-    <BooleanToVisibilityConverter x:Key="Visible" />
-  </ui:FluentWindow.Resources>
+  <!-- D-01: title in the content, 48 px rows with the games' own icons, a foot on the chrome surface. -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -26,27 +28,34 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="{Binding WindowTitle}" ShowMaximize="False" ShowMinimize="False" />
+    <ui:TitleBar Grid.Row="0" Height="32" ShowMaximize="False" ShowMinimize="False" />
 
-    <StackPanel Grid.Row="1" Margin="24,8,24,12">
+    <StackPanel Grid.Row="1" Margin="24,0,24,12">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{Binding WindowTitle}" />
       <TextBlock
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Margin="0,6,0,0"
+        Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+        Style="{StaticResource RigShift.Text.Body}"
         Text="{Binding Intro}"
         TextWrapping="Wrap" />
       <ui:TextBox
         x:Name="SearchBox"
-        Margin="0,12,0,0"
+        Margin="0,14,0,0"
         AutomationProperties.Name="{loc:Tr GamePicker_Search}"
-        Icon="{ui:SymbolIcon Search24}"
+        Icon="{ui:SymbolIcon Search16}"
         PlaceholderText="{loc:Tr GamePicker_Search}"
         PreviewKeyDown="OnSearchKeyDown"
         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
     </StackPanel>
 
-    <Grid Grid.Row="2" Margin="24,0">
+    <Grid Grid.Row="2" Margin="16,0">
       <ListBox
         x:Name="GameList"
         AutomationProperties.Name="{loc:Tr GamePicker_Title}"
+        Background="Transparent"
+        BorderThickness="0"
+        HorizontalContentAlignment="Stretch"
+        ItemContainerStyle="{StaticResource RigShift.PickerRow}"
         ItemsSource="{Binding Games}"
         MouseDoubleClick="OnListDoubleClick"
         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -54,7 +63,7 @@
         VirtualizingPanel.IsVirtualizing="True">
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <Grid Margin="0,4">
+            <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -62,72 +71,82 @@
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <CheckBox
-                Margin="0,0,4,0"
+                Margin="0,0,8,0"
                 VerticalAlignment="Center"
                 AutomationProperties.Name="{Binding Name}"
                 IsChecked="{Binding IsChecked}"
-                Visibility="{Binding DataContext.IsMultiple, RelativeSource={RelativeSource AncestorType=ListBox}, Converter={StaticResource Visible}}" />
+                Style="{StaticResource RigShift.Check}"
+                Visibility="{Binding DataContext.IsMultiple, RelativeSource={RelativeSource AncestorType=ListBox}, Converter={StaticResource BoolToVisibility}}" />
               <!-- The game's own icon: it says more about the game than any symbol we could pick for it. -->
-              <Image
+              <Border
                 Grid.Column="1"
-                Width="20"
-                Height="20"
-                Margin="0,0,10,0"
-                VerticalAlignment="Center"
-                RenderOptions.BitmapScalingMode="HighQuality"
-                Source="{Binding Icon}"
-                Visibility="{Binding HasIcon, Converter={StaticResource Visible}}" />
+                Width="28"
+                Height="28"
+                Margin="0,0,12,0"
+                Background="{DynamicResource RigShift.Brush.HoverOverlay}"
+                ClipToBounds="True"
+                CornerRadius="6">
+                <Grid>
+                  <ui:SymbolIcon
+                    FontSize="16"
+                    Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                    Symbol="Games20"
+                    Visibility="{Binding HasIcon, Converter={StaticResource InverseBoolToVisibility}}" />
+                  <Image
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    Source="{Binding Icon}"
+                    Stretch="UniformToFill"
+                    Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+              </Border>
               <TextBlock
                 Grid.Column="2"
                 VerticalAlignment="Center"
-                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                Style="{StaticResource RigShift.Text.Body}"
                 Text="{Binding Name}"
                 TextTrimming="CharacterEllipsis" />
-              <Border
+              <ContentControl
                 Grid.Column="3"
                 Margin="12,0,0,0"
-                Padding="8,2"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                CornerRadius="4">
-                <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Source}" />
-              </Border>
+                Content="{Binding Source}"
+                Style="{StaticResource RigShift.Chip}"
+                Visibility="{Binding HasSource, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <ui:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource Visible}}" />
+      <ui:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
       <TextBlock
         Margin="24"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Style="{StaticResource RigShift.Text.Caption}"
         Text="{loc:Tr GamePicker_Empty}"
         TextAlignment="Center"
         TextWrapping="Wrap"
-        Visibility="{Binding IsEmpty, Converter={StaticResource Visible}}" />
+        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 
-    <Grid Grid.Row="3" Margin="24,16,24,20">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <ui:Button
-        HorizontalAlignment="Left"
-        Click="OnBrowseFile"
-        Content="{loc:Tr GamePicker_BrowseFile}"
-        Visibility="{Binding IsSingle, Converter={StaticResource Visible}}" />
-      <StackPanel Grid.Column="1" Orientation="Horizontal">
-        <ui:Button
-          Margin="0,0,8,0"
-          Appearance="Primary"
-          Click="OnChoose"
-          Content="{Binding ChooseText}"
-          IsDefault="True"
-          IsEnabled="{Binding CanChoose}" />
-        <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />
-      </StackPanel>
-    </Grid>
+    <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource RigShift.DialogFooter}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button
+            Margin="0,0,8,0"
+            Click="OnChoose"
+            Content="{Binding ChooseText}"
+            IsDefault="True"
+            IsEnabled="{Binding CanChoose}"
+            Style="{StaticResource RigShift.Button.Primary}" />
+          <Button Content="{loc:Tr Common_Cancel}" IsCancel="True" Style="{StaticResource RigShift.Button}" />
+        </StackPanel>
+        <Button
+          HorizontalAlignment="Left"
+          Click="OnBrowseFile"
+          Content="{loc:Tr GamePicker_BrowseFile}"
+          Style="{StaticResource RigShift.Button.Ghost}"
+          Visibility="{Binding IsSingle, Converter={StaticResource BoolToVisibility}}" />
+      </DockPanel>
+    </Border>
   </Grid>
 </ui:FluentWindow>

@@ -30,7 +30,7 @@
   <data name="Tray_PlayGame" xml:space="preserve"><value>{0} spielen</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>Kein Profil aktiv</value></data>
   <data name="Confirm_Title" xml:space="preserve"><value>Diese Anordnung behalten?</value></data>
-  <data name="Confirm_Hint" xml:space="preserve"><value>Sonst kommt in {0} s die vorherige Anordnung zurück. Enter behält, Esc setzt zurück – von jedem Bildschirm aus.</value></data>
+  <data name="Confirm_Hint" xml:space="preserve"><value>Sonst kommt in {0} s die vorherige Anordnung zurück.</value></data>
   <data name="Confirm_Keep" xml:space="preserve"><value>Behalten</value></data>
   <data name="Confirm_Revert" xml:space="preserve"><value>Zurücksetzen</value></data>
   <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} aktiv</value></data>
@@ -646,5 +646,11 @@
   </data>
   <data name="Nav_UpdateReady" xml:space="preserve">
     <value>Ein Update ist bereit</value>
+  </data>
+  <data name="Confirm_KeyKeep" xml:space="preserve">
+    <value>behält</value>
+  </data>
+  <data name="Confirm_KeyRevert" xml:space="preserve">
+    <value>setzt zurück – von jedem Bildschirm aus</value>
   </data>
 </root>

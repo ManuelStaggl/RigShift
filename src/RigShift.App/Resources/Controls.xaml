@@ -222,7 +222,7 @@
   <Style x:Key="RigShift.Button.IconDanger" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}">
     <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Error}" />
   </Style>
-  <!-- Destructive: secondary look with red text, only in dialogs (R-ACT-3). -->
+  <!-- Destructive: red fill with dark text, only in dialogs (D-03); hover lightens it like the other buttons. -->
   <Style x:Key="RigShift.Button.Danger" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Error}" />
     <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
@@ -1071,6 +1071,18 @@
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="Template" Value="{StaticResource RigShift.RowTemplate}" />
+  </Style>
+  <!-- Picker row (D-01): 48 high, the list's full width; selected = the row fill of the master lists. -->
+  <Style x:Key="RigShift.PickerRow" TargetType="ListBoxItem" BasedOn="{StaticResource RigShift.ListRow}">
+    <Setter Property="Height" Value="48" />
+    <Setter Property="Margin" Value="0,0,0,2" />
+  </Style>
+  <!-- Dialog foot: chrome surface under a line, actions on the right (D-01). -->
+  <Style x:Key="RigShift.DialogFooter" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Chrome}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="24,16" />
   </Style>
   <!-- Navigation entry: 36 high, 6 radius, symbol 16 + text; the page sets the content. -->
   <Style x:Key="RigShift.NavItem" TargetType="ListBoxItem" BasedOn="{StaticResource RigShift.ListRow}">

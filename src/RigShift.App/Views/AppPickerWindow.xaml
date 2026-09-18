@@ -10,14 +10,16 @@
   Height="640"
   MinWidth="420"
   MinHeight="400"
+  Background="{DynamicResource RigShift.Brush.Page}"
+  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
   ExtendsContentIntoTitleBar="True"
   ShowInTaskbar="False"
-  WindowBackdropType="Mica"
+  WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner">
-  <ui:FluentWindow.Resources>
-    <BooleanToVisibilityConverter x:Key="Visible" />
-  </ui:FluentWindow.Resources>
+  <!-- D-01: title in the content, 48 px rows with the programs' own icons, a foot on the chrome surface. -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -26,22 +28,28 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="{loc:Tr App_Browse}" ShowMaximize="False" ShowMinimize="False" />
+    <ui:TitleBar Grid.Row="0" Height="32" ShowMaximize="False" ShowMinimize="False" />
 
-    <ui:TextBox
-      x:Name="SearchBox"
-      Grid.Row="1"
-      Margin="24,8,24,12"
-      AutomationProperties.Name="{loc:Tr AppPicker_Search}"
-      Icon="{ui:SymbolIcon Search24}"
-      PlaceholderText="{loc:Tr AppPicker_Search}"
-      PreviewKeyDown="OnSearchKeyDown"
-      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+    <StackPanel Grid.Row="1" Margin="24,0,24,12">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr App_Browse}" />
+      <ui:TextBox
+        x:Name="SearchBox"
+        Margin="0,14,0,0"
+        AutomationProperties.Name="{loc:Tr AppPicker_Search}"
+        Icon="{ui:SymbolIcon Search16}"
+        PlaceholderText="{loc:Tr AppPicker_Search}"
+        PreviewKeyDown="OnSearchKeyDown"
+        Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+    </StackPanel>
 
-    <Grid Grid.Row="2" Margin="24,0">
+    <Grid Grid.Row="2" Margin="16,0">
       <ListBox
         x:Name="AppList"
         AutomationProperties.Name="{loc:Tr App_Browse}"
+        Background="Transparent"
+        BorderThickness="0"
+        HorizontalContentAlignment="Stretch"
+        ItemContainerStyle="{StaticResource RigShift.PickerRow}"
         ItemsSource="{Binding Apps}"
         MouseDoubleClick="OnListDoubleClick"
         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -50,17 +58,17 @@
         VirtualizingPanel.VirtualizationMode="Recycling">
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <Grid Margin="0,4">
+            <Grid>
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="28" />
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <!-- A generic symbol until the icon is loaded, or for programs without one. -->
-              <Border Width="32" Height="32" VerticalAlignment="Center">
-                <Border.Style>
-                  <Style TargetType="Border">
+              <ui:SymbolIcon FontSize="22" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps24">
+                <ui:SymbolIcon.Style>
+                  <Style TargetType="ui:SymbolIcon">
                     <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                       <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
@@ -68,50 +76,50 @@
                       </DataTrigger>
                     </Style.Triggers>
                   </Style>
-                </Border.Style>
-                <ui:SymbolIcon FontSize="26" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Symbol="Apps24" />
-              </Border>
-              <Image Width="32" Height="32" VerticalAlignment="Center" Source="{Binding Icon}" />
+                </ui:SymbolIcon.Style>
+              </ui:SymbolIcon>
+              <Image Width="28" Height="28" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Icon}" />
               <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Path}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{Binding ShownPath}" TextTrimming="CharacterEllipsis" ToolTip="{Binding ShownPath}" />
               </StackPanel>
-              <Border
+              <ContentControl
                 Grid.Column="3"
                 Margin="12,0,0,0"
-                Padding="8,2"
                 VerticalAlignment="Center"
-                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                CornerRadius="4"
-                Visibility="{Binding IsRunning, Converter={StaticResource Visible}}">
-                <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{loc:Tr AppPicker_Running}" />
-              </Border>
+                Content="{loc:Tr AppPicker_Running}"
+                Style="{StaticResource RigShift.Chip}"
+                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <ui:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource Visible}}" />
+      <ui:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
       <TextBlock
         Margin="24"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Style="{StaticResource RigShift.Text.Caption}"
         Text="{loc:Tr AppPicker_Empty}"
         TextAlignment="Center"
         TextWrapping="Wrap"
-        Visibility="{Binding IsEmpty, Converter={StaticResource Visible}}" />
+        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 
-    <Grid Grid.Row="3" Margin="24,16,24,20">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <ui:Button HorizontalAlignment="Left" Click="OnBrowseFile" Content="{loc:Tr AppPicker_BrowseFile}" />
-      <StackPanel Grid.Column="1" Orientation="Horizontal">
-        <ui:Button Margin="0,0,8,0" Appearance="Primary" Click="OnChoose" Content="{loc:Tr AppPicker_Choose}" IsDefault="True" IsEnabled="{Binding CanChoose}" />
-        <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />
-      </StackPanel>
-    </Grid>
+    <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource RigShift.DialogFooter}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button
+            Margin="0,0,8,0"
+            Click="OnChoose"
+            Content="{loc:Tr AppPicker_Choose}"
+            IsDefault="True"
+            IsEnabled="{Binding CanChoose}"
+            Style="{StaticResource RigShift.Button.Primary}" />
+          <Button Content="{loc:Tr Common_Cancel}" IsCancel="True" Style="{StaticResource RigShift.Button}" />
+        </StackPanel>
+        <Button HorizontalAlignment="Left" Click="OnBrowseFile" Content="{loc:Tr AppPicker_BrowseFile}" Style="{StaticResource RigShift.Button.Ghost}" />
+      </DockPanel>
+    </Border>
   </Grid>
 </ui:FluentWindow>

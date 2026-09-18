@@ -6,15 +6,20 @@
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   Title="{loc:Tr Capture_Title}"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
-  Width="660"
-  Height="620"
+  Width="620"
   MinWidth="440"
-  MinHeight="400"
+  MaxHeight="680"
+  Background="{DynamicResource RigShift.Brush.Page}"
+  Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
+  FontFamily="{DynamicResource RigShift.Font.Text}"
+  FontSize="14"
   ExtendsContentIntoTitleBar="True"
   ShowInTaskbar="False"
-  WindowBackdropType="Mica"
+  SizeToContent="Height"
+  WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner">
+  <!-- D-02: as tall as the list (room for five rows at least), one line per window with its size. -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -23,57 +28,55 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <ui:TitleBar Grid.Row="0" Title="{loc:Tr Capture_Title}" ShowMaximize="False" ShowMinimize="False" />
+    <ui:TitleBar Grid.Row="0" Height="32" ShowMaximize="False" ShowMinimize="False" />
 
-    <TextBlock
-      Grid.Row="1"
-      Margin="24,8,24,12"
-      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-      Text="{loc:Tr Capture_Intro}"
-      TextWrapping="Wrap" />
+    <StackPanel Grid.Row="1" Margin="24,0,24,12">
+      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Capture_Title}" />
+      <TextBlock
+        Margin="0,6,0,0"
+        Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+        Style="{StaticResource RigShift.Text.Body}"
+        Text="{loc:Tr Capture_Intro}"
+        TextWrapping="Wrap" />
+    </StackPanel>
 
     <ListBox
       Grid.Row="2"
-      Margin="24,0"
+      MinHeight="250"
+      Margin="16,0"
       AutomationProperties.Name="{loc:Tr Capture_Title}"
+      Background="Transparent"
+      BorderThickness="0"
+      HorizontalContentAlignment="Stretch"
+      ItemContainerStyle="{StaticResource RigShift.PickerRow}"
       ItemsSource="{Binding Windows}"
       ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-      <ListBox.ItemContainerStyle>
-        <Style TargetType="ListBoxItem">
-          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        </Style>
-      </ListBox.ItemContainerStyle>
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <CheckBox Margin="0,2" IsChecked="{Binding IsChosen}">
-            <StackPanel>
-              <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-              <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Details}" />
+          <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChosen}" Style="{StaticResource RigShift.Check}" ToolTip="{Binding Position}">
+            <StackPanel Margin="4,0,0,0">
+              <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
           </CheckBox>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
 
-    <Grid Grid.Row="3" Margin="24,16,24,20">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <TextBlock
-        VerticalAlignment="Center"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-        Text="{Binding ChosenText}" />
-      <StackPanel Grid.Column="1" Orientation="Horizontal">
-        <ui:Button
-          Margin="0,0,8,0"
-          Appearance="Primary"
-          Click="OnSave"
-          Content="{loc:Tr Capture_Save}"
-          IsDefault="True"
-          IsEnabled="{Binding CanSave}" />
-        <ui:Button Content="{loc:Tr Common_Cancel}" IsCancel="True" />
-      </StackPanel>
-    </Grid>
+    <Border Grid.Row="3" Margin="0,12,0,0" Style="{StaticResource RigShift.DialogFooter}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button
+            Margin="0,0,8,0"
+            Click="OnSave"
+            Content="{loc:Tr Capture_Save}"
+            IsDefault="True"
+            IsEnabled="{Binding CanSave}"
+            Style="{StaticResource RigShift.Button.Primary}" />
+          <Button Content="{loc:Tr Common_Cancel}" IsCancel="True" Style="{StaticResource RigShift.Button}" />
+        </StackPanel>
+        <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding ChosenText}" />
+      </DockPanel>
+    </Border>
   </Grid>
 </ui:FluentWindow>

@@ -164,7 +164,7 @@
           TextAlignment="Center"
           TextWrapping="Wrap" />
         <StackPanel Margin="0,20,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
-          <Button Command="{Binding AddInstalledCommand}" Style="{StaticResource RigShift.Button.Primary}">
+          <Button AutomationProperties.Name="{loc:Tr Games_Scan}" Command="{Binding AddInstalledCommand}" Style="{StaticResource RigShift.Button.Primary}">
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,8,0" FontSize="14" Symbol="Search16" />
               <TextBlock Text="{loc:Tr Games_Scan}" />

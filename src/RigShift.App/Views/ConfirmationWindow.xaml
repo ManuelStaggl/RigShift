@@ -8,7 +8,7 @@
   Title="RigShift"
   Icon="pack://application:,,,/Assets/Brand/rigshift-app-light.ico"
   Width="520"
-  Height="340"
+  SizeToContent="Height"
   Background="{DynamicResource RigShift.Brush.Page}"
   ExtendsContentIntoTitleBar="True"
   FontFamily="{DynamicResource RigShift.Font.Text}"
@@ -113,13 +113,20 @@
       </StackPanel>
     </Grid>
 
-    <TextBlock
-      x:Name="HintText"
-      Grid.Row="2"
-      Margin="0,20,0,0"
-      AutomationProperties.LiveSetting="Assertive"
-      Style="{StaticResource RigShift.Text.Caption}"
-      TextWrapping="Wrap" />
+    <!-- The countdown sentence, then the keys as keycaps (D-04). -->
+    <StackPanel Grid.Row="2" Margin="0,20,0,0">
+      <TextBlock
+        x:Name="HintText"
+        AutomationProperties.LiveSetting="Assertive"
+        Style="{StaticResource RigShift.Text.Caption}"
+        TextWrapping="Wrap" />
+      <WrapPanel Margin="0,8,0,0">
+        <ContentControl Margin="0,0,6,0" Content="Enter" Style="{StaticResource RigShift.Keycap}" />
+        <TextBlock Margin="0,0,14,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Confirm_KeyKeep}" />
+        <ContentControl Margin="0,0,6,0" Content="Esc" Style="{StaticResource RigShift.Keycap}" />
+        <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Confirm_KeyRevert}" />
+      </WrapPanel>
+    </StackPanel>
 
     <!-- Windows order, as in its own "Keep these display settings?" dialog: the action first, the way back second. -->
     <StackPanel

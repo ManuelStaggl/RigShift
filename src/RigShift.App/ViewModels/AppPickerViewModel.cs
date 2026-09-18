@@ -98,6 +98,9 @@ public sealed partial class AppChoice(DiscoveredApp app) : ObservableObject
 
     public string Path => App.Path;
 
+    /// <summary>The path as Windows writes it: Start menu shortcuts sometimes come with forward slashes.</summary>
+    public string ShownPath => Path.Replace('/', '\\');
+
     public bool IsRunning => App.IsRunning;
 
     [ObservableProperty]

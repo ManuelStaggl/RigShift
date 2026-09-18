@@ -160,13 +160,14 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
-          <!-- Welcome: the horizontal logo with the slogan, once in the whole app (R-BRAND-1). One block, centred. -->
+          <!-- Welcome: the horizontal logo with the slogan, once in the whole app (R-BRAND-1). One block, centred;
+               the three steps as cards with a symbol – the numbers already stand in the list on the left (D-05). -->
           <StackPanel
             Grid.Row="0"
             VerticalAlignment="Center"
             Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVisibility}}">
             <Image
-              Width="400"
+              Width="280"
               HorizontalAlignment="Center"
               RenderOptions.BitmapScalingMode="HighQuality"
               Source="pack://application:,,,/Assets/Brand/rigshift-horizontal-tagline.png"
@@ -180,12 +181,44 @@
               TextAlignment="Center"
               TextWrapping="Wrap" />
             <ItemsControl
-              Width="400"
-              Margin="0,28,0,0"
+              MaxWidth="600"
+              Margin="0,28,-12,0"
               HorizontalAlignment="Center"
               Focusable="False"
-              ItemTemplate="{StaticResource StepRow}"
-              ItemsSource="{Binding WelcomeList}" />
+              ItemsSource="{Binding WelcomeList}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <UniformGrid Columns="3" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:WizardStepItem}">
+                  <Border Margin="0,0,12,0" Padding="16" Style="{StaticResource RigShift.Card}">
+                    <StackPanel>
+                      <ui:SymbolIcon
+                        x:Name="Icon"
+                        HorizontalAlignment="Left"
+                        FontSize="22"
+                        Foreground="{DynamicResource RigShift.Brush.Accent}"
+                        Symbol="Desktop24" />
+                      <TextBlock
+                        Margin="0,10,0,0"
+                        Style="{StaticResource RigShift.Text.Body}"
+                        Text="{Binding Text}"
+                        TextWrapping="Wrap" />
+                    </StackPanel>
+                  </Border>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Number}" Value="2">
+                      <Setter TargetName="Icon" Property="Symbol" Value="VehicleCar24" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Number}" Value="3">
+                      <Setter TargetName="Icon" Property="Symbol" Value="UsbPlug24" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
           </StackPanel>
 
           <ScrollViewer

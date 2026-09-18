@@ -111,10 +111,13 @@ public sealed partial class CaptureRow(OpenWindow window) : ObservableObject
 
     public string Title => string.IsNullOrWhiteSpace(Window.Title) ? Window.ProcessName : Window.Title;
 
-    /// <summary>"SimHubWPF · 3840, 0 · 800 × 600" – enough to tell two windows of one program apart.</summary>
+    /// <summary>"SimHubWPF · 800 × 600" under the title (D-02); the position is the tooltip, not the headline.</summary>
     public string Details => string.Create(
         Loc.Instance.Culture,
-        $"{Window.ProcessName} · {Window.Bounds.Left}, {Window.Bounds.Top} · {Window.Bounds.Width} × {Window.Bounds.Height}");
+        $"{Window.ProcessName} · {Window.Bounds.Width} × {Window.Bounds.Height}");
+
+    /// <summary>"3840, 0" – enough to tell two windows of one program apart.</summary>
+    public string Position => string.Create(Loc.Instance.Culture, $"{Window.Bounds.Left}, {Window.Bounds.Top}");
 
     [ObservableProperty]
     public partial bool IsChosen { get; set; }
