@@ -576,4 +576,51 @@
   <data name="Trigger_CommandHint" xml:space="preserve"><value>Für Stream Deck, Skripte oder die Konsole.</value></data>
   <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>Keine Bestätigung nach dem Wechsel in dieses Profil.</value></data>
   <data name="Game_WindowsTitle" xml:space="preserve"><value>Fensterpositionen</value></data>
+  <data name="Overview_Switch" xml:space="preserve">
+    <value>Umschalten</value>
+  </data>
+  <data name="Overview_NoHotkey" xml:space="preserve">
+    <value>Kein Tastenkürzel</value>
+  </data>
+  <data name="Overview_GamesHint" xml:space="preserve">
+    <value>starten mit ihrem Profil</value>
+  </data>
+  <data name="Overview_NamePlaceholder" xml:space="preserve">
+    <value>Name vergeben</value>
+  </data>
+  <data name="About_StartTitle" xml:space="preserve">
+    <value>Erste Schritte</value>
+  </data>
+  <data name="About_StartText" xml:space="preserve">
+    <value>1  Anordnung als Profil speichern
+2  Audio und Apps ergänzen
+3  Tastenkürzel oder USB-Gerät als Auslöser wählen</value>
+  </data>
+  <data name="About_Guide" xml:space="preserve">
+    <value>Anleitung auf GitHub</value>
+  </data>
+  <data name="About_Shortcuts" xml:space="preserve">
+    <value>Tastenkürzel &amp; Befehle</value>
+  </data>
+  <data name="About_NoShortcuts" xml:space="preserve">
+    <value>Noch keine Tastenkürzel – vergeben in Profil oder Spiel.</value>
+  </data>
+  <data name="About_Commands" xml:space="preserve">
+    <value>Befehle für Stream Deck und Skripte</value>
+  </data>
+  <data name="About_ProblemText" xml:space="preserve">
+    <value>Diagnose-Infos kopieren (ohne Benutzernamen) und ins GitHub-Issue einfügen.</value>
+  </data>
+  <data name="About_CopyDiagnostics" xml:space="preserve">
+    <value>Diagnose kopieren</value>
+  </data>
+  <data name="Profiles_EmptyTitle" xml:space="preserve">
+    <value>Deine aktuelle Anordnung</value>
+  </data>
+  <data name="Profiles_EmptySave" xml:space="preserve">
+    <value>Als Profil speichern</value>
+  </data>
+  <data name="Profiles_EmptyInvite" xml:space="preserve">
+    <value>Das sind die Bildschirme, die Windows gerade zeigt. Speichere sie als erstes Profil – Audio und Apps kommen danach.</value>
+  </data>
 </root>

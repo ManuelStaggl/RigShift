@@ -576,4 +576,51 @@
   <data name="Trigger_CommandHint" xml:space="preserve"><value>For Stream Deck, scripts or a terminal.</value></data>
   <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>No confirmation after switching to this profile.</value></data>
   <data name="Game_WindowsTitle" xml:space="preserve"><value>Window positions</value></data>
+  <data name="Overview_Switch" xml:space="preserve">
+    <value>Switch</value>
+  </data>
+  <data name="Overview_NoHotkey" xml:space="preserve">
+    <value>No hotkey</value>
+  </data>
+  <data name="Overview_GamesHint" xml:space="preserve">
+    <value>start with their profile</value>
+  </data>
+  <data name="Overview_NamePlaceholder" xml:space="preserve">
+    <value>Add a name</value>
+  </data>
+  <data name="About_StartTitle" xml:space="preserve">
+    <value>First steps</value>
+  </data>
+  <data name="About_StartText" xml:space="preserve">
+    <value>1  Save your arrangement as a profile
+2  Add audio and apps
+3  Pick a hotkey or a USB device as trigger</value>
+  </data>
+  <data name="About_Guide" xml:space="preserve">
+    <value>Guide on GitHub</value>
+  </data>
+  <data name="About_Shortcuts" xml:space="preserve">
+    <value>Hotkeys &amp; commands</value>
+  </data>
+  <data name="About_NoShortcuts" xml:space="preserve">
+    <value>No hotkeys yet – set them in a profile or game.</value>
+  </data>
+  <data name="About_Commands" xml:space="preserve">
+    <value>Commands for Stream Deck and scripts</value>
+  </data>
+  <data name="About_ProblemText" xml:space="preserve">
+    <value>Copy the diagnostic info (without your user name) and paste it into a GitHub issue.</value>
+  </data>
+  <data name="About_CopyDiagnostics" xml:space="preserve">
+    <value>Copy diagnostics</value>
+  </data>
+  <data name="Profiles_EmptyTitle" xml:space="preserve">
+    <value>Your current arrangement</value>
+  </data>
+  <data name="Profiles_EmptySave" xml:space="preserve">
+    <value>Save as profile</value>
+  </data>
+  <data name="Profiles_EmptyInvite" xml:space="preserve">
+    <value>These are the displays Windows shows right now. Save them as your first profile – audio and apps come after.</value>
+  </data>
 </root>

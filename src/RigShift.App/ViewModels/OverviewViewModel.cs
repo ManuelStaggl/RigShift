@@ -15,8 +15,8 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The start page: what the PC shows right now (live topology), the active profile, the attached displays with their
-/// names, and the recent switches. State before action – no primary action lives here.
+/// The start page: what the PC shows right now (live topology), the profiles to switch to, the games to start, the
+/// attached displays with their names, and the recent switches.
 /// </summary>
 public sealed partial class OverviewViewModel : ObservableObject
 {
@@ -28,6 +28,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
     private readonly IDisplaySizeReader _sizes;
+    private readonly GameSessionService _sessions;
     private IReadOnlyList<AttachedDisplay> _attached = [];
     private readonly TimeProvider _time;
     private readonly ILogger _log;
@@ -40,6 +41,8 @@ public sealed partial class OverviewViewModel : ObservableObject
         SettingsService settings,
         ProfileDialogs dialogs,
         ProfilesViewModel profiles,
+        GameCatalog games,
+        GameSessionService sessions,
         DisplayChangeWatcher watcher,
         IAppShell shell,
         IDisplaySizeReader sizes,
@@ -49,6 +52,8 @@ public sealed partial class OverviewViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(watcher);
+        ArgumentNullException.ThrowIfNull(games);
+        ArgumentNullException.ThrowIfNull(sessions);
         ArgumentNullException.ThrowIfNull(log);
         _display = display;
         _catalog = catalog;
@@ -58,6 +63,10 @@ public sealed partial class OverviewViewModel : ObservableObject
         _profiles = profiles;
         _shell = shell;
         _sizes = sizes;
+        _sessions = sessions;
+        Catalog = catalog;
+        Games = games;
+        Coordinator = coordinator;
         _time = time;
         _log = log.ForContext<OverviewViewModel>();
 
@@ -81,6 +90,12 @@ public sealed partial class OverviewViewModel : ObservableObject
         UpdateActive();
         RebuildHistory();
     }
+
+    public ProfileCatalog Catalog { get; }
+
+    public GameCatalog Games { get; }
+
+    public SwitchCoordinator Coordinator { get; }
 
     public ObservableCollection<DisplayCard> Displays { get; } = [];
 
@@ -169,6 +184,27 @@ public sealed partial class OverviewViewModel : ObservableObject
         {
             _log.Error(ex, "Displays could not be read");
             ErrorMessage = ex.Message;
+        }
+    }
+
+    /// <summary>"Switch" on a profile tile; on the active one it reads "Apply again" and does the same.</summary>
+    [RelayCommand]
+    private async Task SwitchAsync(ProfileItem? item)
+    {
+        if (item is not null)
+        {
+            _log.Information("Overview switches to {Profile}", item.Name);
+            await _coordinator.SwitchAsync(item.Profile);
+        }
+    }
+
+    [RelayCommand]
+    private void Play(GameItem? item)
+    {
+        if (item is { CanPlay: true })
+        {
+            _log.Information("Overview starts {Game}", item.Name);
+            _sessions.Start(item.Game);
         }
     }
 

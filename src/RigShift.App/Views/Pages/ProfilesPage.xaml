@@ -133,17 +133,6 @@
             Text="{loc:Tr Nav_Profiles}" />
         </DockPanel>
         <Border DockPanel.Dock="Top" Style="{StaticResource RigShift.Divider}" />
-        <StackPanel
-          Margin="16,24"
-          DockPanel.Dock="Top"
-          Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
-          <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr List_EmptyTitle}" />
-          <TextBlock
-            Margin="0,4,0,0"
-            Style="{StaticResource RigShift.Text.Caption}"
-            Text="{loc:Tr List_EmptyText}"
-            TextWrapping="Wrap" />
-        </StackPanel>
         <ListBox
           x:Name="List"
           AutomationProperties.Name="{loc:Tr Nav_Profiles}"
@@ -186,15 +175,38 @@
 
     <!-- ===== Detail ===== -->
     <Grid Grid.Column="1">
-      <!-- Empty: nothing selected (only while there are no profiles). -->
-      <TextBlock
+      <!-- Empty (X-01): nothing selected only while there are no profiles – the displays of right now as the invitation. -->
+      <StackPanel
+        MaxWidth="460"
         Margin="24"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Style="{StaticResource RigShift.Text.Caption}"
-        Text="{loc:Tr Detail_NoSelection}"
-        TextWrapping="Wrap"
-        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
+        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}">
+        <ContentControl Width="420" Height="170" Style="{StaticResource RigShift.TopologyPanel}">
+          <controls:DisplayTopology Displays="{Binding CurrentTopology}" IsHitTestVisible="False" Size="M" />
+        </ContentControl>
+        <TextBlock
+          Margin="0,20,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Subtitle}"
+          Text="{loc:Tr Profiles_EmptyTitle}" />
+        <TextBlock
+          Margin="0,8,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Body}"
+          Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+          Text="{loc:Tr Profiles_EmptyInvite}"
+          TextAlignment="Center"
+          TextWrapping="Wrap" />
+        <StackPanel Margin="0,20,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+          <Button Command="{Binding NewFromCurrentCommand}" Content="{loc:Tr Profiles_EmptySave}" Style="{StaticResource RigShift.Button.Primary}" />
+          <Button
+            Margin="8,0,0,0"
+            Command="{Binding SetupAssistantCommand}"
+            Content="{loc:Tr Overview_SetupStart}"
+            Style="{StaticResource RigShift.Button.Ghost}" />
+        </StackPanel>
+      </StackPanel>
 
       <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
         <Grid.RowDefinitions>

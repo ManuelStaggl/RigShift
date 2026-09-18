@@ -89,27 +89,6 @@
             Text="{loc:Tr Nav_Games}" />
         </DockPanel>
         <Border DockPanel.Dock="Top" Style="{StaticResource RigShift.Divider}" />
-        <StackPanel
-          Margin="16,24"
-          DockPanel.Dock="Top"
-          Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
-          <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr Games_EmptyTitle}" />
-          <TextBlock
-            Margin="0,4,0,0"
-            Style="{StaticResource RigShift.Text.Caption}"
-            Text="{loc:Tr Games_EmptyText}"
-            TextWrapping="Wrap" />
-          <Button
-            Margin="0,12,0,0"
-            HorizontalAlignment="Left"
-            Command="{Binding AddInstalledCommand}"
-            Style="{StaticResource RigShift.Button}">
-            <StackPanel Orientation="Horizontal">
-              <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Search16" />
-              <TextBlock Text="{loc:Tr Games_Scan}" />
-            </StackPanel>
-          </Button>
-        </StackPanel>
         <ListBox
           x:Name="List"
           AutomationProperties.Name="{loc:Tr Nav_Games}"
@@ -154,14 +133,50 @@
 
     <!-- ===== Detail ===== -->
     <Grid Grid.Column="1">
-      <TextBlock
+      <!-- Empty (X-01): the games on this PC are one click away. -->
+      <StackPanel
+        MaxWidth="460"
         Margin="24"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Style="{StaticResource RigShift.Text.Caption}"
-        Text="{loc:Tr Games_NoSelection}"
-        TextWrapping="Wrap"
-        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
+        Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}">
+        <Border
+          Width="96"
+          Height="96"
+          HorizontalAlignment="Center"
+          Background="{DynamicResource RigShift.Brush.Chrome}"
+          BorderBrush="{DynamicResource RigShift.Brush.Line}"
+          BorderThickness="1"
+          CornerRadius="48">
+          <ui:SymbolIcon FontSize="44" Foreground="{DynamicResource RigShift.Brush.Accent}" Symbol="Games24" />
+        </Border>
+        <TextBlock
+          Margin="0,20,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Subtitle}"
+          Text="{loc:Tr Games_EmptyTitle}" />
+        <TextBlock
+          Margin="0,8,0,0"
+          HorizontalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Body}"
+          Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+          Text="{loc:Tr Games_EmptyText}"
+          TextAlignment="Center"
+          TextWrapping="Wrap" />
+        <StackPanel Margin="0,20,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+          <Button Command="{Binding AddInstalledCommand}" Style="{StaticResource RigShift.Button.Primary}">
+            <StackPanel Orientation="Horizontal">
+              <ui:SymbolIcon Margin="0,0,8,0" FontSize="14" Symbol="Search16" />
+              <TextBlock Text="{loc:Tr Games_Scan}" />
+            </StackPanel>
+          </Button>
+          <Button
+            Margin="8,0,0,0"
+            Command="{Binding AddProgramCommand}"
+            Content="{loc:Tr List_NewProgram}"
+            Style="{StaticResource RigShift.Button.Ghost}" />
+        </StackPanel>
+      </StackPanel>
 
       <Grid Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
         <Grid.RowDefinitions>

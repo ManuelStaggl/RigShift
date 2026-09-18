@@ -11,194 +11,280 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
   Background="{DynamicResource RigShift.Brush.Page}">
+  <Page.Resources>
+    <!-- The four help cards: same height, title with an accent symbol, actions at the bottom. -->
+    <Style x:Key="HelpCard" TargetType="Border" BasedOn="{StaticResource RigShift.Card}">
+      <Setter Property="Margin" Value="0,0,16,16" />
+      <Setter Property="Padding" Value="20,18" />
+    </Style>
+    <Style x:Key="HelpIcon" TargetType="ui:SymbolIcon">
+      <Setter Property="Margin" Value="0,0,10,0" />
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Accent}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </Page.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="32,20,32,24" MaxWidth="1200">
       <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_About}" />
 
-      <controls:AdaptiveColumns Margin="0,20,0,0" Gap="24">
-
-        <!-- Version and update -->
-        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
-          <StackPanel>
-            <controls:AdaptiveColumns Gap="16">
-              <DockPanel controls:AdaptiveColumns.MinColumnWidth="180">
-                <Image
-                  Width="36"
-                  Height="36"
-                  Margin="0,0,16,0"
-                  VerticalAlignment="Center"
-                  DockPanel.Dock="Left"
-                  Source="{StaticResource RigShift.Image.AppIcon}" />
-                <StackPanel VerticalAlignment="Center">
-                  <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{Binding VersionText}" TextWrapping="Wrap" />
-                  <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Tagline}" />
-                </StackPanel>
-              </DockPanel>
+      <!-- Head (H-01): mark, version, update state, the one update action. -->
+      <Border Margin="0,20,0,0" Padding="24,20" Style="{StaticResource RigShift.Card}">
+        <StackPanel>
+          <DockPanel>
+            <Grid VerticalAlignment="Center" DockPanel.Dock="Right">
               <Button
-                VerticalAlignment="Center"
                 Command="{Binding InstallUpdateNowCommand}"
                 Content="{loc:Tr Settings_RestartToUpdate}"
                 Style="{StaticResource RigShift.Button.Primary}"
                 Visibility="{Binding IsUpdateInstallable, Converter={StaticResource BoolToVisibility}}" />
               <Button
-                VerticalAlignment="Center"
                 Command="{Binding CheckForUpdatesCommand}"
                 Content="{loc:Tr Settings_CheckUpdates}"
                 Style="{StaticResource RigShift.Button}"
                 Visibility="{Binding IsUpdateInstallable, Converter={StaticResource InverseBoolToVisibility}}" />
-            </controls:AdaptiveColumns>
-
-            <controls:InfoBar
-              Margin="0,12,0,0"
-              controls:LiveRegion.IsLive="True"
-              Text="{Binding UpdateStatusText}" />
-
-            <!-- Height-limited: a full changelog section used to make the card huge (hardware test of 1.3.1). -->
-            <StackPanel Margin="0,12,0,0" Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr About_WhatsNew}" />
-              <ScrollViewer
-                MaxHeight="160"
+            </Grid>
+            <Border
+              Width="56"
+              Height="56"
+              Margin="0,0,18,0"
+              Background="White"
+              CornerRadius="12"
+              DockPanel.Dock="Left">
+              <Image Width="38" Height="38" Source="{StaticResource RigShift.Image.AppIcon}" />
+            </Border>
+            <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+              <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{Binding VersionText}" TextWrapping="Wrap" />
+              <controls:StatusLine
                 Margin="0,4,0,0"
-                Focusable="False"
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <ItemsControl Focusable="False" ItemsSource="{Binding ReleaseNoteLines}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <TextBlock Text="{Binding Text}" TextWrapping="Wrap">
-                        <TextBlock.Style>
-                          <Style BasedOn="{StaticResource RigShift.Text.Caption}" TargetType="TextBlock">
-                            <Setter Property="Margin" Value="0,2,0,0" />
-                            <Style.Triggers>
-                              <DataTrigger Binding="{Binding IsHeading}" Value="True">
-                                <Setter Property="Margin" Value="0,8,0,0" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
-                              </DataTrigger>
-                            </Style.Triggers>
-                          </Style>
-                        </TextBlock.Style>
-                      </TextBlock>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
-              <Button
-                Margin="0,8,0,0"
-                HorizontalAlignment="Left"
-                Command="{Binding OpenReleaseNotesCommand}"
-                Content="{loc:Tr Settings_ReleaseNotesLink}"
-                Style="{StaticResource RigShift.Link}" />
+                controls:LiveRegion.IsLive="True"
+                Kind="{Binding UpdateStatusKind}"
+                Text="{Binding UpdateStatusText}" />
             </StackPanel>
-          </StackPanel>
-        </Border>
+          </DockPanel>
 
-        <!-- Diagnostics -->
-        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
-          <StackPanel>
-            <controls:AdaptiveColumns Gap="16">
-              <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
-                <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Diagnostics}" />
-                <TextBlock
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr About_DiagnosticsHint}"
-                  TextWrapping="Wrap" />
-                <TextBlock
-                  controls:LiveRegion.IsLive="True"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{Binding CopyStatus}" />
-              </StackPanel>
+          <!-- Height-limited: a full changelog section used to make the card huge (hardware test of 1.3.1). -->
+          <StackPanel Margin="74,16,0,0" Visibility="{Binding ShowReleaseNotes, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr About_WhatsNew}" />
+            <ScrollViewer
+              MaxHeight="160"
+              Margin="0,4,0,0"
+              Focusable="False"
+              HorizontalScrollBarVisibility="Disabled"
+              VerticalScrollBarVisibility="Auto">
+              <ItemsControl Focusable="False" ItemsSource="{Binding ReleaseNoteLines}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap">
+                      <TextBlock.Style>
+                        <Style BasedOn="{StaticResource RigShift.Text.Caption}" TargetType="TextBlock">
+                          <Setter Property="Margin" Value="0,2,0,0" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsHeading}" Value="True">
+                              <Setter Property="Margin" Value="0,8,0,0" />
+                              <Setter Property="FontWeight" Value="SemiBold" />
+                              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <Button
+              Margin="0,8,0,0"
+              HorizontalAlignment="Left"
+              Command="{Binding OpenReleaseNotesCommand}"
+              Content="{loc:Tr Settings_ReleaseNotesLink}"
+              Style="{StaticResource RigShift.Link}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Four cards of equal height, two per row. -->
+      <UniformGrid Margin="0,16,-16,0" Columns="2">
+
+        <!-- First steps -->
+        <Border Style="{StaticResource HelpCard}">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+              <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Rocket20" />
+              <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_StartTitle}" />
+            </StackPanel>
+            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
+              <Button
+                Margin="0,0,12,0"
+                Command="{Binding StartAssistantCommand}"
+                Content="{loc:Tr Overview_SetupStart}"
+                Style="{StaticResource RigShift.Button}" />
               <Button
                 VerticalAlignment="Center"
-                Command="{Binding CopyDiagnosticsCommand}"
-                Content="{loc:Tr About_Copy}"
-                Style="{StaticResource RigShift.Button}"
-                ToolTip="{loc:Tr About_CopyHint}" />
-            </controls:AdaptiveColumns>
-            <WrapPanel Margin="0,12,0,0">
-              <Button
-                Height="28"
-                Command="{Binding OpenLogFolderCommand}"
-                Style="{StaticResource RigShift.Button.Ghost}">
-                <StackPanel Orientation="Horizontal">
-                  <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open16" />
-                  <TextBlock Text="{loc:Tr About_Logs}" />
-                </StackPanel>
-              </Button>
-              <Button
-                Height="28"
-                Margin="8,0,0,0"
-                Command="{Binding OpenProfileFolderCommand}"
-                Style="{StaticResource RigShift.Button.Ghost}">
-                <StackPanel Orientation="Horizontal">
-                  <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Open16" />
-                  <TextBlock Text="{loc:Tr About_Profiles}" />
-                </StackPanel>
-              </Button>
+                Command="{Binding OpenGuideCommand}"
+                Content="{loc:Tr About_Guide}"
+                Style="{StaticResource RigShift.Link}" />
             </WrapPanel>
+            <TextBlock
+              Margin="0,10,0,0"
+              LineHeight="22"
+              Style="{StaticResource RigShift.Text.Body}"
+              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+              Text="{loc:Tr About_StartText}"
+              TextWrapping="Wrap" />
+          </DockPanel>
+        </Border>
+
+        <!-- Hotkeys and commands: the user's own, live. -->
+        <Border Style="{StaticResource HelpCard}">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Keyboard20" />
+              <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_Shortcuts}" />
+            </StackPanel>
+            <TextBlock
+              Margin="0,10,0,0"
+              Style="{StaticResource RigShift.Text.Caption}"
+              Text="{loc:Tr About_NoShortcuts}"
+              TextWrapping="Wrap"
+              Visibility="{Binding HasShortcuts, Converter={StaticResource InverseBoolToVisibility}}" />
+            <ItemsControl Margin="0,6,0,0" Focusable="False" ItemsSource="{Binding Shortcuts}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ShortcutRow}">
+                  <DockPanel Height="30">
+                    <ContentControl VerticalAlignment="Center" Content="{Binding Keys}" DockPanel.Dock="Right" Style="{StaticResource RigShift.Keycap}" />
+                    <TextBlock
+                      Margin="0,0,12,0"
+                      VerticalAlignment="Center"
+                      Style="{StaticResource RigShift.Text.Body}"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                      Text="{Binding Name}"
+                      TextTrimming="CharacterEllipsis"
+                      TextWrapping="NoWrap" />
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Margin="0,12,0,4" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Commands}" />
+            <ItemsControl Focusable="False" ItemsSource="{Binding CommandExamples}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <DockPanel Height="30">
+                    <Button
+                      Height="28"
+                      AutomationProperties.Name="{loc:Tr About_Copy}"
+                      Command="{Binding DataContext.CopyCommandCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                      CommandParameter="{Binding}"
+                      DockPanel.Dock="Right"
+                      Style="{StaticResource RigShift.Button.Icon}"
+                      ToolTip="{loc:Tr About_Copy}">
+                      <ui:SymbolIcon FontSize="14" Symbol="Copy16" />
+                    </Button>
+                    <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
           </StackPanel>
         </Border>
 
-      </controls:AdaptiveColumns>
-
-      <controls:AdaptiveColumns Margin="0,24,0,0" Gap="24">
-
         <!-- Backup -->
-        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
-          <controls:AdaptiveColumns Gap="16">
-            <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
-              <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Backup}" />
-              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
-              <TextBlock
-                controls:LiveRegion.IsLive="True"
-                Style="{StaticResource RigShift.Text.Caption}"
-                Text="{Binding BackupStatus}" />
+        <Border Style="{StaticResource HelpCard}">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+              <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Save20" />
+              <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_Backup}" />
             </StackPanel>
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
               <Button
+                Margin="0,0,8,0"
                 Command="{Binding SaveBackupCommand}"
                 Content="{loc:Tr About_SaveBackup}"
                 Style="{StaticResource RigShift.Button}" />
               <Button
-                Margin="8,0,0,0"
                 Command="{Binding RestoreBackupCommand}"
                 Content="{loc:Tr About_RestoreBackup}"
                 Style="{StaticResource RigShift.Button}" />
+            </WrapPanel>
+            <StackPanel Margin="0,10,0,0">
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
+              <TextBlock
+                Margin="0,4,0,0"
+                controls:LiveRegion.IsLive="True"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{Binding BackupStatus}" />
             </StackPanel>
-          </controls:AdaptiveColumns>
+          </DockPanel>
         </Border>
 
-        <!-- Links -->
-        <Border Style="{StaticResource RigShift.Card}" controls:AdaptiveColumns.MinColumnWidth="340">
-          <StackPanel>
-            <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="{loc:Tr About_Links}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_Copyright}" TextWrapping="Wrap" />
-            <WrapPanel Margin="0,12,0,0">
+        <!-- Report a problem: diagnostics, the issue, the folders. -->
+        <Border Style="{StaticResource HelpCard}">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+              <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Bug20" />
+              <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_ReportProblem}" />
+            </StackPanel>
+            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
               <Button
-                Margin="0,0,16,4"
-                Command="{Binding OpenRepositoryCommand}"
-                Content="{loc:Tr About_Repository}"
-                Style="{StaticResource RigShift.Link}" />
+                Margin="0,0,8,0"
+                Command="{Binding CopyDiagnosticsCommand}"
+                Content="{loc:Tr About_CopyDiagnostics}"
+                Style="{StaticResource RigShift.Button}"
+                ToolTip="{loc:Tr About_CopyHint}" />
               <Button
-                Margin="0,0,16,4"
+                Margin="0,0,8,0"
                 Command="{Binding ReportProblemCommand}"
-                Content="{loc:Tr About_ReportProblem}"
-                Style="{StaticResource RigShift.Link}" />
+                Style="{StaticResource RigShift.Button}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{loc:Tr About_ReportProblem}" />
+                  <ui:SymbolIcon Margin="8,0,0,0" FontSize="14" Symbol="Open16" />
+                </StackPanel>
+              </Button>
               <Button
-                Margin="0,0,16,4"
-                Command="{Binding OpenLicenseCommand}"
-                Content="{loc:Tr About_License}"
-                Style="{StaticResource RigShift.Link}" />
+                Command="{Binding OpenLogFolderCommand}"
+                Content="{loc:Tr About_Logs}"
+                Style="{StaticResource RigShift.Button.Ghost}" />
               <Button
-                Margin="0,0,16,4"
-                Command="{Binding OpenKofiCommand}"
-                Content="{loc:Tr About_Kofi}"
-                Style="{StaticResource RigShift.Link}"
-                ToolTip="{loc:Tr About_KofiHint}" />
+                Command="{Binding OpenProfileFolderCommand}"
+                Content="{loc:Tr About_Profiles}"
+                Style="{StaticResource RigShift.Button.Ghost}" />
             </WrapPanel>
-          </StackPanel>
+            <StackPanel Margin="0,10,0,0">
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_ProblemText}" TextWrapping="Wrap" />
+              <TextBlock
+                Margin="0,4,0,0"
+                controls:LiveRegion.IsLive="True"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{Binding CopyStatus}" />
+            </StackPanel>
+          </DockPanel>
         </Border>
-      </controls:AdaptiveColumns>
+      </UniformGrid>
+
+      <!-- Quiet footer: license and links. -->
+      <WrapPanel Margin="0,4,0,0">
+        <TextBlock
+          Margin="0,0,20,4"
+          VerticalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{loc:Tr About_Copyright}" />
+        <Button
+          Margin="0,0,16,4"
+          Command="{Binding OpenRepositoryCommand}"
+          Content="{loc:Tr About_Repository}"
+          Style="{StaticResource RigShift.Link}" />
+        <Button
+          Margin="0,0,16,4"
+          Command="{Binding OpenLicenseCommand}"
+          Content="{loc:Tr About_License}"
+          Style="{StaticResource RigShift.Link}" />
+        <Button
+          Margin="0,0,16,4"
+          Command="{Binding OpenKofiCommand}"
+          Content="{loc:Tr About_Kofi}"
+          Style="{StaticResource RigShift.Link}"
+          ToolTip="{loc:Tr About_KofiHint}" />
+      </WrapPanel>
     </StackPanel>
   </ScrollViewer>
 </Page>

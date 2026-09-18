@@ -103,6 +103,10 @@ public sealed partial class ProfilesViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsEmpty { get; private set; }
 
+    /// <summary>What Windows shows right now; the empty page offers it as the first profile (X-01).</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<TopologyDisplay> CurrentTopology { get; private set; } = [];
+
     /// <summary>A switch runs: every trigger is locked, not hidden (R-FLOW-1).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SwitchCommand), nameof(TestCommand))]
@@ -562,6 +566,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
             return;
         }
 
+        CurrentTopology = TopologyDisplays.From(ProfileEditing.CurrentArrangement(snapshot, [], _catalog.KnownDisplayNames));
         _plans.Clear();
         foreach (Profile profile in _catalog.Profiles)
         {

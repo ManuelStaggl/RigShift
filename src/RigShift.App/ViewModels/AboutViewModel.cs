@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
@@ -13,7 +14,7 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>Version and updates, troubleshooting and links.</summary>
+/// <summary>The help page: version and updates, first steps, the hotkeys and commands in use, backup, troubleshooting.</summary>
 public sealed partial class AboutViewModel : ObservableObject
 {
     private const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";
@@ -25,6 +26,8 @@ public sealed partial class AboutViewModel : ObservableObject
     private readonly IAudioController _audio;
     private readonly AppPaths _paths;
     private readonly SettingsService _settings;
+    private readonly GameCatalog _games;
+    private readonly ProfileDialogs _dialogs;
     private readonly ILogger _log;
 
     public AboutViewModel(
@@ -35,6 +38,8 @@ public sealed partial class AboutViewModel : ObservableObject
         IAudioController audio,
         AppPaths paths,
         SettingsService settings,
+        GameCatalog games,
+        ProfileDialogs dialogs,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(updates);
@@ -48,7 +53,13 @@ public sealed partial class AboutViewModel : ObservableObject
         _audio = audio;
         _paths = paths;
         _settings = settings;
+        _games = games;
+        _dialogs = dialogs;
         _log = log.ForContext<AboutViewModel>();
+        catalog.Changed += (_, _) => RebuildShortcuts();
+        games.Changed += (_, _) => RebuildShortcuts();
+        settings.Changed += (_, _) => RebuildShortcuts();
+        RebuildShortcuts();
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
         RefreshUpdateStatus();
 
@@ -60,6 +71,7 @@ public sealed partial class AboutViewModel : ObservableObject
             CopyStatus = null;
             BackupStatus = null;
             System.Windows.Data.CollectionViewSource.GetDefaultView(History).Refresh();
+            RebuildShortcuts();
         };
     }
 
@@ -159,6 +171,66 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             BackupStatus = Loc.Format("About_BackupRestored", content.Profiles.Count);
         }
+    }
+
+    /// <summary>The hotkeys in use: profiles, games and "previous profile" (H-01).</summary>
+    public ObservableCollection<ShortcutRow> Shortcuts { get; } = [];
+
+    [ObservableProperty]
+    public partial bool HasShortcuts { get; set; }
+
+    /// <summary>The commands for Stream Deck and scripts, with a placeholder for the name.</summary>
+    public IReadOnlyList<string> CommandExamples { get; } = ["rigshift://apply/<name>", "rigshift://play/<name>", "rigshift://toggle"];
+
+    /// <summary>Colour of the update line in the head: up to date is ok, an update waiting is the accent.</summary>
+    [ObservableProperty]
+    public partial StatusKind UpdateStatusKind { get; set; }
+
+    [RelayCommand]
+    private Task StartAssistantAsync() => _dialogs.ShowSetupAssistantAsync();
+
+    [RelayCommand]
+    private void OpenGuide() => ShellFolders.OpenUrl(RepositoryUrl + "#readme", _log);
+
+    [RelayCommand]
+    private void CopyCommand(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        try
+        {
+            System.Windows.Clipboard.SetText(text);
+            CopyStatus = Loc.Instance["About_Copied"];
+        }
+        catch (COMException ex)
+        {
+            _log.Warning(ex, "Command could not be copied to the clipboard");
+            CopyStatus = Loc.Format("About_CopyFailed", ex.Message);
+        }
+    }
+
+    private void RebuildShortcuts()
+    {
+        Shortcuts.Clear();
+        foreach (ProfileItem item in _catalog.Items.Where(i => i.HotkeyText.Length > 0))
+        {
+            Shortcuts.Add(new ShortcutRow(item.Name, item.HotkeyText));
+        }
+
+        foreach (GameItem item in _games.Items.Where(i => i.HotkeyText.Length > 0))
+        {
+            Shortcuts.Add(new ShortcutRow(item.Name, item.HotkeyText));
+        }
+
+        if (_settings.Current.ToggleHotkey is { } toggle)
+        {
+            Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_ToggleHotkey"], HotkeyFormat.Format(toggle)));
+        }
+
+        HasShortcuts = Shortcuts.Count > 0;
     }
 
     public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);
@@ -276,6 +348,13 @@ public sealed partial class AboutViewModel : ObservableObject
             UpdateState.Available => Loc.Format("Update_StatusAvailable", _updates.TargetVersion ?? "?"),
             _ => Loc.Instance["Update_StatusFailed"],
         };
+        UpdateStatusKind = _updates.State switch
+        {
+            UpdateState.UpToDate => StatusKind.Ok,
+            UpdateState.Ready or UpdateState.Available or UpdateState.Downloading => StatusKind.Accent,
+            UpdateState.NotInstalled or UpdateState.NotChecked or UpdateState.Checking => StatusKind.Neutral,
+            _ => StatusKind.Warn,
+        };
         IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;
         ShowReleaseNotes = _updates.State is UpdateState.Ready or UpdateState.Available or UpdateState.Downloading && _updates.ReleaseUrl is not null;
         ReleaseNoteLines = _updates.ReleaseNoteLines;
@@ -283,3 +362,6 @@ public sealed partial class AboutViewModel : ObservableObject
         InstallUpdateNowCommand.NotifyCanExecuteChanged();
     }
 }
+
+/// <summary>One hotkey on the help page: what it does and the keys.</summary>
+public sealed record ShortcutRow(string Name, string Keys);

@@ -339,6 +339,83 @@
       </Trigger>
     </Style.Triggers>
   </Style>
+  <!--
+    Inline edit in a list row (O-03): reads as plain text, shows its frame and a pen on hover, the full field with the
+    focus. An empty value shows the placeholder from Tag in the disabled text color.
+  -->
+  <Style x:Key="RigShift.Field.Inline" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="8,0,28,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Cursor" Value="IBeam" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Grid>
+            <Border
+              x:Name="Ring"
+              Margin="-2"
+              BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
+              BorderThickness="2"
+              CornerRadius="8"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Root"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              SnapsToDevicePixels="True">
+              <Grid>
+                <TextBlock
+                  x:Name="Placeholder"
+                  Margin="{TemplateBinding Padding}"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                  IsHitTestVisible="False"
+                  Text="{TemplateBinding Tag}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="Collapsed" />
+                <ScrollViewer
+                  x:Name="PART_ContentHost"
+                  Margin="0"
+                  Padding="0"
+                  VerticalAlignment="Center"
+                  Focusable="False" />
+                <ui:SymbolIcon
+                  x:Name="Pen"
+                  Margin="0,0,8,0"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center"
+                  FontSize="14"
+                  Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                  IsHitTestVisible="False"
+                  Opacity="0"
+                  Symbol="Edit16" />
+              </Grid>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter TargetName="Pen" Property="Opacity" Value="1" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Page}" />
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Pen" Property="Opacity" Value="0" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
   <!-- Caption under a field with the validation reason. -->
   <Style x:Key="RigShift.Text.FieldError" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
@@ -1183,6 +1260,30 @@
   <Style x:Key="RigShift.Text.CardTitle" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.BodyStrong}">
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!-- Keys as keycaps ("Ctrl+Alt+F1", "Enter"): a thin frame with a heavier bottom edge, text face (T-01). -->
+  <Style x:Key="RigShift.Keycap" TargetType="ContentControl">
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Border
+            MinWidth="22"
+            Height="22"
+            Padding="7,0"
+            Background="{DynamicResource RigShift.Brush.HoverOverlay}"
+            BorderBrush="{DynamicResource RigShift.Brush.LineStrong}"
+            BorderThickness="1,1,1,2"
+            CornerRadius="4"
+            SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- ===== Slider (B-05): 4 px rail, accent fill up to the thumb, 20 px thumb with an accent dot that grows on hover ===== -->
