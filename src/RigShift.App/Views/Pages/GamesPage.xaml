@@ -70,8 +70,16 @@
           </DockPanel>
           <Button.ContextMenu>
             <ContextMenu>
-              <MenuItem Command="{Binding AddInstalledCommand}" Header="{loc:Tr List_NewInstalled}" />
-              <MenuItem Command="{Binding AddProgramCommand}" Header="{loc:Tr List_NewProgram}" />
+              <MenuItem Command="{Binding AddInstalledCommand}" Header="{loc:Tr List_NewInstalled}">
+                <MenuItem.Icon>
+                  <ui:SymbolIcon Symbol="Search16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Command="{Binding AddProgramCommand}" Header="{loc:Tr List_NewProgram}">
+                <MenuItem.Icon>
+                  <ui:SymbolIcon Symbol="Apps16" />
+                </MenuItem.Icon>
+              </MenuItem>
             </ContextMenu>
           </Button.ContextMenu>
         </Button>
@@ -228,7 +236,7 @@
                   VerticalAlignment="Center"
                   Content="{Binding Editor.HotkeyText}"
                   DockPanel.Dock="Right"
-                  Style="{StaticResource RigShift.Chip.Mono}"
+                  Style="{StaticResource RigShift.Chip.Value}"
                   Visibility="{Binding Editor.HasHotkey, Converter={StaticResource BoolToVisibility}}" />
                 <TextBox
                   x:Name="NameBox"
@@ -283,12 +291,20 @@
                 <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
                 <Button.ContextMenu>
                   <ContextMenu>
-                    <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}" />
+                    <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Link16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                     <Separator />
                     <MenuItem
                       Command="{Binding DeleteCommand}"
                       Foreground="{DynamicResource RigShift.Brush.Error}"
-                      Header="{loc:Tr Profile_Delete}" />
+                      Header="{loc:Tr Profile_Delete}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Foreground="{DynamicResource RigShift.Brush.Error}" Symbol="Delete16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Button.ContextMenu>
               </Button>
@@ -385,7 +401,7 @@
                             Visibility="{Binding HasLaunch, Converter={StaticResource BoolToVisibility}}" />
                           <TextBlock
                             VerticalAlignment="Center"
-                            Style="{StaticResource RigShift.Text.Mono}"
+                            Style="{StaticResource RigShift.Text.Value}"
                             Text="{Binding LaunchText}"
                             ToolTip="{Binding LaunchText}"
                             Visibility="{Binding HasLaunch, Converter={StaticResource BoolToVisibility}}" />
@@ -407,7 +423,7 @@
                     <TextBox
                       AutomationProperties.HelpText="{Binding ProcessHint}"
                       AutomationProperties.Name="{loc:Tr Game_ProcessName}"
-                      Style="{StaticResource RigShift.Field.Mono}"
+                      Style="{StaticResource RigShift.Field.Value}"
                       Text="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}"
                       ToolTip="{loc:Tr Game_ProcessLearned}"
                       controls:Interaction.IsInvalid="{Binding ProcessHintIsError}" />
@@ -439,7 +455,7 @@
                       <TextBox
                         AutomationProperties.HelpText="{loc:Tr Game_LauncherProcessHint}"
                         AutomationProperties.Name="{loc:Tr Game_LauncherProcess}"
-                        Style="{StaticResource RigShift.Field.Mono}"
+                        Style="{StaticResource RigShift.Field.Value}"
                         Text="{Binding LauncherProcessName, UpdateSourceTrigger=PropertyChanged}" />
                       <TextBlock
                         Margin="0,4,0,0"
@@ -482,7 +498,7 @@
                         IsReadOnlyCaretVisible="False"
                         LostKeyboardFocus="OnHotkeyLostFocus"
                         PreviewKeyDown="OnHotkeyKeyDown"
-                        Style="{StaticResource RigShift.Field.Mono}"
+                        Style="{StaticResource RigShift.Field.Value}"
                         Text="{Binding HotkeyText, Mode=OneWay}"
                         ToolTip="{loc:Tr Hotkey_RecordTip}"
                         controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />
@@ -539,7 +555,7 @@
                         FontSize="12"
                         Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                         IsReadOnly="True"
-                        Style="{StaticResource RigShift.Field.Mono}"
+                        Style="{StaticResource RigShift.Field.Value}"
                         Text="{Binding CommandText, Mode=OneWay}" />
                     </DockPanel>
                   </StackPanel>
@@ -675,7 +691,7 @@
                                 TextWrapping="NoWrap"
                                 ToolTip="{Binding Path}">
                                 <TextBlock.Style>
-                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.MonoSecondary}">
+                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
                                     <Style.Triggers>
                                       <DataTrigger Binding="{Binding PathMissing}" Value="True">
                                         <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
@@ -768,7 +784,7 @@
                               <TextBox
                                 Height="28"
                                 AutomationProperties.Name="{loc:Tr App_Arguments}"
-                                Style="{StaticResource RigShift.Field.Mono}"
+                                Style="{StaticResource RigShift.Field.Value}"
                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <Button

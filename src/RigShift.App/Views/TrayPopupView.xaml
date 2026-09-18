@@ -29,7 +29,7 @@
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
-    <Style x:Key="RowValue" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.MonoSecondary}">
+    <Style x:Key="RowValue" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
       <Setter Property="Grid.Column" Value="2" />
       <Setter Property="Margin" Value="12,0,0,0" />
       <Setter Property="VerticalAlignment" Value="Center" />

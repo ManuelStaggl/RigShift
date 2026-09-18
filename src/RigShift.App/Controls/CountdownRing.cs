@@ -50,7 +50,7 @@ public sealed class CountdownRing : ContentControl
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        _text.SetResourceReference(TextBlock.FontFamilyProperty, "RigShift.Font.Mono");
+        _text.SetResourceReference(TextBlock.FontFamilyProperty, "RigShift.Font.Text");
         _text.SetResourceReference(TextBlock.ForegroundProperty, "RigShift.Brush.TextPrimary");
 
         var root = new Grid { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };

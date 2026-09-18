@@ -34,6 +34,13 @@ public partial class MainWindow : FluentWindow
 
         // The pages paint square backgrounds; without this they cover the rounded corner of the page surface.
         PageHost.SizeChanged += (_, e) => PageHost.Clip = TopLeftRounded(e.NewSize, 7);
+        PageHost.Navigated += (_, e) =>
+        {
+            if (e.Content is UIElement page)
+            {
+                Controls.Motion.PlayEnter(page, 12);
+            }
+        };
 
         AddNav(NavTop, typeof(OverviewPage), SymbolRegular.Home16, "Nav_Overview", Key.D1);
         AddNav(NavTop, typeof(ProfilesPage), SymbolRegular.Desktop16, "Nav_Profiles", Key.D2);

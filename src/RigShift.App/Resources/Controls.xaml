@@ -27,6 +27,20 @@
     </Setter>
   </Style>
 
+  <!-- Elevation of flyouts, menus and drop downs (F-02): a shadow on its own layer behind the surface, so the text
+       above it keeps ClearType. The popup needs AllowsTransparency and a margin the shadow can fall into. -->
+  <Style x:Key="RigShift.FlyoutShadow" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource RigShift.Radius.Card}" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect BlurRadius="24" Direction="270" Opacity="0.45" ShadowDepth="6" Color="{DynamicResource RigShift.Color.Shadow}" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <controls:AddConverter x:Key="RigShift.PlusShadowMargin" Amount="32" />
+
   <!-- ===== Text roles (spec 7.2) ===== -->
   <Style x:Key="RigShift.Text.Body" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
@@ -61,45 +75,88 @@
     <Setter Property="FontSize" Value="28" />
     <Setter Property="LineHeight" Value="36" />
   </Style>
-  <!-- Values: resolutions, refresh rates, hotkeys, process names, paths, times. -->
-  <Style x:Key="RigShift.Text.Mono" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
-    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
-    <Setter Property="FontSize" Value="12" />
-    <Setter Property="LineHeight" Value="16" />
+  <!-- Page title: 24 on the display face, one per page. -->
+  <Style x:Key="RigShift.Text.PageTitle" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Subtitle}">
+    <Setter Property="FontSize" Value="{DynamicResource RigShift.Type.PageTitle.Size}" />
+    <Setter Property="LineHeight" Value="{DynamicResource RigShift.Type.PageTitle.LineHeight}" />
+  </Style>
+  <!-- Section heading inside a page or tab: 16 semibold, primary text. -->
+  <Style x:Key="RigShift.Text.Section" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontSize" Value="{DynamicResource RigShift.Type.Section.Size}" />
+    <Setter Property="LineHeight" Value="{DynamicResource RigShift.Type.Section.LineHeight}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <!-- Values: resolutions, refresh rates, hotkeys, process names, paths, times. The text face with tabular figures,
+       so columns of numbers stay aligned without a monospaced font. -->
+  <Style x:Key="RigShift.Text.Value" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="18" />
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     <Setter Property="TextWrapping" Value="NoWrap" />
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
   </Style>
-  <Style x:Key="RigShift.Text.MonoSecondary" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Mono}">
+  <Style x:Key="RigShift.Text.ValueSecondary" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Value}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
   </Style>
 
   <!-- ===== Buttons (spec 7.3): one template, the rank sets fills through Interaction.* ===== -->
+  <!-- Hover and pressed fills are layers over the rest fill whose opacity fades (Motion.Fast), so any brush works. -->
   <ControlTemplate x:Key="RigShift.ButtonTemplate" TargetType="ButtonBase">
-    <Border
-      x:Name="Root"
-      Padding="{TemplateBinding Padding}"
-      Background="{TemplateBinding Background}"
-      BorderBrush="{TemplateBinding BorderBrush}"
-      BorderThickness="{TemplateBinding BorderThickness}"
-      CornerRadius="{DynamicResource RigShift.Radius.Control}"
-      SnapsToDevicePixels="True">
+    <Grid SnapsToDevicePixels="True">
+      <Border
+        x:Name="Root"
+        Background="{TemplateBinding Background}"
+        BorderBrush="{TemplateBinding BorderBrush}"
+        BorderThickness="{TemplateBinding BorderThickness}"
+        CornerRadius="{DynamicResource RigShift.Radius.Control}" />
+      <Border
+        x:Name="HoverLayer"
+        Margin="{TemplateBinding BorderThickness}"
+        Background="{Binding Path=(controls:Interaction.HoverBackground), RelativeSource={RelativeSource TemplatedParent}}"
+        CornerRadius="{DynamicResource RigShift.Radius.Control}"
+        Opacity="0" />
+      <Border
+        x:Name="PressedLayer"
+        Margin="{TemplateBinding BorderThickness}"
+        Background="{Binding Path=(controls:Interaction.PressedBackground), RelativeSource={RelativeSource TemplatedParent}}"
+        CornerRadius="{DynamicResource RigShift.Radius.Control}"
+        Opacity="0" />
       <ContentPresenter
         x:Name="Content"
+        Margin="{TemplateBinding Padding}"
         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
         RecognizesAccessKey="True"
         TextElement.Foreground="{TemplateBinding Foreground}" />
-    </Border>
+    </Grid>
     <ControlTemplate.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
-        <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.HoverBackground), RelativeSource={RelativeSource TemplatedParent}}" />
         <Setter TargetName="Content" Property="TextElement.Foreground" Value="{Binding Path=(controls:Interaction.HoverForeground), RelativeSource={RelativeSource TemplatedParent}}" />
+        <Trigger.EnterActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation Storyboard.TargetName="HoverLayer" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.EnterActions>
+        <Trigger.ExitActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation Storyboard.TargetName="HoverLayer" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.ExitActions>
       </Trigger>
       <Trigger Property="IsPressed" Value="True">
-        <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.PressedBackground), RelativeSource={RelativeSource TemplatedParent}}" />
+        <Setter TargetName="PressedLayer" Property="Opacity" Value="1" />
+        <Setter TargetName="HoverLayer" Property="Visibility" Value="Hidden" />
       </Trigger>
+      <!-- Disabled: no accent, no frame, muted text – it must not look clickable (Z-06). -->
       <Trigger Property="IsEnabled" Value="False">
-        <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+        <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.DisabledBackground), RelativeSource={RelativeSource TemplatedParent}}" />
+        <Setter TargetName="Root" Property="BorderBrush" Value="Transparent" />
+        <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+        <Setter TargetName="HoverLayer" Property="Visibility" Value="Collapsed" />
       </Trigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
@@ -116,6 +173,7 @@
     <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.Selected}" />
     <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.Layer}" />
+    <Setter Property="controls:Interaction.DisabledBackground" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="FontWeight" Value="Normal" />
@@ -139,31 +197,40 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
-    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.LayerHover}" />
-    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.Selected}" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+    <Setter Property="controls:Interaction.DisabledBackground" Value="Transparent" />
   </Style>
   <!-- Icon buttons: 32 × 32, ghost or outlined. The content is a ui:SymbolIcon; the AutomationProperties.Name carries the meaning. -->
   <Style x:Key="RigShift.Button.Icon" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
     <Setter Property="Width" Value="32" />
     <Setter Property="Padding" Value="0" />
   </Style>
-  <Style x:Key="RigShift.Button.IconOutlined" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
-    <Setter Property="Width" Value="32" />
-    <Setter Property="Padding" Value="0" />
+  <!-- Kept as a key for existing pages; every icon button is a ghost now (B-08). -->
+  <Style x:Key="RigShift.Button.IconOutlined" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}" />
+  <!-- Delete and remove: quiet at rest, red on hover. -->
+  <Style x:Key="RigShift.Button.IconDanger" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}">
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Error}" />
   </Style>
   <!-- Destructive: secondary look with red text, only in dialogs (R-ACT-3). -->
   <Style x:Key="RigShift.Button.Danger" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
-    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
-    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Error}" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Error}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="controls:Interaction.HoverBackground" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+    <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
   </Style>
-  <!-- Link: underlined text, accent only on hover (R-COL-1: links are not accent). -->
+  <!-- Link: accent text, underline only on hover (B-09). -->
   <Style x:Key="RigShift.Link" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
     <Setter Property="Height" Value="Auto" />
     <Setter Property="MinWidth" Value="0" />
     <Setter Property="Padding" Value="0" />
-    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Accent}" />
     <Setter Property="controls:Interaction.HoverBackground" Value="Transparent" />
-    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.AccentHover}" />
     <Setter Property="controls:Interaction.PressedBackground" Value="Transparent" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">
@@ -172,11 +239,11 @@
           <TextBlock
             x:Name="Text"
             Foreground="{TemplateBinding Foreground}"
-            Text="{TemplateBinding Content}"
-            TextDecorations="Underline" />
+            Text="{TemplateBinding Content}" />
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Text" Property="Foreground" Value="{Binding Path=(controls:Interaction.HoverForeground), RelativeSource={RelativeSource TemplatedParent}}" />
+              <Setter TargetName="Text" Property="TextDecorations" Value="Underline" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -241,16 +308,18 @@
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-              <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>
   </Style>
-  <Style x:Key="RigShift.Field.Mono" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
-    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
-    <Setter Property="FontSize" Value="13" />
+  <!-- Values (hotkeys, process names, commands): the text face with tabular figures. -->
+  <Style x:Key="RigShift.Field.Value" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
   </Style>
   <!-- The name in a detail head: subtitle size, no frame until it has the focus (F2 edits it). -->
   <Style x:Key="RigShift.Field.Title" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
@@ -311,10 +380,10 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
             </Trigger>
             <Trigger Property="IsHighlighted" Value="True">
-              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
               <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
@@ -395,6 +464,7 @@
                   Height="6"
                   Margin="0,1,11,0"
                   VerticalAlignment="Center"
+                  RenderTransformOrigin="0.5,0.5"
                   Data="M 0,0 L 5,5 L 10,0"
                   IsHitTestVisible="False"
                   Stretch="None"
@@ -402,7 +472,11 @@
                   StrokeEndLineCap="Round"
                   StrokeLineJoin="Round"
                   StrokeStartLineCap="Round"
-                  StrokeThickness="1.4" />
+                  StrokeThickness="1.4">
+                  <Path.RenderTransform>
+                    <RotateTransform x:Name="ChevronTurn" Angle="0" />
+                  </Path.RenderTransform>
+                </Path>
               </Grid>
             </Border>
             <!-- Stretch spelled out: the WPF-UI style for ToggleButton would shrink this empty template to nothing. -->
@@ -416,28 +490,36 @@
               Focusable="False"
               IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
               Template="{StaticResource RigShift.SelectToggleTemplate}" />
+            <!-- A transparent margin around the list carries the flyout shadow; the offsets take it back out. -->
             <Popup
               x:Name="PART_Popup"
-              MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-              MaxWidth="560"
+              MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource RigShift.PlusShadowMargin}}"
+              MaxWidth="592"
               AllowsTransparency="True"
               Focusable="False"
+              HorizontalOffset="-16"
               IsOpen="{TemplateBinding IsDropDownOpen}"
               Placement="Bottom"
               PopupAnimation="None"
               VerticalOffset="4">
-              <Border
-                MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                Padding="0,4"
-                Background="{DynamicResource RigShift.Brush.Layer}"
-                BorderBrush="{DynamicResource RigShift.Brush.Line}"
-                BorderThickness="1"
-                CornerRadius="{DynamicResource RigShift.Radius.Card}"
-                SnapsToDevicePixels="True">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                  <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
-                </ScrollViewer>
-              </Border>
+              <Grid x:Name="Flyout" Margin="16,0,16,24">
+                <Grid.RenderTransform>
+                  <TranslateTransform x:Name="FlyoutShift" />
+                </Grid.RenderTransform>
+                <Border Style="{StaticResource RigShift.FlyoutShadow}" />
+                <Border
+                  MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                  Padding="0,4"
+                  Background="{DynamicResource RigShift.Brush.Layer}"
+                  BorderBrush="{DynamicResource RigShift.Brush.Line}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RigShift.Radius.Card}"
+                  SnapsToDevicePixels="True">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                  </ScrollViewer>
+                </Border>
+              </Grid>
             </Popup>
           </Grid>
           <ControlTemplate.Triggers>
@@ -446,6 +528,22 @@
             </Trigger>
             <Trigger Property="IsDropDownOpen" Value="True">
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="ChevronTurn" Storyboard.TargetProperty="Angle" To="180" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                    <DoubleAnimation Storyboard.TargetName="Flyout" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="{x:Static controls:Motion.Enter}" />
+                    <DoubleAnimation Storyboard.TargetName="FlyoutShift" Storyboard.TargetProperty="Y" From="-4" To="0" Duration="{x:Static controls:Motion.Enter}" EasingFunction="{x:Static controls:Motion.Decelerate}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="ChevronTurn" Storyboard.TargetProperty="Angle" To="0" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
@@ -458,8 +556,10 @@
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-              <Setter TargetName="Root" Property="Opacity" Value="0.45" />
-              <Setter TargetName="Chevron" Property="Opacity" Value="0.45" />
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter TargetName="Chevron" Property="Stroke" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+              <Setter TargetName="Selection" Property="TextElement.Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -469,6 +569,7 @@
   <!-- Toggle 36 × 20 and the check box on the WPF-UI templates; the tokens color them. -->
   <Style x:Key="RigShift.Toggle" TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
   <!-- A long label wraps; without this the text is cut at the column's edge (the box content is always a string). -->
   <DataTemplate x:Key="RigShift.WrappingLabel">
@@ -480,6 +581,7 @@
     <Setter Property="Padding" Value="10,0,0,0" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
   <!-- Number box on the field's measurements; the WPF-UI default is a few pixels taller than a text field. -->
   <Style x:Key="RigShift.Number" TargetType="ui:NumberBox" BasedOn="{StaticResource {x:Type ui:NumberBox}}">
@@ -491,18 +593,99 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
   </Style>
-  <Style x:Key="RigShift.Radio" TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+  <!-- Radio (Z-01): 20 px, 1.5 px ring; chosen = accent disc with an 8 px dot, 10 px on hover. One look everywhere. -->
+  <Style x:Key="RigShift.Radio" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="14" />
     <Setter Property="MinHeight" Value="24" />
+    <Setter Property="Padding" Value="10,0,0,0" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
+    <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Grid Background="Transparent" SnapsToDevicePixels="True">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Width="20" Height="20" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+              <Ellipse x:Name="Ring" Fill="Transparent" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1.5" />
+              <Ellipse
+                x:Name="Dot"
+                Width="8"
+                Height="8"
+                Fill="{DynamicResource RigShift.Brush.OnAccent}"
+                RenderTransformOrigin="0.5,0.5"
+                Visibility="Collapsed">
+                <Ellipse.RenderTransform>
+                  <ScaleTransform x:Name="DotScale" />
+                </Ellipse.RenderTransform>
+              </Ellipse>
+            </Grid>
+            <ContentPresenter
+              x:Name="Label"
+              Grid.Column="1"
+              Margin="{TemplateBinding Padding}"
+              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+              RecognizesAccessKey="True"
+              TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
+              <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleX" From="0.4" To="1" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                    <DoubleAnimation Storyboard.TargetName="DotScale" Storyboard.TargetProperty="ScaleY" From="0.4" To="1" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+            </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsChecked" Value="True" />
+                <Condition Property="IsMouseOver" Value="True" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.AccentHover}" />
+              <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.AccentHover}" />
+              <Setter TargetName="Dot" Property="Width" Value="10" />
+              <Setter TargetName="Dot" Property="Height" Value="10" />
+            </MultiTrigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter TargetName="Label" Property="TextElement.Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsChecked" Value="True" />
+                <Condition Property="IsEnabled" Value="False" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </MultiTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- ===== Segment: one of three ("Leave · Off · On"), a ListBox with equal cells ===== -->
   <Style x:Key="RigShift.Segment" TargetType="ListBox">
     <Setter Property="Height" Value="32" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Chrome}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -523,11 +706,10 @@
             Background="{TemplateBinding Background}"
             BorderBrush="{TemplateBinding BorderBrush}"
             BorderThickness="{TemplateBinding BorderThickness}"
-            ClipToBounds="True"
+            Padding="2"
             CornerRadius="{DynamicResource RigShift.Radius.Control}"
             SnapsToDevicePixels="True">
-            <!-- The last cell's divider is pushed under the edge. -->
-            <ItemsPresenter Margin="0,0,-1,0" />
+            <ItemsPresenter />
           </Border>
         </ControlTemplate>
       </Setter.Value>
@@ -543,30 +725,67 @@
           <Setter Property="Template">
             <Setter.Value>
               <ControlTemplate TargetType="ListBoxItem">
-                <Border
-                  x:Name="Root"
-                  Padding="{TemplateBinding Padding}"
-                  Background="Transparent"
-                  BorderBrush="{DynamicResource RigShift.Brush.Line}"
-                  BorderThickness="0,0,1,0"
-                  SnapsToDevicePixels="True">
+                <Grid Background="Transparent" SnapsToDevicePixels="True">
+                  <Border x:Name="Hover" Background="{DynamicResource RigShift.Brush.HoverOverlay}" CornerRadius="4" Opacity="0" />
+                  <Border
+                    x:Name="Pill"
+                    Background="{DynamicResource RigShift.Brush.LayerHover}"
+                    BorderBrush="{DynamicResource RigShift.Brush.LineStrong}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Opacity="0" />
+                  <Border
+                    x:Name="Focus"
+                    Margin="-1"
+                    BorderBrush="{DynamicResource RigShift.Brush.Accent}"
+                    BorderThickness="2"
+                    CornerRadius="5"
+                    Visibility="Collapsed" />
                   <ContentPresenter
+                    Margin="{TemplateBinding Padding}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     TextElement.Foreground="{TemplateBinding Foreground}" />
-                </Border>
+                </Grid>
                 <ControlTemplate.Triggers>
                   <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+                  <Trigger.EnterActions>
+                    <BeginStoryboard>
+                      <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                      </Storyboard>
+                    </BeginStoryboard>
+                  </Trigger.EnterActions>
+                  <Trigger.ExitActions>
+                    <BeginStoryboard>
+                      <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+                      </Storyboard>
+                    </BeginStoryboard>
+                  </Trigger.ExitActions>
                   </Trigger>
                   <Trigger Property="IsSelected" Value="True">
-                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
-                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnSelected}" />
+                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
                     <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter TargetName="Hover" Property="Visibility" Value="Collapsed" />
+                    <Trigger.EnterActions>
+                      <BeginStoryboard>
+                        <Storyboard>
+                          <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Base}" />
+                        </Storyboard>
+                      </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                      <BeginStoryboard>
+                        <Storyboard>
+                          <DoubleAnimation Storyboard.TargetName="Pill" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Base}" />
+                        </Storyboard>
+                      </BeginStoryboard>
+                    </Trigger.ExitActions>
                   </Trigger>
                   <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
-                    <Setter TargetName="Root" Property="BorderThickness" Value="1" />
+                    <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
                   </Trigger>
                 </ControlTemplate.Triggers>
               </ControlTemplate>
@@ -577,7 +796,7 @@
     </Setter>
   </Style>
 
-  <!-- ===== Chip (22 high): a fact, in caption or mono ===== -->
+  <!-- ===== Chip (22 high, pill): a fact ===== -->
   <Style x:Key="RigShift.Chip" TargetType="ContentControl">
     <Setter Property="Height" Value="22" />
     <Setter Property="Padding" Value="8,0" />
@@ -596,7 +815,7 @@
             Background="{TemplateBinding Background}"
             BorderBrush="{TemplateBinding BorderBrush}"
             BorderThickness="1"
-            CornerRadius="{DynamicResource RigShift.Radius.Control}"
+            CornerRadius="{DynamicResource RigShift.Radius.Chip}"
             SnapsToDevicePixels="True">
             <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
           </Border>
@@ -604,8 +823,8 @@
       </Setter.Value>
     </Setter>
   </Style>
-  <Style x:Key="RigShift.Chip.Mono" TargetType="ContentControl" BasedOn="{StaticResource RigShift.Chip}">
-    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Mono}" />
+  <Style x:Key="RigShift.Chip.Value" TargetType="ContentControl" BasedOn="{StaticResource RigShift.Chip}">
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
   </Style>
 
   <!-- ===== Card: layer surface, 12 radius, thin line; 16 padding (spec 7.3) ===== -->
@@ -623,7 +842,7 @@
     <Setter Property="BorderThickness" Value="0,1,0,0" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
   </Style>
-  <!-- Surface under a topology picture: chrome, dashed line, 12 radius. -->
+  <!-- Surface under a topology picture: chrome, a soft light in the middle, a solid hairline, 12 radius (F-01). -->
   <Style x:Key="RigShift.TopologyPanel" TargetType="ContentControl">
     <Setter Property="Padding" Value="16,12,16,16" />
     <Setter Property="IsTabStop" Value="False" />
@@ -631,14 +850,20 @@
       <Setter.Value>
         <ControlTemplate TargetType="ContentControl">
           <Grid>
-            <Rectangle
-              Fill="{DynamicResource RigShift.Brush.Chrome}"
-              RadiusX="12"
-              RadiusY="12"
-              SnapsToDevicePixels="True"
-              Stroke="{DynamicResource RigShift.Brush.Line}"
-              StrokeDashArray="4 3"
-              StrokeThickness="1" />
+            <Border
+              Background="{DynamicResource RigShift.Brush.Chrome}"
+              BorderBrush="{DynamicResource RigShift.Brush.Line}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RigShift.Radius.Card}"
+              SnapsToDevicePixels="True" />
+            <Border Margin="1" CornerRadius="11" IsHitTestVisible="False">
+              <Border.Background>
+                <RadialGradientBrush Center="0.5,0.45" GradientOrigin="0.5,0.45" RadiusX="0.6" RadiusY="0.75">
+                  <GradientStop Offset="0" Color="#1479B8FF" />
+                  <GradientStop Offset="1" Color="#0079B8FF" />
+                </RadialGradientBrush>
+              </Border.Background>
+            </Border>
             <ContentPresenter Margin="{TemplateBinding Padding}" />
           </Grid>
         </ControlTemplate>
@@ -667,47 +892,75 @@
     </Setter>
   </Style>
   <ControlTemplate x:Key="RigShift.RowTemplate" TargetType="ListBoxItem">
-    <Grid>
+    <Grid SnapsToDevicePixels="True">
       <Border
         x:Name="Root"
-        Padding="{TemplateBinding Padding}"
         Background="{TemplateBinding Background}"
         BorderBrush="{TemplateBinding BorderBrush}"
         BorderThickness="{TemplateBinding BorderThickness}"
+        CornerRadius="{Binding Path=(controls:Interaction.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}" />
+      <Border
+        x:Name="Hover"
+        Background="{DynamicResource RigShift.Brush.HoverOverlay}"
         CornerRadius="{Binding Path=(controls:Interaction.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
-        SnapsToDevicePixels="True">
-        <ContentPresenter
-          HorizontalAlignment="Stretch"
-          VerticalAlignment="Center"
-          TextElement.Foreground="{TemplateBinding Foreground}" />
-      </Border>
-      <!-- Accent bar of the selected row (R-COL-1). -->
+        Opacity="0" />
+      <ContentPresenter
+        Margin="{TemplateBinding Padding}"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Center"
+        TextElement.Foreground="{TemplateBinding Foreground}" />
+      <!-- Pill of the selected row, 3 × 16, vertically centered like the WinUI navigation view; it grows in. -->
       <Rectangle
         x:Name="Bar"
         Width="3"
-        Margin="0,8"
+        Height="16"
         HorizontalAlignment="Left"
+        VerticalAlignment="Center"
         Fill="{DynamicResource RigShift.Brush.Accent}"
         RadiusX="1.5"
         RadiusY="1.5"
-        Visibility="Collapsed" />
+        RenderTransformOrigin="0.5,0.5"
+        Visibility="Collapsed">
+        <Rectangle.RenderTransform>
+          <ScaleTransform x:Name="BarScale" />
+        </Rectangle.RenderTransform>
+      </Rectangle>
       <Border
         x:Name="Focus"
-        Margin="2"
         BorderBrush="{DynamicResource RigShift.Brush.Accent}"
         BorderThickness="2"
-        CornerRadius="{DynamicResource RigShift.Radius.Control}"
+        CornerRadius="{Binding Path=(controls:Interaction.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
         IsHitTestVisible="False"
         Visibility="Collapsed" />
     </Grid>
     <ControlTemplate.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
-        <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
+        <Trigger.EnterActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.EnterActions>
+        <Trigger.ExitActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.ExitActions>
       </Trigger>
       <Trigger Property="IsSelected" Value="True">
         <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.Selected}" />
         <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
         <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnSelected}" />
+        <Trigger.EnterActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation Storyboard.TargetName="BarScale" Storyboard.TargetProperty="ScaleY" From="0" To="1" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.EnterActions>
       </Trigger>
       <Trigger Property="IsKeyboardFocused" Value="True">
         <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
@@ -717,13 +970,15 @@
       </Trigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
-  <!-- Master list row: 56 high, hairline below, 3 px bar when selected. -->
+  <!-- Master list row: 56 high, rounded, 8 in from the column edges, 2 apart; pill when selected. -->
   <Style x:Key="RigShift.ListRow" TargetType="ListBoxItem">
     <Setter Property="Height" Value="56" />
-    <Setter Property="Padding" Value="16,0" />
+    <Setter Property="Margin" Value="8,0,8,2" />
+    <Setter Property="Padding" Value="12,0" />
     <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
-    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="controls:Interaction.CornerRadius" Value="{DynamicResource RigShift.Radius.Row}" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
     <Setter Property="FontSize" Value="14" />
@@ -736,9 +991,7 @@
     <Setter Property="Height" Value="36" />
     <Setter Property="Padding" Value="12,0" />
     <Setter Property="Margin" Value="0,0,0,2" />
-    <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
-    <Setter Property="controls:Interaction.CornerRadius" Value="6" />
   </Style>
 
   <!-- Tray popup row (component TrayRow): 44 high for a profile, 36 for a game or an action; no border, radius 6. -->
@@ -987,6 +1240,7 @@
 
   <!-- ===== Tabs: 40 high, BodyStrong, 2 px accent underline; a red dot marks a tab with a validation problem (spec 7.3) ===== -->
   <Style x:Key="RigShift.Tabs" TargetType="TabControl">
+    <Setter Property="controls:Motion.AnimateTabContent" Value="True" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Padding" Value="0" />
@@ -1008,7 +1262,7 @@
             </Grid.RowDefinitions>
             <Border
               Grid.Row="0"
-              Padding="24,0"
+              Padding="12,0"
               BorderBrush="{DynamicResource RigShift.Brush.Line}"
               BorderThickness="0,0,0,1"
               SnapsToDevicePixels="True">
@@ -1026,9 +1280,9 @@
     </Setter>
   </Style>
   <Style x:Key="RigShift.Tab" TargetType="TabItem">
-    <Setter Property="Height" Value="40" />
-    <Setter Property="Padding" Value="4,0" />
-    <Setter Property="Margin" Value="0,0,24,0" />
+    <Setter Property="Height" Value="44" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="Margin" Value="0,0,4,0" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
@@ -1039,6 +1293,12 @@
       <Setter.Value>
         <ControlTemplate TargetType="TabItem">
           <Grid Background="Transparent" SnapsToDevicePixels="True">
+            <Border
+              x:Name="Hover"
+              Margin="0,4,0,6"
+              Background="{DynamicResource RigShift.Brush.HoverOverlay}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              Opacity="0" />
             <StackPanel Margin="{TemplateBinding Padding}" Orientation="Horizontal" VerticalAlignment="Center">
               <ContentPresenter
                 x:Name="Header"
@@ -1056,13 +1316,21 @@
             </StackPanel>
             <Rectangle
               x:Name="Underline"
-              Height="2"
+              Height="3"
+              Margin="{TemplateBinding Padding}"
               VerticalAlignment="Bottom"
               Fill="{DynamicResource RigShift.Brush.Accent}"
-              Visibility="Collapsed" />
+              RadiusX="1.5"
+              RadiusY="1.5"
+              RenderTransformOrigin="0.5,0.5"
+              Visibility="Collapsed">
+              <Rectangle.RenderTransform>
+                <ScaleTransform x:Name="UnderlineScale" />
+              </Rectangle.RenderTransform>
+            </Rectangle>
             <Border
               x:Name="Focus"
-              Margin="-4,2"
+              Margin="0,4,0,6"
               BorderBrush="{DynamicResource RigShift.Brush.Accent}"
               BorderThickness="2"
               CornerRadius="{DynamicResource RigShift.Radius.Control}"
@@ -1072,10 +1340,31 @@
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
               <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
               <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="UnderlineScale" Storyboard.TargetProperty="ScaleX" From="0.3" To="1" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
             </Trigger>
             <Trigger Property="controls:Interaction.IsInvalid" Value="True">
               <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
@@ -1092,26 +1381,45 @@
   <!-- Step variant (games): "1 Game → 2 Profile → …" – number in mono, arrow between the tabs (spec 7.3, TabStrip).
        The TabControl sets AlternationCount, so the first tab knows it has no arrow in front; the number is the Tag. -->
   <Style x:Key="RigShift.Tab.Step" TargetType="TabItem" BasedOn="{StaticResource RigShift.Tab}">
-    <Setter Property="Margin" Value="0,0,8,0" />
+    <Setter Property="Margin" Value="0" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="TabItem">
-          <Grid Background="Transparent" SnapsToDevicePixels="True">
-            <StackPanel Margin="{TemplateBinding Padding}" Orientation="Horizontal" VerticalAlignment="Center">
-              <ui:SymbolIcon
-                x:Name="Arrow"
-                Margin="0,0,8,0"
-                VerticalAlignment="Center"
-                FontSize="12"
-                Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
-                Symbol="ArrowRight12" />
-              <TextBlock
-                Margin="0,0,6,0"
-                VerticalAlignment="Center"
-                FontFamily="{DynamicResource RigShift.Font.Mono}"
-                FontSize="12"
-                Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
-                Text="{TemplateBinding Tag}" />
+          <!-- Column 0 is the separator: no background, so it takes no clicks and never carries hover or focus. -->
+          <Grid SnapsToDevicePixels="True">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ui:SymbolIcon
+              x:Name="Arrow"
+              Grid.Column="0"
+              Margin="4,0"
+              VerticalAlignment="Center"
+              FontSize="12"
+              Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+              IsHitTestVisible="False"
+              Symbol="ChevronRight12" />
+            <Border Grid.Column="1" Background="Transparent" />
+            <Border
+              x:Name="Hover"
+              Grid.Column="1"
+              Margin="0,4,0,6"
+              Background="{DynamicResource RigShift.Brush.HoverOverlay}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              Opacity="0" />
+            <StackPanel Grid.Column="1" Margin="{TemplateBinding Padding}" Orientation="Horizontal" VerticalAlignment="Center">
+              <Grid Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
+                <Ellipse x:Name="NumberDisc" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1" />
+                <TextBlock
+                  x:Name="Number"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  FontSize="11"
+                  FontWeight="SemiBold"
+                  Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                  Text="{TemplateBinding Tag}" />
+              </Grid>
               <ContentPresenter
                 x:Name="Header"
                 ContentSource="Header"
@@ -1128,14 +1436,23 @@
             </StackPanel>
             <Rectangle
               x:Name="Underline"
-              Height="2"
-              Margin="20,0,0,0"
+              Grid.Column="1"
+              Height="3"
+              Margin="{TemplateBinding Padding}"
               VerticalAlignment="Bottom"
               Fill="{DynamicResource RigShift.Brush.Accent}"
-              Visibility="Collapsed" />
+              RadiusX="1.5"
+              RadiusY="1.5"
+              RenderTransformOrigin="0.5,0.5"
+              Visibility="Collapsed">
+              <Rectangle.RenderTransform>
+                <ScaleTransform x:Name="UnderlineScale" />
+              </Rectangle.RenderTransform>
+            </Rectangle>
             <Border
               x:Name="Focus"
-              Margin="-4,2"
+              Grid.Column="1"
+              Margin="0,4,0,6"
               BorderBrush="{DynamicResource RigShift.Brush.Accent}"
               BorderThickness="2"
               CornerRadius="{DynamicResource RigShift.Radius.Control}"
@@ -1145,14 +1462,37 @@
           <ControlTemplate.Triggers>
             <Trigger Property="ItemsControl.AlternationIndex" Value="0">
               <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed" />
-              <Setter TargetName="Underline" Property="Margin" Value="0" />
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="1" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity" To="0" Duration="{x:Static controls:Motion.Fast}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
               <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
               <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+              <Setter TargetName="NumberDisc" Property="Fill" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="NumberDisc" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Number" Property="Foreground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="UnderlineScale" Storyboard.TargetProperty="ScaleX" From="0.3" To="1" Duration="{x:Static controls:Motion.Base}" EasingFunction="{x:Static controls:Motion.Standard}" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
             </Trigger>
             <Trigger Property="controls:Interaction.IsInvalid" Value="True">
               <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
@@ -1189,16 +1529,16 @@
                   Background="{TemplateBinding Background}"
                   BorderBrush="{TemplateBinding BorderBrush}"
                   BorderThickness="1"
-                  CornerRadius="{DynamicResource RigShift.Radius.Control}"
+                  CornerRadius="{DynamicResource RigShift.Radius.Card}"
                   SnapsToDevicePixels="True">
                   <DockPanel>
                     <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center" DockPanel.Dock="Left">
-                      <Ellipse x:Name="Ring" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1" />
+                      <Ellipse x:Name="Ring" Stroke="{DynamicResource RigShift.Brush.LineStrong}" StrokeThickness="1.5" />
                       <Ellipse
                         x:Name="Mark"
-                        Width="10"
-                        Height="10"
-                        Fill="{DynamicResource RigShift.Brush.Accent}"
+                        Width="8"
+                        Height="8"
+                        Fill="{DynamicResource RigShift.Brush.OnAccent}"
                         Visibility="Collapsed" />
                     </Grid>
                     <ContentPresenter VerticalAlignment="Center" />
@@ -1212,6 +1552,7 @@
                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
                     <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
                     <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource RigShift.Brush.Accent}" />
+                    <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource RigShift.Brush.Accent}" />
                     <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
                   </Trigger>
                   <Trigger Property="IsKeyboardFocused" Value="True">
@@ -1231,15 +1572,15 @@
   <!-- Device chip (28 high): connected dot, name, remove (component DeviceChip). -->
   <Style x:Key="RigShift.DeviceChip" TargetType="Border">
     <Setter Property="Height" Value="28" />
-    <Setter Property="Padding" Value="8,0,2,0" />
+    <Setter Property="Padding" Value="10,0,2,0" />
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.LayerHover}" />
     <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="{DynamicResource RigShift.Radius.Control}" />
+    <Setter Property="CornerRadius" Value="14" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
   </Style>
 
-  <!-- ===== Progress line: 2 px, indeterminate, accent – the only motion besides the countdown (spec 7.6) ===== -->
+  <!-- ===== Progress line: 2 px, indeterminate, accent ===== -->
   <Style TargetType="controls:ProgressLine">
     <Setter Property="Height" Value="2" />
     <Setter Property="TrackBrush" Value="{DynamicResource RigShift.Brush.Line}" />

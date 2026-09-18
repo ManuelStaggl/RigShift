@@ -9,7 +9,6 @@
   FontFamily="{DynamicResource RigShift.Font.Text}"
   FontSize="14"
   Foreground="{DynamicResource RigShift.Brush.TextPrimary}"
-  TextOptions.TextFormattingMode="Display"
   TextOptions.TextRenderingMode="ClearType">
   <UserControl.Resources>
     <Style x:Key="Section" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.CaptionStrong}">
@@ -41,8 +40,8 @@
         <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="BodyStrong 14/20 – Listen-Namen, Kartentitel, Tabs" />
         <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="Body 14/20 – Standardtext in Sätzen." />
         <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Caption 12/16 – Beschreibungen, Labels, Statuszeilen" />
-        <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="Mono 12/16 · 5120×1440 @ 240 Hz · Ctrl+Alt+F2 · iRacingSim64DX11" />
-        <TextBlock Style="{StaticResource RigShift.Text.MonoSecondary}" Text="MonoSecondary · C:\Program Files (x86)\SimHub\SimHubWPF.exe" />
+        <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="Value 13/18 · 5120×1440 @ 240 Hz · Ctrl+Alt+F2 · iRacingSim64DX11" />
+        <TextBlock Style="{StaticResource RigShift.Text.ValueSecondary}" Text="ValueSecondary · C:\Program Files (x86)\SimHub\SimHubWPF.exe" />
       </StackPanel>
       <StackPanel Width="360" Margin="24,0,0,0">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Statuszeilen (R-COL-2: Punkt + Text)" />
@@ -54,7 +53,7 @@
         <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="Chips" />
         <StackPanel Orientation="Horizontal">
           <ContentControl Content="Standard" Style="{StaticResource RigShift.Chip}" />
-          <ContentControl Margin="6,0,0,0" Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Mono}" />
+          <ContentControl Margin="6,0,0,0" Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Value}" />
           <ContentControl Margin="6,0,0,0" Content="Steam" Style="{StaticResource RigShift.Chip}" />
         </StackPanel>
         <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="Fortschrittsleiste (2 px)" />
@@ -92,11 +91,11 @@
       </StackPanel>
       <StackPanel Width="140" Margin="16,0,0,0">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Tastenkürzel" />
-        <TextBox Style="{StaticResource RigShift.Field.Mono}" Text="Ctrl+Alt+F2" />
+        <TextBox Style="{StaticResource RigShift.Field.Value}" Text="Ctrl+Alt+F2" />
       </StackPanel>
       <StackPanel Width="200" Margin="16,0,0,0">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Spielprozess" />
-        <TextBox controls:Interaction.IsInvalid="True" Style="{StaticResource RigShift.Field.Mono}" Text="FlightSimulator2024" />
+        <TextBox controls:Interaction.IsInvalid="True" Style="{StaticResource RigShift.Field.Value}" Text="FlightSimulator2024" />
         <TextBlock Style="{StaticResource RigShift.Text.FieldError}" Text="Beim ersten Start wurde kein Prozess erkannt." />
       </StackPanel>
       <StackPanel Width="220" Margin="16,0,0,0">
@@ -175,7 +174,7 @@
           <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Aktives Profil" />
           <TextBlock Margin="0,4,0,0" Style="{StaticResource RigShift.Text.Subtitle}" Text="Schreibtisch" />
           <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
-            <ContentControl Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Mono}" />
+            <ContentControl Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Value}" />
             <ContentControl Margin="6,0,0,0" Content="Standard" Style="{StaticResource RigShift.Chip}" />
           </StackPanel>
           <controls:StatusLine Margin="0,12,0,0" Kind="Ok" Text="Umgeschaltet vor 12 Min. · 2,4 s" />

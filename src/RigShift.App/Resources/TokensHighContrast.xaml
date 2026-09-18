@@ -29,6 +29,9 @@
   <SolidColorBrush x:Key="RigShift.Brush.Error" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFill" Color="{x:Static SystemColors.ControlColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFillOff" Color="{x:Static SystemColors.WindowColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.HoverOverlay" Color="{x:Static SystemColors.ControlColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.PressedOverlay" Color="{x:Static SystemColors.ControlColor}" />
+  <Color x:Key="RigShift.Color.Shadow">#000000</Color>
   <DrawingBrush
     x:Key="RigShift.Brush.Hatch"
     TileMode="Tile"
@@ -51,21 +54,24 @@
   <FontFamily x:Key="RigShift.Font.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
   <FontFamily x:Key="RigShift.Font.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
   <FontFamily x:Key="RigShift.Font.Small">Segoe UI Variable Small, Segoe UI</FontFamily>
-  <FontFamily x:Key="RigShift.Font.Mono">Cascadia Mono, Consolas</FontFamily>
   <sys:Double x:Key="RigShift.Type.Caption.Size">12</sys:Double>
   <sys:Double x:Key="RigShift.Type.Caption.LineHeight">16</sys:Double>
   <sys:Double x:Key="RigShift.Type.Body.Size">14</sys:Double>
   <sys:Double x:Key="RigShift.Type.Body.LineHeight">20</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Section.Size">16</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Section.LineHeight">22</sys:Double>
   <sys:Double x:Key="RigShift.Type.Subtitle.Size">20</sys:Double>
   <sys:Double x:Key="RigShift.Type.Subtitle.LineHeight">28</sys:Double>
+  <sys:Double x:Key="RigShift.Type.PageTitle.Size">24</sys:Double>
+  <sys:Double x:Key="RigShift.Type.PageTitle.LineHeight">32</sys:Double>
   <sys:Double x:Key="RigShift.Type.Title.Size">28</sys:Double>
   <sys:Double x:Key="RigShift.Type.Title.LineHeight">36</sys:Double>
-  <sys:Double x:Key="RigShift.Type.Mono.Size">12</sys:Double>
-  <sys:Double x:Key="RigShift.Type.Mono.LineHeight">16</sys:Double>
   <FontWeight x:Key="RigShift.Type.Weight.Regular">Normal</FontWeight>
   <FontWeight x:Key="RigShift.Type.Weight.Strong">SemiBold</FontWeight>
 
   <CornerRadius x:Key="RigShift.Radius.Control">6</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Chip">11</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Row">6</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Card">12</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Window">12</CornerRadius>
   <sys:Double x:Key="RigShift.Space.1">4</sys:Double>

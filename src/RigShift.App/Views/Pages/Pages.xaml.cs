@@ -39,28 +39,16 @@ public partial class ProfilesPage : Page
         NameBox.SelectAll();
     }
 
-    /// <summary>Buttons with a menu open it on click and Enter, not only on right click.</summary>
-    private static void OpenMenu(FrameworkElement button, object? dataContext)
-    {
-        if (button.ContextMenu is { } menu)
-        {
-            menu.PlacementTarget = button;
-            menu.Placement = PlacementMode.Bottom;
-            menu.DataContext = dataContext;
-            menu.IsOpen = true;
-        }
-    }
+    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel);
 
-    private void OnNewClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
+    private void OnMoreClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
-    private void OnMoreClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
-
-    private void OnIconClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel.Editor);
+    private void OnIconClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel.Editor);
 
     private void OnAddDeviceClick(object sender, RoutedEventArgs e)
     {
         var button = (FrameworkElement)sender;
-        OpenMenu(button, button.DataContext);
+        Controls.MenuButton.Open(button, button.DataContext);
     }
 
     /// <summary>A new app entry starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
@@ -298,23 +286,11 @@ public partial class GamesPage : Page
         NameBox.SelectAll();
     }
 
-    /// <summary>Buttons with a menu open it on click and Enter, not only on right click.</summary>
-    private static void OpenMenu(FrameworkElement button, object? dataContext)
-    {
-        if (button.ContextMenu is { } menu)
-        {
-            menu.PlacementTarget = button;
-            menu.Placement = PlacementMode.Bottom;
-            menu.DataContext = dataContext;
-            menu.IsOpen = true;
-        }
-    }
+    private void OnNewClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel);
 
-    private void OnNewClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
+    private void OnMoreClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
-    private void OnMoreClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel);
-
-    private void OnIconClick(object sender, RoutedEventArgs e) => OpenMenu((FrameworkElement)sender, _viewModel.Editor);
+    private void OnIconClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel.Editor);
 
     /// <summary>"Choose…" on the Game tab: an installed game or a program.</summary>
     private async void OnPickGame(object sender, RoutedEventArgs e)

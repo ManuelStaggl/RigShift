@@ -13,7 +13,7 @@
   Background="{DynamicResource RigShift.Brush.Page}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_Overview}" />
+      <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_Overview}" />
 
       <controls:InfoBar
         Margin="0,12,0,0"
@@ -96,7 +96,7 @@
               Orientation="Horizontal">
               <ContentControl
                 Content="{Binding ActiveHotkey}"
-                Style="{StaticResource RigShift.Chip.Mono}"
+                Style="{StaticResource RigShift.Chip.Value}"
                 Visibility="{Binding HasActiveHotkey, Converter={StaticResource BoolToVisibility}}" />
               <ContentControl
                 Margin="6,0,0,0"
@@ -163,7 +163,7 @@
 
       <!-- Displays: names are saved on Enter or when the field loses focus (F6). -->
       <DockPanel Margin="0,24,0,0">
-        <TextBlock DockPanel.Dock="Left" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_Displays}" />
+        <TextBlock DockPanel.Dock="Left" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Overview_Displays}" />
         <TextBlock
           Margin="12,0,0,0"
           Style="{StaticResource RigShift.Text.Caption}"
@@ -180,7 +180,7 @@
           <ColumnDefinition Width="196" />
           <ColumnDefinition Width="*" MinWidth="90" />
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_ColDisplay}" />
+        <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColDisplay}" />
         <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColStatus}" />
         <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColMode}" />
         <TextBlock Grid.Column="4" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_ColName}" />
@@ -199,10 +199,10 @@
                   <ColumnDefinition Width="196" />
                   <ColumnDefinition Width="*" MinWidth="90" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding NumberText}" />
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.ValueSecondary}" Text="{Binding NumberText}" />
                 <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ModelName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ModelName}" />
                 <controls:StatusLine Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" Kind="{Binding StateKind}" Text="{Binding StateText}" />
-                <TextBlock Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding ModeText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ModeText}" />
+                <TextBlock Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.ValueSecondary}" Text="{Binding ModeText}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding ModeText}" />
                 <TextBox
                   Grid.Column="4"
                   Width="180"
@@ -224,7 +224,7 @@
 
       <!-- Recent switches: same wording as the toast (R-FLOW-2). -->
       <StackPanel Margin="0,24,0,0" Visibility="{Binding HasHistory, Converter={StaticResource BoolToVisibility}}">
-        <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Overview_History}" />
+        <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Overview_History}" />
         <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding History}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:HistoryRow}">
@@ -239,7 +239,7 @@
                   <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding TimeText}" />
                   <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding ProfileName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                   <controls:StatusLine Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" Kind="{Binding Kind}" Text="{Binding ResultText}" />
-                  <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding DurationText}" />
+                  <TextBlock Grid.Column="3" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.ValueSecondary}" Text="{Binding DurationText}" />
                 </Grid>
               </Border>
             </DataTemplate>

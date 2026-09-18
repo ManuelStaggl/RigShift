@@ -19,6 +19,22 @@ public static class Interaction
     public static readonly DependencyProperty HoverForegroundProperty = DependencyProperty.RegisterAttached(
         "HoverForeground", typeof(Brush), typeof(Interaction), new FrameworkPropertyMetadata(null));
 
+    /// <summary>Fill of a disabled button; the accent and the frame are dropped so it no longer looks clickable.</summary>
+    public static readonly DependencyProperty DisabledBackgroundProperty = DependencyProperty.RegisterAttached(
+        "DisabledBackground", typeof(Brush), typeof(Interaction), new FrameworkPropertyMetadata(null));
+
+    public static Brush? GetDisabledBackground(DependencyObject element)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        return (Brush?)element.GetValue(DisabledBackgroundProperty);
+    }
+
+    public static void SetDisabledBackground(DependencyObject element, Brush? value)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        element.SetValue(DisabledBackgroundProperty, value);
+    }
+
     /// <summary>The field's content failed validation: error border and, below it, a caption with the reason.</summary>
     public static readonly DependencyProperty IsInvalidProperty = DependencyProperty.RegisterAttached(
         "IsInvalid", typeof(bool), typeof(Interaction), new FrameworkPropertyMetadata(false));

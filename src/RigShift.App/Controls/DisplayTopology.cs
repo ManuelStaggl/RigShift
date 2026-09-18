@@ -285,7 +285,7 @@ public sealed class DisplayTopology : FrameworkElement
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 Margin = new Thickness(6, 0, 6, 0),
             };
-            mode.SetResourceReference(TextBlock.FontFamilyProperty, "RigShift.Font.Mono");
+            mode.SetResourceReference(TextBlock.FontFamilyProperty, "RigShift.Font.Text");
             mode.SetResourceReference(TextBlock.ForegroundProperty, missing ? "RigShift.Brush.Error" : "RigShift.Brush.TextSecondary");
             Labels = new StackPanel
             {

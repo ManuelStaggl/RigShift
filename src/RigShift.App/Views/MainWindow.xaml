@@ -18,7 +18,7 @@
   WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterScreen"
-  TextOptions.TextFormattingMode="Display">
+>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -37,7 +37,7 @@
         <ui:ImageIcon
           Width="18"
           Height="18"
-          Source="{StaticResource RigShift.Image.AppIcon}" />
+          Source="{StaticResource RigShift.Image.AppMark}" />
       </ui:TitleBar.Icon>
     </ui:TitleBar>
 

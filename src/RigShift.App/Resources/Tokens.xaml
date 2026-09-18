@@ -34,6 +34,10 @@
   <!-- Topology -->
   <Color x:Key="RigShift.Color.DisplayFill">#253449</Color>
   <Color x:Key="RigShift.Color.DisplayFillOff">#172033</Color>
+  <!-- Translucent state layers (derived): lay over any surface, so hover reads the same on page, card and chrome. -->
+  <Color x:Key="RigShift.Color.HoverOverlay">#14FFFFFF</Color>
+  <Color x:Key="RigShift.Color.PressedOverlay">#0AFFFFFF</Color>
+  <Color x:Key="RigShift.Color.Shadow">#000000</Color>
 
   <SolidColorBrush x:Key="RigShift.Brush.Chrome" Color="{StaticResource RigShift.Color.Chrome}" />
   <SolidColorBrush x:Key="RigShift.Brush.Page" Color="{StaticResource RigShift.Color.Page}" />
@@ -56,6 +60,8 @@
   <SolidColorBrush x:Key="RigShift.Brush.Error" Color="{StaticResource RigShift.Color.Error}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFill" Color="{StaticResource RigShift.Color.DisplayFill}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFillOff" Color="{StaticResource RigShift.Color.DisplayFillOff}" />
+  <SolidColorBrush x:Key="RigShift.Brush.HoverOverlay" Color="{StaticResource RigShift.Color.HoverOverlay}" />
+  <SolidColorBrush x:Key="RigShift.Brush.PressedOverlay" Color="{StaticResource RigShift.Color.PressedOverlay}" />
   <!-- Hatch for a missing display: 45° lines in the error color at 45 %. -->
   <DrawingBrush
     x:Key="RigShift.Brush.Hatch"
@@ -77,26 +83,29 @@
     </DrawingBrush.Drawing>
   </DrawingBrush>
 
-  <!-- Type: Segoe UI Variable (Brand), Cascadia Mono for values (addition, spec principle 5). -->
+  <!-- Type: Segoe UI Variable (Brand) only; values use tabular figures instead of a monospaced face. -->
   <FontFamily x:Key="RigShift.Font.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
   <FontFamily x:Key="RigShift.Font.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
   <FontFamily x:Key="RigShift.Font.Small">Segoe UI Variable Small, Segoe UI</FontFamily>
-  <FontFamily x:Key="RigShift.Font.Mono">Cascadia Mono, Consolas</FontFamily>
   <sys:Double x:Key="RigShift.Type.Caption.Size">12</sys:Double>
   <sys:Double x:Key="RigShift.Type.Caption.LineHeight">16</sys:Double>
   <sys:Double x:Key="RigShift.Type.Body.Size">14</sys:Double>
   <sys:Double x:Key="RigShift.Type.Body.LineHeight">20</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Section.Size">16</sys:Double>
+  <sys:Double x:Key="RigShift.Type.Section.LineHeight">22</sys:Double>
   <sys:Double x:Key="RigShift.Type.Subtitle.Size">20</sys:Double>
   <sys:Double x:Key="RigShift.Type.Subtitle.LineHeight">28</sys:Double>
+  <sys:Double x:Key="RigShift.Type.PageTitle.Size">24</sys:Double>
+  <sys:Double x:Key="RigShift.Type.PageTitle.LineHeight">32</sys:Double>
   <sys:Double x:Key="RigShift.Type.Title.Size">28</sys:Double>
   <sys:Double x:Key="RigShift.Type.Title.LineHeight">36</sys:Double>
-  <sys:Double x:Key="RigShift.Type.Mono.Size">12</sys:Double>
-  <sys:Double x:Key="RigShift.Type.Mono.LineHeight">16</sys:Double>
   <FontWeight x:Key="RigShift.Type.Weight.Regular">Normal</FontWeight>
   <FontWeight x:Key="RigShift.Type.Weight.Strong">SemiBold</FontWeight>
 
   <!-- Geometry: radii and the 4 px spacing scale. -->
   <CornerRadius x:Key="RigShift.Radius.Control">6</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Chip">11</CornerRadius>
+  <CornerRadius x:Key="RigShift.Radius.Row">6</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Card">12</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Window">12</CornerRadius>
   <sys:Double x:Key="RigShift.Space.1">4</sys:Double>
@@ -205,8 +214,8 @@
   <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource RigShift.Color.OnAccent}" />
   <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource RigShift.Color.OnAccent}" />
   <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource RigShift.Color.OnAccent}" />
-  <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="{StaticResource RigShift.Color.TextPrimary}" />
-  <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="{StaticResource RigShift.Color.Accent}" />
+  <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="{StaticResource RigShift.Color.Accent}" />
+  <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="{StaticResource RigShift.Color.AccentHover}" />
   <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="{StaticResource RigShift.Color.AccentPressed}" />
   <SolidColorBrush x:Key="HyperlinkButtonForegroundDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
   <SolidColorBrush x:Key="ToggleButtonBackground" Color="{StaticResource RigShift.Color.LayerHover}" />
@@ -253,6 +262,17 @@
   <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="{StaticResource RigShift.Color.AccentPressed}" />
   <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource RigShift.Color.LayerHover}" />
   <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="{StaticResource RigShift.Color.Selected}" />
+  <SolidColorBrush x:Key="CheckBoxForegroundUncheckedDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedDisabled" Color="Transparent" />
+  <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedDisabled" Color="{StaticResource RigShift.Color.Line}" />
+  <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokeDisabled" Color="{StaticResource RigShift.Color.Line}" />
+  <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokeDisabled" Color="{StaticResource RigShift.Color.Line}" />
+  <SolidColorBrush x:Key="ToggleSwitchContentForegroundDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="ToggleSwitchStrokeOffDisabled" Color="{StaticResource RigShift.Color.Line}" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOffDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="ToggleSwitchFillOnDisabled" Color="{StaticResource RigShift.Color.Line}" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOnDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="RadioButtonForegroundDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
   <SolidColorBrush x:Key="RadioButtonForeground" Color="{StaticResource RigShift.Color.TextPrimary}" />
   <SolidColorBrush x:Key="RadioButtonOuterEllipseStroke" Color="{StaticResource RigShift.Color.LineStrong}" />
   <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStroke" Color="{StaticResource RigShift.Color.Accent}" />
@@ -260,11 +280,11 @@
   <SolidColorBrush x:Key="RadioButtonCheckGlyphFill" Color="{StaticResource RigShift.Color.Accent}" />
   <SolidColorBrush x:Key="RadioButtonOuterEllipseFill" Color="Transparent" />
   <SolidColorBrush x:Key="ToggleSwitchContentForeground" Color="{StaticResource RigShift.Color.TextPrimary}" />
-  <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="{StaticResource RigShift.Color.LayerHover}" />
-  <SolidColorBrush x:Key="ToggleSwitchFillOffPointerOver" Color="{StaticResource RigShift.Color.Selected}" />
+  <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="Transparent" />
+  <SolidColorBrush x:Key="ToggleSwitchFillOffPointerOver" Color="{StaticResource RigShift.Color.HoverOverlay}" />
   <SolidColorBrush x:Key="ToggleSwitchFillOffPressed" Color="{StaticResource RigShift.Color.Selected}" />
-  <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="{StaticResource RigShift.Color.Line}" />
-  <SolidColorBrush x:Key="ToggleSwitchStrokeOffPointerOver" Color="{StaticResource RigShift.Color.LineStrong}" />
+  <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="{StaticResource RigShift.Color.LineStrong}" />
+  <SolidColorBrush x:Key="ToggleSwitchStrokeOffPointerOver" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="ToggleSwitchStrokeOffPressed" Color="{StaticResource RigShift.Color.LineStrong}" />
   <SolidColorBrush x:Key="ToggleSwitchKnobFillOff" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="ToggleSwitchKnobFillOffPointerOver" Color="{StaticResource RigShift.Color.TextPrimary}" />

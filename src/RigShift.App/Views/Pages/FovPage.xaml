@@ -17,7 +17,7 @@
   </Page.Resources>
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_Fov}" />
+      <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_Fov}" />
       <TextBlock
         Margin="0,4,0,0"
         Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
@@ -30,7 +30,7 @@
         <!-- The rig: everything the numbers are made of. -->
         <Border Width="340" Style="{StaticResource RigShift.Card}">
           <StackPanel>
-            <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Fov_Rig}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Fov_Rig}" />
 
             <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Display}" />
             <ComboBox
@@ -208,31 +208,31 @@
         <UniformGrid Columns="6">
           <StackPanel>
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Vertical}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding VerticalText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding VerticalText}" />
           </StackPanel>
           <StackPanel>
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Horizontal}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding HorizontalText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding HorizontalText}" />
           </StackPanel>
           <StackPanel Visibility="{Binding HasTrueHorizontal, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_HorizontalTrue}" ToolTip="{loc:Tr Fov_HorizontalTrueTip}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding TrueHorizontalText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding TrueHorizontalText}" />
           </StackPanel>
           <StackPanel Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Angle}" ToolTip="{loc:Tr Fov_AngleTip}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding AngleText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding AngleText}" />
           </StackPanel>
           <StackPanel Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Total}" ToolTip="{loc:Tr Fov_TotalTip}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding TotalText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding TotalText}" />
           </StackPanel>
           <StackPanel Visibility="{Binding IsTriple, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_OuterEdge}" ToolTip="{loc:Tr Fov_OuterEdgeTip}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding OuterEdgeText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding OuterEdgeText}" />
           </StackPanel>
           <StackPanel>
             <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Fov_Ppd}" ToolTip="{loc:Tr Fov_PpdTip}" />
-            <TextBlock Style="{StaticResource RigShift.Text.Mono}" Text="{Binding PixelDensityText}" />
+            <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="{Binding PixelDensityText}" />
           </StackPanel>
         </UniformGrid>
       </Border>
@@ -250,7 +250,7 @@
 
       <!-- One line per sim: the number, what kind of number it is, and where it goes. -->
       <DockPanel Margin="0,20,0,0">
-        <TextBlock DockPanel.Dock="Left" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Fov_PerGame}" />
+        <TextBlock DockPanel.Dock="Left" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Fov_PerGame}" />
         <TextBlock
           Margin="12,0,0,0"
           Style="{StaticResource RigShift.Text.Caption}"
@@ -273,7 +273,7 @@
                   </Grid.ColumnDefinitions>
                   <TextBlock Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Body}" Text="{Binding Sim}" TextTrimming="CharacterEllipsis" />
                   <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding KindText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding KindText}" />
-                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Mono}" Text="{Binding Value}" TextAlignment="Right" />
+                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Value}" Text="{Binding Value}" TextAlignment="Right" />
                   <TextBlock
                     Grid.Column="3"
                     Margin="8,0,0,0"
@@ -327,8 +327,8 @@
                             <ColumnDefinition Width="40" />
                             <ColumnDefinition Width="Auto" />
                           </Grid.ColumnDefinitions>
-                          <TextBlock Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.MonoSecondary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
-                          <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Mono}" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.ValueSecondary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                          <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Value}" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
                           <TextBlock Grid.Column="2" Margin="6,0,0,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{Binding Unit}" />
                           <Button
                             Grid.Column="3"

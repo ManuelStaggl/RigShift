@@ -25,7 +25,7 @@
   WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner"
-  TextOptions.TextFormattingMode="Display">
+>
   <ui:FluentWindow.Resources>
     <!-- A 22 px numbered circle: filled once the step is done, outlined in the accent while it is the current one. -->
     <Style x:Key="StepCircle" TargetType="Border">
@@ -36,7 +36,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
       <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
-    <Style x:Key="StepNumber" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Mono}">
+    <Style x:Key="StepNumber" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Value}">
       <Setter Property="HorizontalAlignment" Value="Center" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
@@ -110,7 +110,7 @@
           <ui:ImageIcon
             Width="18"
             Height="18"
-            Source="{StaticResource RigShift.Image.AppIcon}" />
+            Source="{StaticResource RigShift.Image.AppMark}" />
         </ui:TitleBar.Icon>
       </ui:TitleBar>
       <!-- What this window is for, beside the name; the title bar itself takes no second line of text. -->

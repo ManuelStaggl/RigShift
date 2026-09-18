@@ -19,7 +19,7 @@
   WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner"
-  TextOptions.TextFormattingMode="Display">
+>
   <!-- No title bar: the question is the heading (mockup DialogLoeschen / DialogUngespeichert). -->
   <StackPanel Margin="24,24,24,24">
     <TextBlock

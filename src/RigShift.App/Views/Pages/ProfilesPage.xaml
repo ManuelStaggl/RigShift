@@ -69,7 +69,7 @@
           <TextBlock
             Grid.Column="2"
             VerticalAlignment="Center"
-            Style="{StaticResource RigShift.Text.Mono}"
+            Style="{StaticResource RigShift.Text.Value}"
             Text="{Binding VolumeText}"
             TextAlignment="Right" />
         </Grid>
@@ -107,8 +107,16 @@
           </DockPanel>
           <Button.ContextMenu>
             <ContextMenu>
-              <MenuItem Command="{Binding NewFromCurrentCommand}" Header="{loc:Tr List_NewFromCurrent}" />
-              <MenuItem Command="{Binding SetupAssistantCommand}" Header="{loc:Tr List_Assistant}" />
+              <MenuItem Command="{Binding NewFromCurrentCommand}" Header="{loc:Tr List_NewFromCurrent}">
+                <MenuItem.Icon>
+                  <ui:SymbolIcon Symbol="DesktopArrowDown16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Command="{Binding SetupAssistantCommand}" Header="{loc:Tr List_Assistant}">
+                <MenuItem.Icon>
+                  <ui:SymbolIcon Symbol="Wand16" />
+                </MenuItem.Icon>
+              </MenuItem>
             </ContextMenu>
           </Button.ContextMenu>
         </Button>
@@ -319,18 +327,34 @@
                 <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
                 <Button.ContextMenu>
                   <ContextMenu>
-                    <MenuItem Command="{Binding DuplicateCommand}" Header="{loc:Tr Profile_Duplicate}" />
+                    <MenuItem Command="{Binding DuplicateCommand}" Header="{loc:Tr Profile_Duplicate}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Copy16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                     <MenuItem
                       Command="{Binding ToggleDefaultCommand}"
                       Header="{loc:Tr Profile_SetDefault}"
                       IsCheckable="False"
-                      IsChecked="{Binding IsSelectedDefault, Mode=OneWay}" />
-                    <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}" />
+                      IsChecked="{Binding IsSelectedDefault, Mode=OneWay}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Star16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Link16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                     <Separator />
                     <MenuItem
                       Command="{Binding DeleteCommand}"
                       Foreground="{DynamicResource RigShift.Brush.Error}"
-                      Header="{loc:Tr Profile_Delete}" />
+                      Header="{loc:Tr Profile_Delete}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Foreground="{DynamicResource RigShift.Brush.Error}" Symbol="Delete16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Button.ContextMenu>
               </Button>
@@ -461,7 +485,7 @@
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap" />
                         <TextBlock
-                          Style="{StaticResource RigShift.Text.MonoSecondary}"
+                          Style="{StaticResource RigShift.Text.ValueSecondary}"
                           Text="{Binding ResolutionText}"
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap"
@@ -576,7 +600,7 @@
                         Margin="0,0,8,0"
                         VerticalAlignment="Center"
                         LineHeight="32"
-                        Style="{StaticResource RigShift.Text.MonoSecondary}"
+                        Style="{StaticResource RigShift.Text.ValueSecondary}"
                         Text="{Binding DesktopIconsText}" />
                       <Button
                         Command="{Binding CaptureDesktopIconsCommand}"
@@ -721,7 +745,7 @@
                                 TextWrapping="NoWrap"
                                 ToolTip="{Binding Path}">
                                 <TextBlock.Style>
-                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.MonoSecondary}">
+                                  <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
                                     <Style.Triggers>
                                       <DataTrigger Binding="{Binding PathMissing}" Value="True">
                                         <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
@@ -802,7 +826,7 @@
                               <TextBox
                                 Height="28"
                                 AutomationProperties.Name="{loc:Tr App_Arguments}"
-                                Style="{StaticResource RigShift.Field.Mono}"
+                                Style="{StaticResource RigShift.Field.Value}"
                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <Button
@@ -1042,7 +1066,7 @@
                         IsReadOnlyCaretVisible="False"
                         LostKeyboardFocus="OnHotkeyLostFocus"
                         PreviewKeyDown="OnHotkeyKeyDown"
-                        Style="{StaticResource RigShift.Field.Mono}"
+                        Style="{StaticResource RigShift.Field.Value}"
                         Text="{Binding HotkeyText, Mode=OneWay}"
                         ToolTip="{loc:Tr Hotkey_RecordTip}"
                         controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />
@@ -1099,7 +1123,7 @@
                         FontSize="12"
                         Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                         IsReadOnly="True"
-                        Style="{StaticResource RigShift.Field.Mono}"
+                        Style="{StaticResource RigShift.Field.Value}"
                         Text="{Binding CommandText, Mode=OneWay}" />
                     </DockPanel>
                   </StackPanel>

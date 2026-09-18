@@ -13,7 +13,7 @@
   Background="{DynamicResource RigShift.Brush.Page}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="32,20,32,24" MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr Nav_Settings}" />
+      <TextBlock Style="{StaticResource RigShift.Text.PageTitle}" Text="{loc:Tr Nav_Settings}" />
 
       <controls:InfoBar
         Margin="0,12,0,0"
@@ -25,7 +25,7 @@
 
         <!-- Left column: switching and the app itself -->
         <StackPanel controls:AdaptiveColumns.MinColumnWidth="360">
-          <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupSwitching}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Settings_GroupSwitching}" />
 
           <controls:SettingRow
             Margin="0,8,0,0"
@@ -54,7 +54,7 @@
                 IsReadOnlyCaretVisible="False"
                 LostKeyboardFocus="OnToggleHotkeyLostFocus"
                 PreviewKeyDown="OnToggleHotkeyKeyDown"
-                Style="{StaticResource RigShift.Field.Mono}"
+                Style="{StaticResource RigShift.Field.Value}"
                 Text="{Binding ToggleHotkeyText, Mode=OneWay}"
                 ToolTip="{loc:Tr Hotkey_RecordTip}" />
               <Button
@@ -94,7 +94,7 @@
               Value="{Binding ConfirmTimeoutSeconds, UpdateSourceTrigger=LostFocus}" />
           </controls:SettingRow>
 
-          <TextBlock Margin="0,24,0,0" Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupApp}" />
+          <TextBlock Margin="0,24,0,0" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Settings_GroupApp}" />
 
           <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_Autostart}">
             <ui:ToggleSwitch
@@ -126,7 +126,7 @@
 
         <!-- Right column: the USB devices rules and profiles use; names are saved on Enter or on leaving (F6). -->
         <StackPanel controls:AdaptiveColumns.MinColumnWidth="360">
-          <TextBlock Style="{StaticResource RigShift.Text.CaptionStrong}" Text="{loc:Tr Settings_GroupDevices}" />
+          <TextBlock Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Settings_GroupDevices}" />
 
           <controls:SettingRow
             Margin="0,8,0,0"
@@ -153,7 +153,7 @@
                         <controls:StatusLine Kind="{Binding StateKind}" Text="{Binding StateText}" />
                         <TextBlock
                           Margin="8,0,0,0"
-                          Style="{StaticResource RigShift.Text.MonoSecondary}"
+                          Style="{StaticResource RigShift.Text.ValueSecondary}"
                           Text="{Binding Id}"
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap" />

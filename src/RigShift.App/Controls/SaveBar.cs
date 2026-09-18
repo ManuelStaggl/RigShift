@@ -40,6 +40,13 @@ public sealed class SaveBar : Control
     {
         // Texts built in code need the language change by hand (finding I-13); weak, the bar lives shorter than Loc.
         PropertyChangedEventManager.AddHandler(Loc.Instance, OnLanguageChanged, string.Empty);
+        IsVisibleChanged += (_, e) =>
+        {
+            if (e.NewValue is true)
+            {
+                Motion.PlayEnter(this, 16);
+            }
+        };
         UpdateProblemsText();
     }
 
