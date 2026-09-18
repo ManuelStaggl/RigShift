@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-09-18
+
+### Fixed
+
+- App and tool cards keep the program name and path at the smallest window width: the program and its buttons
+  sit on top, action, timing, delay and arguments below with labels. "Change…" is a real button now.
+- The display card has a fixed layout: model and resolution with the delete button on top, name, refresh rate and
+  HDR below, "Main display" and "Optional" in the same row while it fits.
+- The rule fields "When disconnected" and the wait time line up in German too.
+- Settings switch to one column below about 1150 px instead of pushing the controls under their text.
+- Content width: pages without a list are centred at up to 1200 px, profile and game details stay left-aligned at
+  up to 960 px.
+
 ## [3.3.0] - 2026-09-18
 
 ### Changed
