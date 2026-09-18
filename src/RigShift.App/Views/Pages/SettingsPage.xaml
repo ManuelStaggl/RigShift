@@ -144,20 +144,14 @@
                 <Border Margin="0,8,0,0" MinHeight="52" Padding="16,8" Style="{StaticResource RigShift.Card}">
                   <controls:AdaptiveColumns Gap="16">
                     <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
+                      <!-- Name and state; the VID/PID only as the tooltip (E-04). -->
                       <TextBlock
                         Style="{StaticResource RigShift.Text.Body}"
                         Text="{Binding WindowsName}"
                         TextTrimming="CharacterEllipsis"
-                        TextWrapping="NoWrap" />
-                      <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
-                        <controls:StatusLine Kind="{Binding StateKind}" Text="{Binding StateText}" />
-                        <TextBlock
-                          Margin="8,0,0,0"
-                          Style="{StaticResource RigShift.Text.ValueSecondary}"
-                          Text="{Binding Id}"
-                          TextTrimming="CharacterEllipsis"
-                          TextWrapping="NoWrap" />
-                      </StackPanel>
+                        TextWrapping="NoWrap"
+                        ToolTip="{Binding Id}" />
+                      <controls:StatusLine Margin="0,2,0,0" Kind="{Binding StateKind}" Text="{Binding StateText}" ToolTip="{Binding Id}" />
                     </StackPanel>
                     <Grid Width="180" VerticalAlignment="Center">
                       <TextBox

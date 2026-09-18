@@ -23,7 +23,6 @@ public sealed partial class OverviewViewModel : ObservableObject
     private readonly IDisplayConfigurator _display;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly SettingsService _settings;
     private readonly ProfileDialogs _dialogs;
     private readonly ProfilesViewModel _profiles;
     private readonly IAppShell _shell;
@@ -38,7 +37,6 @@ public sealed partial class OverviewViewModel : ObservableObject
         IDisplayConfigurator display,
         ProfileCatalog catalog,
         SwitchCoordinator coordinator,
-        SettingsService settings,
         ProfileDialogs dialogs,
         ProfilesViewModel profiles,
         GameCatalog games,
@@ -58,7 +56,6 @@ public sealed partial class OverviewViewModel : ObservableObject
         _display = display;
         _catalog = catalog;
         _coordinator = coordinator;
-        _settings = settings;
         _dialogs = dialogs;
         _profiles = profiles;
         _shell = shell;
@@ -121,29 +118,9 @@ public sealed partial class OverviewViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasProfiles { get; set; }
 
-    [ObservableProperty]
-    public partial bool HasActive { get; set; }
-
+    /// <summary>"Showing now · Desk" over the live picture.</summary>
     [ObservableProperty]
     public partial string ActiveName { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string? ActiveIconKey { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasActiveHotkey))]
-    public partial string? ActiveHotkey { get; set; }
-
-    public bool HasActiveHotkey => ActiveHotkey is not null;
-
-    [ObservableProperty]
-    public partial bool ActiveIsDefault { get; set; }
-
-    [ObservableProperty]
-    public partial StatusKind ActiveStatusKind { get; set; }
-
-    [ObservableProperty]
-    public partial string ActiveStatusText { get; set; } = string.Empty;
 
     internal async Task RenameAsync(DisplayCard card, string? name)
     {
@@ -258,35 +235,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     private void UpdateActive()
     {
         HasProfiles = !_catalog.IsEmpty;
-        Profile? active = _catalog.ActiveProfile;
-        HasActive = active is not null;
-        if (active is null)
-        {
-            ActiveName = Loc.Instance["Tray_ActiveNone"];
-            ActiveIconKey = null;
-            ActiveHotkey = null;
-            ActiveIsDefault = false;
-            ActiveStatusKind = StatusKind.Neutral;
-            ActiveStatusText = Loc.Instance["Overview_NoActiveHint"];
-            return;
-        }
-
-        ActiveName = active.Name;
-        ActiveIconKey = ProfileIcons.Normalize(active.Icon);
-        ActiveHotkey = active.Hotkey is { } hotkey ? HotkeyFormat.Format(hotkey) : null;
-        ActiveIsDefault = _settings.Current.DefaultProfileId == active.Id;
-
-        SwitchRecord? last = _coordinator.History.FirstOrDefault(r => r.ProfileName == active.Name && r.Outcome != SwitchOutcome.DryRun);
-        if (last is null)
-        {
-            ActiveStatusKind = StatusKind.Ok;
-            ActiveStatusText = Loc.Instance["Profile_Active"];
-        }
-        else
-        {
-            ActiveStatusKind = HistoryRow.KindOf(last);
-            ActiveStatusText = Loc.Format("Overview_SwitchedAgo", RelativeTime.Format(last.At, _time.GetUtcNow(), Loc.Instance.Culture), last.DurationText);
-        }
+        ActiveName = _catalog.ActiveProfile?.Name ?? Loc.Instance["Tray_ActiveNone"];
     }
 
     private void RebuildHistory()

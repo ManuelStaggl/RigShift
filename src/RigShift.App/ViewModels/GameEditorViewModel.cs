@@ -207,8 +207,13 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     public partial bool StopApps { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowsText), nameof(HasWindows))]
+    [NotifyPropertyChangedFor(nameof(WindowsText), nameof(HasWindows), nameof(SavedWindows))]
     public partial WindowLayout? WindowLayout { get; set; }
+
+    /// <summary>The captured windows, one line each (G-05).</summary>
+    public IReadOnlyList<SavedWindowRow> SavedWindows => WindowLayout is { IsEmpty: false } layout
+        ? [.. layout.Windows.Select(w => new SavedWindowRow(w))]
+        : [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
@@ -625,4 +630,19 @@ public sealed record ProfileOption(string? Key, string Name, IReadOnlyList<Topol
     public bool HasTopology => Topology.Count > 0;
 
     public override string ToString() => Name;
+}
+
+/// <summary>One captured window on the games page: its title, the program and the size it gets back.</summary>
+public sealed class SavedWindowRow(WindowPlacement placement)
+{
+    public string Name { get; } = string.IsNullOrWhiteSpace(placement.Title) ? placement.ProcessName : placement.Title;
+
+    public string Details { get; } = placement.State switch
+    {
+        WindowState.Maximized => $"{placement.ProcessName} · {Localization.Loc.Instance["Game_WindowMaximized"]}",
+        _ => string.Create(Localization.Loc.Instance.Culture, $"{placement.ProcessName} · {placement.Bounds.Width} × {placement.Bounds.Height}"),
+    };
+
+    /// <summary>"3840, 0" – where on the desktop it goes.</summary>
+    public string Position { get; } = string.Create(Localization.Loc.Instance.Culture, $"{placement.Bounds.Left}, {placement.Bounds.Top}");
 }

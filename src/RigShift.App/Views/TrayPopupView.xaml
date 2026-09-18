@@ -219,7 +219,8 @@
                           <Setter TargetName="Face" Property="Background" Value="{DynamicResource RigShift.Brush.HoverOverlay}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                          <Setter TargetName="Face" Property="Background" Value="{DynamicResource RigShift.Brush.Accent}" />
+                          <!-- Paused rules are a state to notice, the same amber as in the window's navigation. -->
+                          <Setter TargetName="Face" Property="Background" Value="{DynamicResource RigShift.Brush.Warn}" />
                           <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
                         </Trigger>
                       </ControlTemplate.Triggers>

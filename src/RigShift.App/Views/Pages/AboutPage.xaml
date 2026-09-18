@@ -12,7 +12,7 @@
   mc:Ignorable="d"
   Background="{DynamicResource RigShift.Brush.Page}">
   <Page.Resources>
-    <!-- The four help cards: same height, title with an accent symbol, actions at the bottom. -->
+    <!-- The four help cards: title with an accent symbol, actions at the bottom. -->
     <Style x:Key="HelpCard" TargetType="Border" BasedOn="{StaticResource RigShift.Card}">
       <Setter Property="Margin" Value="0,0,16,16" />
       <Setter Property="Padding" Value="20,18" />

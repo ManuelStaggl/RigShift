@@ -30,6 +30,11 @@ public partial class App : Application, IAppShell
     public App(CliRequest request)
     {
         _request = request;
+
+        // Tooltips a little sooner than the Windows default (B-10); the look is the implicit style in Controls.xaml.
+        System.Windows.Controls.ToolTipService.InitialShowDelayProperty.OverrideMetadata(
+            typeof(FrameworkElement), new FrameworkPropertyMetadata(400));
+        Controls.Interaction.TrackKeyboardFocus();
     }
 
     /// <summary>

@@ -888,6 +888,40 @@
                       Style="{StaticResource RigShift.Button}" />
                   </StackPanel>
                 </controls:SettingRow>
+
+                <!-- What was captured, one line per window (G-05). -->
+                <Border
+                  Margin="0,8,0,0"
+                  Padding="0"
+                  ClipToBounds="True"
+                  Style="{StaticResource RigShift.Card}"
+                  Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}">
+                  <ItemsControl Focusable="False" ItemsSource="{Binding SavedWindows}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="{x:Type vm:SavedWindowRow}">
+                        <Border x:Name="Row" Height="52" Padding="16,0" BorderBrush="{DynamicResource RigShift.Brush.Line}" BorderThickness="0,1,0,0" ToolTip="{Binding Position}">
+                          <DockPanel>
+                            <ui:SymbolIcon
+                              Margin="0,0,12,0"
+                              VerticalAlignment="Center"
+                              FontSize="16"
+                              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                              Symbol="Window16" />
+                            <StackPanel VerticalAlignment="Center">
+                              <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                          </DockPanel>
+                        </Border>
+                        <DataTemplate.Triggers>
+                          <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                            <Setter TargetName="Row" Property="BorderThickness" Value="0" />
+                          </DataTrigger>
+                        </DataTemplate.Triggers>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Border>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>

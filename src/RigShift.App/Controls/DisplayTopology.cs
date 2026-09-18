@@ -417,7 +417,7 @@ public sealed class DisplayTopology : FrameworkElement
             _nameLabel.Text = display.Name;
             _modeLabel = Text(12, FontWeights.Normal, "RigShift.Brush.TextSecondary");
             _modeLabel.Margin = new Thickness(8, 2, 8, 0);
-            _modeLabel.Text = missing ? Loc.Instance["Topology_Missing"] : (display.Mode ?? string.Empty).Replace(" @ ", " · ", StringComparison.Ordinal);
+            _modeLabel.Text = missing ? Loc.Instance["Topology_Missing"] : display.Mode ?? string.Empty;
 
             Labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
             if (missing)

@@ -870,7 +870,7 @@
                       </BeginStoryboard>
                     </Trigger.ExitActions>
                   </Trigger>
-                  <Trigger Property="IsKeyboardFocused" Value="True">
+                  <Trigger Property="controls:Interaction.IsKeyboardFocusVisible" Value="True">
                     <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
                   </Trigger>
                 </ControlTemplate.Triggers>
@@ -1048,7 +1048,7 @@
           </BeginStoryboard>
         </Trigger.EnterActions>
       </Trigger>
-      <Trigger Property="IsKeyboardFocused" Value="True">
+      <Trigger Property="controls:Interaction.IsKeyboardFocusVisible" Value="True">
         <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
       </Trigger>
       <Trigger Property="IsEnabled" Value="False">
@@ -1621,7 +1621,7 @@
             <Trigger Property="controls:Interaction.IsInvalid" Value="True">
               <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
             </Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True">
+            <Trigger Property="controls:Interaction.IsKeyboardFocusVisible" Value="True">
               <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
             </Trigger>
           </ControlTemplate.Triggers>
@@ -1749,7 +1749,7 @@
             <Trigger Property="controls:Interaction.IsInvalid" Value="True">
               <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
             </Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True">
+            <Trigger Property="controls:Interaction.IsKeyboardFocusVisible" Value="True">
               <Setter TargetName="Focus" Property="Visibility" Value="Visible" />
             </Trigger>
           </ControlTemplate.Triggers>
@@ -1821,7 +1821,7 @@
                     <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
                     <Setter TargetName="Badge" Property="Visibility" Value="Visible" />
                   </Trigger>
-                  <Trigger Property="IsKeyboardFocused" Value="True">
+                  <Trigger Property="controls:Interaction.IsKeyboardFocusVisible" Value="True">
                     <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
                     <Setter TargetName="Ring" Property="Margin" Value="-4" />
                     <Setter TargetName="Ring" Property="CornerRadius" Value="16" />
@@ -1896,5 +1896,42 @@
     <Setter Property="Height" Value="2" />
     <Setter Property="TrackBrush" Value="{DynamicResource RigShift.Brush.Line}" />
     <Setter Property="BarBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+  </Style>
+
+  <!-- Tooltip (B-10): layer surface, 6 radius, a soft shadow, caption text; implicit, so every tooltip gets it. -->
+  <Style TargetType="ToolTip">
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
+    <Setter Property="FontSize" Value="12" />
+    <!-- True keeps the popup transparent, so the margin around the card can carry the own shadow. -->
+    <Setter Property="HasDropShadow" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToolTip">
+          <Grid Margin="8,4,8,12">
+            <Border Background="{DynamicResource RigShift.Brush.Chrome}" CornerRadius="6">
+              <Border.Effect>
+                <DropShadowEffect BlurRadius="12" Direction="270" Opacity="0.45" ShadowDepth="3" Color="Black" />
+              </Border.Effect>
+            </Border>
+            <Border
+              MaxWidth="360"
+              Padding="10,6"
+              Background="{DynamicResource RigShift.Brush.Layer}"
+              BorderBrush="{DynamicResource RigShift.Brush.LineStrong}"
+              BorderThickness="1"
+              CornerRadius="6">
+              <ContentPresenter>
+                <ContentPresenter.Resources>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="TextWrapping" Value="Wrap" />
+                  </Style>
+                </ContentPresenter.Resources>
+              </ContentPresenter>
+            </Border>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 </ResourceDictionary>

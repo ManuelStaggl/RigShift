@@ -187,7 +187,7 @@
   <data name="Displays_StatePrimary" xml:space="preserve"><value>Active · main display</value></data>
   <data name="Displays_StateOff" xml:space="preserve"><value>Connected, not in use</value></data>
   <data name="Displays_StateNotReady" xml:space="preserve"><value>Not ready</value></data>
-  <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} @ {2} Hz</value></data>
+  <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} · {2} Hz</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed; log files are not anonymized, so check them before attaching one.</value></data>
@@ -275,8 +275,6 @@
   <data name="Hotkey_RecordTip" xml:space="preserve"><value>Click, then press Ctrl, Alt or Win with another key. Backspace removes it.</value></data>
   <data name="Displays_IdentifyTip" xml:space="preserve"><value>Shows the Windows number on each display.</value></data>
   <data name="Automation_NoDevice" xml:space="preserve"><value>No device</value></data>
-  <data name="About_Diagnostics" xml:space="preserve"><value>Diagnostic info</value></data>
-  <data name="About_DiagnosticsHint" xml:space="preserve"><value>For a GitHub issue, without your user name.</value></data>
   <data name="About_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profiles</value></data>
@@ -373,9 +371,6 @@
   <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
   <data name="Overview_Now" xml:space="preserve"><value>Showing now</value></data>
   <data name="Overview_Empty" xml:space="preserve"><value>No active display. Details are in the log.</value></data>
-  <data name="Overview_ActiveProfile" xml:space="preserve"><value>Active profile</value></data>
-  <data name="Overview_NoActiveHint" xml:space="preserve"><value>No saved profile matches this arrangement.</value></data>
-  <data name="Overview_SwitchedAgo" xml:space="preserve"><value>Switched {0} · {1}</value></data>
   <data name="Overview_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile</value></data>
   <data name="Overview_SetupTitle" xml:space="preserve"><value>Set up RigShift</value></data>
   <data name="Overview_SetupText" xml:space="preserve"><value>Save two setups, optionally a USB device as trigger. Takes three minutes.</value></data>
@@ -396,14 +391,11 @@
   <data name="List_New" xml:space="preserve"><value>New</value></data>
   <data name="List_NewFromCurrent" xml:space="preserve"><value>From the current arrangement</value></data>
   <data name="List_Assistant" xml:space="preserve"><value>Setup assistant</value></data>
-  <data name="List_EmptyTitle" xml:space="preserve"><value>No profiles yet</value></data>
-  <data name="List_EmptyText" xml:space="preserve"><value>Save the current arrangement with "New", or let the assistant guide you.</value></data>
   <data name="List_Unsaved" xml:space="preserve"><value>Not saved yet</value></data>
   <data name="List_Checking" xml:space="preserve"><value>Checking…</value></data>
   <data name="List_Ready" xml:space="preserve"><value>Ready</value></data>
   <data name="List_OptionalMissing" xml:space="preserve"><value>Ready · {0} missing (optional)</value></data>
   <data name="List_Blocked" xml:space="preserve"><value>Blocked: {0} missing</value></data>
-  <data name="Detail_NoSelection" xml:space="preserve"><value>Pick a profile on the left, or create one with "New".</value></data>
   <data name="Detail_TestTip" xml:space="preserve"><value>Checks without switching whether every display is there.</value></data>
   <data name="Detail_SwitchTip" xml:space="preserve"><value>Switches to this profile.</value></data>
   <data name="Tab_Displays" xml:space="preserve"><value>Displays</value></data>
@@ -435,7 +427,6 @@
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="List_NewInstalled" xml:space="preserve"><value>Find installed games…</value></data>
   <data name="List_NewProgram" xml:space="preserve"><value>Choose a program…</value></data>
-  <data name="Games_NoSelection" xml:space="preserve"><value>Pick a game on the left, or add one with "New".</value></data>
   <data name="Detail_PlayTip" xml:space="preserve"><value>Switches the profile, starts the tools and the game (Ctrl+Enter)</value></data>
   <data name="Game_OpenGameTab" xml:space="preserve"><value>Game tab</value></data>
   <data name="GameTab_Game" xml:space="preserve"><value>Game</value></data>
@@ -467,7 +458,6 @@
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>
   <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
-  <data name="About_Links" xml:space="preserve"><value>Links</value></data>
   <data name="Confirm_Before" xml:space="preserve"><value>Previous arrangement</value></data>
   <data name="Setup_Subtitle" xml:space="preserve"><value>· Setup</value></data>
   <data name="Setup_StepWelcome" xml:space="preserve"><value>Welcome</value></data>
@@ -652,5 +642,8 @@
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
     <value>reverts – from any screen</value>
+  </data>
+  <data name="Game_WindowMaximized" xml:space="preserve">
+    <value>maximized</value>
   </data>
 </root>

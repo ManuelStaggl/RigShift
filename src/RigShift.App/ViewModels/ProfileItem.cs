@@ -100,7 +100,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     {
         double hertz = RefreshRate.Of(display).Hertz;
         string text = string.Create(Loc.Instance.Culture,
-            $"{SwitchMessages.NameOf(display)} · {display.Width} × {display.Height} @ {hertz:0.##} Hz");
+            $"{SwitchMessages.NameOf(display)} · {display.Width} × {display.Height} · {hertz:0.##} Hz");
         if (display.IsPrimary)
         {
             text += " · " + Loc.Instance["Profile_Primary"];

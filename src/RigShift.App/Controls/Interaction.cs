@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace RigShift.App.Controls;
@@ -10,6 +11,45 @@ namespace RigShift.App.Controls;
 /// </summary>
 public static class Interaction
 {
+    /// <summary>
+    /// The element has the keyboard focus and got it from the keyboard – the moment a focus ring belongs on screen.
+    /// <see cref="UIElement.IsKeyboardFocused"/> is also true after a mouse click, which left rings behind on tabs and
+    /// rows the user had only clicked. Kept up to date by <see cref="TrackKeyboardFocus"/>.
+    /// </summary>
+    public static readonly DependencyProperty IsKeyboardFocusVisibleProperty = DependencyProperty.RegisterAttached(
+        "IsKeyboardFocusVisible", typeof(bool), typeof(Interaction), new FrameworkPropertyMetadata(false));
+
+    public static bool GetIsKeyboardFocusVisible(DependencyObject element)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        return (bool)element.GetValue(IsKeyboardFocusVisibleProperty);
+    }
+
+    public static void SetIsKeyboardFocusVisible(DependencyObject element, bool value)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+        element.SetValue(IsKeyboardFocusVisibleProperty, value);
+    }
+
+    /// <summary>Once at startup: every element learns whether its keyboard focus came from the keyboard.</summary>
+    public static void TrackKeyboardFocus()
+    {
+        EventManager.RegisterClassHandler(typeof(UIElement), Keyboard.GotKeyboardFocusEvent, new KeyboardFocusChangedEventHandler((sender, e) =>
+        {
+            if (e.OriginalSource == sender && sender is DependencyObject element)
+            {
+                SetIsKeyboardFocusVisible(element, InputManager.Current.MostRecentInputDevice is KeyboardDevice);
+            }
+        }));
+        EventManager.RegisterClassHandler(typeof(UIElement), Keyboard.LostKeyboardFocusEvent, new KeyboardFocusChangedEventHandler((sender, e) =>
+        {
+            if (e.OriginalSource == sender && sender is DependencyObject element)
+            {
+                element.ClearValue(IsKeyboardFocusVisibleProperty);
+            }
+        }));
+    }
+
     public static readonly DependencyProperty HoverBackgroundProperty = DependencyProperty.RegisterAttached(
         "HoverBackground", typeof(Brush), typeof(Interaction), new FrameworkPropertyMetadata(null));
 
