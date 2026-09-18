@@ -6,6 +6,35 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-09-18
+
+### Added
+
+- **Switch and play from the overview**: every profile is a tile with its arrangement and a "Switch" button (the
+  active one offers "Apply again"), every game a row with "Play". The display list reads as a status list; a
+  display's name becomes editable on hover.
+- **Help page with actual help**: version and update state on top, then first steps with the assistant, your own
+  hotkeys and the `rigshift://` commands with a copy button, backup, and reporting a problem.
+- **Field of view picture with substance**: screens as bars with joints and a curve, a head with its line of sight,
+  the cone as light from the eye, the angle as one arc, distance and width as dimensions on a 10 cm floor grid, and
+  a small side view for the vertical angle when there is room. The results are three large figures; the sim list
+  has a search, pins your own games to the top and answers "Copied" in the row.
+- Empty profile and game pages show a proper start: the displays Windows shows right now with "Save as profile",
+  or "Find installed games".
+- The navigation folds to its symbols below 1200 px (or with the button on top) and shows the active profile,
+  paused USB rules and a dot on Help when an update is waiting. The chosen page's symbol is filled.
+- A game's Windows tab lists the captured windows.
+
+### Changed
+
+- App and game pickers and the window capture use the app's own look: title in the window, 48 px rows with the
+  programs' icons, a footer with the actions. Window capture lists size instead of raw coordinates.
+- The confirmation after a switch shows Enter and Esc as keys; the first page of the assistant shows its three
+  steps as cards.
+- Tooltips appear sooner and match the app; focus rings only appear when you move with the keyboard.
+- Resolutions read "3840 × 2160 · 165 Hz" everywhere; USB device IDs moved into a tooltip.
+- Paused USB rules show in amber in the tray popup, as in the window.
+
 ## [3.4.0] - 2026-09-18
 
 ### Changed
