@@ -103,7 +103,7 @@
         </StackPanel>
       </Border>
 
-      <!-- Four cards of equal height, two per row. -->
+      <!-- Four cards, two per row; the cards of a row share their height. -->
       <UniformGrid Margin="0,16,-16,0" Columns="2">
 
         <!-- First steps -->
@@ -187,6 +187,11 @@
             </ItemsControl>
           </StackPanel>
         </Border>
+
+      </UniformGrid>
+
+      <!-- Second row: as tall as its own cards. -->
+      <UniformGrid Margin="0,0,-16,0" Columns="2">
 
         <!-- Backup -->
         <Border Style="{StaticResource HelpCard}">

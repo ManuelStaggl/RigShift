@@ -15,21 +15,33 @@ namespace RigShift.App.Views;
 
 /// <summary>
 /// Main window: title bar, the navigation rail on the left and one page on the right. Closing only hides it – RigShift
-/// keeps running in the tray. Ctrl+1…6 jump to the six pages (R-NAV-5).
+/// keeps running in the tray. Ctrl+1…6 jump to the six pages (R-NAV-5). Below 1200 px the rail keeps only its symbols
+/// (N-01); its foot shows the active profile and paused rules, the help entry a dot for an update (N-02).
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
     private readonly IServiceProvider _services;
     private readonly IAppShell _shell;
     private readonly Dictionary<Type, ListBoxItem> _navItems = [];
+    private readonly List<System.Windows.Controls.TextBlock> _navTexts = [];
+    private readonly ProfileCatalog _catalog;
+    private readonly AutomationService? _automation;
+    private readonly UpdateService _updates;
+    private System.Windows.Shapes.Ellipse? _updateDot;
     private Type _page = typeof(OverviewPage);
     private bool _syncingNav;
+
+    /// <summary>The user's own choice with the toggle; <c>null</c> follows the window width.</summary>
+    private bool? _compactChoice;
 
     public MainWindow(IServiceProvider services, IAppShell shell, SwitchCoordinator coordinator)
     {
         ArgumentNullException.ThrowIfNull(coordinator);
         _services = services;
         _shell = shell;
+        _catalog = services.GetRequiredService<ProfileCatalog>();
+        _automation = services.GetService<AutomationService>();
+        _updates = services.GetRequiredService<UpdateService>();
         InitializeComponent();
 
         // The pages paint square backgrounds; without this they cover the rounded corner of the page surface.
@@ -55,7 +67,80 @@ public partial class MainWindow : FluentWindow
             Converter = (IValueConverter)Application.Current.Resources["BoolToVisibility"],
         });
 
-        Loaded += (_, _) => ShowPage(_page);
+        _catalog.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ProfileCatalog.ActiveProfile))
+            {
+                Dispatcher.InvokeAsync(ShowAppState);
+            }
+        };
+        if (_automation is not null)
+        {
+            _automation.Changed += (_, _) => Dispatcher.InvokeAsync(ShowAppState);
+        }
+
+        _updates.StateChanged += (_, _) => Dispatcher.InvokeAsync(ShowAppState);
+        Loc.Instance.PropertyChanged += (_, _) => Dispatcher.InvokeAsync(() => { ShowAppState(); UpdateNavWidth(); });
+        SizeChanged += (_, _) => UpdateNavWidth();
+
+        Loaded += (_, _) =>
+        {
+            ShowAppState();
+            UpdateNavWidth();
+            ShowPage(_page);
+        };
+    }
+
+    private bool IsCompact => _compactChoice ?? ActualWidth < 1200;
+
+    private void OnNavToggleClick(object sender, RoutedEventArgs e)
+    {
+        _compactChoice = !IsCompact;
+        UpdateNavWidth();
+    }
+
+    /// <summary>Wide rail with names, or 56 px with symbols and the names as tooltips.</summary>
+    private void UpdateNavWidth()
+    {
+        bool compact = IsCompact;
+        NavColumn.Width = new GridLength(compact ? 56 : 200);
+        foreach (System.Windows.Controls.TextBlock text in _navTexts)
+        {
+            text.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        foreach (ListBoxItem item in _navItems.Values)
+        {
+            ToolTipService.SetIsEnabled(item, compact);
+        }
+
+        ActiveText.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        NavFooter.Padding = compact ? new Thickness(14, 10, 0, 2) : new Thickness(12, 10, 8, 2);
+        NavToggleIcon.Symbol = compact ? SymbolRegular.PanelLeftExpand16 : SymbolRegular.PanelLeftContract16;
+        string label = Loc.Instance[compact ? "Nav_Expand" : "Nav_Collapse"];
+        NavToggle.ToolTip = label;
+        AutomationProperties.SetName(NavToggle, label);
+        ShowAppState();
+    }
+
+    /// <summary>The rail's foot and the update dot: what the app is doing without opening a page.</summary>
+    private void ShowAppState()
+    {
+        string active = _catalog.ActiveProfile?.Name ?? Loc.Instance["Tray_ActiveNone"];
+        ActiveText.Text = active;
+        NavFooter.ToolTip = active;
+        ActiveDot.Fill = (System.Windows.Media.Brush)FindResource(_catalog.ActiveProfile is null ? "RigShift.Brush.TextDisabled" : "RigShift.Brush.Ok");
+        bool paused = _automation?.IsPaused == true;
+        PausedIcon.Visibility = paused ? Visibility.Visible : Visibility.Collapsed;
+
+        // The narrow rail has room for one sign: paused rules outrank the profile dot.
+        ActiveDot.Visibility = paused && IsCompact ? Visibility.Collapsed : Visibility.Visible;
+        PausedIcon.ToolTip = Loc.Instance["Nav_RulesPaused"];
+        if (_updateDot is not null)
+        {
+            _updateDot.Visibility = _updates.State is UpdateState.Available or UpdateState.Ready ? Visibility.Visible : Visibility.Collapsed;
+            _updateDot.ToolTip = Loc.Instance["Nav_UpdateReady"];
+        }
     }
 
     public void ShowPage(Type? page) => _ = ShowPageAsync(page).ContinueWith(
@@ -149,9 +234,30 @@ public partial class MainWindow : FluentWindow
         var text = new System.Windows.Controls.TextBlock { VerticalAlignment = VerticalAlignment.Center };
         text.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
         var content = new StackPanel { Orientation = Orientation.Horizontal };
-        content.Children.Add(new SymbolIcon { Symbol = symbol, FontSize = 16, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center });
+        var icon = new SymbolIcon { Symbol = symbol, FontSize = 16, Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center };
+        content.Children.Add(icon);
         content.Children.Add(text);
         var item = new ListBoxItem { Content = content, Tag = page };
+
+        // The chosen page shows its symbol filled (N-03); the name is the tooltip while the rail is narrow.
+        icon.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(ListBoxItem.IsSelected)) { Source = item });
+        item.SetBinding(ToolTipProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
+        ToolTipService.SetPlacement(item, System.Windows.Controls.Primitives.PlacementMode.Right);
+        _navTexts.Add(text);
+        if (page == typeof(AboutPage))
+        {
+            _updateDot = new System.Windows.Shapes.Ellipse
+            {
+                Width = 7,
+                Height = 7,
+                Margin = new Thickness(-8, -10, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Fill = (System.Windows.Media.Brush)FindResource("RigShift.Brush.Accent"),
+                Visibility = Visibility.Collapsed,
+            };
+            content.Children.Insert(1, _updateDot);
+        }
+
         AutomationProperties.SetName(item, Loc.Instance[textKey]);
         list.Items.Add(item);
         _navItems[page] = item;

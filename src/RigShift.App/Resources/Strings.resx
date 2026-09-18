@@ -635,4 +635,16 @@
   <data name="Fov_Pinned" xml:space="preserve">
     <value>One of your games</value>
   </data>
+  <data name="Nav_Collapse" xml:space="preserve">
+    <value>Collapse navigation</value>
+  </data>
+  <data name="Nav_Expand" xml:space="preserve">
+    <value>Expand navigation</value>
+  </data>
+  <data name="Nav_RulesPaused" xml:space="preserve">
+    <value>USB rules are paused</value>
+  </data>
+  <data name="Nav_UpdateReady" xml:space="preserve">
+    <value>An update is ready</value>
+  </data>
 </root>

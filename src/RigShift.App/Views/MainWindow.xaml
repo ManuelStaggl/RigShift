@@ -49,12 +49,56 @@
 
     <Grid Grid.Row="2">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="200" />
+        <ColumnDefinition x:Name="NavColumn" Width="200" />
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
 
-      <!-- Navigation: five entries, settings and help at the bottom (R-NAV-1). -->
-      <DockPanel Grid.Column="0" Margin="8,8,8,8">
+      <!-- Navigation: four pages on top, settings and help at the bottom (R-NAV-1), then the app's state (N-02).
+           Below 1200 px, or on request, only the symbols stay (N-01). -->
+      <DockPanel Grid.Column="0" Margin="8">
+        <Button
+          x:Name="NavToggle"
+          Margin="2,0,0,6"
+          HorizontalAlignment="Left"
+          Click="OnNavToggleClick"
+          DockPanel.Dock="Top"
+          Style="{StaticResource RigShift.Button.Icon}">
+          <ui:SymbolIcon x:Name="NavToggleIcon" FontSize="16" Symbol="PanelLeftContract16" />
+        </Button>
+
+        <!-- State: the active profile, paused rules. -->
+        <Border
+          x:Name="NavFooter"
+          Margin="0,6,0,0"
+          Padding="12,10,8,2"
+          BorderBrush="{DynamicResource RigShift.Brush.Line}"
+          BorderThickness="0,1,0,0"
+          DockPanel.Dock="Bottom">
+          <DockPanel>
+            <ui:SymbolIcon
+              x:Name="PausedIcon"
+              Margin="6,0,0,0"
+              DockPanel.Dock="Right"
+              FontSize="14"
+              Foreground="{DynamicResource RigShift.Brush.Warn}"
+              Symbol="Pause16"
+              Visibility="Collapsed" />
+            <Ellipse
+              x:Name="ActiveDot"
+              Width="8"
+              Height="8"
+              Margin="0,0,8,0"
+              VerticalAlignment="Center"
+              DockPanel.Dock="Left"
+              Fill="{DynamicResource RigShift.Brush.TextDisabled}" />
+            <TextBlock
+              x:Name="ActiveText"
+              VerticalAlignment="Center"
+              FontSize="12"
+              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+              TextTrimming="CharacterEllipsis" />
+          </DockPanel>
+        </Border>
         <ListBox
           x:Name="NavBottom"
           DockPanel.Dock="Bottom"
