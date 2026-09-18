@@ -623,4 +623,16 @@
   <data name="Profiles_EmptyInvite" xml:space="preserve">
     <value>These are the displays Windows shows right now. Save them as your first profile – audio and apps come after.</value>
   </data>
+  <data name="Fov_SideView" xml:space="preserve">
+    <value>Side</value>
+  </data>
+  <data name="Fov_Search" xml:space="preserve">
+    <value>Find a sim</value>
+  </data>
+  <data name="Fov_CopiedShort" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Fov_Pinned" xml:space="preserve">
+    <value>One of your games</value>
+  </data>
 </root>

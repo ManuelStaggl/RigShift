@@ -31,6 +31,7 @@ public sealed partial class FovViewModel : ObservableObject
     private readonly ProfileCatalog _catalog;
     private readonly IDisplaySizeReader _sizes;
     private readonly SettingsService _settings;
+    private readonly GameCatalog? _games;
     private readonly ILogger _log;
     private readonly Dictionary<string, ScreenSize?> _measured = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _curvature = new(StringComparer.OrdinalIgnoreCase);
@@ -43,7 +44,8 @@ public sealed partial class FovViewModel : ObservableObject
         IDisplaySizeReader sizes,
         SettingsService settings,
         DisplayChangeWatcher? watcher,
-        ILogger log)
+        ILogger log,
+        GameCatalog? games = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(settings);
@@ -53,6 +55,7 @@ public sealed partial class FovViewModel : ObservableObject
         _sizes = sizes;
         _settings = settings;
         _log = log.ForContext<FovViewModel>();
+        _games = games;
 
         AppSettings current = settings.Current;
         _loading = true;
@@ -91,6 +94,31 @@ public sealed partial class FovViewModel : ObservableObject
 
     public ObservableCollection<FovSimRow> SimRows { get; } = [];
 
+    /// <summary>The rows as the page shows them: filtered by <see cref="SimFilter"/>, the user's own games first.</summary>
+    public ObservableCollection<FovSimRow> ShownSimRows { get; } = [];
+
+    /// <summary>Search over 18 sims (V-03).</summary>
+    [ObservableProperty]
+    public partial string SimFilter { get; set; } = string.Empty;
+
+    partial void OnSimFilterChanged(string value) => ShowSimRows();
+
+    private void ShowSimRows()
+    {
+        ShownSimRows.Clear();
+        foreach (FovSimRow row in SimRows.Where(r => r.Matches(SimFilter)))
+        {
+            ShownSimRows.Add(row);
+        }
+    }
+
+    /// <summary>"One · Three" as a segmented control: 0 = one screen, 1 = three (V-01).</summary>
+    public int LayoutIndex
+    {
+        get => IsTriple ? 1 : 0;
+        set => IsTriple = value == 1;
+    }
+
     /// <summary>What the numbers cannot be trusted with, in the user's words.</summary>
     public ObservableCollection<string> Warnings { get; } = [];
 
@@ -116,7 +144,7 @@ public sealed partial class FovViewModel : ObservableObject
     public partial double DistanceCm { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSingle))]
+    [NotifyPropertyChangedFor(nameof(IsSingle), nameof(LayoutIndex))]
     public partial bool IsTriple { get; set; }
 
     /// <summary>The other radio button; both bind to one flag.</summary>
@@ -153,7 +181,11 @@ public sealed partial class FovViewModel : ObservableObject
 
     /// <summary>How far the eye sits above the middle of the picture; changes no angle, only the hint.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VerticalOffsetMm))]
     public partial double VerticalOffsetCm { get; set; }
+
+    /// <summary>The same in millimetres, for the side view of the picture.</summary>
+    public double VerticalOffsetMm => VerticalOffsetCm * 10;
 
     [ObservableProperty]
     public partial string SizeText { get; set; } = string.Empty;
@@ -284,6 +316,26 @@ public sealed partial class FovViewModel : ObservableObject
     }
 
     partial void OnSelectedCurvatureChanged(Choice? value) => OnCurvatureChanged();
+
+    /// <summary>Copies a row's value; the row answers with "Copied ✓" for a moment instead of a line elsewhere.</summary>
+    [RelayCommand]
+    private async Task CopyRowAsync(FovSimRow? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        Copy(row.Value);
+        foreach (FovSimRow other in SimRows)
+        {
+            other.IsCopied = false;
+        }
+
+        row.IsCopied = true;
+        await Task.Delay(TimeSpan.FromMilliseconds(1500));
+        row.IsCopied = false;
+    }
 
     [RelayCommand]
     private void Copy(string? value)
@@ -514,10 +566,18 @@ public sealed partial class FovViewModel : ObservableObject
     {
         var open = SimRows.Where(r => r.IsExpanded).Select(r => r.Id).ToHashSet(StringComparer.Ordinal);
         SimRows.Clear();
-        foreach (SimValue value in SimCatalog.Evaluate(input, result))
+        IReadOnlyList<SimValue> values = SimCatalog.Evaluate(input, result);
+        HashSet<string> pinned = FovSimRow.OwnGames(values.Select(v => v.Sim), _games?.Items.Select(g => g.Name) ?? []);
+        var rows = values
+            .Select(value => new FovSimRow(value, input.Triple) { IsExpanded = open.Contains(value.Id), IsPinned = pinned.Contains(value.Sim) })
+            .OrderByDescending(r => r.IsPinned)
+            .ToList();
+        foreach (FovSimRow row in rows)
         {
-            SimRows.Add(new FovSimRow(value, input.Triple) { IsExpanded = open.Contains(value.Id) });
+            SimRows.Add(row);
         }
+
+        ShowSimRows();
     }
 
     private void Persist()
@@ -610,6 +670,41 @@ public sealed partial class FovSimRow : ObservableObject
     public string Id { get; }
 
     public string Sim { get; }
+
+    /// <summary>The sim is one of the user's games: pinned to the top of the list.</summary>
+    public bool IsPinned { get; init; }
+
+    /// <summary>For 1.5 s after the value was copied.</summary>
+    [ObservableProperty]
+    public partial bool IsCopied { get; set; }
+
+    public bool Matches(string? filter) =>
+        string.IsNullOrWhiteSpace(filter) || Sim.Contains(filter.Trim(), StringComparison.CurrentCultureIgnoreCase);
+
+    /// <summary>
+    /// The sims among <paramref name="sims"/> the user has as games. A game name matches the sim whose name it contains,
+    /// letters and digits only – the longest such sim wins, so "Assetto Corsa Competizione" does not also pin
+    /// "Assetto Corsa".
+    /// </summary>
+    public static HashSet<string> OwnGames(IEnumerable<string> sims, IEnumerable<string> games)
+    {
+        ArgumentNullException.ThrowIfNull(games);
+        var keyed = sims.Select(s => (Sim: s, Key: Key(s))).Where(s => s.Key.Length > 0).ToList();
+        var result = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string game in games.Select(Key).Where(g => g.Length > 0))
+        {
+            var best = keyed.Where(s => game.Contains(s.Key, StringComparison.Ordinal)).OrderByDescending(s => s.Key.Length).FirstOrDefault();
+            if (best.Sim is not null)
+            {
+                result.Add(best.Sim);
+            }
+        }
+
+        return result;
+    }
+
+    private static string Key(string name) =>
+        new([.. (name ?? string.Empty).Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant)]);
 
     public string Value { get; }
 

@@ -88,6 +88,15 @@
   </Style>
   <!-- Values: resolutions, refresh rates, hotkeys, process names, paths, times. The text face with tabular figures,
        so columns of numbers stay aligned without a monospaced font. -->
+  <!-- A result as a key figure (V-02): big, semibold, tabular figures. -->
+  <Style x:Key="RigShift.Text.Metric" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+    <Setter Property="Margin" Value="0,2,0,0" />
+    <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Display}" />
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="LineHeight" Value="34" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+  </Style>
   <Style x:Key="RigShift.Text.Value" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
     <Setter Property="FontSize" Value="13" />
     <Setter Property="LineHeight" Value="18" />

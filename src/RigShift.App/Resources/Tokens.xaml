@@ -63,6 +63,8 @@
   <!-- Display drawing (DisplayTopology): bezel, edge, screen gradient, stand, and the screen of a missing display. -->
   <SolidColorBrush x:Key="RigShift.Brush.DisplayBezel" Color="#0A111D" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayEdge" Color="#3A4A63" />
+  <!-- The screens in the field-of-view top view: bars a little lighter than a display edge. -->
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayRail" Color="#8FA3C0" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayStand" Color="#1A2539" />
   <LinearGradientBrush x:Key="RigShift.Brush.DisplayScreen" StartPoint="0,0" EndPoint="0,1"><GradientStop Offset="0" Color="#2C4062" /><GradientStop Offset="1" Color="#1B2A43" /></LinearGradientBrush>
   <LinearGradientBrush x:Key="RigShift.Brush.DisplayScreenMissing" StartPoint="0,0" EndPoint="0,1"><GradientStop Offset="0" Color="#2A2F3A" /><GradientStop Offset="1" Color="#1D212A" /></LinearGradientBrush>

@@ -31,6 +31,7 @@
   <SolidColorBrush x:Key="RigShift.Brush.DisplayFillOff" Color="{x:Static SystemColors.WindowColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayBezel" Color="{x:Static SystemColors.WindowColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayEdge" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.DisplayRail" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayStand" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayScreen" Color="{x:Static SystemColors.ControlColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.DisplayScreenMissing" Color="{x:Static SystemColors.WindowColor}" />

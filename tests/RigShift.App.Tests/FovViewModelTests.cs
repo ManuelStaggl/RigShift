@@ -176,6 +176,20 @@ public sealed class FovViewModelTests : IDisposable
 
     private Task WaitForSettingsAsync(Func<RigShift.Core.Settings.AppSettings, bool> until) => WaitForSettingsAsync(_host, until);
 
+    [Fact]
+    public void OwnGames_PinsTheLongestMatchingSim_NotEverySimItContains()
+    {
+        string[] sims = ["Assetto Corsa", "Assetto Corsa Competizione", "iRacing", "Le Mans Ultimate"];
+
+        HashSet<string> pinned = FovSimRow.OwnGames(sims, ["ACC – Assetto Corsa Competizione", "iRacing", "Flight Simulator"]);
+
+        pinned.ShouldBe(["Assetto Corsa Competizione", "iRacing"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void OwnGames_WithoutGames_PinsNothing() =>
+        FovSimRow.OwnGames(["iRacing"], []).ShouldBeEmpty();
+
     /// <summary>The page saves while the user types, so a test waits for the write instead of racing it.</summary>
     private static async Task WaitForSettingsAsync(AppTestHost host, Func<RigShift.Core.Settings.AppSettings, bool> until)
     {
