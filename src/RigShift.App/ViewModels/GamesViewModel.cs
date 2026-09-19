@@ -237,7 +237,14 @@ public sealed partial class GamesViewModel : ObservableObject
         _selectAfterRebuild = Items.ElementAtOrDefault(index + 1)?.Game.Id ?? Items.ElementAtOrDefault(index - 1)?.Game.Id;
         Editor?.Dispose();
         Editor = null;
-        await RunStoreActionAsync(() => _catalog.DeleteAsync(item.Game.Id, CancellationToken.None), Loc.Format("Status_Deleted", item.Name));
+        Guid id = item.Game.Id;
+        await RunStoreActionAsync(
+            async () =>
+            {
+                await _catalog.DeleteAsync(id, CancellationToken.None);
+                GameShortcutIcon.Delete(id, App.Paths.Icons, _log);
+            },
+            Loc.Format("Status_Deleted", item.Name));
     }
 
     /// <summary>
@@ -255,8 +262,14 @@ public sealed partial class GamesViewModel : ObservableObject
         string title = Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
         string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
 
-        // No icon found is the fallback, not the error case: the shortcut then shows the RigShift symbol.
+        // No icon found is the fallback, not the error case: the shortcut then shows the RigShift symbol. A found one
+        // gets the RigShift card behind it; if that cannot be drawn, the game's plain icon still beats the symbol.
         string? icon = Windows.Games.GameIconSource.Find(item.Game.Launch, _log);
+        if (icon is not null)
+        {
+            icon = GameShortcutIcon.Create(item.Game.Id, icon, App.Paths.Icons, _log) ?? icon;
+        }
+
         try
         {
             Windows.Shell.ShortcutWriter.Create(
