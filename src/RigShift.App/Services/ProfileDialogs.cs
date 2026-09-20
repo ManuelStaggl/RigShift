@@ -166,6 +166,25 @@ public sealed class ProfileDialogs
             Loc.Instance["Interrupted_Title"], Loc.Format("Interrupted_Text", targetProfileName),
             Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
 
+    /// <summary>
+    /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
+    /// (rules, hotkeys, the update choice) changes how the machine behaves, and the copy is only useful if the user
+    /// knows it exists.
+    /// </summary>
+    /// <returns><c>true</c> when the user wants to see the folder with the copy.</returns>
+    public static async Task<bool> ShowSettingsProblemAsync(Core.Settings.SettingsLoadReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        string? copy = report.BackupFile is null ? null : System.IO.Path.GetFileName(report.BackupFile);
+        bool newer = report.Problem == Core.Settings.SettingsLoadProblem.FromNewerVersion;
+        string text = newer ? Loc.Format("SettingsProblem_NewerText", copy ?? "–")
+            : copy is null ? Loc.Instance["SettingsProblem_TextNoCopy"]
+            : Loc.Format("SettingsProblem_TextCopy", copy);
+        return await Ask(
+            Loc.Instance[newer ? "SettingsProblem_NewerTitle" : "SettingsProblem_Title"], text,
+            Loc.Instance["SettingsProblem_OpenFolder"], DialogButtonKind.Secondary, Loc.Instance["Common_Close"]);
+    }
+
     /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
     public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName) =>

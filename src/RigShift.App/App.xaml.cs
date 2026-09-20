@@ -265,6 +265,7 @@ public partial class App : Application, IAppShell
             }
 
             KeepAwakeForActiveProfile(catalog);
+            ReportSettingsProblem();
             await OfferInterruptedRestoreAsync();
             await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
         }
@@ -301,6 +302,27 @@ public partial class App : Application, IAppShell
             else
             {
                 await journal.ClearAsync(CancellationToken.None);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Defaults in place of the user's settings are not something to find out by accident. Queued, so startup finishes
+    /// before the dialog blocks.
+    /// </summary>
+    private void ReportSettingsProblem()
+    {
+        Core.Settings.SettingsLoadReport report = Services.GetRequiredService<SettingsService>().LastLoad;
+        if (report.Problem == Core.Settings.SettingsLoadProblem.None)
+        {
+            return;
+        }
+
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            if (await ProfileDialogs.ShowSettingsProblemAsync(report))
+            {
+                ShellFolders.Open(Paths.DataDirectory, Log.Logger);
             }
         });
     }

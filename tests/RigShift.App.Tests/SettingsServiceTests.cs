@@ -32,6 +32,21 @@ public sealed class SettingsServiceTests : IDisposable
         changed.ShouldBeFalse();
     }
 
+    /// <summary>The app asks this at startup to tell the user that defaults replaced the settings.</summary>
+    [Fact]
+    public async Task Load_DamagedFile_SaysSoAndNamesTheCopy()
+    {
+        Directory.CreateDirectory(_directory);
+        string file = Path.Combine(_directory, "settings.json");
+        await File.WriteAllTextAsync(file, """{ "automationRules": [""", Ct);
+        using var settings = new SettingsService(new JsonSettingsStore(file, Logger.None), Substitute.For<IAutostart>());
+
+        await settings.LoadAsync(Ct);
+
+        settings.LastLoad.Problem.ShouldBe(SettingsLoadProblem.Damaged);
+        File.Exists(settings.LastLoad.BackupFile.ShouldNotBeNull()).ShouldBeTrue();
+    }
+
     [Fact]
     public async Task Update_WithoutNotify_SavesButRaisesNoChange()
     {

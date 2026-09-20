@@ -103,6 +103,12 @@
   <data name="Interrupted_Text" xml:space="preserve"><value>RigShift wurde beim Umschalten auf „{0}“ beendet, das Umschalten wurde also nie bestätigt. Die vorherige Anordnung wiederherstellen?</value></data>
   <data name="Interrupted_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Interrupted_Keep" xml:space="preserve"><value>So lassen</value></data>
+  <data name="SettingsProblem_Title" xml:space="preserve"><value>Die Einstellungen konnten nicht gelesen werden</value></data>
+  <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
+  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei ließ sich nicht kopieren – eine geänderte Einstellung überschreibt sie.</value></data>
+  <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>Diese Einstellungen stammen von einem neueren RigShift</value></data>
+  <data name="SettingsProblem_NewerText" xml:space="preserve"><value>Diese Version behält, was sie kennt, und verwirft den Rest beim nächsten Speichern. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
+  <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Ordner öffnen</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>„{0}“ wird gelöscht. Die USB-Regeln dieses Profils auch. Das lässt sich nicht rückgängig machen.</value></data>

@@ -48,6 +48,9 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
 
     public IAutostart Autostart => autostart;
 
+    /// <summary>How reading the file went the last time; the app tells the user when it went wrong.</summary>
+    public SettingsLoadReport LastLoad => store.LastLoad;
+
     public async Task LoadAsync(CancellationToken cancellationToken)
     {
         Current = await store.LoadAsync(cancellationToken);
