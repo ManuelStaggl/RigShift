@@ -60,6 +60,38 @@ public sealed class CcdPathBuilderTests
         modes[(int)paths[1].sourceInfo.modeInfoIdx].sourceMode.position.x.ShouldBe(3840);
     }
 
+    /// <summary>
+    /// "Duplicate these displays" is two targets on one source. Restoring it with a source each put two desktops on the
+    /// same spot, Windows refused, and the way back ended in extended mode.
+    /// </summary>
+    [Fact]
+    public void Build_RestoringDuplicatedDisplays_SharesOneSourceAndOneSourceMode()
+    {
+        var left = Target(1, activeSource: 0, sources: [0, 1, 2]);
+        var right = Target(2, activeSource: 1, sources: [0, 1, 2]);
+        var beside = Target(3, activeSource: 2, sources: [0, 1, 2]);
+
+        (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdPathBuilder.Build(
+            [(left, Assignment(1920, 1080, 60)), (right, Assignment(1920, 1080, 60)), (beside, Assignment(1920, 1080, 60, x: 1920))],
+            databaseModes: false,
+            allowClone: true);
+
+        paths[1].sourceInfo.id.ShouldBe(paths[0].sourceInfo.id);
+        paths[1].sourceInfo.modeInfoIdx.ShouldBe(paths[0].sourceInfo.modeInfoIdx);
+        paths[2].sourceInfo.id.ShouldNotBe(paths[0].sourceInfo.id);
+        modes.Length.ShouldBe(2);
+    }
+
+    /// <summary>A profile never duplicates by accident: two displays left at the same spot in the editor stay two desktops.</summary>
+    [Fact]
+    public void Build_SameRectangleWithoutAllowClone_KeepsDistinctSources()
+    {
+        (DISPLAYCONFIG_PATH_INFO[] paths, _) = CcdPathBuilder.Build(
+            [(Target(1, null, [0, 1]), Assignment(1920, 1080, 60)), (Target(2, null, [0, 1]), Assignment(1920, 1080, 60))], databaseModes: false);
+
+        paths[1].sourceInfo.id.ShouldNotBe(paths[0].sourceInfo.id);
+    }
+
     [Fact]
     public void Build_NoFreeSource_Throws()
     {

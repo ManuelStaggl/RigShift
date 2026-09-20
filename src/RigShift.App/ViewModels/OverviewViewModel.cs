@@ -160,7 +160,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         catch (Win32Exception ex)
         {
             _log.Error(ex, "Displays could not be read");
-            ErrorMessage = ex.Message;
+            ErrorMessage = Loc.Format("Overview_ReadFailed", ex.NativeErrorCode);
         }
     }
 

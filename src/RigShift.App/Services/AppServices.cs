@@ -31,6 +31,12 @@ public interface IAppShell
     void ShowMainWindow(Type? page = null);
 
     void Quit();
+
+    /// <summary>
+    /// "Exit" chosen by the user: unsaved changes in the profile or game editor are asked about first, and "cancel"
+    /// keeps RigShift running. <see cref="Quit"/> is for exits that must happen – an update, a restart.
+    /// </summary>
+    void QuitByUser();
 }
 
 /// <summary>

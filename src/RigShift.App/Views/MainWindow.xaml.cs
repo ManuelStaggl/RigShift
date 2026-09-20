@@ -258,7 +258,8 @@ public partial class MainWindow : FluentWindow
             content.Children.Insert(1, _updateDot);
         }
 
-        AutomationProperties.SetName(item, Loc.Instance[textKey]);
+        // Bound like the text and the tooltip: a name set once kept the old language for screen readers.
+        item.SetBinding(AutomationProperties.NameProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
         list.Items.Add(item);
         _navItems[page] = item;
         InputBindings.Add(new KeyBinding(new NavigateCommand(this, page), shortcut, ModifierKeys.Control));

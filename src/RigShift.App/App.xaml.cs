@@ -80,6 +80,36 @@ public partial class App : Application, IAppShell
         _ = QuitAsync();
     }
 
+    public void QuitByUser() => _ = QuitByUserAsync();
+
+    private async Task QuitByUserAsync()
+    {
+        try
+        {
+            var profiles = Services.GetRequiredService<ProfilesViewModel>();
+            var games = Services.GetRequiredService<GamesViewModel>();
+            if (profiles.Editor is { IsDirty: true } || games.Editor is { IsDirty: true })
+            {
+                // The question needs its window: the tray menu also works while the main window is hidden.
+                Log.Information("Exit requested with unsaved changes, asking first");
+                ShowMainWindow();
+                if (!await profiles.ConfirmLeaveAsync() || !await games.ConfirmLeaveAsync())
+                {
+                    Log.Information("Exit cancelled, the unsaved changes stay open");
+                    return;
+                }
+            }
+        }
+#pragma warning disable CA1031 // A question that cannot be asked must not make RigShift impossible to exit.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Log.Error(ex, "Asking about unsaved changes before exiting failed, exiting anyway");
+        }
+
+        Quit();
+    }
+
     private async Task QuitAsync()
     {
         try

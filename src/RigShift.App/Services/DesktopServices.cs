@@ -450,7 +450,7 @@ public sealed class TrayIconService : IDisposable
             menu.Items.Add(restart);
         }
 
-        menu.Items.Add(Command(Loc.Instance["Tray_Exit"], _shell.Quit));
+        menu.Items.Add(Command(Loc.Instance["Tray_Exit"], _shell.QuitByUser));
         _icon.ContextMenu = menu;
     }
 

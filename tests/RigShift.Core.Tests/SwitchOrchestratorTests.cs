@@ -629,6 +629,18 @@ public sealed class SwitchOrchestratorTests
         await _audio.DidNotReceive().SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Only the way back may duplicate displays: it restores what Windows showed, a profile describes a desktop each.</summary>
+    [Fact]
+    public async Task Switch_Rollback_AllowsDuplicatedDisplays_TheSwitchItselfDoesNot()
+    {
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+
+        display.Applied.Select(a => a.Options.AllowClone).ShouldBe([false, true]);
+    }
+
     /// <summary>Only the roles the switch touched come back – the call device the profile left alone stays alone.</summary>
     [Fact]
     public async Task Switch_Rollback_LeavesUntouchedRolesAlone()

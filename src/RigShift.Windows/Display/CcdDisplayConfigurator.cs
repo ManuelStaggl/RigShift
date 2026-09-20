@@ -158,7 +158,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         DISPLAYCONFIG_MODE_INFO[] modes;
         try
         {
-            (paths, modes) = CcdPathBuilder.Build(displays, options.UseDatabaseModes);
+            (paths, modes) = CcdPathBuilder.Build(displays, options.UseDatabaseModes, options.AllowClone);
         }
         catch (InvalidOperationException ex)
         {

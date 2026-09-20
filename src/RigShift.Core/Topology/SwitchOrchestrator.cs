@@ -522,7 +522,7 @@ public sealed class SwitchOrchestrator
 
             rolledBack = rollbackPlan.Resolved.Count == 0
                 ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.", false)
-                : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+                : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken, restoring: true);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -617,7 +617,7 @@ public sealed class SwitchOrchestrator
             return SwitchNote.RestoreFailed;
         }
 
-        ApplyOutcome restored = await ApplyWithRetryAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        ApplyOutcome restored = await ApplyWithRetryAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken, restoring: true);
         if (!restored.Succeeded)
         {
             _log.Error("Restore after failed switch failed: {Reason}", restored.Message);
@@ -637,7 +637,9 @@ public sealed class SwitchOrchestrator
     /// Stored modes first, then database modes (rule 5). On a transient error (31, 1610): wait, re-query, re-plan and try again
     /// within the time budget (rule 4). Every retry uses a fresh snapshot because LUIDs may change (rule 2).
     /// </summary>
-    private async Task<ApplyOutcome> ApplyWithRetryAsync(Profile profile, TopologyPlan plan, DateTimeOffset deadline, CancellationToken cancellationToken)
+    /// <param name="restoring">The previous arrangement comes back: displays Windows had duplicated are duplicated again.</param>
+    private async Task<ApplyOutcome> ApplyWithRetryAsync(
+        Profile profile, TopologyPlan plan, DateTimeOffset deadline, CancellationToken cancellationToken, bool restoring = false)
     {
         int attempts = 0;
         int? lastError = null;
@@ -661,7 +663,7 @@ public sealed class SwitchOrchestrator
                 int code;
                 try
                 {
-                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken)
+                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes, AllowClone = restoring }, cancellationToken)
                         .WaitAsync(_options.ApplyCallTimeout, _time, cancellationToken);
                 }
                 catch (TimeoutException)
