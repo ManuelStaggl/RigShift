@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-09-20
+
 ### Added
 
 - **Restore the desktop icons on their own**: "Restore" next to "Save positions" in the profile, the same entry in

@@ -213,7 +213,7 @@
       "rigshift.windows": {
         "type": "Project",
         "dependencies": {
-          "RigShift.Core": "[3.5.1, )",
+          "RigShift.Core": "[3.6.0, )",
           "Serilog": "[4.4.0, )"
         }
       },

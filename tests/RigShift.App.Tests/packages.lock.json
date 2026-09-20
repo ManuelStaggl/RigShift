@@ -238,8 +238,8 @@
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "H.NotifyIcon.Wpf": "[2.4.1, )",
           "Microsoft.Extensions.DependencyInjection": "[10.0.12, )",
-          "RigShift.Core": "[3.5.1, )",
-          "RigShift.Windows": "[3.5.1, )",
+          "RigShift.Core": "[3.6.0, )",
+          "RigShift.Windows": "[3.6.0, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Debug": "[3.0.0, )",
           "Serilog.Sinks.File": "[7.0.0, )",
@@ -257,7 +257,7 @@
       "rigshift.windows": {
         "type": "Project",
         "dependencies": {
-          "RigShift.Core": "[3.5.1, )",
+          "RigShift.Core": "[3.6.0, )",
           "Serilog": "[4.4.0, )"
         }
       },
