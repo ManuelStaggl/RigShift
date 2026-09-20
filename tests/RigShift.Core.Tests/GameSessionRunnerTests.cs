@@ -88,6 +88,28 @@ public sealed class GameSessionRunnerTests
         _starter.DidNotReceive().Start(Arg.Any<GameLaunch>());
     }
 
+    /// <summary>A rigshift://play link: the switch asks even with confirmation off, and "no" starts nothing.</summary>
+    [Fact]
+    public async Task Run_FromALink_AsksAndStartsNothingWhenDeclined()
+    {
+        _switcher.SwitchAsync(Arg.Any<Profile>(), Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Result(SwitchOutcome.RolledBack));
+
+        GameSessionResult result = await Runner().RunAsync(Game(), alreadyRunning: false, fromLink: true, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.ProfileFailed);
+        await _switcher.Received(1).SwitchAsync(Arg.Any<Profile>(), Arg.Is<SwitchRequest>(r => r.FromLink), Arg.Any<CancellationToken>());
+        _starter.DidNotReceive().Start(Arg.Any<GameLaunch>());
+    }
+
+    [Fact]
+    public async Task Run_WithoutALink_SwitchesWithTheDefaultRequest()
+    {
+        await Runner().RunAsync(Game(), alreadyRunning: false, Ct);
+
+        await _switcher.Received(1).SwitchAsync(Arg.Any<Profile>(), Arg.Is<SwitchRequest>(r => !r.FromLink), Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Run_TreatsAnotherRunningSwitchAsBlocked()
     {

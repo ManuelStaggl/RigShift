@@ -310,13 +310,28 @@ public sealed class CommandRunnerTests
         var games = new InMemoryGameStore();
         games.Games.Add(Game("iRacing"));
         var player = Substitute.For<IGamePlayer>();
-        player.Play(Arg.Any<GameEntry>()).Returns(true);
+        player.Play(Arg.Any<GameEntry>(), Arg.Any<bool>()).Returns(true);
 
         CliResponse response = await Runner(games: games, player: player)
             .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iracing" }, CancellationToken.None);
 
         response.ExitCode.ShouldBe(CliExitCodes.Applied);
-        player.Received(1).Play(Arg.Is<GameEntry>(g => g.Name == "iRacing"));
+        player.Received(1).Play(Arg.Is<GameEntry>(g => g.Name == "iRacing"), false);
+    }
+
+    /// <summary>A web page can send rigshift://play – the session has to know, so its switch asks.</summary>
+    [Fact]
+    public async Task Play_FromALink_TellsTheSession()
+    {
+        var games = new InMemoryGameStore();
+        games.Games.Add(Game("iRacing"));
+        var player = Substitute.For<IGamePlayer>();
+        player.Play(Arg.Any<GameEntry>(), Arg.Any<bool>()).Returns(true);
+
+        await Runner(games: games, player: player)
+            .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iRacing", FromLink = true }, CancellationToken.None);
+
+        player.Received(1).Play(Arg.Any<GameEntry>(), true);
     }
 
     [Fact]
@@ -325,7 +340,7 @@ public sealed class CommandRunnerTests
         var games = new InMemoryGameStore();
         games.Games.Add(Game("iRacing"));
         var player = Substitute.For<IGamePlayer>();
-        player.Play(Arg.Any<GameEntry>()).Returns(false);
+        player.Play(Arg.Any<GameEntry>(), Arg.Any<bool>()).Returns(false);
 
         CliResponse response = await Runner(games: games, player: player)
             .RunAsync(new CliRequest { Command = CliCommand.Play, GameName = "iRacing" }, CancellationToken.None);

@@ -68,12 +68,20 @@ public sealed class GameSessionRunner
     /// The game was started outside RigShift and is already running: the profile is still applied and the apps still
     /// come up, but nothing is started and nothing is learned.
     /// </param>
-    public async Task<GameSessionResult> RunAsync(GameEntry game, bool alreadyRunning, CancellationToken cancellationToken)
+    public Task<GameSessionResult> RunAsync(GameEntry game, bool alreadyRunning, CancellationToken cancellationToken) =>
+        RunAsync(game, alreadyRunning, fromLink: false, cancellationToken);
+
+    /// <param name="fromLink">
+    /// The session was asked for by a <c>rigshift://play</c> link: the switch asks for confirmation even when that is
+    /// turned off, and a "no" ends the session before anything is started.
+    /// </param>
+    /// <inheritdoc cref="RunAsync(GameEntry, bool, CancellationToken)"/>
+    public async Task<GameSessionResult> RunAsync(GameEntry game, bool alreadyRunning, bool fromLink, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(game);
         long started = _time.GetTimestamp();
 
-        SwitchOutcome? applied = await ApplyProfileAsync(game, cancellationToken);
+        SwitchOutcome? applied = await ApplyProfileAsync(game, fromLink, cancellationToken);
         if (applied is { } outcome && outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
         {
             // Starting a game into a layout that was not applied is worse than not starting it.
@@ -153,7 +161,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    private async Task<SwitchOutcome?> ApplyProfileAsync(GameEntry game, CancellationToken cancellationToken)
+    private async Task<SwitchOutcome?> ApplyProfileAsync(GameEntry game, bool fromLink, CancellationToken cancellationToken)
     {
         if (game.ProfileId is not { } id)
         {
@@ -166,7 +174,8 @@ public sealed class GameSessionRunner
             return null;
         }
 
-        SwitchResult? result = await _switcher.SwitchAsync(profile, SwitchRequest.Default, cancellationToken);
+        SwitchRequest request = fromLink ? new SwitchRequest { FromLink = true } : SwitchRequest.Default;
+        SwitchResult? result = await _switcher.SwitchAsync(profile, request, cancellationToken);
         if (result is null)
         {
             _log.Warning("Game {Game}: another switch was running, so nothing was applied", game.Name);

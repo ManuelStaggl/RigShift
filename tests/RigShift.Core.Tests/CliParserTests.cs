@@ -93,6 +93,25 @@ public sealed class CliParserTests
     }
 
     [Fact]
+    public void Parse_NameStartingWithAt_IsANameAndNotAResponseFile()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"rigshift-{Guid.NewGuid():N}.rsp");
+        File.WriteAllText(file, "Injected --no-confirm");
+        try
+        {
+            CliRequest request = CliParser.Parse(["apply", "@" + file, "--from-link"]).Request.ShouldNotBeNull();
+
+            request.ProfileName.ShouldBe("@" + file);
+            request.NoConfirm.ShouldBeFalse();
+            request.FromLink.ShouldBeTrue();
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
     public void Parse_Help_PrintsCommands()
     {
         CliParseResult result = CliParser.Parse(["--help"]);

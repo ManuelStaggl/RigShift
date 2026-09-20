@@ -25,7 +25,7 @@ public interface IGamePlayer
     bool IsRunning(Guid gameId);
 
     /// <returns><c>false</c> when a session for this game is already running, so nothing was started a second time.</returns>
-    bool Play(GameEntry game);
+    bool Play(GameEntry game, bool fromLink);
 }
 
 public sealed record CliResponse(int ExitCode, string Output);
@@ -93,7 +93,7 @@ public sealed class CommandRunner
                 CliCommand.Toggle => await ToggleAsync(request, cancellationToken),
                 CliCommand.Save => await SaveAsync(request.ProfileName ?? string.Empty, cancellationToken),
                 CliCommand.Games => await GamesAsync(cancellationToken),
-                CliCommand.Play => await PlayAsync(request.GameName ?? string.Empty, cancellationToken),
+                CliCommand.Play => await PlayAsync(request.GameName ?? string.Empty, request.FromLink, cancellationToken),
                 _ => new CliResponse(CliExitCodes.InvalidArguments, "No command given."),
             };
         }
@@ -305,7 +305,7 @@ public sealed class CommandRunner
     /// Starts a game session and returns at once: the session outlives the command by hours, so waiting for it would
     /// leave a console process hanging around for the whole evening.
     /// </summary>
-    private async Task<CliResponse> PlayAsync(string name, CancellationToken cancellationToken)
+    private async Task<CliResponse> PlayAsync(string name, bool fromLink, CancellationToken cancellationToken)
     {
         if (_games is null || _player is null)
         {
@@ -319,7 +319,7 @@ public sealed class CommandRunner
             return new CliResponse(CliExitCodes.ProfileNotFound, $"Game '{name}' not found. Available: {available}.");
         }
 
-        return _player.Play(game)
+        return _player.Play(game, fromLink)
             ? new CliResponse(CliExitCodes.Applied, $"Started '{game.Name}'.")
             : new CliResponse(CliExitCodes.Failed, $"'{game.Name}' is already running.");
     }

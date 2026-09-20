@@ -134,7 +134,9 @@ public static class CliParser
             command.SetAction(_ => CliExitCodes.Applied);
         }
 
-        ParseResult parsed = root.Parse(args);
+        // No response files: "@file" would make the parser read that file – and a rigshift:// link can carry such a
+        // name, down to a UNC path on somebody else's server. A profile may simply be called "@Rig".
+        ParseResult parsed = root.Parse(args, new ParserConfiguration { ResponseFileTokenReplacer = null });
         if (parsed.Errors.Count > 0 || parsed.Action != parsed.CommandResult.Command.Action)
         {
             using var output = new StringWriter(CultureInfo.InvariantCulture);
