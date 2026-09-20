@@ -1,4 +1,7 @@
 using System.IO.Compression;
+using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
+using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Settings;
 using RigShift.Core.Storage;
@@ -67,6 +70,125 @@ public sealed class BackupArchiveTests : IDisposable
 
         content.Settings.ShouldBeNull();
         (await new JsonSettingsStore(SettingsFile, Logger.None).LoadAsync(Ct)).Language.ShouldBe("en");
+    }
+
+    [Fact]
+    public async Task WriteThenRestore_RoundTripsTheGames()
+    {
+        await new JsonProfileStore(Profiles, Logger.None).SaveAsync(Rig(), Ct);
+        GameEntry game = Game("iRacing");
+        await new JsonGameStore(_directory, Logger.None).SaveAsync(game, Ct);
+        using var archive = new MemoryStream();
+        BackupArchive.Write(_directory, archive);
+
+        string other = _directory + "-restored";
+        await new JsonGameStore(other, Logger.None).SaveAsync(Game("Old game"), Ct);
+        archive.Position = 0;
+        BackupContent content = BackupArchive.Inspect(archive);
+        BackupArchive.Restore(other, content, Logger.None);
+
+        content.Games.ShouldNotBeNull().ShouldHaveSingleItem().Name.ShouldBe("iRacing");
+        GameLoadResult loaded = await new JsonGameStore(other, Logger.None).LoadAllAsync(Ct);
+        loaded.Games.ShouldHaveSingleItem().Id.ShouldBe(game.Id);
+        Directory.Delete(other, recursive: true);
+    }
+
+    /// <summary>A backup from before 2.x knows no games: restoring it must not wipe them.</summary>
+    [Fact]
+    public async Task Restore_BackupWithoutGames_LeavesTheGamesAlone()
+    {
+        await new JsonGameStore(_directory, Logger.None).SaveAsync(Game("iRacing"), Ct);
+        using var archive = Zip(("profiles/a.json", ProfileJson(Rig())));
+
+        BackupContent content = BackupArchive.Inspect(archive);
+        BackupArchive.Restore(_directory, content, Logger.None);
+
+        content.Games.ShouldBeNull();
+        (await new JsonGameStore(_directory, Logger.None).LoadAllAsync(Ct)).Games.ShouldHaveSingleItem().Name.ShouldBe("iRacing");
+    }
+
+    /// <summary>
+    /// The write fails halfway – here a file that cannot be replaced. The profiles that were there must still be
+    /// there: nothing is removed before everything new is in place.
+    /// </summary>
+    [Fact]
+    public async Task Restore_FailingHalfway_KeepsTheOldProfiles()
+    {
+        var store = new JsonProfileStore(Profiles, Logger.None);
+        Profile old = Profile("Old", DeskModes);
+        Profile rig = Rig();
+        await store.SaveAsync(old, Ct);
+        await store.SaveAsync(rig, Ct);
+        using var archive = Zip(("profiles/a.json", ProfileJson(rig)));
+        BackupContent content = BackupArchive.Inspect(archive);
+
+        string target = Path.Combine(Profiles, rig.Id.ToString("D") + ".json");
+        using (new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            // Windows reports the locked target as a sharing violation or as "access denied", depending on the lock.
+            Exception failure = Should.Throw<Exception>(() => BackupArchive.Restore(_directory, content, Logger.None));
+            (failure is IOException or UnauthorizedAccessException).ShouldBeTrue(failure.ToString());
+        }
+
+        (await store.LoadAllAsync(Ct)).Profiles.Select(p => p.Name).ShouldBe(["Old", rig.Name], ignoreOrder: true);
+        Directory.Exists(Path.Combine(_directory, "profiles.restore")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Inspect_EntryThatUnpacksToMegabytes_IsRejected()
+    {
+        using var archive = Zip(("profiles/a.json", new string(' ', 2 * BoundedRead.DefaultLimit)));
+
+        Should.Throw<InvalidDataException>(() => BackupArchive.Inspect(archive));
+    }
+
+    [Theory]
+    [InlineData("""{"schemaVersion":1,"games":[{"id":"6f1b6f0e-0000-0000-0000-000000000001","name":"","launch":{"kind":"steam","target":"1"}}]}""")]
+    [InlineData("""{"schemaVersion":1,"games":[{"id":"6f1b6f0e-0000-0000-0000-000000000001","name":"A","launch":null}]}""")]
+    [InlineData("""{"schemaVersion":99,"games":[]}""")]
+    [InlineData("not json")]
+    public void Inspect_BrokenGames_IsRejected(string json)
+    {
+        using var archive = Zip(("games.json", json));
+
+        Should.Throw<InvalidDataException>(() => BackupArchive.Inspect(archive)).Message.ShouldContain("games.json");
+    }
+
+    /// <summary>What a foreign backup would run has to be in front of the user before it is restored.</summary>
+    [Fact]
+    public void Review_ListsProgramsRulesAndHotkeys_AndMarksWhatNeedsASecondLook()
+    {
+        Profile rig = Rig() with
+        {
+            Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control, VirtualKey = 0x70 },
+            Apps =
+            [
+                new AppAction { Kind = AppActionKind.Start, Path = @"C:\Tools\SimHub.exe", Arguments = "-min" },
+                new AppAction { Kind = AppActionKind.Start, Path = @"\\evil\share\x.exe" },
+                new AppAction { Kind = AppActionKind.Start, Path = "powershell", Arguments = "-c calc" },
+                new AppAction { Kind = AppActionKind.Stop, Path = "discord" },
+            ],
+        };
+        GameEntry game = Game("rFactor") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"D:\rF\rf.exe" } };
+        var settings = new AppSettings
+        {
+            AutomationRules = [new AutomationRule { ProfileId = rig.Id, SkipConfirmation = true, Devices = [new RuleDevice { Id = "USB\\X", Name = "Wheel" }] }],
+        };
+
+        IReadOnlyList<BackupItem> items = BackupReview.Review(new BackupContent([rig], settings, [game]));
+
+        items.Select(i => i.Kind).ShouldBe([
+            BackupItemKind.StartsProgram, BackupItemKind.StartsProgram, BackupItemKind.StartsProgram, BackupItemKind.StopsProgram,
+            BackupItemKind.Hotkey, BackupItemKind.StartsGame, BackupItemKind.Rule,
+        ]);
+        items[0].Detail.ShouldBe(@"C:\Tools\SimHub.exe -min");
+        items[0].NeedsAttention.ShouldBeFalse();
+        items[1].IsNetworkPath.ShouldBeTrue();
+        items[2].IsNotFullPath.ShouldBeTrue();
+        items[3].NeedsAttention.ShouldBeFalse(); // Ending a program by its name starts nothing.
+        items[6].SkipsConfirmation.ShouldBeTrue();
+        items[6].Owner.ShouldBe(rig.Name);
+        items[6].Detail.ShouldBe("Wheel");
     }
 
     [Fact]
@@ -152,6 +274,13 @@ public sealed class BackupArchiveTests : IDisposable
             Directory.Delete(_directory, recursive: true);
         }
     }
+
+    private static GameEntry Game(string name) => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = name,
+        Launch = new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410" },
+    };
 
     private string ProfileJson(Profile profile)
     {

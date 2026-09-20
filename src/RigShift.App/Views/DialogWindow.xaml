@@ -32,6 +32,23 @@
       Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
       Style="{StaticResource RigShift.Text.Body}"
       TextWrapping="Wrap" />
+    <!-- What the answer would bring along, e.g. the programs in a backup. Scrolls; the question stays in view. -->
+    <Border
+      x:Name="DetailsBox"
+      Margin="0,16,0,0"
+      Padding="12,8,4,8"
+      Background="{DynamicResource RigShift.Brush.Layer}"
+      BorderBrush="{DynamicResource RigShift.Brush.Line}"
+      BorderThickness="1"
+      CornerRadius="6"
+      Visibility="Collapsed">
+      <ScrollViewer
+        MaxHeight="280"
+        Focusable="False"
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="Details" Margin="0,0,12,0" />
+      </ScrollViewer>
+    </Border>
     <!-- Windows order: the action first, the way out last (R-ACT-3). -->
     <StackPanel
       x:Name="Buttons"

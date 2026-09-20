@@ -194,7 +194,7 @@
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, rules and settings as one ZIP file.</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, games, rules and settings as one ZIP file.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Save…</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Restore…</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Backup saved with {0} profile(s).</value></data>
@@ -202,7 +202,7 @@
   <data name="About_BackupFailed" xml:space="preserve"><value>Error: {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Wait until the running switch has finished.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Restore backup?</value></data>
-  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. This cannot be undone.</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. Your games stay as they are. This cannot be undone.</value></data>
   <data name="About_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift on GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
@@ -645,5 +645,38 @@
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximized</value>
+  </data>
+  <data name="About_RestoreTextGames" xml:space="preserve">
+    <value>All profiles, games, automation rules and settings are replaced by the {0} profile(s), {1} game(s) and the settings from the backup. This cannot be undone.</value>
+  </data>
+  <data name="About_RestoreReview" xml:space="preserve">
+    <value>The backup brings the following along:</value>
+  </data>
+  <data name="About_RestoreReviewAttention" xml:space="preserve">
+    <value>The backup brings the following along – restore it only if you trust where it comes from:</value>
+  </data>
+  <data name="Restore_Starts" xml:space="preserve">
+    <value>Starts</value>
+  </data>
+  <data name="Restore_Stops" xml:space="preserve">
+    <value>Ends</value>
+  </data>
+  <data name="Restore_Game" xml:space="preserve">
+    <value>Game</value>
+  </data>
+  <data name="Restore_Rule" xml:space="preserve">
+    <value>USB rule</value>
+  </data>
+  <data name="Restore_Hotkey" xml:space="preserve">
+    <value>Shortcut</value>
+  </data>
+  <data name="Restore_WarnNetwork" xml:space="preserve">
+    <value>Program on a network share</value>
+  </data>
+  <data name="Restore_WarnNotFullPath" xml:space="preserve">
+    <value>No full path – RigShift will not start it</value>
+  </data>
+  <data name="Restore_WarnNoConfirm" xml:space="preserve">
+    <value>Switches without asking</value>
   </data>
 </root>

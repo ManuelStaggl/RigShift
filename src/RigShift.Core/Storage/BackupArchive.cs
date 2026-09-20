@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Settings;
 using Serilog;
@@ -7,17 +8,23 @@ using Serilog;
 namespace RigShift.Core.Storage;
 
 /// <summary>What a backup holds, read without touching the data folder.</summary>
-public sealed record BackupContent(IReadOnlyList<Profile> Profiles, AppSettings? Settings);
+/// <param name="Games">The games, or <c>null</c> for a backup from before they were included: restoring leaves the games alone.</param>
+public sealed record BackupContent(IReadOnlyList<Profile> Profiles, AppSettings? Settings, IReadOnlyList<GameEntry>? Games = null);
 
 /// <summary>
-/// Profiles and settings as one ZIP file (1.7.0): <c>profiles/&lt;guid&gt;.json</c> plus <c>settings.json</c>, exactly
-/// the files RigShift keeps in <c>%AppData%\RigShift</c>. Logs are not included. Restoring replaces every profile and the
-/// settings; profile files are written under the id inside them, never under the name in the archive.
+/// Profiles, games and settings as one ZIP file: <c>profiles/&lt;guid&gt;.json</c>, <c>games.json</c> and
+/// <c>settings.json</c>, exactly the files RigShift keeps in <c>%AppData%\RigShift</c>. Logs are not included.
+/// Restoring replaces every profile and whichever of the other two the backup has; profile files are written under
+/// the id inside them, never under the name in the archive.
 /// </summary>
 public static class BackupArchive
 {
     public const string SettingsEntry = "settings.json";
+    public const string GamesEntry = JsonGameStore.FileName;
     public const string ProfilesFolder = "profiles/";
+
+    /// <summary>Where a restore collects the new profile files before any existing file is touched.</summary>
+    private const string StagingFolder = "profiles.restore";
 
     /// <summary>Writes the backup of <paramref name="dataDirectory"/> to <paramref name="destination"/>.</summary>
     /// <returns>The number of profile files written.</returns>
@@ -38,10 +45,13 @@ public static class BackupArchive
             }
         }
 
-        string settings = Path.Combine(dataDirectory, SettingsEntry);
-        if (File.Exists(settings))
+        foreach (string name in (string[])[SettingsEntry, GamesEntry])
         {
-            archive.CreateEntryFromFile(settings, SettingsEntry);
+            string file = Path.Combine(dataDirectory, name);
+            if (File.Exists(file))
+            {
+                archive.CreateEntryFromFile(file, name);
+            }
         }
 
         return count;
@@ -66,6 +76,7 @@ public static class BackupArchive
         {
             var profiles = new List<Profile>();
             AppSettings? settings = null;
+            IReadOnlyList<GameEntry>? games = null;
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
                 string name = entry.FullName.Replace('\\', '/');
@@ -77,6 +88,10 @@ public static class BackupArchive
                 if (string.Equals(name, SettingsEntry, StringComparison.OrdinalIgnoreCase))
                 {
                     settings = ReadSettings(entry);
+                }
+                else if (string.Equals(name, GamesEntry, StringComparison.OrdinalIgnoreCase))
+                {
+                    games = ReadGames(entry);
                 }
                 else if (name.StartsWith(ProfilesFolder, StringComparison.OrdinalIgnoreCase)
                     && name.Length > ProfilesFolder.Length
@@ -91,9 +106,9 @@ public static class BackupArchive
                 }
             }
 
-            if (profiles.Count == 0 && settings is null)
+            if (profiles.Count == 0 && settings is null && games is null)
             {
-                throw new InvalidDataException("The archive contains no profiles and no settings.");
+                throw new InvalidDataException("The archive contains no profiles, no games and no settings.");
             }
 
             var ids = new HashSet<Guid>();
@@ -105,13 +120,16 @@ public static class BackupArchive
                 }
             }
 
-            return new BackupContent(profiles, settings);
+            return new BackupContent(profiles, settings, games);
         }
     }
 
     /// <summary>
-    /// Replaces the profiles in <paramref name="dataDirectory"/> with those of <paramref name="content"/> and the settings
-    /// file when the backup has one. Existing profile files go first, so a profile that is not in the backup is gone.
+    /// Replaces the profiles in <paramref name="dataDirectory"/> with those of <paramref name="content"/>, and the
+    /// settings and the games when the backup has them. A profile that is not in the backup is gone afterwards.
+    /// Everything new is written to the side first; existing files are only touched once all of it is safely on disk,
+    /// and old profiles are removed last. A failure on the way – disk full, a virus scanner holding a file – therefore
+    /// leaves either the old state or old and new profiles side by side, never an empty folder.
     /// </summary>
     public static void Restore(string dataDirectory, BackupContent content, ILogger log)
     {
@@ -120,36 +138,104 @@ public static class BackupArchive
         ArgumentNullException.ThrowIfNull(log);
 
         string profiles = Path.Combine(dataDirectory, "profiles");
+        string staging = Path.Combine(dataDirectory, StagingFolder);
+        string settingsFile = Path.Combine(dataDirectory, SettingsEntry);
+        string gamesFile = Path.Combine(dataDirectory, GamesEntry);
         Directory.CreateDirectory(profiles);
-        int removed = 0;
-        foreach (string file in Directory.EnumerateFiles(profiles, "*.json").ToList())
+        if (Directory.Exists(staging))
         {
-            File.Delete(file);
-            removed++;
+            Directory.Delete(staging, recursive: true); // Left over from a restore that did not finish.
         }
 
-        foreach (Profile profile in content.Profiles)
+        Directory.CreateDirectory(staging);
+        try
         {
-            string target = Path.Combine(profiles, profile.Id.ToString("D") + ".json");
-            using FileStream stream = File.Create(target);
-            JsonSerializer.Serialize(stream, new ProfileDocument(JsonProfileStore.CurrentSchemaVersion, profile), ProfileJsonContext.Default.ProfileDocument);
-        }
-
-        if (content.Settings is { } settings)
-        {
-            string file = Path.Combine(dataDirectory, SettingsEntry);
-            string temp = file + ".tmp";
-            using (FileStream stream = File.Create(temp))
+            // 1. Everything new, next to the old.
+            var staged = new List<string>(content.Profiles.Count);
+            foreach (Profile profile in content.Profiles)
             {
-                JsonSerializer.Serialize(stream, settings, SettingsJsonContext.Default.AppSettings);
+                string name = profile.Id.ToString("D") + ".json";
+                WriteThrough(Path.Combine(staging, name), stream => JsonSerializer.Serialize(
+                    stream, new ProfileDocument(JsonProfileStore.CurrentSchemaVersion, profile), ProfileJsonContext.Default.ProfileDocument));
+                staged.Add(name);
             }
 
-            File.Move(temp, file, overwrite: true);
-        }
+            if (content.Settings is { } settings)
+            {
+                WriteThrough(settingsFile + ".restore", stream => JsonSerializer.Serialize(stream, settings, SettingsJsonContext.Default.AppSettings));
+            }
 
-        log.ForContext(typeof(BackupArchive)).Information(
-            "Backup restored to {Directory}: {Profiles} profile(s) written, {Removed} old file(s) removed, settings {Settings}",
-            dataDirectory, content.Profiles.Count, removed, content.Settings is null ? "kept" : "replaced");
+            if (content.Games is { } games)
+            {
+                WriteThrough(gamesFile + ".restore", stream => JsonSerializer.Serialize(
+                    stream, new GameDocument(JsonGameStore.CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument));
+            }
+
+            // 2. Into place, file by file; each move replaces its target in one step.
+            foreach (string name in staged)
+            {
+                File.Move(Path.Combine(staging, name), Path.Combine(profiles, name), overwrite: true);
+            }
+
+            if (content.Settings is not null)
+            {
+                File.Move(settingsFile + ".restore", settingsFile, overwrite: true);
+            }
+
+            if (content.Games is not null)
+            {
+                File.Move(gamesFile + ".restore", gamesFile, overwrite: true);
+            }
+
+            // 3. Only now the profiles the backup does not know.
+            var keep = new HashSet<string>(staged, StringComparer.OrdinalIgnoreCase);
+            int removed = 0;
+            foreach (string file in Directory.EnumerateFiles(profiles, "*.json").ToList())
+            {
+                if (!keep.Contains(Path.GetFileName(file)))
+                {
+                    File.Delete(file);
+                    removed++;
+                }
+            }
+
+            log.ForContext(typeof(BackupArchive)).Information(
+                "Backup restored to {Directory}: {Profiles} profile(s) written, {Removed} old file(s) removed, settings {Settings}, games {Games}",
+                dataDirectory, content.Profiles.Count, removed,
+                content.Settings is null ? "kept" : "replaced", content.Games is null ? "kept" : "replaced");
+        }
+        finally
+        {
+            TryCleanUp(staging, settingsFile + ".restore", gamesFile + ".restore");
+        }
+    }
+
+    /// <summary>Written and flushed to the disk, not just to the cache: the next step relies on the file being there.</summary>
+    private static void WriteThrough(string file, Action<FileStream> write)
+    {
+        using FileStream stream = File.Create(file);
+        write(stream);
+        stream.Flush(flushToDisk: true);
+    }
+
+    private static void TryCleanUp(string staging, params string[] files)
+    {
+        try
+        {
+            if (Directory.Exists(staging))
+            {
+                Directory.Delete(staging, recursive: true);
+            }
+
+            foreach (string file in files)
+            {
+                File.Delete(file);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Leftovers are removed by the next restore; they are never read.
+        }
     }
 
     private static Profile ReadProfile(ZipArchiveEntry entry)
@@ -175,12 +261,53 @@ public static class BackupArchive
             throw new InvalidDataException($"'{entry.FullName}' is from a newer RigShift version.");
         }
 
-        if (string.IsNullOrWhiteSpace(profile.Name) || profile.Displays is null)
+        if (string.IsNullOrWhiteSpace(profile.Name) || profile.Displays is null || profile.Apps is null)
         {
             throw new InvalidDataException($"'{entry.FullName}' is not a complete profile.");
         }
 
         return profile.WithMigratedConfirmation();
+    }
+
+    private static IReadOnlyList<GameEntry> ReadGames(ZipArchiveEntry entry)
+    {
+        GameDocument? document;
+        try
+        {
+            using Stream stream = BoundedRead.Entry(entry);
+            document = JsonSerializer.Deserialize(stream, GameJsonContext.Default.GameDocument);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException("games.json is not a RigShift games file.", ex);
+        }
+
+        if (document is null)
+        {
+            throw new InvalidDataException("games.json is empty.");
+        }
+
+        if (document.SchemaVersion > JsonGameStore.CurrentSchemaVersion)
+        {
+            throw new InvalidDataException("games.json is from a newer RigShift version.");
+        }
+
+        IReadOnlyList<GameEntry> games = document.Games ?? [];
+        var ids = new HashSet<Guid>();
+        foreach (GameEntry game in games)
+        {
+            if (game is null || string.IsNullOrWhiteSpace(game.Name) || game.Launch is null || game.Apps is null)
+            {
+                throw new InvalidDataException("games.json contains an incomplete game.");
+            }
+
+            if (!ids.Add(game.Id))
+            {
+                throw new InvalidDataException($"Game '{game.Name}' appears twice.");
+            }
+        }
+
+        return games;
     }
 
     private static AppSettings ReadSettings(ZipArchiveEntry entry)

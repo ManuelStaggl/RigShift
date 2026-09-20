@@ -143,7 +143,7 @@ public sealed partial class AboutViewModel : ObservableObject
             return;
         }
 
-        if (!await ProfileDialogs.ConfirmRestoreAsync(content.Profiles.Count))
+        if (!await ProfileDialogs.ConfirmRestoreAsync(content))
         {
             return;
         }
@@ -167,6 +167,7 @@ public sealed partial class AboutViewModel : ObservableObject
         // Even after a failure halfway, what is on disk now is what counts.
         await _settings.ReloadAsync(CancellationToken.None);
         await _catalog.ReloadAsync(CancellationToken.None);
+        await _games.ReloadAsync(CancellationToken.None);
         if (BackupStatus is null || !BackupStatus.StartsWith(Loc.Format("About_BackupFailed", string.Empty), StringComparison.Ordinal))
         {
             BackupStatus = Loc.Format("About_BackupRestored", content.Profiles.Count);

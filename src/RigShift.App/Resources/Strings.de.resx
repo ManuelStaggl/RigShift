@@ -194,7 +194,7 @@
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Spiele, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Speichern …</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Wiederherstellen …</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
@@ -202,7 +202,7 @@
   <data name="About_BackupFailed" xml:space="preserve"><value>Fehler: {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Warte, bis der laufende Wechsel fertig ist.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Sicherung wiederherstellen?</value></data>
-  <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Deine Spiele bleiben, wie sie sind. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="About_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift auf GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
@@ -645,5 +645,38 @@
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximiert</value>
+  </data>
+  <data name="About_RestoreTextGames" xml:space="preserve">
+    <value>Alle Profile, Spiele, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e), {1} Spiel(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="About_RestoreReview" xml:space="preserve">
+    <value>Die Sicherung bringt Folgendes mit:</value>
+  </data>
+  <data name="About_RestoreReviewAttention" xml:space="preserve">
+    <value>Die Sicherung bringt Folgendes mit – stelle sie nur wieder her, wenn du ihrer Herkunft vertraust:</value>
+  </data>
+  <data name="Restore_Starts" xml:space="preserve">
+    <value>Startet</value>
+  </data>
+  <data name="Restore_Stops" xml:space="preserve">
+    <value>Beendet</value>
+  </data>
+  <data name="Restore_Game" xml:space="preserve">
+    <value>Spiel</value>
+  </data>
+  <data name="Restore_Rule" xml:space="preserve">
+    <value>USB-Regel</value>
+  </data>
+  <data name="Restore_Hotkey" xml:space="preserve">
+    <value>Tastenkürzel</value>
+  </data>
+  <data name="Restore_WarnNetwork" xml:space="preserve">
+    <value>Programm auf einer Netzwerkfreigabe</value>
+  </data>
+  <data name="Restore_WarnNotFullPath" xml:space="preserve">
+    <value>Kein voller Pfad – RigShift startet es nicht</value>
+  </data>
+  <data name="Restore_WarnNoConfirm" xml:space="preserve">
+    <value>Schaltet ohne Rückfrage um</value>
   </data>
 </root>
