@@ -330,12 +330,14 @@
                     <!-- Number as the round badge of the picture; a dashed ring for a display Windows does not use. -->
                     <Border
                       x:Name="Badge"
-                      Width="20"
+                      MinWidth="20"
                       Height="20"
                       HorizontalAlignment="Left"
                       Background="{DynamicResource RigShift.Brush.HoverOverlay}"
                       CornerRadius="10">
+                      <!-- The side margin turns the disc into a pill for a number in the hundreds (remote session). -->
                       <TextBlock
+                        Margin="5,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         FontSize="11"

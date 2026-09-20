@@ -366,14 +366,22 @@ public sealed class DisplayTopology : FrameworkElement
             double disc = owner.Size == TopologySize.L ? 20 : 16;
             if (display.Number is { } number)
             {
-                var numberBadge = new Grid { Width = disc, Height = disc, Margin = new Thickness(0, 0, 4, 0) };
-                var back = new Ellipse();
-                back.SetResourceReference(Shape.FillProperty, "RigShift.Brush.HoverOverlay");
-                numberBadge.Children.Add(back);
+                // A disc for one digit that grows into a pill: a remote session numbers its display in the hundreds.
                 TextBlock digit = Text(disc > 16 ? 11 : 10, FontWeights.SemiBold, "RigShift.Brush.TextPrimary");
                 digit.Text = number.ToString(CultureInfo.InvariantCulture);
+                digit.TextTrimming = TextTrimming.None;
                 digit.VerticalAlignment = VerticalAlignment.Center;
-                numberBadge.Children.Add(digit);
+                digit.HorizontalAlignment = HorizontalAlignment.Center;
+                var numberBadge = new Border
+                {
+                    MinWidth = disc,
+                    Height = disc,
+                    CornerRadius = new CornerRadius(disc / 2),
+                    Padding = new Thickness(number >= 10 ? 5 : 0, 0, number >= 10 ? 5 : 0, 0),
+                    Margin = new Thickness(0, 0, 4, 0),
+                    Child = digit,
+                };
+                numberBadge.SetResourceReference(Border.BackgroundProperty, "RigShift.Brush.HoverOverlay");
                 _badges.Children.Add(numberBadge);
             }
 
