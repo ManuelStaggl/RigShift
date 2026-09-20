@@ -109,17 +109,12 @@ public sealed class JsonGameStore : IGameStore
 
     private async Task WriteAsync(IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_file)!);
-        string temp = _file + ".tmp";
-
-        // Write to a temp file and move it over the original, so a crash never leaves a half-written list.
-        await using (FileStream stream = File.Create(temp))
-        {
-            await JsonSerializer.SerializeAsync(
-                stream, new GameDocument(CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument, cancellationToken);
-        }
-
-        File.Move(temp, _file, overwrite: true);
+        // Written next to the original and moved over it, so a crash never leaves a half-written list.
+        await AtomicFile.WriteAsync(
+            _file,
+            stream => JsonSerializer.SerializeAsync(
+                stream, new GameDocument(CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument, cancellationToken),
+            cancellationToken);
     }
 
     /// <summary>

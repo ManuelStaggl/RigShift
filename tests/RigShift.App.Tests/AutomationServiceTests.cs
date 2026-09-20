@@ -76,11 +76,23 @@ public sealed class AutomationServiceTests : IDisposable
     {
         using AutomationService automation = await CreateAsync();
 
-        // A directory where the temporary settings file goes makes the save fail.
-        Directory.CreateDirectory(_host.Paths.SettingsFile + ".tmp");
+        // A read-only settings file cannot be replaced, so the save fails.
+        Directory.CreateDirectory(Path.GetDirectoryName(_host.Paths.SettingsFile)!);
+        if (!File.Exists(_host.Paths.SettingsFile))
+        {
+            await File.WriteAllTextAsync(_host.Paths.SettingsFile, "{}", TestContext.Current.CancellationToken);
+        }
 
-        (await automation.SetPausedAsync(true)).ShouldBeFalse();
-        automation.IsPaused.ShouldBeFalse();
+        File.SetAttributes(_host.Paths.SettingsFile, FileAttributes.ReadOnly);
+        try
+        {
+            (await automation.SetPausedAsync(true)).ShouldBeFalse();
+            automation.IsPaused.ShouldBeFalse();
+        }
+        finally
+        {
+            File.SetAttributes(_host.Paths.SettingsFile, FileAttributes.Normal);
+        }
     }
 
     public void Dispose() => _host.Dispose();

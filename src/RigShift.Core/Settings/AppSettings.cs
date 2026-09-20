@@ -337,14 +337,11 @@ public sealed class JsonSettingsStore
             LastLoad = LastLoad with { BackupFile = copy };
         }
 
-        string temp = _file + ".tmp";
-        await using (FileStream stream = File.Create(temp))
-        {
-            await JsonSerializer.SerializeAsync(
-                stream, settings with { SchemaVersion = AppSettings.CurrentSchemaVersion }, SettingsJsonContext.Default.AppSettings, cancellationToken);
-        }
-
-        File.Move(temp, _file, overwrite: true);
+        await Storage.AtomicFile.WriteAsync(
+            _file,
+            stream => JsonSerializer.SerializeAsync(
+                stream, settings with { SchemaVersion = AppSettings.CurrentSchemaVersion }, SettingsJsonContext.Default.AppSettings, cancellationToken),
+            cancellationToken);
         _log.Information("Settings saved to {File}", _file);
     }
 }
