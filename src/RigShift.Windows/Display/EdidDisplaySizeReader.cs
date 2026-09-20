@@ -27,7 +27,7 @@ public sealed class EdidDisplaySizeReader : IDisplaySizeReader
         string? keyPath = Edid.RegistryKeyFor(display.TargetDevicePath);
         if (keyPath is null)
         {
-            _log.Debug("No registry instance in display path {Path}", display.TargetDevicePath);
+            _log.Debug("The device path of {Display} names no registry instance", DisplayNames.Of(display));
             return null;
         }
 

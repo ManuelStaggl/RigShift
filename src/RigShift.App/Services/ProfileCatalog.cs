@@ -147,7 +147,8 @@ public sealed partial class ProfileCatalog : ObservableObject
             await _store.SaveAsync(profile, cancellationToken);
         }
 
-        _log.Information("Display {Display} named {Name}; {Count} profile(s) updated", targetDevicePath, DisplayNames.Normalize(name) ?? "(none)", changed.Count);
+        _log.Information("Display {Display} named {Name}; {Count} profile(s) updated",
+            DiagnosticsReport.ShortTargetPath(targetDevicePath), DisplayNames.Normalize(name) ?? "(none)", changed.Count);
         if (changed.Count > 0)
         {
             await ReloadAsync(cancellationToken);

@@ -214,7 +214,7 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
         catch (COMException ex) when (ex.HResult == ElementNotFound)
         {
-            _log.Warning("Audio device {Device} ({EndpointId}) is not known on this machine", endpoint.FriendlyName, endpoint.EndpointId);
+            _log.Warning("Audio device {Device} is not known on this machine", endpoint.FriendlyName);
             return false;
         }
         finally

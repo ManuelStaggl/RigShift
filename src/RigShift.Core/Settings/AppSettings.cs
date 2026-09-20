@@ -40,6 +40,12 @@ public sealed record AppSettings
     public bool OnlyNotifyAboutUpdates { get; init; }
 
     /// <summary>
+    /// Write Debug lines to the log as well. Off by default: at Debug every poll of the displays leaves a line, which
+    /// buries what happened and fills the 14 days of files for nothing. On for a bug report.
+    /// </summary>
+    public bool DetailedLogging { get; init; }
+
+    /// <summary>
     /// Custom monitor names by target device path, also for monitors that are in no profile (displays page). Profiles
     /// carry the name too, so the core and the command line do not need the settings.
     /// </summary>

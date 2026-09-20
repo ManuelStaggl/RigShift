@@ -122,6 +122,16 @@
               IsChecked="{Binding InstallUpdatesAutomatically}"
               Style="{StaticResource RigShift.Toggle}" />
           </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_DetailedLogHint}"
+            Title="{loc:Tr Settings_DetailedLog}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_DetailedLog}"
+              IsChecked="{Binding DetailedLogging}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
         </StackPanel>
 
         <!-- Right column: the USB devices rules and profiles use; names are saved on Enter or on leaving (F6). -->

@@ -158,6 +158,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             ConfirmEnabled = current.ConfirmTimeoutSeconds > 0;
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
+            DetailedLogging = current.DetailedLogging;
             StartWithWindows = _settings.Autostart.IsEnabled;
             ToggleHotkey = current.ToggleHotkey;
             Devices.Refresh();
@@ -176,6 +177,17 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (!_loading)
         {
             Persist(s => s with { OnlyNotifyAboutUpdates = !value });
+        }
+    }
+
+    [ObservableProperty]
+    public partial bool DetailedLogging { get; set; }
+
+    partial void OnDetailedLoggingChanged(bool value)
+    {
+        if (!_loading)
+        {
+            Persist(s => s with { DetailedLogging = value });
         }
     }
 

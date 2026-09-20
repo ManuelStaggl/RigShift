@@ -89,6 +89,10 @@
   <data name="Update_Available" xml:space="preserve"><value>Version {0} ist verfügbar. Unter „Über &amp; Hilfe“ kannst du sie installieren.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Updates automatisch installieren</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: Neue Versionen werden nur gemeldet.</value></data>
+
+  <data name="Settings_DetailedLog" xml:space="preserve"><value>Ausführliches Protokoll</value></data>
+
+  <data name="Settings_DetailedLogHint" xml:space="preserve"><value>Für eine Fehlermeldung: einschalten, dann das Problem wiederholen.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release-Notes auf GitHub</value></data>
   <data name="About_WhatsNew" xml:space="preserve"><value>Was ist neu</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>

@@ -55,6 +55,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
     {
         Current = await store.LoadAsync(cancellationToken);
         Loc.Instance.SetLanguage(Current.Language);
+        AppLogging.SetDetailed(Current.DetailedLogging);
     }
 
     /// <summary>The file was replaced behind our back (a restored backup): read it again and tell everyone. UI thread.</summary>
@@ -71,6 +72,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
         }
 
         Loc.Instance.SetLanguage(Current.Language);
+        AppLogging.SetDetailed(Current.DetailedLogging);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -96,6 +98,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
             await store.SaveAsync(updated, cancellationToken);
             languageChanged = !string.Equals(updated.Language, Current.Language, StringComparison.Ordinal);
             Current = updated;
+            AppLogging.SetDetailed(updated.DetailedLogging);
         }
         finally
         {

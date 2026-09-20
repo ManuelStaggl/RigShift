@@ -30,7 +30,8 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
     {
         CcdRawSnapshot raw = QueryRaw();
         List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
-        _log.Information("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
+        // Debug: the tray, the automation and every open page ask, so at Information this line was most of the log.
+        _log.Debug("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
             raw.Paths.Count, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
 
         return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
