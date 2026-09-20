@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
+using RigShift.Core.Storage;
 using Serilog;
 
 namespace RigShift.Windows.Games;
@@ -69,7 +70,7 @@ public sealed class SteamLibrary
             return folders;
         }
 
-        ValveNode root = ValveDataFormat.Parse(File.ReadAllText(file));
+        ValveNode root = ValveDataFormat.Parse(BoundedRead.Text(file));
         ValveNode libraries = root.Child("libraryfolders") ?? root;
         foreach ((_, ValveNode entry) in libraries.Children)
         {
@@ -107,7 +108,7 @@ public sealed class SteamLibrary
             string text;
             try
             {
-                text = File.ReadAllText(file);
+                text = BoundedRead.Text(file);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

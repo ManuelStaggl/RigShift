@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.Windows.Games;
@@ -24,6 +25,12 @@ public sealed class ShellGameStarter : IGameStarter
     public int? Start(GameLaunch launch)
     {
         ArgumentNullException.ThrowIfNull(launch);
+        if (!launch.HasValidTarget)
+        {
+            // The id ends up inside a URI that the store client acts on; anything but an id does not belong there.
+            throw new InvalidOperationException($"'{launch.Target}' is not a valid {launch.Kind} id.");
+        }
+
         if (launch.Uri is { Length: > 0 } uri)
         {
             using Process? client = Process.Start(new ProcessStartInfo { FileName = uri, UseShellExecute = true });
@@ -31,7 +38,7 @@ public sealed class ShellGameStarter : IGameStarter
             return null;
         }
 
-        string file = Environment.ExpandEnvironmentVariables(launch.Target.Trim().Trim('"'));
+        string file = LaunchPath.ForStart(launch.Target);
         var start = new ProcessStartInfo
         {
             FileName = file,
@@ -40,7 +47,7 @@ public sealed class ShellGameStarter : IGameStarter
         };
 
         // Many games look for their files next to the executable instead of their own folder.
-        if (Path.IsPathFullyQualified(file) && Path.GetDirectoryName(file) is { Length: > 0 } directory)
+        if (Path.GetDirectoryName(file) is { Length: > 0 } directory)
         {
             start.WorkingDirectory = directory;
         }

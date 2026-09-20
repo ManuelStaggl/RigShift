@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.Windows.Apps;
@@ -29,7 +30,7 @@ public sealed class ProcessAppLauncher : IAppLauncher
 
     public void Start(string path, string? arguments)
     {
-        string file = Expand(path);
+        string file = LaunchPath.ForStart(path);
         var start = new ProcessStartInfo
         {
             FileName = file,
@@ -38,7 +39,7 @@ public sealed class ProcessAppLauncher : IAppLauncher
         };
 
         // Many sim tools look for their files next to the EXE instead of their own folder.
-        if (Path.IsPathFullyQualified(file) && Path.GetDirectoryName(file) is { Length: > 0 } directory)
+        if (Path.GetDirectoryName(file) is { Length: > 0 } directory)
         {
             start.WorkingDirectory = directory;
         }
@@ -172,7 +173,7 @@ public sealed class ProcessAppLauncher : IAppLauncher
         }
     }
 
-    private static string Expand(string path) => Environment.ExpandEnvironmentVariables(path.Trim().Trim('"'));
+    private static string Expand(string path) => LaunchPath.Expand(path);
 
     private static void DisposeAll(Process[] processes)
     {

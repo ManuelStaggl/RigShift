@@ -157,7 +157,7 @@ public static class BackupArchive
         ProfileDocument? document;
         try
         {
-            using Stream stream = entry.Open();
+            using Stream stream = BoundedRead.Entry(entry);
             document = JsonSerializer.Deserialize(stream, ProfileJsonContext.Default.ProfileDocument);
         }
         catch (JsonException ex)
@@ -188,7 +188,7 @@ public static class BackupArchive
         AppSettings? settings;
         try
         {
-            using Stream stream = entry.Open();
+            using Stream stream = BoundedRead.Entry(entry);
             settings = JsonSerializer.Deserialize(stream, SettingsJsonContext.Default.AppSettings);
         }
         catch (JsonException ex)

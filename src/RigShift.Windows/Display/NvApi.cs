@@ -63,7 +63,10 @@ internal sealed unsafe class NvApi : IDisposable
     internal static NvApi? TryOpen(out string? failure)
     {
         failure = null;
-        if (!NativeLibrary.TryLoad("nvapi64.dll", out nint library))
+        // The driver puts it into System32. By full path: a bare name would also be looked for next to the EXE, in the
+        // current directory and along PATH - on a machine without an NVIDIA driver, that is where a planted DLL would win.
+        string path = Path.Combine(Environment.SystemDirectory, "nvapi64.dll");
+        if (!NativeLibrary.TryLoad(path, out nint library))
         {
             return null;
         }
