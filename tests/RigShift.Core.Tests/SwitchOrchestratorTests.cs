@@ -450,6 +450,74 @@ public sealed class SwitchOrchestratorTests
         _duckingMemory.Remembered.ShouldBeNull();
     }
 
+    /// <summary>
+    /// Anything thrown between the apply and the answer used to leave the arrangement nobody confirmed – on displays
+    /// the user may not be able to see.
+    /// </summary>
+    [Fact]
+    public async Task Switch_ConfirmationThrows_RollsBackAndRestoresAudio()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default)
+            .ThrowsAsyncForAnyArgs(new InvalidOperationException("the dialog could not be shown"));
+        _power.SetKeepAwake(false);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }) with { KeepAwake = true }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
+        result.Message.ShouldNotBeNull().ShouldContain("the dialog could not be shown");
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+        _power.IsKeepingAwake.ShouldBeFalse();
+        _journal.Entry.ShouldBeNull();
+    }
+
+    /// <summary>App exit while the audio switches: no answer will come, so the old arrangement comes back first.</summary>
+    [Fact]
+    public async Task Switch_CancelledBetweenApplyAndConfirmation_RollsBackBeforeThrowing()
+    {
+        using var exit = new CancellationTokenSource();
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs<bool>(_ =>
+        {
+            exit.Cancel();
+            throw new OperationCanceledException(exit.Token);
+        });
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Should.ThrowAsync<OperationCanceledException>(() => Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, exit.Token));
+
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+        await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
+    /// <summary>The rollback asks the driver first; when that throws, the audio still has to come back.</summary>
+    [Fact]
+    public async Task Switch_RollbackQueryThrows_StillRestoresAudioAndReportsFailed()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        display.QueryExceptions.Enqueue(null);
+        display.QueryExceptions.Enqueue(new InvalidOperationException("driver reset"));
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoreFailed);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Switch_Confirmed_KeepsNewTopology()
     {

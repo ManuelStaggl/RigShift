@@ -230,32 +230,49 @@ public sealed class SwitchOrchestrator
         }
 
         plan = applied.Plan;
-        ModeCheck modes = applied.UsedDatabaseModes ? await CheckDatabaseModesAsync(plan, cancellationToken) : ModeCheck.AsPlanned(plan);
-        plan = modes.Plan;
-        long audioStarted = _time.GetTimestamp();
-        AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
-        if (audio != AudioOutcome.NotConfigured)
-        {
-            _log.Information("Audio for {Profile}: {Audio} after {Milliseconds:0} ms", profile.Name, audio, _time.GetElapsedTime(audioStarted).TotalMilliseconds);
-        }
+        ModeCheck modes = ModeCheck.AsPlanned(plan);
+        AudioOutcome audio = AudioOutcome.NotConfigured;
+        ConfirmationResult answer = ConfirmationResult.Confirmed;
+        long askedAt = 0;
+        Exception? thrown = null;
 
-        // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
-        SwitchKeepAwake(profile);
-        await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
+        // From here until the answer the screens show an arrangement nobody confirmed, possibly on displays the user
+        // cannot see. Whatever is thrown in between – a dialog that cannot be shown, a COM surprise, the app exiting –
+        // must end in the way back, never in that arrangement staying.
+        try
+        {
+            modes = applied.UsedDatabaseModes ? await CheckDatabaseModesAsync(plan, cancellationToken) : modes;
+            plan = modes.Plan;
+            long audioStarted = _time.GetTimestamp();
+            audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
+            if (audio != AudioOutcome.NotConfigured)
+            {
+                _log.Information("Audio for {Profile}: {Audio} after {Milliseconds:0} ms", profile.Name, audio, _time.GetElapsedTime(audioStarted).TotalMilliseconds);
+            }
+
+            // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
+            SwitchKeepAwake(profile);
+            await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
+
+            if (confirm)
+            {
+                askedAt = _time.GetTimestamp();
+                answer = await _confirmation.ConfirmAsync(profile, before, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (confirm && cancellationToken.IsCancellationRequested)
+        {
+            answer = ConfirmationResult.Cancelled;
+        }
+        catch (Exception ex) when (confirm)
+        {
+            _log.Error(ex, "Switch to {Profile} threw before it was confirmed, rolling back", profile.Name);
+            thrown = ex;
+            answer = ConfirmationResult.Cancelled;
+        }
 
         if (confirm)
         {
-            ConfirmationResult answer;
-            long askedAt = _time.GetTimestamp();
-            try
-            {
-                answer = await _confirmation.ConfirmAsync(profile, before, TimeSpan.FromSeconds(confirmSeconds), cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                answer = ConfirmationResult.Cancelled;
-            }
-
             if (answer == ConfirmationResult.Confirmed)
             {
                 _log.Information("Switch to {Profile} confirmed after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(askedAt).TotalSeconds);
@@ -265,27 +282,45 @@ public sealed class SwitchOrchestrator
             {
                 // Cancelled (app exit, logoff): the window closing is no answer, and the rollback must run to the end
                 // before the caller learns about the cancellation (analysis finding B-02).
-                bool cancelled = cancellationToken.IsCancellationRequested;
-                CancellationToken rollbackToken = cancelled ? CancellationToken.None : cancellationToken;
+                bool cancelled = thrown is null && cancellationToken.IsCancellationRequested;
+                CancellationToken rollbackToken = cancelled || thrown is not null ? CancellationToken.None : cancellationToken;
                 if (cancelled)
                 {
                     _log.Warning("Switch to {Profile} cancelled during confirmation, rolling back", profile.Name);
                 }
-                else
+                else if (thrown is null)
                 {
                     _log.Warning("Switch to {Profile} not confirmed ({Answer}), rolling back", profile.Name, answer);
                 }
 
                 RestoreKeepAwake(keepAwakeBefore);
-                await _duckingSwitcher.RestoreAsync(duckingRestore, rollbackToken);
+                try
+                {
+                    await _duckingSwitcher.RestoreAsync(duckingRestore, rollbackToken);
 
-                // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
-                await _surroundSwitcher.RestoreAsync(surroundBefore, rollbackToken);
+                    // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
+                    await _surroundSwitcher.RestoreAsync(surroundBefore, rollbackToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // The displays matter most: nothing on the way there may keep the rollback from reaching them.
+                    _log.Error(ex, "Restoring ducking or Surround threw, the displays are rolled back regardless");
+                }
+
                 SwitchResult rolledBack = await RollBackAsync(before, audioRestore, plan, applied, audio, answer, started, rollbackToken);
                 if (cancelled)
                 {
                     _log.Warning("Switch to {Profile} cancelled, rolled back ({Outcome})", profile.Name, rolledBack.Outcome);
                     throw new OperationCanceledException(cancellationToken);
+                }
+
+                if (thrown is not null)
+                {
+                    return rolledBack with
+                    {
+                        Outcome = SwitchOutcome.Failed,
+                        Message = string.Create(CultureInfo.InvariantCulture, $"{thrown.Message} {rolledBack.Message}"),
+                    };
                 }
 
                 return rolledBack;
@@ -478,15 +513,27 @@ public sealed class SwitchOrchestrator
         CancellationToken cancellationToken)
     {
         Profile previous = PreviousTopology(before);
-        DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
-        TopologyPlan rollbackPlan = _planner.Plan(previous, now);
-        LogPlan(rollbackPlan);
+        ApplyOutcome rolledBack;
+        try
+        {
+            DisplaySnapshot now = await _display.QueryAsync(cancellationToken);
+            TopologyPlan rollbackPlan = _planner.Plan(previous, now);
+            LogPlan(rollbackPlan);
 
-        ApplyOutcome rolledBack = rollbackPlan.Resolved.Count == 0
-            ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.", false)
-            : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
-
-        await _audioSwitcher.RestoreAsync(audioRestore, cancellationToken);
+            rolledBack = rollbackPlan.Resolved.Count == 0
+                ? new ApplyOutcome(false, rollbackPlan, 0, null, "None of the previously active displays is available.", false)
+                : await ApplyWithRetryAsync(previous, rollbackPlan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "Restoring the previous topology threw");
+            rolledBack = new ApplyOutcome(false, plan, 0, null, ex.Message, false);
+        }
+        finally
+        {
+            // Whatever the displays did: the sound must not stay on a headset that lies in the rig.
+            await RestoreAudioAsync(audioRestore, cancellationToken);
+        }
 
         if (!rolledBack.Succeeded)
         {
@@ -517,6 +564,18 @@ public sealed class SwitchOrchestrator
             Note = SwitchNote.RestoredPrevious,
             Audio = audio,
         }, started);
+    }
+
+    private async Task RestoreAudioAsync(AudioSwitcher.AudioRestore audioRestore, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _audioSwitcher.RestoreAsync(audioRestore, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "The previous audio devices could not be restored");
+        }
     }
 
     /// <summary>
