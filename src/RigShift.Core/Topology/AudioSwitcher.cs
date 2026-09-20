@@ -119,8 +119,8 @@ internal sealed class AudioSwitcher(IAudioController audio, ILogger log)
 
     /// <summary>
     /// Remembers the current default device per direction the profile changes, and the volume of every device whose
-    /// volume it sets, so a rollback can restore them. The OS reports one default per direction; it is restored for
-    /// every role the switch touched.
+    /// volume it sets, so a rollback can restore them. Windows keeps one default per role – sound on the speakers,
+    /// calls on the headset – so each role the switch touches goes back to the device that held it.
     /// </summary>
     public async Task<AudioRestore> CaptureAsync(AudioAssignment audio, CancellationToken cancellationToken)
     {
@@ -130,10 +130,13 @@ internal sealed class AudioSwitcher(IAudioController audio, ILogger log)
             try
             {
                 IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(direction.Key, cancellationToken);
-                if (devices.FirstOrDefault(d => d.IsDefault) is { } current)
+                AudioRoleMask touched = direction.Aggregate(AudioRoleMask.None, (mask, step) => mask | step.Roles);
+                foreach (AudioDeviceInfo device in devices)
                 {
-                    AudioRoleMask roles = direction.Aggregate(AudioRoleMask.None, (mask, step) => mask | step.Roles);
-                    defaults.Add(new DefaultRestore(current.Endpoint, roles));
+                    if ((device.DefaultRoles & touched) is var held and not AudioRoleMask.None)
+                    {
+                        defaults.Add(new DefaultRestore(device.Endpoint, held));
+                    }
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

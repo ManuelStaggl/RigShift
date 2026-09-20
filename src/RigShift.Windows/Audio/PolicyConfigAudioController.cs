@@ -21,6 +21,13 @@ public sealed class PolicyConfigAudioController : IAudioController
 {
     private const int ElementNotFound = unchecked((int)0x80070490);
 
+    private static readonly (AudioRoleMask Flag, ERole Role)[] Roles =
+    [
+        (AudioRoleMask.Console, ERole.eConsole),
+        (AudioRoleMask.Multimedia, ERole.eMultimedia),
+        (AudioRoleMask.Communications, ERole.eCommunications),
+    ];
+
     private readonly ILogger _log;
 
     public PolicyConfigAudioController(ILogger log)
@@ -35,7 +42,7 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             EDataFlow flow = ToFlow(direction);
-            string? defaultId = TryGetDefaultId(enumerator, flow);
+            (AudioRoleMask Flag, string? Id)[] defaults = [.. Roles.Select(r => (r.Flag, TryGetDefaultId(enumerator, flow, r.Role)))];
 
             enumerator.EnumAudioEndpoints(
                 flow,
@@ -57,7 +64,9 @@ public sealed class PolicyConfigAudioController : IAudioController
                             new AudioEndpoint(id, GetFriendlyName(device)),
                             direction,
                             IsActive: state == DEVICE_STATE.DEVICE_STATE_ACTIVE,
-                            IsDefault: string.Equals(id, defaultId, StringComparison.OrdinalIgnoreCase)));
+                            DefaultRoles: defaults
+                                .Where(d => string.Equals(id, d.Id, StringComparison.OrdinalIgnoreCase))
+                                .Aggregate(AudioRoleMask.None, (mask, d) => mask | d.Flag)));
                     }
                     finally
                     {
@@ -92,8 +101,7 @@ public sealed class PolicyConfigAudioController : IAudioController
         try
         {
             var policy = (IPolicyConfig)client;
-            foreach ((AudioRoleMask flag, ERole role) in (ReadOnlySpan<(AudioRoleMask, ERole)>)
-                [(AudioRoleMask.Console, ERole.eConsole), (AudioRoleMask.Multimedia, ERole.eMultimedia), (AudioRoleMask.Communications, ERole.eCommunications)])
+            foreach ((AudioRoleMask flag, ERole role) in Roles)
             {
                 if (roles.HasFlag(flag))
                 {
@@ -215,11 +223,11 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
     }
 
-    private string? TryGetDefaultId(IMMDeviceEnumerator enumerator, EDataFlow flow)
+    private string? TryGetDefaultId(IMMDeviceEnumerator enumerator, EDataFlow flow, ERole role)
     {
         try
         {
-            enumerator.GetDefaultAudioEndpoint(flow, ERole.eConsole, out IMMDevice device);
+            enumerator.GetDefaultAudioEndpoint(flow, role, out IMMDevice device);
             try
             {
                 return GetId(device);

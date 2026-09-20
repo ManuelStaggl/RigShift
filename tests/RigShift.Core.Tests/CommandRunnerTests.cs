@@ -27,7 +27,7 @@ public sealed class CommandRunnerTests
     {
         _store.Profiles.AddRange([_desk, Rig()]);
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
-            .Returns([new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+            .Returns([new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
     }
 
     [Fact]

@@ -458,7 +458,7 @@ public sealed class SwitchOrchestratorTests
     public async Task Switch_ConfirmationThrows_RollsBackAndRestoresAudio()
     {
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
-            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
         _confirmation.ConfirmAsync(default!, default!, default, default)
             .ThrowsAsyncForAnyArgs(new InvalidOperationException("the dialog could not be shown"));
@@ -503,7 +503,7 @@ public sealed class SwitchOrchestratorTests
     public async Task Switch_RollbackQueryThrows_StillRestoresAudioAndReportsFailed()
     {
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
-            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
         var display = new FakeDisplayConfigurator(DeskActive());
@@ -589,7 +589,7 @@ public sealed class SwitchOrchestratorTests
     public async Task Switch_Rollback_RestoresPreviousPlaybackDevice()
     {
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
-            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
         var display = new FakeDisplayConfigurator(DeskActive());
@@ -603,6 +603,46 @@ public sealed class SwitchOrchestratorTests
             _audio.SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
             _audio.SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
         });
+    }
+
+    /// <summary>Speakers for sound, a headset for calls: a rollback used to hand the calls to the speakers as well.</summary>
+    [Fact]
+    public async Task Switch_Rollback_RestoresTheDefaultOfEachRole()
+    {
+        var headset = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000004}", "Headset");
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns(
+        [
+            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.Console | AudioRoleMask.Multimedia),
+            new AudioDeviceInfo(headset, AudioDirection.Render, IsActive: true, AudioRoleMask.Communications),
+            new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+        ]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.Console | AudioRoleMask.Multimedia, Arg.Any<CancellationToken>());
+        await _audio.Received(1).SetDefaultAsync(headset, AudioRoleMask.Communications, Arg.Any<CancellationToken>());
+        await _audio.DidNotReceive().SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Only the roles the switch touched come back – the call device the profile left alone stays alone.</summary>
+    [Fact]
+    public async Task Switch_Rollback_LeavesUntouchedRolesAlone()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { PlaybackCommunications = Headphones }), SwitchRequest.Default, Ct);
+
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.Communications, Arg.Any<CancellationToken>());
     }
 
     [Fact]
