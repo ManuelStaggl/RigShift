@@ -22,7 +22,7 @@ public sealed class ShellGameStarter : IGameStarter
         _log = log.ForContext<ShellGameStarter>();
     }
 
-    public int? Start(GameLaunch launch)
+    public IRunningGame? Start(GameLaunch launch)
     {
         ArgumentNullException.ThrowIfNull(launch);
         if (!launch.HasValidTarget)
@@ -52,8 +52,29 @@ public sealed class ShellGameStarter : IGameStarter
             start.WorkingDirectory = directory;
         }
 
-        using Process? process = Process.Start(start);
+        // Not disposed here: the session waits on this very handle, see IRunningGame.
+        Process? process = Process.Start(start);
         _log.Information("Started {File} (process {ProcessId})", file, process?.Id);
-        return process?.Id;
+        return process is null ? null : new StartedProcess(process, _log);
+    }
+
+    private sealed class StartedProcess(Process process, ILogger log) : IRunningGame
+    {
+        public int Id { get; } = process.Id;
+
+        public async Task WaitForExitAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken);
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                // No handle to wait on, e.g. the shell started it elevated. The caller falls back to the name.
+                log.Debug(ex, "Waiting for process {ProcessId} failed, treating it as ended", Id);
+            }
+        }
+
+        public void Dispose() => process.Dispose();
     }
 }

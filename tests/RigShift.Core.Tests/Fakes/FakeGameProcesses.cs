@@ -29,7 +29,14 @@ internal sealed class FakeGameProcesses : IGameProcesses
 
     public int IsRunningCalls { get; private set; }
 
-    public Task WaitForExitAsync(int processId, CancellationToken cancellationToken) => Task.CompletedTask;
+    /// <summary>The process ids the session waited on by id, in order.</summary>
+    public List<int> WaitedFor { get; } = [];
+
+    public Task WaitForExitAsync(int processId, CancellationToken cancellationToken)
+    {
+        WaitedFor.Add(processId);
+        return Task.CompletedTask;
+    }
 
     public bool IsRunning(string processName)
     {

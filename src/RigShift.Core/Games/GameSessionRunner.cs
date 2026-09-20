@@ -79,6 +79,20 @@ public sealed class GameSessionRunner
     public async Task<GameSessionResult> RunAsync(GameEntry game, bool alreadyRunning, bool fromLink, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(game);
+        var session = new StartedGame();
+        try
+        {
+            return await RunAsync(game, alreadyRunning, fromLink, session, cancellationToken);
+        }
+        finally
+        {
+            session.Process?.Dispose();
+        }
+    }
+
+    private async Task<GameSessionResult> RunAsync(
+        GameEntry game, bool alreadyRunning, bool fromLink, StartedGame session, CancellationToken cancellationToken)
+    {
         long started = _time.GetTimestamp();
 
         SwitchOutcome? applied = await ApplyProfileAsync(game, fromLink, cancellationToken);
@@ -100,10 +114,11 @@ public sealed class GameSessionRunner
         string? learned = null;
         if (!alreadyRunning)
         {
-            IReadOnlySet<int> before = _learner.Snapshot();
+            session.Before = _learner.Snapshot();
+            IReadOnlySet<int> before = session.Before;
             try
             {
-                processId = _starter.Start(game.Launch);
+                session.Process = _starter.Start(game.Launch);
             }
             catch (Exception ex)
             {
@@ -111,11 +126,14 @@ public sealed class GameSessionRunner
                 return new GameSessionResult(GameSessionOutcome.StartFailed, applied, apps, Windows: layout);
             }
 
+            // Watched from the first moment: how long the process lived tells a game from a stub that only starts one.
+            session.Lifetime = session.Process is { } own ? ObserveAsync(own, cancellationToken) : null;
+
             // A store start returns at once and the game shows up ten to forty seconds later. Waiting for its end
             // before it was ever there would end the session – and switch the displays back – while it still loads.
             // A session that hangs on the interface waits for that instead: iRacing's sim only starts with a race.
             string? expected = game.Launch.KnownProcessName();
-            bool known = processId is not null
+            bool known = session.Process is not null
                 || (expected is not null && (EndsWithLauncher(game) || await AppearsAsync(expected, cancellationToken)));
             if (!known && expected is not null)
             {
@@ -148,7 +166,7 @@ public sealed class GameSessionRunner
         AppsOutcome afterwards = await _apps.Start(AppPlan.For(game, AppTiming.AfterGame));
         apps = Worse(apps, afterwards);
 
-        await WaitForEndAsync(game, processId, learned, cancellationToken);
+        await WaitForEndAsync(game, session, processId, learned, cancellationToken);
         _log.Information("Game {Game} ended after {Minutes:0.0} min", game.Name, _time.GetElapsedTime(started).TotalMinutes);
 
         await EndAppsAsync(game, cancellationToken);
@@ -208,7 +226,7 @@ public sealed class GameSessionRunner
     /// return to the menu between two races. Otherwise the game's own process decides, exactly where a process id
     /// is at hand and by polling the name where it is not.
     /// </summary>
-    private async Task WaitForEndAsync(GameEntry game, int? processId, string? learned, CancellationToken cancellationToken)
+    private async Task WaitForEndAsync(GameEntry game, StartedGame session, int? processId, string? learned, CancellationToken cancellationToken)
     {
         if (EndsWithLauncher(game) && game.LauncherProcessName is { } launcher)
         {
@@ -223,6 +241,22 @@ public sealed class GameSessionRunner
             _log.Warning("Game {Game}: {Launcher} did not show up, the session hangs on the game instead", game.Name, launcher);
         }
 
+        if (session.Lifetime is { } lifetime)
+        {
+            TimeSpan? ranFor = await lifetime;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (ranFor is { } span && span < StubLifetime)
+            {
+                // Launchers, "Play" stubs and executables that restart themselves end within seconds and leave the game
+                // running. Taking their end for the game's would switch the displays back under it.
+                _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking for the game it left behind",
+                    game.Name, span.TotalSeconds);
+                await WaitForSuccessorAsync(game, session.Before, cancellationToken);
+            }
+
+            return;
+        }
+
         if (processId is { } id)
         {
             await _processes.WaitForExitAsync(id, cancellationToken);
@@ -233,6 +267,103 @@ public sealed class GameSessionRunner
         {
             await PollUntilGoneAsync(name, cancellationToken);
         }
+    }
+
+    /// <summary>A started process that ends sooner than this was not the game but something that started it.</summary>
+    public static readonly TimeSpan StubLifetime = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// How long to look for what a stub left behind. Short on purpose: a game that simply crashed on start goes
+    /// through here too, and its session should end soon.
+    /// </summary>
+    public static readonly TimeSpan StubGrace = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
+    /// folder. Returns once that has ended, or when nothing showed up.
+    /// </summary>
+    private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, CancellationToken cancellationToken)
+    {
+        string? name = game.Launch.KnownProcessName();
+        string? folder = GameFolder(game.Launch);
+        DateTimeOffset deadline = _time.GetUtcNow() + StubGrace;
+        while (true)
+        {
+            if (name is not null && _processes.IsRunning(name))
+            {
+                _log.Information("Game {Game}: {Process} runs on, the session hangs on it", game.Name, name);
+                await PollUntilGoneAsync(name, cancellationToken);
+                return;
+            }
+
+            // Only with a folder: without one every new process would qualify.
+            RunningProcess? successor = folder is null ? null : _processes.List()
+                .Where(p => !before.Contains(p.Id)
+                    && !string.Equals(p.Name, game.LauncherProcessName, StringComparison.OrdinalIgnoreCase)
+                    && p.ExecutablePath is not null
+                    && GameProcessLearner.IsFromInstallFolder(p, folder))
+                .OrderBy(p => p.StartedAt)
+                .FirstOrDefault();
+            if (successor is not null)
+            {
+                _log.Information("Game {Game}: {Process} ({ProcessId}) runs from the game's folder, the session hangs on it",
+                    game.Name, successor.Name, successor.Id);
+                await _processes.WaitForExitAsync(successor.Id, cancellationToken);
+                return;
+            }
+
+            if (_time.GetUtcNow() >= deadline)
+            {
+                _log.Information("Game {Game}: nothing followed the started process, the game has ended", game.Name);
+                return;
+            }
+
+            await Task.Delay(GameProcessLearner.PollInterval, _time, cancellationToken);
+        }
+    }
+
+    private static string? GameFolder(GameLaunch launch)
+    {
+        if (!string.IsNullOrWhiteSpace(launch.InstallFolder))
+        {
+            return launch.InstallFolder;
+        }
+
+        try
+        {
+            return launch.Kind == GameLaunchKind.Executable
+                ? Path.GetDirectoryName(Environment.ExpandEnvironmentVariables(launch.Target.Trim().Trim('"')))
+                : null;
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>How long the started process ran; <c>null</c> when the wait was cancelled. Never throws.</summary>
+    private async Task<TimeSpan?> ObserveAsync(IRunningGame process, CancellationToken cancellationToken)
+    {
+        long startedAt = _time.GetTimestamp();
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+            return _time.GetElapsedTime(startedAt);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>What one session started, so every way out of it lets go of the process handle.</summary>
+    private sealed class StartedGame
+    {
+        public IRunningGame? Process { get; set; }
+
+        public Task<TimeSpan?>? Lifetime { get; set; }
+
+        public IReadOnlySet<int> Before { get; set; } = new HashSet<int>();
     }
 
     private static bool EndsWithLauncher(GameEntry game) =>
