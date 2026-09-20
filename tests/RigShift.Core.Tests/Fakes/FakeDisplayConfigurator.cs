@@ -87,11 +87,19 @@ internal sealed class FakeDisplayConfigurator : IDisplayConfigurator
         }
     }
 
+    /// <summary>Applying never returns, like a graphics driver that froze inside SetDisplayConfig.</summary>
+    public bool ApplyNeverReturns { get; set; }
+
     public Task<int> ApplyAsync(TopologyPlan plan, ApplyOptions options, CancellationToken cancellationToken)
     {
         lock (_gate)
         {
             Applied.Add((plan, options));
+            if (ApplyNeverReturns)
+            {
+                return new TaskCompletionSource<int>().Task;
+            }
+
             if (ApplyExceptions.Count > 0 && ApplyExceptions.Dequeue() is { } exception)
             {
                 throw exception;

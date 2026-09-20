@@ -940,6 +940,20 @@ public sealed class SwitchOrchestratorTests
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
     }
 
+    /// <summary>A driver frozen inside SetDisplayConfig used to freeze the switch with it – no result, no log line, no end.</summary>
+    [Fact]
+    public async Task Switch_ApplyCallHangs_FailsInsteadOfWaitingForever()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive()) { ApplyNeverReturns = true };
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct)
+            .WaitAsync(TimeSpan.FromSeconds(5), Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Message.ShouldNotBeNull().ShouldContain("did not return");
+        display.Applied.Count.ShouldBe(1);
+    }
+
     [Fact]
     public async Task Switch_DisplaysStillChangingAfterApply_HdrWaitsUntilTheySettle()
     {

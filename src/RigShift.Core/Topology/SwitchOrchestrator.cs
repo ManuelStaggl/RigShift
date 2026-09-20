@@ -661,7 +661,17 @@ public sealed class SwitchOrchestrator
                 int code;
                 try
                 {
-                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken);
+                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken)
+                        .WaitAsync(_options.ApplyCallTimeout, _time, cancellationToken);
+                }
+                catch (TimeoutException)
+                {
+                    // No second attempt: a call stuck in the driver holds whatever the next one would wait for.
+                    _log.Error("Attempt {Attempt} did not return within {Timeout} ({ModeSource} modes); the graphics driver may hang",
+                        attempts, _options.ApplyCallTimeout, modeSource);
+                    return new ApplyOutcome(false, plan, attempts, lastError,
+                        string.Create(CultureInfo.InvariantCulture,
+                            $"The display driver did not return within {_options.ApplyCallTimeout.TotalSeconds} s."), false);
                 }
                 catch (Exception ex) when (IsDisplayApiFailure(ex))
                 {

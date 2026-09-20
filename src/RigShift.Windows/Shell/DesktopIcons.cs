@@ -18,6 +18,9 @@ namespace RigShift.Windows.Shell;
 /// </summary>
 public sealed class DesktopIcons : IDesktopIcons
 {
+    /// <summary>A desktop full of symbols is read and placed in well under a second; this is for an Explorer that hangs.</summary>
+    private static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(10);
+
     private readonly ILogger _log;
 
     public DesktopIcons(ILogger log)
@@ -227,31 +230,15 @@ public sealed class DesktopIcons : IDesktopIcons
     /// </summary>
     private bool TryOnShellThread<T>(Func<IFolderView, ILogger, T> work, string what, out T result)
     {
-        object? value = null;
-        Exception? failure = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                if (OpenDesktopView() is { } view)
-                {
-                    value = work(view, _log);
-                }
-            }
-            catch (Exception ex) when (ex is COMException or InvalidCastException or NotSupportedException)
-            {
-                failure = ex;
-            }
-        })
-        {
-            IsBackground = true,
-        };
+        (bool finished, object? value, Exception? failure) = StaCall.Run<object>(
+            () => OpenDesktopView() is { } view ? work(view, _log) : null,
+            TimeLimit);
 
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (failure is not null)
+        if (!finished)
+        {
+            _log.Warning("Could not {What}: Explorer did not answer within {Limit}", what, TimeLimit);
+        }
+        else if (failure is not null)
         {
             _log.Warning(failure, "Could not {What}", what);
         }
