@@ -19,6 +19,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
     private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
+    private HotkeyUse? _hotkeyConflict;
     private bool _loading;
 
     public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, ILogger log)
@@ -29,12 +30,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         _hotkeys = hotkeys;
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
-        ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
+        ToggleHotkeyHint = HotkeyHintText();
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
-            ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
+            ToggleHotkeyHint = HotkeyHintText();
             Load();
         };
     }
@@ -99,6 +100,14 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
+        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
+        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Toggle, Guid.Empty) is { } use)
+        {
+            _hotkeyConflict = use;
+            ToggleHotkeyHint = HotkeyHintText();
+            return;
+        }
+
         ToggleHotkey = hotkey;
         SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
         _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
@@ -114,8 +123,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         Persist(s => s with { ToggleHotkey = null });
     }
 
+    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
+    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_toggleHotkeyHintKey];
+
     private void SetToggleHotkeyHint(string key)
     {
+        _hotkeyConflict = null;
         _toggleHotkeyHintKey = key;
         ToggleHotkeyHint = Loc.Instance[key];
     }

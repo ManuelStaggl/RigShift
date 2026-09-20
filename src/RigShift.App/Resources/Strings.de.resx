@@ -164,12 +164,14 @@
   <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
+
+  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>„{0}“ nutzt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Keins</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Halte zusätzlich Strg, Alt oder Win.</value></data>
-  <data name="Hotkey_Failed" xml:space="preserve"><value>Eine andere App belegt das Tastenkürzel dieser Profile, es funktioniert daher nicht: {0}</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>Diese Tastenkürzel funktionieren nicht, weil eine andere App oder etwas anderes in RigShift sie schon belegt: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Strg</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Umschalt</value></data>
   <data name="Audio_SetVolume" xml:space="preserve"><value>Lautstärke festlegen</value></data>

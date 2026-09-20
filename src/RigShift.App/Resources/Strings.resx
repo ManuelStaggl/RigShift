@@ -164,12 +164,14 @@
   <data name="Problem_NameTaken" xml:space="preserve"><value>A profile with this name already exists.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Another profile already uses this keyboard shortcut.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this keyboard shortcut. Choose a different one.</value></data>
+
+  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this keyboard shortcut. Choose a different one.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>None</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Hold Ctrl, Alt or Win as well.</value></data>
-  <data name="Hotkey_Failed" xml:space="preserve"><value>Another app uses the keyboard shortcut of these profiles, so it does not work: {0}</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>These keyboard shortcuts do not work, because another app or something else in RigShift already uses them: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Ctrl</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Shift</value></data>
   <data name="Audio_SetVolume" xml:space="preserve"><value>Set volume</value></data>

@@ -30,6 +30,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly string? _savedWaitDeviceId;
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
+    private HotkeyUse? _hotkeyConflict;
     private SurroundGrid? _surroundGrid;
     private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
@@ -82,7 +83,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _savedWaitDeviceId = UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId);
         _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
         Rules = rules;
         _log = log.ForContext<ProfileEditorViewModel>();
 
@@ -387,6 +388,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             return;
         }
 
+        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
+        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Profile, _original.Id) is { } use)
+        {
+            _hotkeyConflict = use;
+            HotkeyHint = HotkeyHintText();
+            return;
+        }
+
         Hotkey = hotkey;
         SetHotkeyHint("Editor_HotkeyHint");
         _log.Information("Editor recorded hotkey {Hotkey}", HotkeyText);
@@ -581,8 +590,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         Rules.Changed -= OnPartChanged;
     }
 
+    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
+    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_hotkeyHintKey];
+
     private void SetHotkeyHint(string key)
     {
+        _hotkeyConflict = null;
         _hotkeyHintKey = key;
         HotkeyHint = Loc.Instance[key];
     }
@@ -665,7 +678,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     /// </summary>
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(DesktopIconsText));
         ErrorMessage = null;
