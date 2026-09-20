@@ -35,7 +35,21 @@ jobs:
         run: dotnet build RigShift.slnx --no-restore -c Release
 
       - name: Test
-        run: dotnet test --solution RigShift.slnx --no-build -c Release
+        run: >
+          dotnet test --solution RigShift.slnx --no-build -c Release
+          --report-trx
+          --coverage --coverage-output-format cobertura --coverage-settings "${{ github.workspace }}\coverage.settings"
+          --results-directory "${{ github.workspace }}\TestResults"
+
+      # Also after a failed test run: the TRX files say which test failed and why.
+      - name: Upload test results and coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: warn
+          retention-days: 14
 
       # Same publish as release.yml, so single-file or ReadyToRun errors show up before a tag.
       - name: Publish
