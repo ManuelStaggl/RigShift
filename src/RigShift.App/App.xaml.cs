@@ -50,6 +50,37 @@ public partial class App : Application, IAppShell
 
     public bool IsExiting { get; private set; }
 
+#if DEBUG
+    /// <summary>A backup with everything the restore question warns about: a share, a bare name, a rule without the question.</summary>
+    private BackupContent PreviewBackup()
+    {
+        IReadOnlyList<Core.Profiles.Profile> profiles = Services.GetRequiredService<ProfileCatalog>().Profiles;
+        if (profiles.Count == 0)
+        {
+            return new BackupContent([], null);
+        }
+
+        Core.Profiles.Profile first = profiles[0] with
+        {
+            Apps =
+            [
+                new Core.Profiles.AppAction { Path = @"C:\Program Files (x86)\SimHub\SimHubWPF.exe" },
+                new Core.Profiles.AppAction { Path = @"\\nas\tools\CrewChiefV4.exe", Arguments = "-profile rig" },
+                new Core.Profiles.AppAction { Path = "overlay.exe" },
+                new Core.Profiles.AppAction { Kind = Core.Profiles.AppActionKind.Stop, Path = "Discord.exe" },
+            ],
+        };
+        var settings = new AppSettings
+        {
+            AutomationRules =
+            [
+                new Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }], SkipConfirmation = true },
+            ],
+        };
+        return new BackupContent([first, .. profiles.Skip(1)], settings);
+    }
+#endif
+
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
     public void ShowMainWindow(Type? page = null)
@@ -225,12 +256,15 @@ public partial class App : Application, IAppShell
                 }
             }
 
-            // Developer aid: the two question dialogs, which otherwise need a profile and a menu to reach.
+            // Developer aid: the question dialogs, which otherwise need a profile and a menu (or a backup file) to reach.
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialogKind)
             {
-                _ = Dispatcher.InvokeAsync(() => string.Equals(dialogKind, "unsaved", StringComparison.OrdinalIgnoreCase)
-                    ? ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default)
-                    : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default));
+                _ = Dispatcher.InvokeAsync(() => dialogKind.ToUpperInvariant() switch
+                {
+                    "UNSAVED" => ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default),
+                    "RESTORE" => ProfileDialogs.ConfirmRestoreAsync(PreviewBackup()).ContinueWith(_ => { }, TaskScheduler.Default),
+                    _ => ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default),
+                });
             }
 
             // Developer aid: a timer that throws on every tick, which is what a broken layout pass or binding looks like.
