@@ -12,7 +12,7 @@
   mc:Ignorable="d"
   Background="{DynamicResource RigShift.Brush.Page}">
   <Page.Resources>
-    <!-- The four help cards: title with an accent symbol, actions at the bottom. -->
+    <!-- The four help cards: title with an accent symbol, text, then the actions right below it. -->
     <Style x:Key="HelpCard" TargetType="Border" BasedOn="{StaticResource RigShift.Card}">
       <Setter Property="Margin" Value="0,0,16,16" />
       <Setter Property="Padding" Value="20,18" />
@@ -108,12 +108,19 @@
 
         <!-- First steps -->
         <Border Style="{StaticResource HelpCard}">
-          <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Rocket20" />
               <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_StartTitle}" />
             </StackPanel>
-            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
+            <TextBlock
+              Margin="0,10,0,0"
+              LineHeight="22"
+              Style="{StaticResource RigShift.Text.Body}"
+              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+              Text="{loc:Tr About_StartText}"
+              TextWrapping="Wrap" />
+            <WrapPanel Margin="0,16,0,0">
               <Button
                 Margin="0,0,12,0"
                 Command="{Binding StartAssistantCommand}"
@@ -125,14 +132,7 @@
                 Content="{loc:Tr About_Guide}"
                 Style="{StaticResource RigShift.Link}" />
             </WrapPanel>
-            <TextBlock
-              Margin="0,10,0,0"
-              LineHeight="22"
-              Style="{StaticResource RigShift.Text.Body}"
-              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-              Text="{loc:Tr About_StartText}"
-              TextWrapping="Wrap" />
-          </DockPanel>
+          </StackPanel>
         </Border>
 
         <!-- Hotkeys and commands: the user's own, live. -->
@@ -195,12 +195,20 @@
 
         <!-- Backup -->
         <Border Style="{StaticResource HelpCard}">
-          <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Save20" />
               <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_Backup}" />
             </StackPanel>
-            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
+            <StackPanel Margin="0,10,0,0">
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
+              <TextBlock
+                Margin="0,4,0,0"
+                controls:LiveRegion.IsLive="True"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{Binding BackupStatus}" />
+            </StackPanel>
+            <WrapPanel Margin="0,16,0,0">
               <Button
                 Margin="0,0,8,0"
                 Command="{Binding SaveBackupCommand}"
@@ -211,25 +219,25 @@
                 Content="{loc:Tr About_RestoreBackup}"
                 Style="{StaticResource RigShift.Button}" />
             </WrapPanel>
-            <StackPanel Margin="0,10,0,0">
-              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_BackupHint}" TextWrapping="Wrap" />
-              <TextBlock
-                Margin="0,4,0,0"
-                controls:LiveRegion.IsLive="True"
-                Style="{StaticResource RigShift.Text.Caption}"
-                Text="{Binding BackupStatus}" />
-            </StackPanel>
-          </DockPanel>
+          </StackPanel>
         </Border>
 
         <!-- Report a problem: diagnostics, the issue, the folders. -->
         <Border Style="{StaticResource HelpCard}">
-          <DockPanel>
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Style="{StaticResource HelpIcon}" Symbol="Bug20" />
               <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr About_ReportProblem}" />
             </StackPanel>
-            <WrapPanel Margin="0,16,0,0" DockPanel.Dock="Bottom">
+            <StackPanel Margin="0,10,0,0">
+              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_ProblemText}" TextWrapping="Wrap" />
+              <TextBlock
+                Margin="0,4,0,0"
+                controls:LiveRegion.IsLive="True"
+                Style="{StaticResource RigShift.Text.Caption}"
+                Text="{Binding CopyStatus}" />
+            </StackPanel>
+            <WrapPanel Margin="0,16,0,0">
               <Button
                 Margin="0,0,8,0"
                 Command="{Binding CopyDiagnosticsCommand}"
@@ -245,24 +253,20 @@
                   <ui:SymbolIcon Margin="8,0,0,0" FontSize="14" Symbol="Open16" />
                 </StackPanel>
               </Button>
-              <Button
-                Command="{Binding OpenLogFolderCommand}"
-                Content="{loc:Tr About_Logs}"
-                Style="{StaticResource RigShift.Button.Ghost}" />
-              <Button
-                Command="{Binding OpenProfileFolderCommand}"
-                Content="{loc:Tr About_Profiles}"
-                Style="{StaticResource RigShift.Button.Ghost}" />
+              <!-- The two folders wrap as a pair, never one alone. -->
+              <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <Button
+                  Margin="4,0,16,0"
+                  Command="{Binding OpenLogFolderCommand}"
+                  Content="{loc:Tr About_Logs}"
+                  Style="{StaticResource RigShift.Link}" />
+                <Button
+                  Command="{Binding OpenProfileFolderCommand}"
+                  Content="{loc:Tr About_Profiles}"
+                  Style="{StaticResource RigShift.Link}" />
+              </StackPanel>
             </WrapPanel>
-            <StackPanel Margin="0,10,0,0">
-              <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr About_ProblemText}" TextWrapping="Wrap" />
-              <TextBlock
-                Margin="0,4,0,0"
-                controls:LiveRegion.IsLive="True"
-                Style="{StaticResource RigShift.Text.Caption}"
-                Text="{Binding CopyStatus}" />
-            </StackPanel>
-          </DockPanel>
+          </StackPanel>
         </Border>
       </UniformGrid>
 
