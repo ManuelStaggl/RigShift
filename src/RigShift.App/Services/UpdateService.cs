@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.Win32;
 using RigShift.Core.Updates;
 using Serilog;
 using Velopack;
@@ -29,7 +30,8 @@ public enum UpdateState
 }
 
 /// <summary>
-/// Checks GitHub Releases at startup, every 24 hours and on request. With automatic
+/// Checks GitHub Releases at startup, every 24 hours, after waking from standby and on request; a failed check is tried
+/// again after 1, 5 and 30 minutes (<see cref="UpdateSchedule"/>). With automatic
 /// installation a newer version is downloaded and Velopack installs it the next time the tray app starts; otherwise
 /// RigShift only reports it until the user installs it. Does nothing when RigShift was not installed by Velopack
 /// (development builds). All members are used on the UI thread; events are raised there.
@@ -39,7 +41,6 @@ public sealed class UpdateService : IDisposable
     private const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";
 
     private readonly UpdateManager _manager = new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: false));
-    private readonly PeriodicTimer _timer = new(TimeSpan.FromHours(24));
     private readonly CancellationTokenSource _stop = new();
     private readonly SwitchCoordinator _coordinator;
     private readonly SettingsService _settings;
@@ -49,6 +50,11 @@ public sealed class UpdateService : IDisposable
     private UpdateInfo? _available;
     private VelopackAsset? _pending;
     private bool _busy;
+    private int _failuresInARow;
+    private DateTimeOffset? _lastSuccess;
+
+    /// <summary>Completed to end the wait for the next check early – after waking from standby.</summary>
+    private volatile TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public UpdateService(SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
     {
@@ -123,6 +129,7 @@ public sealed class UpdateService : IDisposable
             return;
         }
 
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
         _ = RunAsync();
     }
 
@@ -176,8 +183,8 @@ public sealed class UpdateService : IDisposable
 
     public void Dispose()
     {
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _stop.Cancel();
-        _timer.Dispose();
         _stop.Dispose();
     }
 
@@ -185,15 +192,54 @@ public sealed class UpdateService : IDisposable
     {
         try
         {
-            do
+            while (true)
             {
                 await CheckAsync();
+
+                // The check at login often runs before the network is up; waiting a day for the next one meant a PC
+                // that is switched off every night never saw an update.
+                TimeSpan wait = UpdateSchedule.NextCheckIn(_failuresInARow);
+                if (_failuresInARow > 0)
+                {
+                    _log.Information("Update check failed {Failures} time(s) in a row, next try in {Wait}", _failuresInARow, wait);
+                }
+
+                await WaitAsync(wait);
             }
-            while (await _timer.WaitForNextTickAsync(_stop.Token));
         }
         catch (OperationCanceledException)
         {
             // App is exiting.
+        }
+    }
+
+    /// <summary>Waits for the next check; waking from standby ends the wait when a check is due by then.</summary>
+    private async Task WaitAsync(TimeSpan wait)
+    {
+        Task delay = Task.Delay(wait, _time, _stop.Token);
+        while (true)
+        {
+            _wake = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (await Task.WhenAny(delay, _wake.Task) == delay)
+            {
+                await delay;
+                return;
+            }
+
+            if (UpdateSchedule.IsDueAfterResume(_lastSuccess, _time.GetUtcNow(), _failuresInARow))
+            {
+                _log.Information("Resumed from sleep, checking for updates now");
+                return;
+            }
+        }
+    }
+
+    // SystemEvents raises on its own thread; completing the task hands over to the loop on the UI thread.
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == PowerModes.Resume)
+        {
+            _wake.TrySetResult();
         }
     }
 
@@ -212,9 +258,12 @@ public sealed class UpdateService : IDisposable
         {
             update = await _manager.CheckForUpdatesAsync();
             LastChecked = _time.GetLocalNow();
+            _lastSuccess = LastChecked;
+            _failuresInARow = 0;
         }
         catch (Exception ex)
         {
+            _failuresInARow++;
             _log.Warning(ex, "Update check failed");
             SetState(readyVersion is null ? UpdateState.Failed : UpdateState.Ready, readyVersion);
             _busy = false;
