@@ -383,6 +383,8 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Not saved</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 icon, saved {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} icons, saved {1}</value></data>
+  <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Puts the icons back where they were saved – without switching.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} problems</value></data>
@@ -443,6 +445,12 @@
   <data name="Behavior_Intro" xml:space="preserve"><value>How the PC behaves while the profile is active.</value></data>
   <data name="Profile_SetDefault" xml:space="preserve"><value>Make default</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create shortcut</value></data>
+  <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Restore desktop icons</value></data>
+  <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 desktop icon put back.</value></data>
+  <data name="Status_IconsRestored" xml:space="preserve"><value>{0} desktop icons put back.</value></data>
+  <data name="Status_IconsRestoredMissing" xml:space="preserve"><value>Desktop icons put back: {0}. No longer on the desktop: {1}.</value></data>
+  <data name="Status_IconsAutoArrange" xml:space="preserve"><value>Windows arranges the desktop icons itself. Turn off “Auto arrange icons” in the desktop’s context menu (View), then try again.</value></data>
+  <data name="Status_IconsUnavailable" xml:space="preserve"><value>The desktop could not be reached. The log says why.</value></data>
   <data name="Status_Tested" xml:space="preserve"><value>Tested: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to “{0}”?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>

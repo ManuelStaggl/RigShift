@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Restore the desktop icons on their own**: "Restore" next to "Save positions" in the profile, the same entry in
+  the profile's "…" menu, and `RigShift.exe icons <name>`. Until now the saved positions only came back as part of a
+  switch – no help when Windows reshuffles the icons while the profile is already active.
+
 ## [3.5.1] - 2026-09-20
 
 ### Changed

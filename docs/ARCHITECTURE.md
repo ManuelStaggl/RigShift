@@ -91,7 +91,7 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
   access list on this user's SID, not by `CurrentUserOnly`, whose owner comparison already fails for an SSH session
   of an administrator.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | toggle | list | save <name> | status | surround |
-  games | play <name>`. Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back,
+  games | play <name> | icons <name>`. Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back,
   4 unknown profile or game, 5 invalid arguments. `play` returns as soon as the session started – it outlives the
   command by hours.
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).

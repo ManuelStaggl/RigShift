@@ -86,7 +86,10 @@ RigShift.exe list
 RigShift.exe status
 RigShift.exe games
 RigShift.exe play <name>
+RigShift.exe icons <name>
 ```
+
+`icons` puts the desktop icons back where the profile saved them, without switching.
 
 Exit codes: 0 applied, 1 failed, 2 blocked (required display missing), 3 not confirmed and reverted, 4 profile or game
 not found, 5 invalid arguments. RigShift.exe is a GUI program; use `start /wait` (cmd) or `Start-Process -Wait -NoNewWindow`

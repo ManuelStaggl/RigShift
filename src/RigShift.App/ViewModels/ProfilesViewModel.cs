@@ -29,6 +29,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     private readonly SettingsService _settings;
     private readonly IDisplayConfigurator _display;
     private readonly TopologyPlanner _planner;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly ILogger _log;
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly Dictionary<Guid, TopologyPlan> _plans = [];
@@ -46,12 +47,14 @@ public sealed partial class ProfilesViewModel : ObservableObject
         IDisplayConfigurator display,
         TopologyPlanner planner,
         DisplayChangeWatcher watcher,
+        IDesktopIcons desktopIcons,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(watcher);
+        ArgumentNullException.ThrowIfNull(desktopIcons);
         ArgumentNullException.ThrowIfNull(log);
         _catalog = catalog;
         _coordinator = coordinator;
@@ -59,6 +62,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         _settings = settings;
         _display = display;
         _planner = planner;
+        _desktopIcons = desktopIcons;
         _log = log.ForContext<ProfilesViewModel>();
 
         catalog.Changed += (_, _) => OnUi(() => _ = RebuildAsync());
@@ -95,6 +99,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyCanExecuteChangedFor(nameof(RestoreDesktopIconsCommand))]
     public partial ProfileEditorViewModel? Editor { get; private set; }
 
     public bool HasSelection => Editor is not null;
@@ -334,6 +339,43 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
     }
 
+    private bool CanRestoreDesktopIcons() => Editor is { HasDesktopIcons: true };
+
+    /// <summary>
+    /// The saved desktop icons and nothing else: Windows reshuffles them now and then while the profile is already
+    /// active, and a full switch is a heavy way to get them back. Takes what the editor shows – a layout captured a
+    /// moment ago counts, saved or not.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRestoreDesktopIcons))]
+    private async Task RestoreDesktopIconsAsync()
+    {
+        if (Editor is not { DesktopIcons: { IsEmpty: false } layout } editor)
+        {
+            return;
+        }
+
+        // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread.
+        DesktopIconResult result = await Task.Run(() => _desktopIcons.Restore(layout));
+        _log.Information("Desktop icons of {Profile} put back on request: {Outcome}, {Placed} placed, {Missing} missing",
+            editor.Name, result.Outcome, result.Placed, result.Missing);
+
+        switch (result.Outcome)
+        {
+            case DesktopIconOutcome.Restored when result.Missing > 0:
+                ShowDetail(Loc.Format("Status_IconsRestoredMissing", result.Placed, result.Missing), InfoKind.Warn);
+                break;
+            case DesktopIconOutcome.Restored:
+                ShowStatus(result.Placed == 1 ? Loc.Instance["Status_IconsRestoredOne"] : Loc.Format("Status_IconsRestored", result.Placed));
+                break;
+            case DesktopIconOutcome.AutoArrange:
+                ShowDetail(Loc.Instance["Status_IconsAutoArrange"], InfoKind.Error);
+                break;
+            default:
+                ShowDetail(Loc.Instance["Status_IconsUnavailable"], InfoKind.Error);
+                break;
+        }
+    }
+
     [RelayCommand]
     private void CopyCommand()
     {
@@ -417,6 +459,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private void OnEditorChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(ProfileEditorViewModel.HasDesktopIcons))
+        {
+            RestoreDesktopIconsCommand.NotifyCanExecuteChanged();
+        }
+
         if (e.PropertyName is nameof(ProfileEditorViewModel.IsDirty) or nameof(ProfileEditorViewModel.IsNew) or nameof(ProfileEditorViewModel.Name)
             or nameof(ProfileEditorViewModel.ErrorMessage))
         {

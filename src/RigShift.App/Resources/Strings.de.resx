@@ -383,6 +383,8 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gesichert</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gesichert {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gesichert {1}</value></data>
+  <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gesicherten Plätze zurück – ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} Problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} Probleme</value></data>
@@ -443,6 +445,12 @@
   <data name="Behavior_Intro" xml:space="preserve"><value>Wie sich der PC verhält, solange das Profil aktiv ist.</value></data>
   <data name="Profile_SetDefault" xml:space="preserve"><value>Als Standard</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Verknüpfung anlegen</value></data>
+  <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Desktopsymbole wiederherstellen</value></data>
+  <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 Desktopsymbol zurückgesetzt.</value></data>
+  <data name="Status_IconsRestored" xml:space="preserve"><value>{0} Desktopsymbole zurückgesetzt.</value></data>
+  <data name="Status_IconsRestoredMissing" xml:space="preserve"><value>Desktopsymbole zurückgesetzt: {0}. Nicht mehr auf dem Desktop: {1}.</value></data>
+  <data name="Status_IconsAutoArrange" xml:space="preserve"><value>Windows ordnet die Desktopsymbole selbst an. Schalte im Kontextmenü des Desktops (Ansicht) „Symbole automatisch anordnen“ aus und versuche es erneut.</value></data>
+  <data name="Status_IconsUnavailable" xml:space="preserve"><value>Der Desktop war nicht erreichbar. Im Protokoll steht, warum.</value></data>
   <data name="Status_Tested" xml:space="preserve"><value>Getestet: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Änderungen an „{0}“ speichern?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Ungespeicherte Änderungen gehen sonst verloren.</value></data>

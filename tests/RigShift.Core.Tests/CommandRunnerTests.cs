@@ -387,12 +387,102 @@ public sealed class CommandRunnerTests
 
     private static TopologyPlan EmptyPlan(Profile profile) => new() { Profile = profile, Resolved = [], Missing = [], Warnings = [] };
 
+    [Fact]
+    public async Task Icons_PutsTheSavedSymbolsBack_WithoutSwitching()
+    {
+        _store.Profiles[0] = _desk with { DesktopIcons = Icons };
+        var desktop = new FakeDesktopIcons();
+
+        CliResponse response = await Runner(_switcher, desktopIcons: desktop)
+            .RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "desk" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldBe("Desk: 2 desktop icon(s) put back.");
+        desktop.Restores.ShouldBe(1);
+        desktop.Capture().ShouldNotBeNull().Icons.ShouldBe(Icons.Icons);
+        await _switcher.DidNotReceiveWithAnyArgs().SwitchAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task Icons_SaysHowManySymbolsAreGone()
+    {
+        _store.Profiles[0] = _desk with { DesktopIcons = Icons };
+        IDesktopIcons desktop = Substitute.For<IDesktopIcons>();
+        desktop.Restore(Arg.Any<DesktopIconLayout>()).Returns(new DesktopIconResult(DesktopIconOutcome.Restored, 1, 1));
+
+        CliResponse response = await Runner(desktopIcons: desktop)
+            .RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "Desk" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Applied);
+        response.Output.ShouldBe("Desk: 1 desktop icon(s) put back, 1 no longer on the desktop.");
+    }
+
+    [Fact]
+    public async Task Icons_ProfileWithoutSavedSymbols_FailsAndTouchesNothing()
+    {
+        var desktop = new FakeDesktopIcons();
+
+        CliResponse response = await Runner(desktopIcons: desktop)
+            .RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "Desk" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("no saved desktop icons");
+        desktop.Restores.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Icons_UnknownProfile_ListsTheAvailableOnes()
+    {
+        CliResponse response = await Runner(desktopIcons: new FakeDesktopIcons())
+            .RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "Couch" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.ProfileNotFound);
+        response.Output.ShouldContain("Desk, Rig");
+    }
+
+    [Theory]
+    [InlineData(DesktopIconOutcome.AutoArrange, "Auto arrange")]
+    [InlineData(DesktopIconOutcome.Unavailable, "could not be reached")]
+    public async Task Icons_WhenTheDesktopRefuses_FailsWithTheReason(DesktopIconOutcome outcome, string expected)
+    {
+        _store.Profiles[0] = _desk with { DesktopIcons = Icons };
+        var desktop = new FakeDesktopIcons { Outcome = outcome };
+
+        CliResponse response = await Runner(desktopIcons: desktop)
+            .RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "Desk" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain(expected);
+    }
+
+    [Fact]
+    public async Task Icons_WithoutTheApp_SaysSo()
+    {
+        _store.Profiles[0] = _desk with { DesktopIcons = Icons };
+
+        CliResponse response = await Runner().RunAsync(new CliRequest { Command = CliCommand.Icons, ProfileName = "Desk" }, CancellationToken.None);
+
+        response.ExitCode.ShouldBe(CliExitCodes.Failed);
+        response.Output.ShouldContain("needs the RigShift app");
+    }
+
+    private static DesktopIconLayout Icons => new()
+    {
+        CapturedAt = DateTimeOffset.UnixEpoch,
+        Icons =
+        [
+            new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 },
+            new DesktopIcon { Item = "::{645FF040-5081-101B-9F08-00AA002F954E}", X = 10, Y = 120 },
+        ],
+    };
+
     private static ActiveProfileMatcher Matcher() => new(new TopologyPlanner(new TopologyPlannerOptions()));
 
     private CommandRunner Runner(
         IProfileSwitcher? switcher = null,
         ISurroundController? surround = null,
         IGameStore? games = null,
-        IGamePlayer? player = null) =>
-        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher, surround, games, player);
+        IGamePlayer? player = null,
+        IDesktopIcons? desktopIcons = null) =>
+        new(_store, new FakeDisplayConfigurator(DeskActive()), _audio, Matcher(), Serilog.Core.Logger.None, switcher, surround, games, player, desktopIcons);
 }

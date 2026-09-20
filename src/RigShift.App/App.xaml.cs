@@ -516,7 +516,8 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<SwitchCoordinator>(),
             sp.GetRequiredService<ISurroundController>(),
             sp.GetRequiredService<IGameStore>(),
-            sp.GetRequiredService<GameSessionService>()));
+            sp.GetRequiredService<GameSessionService>(),
+            sp.GetRequiredService<IDesktopIcons>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());

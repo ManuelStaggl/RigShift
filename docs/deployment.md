@@ -75,5 +75,5 @@ RigShift. Hosts, all HTTPS: `api.github.com`, `github.com`, `release-assets.gith
 
 ## Command line
 
-`RigShift.exe list | status | apply <profile> [--dry-run] | toggle | games | play <game>` talks to the running tray
+`RigShift.exe list | status | apply <profile> [--dry-run] | toggle | games | play <game> | icons <profile>` talks to the running tray
 app and returns exit code 0 on success – usable from scripts, Task Scheduler or a Stream Deck.

@@ -79,9 +79,19 @@ public sealed class CliParserTests
         request.FromLink.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Parse_Icons_TakesTheProfileName()
+    {
+        CliRequest request = CliParser.Parse(["icons", "Desk"]).Request.ShouldNotBeNull();
+
+        request.Command.ShouldBe(CliCommand.Icons);
+        request.ProfileName.ShouldBe("Desk");
+    }
+
     [Theory]
     [InlineData("apply")]
     [InlineData("play")]
+    [InlineData("icons")]
     [InlineData("frobnicate")]
     public void Parse_InvalidArguments_ReturnsUsageText(string command)
     {

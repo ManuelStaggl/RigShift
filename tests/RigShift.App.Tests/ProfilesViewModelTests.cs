@@ -32,6 +32,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     private readonly HotkeyService _hotkeys;
     private readonly DisplayChangeWatcher _watcher;
     private readonly Dialogs _dialogs;
+    private readonly IDesktopIcons _desktopIcons = Substitute.For<IDesktopIcons>();
 
     public ProfilesViewModelTests()
     {
@@ -55,7 +56,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         IServiceProvider services = Substitute.For<IServiceProvider>();
         services.GetService(typeof(IUsbPowerCheck)).Returns(powerCheck);
         _dialogs = new Dialogs(new ProfileDialogs(
-            _host.Catalog, _display, audio, _host.Settings, _hotkeys, _host.Usb, Substitute.For<IDesktopIcons>(), surround, services, Logger.None));
+            _host.Catalog, _display, audio, _host.Settings, _hotkeys, _host.Usb, _desktopIcons, surround, services, Logger.None));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -349,6 +350,77 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.DetailMessage.ShouldNotBeNull().ShouldContain("Desk");
     });
 
+    [Fact]
+    public Task RestoreDesktopIcons_PutsTheSavedIconsBack_WithoutSwitching() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes) with { DesktopIcons = Icons });
+        _desktopIcons.Restore(Arg.Any<DesktopIconLayout>()).Returns(new DesktopIconResult(DesktopIconOutcome.Restored, 2, 0));
+        ProfilesViewModel page = await PageAsync();
+
+        page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeTrue();
+        await page.RestoreDesktopIconsCommand.ExecuteAsync(null);
+
+        _desktopIcons.Received(1).Restore(Arg.Is<DesktopIconLayout>(l => l.Icons.Count == 2));
+        _display.Applied.ShouldBeEmpty();
+        page.StatusMessage.ShouldBe(Loc.Format("Status_IconsRestored", 2));
+        page.HasDetailMessage.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task RestoreDesktopIcons_IconsThatAreGone_AreCountedInAWarning() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes) with { DesktopIcons = Icons });
+        _desktopIcons.Restore(Arg.Any<DesktopIconLayout>()).Returns(new DesktopIconResult(DesktopIconOutcome.Restored, 1, 1));
+        ProfilesViewModel page = await PageAsync();
+
+        await page.RestoreDesktopIconsCommand.ExecuteAsync(null);
+
+        page.DetailKind.ShouldBe(InfoKind.Warn);
+        page.DetailMessage.ShouldBe(Loc.Format("Status_IconsRestoredMissing", 1, 1));
+    });
+
+    [Theory]
+    [InlineData(DesktopIconOutcome.AutoArrange, "Status_IconsAutoArrange")]
+    [InlineData(DesktopIconOutcome.Unavailable, "Status_IconsUnavailable")]
+    public Task RestoreDesktopIcons_WhenTheDesktopRefuses_SaysWhy(DesktopIconOutcome outcome, string key) => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes) with { DesktopIcons = Icons });
+        _desktopIcons.Restore(Arg.Any<DesktopIconLayout>()).Returns(new DesktopIconResult(outcome, 0, 0));
+        ProfilesViewModel page = await PageAsync();
+
+        await page.RestoreDesktopIconsCommand.ExecuteAsync(null);
+
+        page.DetailKind.ShouldBe(InfoKind.Error);
+        page.DetailMessage.ShouldBe(Loc.Instance[key]);
+    });
+
+    [Fact]
+    public Task RestoreDesktopIcons_FollowsTheEditor_NotOnlyTheSavedProfile() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        _desktopIcons.Restore(Arg.Any<DesktopIconLayout>()).Returns(new DesktopIconResult(DesktopIconOutcome.Restored, 2, 0));
+        ProfilesViewModel page = await PageAsync();
+        page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse("nothing is saved yet");
+
+        _desktopIcons.Capture().Returns(Icons);
+        page.Editor.ShouldNotBeNull().CaptureDesktopIconsCommand.Execute(null);
+
+        page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeTrue("what the row shows is what the button restores");
+
+        page.Editor.ClearDesktopIconsCommand.Execute(null);
+        page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse();
+    });
+
+    private static DesktopIconLayout Icons => new()
+    {
+        CapturedAt = DateTimeOffset.UnixEpoch,
+        Icons =
+        [
+            new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 },
+            new DesktopIcon { Item = "::{645FF040-5081-101B-9F08-00AA002F954E}", X = 10, Y = 120 },
+        ],
+    };
+
     public void Dispose()
     {
         _ui.Invoke(() =>
@@ -371,7 +443,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     private async Task<ProfilesViewModel> PageAsync()
     {
         var page = new ProfilesViewModel(
-            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _watcher, Logger.None);
+            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _watcher, _desktopIcons, Logger.None);
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }

@@ -372,6 +372,11 @@
                         <ui:SymbolIcon Symbol="Link16" />
                       </MenuItem.Icon>
                     </MenuItem>
+                    <MenuItem Command="{Binding RestoreDesktopIconsCommand}" Header="{loc:Tr Profile_RestoreIconsMenu}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Apps16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                     <Separator />
                     <MenuItem
                       Command="{Binding DeleteCommand}"
@@ -640,6 +645,13 @@
                       Command="{Binding ClearDesktopIconsCommand}"
                       Content="{loc:Tr Editor_DesktopIconsClear}"
                       Style="{StaticResource RigShift.Button.Ghost}"
+                      Visibility="{Binding HasDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
+                    <Button
+                      Margin="8,0,0,0"
+                      Command="{Binding DataContext.RestoreDesktopIconsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                      Content="{loc:Tr Editor_DesktopIconsRestore}"
+                      Style="{StaticResource RigShift.Button}"
+                      ToolTip="{loc:Tr Editor_DesktopIconsRestoreHint}"
                       Visibility="{Binding HasDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
                     <Button
                       Margin="8,0,0,0"
