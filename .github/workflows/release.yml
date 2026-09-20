@@ -50,27 +50,32 @@ jobs:
           $section.Groups[1].Value.Trim() | Set-Content release-notes.md
           "version=$v" >> $env:GITHUB_OUTPUT
 
+      # The same gates as ci.yml: a tag can point at a commit CI never saw.
+      - name: Restore
+        run: dotnet restore RigShift.slnx
+
+      - name: Check formatting
+        run: dotnet format RigShift.slnx --verify-no-changes --no-restore
+
       - name: Test
         run: dotnet test --solution RigShift.slnx -c Release
 
       - name: Publish
         run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
 
-      - name: Install Velopack CLI
-        run: dotnet tool install -g vpk --version 1.2.0
+      # vpk and CycloneDX in the versions of .config/dotnet-tools.json.
+      - name: Restore tools
+        run: dotnet tool restore
 
       # The previous release's full package lets vpk build a delta package.
       - name: Download previous release
-        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir Releases
+        run: dotnet vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --outputDir Releases
 
       - name: Pack
         run: >
-          vpk pack --packId RigShift --packVersion ${{ steps.version.outputs.version }} --packTitle RigShift
+          dotnet vpk pack --packId RigShift --packVersion ${{ steps.version.outputs.version }} --packTitle RigShift
           --packAuthors "Manuel Staggl" --packDir publish --mainExe RigShift.exe
           --icon src/RigShift.App/Assets/Brand/rigshift-app-light.ico --releaseNotes release-notes.md --outputDir Releases
-
-      - name: Restore tools
-        run: dotnet tool restore
 
       # Every NuGet package that ends up in the shipped app, as CycloneDX JSON.
       - name: Write SBOM
@@ -101,7 +106,7 @@ jobs:
       # Without --publish the release stays a draft, so nobody sees it before the checksums and the SBOM are there.
       - name: Upload to a draft GitHub release
         run: >
-          vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
+          dotnet vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
           --outputDir Releases --releaseName "RigShift ${{ steps.version.outputs.version }}"
           --tag ${{ github.ref_name }}
 

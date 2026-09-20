@@ -11,6 +11,9 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <SatelliteResourceLanguages>en;de</SatelliteResourceLanguages>
+    <!-- packages.lock.json per project. On GitHub every restore is locked, so a package graph that differs from the lock files fails the build. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(GITHUB_ACTIONS)' == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <PropertyGroup>
