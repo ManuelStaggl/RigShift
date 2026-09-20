@@ -50,9 +50,9 @@ public sealed class UsbDeviceList : IUsbDeviceList
                 continue;
             }
 
-            if (NameOf(instance) is { } name && !name.Contains("hub", StringComparison.OrdinalIgnoreCase))
+            if (Describe(instance) is { } found && UsbDevicePicking.IsOffered(found.Name, found.DeviceClass, found.BuiltIn))
             {
-                devices[id] = new UsbDevice(id, name);
+                devices[id] = new UsbDevice(id, found.Name);
             }
         }
 
@@ -96,7 +96,7 @@ public sealed class UsbDeviceList : IUsbDeviceList
         throw new Win32Exception("CM_Get_Device_ID_List kept reporting a too-small buffer.");
     }
 
-    private static unsafe string? NameOf(string instanceId)
+    private static unsafe (string Name, string? DeviceClass, bool BuiltIn)? Describe(string instanceId)
     {
         uint node;
         fixed (char* id = instanceId)
@@ -111,11 +111,22 @@ public sealed class UsbDeviceList : IUsbDeviceList
         {
             if (StringProperty(node, key) is { Length: > 0 } name)
             {
-                return name;
+                return (name, StringProperty(node, PInvoke.DEVPKEY_Device_Class), BoolProperty(node, PInvoke.DEVPKEY_Device_InLocalMachineContainer));
             }
         }
 
         return null;
+    }
+
+    /// <summary>False when the property is missing: an unknown device is rather offered than hidden.</summary>
+    private static unsafe bool BoolProperty(uint node, DEVPROPKEY key)
+    {
+        DEVPROPTYPE type;
+        sbyte value = 0;
+        uint size = sizeof(sbyte);
+        return PInvoke.CM_Get_DevNode_Property(node, &key, &type, (byte*)&value, &size, 0) == CONFIGRET.CR_SUCCESS
+            && type == DEVPROPTYPE.DEVPROP_TYPE_BOOLEAN
+            && value != 0;
     }
 
     private static unsafe string? StringProperty(uint node, DEVPROPKEY key)

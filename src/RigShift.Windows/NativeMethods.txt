@@ -49,6 +49,8 @@ CM_LOCATE_DEVNODE_FLAGS
 DEVPKEY_Device_BusReportedDeviceDesc
 DEVPKEY_Device_FriendlyName
 DEVPKEY_Device_DeviceDesc
+DEVPKEY_Device_Class
+DEVPKEY_Device_InLocalMachineContainer
 // Global hotkeys (v1.1).
 RegisterHotKey
 UnregisterHotKey
