@@ -91,7 +91,7 @@ internal static class CommandLineClient
         {
             found = [.. Directory.GetFiles(PipeDirectory)
                 .Select(Path.GetFileName)
-                .Where(name => name is not null && name.StartsWith(PipePrefix, StringComparison.Ordinal))
+                .Where(name => name is not null && IsInstancePipe(name))
                 .Select(name => name!)
                 .Order(StringComparer.Ordinal)];
         }
@@ -124,6 +124,15 @@ internal static class CommandLineClient
 
     private const string PipeDirectory = @"\\.\pipe\";
     private const string PipePrefix = "RigShift.";
+
+    /// <summary><c>RigShift.&lt;session number&gt;</c> and nothing else – not any name that merely starts like ours.</summary>
+    internal static bool IsInstancePipe(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        return name.StartsWith(PipePrefix, StringComparison.Ordinal)
+            && name.Length > PipePrefix.Length
+            && name.AsSpan(PipePrefix.Length).IndexOfAnyExceptInRange('0', '9') < 0;
+    }
 
     private static async Task<CliResponse> RunHeadlessAsync(CliRequest request)
     {
@@ -175,6 +184,14 @@ internal static class CommandLineClient
             using (var connect = new CancellationTokenSource(connectTimeout))
             {
                 await pipe.ConnectAsync(connect.Token);
+            }
+
+            // Before a single argument goes out: is that really this user's RigShift, or a pipe somebody put up
+            // under our name to read commands and fake answers?
+            if (!PipeTrust.BelongsToThisUser(pipe, out string reason))
+            {
+                Logger.Error("Command pipe {Pipe} is not trusted: {Reason}. Nothing was sent", pipeName, reason);
+                return null;
             }
 
             await PipeProtocol.WriteRequestAsync(pipe, new PipeRequest(args), CancellationToken.None);
