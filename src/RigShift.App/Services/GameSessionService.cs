@@ -115,10 +115,12 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     private async Task RunAsync(GameEntry game, bool alreadyRunning, bool fromLink)
     {
-        GameSessionRunner runner = _runner();
-        runner.ProcessLearned += OnProcessLearned;
+        // Inside the try: a runner that cannot be created must end the session too, or the game stays "running".
+        GameSessionRunner? runner = null;
         try
         {
+            runner = _runner();
+            runner.ProcessLearned += OnProcessLearned;
             GameSessionResult result = await Task.Run(
                 () => runner.RunAsync(game, alreadyRunning, fromLink, _stopping.Token), CancellationToken.None);
             _log.Information("Game {Game} finished as {Outcome}", game.Name, result.Outcome);
@@ -135,7 +137,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         }
         finally
         {
-            runner.ProcessLearned -= OnProcessLearned;
+            runner?.ProcessLearned -= OnProcessLearned;
         }
     }
 
