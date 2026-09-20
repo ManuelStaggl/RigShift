@@ -158,6 +158,14 @@ public sealed class GameSessionRunnerTests
             ProcessName = "iRacingSim64DX11",
         });
         _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+        _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX11", null, _time.GetUtcNow()));
+        _processes.OnIsRunning = call =>
+        {
+            if (call >= 3)
+            {
+                _processes.Running.Clear();
+            }
+        };
 
         GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
 
@@ -165,6 +173,108 @@ public sealed class GameSessionRunnerTests
         result.LearnedProcessName.ShouldBeNull();
         _time.Elapsed.ShouldBeLessThan(GameProcessLearner.Timeout);
     }
+
+    /// <summary>
+    /// Steam needs ten to forty seconds to bring a game up. Polling for "gone" right after the start saw "gone" at
+    /// once: the session ended and the displays switched back while the game was still loading.
+    /// </summary>
+    [Fact]
+    public async Task Run_WithAKnownProcessName_WaitsForTheGameToShowUpBeforeWaitingForItsEnd()
+    {
+        GameEntry game = KnownSteamGame() with { Exit = new GameExitAction { Kind = GameExitKind.Profile, ProfileId = _desk.Id } };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+        bool wasUp = false;
+        _processes.OnIsRunning = call =>
+        {
+            if (call == 10)
+            {
+                _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX11", null, _time.GetUtcNow()));
+                wasUp = true;
+            }
+            else if (call == 15)
+            {
+                _processes.Running.Clear();
+            }
+        };
+        _switcher.When(s => s.SwitchAsync(_desk, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>()))
+            .Do(_ => wasUp.ShouldBeTrue("the exit action ran before the game had come up"));
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _processes.IsRunningCalls.ShouldBeGreaterThanOrEqualTo(15);
+        await _switcher.Received(1).SwitchAsync(_desk, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A game that never shows up has not ended: nothing is switched back under whatever is running instead.</summary>
+    [Fact]
+    public async Task Run_WithAKnownProcessNameThatNeverShowsUp_IsNotRecognisedAndSwitchesNothingBack()
+    {
+        GameEntry game = KnownSteamGame() with { Exit = new GameExitAction { Kind = GameExitKind.Profile, ProfileId = _desk.Id } };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.NotRecognised);
+        _time.Elapsed.ShouldBeGreaterThanOrEqualTo(GameProcessLearner.Timeout);
+        await _switcher.DidNotReceive().SwitchAsync(_desk, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>An update renamed the executable: the stale name never shows up, but the game's folder gives it away.</summary>
+    [Fact]
+    public async Task Run_WhenTheKnownNameNeverShowsUpButTheGameRuns_LearnsTheNewName()
+    {
+        GameEntry game = KnownSteamGame();
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+        _processes.OnListed = call =>
+        {
+            if (call == 2)
+            {
+                _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX12", InstallFolder + @"\iRacingSim64DX12.exe", _time.GetUtcNow()));
+            }
+        };
+        GameProcessLearned? learned = null;
+        GameSessionRunner runner = Runner();
+        runner.ProcessLearned += (_, e) => learned = e;
+
+        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        result.LearnedProcessName.ShouldBe("iRacingSim64DX12");
+        learned.ShouldNotBeNull();
+    }
+
+    /// <summary>The interface is started by the store like the game is, so it needs the same patience.</summary>
+    [Fact]
+    public async Task Run_ForASimWhoseInterfaceOutlivesIt_WaitsForTheInterfaceToShowUpFirst()
+    {
+        GameEntry game = KnownSteamGame() with { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((int?)null);
+        _processes.OnIsRunning = call =>
+        {
+            if (call == 10)
+            {
+                _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
+            }
+            else if (call == 15)
+            {
+                _processes.Running.Clear();
+            }
+        };
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _processes.IsRunningCalls.ShouldBeGreaterThanOrEqualTo(15);
+    }
+
+    private GameEntry KnownSteamGame() => Game(new GameLaunch
+    {
+        Kind = GameLaunchKind.Steam,
+        Target = "266410",
+        InstallFolder = InstallFolder,
+        ProcessName = "iRacingSim64DX11",
+    });
 
     [Fact]
     public async Task Run_WhenNothingCanBeRecognised_SaysSo()

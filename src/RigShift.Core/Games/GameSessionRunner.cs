@@ -111,8 +111,25 @@ public sealed class GameSessionRunner
                 return new GameSessionResult(GameSessionOutcome.StartFailed, applied, apps, Windows: layout);
             }
 
-            if (processId is null && game.Launch.KnownProcessName() is null)
+            // A store start returns at once and the game shows up ten to forty seconds later. Waiting for its end
+            // before it was ever there would end the session – and switch the displays back – while it still loads.
+            // A session that hangs on the interface waits for that instead: iRacing's sim only starts with a race.
+            string? expected = game.Launch.KnownProcessName();
+            bool known = processId is not null
+                || (expected is not null && (EndsWithLauncher(game) || await AppearsAsync(expected, cancellationToken)));
+            if (!known && expected is not null)
             {
+                _log.Warning("Game {Game}: {Process} did not show up within {Seconds} s", game.Name, expected, GameProcessLearner.Timeout.TotalSeconds);
+                if (string.IsNullOrWhiteSpace(game.Launch.InstallFolder))
+                {
+                    // Without the folder every new process would qualify, and a wrong name is worse than none.
+                    return new GameSessionResult(GameSessionOutcome.NotRecognised, applied, apps, Windows: layout);
+                }
+            }
+
+            if (!known)
+            {
+                // After a stale name – an update renamed the executable – the game is up already and found at once.
                 RunningProcess? found = await _learner.LearnAsync(
                     before, game.Launch.InstallFolder, cancellationToken, game.LauncherProcessName);
                 if (found is null)
@@ -193,11 +210,17 @@ public sealed class GameSessionRunner
     /// </summary>
     private async Task WaitForEndAsync(GameEntry game, int? processId, string? learned, CancellationToken cancellationToken)
     {
-        if (game.EndsWith == SessionEnd.LauncherProcess && game.LauncherProcessName is { Length: > 0 } launcher)
+        if (EndsWithLauncher(game) && game.LauncherProcessName is { } launcher)
         {
-            _log.Information("Game {Game}: the session ends when {Launcher} does", game.Name, launcher);
-            await PollUntilGoneAsync(launcher, cancellationToken);
-            return;
+            // The interface is brought up by the store like the game is, so it needs the same patience.
+            if (await AppearsAsync(launcher, cancellationToken))
+            {
+                _log.Information("Game {Game}: the session ends when {Launcher} does", game.Name, launcher);
+                await PollUntilGoneAsync(launcher, cancellationToken);
+                return;
+            }
+
+            _log.Warning("Game {Game}: {Launcher} did not show up, the session hangs on the game instead", game.Name, launcher);
         }
 
         if (processId is { } id)
@@ -210,6 +233,26 @@ public sealed class GameSessionRunner
         {
             await PollUntilGoneAsync(name, cancellationToken);
         }
+    }
+
+    private static bool EndsWithLauncher(GameEntry game) =>
+        game.EndsWith == SessionEnd.LauncherProcess && game.LauncherProcessName is { Length: > 0 };
+
+    /// <summary>Waits until the process is there, as long as learning would; false when it never came.</summary>
+    private async Task<bool> AppearsAsync(string processName, CancellationToken cancellationToken)
+    {
+        DateTimeOffset deadline = _time.GetUtcNow() + GameProcessLearner.Timeout;
+        while (!_processes.IsRunning(processName))
+        {
+            if (_time.GetUtcNow() >= deadline)
+            {
+                return false;
+            }
+
+            await Task.Delay(GameProcessLearner.PollInterval, _time, cancellationToken);
+        }
+
+        return true;
     }
 
     private async Task PollUntilGoneAsync(string processName, CancellationToken cancellationToken)
