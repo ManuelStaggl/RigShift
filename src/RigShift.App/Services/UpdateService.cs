@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using RigShift.Core.Updates;
 using Serilog;
 using Velopack;
-using Velopack.Sources;
 
 namespace RigShift.App.Services;
 
@@ -38,9 +37,9 @@ public enum UpdateState
 /// </summary>
 public sealed class UpdateService : IDisposable
 {
-    private const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";
+    public const string RepositoryUrl = "https://github.com/ManuelStaggl/RigShift";
 
-    private readonly UpdateManager _manager = new(new GithubSource(RepositoryUrl, accessToken: null, prerelease: false));
+    private readonly IUpdateFeed _feed;
     private readonly CancellationTokenSource _stop = new();
     private readonly SwitchCoordinator _coordinator;
     private readonly SettingsService _settings;
@@ -56,11 +55,14 @@ public sealed class UpdateService : IDisposable
     /// <summary>Completed to end the wait for the next check early – after waking from standby.</summary>
     private volatile TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public UpdateService(SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
+    public UpdateService(
+        IUpdateFeed feed, SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(feed);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(log);
+        _feed = feed;
         _coordinator = coordinator;
         _settings = settings;
         _shell = shell;
@@ -83,10 +85,10 @@ public sealed class UpdateService : IDisposable
             }
         };
 
-        IsInstalled = _manager.IsInstalled;
+        IsInstalled = _feed.IsInstalled;
         State = IsInstalled ? UpdateState.NotChecked : UpdateState.NotInstalled;
-        CurrentVersion = IsInstalled && _manager.CurrentVersion is { } installed
-            ? installed.ToString()
+        CurrentVersion = _feed.InstalledVersion is { } installed
+            ? installed
             : Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?";
     }
 
@@ -169,7 +171,7 @@ public sealed class UpdateService : IDisposable
         try
         {
             _log.Information("Restarting to install update {Version}", _pending.Version);
-            _manager.WaitExitThenApplyUpdates(_pending, silent: true, restart: true);
+            _feed.ApplyAfterExit(_pending);
         }
         catch (Exception ex)
         {
@@ -239,9 +241,12 @@ public sealed class UpdateService : IDisposable
     {
         if (e.Mode == PowerModes.Resume)
         {
-            _wake.TrySetResult();
+            Resumed();
         }
     }
+
+    /// <summary>The PC woke from standby; ends the wait for the next check when one is due.</summary>
+    internal void Resumed() => _wake.TrySetResult();
 
     private async Task CheckAsync()
     {
@@ -252,11 +257,14 @@ public sealed class UpdateService : IDisposable
 
         _busy = true;
         string? readyVersion = State == UpdateState.Ready ? TargetVersion : null;
+
+        // Read before the state turns to Checking: a version that was reported already is not reported every day.
+        string? reportedVersion = State == UpdateState.Available ? TargetVersion : null;
         SetState(readyVersion is null ? UpdateState.Checking : UpdateState.Ready, readyVersion);
         UpdateInfo? update;
         try
         {
-            update = await _manager.CheckForUpdatesAsync();
+            update = await _feed.CheckAsync();
             LastChecked = _time.GetLocalNow();
             _lastSuccess = LastChecked;
             _failuresInARow = 0;
@@ -290,7 +298,7 @@ public sealed class UpdateService : IDisposable
 
         if (_settings.Current.OnlyNotifyAboutUpdates)
         {
-            bool isNew = !(State == UpdateState.Available && TargetVersion == version) && version != readyVersion;
+            bool isNew = version != reportedVersion;
             _available = update;
             _log.Information("Update {Version} available, automatic installation is off", version);
             SetState(UpdateState.Available, version);
@@ -316,7 +324,7 @@ public sealed class UpdateService : IDisposable
         {
             _log.Information("Downloading update {Version}", version);
             SetState(UpdateState.Downloading, version);
-            await _manager.DownloadUpdatesAsync(update, cancelToken: _stop.Token);
+            await _feed.DownloadAsync(update, _stop.Token);
             _pending = update.TargetFullRelease;
             _available = null;
             _log.Information("Update {Version} downloaded, it is installed on the next start", version);
