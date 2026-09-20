@@ -43,6 +43,7 @@ public partial class MainWindow : FluentWindow
         _automation = services.GetService<AutomationService>();
         _updates = services.GetRequiredService<UpdateService>();
         InitializeComponent();
+        _textScale = TextScale.Apply(this);
 
         // The pages paint square backgrounds; without this they cover the rounded corner of the page surface.
         PageHost.SizeChanged += (_, e) => PageHost.Clip = TopLeftRounded(e.NewSize, 7);
@@ -91,7 +92,10 @@ public partial class MainWindow : FluentWindow
         };
     }
 
-    private bool IsCompact => _compactChoice ?? ActualWidth < 1200;
+    /// <summary>Windows' text size setting as a factor; the rail's width check counts in layout pixels.</summary>
+    private readonly double _textScale;
+
+    private bool IsCompact => _compactChoice ?? ActualWidth / _textScale < 1200;
 
     private void OnNavToggleClick(object sender, RoutedEventArgs e)
     {

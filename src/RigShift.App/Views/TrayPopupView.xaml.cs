@@ -18,6 +18,7 @@ public partial class TrayPopupView : UserControl
         _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
+        TextScale.Apply(this);
 
         // The work area changes with the taskbar and the primary display, so it is read each time the popup shows.
         IsVisibleChanged += (_, e) =>

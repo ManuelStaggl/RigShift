@@ -22,6 +22,7 @@ public partial class WindowCaptureWindow : FluentWindow
         _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
+        TextScale.Apply(this);
     }
 
     protected override void OnSourceInitialized(EventArgs e)

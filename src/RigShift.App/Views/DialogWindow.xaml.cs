@@ -41,6 +41,7 @@ public partial class DialogWindow : FluentWindow
         string title, string message, IReadOnlyList<DialogChoice> choices, int cancelResult, IReadOnlyList<DialogDetail>? details)
     {
         InitializeComponent();
+        TextScale.Apply(this);
         TitleText.Text = title;
         MessageText.Text = message;
         _cancelResult = cancelResult;
