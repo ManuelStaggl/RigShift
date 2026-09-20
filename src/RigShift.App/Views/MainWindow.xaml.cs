@@ -128,7 +128,13 @@ public partial class MainWindow : FluentWindow
     {
         string active = _catalog.ActiveProfile?.Name ?? Loc.Instance["Tray_ActiveNone"];
         ActiveText.Text = active;
-        NavFooter.ToolTip = active;
+
+        // The narrow rail shows only the dot: its meaning comes as a whole sentence, at once, and for a screen reader.
+        string state = _catalog.ActiveProfile is { } profile
+            ? string.Format(Loc.Instance.UICulture, Loc.Instance["Nav_ActiveProfile"], profile.Name)
+            : active;
+        NavFooter.ToolTip = state;
+        AutomationProperties.SetName(NavFooter, state);
         ActiveDot.Fill = (System.Windows.Media.Brush)FindResource(_catalog.ActiveProfile is null ? "RigShift.Brush.TextDisabled" : "RigShift.Brush.Ok");
         bool paused = _automation?.IsPaused == true;
         PausedIcon.Visibility = paused ? Visibility.Visible : Visibility.Collapsed;

@@ -657,6 +657,9 @@
   <data name="Fov_Pinned" xml:space="preserve">
     <value>One of your games</value>
   </data>
+  <data name="Nav_ActiveProfile" xml:space="preserve">
+    <value>Active profile: {0}</value>
+  </data>
   <data name="Nav_Collapse" xml:space="preserve">
     <value>Collapse navigation</value>
   </data>

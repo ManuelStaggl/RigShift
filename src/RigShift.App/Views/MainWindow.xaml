@@ -73,7 +73,8 @@
           Padding="12,10,8,2"
           BorderBrush="{DynamicResource RigShift.Brush.Line}"
           BorderThickness="0,1,0,0"
-          DockPanel.Dock="Bottom">
+          DockPanel.Dock="Bottom"
+          ToolTipService.InitialShowDelay="150">
           <DockPanel>
             <ui:SymbolIcon
               x:Name="PausedIcon"
