@@ -21,7 +21,7 @@ public sealed class HotkeyServiceTests : IDisposable
     private readonly InMemoryGameStore _games = new();
     private readonly GameCatalog _catalog;
     private readonly GameSessionService _sessions;
-    private readonly FakeRegistrar _registrar = new();
+    private readonly FakeHotkeyRegistrar _registrar = new();
     private readonly HotkeyService _service;
     private readonly List<IReadOnlyList<string>> _failures = [];
 
@@ -117,36 +117,5 @@ public sealed class HotkeyServiceTests : IDisposable
         };
         await _catalog.SaveAsync(game, Ct);
         return game;
-    }
-
-    private sealed class FakeRegistrar : IHotkeyRegistrar
-    {
-        public Dictionary<int, Hotkey> Held { get; } = [];
-
-        /// <summary>Combinations another application holds: registering them fails with 1409.</summary>
-        public HashSet<Hotkey> TakenElsewhere { get; } = [];
-
-#pragma warning disable CS0067 // Nothing presses a key in these tests.
-        public event EventHandler<int>? Pressed;
-#pragma warning restore CS0067
-
-        public bool Register(int id, Hotkey hotkey, out int error)
-        {
-            if (TakenElsewhere.Contains(hotkey) || Held.ContainsValue(hotkey))
-            {
-                error = 1409;
-                return false;
-            }
-
-            error = 0;
-            Held[id] = hotkey;
-            return true;
-        }
-
-        public void Unregister(int id) => Held.Remove(id);
-
-        public void Dispose()
-        {
-        }
     }
 }
