@@ -14,6 +14,14 @@ using Wpf.Ui.Controls;
 namespace RigShift.App.Services;
 
 /// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
+/// <summary>The answer to "the same error keeps coming back".</summary>
+public enum RepeatedErrorChoice
+{
+    Continue,
+    Restart,
+    OpenLog,
+}
+
 public enum UnsavedChoice
 {
     Save,
@@ -184,6 +192,17 @@ public sealed class ProfileDialogs
             Loc.Instance[newer ? "SettingsProblem_NewerTitle" : "SettingsProblem_Title"], text,
             Loc.Instance["SettingsProblem_OpenFolder"], DialogButtonKind.Secondary, Loc.Instance["Common_Close"]);
     }
+
+    /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
+    public static async Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>
+        (RepeatedErrorChoice)await DialogWindow.AskAsync(
+            Loc.Instance["Crash_Title"], Loc.Format("Crash_Text", message),
+            [
+                new DialogChoice(Loc.Instance["Crash_Restart"], DialogButtonKind.Primary, (int)RepeatedErrorChoice.Restart),
+                new DialogChoice(Loc.Instance["Crash_OpenLog"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.OpenLog),
+                new DialogChoice(Loc.Instance["Crash_Continue"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.Continue),
+            ],
+            cancelResult: (int)RepeatedErrorChoice.Continue);
 
     /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>

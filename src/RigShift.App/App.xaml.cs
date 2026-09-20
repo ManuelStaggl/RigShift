@@ -203,6 +203,16 @@ public partial class App : Application, IAppShell
                     : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default));
             }
 
+            // Developer aid: a timer that throws on every tick, which is what a broken layout pass or binding looks like.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_CRASH") is { Length: > 0 })
+            {
+                var broken = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                // Thrown from a queued call: a timer whose own tick throws is never re-armed by WPF.
+                broken.Tick += (_, _) => Dispatcher.BeginInvoke(
+                    () => throw new InvalidOperationException("Preview: this timer throws on every tick."));
+                broken.Start();
+            }
+
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
             {
                 _ = Dispatcher.InvokeAsync(() =>
@@ -332,7 +342,8 @@ public partial class App : Application, IAppShell
         Log.Information("RigShift exiting with code {ExitCode}", e.ApplicationExitCode);
         // Disposes the singletons in reverse creation order; all of them are IDisposable (none async-only).
         _services?.Dispose();
-        Log.CloseAndFlush();
+
+        // The log stays open: Program.Main closes it, after a restart that may still have something to say.
         base.OnExit(e);
     }
 
@@ -525,12 +536,72 @@ public partial class App : Application, IAppShell
         services.AddSingleton<MainWindow>();
     }
 
+    /// <summary>Set when the user asked for a restart; <see cref="Program"/> starts the new process once this one let go.</summary>
+    internal static bool RestartRequested { get; private set; }
+
+    private readonly UiExceptionTracker _uiExceptions = new(TimeProvider.System);
+
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Log.Error(e.Exception, "Unhandled UI exception");
+        // Handled in every case: the alternative is the process ending in the middle of whatever the user was doing.
+        // What differs is whether we keep quiet about it.
         e.Handled = true;
+        UiExceptionVerdict verdict = _uiExceptions.Record(e.Exception);
+        if (verdict == UiExceptionVerdict.Quiet)
+        {
+            // A loop can throw hundreds of times a second; the first ones are in the log with their stack.
+            Log.Debug("Unhandled UI exception again: {Message}", e.Exception.Message);
+            return;
+        }
+
+        Log.Error(e.Exception, "Unhandled UI exception");
+        if (verdict == UiExceptionVerdict.Escalate)
+        {
+            Log.Fatal("The same UI exception keeps coming back, asking the user whether to restart");
+            _ = Dispatcher.InvokeAsync(() => AskAboutRepeatedErrorAsync(e.Exception.Message));
+            return;
+        }
 
         // Only once the tray exists: resolving it here during a failed startup could throw again.
         _tray?.ShowUnexpectedError(e.Exception.Message);
+    }
+
+    private async Task AskAboutRepeatedErrorAsync(string message)
+    {
+        try
+        {
+            while (true)
+            {
+                RepeatedErrorChoice choice = await ProfileDialogs.AskAboutRepeatedErrorAsync(message);
+                if (choice == RepeatedErrorChoice.OpenLog)
+                {
+                    ShellFolders.Open(Paths.Logs, Log.Logger);
+                    continue;
+                }
+
+                if (choice == RepeatedErrorChoice.Restart)
+                {
+                    RestartRequested = true;
+                    Quit();
+                    return;
+                }
+
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            // The dialog is WPF too and may be what is broken. The plain message box is not.
+            Log.Error(ex, "The dialog about the repeated error failed");
+            if (MessageBox.Show($"{message}\n\n{Localization.Loc.Instance["Crash_Restart"]}?", "RigShift", MessageBoxButton.YesNo, MessageBoxImage.Error)
+                == MessageBoxResult.Yes)
+            {
+                RestartRequested = true;
+                Quit();
+                return;
+            }
+        }
+
+        _uiExceptions.Reset();
     }
 }

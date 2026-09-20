@@ -109,6 +109,11 @@
   <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>These settings come from a newer RigShift</value></data>
   <data name="SettingsProblem_NewerText" xml:space="preserve"><value>This version keeps what it knows and drops the rest on the next save. The file was kept as “{0}”.</value></data>
   <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="Crash_Title" xml:space="preserve"><value>RigShift keeps running into the same error</value></data>
+  <data name="Crash_Text" xml:space="preserve"><value>“{0}” came back several times within seconds. A restart usually clears it; the log has the details.</value></data>
+  <data name="Crash_Restart" xml:space="preserve"><value>Restart</value></data>
+  <data name="Crash_OpenLog" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="Crash_Continue" xml:space="preserve"><value>Keep running</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Delete profile?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>“{0}” will be deleted. This cannot be undone.</value></data>
   <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>“{0}” will be deleted, and so will this profile’s USB rules. This cannot be undone.</value></data>
