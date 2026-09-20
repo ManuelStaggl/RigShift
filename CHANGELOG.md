@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.5.1] - 2026-09-20
+
+### Changed
+
+- A game's desktop shortcut now shows the game's own icon in front of a small RigShift card in the top right corner,
+  instead of the plain RigShift icon: you see at a glance which game it starts and that it goes through RigShift.
+
 ## [3.5.0] - 2026-09-18
 
 ### Added
