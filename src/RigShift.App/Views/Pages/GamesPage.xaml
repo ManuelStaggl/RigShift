@@ -727,21 +727,22 @@
                               Text="{Binding DisplayName}"
                               TextTrimming="CharacterEllipsis"
                               TextWrapping="NoWrap" />
-                            <TextBlock
-                              Text="{Binding Path}"
-                              TextTrimming="CharacterEllipsis"
-                              TextWrapping="NoWrap"
-                              ToolTip="{Binding Path}">
-                              <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.ValueSecondary}">
-                                  <Style.Triggers>
-                                    <DataTrigger Binding="{Binding PathMissing}" Value="True">
-                                      <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
-                                    </DataTrigger>
-                                  </Style.Triggers>
-                                </Style>
-                              </TextBlock.Style>
-                            </TextBlock>
+                            <!-- What is wrong with the path stands in words before it; colour alone does not carry it. -->
+                            <DockPanel>
+                              <TextBlock
+                                Margin="0,0,8,0"
+                                DockPanel.Dock="Left"
+                                Foreground="{DynamicResource RigShift.Brush.Error}"
+                                Style="{StaticResource RigShift.Text.ValueSecondary}"
+                                Text="{Binding PathNote}"
+                                Visibility="{Binding HasPathNote, Converter={StaticResource BoolToVisibility}}" />
+                              <TextBlock
+                                Style="{StaticResource RigShift.Text.ValueSecondary}"
+                                Text="{Binding Path}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                ToolTip="{Binding Path}" />
+                            </DockPanel>
                           </StackPanel>
                           <Button
                             Grid.Column="2"

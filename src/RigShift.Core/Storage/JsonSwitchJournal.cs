@@ -38,17 +38,12 @@ public sealed class JsonSwitchJournal : ISwitchJournal
 
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_file)!);
-            string temp = _file + ".tmp";
-
-            // Write to a temp file and move it over the original: the crash this guards against can happen while we write.
-            await using (FileStream stream = File.Create(temp))
-            {
-                await JsonSerializer.SerializeAsync(
-                    stream, new JournalDocument(CurrentSchemaVersion, entry), JournalJsonContext.Default.JournalDocument, cancellationToken);
-            }
-
-            File.Move(temp, _file, overwrite: true);
+            // On the disk before the driver is called: a hang and reset right after would otherwise leave an empty record.
+            await AtomicFile.WriteAsync(
+                _file,
+                stream => JsonSerializer.SerializeAsync(
+                    stream, new JournalDocument(CurrentSchemaVersion, entry), JournalJsonContext.Default.JournalDocument, cancellationToken),
+                cancellationToken);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {

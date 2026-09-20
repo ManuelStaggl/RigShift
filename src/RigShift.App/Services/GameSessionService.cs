@@ -90,7 +90,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     /// twice.
     /// </summary>
     /// <returns><c>false</c> when a session for it was already running, so nothing was started.</returns>
-    public bool Start(GameEntry game, bool alreadyRunning = false)
+    public bool Start(GameEntry game, bool alreadyRunning = false, bool fromLink = false)
     {
         ArgumentNullException.ThrowIfNull(game);
         if (_running.ContainsKey(game.Id))
@@ -105,22 +105,24 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
             return false;
         }
 
-        session.Task = RunAsync(game, alreadyRunning);
+        session.Task = RunAsync(game, alreadyRunning, fromLink);
         Raise(game, running: true, status: null, outcome: null);
         return true;
     }
 
     /// <summary>The command line and the tray menu start a game through here.</summary>
-    bool IGamePlayer.Play(GameEntry game) => Start(game);
+    bool IGamePlayer.Play(GameEntry game, bool fromLink) => Start(game, fromLink: fromLink);
 
-    private async Task RunAsync(GameEntry game, bool alreadyRunning)
+    private async Task RunAsync(GameEntry game, bool alreadyRunning, bool fromLink)
     {
-        GameSessionRunner runner = _runner();
-        runner.ProcessLearned += OnProcessLearned;
+        // Inside the try: a runner that cannot be created must end the session too, or the game stays "running".
+        GameSessionRunner? runner = null;
         try
         {
+            runner = _runner();
+            runner.ProcessLearned += OnProcessLearned;
             GameSessionResult result = await Task.Run(
-                () => runner.RunAsync(game, alreadyRunning, _stopping.Token), CancellationToken.None);
+                () => runner.RunAsync(game, alreadyRunning, fromLink, _stopping.Token), CancellationToken.None);
             _log.Information("Game {Game} finished as {Outcome}", game.Name, result.Outcome);
             await _dispatcher.InvokeAsync(() => Finish(game, GameMessages.Describe(result), result.Outcome));
         }
@@ -135,7 +137,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         }
         finally
         {
-            runner.ProcessLearned -= OnProcessLearned;
+            runner?.ProcessLearned -= OnProcessLearned;
         }
     }
 

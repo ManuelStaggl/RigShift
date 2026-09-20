@@ -28,8 +28,8 @@ public sealed class SetupWizardViewModelTests : IDisposable
     {
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns(
         [
-            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true),
-            new AudioDeviceInfo(Headset, AudioDirection.Render, IsActive: true, IsDefault: false),
+            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All),
+            new AudioDeviceInfo(Headset, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
         ]);
         _host.Usb.ConnectedDevices().Returns([new UsbDevice(Dongle, "Dongle")]);
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();

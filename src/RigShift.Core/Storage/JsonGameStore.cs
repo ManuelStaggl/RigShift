@@ -22,6 +22,8 @@ public sealed class JsonGameStore : IGameStore
     private readonly string _file;
     private readonly ILogger _log;
     private readonly TimeProvider _time;
+    private readonly Lock _turnGate = new();
+    private Task _lastChange = Task.CompletedTask;
 
     /// <param name="directory">Folder holding <see cref="FileName"/>.</param>
     /// <param name="time">Clock for the retry pause; <see cref="TimeProvider.System"/> when omitted.</param>
@@ -62,6 +64,14 @@ public sealed class JsonGameStore : IGameStore
                 return new GameLoadResult([], "The file is from a newer RigShift version.");
             }
 
+            // One unusable entry makes the file unreadable rather than shorter: a save would otherwise write the list
+            // back without it.
+            if ((document.Games ?? []).Select(StoredDataCheck.Problem).FirstOrDefault(p => p is not null) is { } problem)
+            {
+                _log.Warning("Game file {File} holds an unusable entry ({Problem})", _file, problem);
+                return new GameLoadResult([], problem);
+            }
+
             IReadOnlyList<GameEntry> games = [.. (document.Games ?? [])
                 .OrderBy(g => g.Name, StringComparer.CurrentCultureIgnoreCase)];
             _log.Information("Loaded {Count} games from {File}", games.Count, _file);
@@ -74,9 +84,33 @@ public sealed class JsonGameStore : IGameStore
         }
     }
 
-    public async Task SaveAsync(GameEntry game, CancellationToken cancellationToken)
+    public Task SaveAsync(GameEntry game, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(game);
+        return InTurnAsync(() => SaveCoreAsync(game, cancellationToken));
+    }
+
+    public Task DeleteAsync(Guid gameId, CancellationToken cancellationToken) =>
+        InTurnAsync(() => DeleteCoreAsync(gameId, cancellationToken));
+
+    /// <summary>
+    /// A change reads the file, alters the list and writes it back. Two at once would both read the old list, and the
+    /// later write would drop what the other added – so they take turns. A chain of tasks rather than a semaphore: there
+    /// is nothing to dispose, and the store is created in many places that never would.
+    /// </summary>
+    private Task InTurnAsync(Func<Task> change)
+    {
+        lock (_turnGate)
+        {
+            Task turn = _lastChange.ContinueWith(
+                _ => change(), CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
+            _lastChange = turn;
+            return turn;
+        }
+    }
+
+    private async Task SaveCoreAsync(GameEntry game, CancellationToken cancellationToken)
+    {
         GameLoadResult loaded = await LoadAllAsync(cancellationToken);
         if (!loaded.IsComplete)
         {
@@ -89,7 +123,7 @@ public sealed class JsonGameStore : IGameStore
         _log.Information("Saved game {Game} to {File}", game.Name, _file);
     }
 
-    public async Task DeleteAsync(Guid gameId, CancellationToken cancellationToken)
+    private async Task DeleteCoreAsync(Guid gameId, CancellationToken cancellationToken)
     {
         GameLoadResult loaded = await LoadAllAsync(cancellationToken);
         if (!loaded.IsComplete)
@@ -109,17 +143,12 @@ public sealed class JsonGameStore : IGameStore
 
     private async Task WriteAsync(IReadOnlyList<GameEntry> games, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_file)!);
-        string temp = _file + ".tmp";
-
-        // Write to a temp file and move it over the original, so a crash never leaves a half-written list.
-        await using (FileStream stream = File.Create(temp))
-        {
-            await JsonSerializer.SerializeAsync(
-                stream, new GameDocument(CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument, cancellationToken);
-        }
-
-        File.Move(temp, _file, overwrite: true);
+        // Written next to the original and moved over it, so a crash never leaves a half-written list.
+        await AtomicFile.WriteAsync(
+            _file,
+            stream => JsonSerializer.SerializeAsync(
+                stream, new GameDocument(CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument, cancellationToken),
+            cancellationToken);
     }
 
     /// <summary>

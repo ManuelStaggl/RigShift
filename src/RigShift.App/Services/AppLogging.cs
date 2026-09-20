@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Velopack.Logging;
 
@@ -11,6 +12,20 @@ public static class AppLogging
     /// <summary>Serilog's default would silently stop writing a day's file at 1 GB; a new file is started instead.</summary>
     private const long FileSizeLimitBytes = 50L * 1024 * 1024;
 
+    /// <summary>Information until the settings say otherwise; the logger exists before the settings are read.</summary>
+    private static readonly LoggingLevelSwitch Level = new(LogEventLevel.Information);
+
+    /// <summary>The setting "detailed log": Debug lines on or off, effective at once.</summary>
+    public static void SetDetailed(bool detailed)
+    {
+        LogEventLevel wanted = detailed ? LogEventLevel.Debug : LogEventLevel.Information;
+        if (Level.MinimumLevel != wanted)
+        {
+            Level.MinimumLevel = wanted;
+            Log.Information("Log level is now {Level}", wanted);
+        }
+    }
+
     /// <summary>
     /// Daily log file, 14 days. <c>shared</c> because the tray app and a command line process write at the same time.
     /// Created first thing in <c>Main</c>, so Velopack's install and update steps land in the same file (analysis finding F-03).
@@ -20,7 +35,7 @@ public static class AppLogging
         ArgumentNullException.ThrowIfNull(paths);
 
         return new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.ControlledBy(Level)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ProcessId", Environment.ProcessId)
             .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)

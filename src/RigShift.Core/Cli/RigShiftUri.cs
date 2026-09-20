@@ -5,7 +5,8 @@ namespace RigShift.Core.Cli;
 /// Windows starts <c>RigShift.exe "&lt;uri&gt;"</c>, which becomes <c>apply &lt;name&gt; --from-link</c>,
 /// <c>toggle --from-link</c> or <c>play &lt;name&gt; --from-link</c>. Only switching and starting a configured game
 /// exist – a link on a web page must not be able to save or change profiles, and it can only reach what the user set
-/// up here – and a switch always asks for confirmation, even when confirmation is turned off.
+/// up here – and a switch always asks for confirmation, even when confirmation is turned off. For a game that means:
+/// declining the switch ends the session before a program or the game is started.
 /// </summary>
 public static class RigShiftUri
 {
@@ -46,6 +47,9 @@ public static class RigShiftUri
             return null;
         }
 
-        return path.Length == 0 || path.Contains('/', StringComparison.Ordinal) ? null : [command, path, FromLinkOption];
+        // A leading '-' would arrive at the parser as an option instead of a name.
+        return path.Length == 0 || path.Contains('/', StringComparison.Ordinal) || path.StartsWith('-')
+            ? null
+            : [command, path, FromLinkOption];
     }
 }

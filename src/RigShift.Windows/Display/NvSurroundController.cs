@@ -106,6 +106,8 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
         lock (_gate)
         {
+            // Api() let go of the lock: a Dispose in between has unloaded the library this would call into.
+            ObjectDisposedException.ThrowIf(_disposed, this);
             return ReadLocked(api);
         }
     }
@@ -147,6 +149,8 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
         lock (_gate)
         {
+            // Api() let go of the lock: a Dispose in between has unloaded the library this would call into.
+            ObjectDisposedException.ThrowIf(_disposed, this);
             SurroundState before = ReadLocked(api);
             if (before.Availability != SurroundAvailability.Available)
             {
@@ -286,6 +290,8 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
         lock (_gate)
         {
+            // Api() let go of the lock: a Dispose in between has unloaded the library this would call into.
+            ObjectDisposedException.ThrowIf(_disposed, this);
             MosaicGridTopoV2[] grids = new MosaicGridTopoV2[MaxGrids];
             if (api.EnumDisplayGrids(grids, out uint count) != NvApi.Status.Ok)
             {

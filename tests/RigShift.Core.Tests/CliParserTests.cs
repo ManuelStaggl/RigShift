@@ -79,9 +79,19 @@ public sealed class CliParserTests
         request.FromLink.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Parse_Icons_TakesTheProfileName()
+    {
+        CliRequest request = CliParser.Parse(["icons", "Desk"]).Request.ShouldNotBeNull();
+
+        request.Command.ShouldBe(CliCommand.Icons);
+        request.ProfileName.ShouldBe("Desk");
+    }
+
     [Theory]
     [InlineData("apply")]
     [InlineData("play")]
+    [InlineData("icons")]
     [InlineData("frobnicate")]
     public void Parse_InvalidArguments_ReturnsUsageText(string command)
     {
@@ -90,6 +100,25 @@ public sealed class CliParserTests
         result.Request.ShouldBeNull();
         result.ExitCode.ShouldBe(CliExitCodes.InvalidArguments);
         result.Output.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void Parse_NameStartingWithAt_IsANameAndNotAResponseFile()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"rigshift-{Guid.NewGuid():N}.rsp");
+        File.WriteAllText(file, "Injected --no-confirm");
+        try
+        {
+            CliRequest request = CliParser.Parse(["apply", "@" + file, "--from-link"]).Request.ShouldNotBeNull();
+
+            request.ProfileName.ShouldBe("@" + file);
+            request.NoConfirm.ShouldBeFalse();
+            request.FromLink.ShouldBeTrue();
+        }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 
     [Fact]

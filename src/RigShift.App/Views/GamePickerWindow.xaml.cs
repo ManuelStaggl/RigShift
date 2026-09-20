@@ -30,6 +30,7 @@ public partial class GamePickerWindow : FluentWindow
         _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
+        TextScale.Apply(this);
         Loaded += (_, _) => SearchBox.Focus();
     }
 

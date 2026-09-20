@@ -124,7 +124,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Exit() => _shell.Quit();
+    private void Exit() => _shell.QuitByUser();
 
     [RelayCommand]
     private async Task TogglePauseAsync()

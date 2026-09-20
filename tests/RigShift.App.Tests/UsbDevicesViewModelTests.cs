@@ -93,7 +93,12 @@ public sealed class UsbDevicesViewModelTests : IDisposable
         UsbDevicesViewModel devices = await CreateAsync(RuleFor(Wheelbase));
 
         devices.IsPaused = true;
-        await Task.Yield();
+
+        // The switch saves in the background, and a save reaches the disk before it counts.
+        for (int i = 0; i < 100 && !_host.Settings.Current.AutomationPaused; i++)
+        {
+            await Task.Delay(50, TestContext.Current.CancellationToken);
+        }
 
         _host.Settings.Current.AutomationPaused.ShouldBeTrue();
         devices.IsPaused.ShouldBeTrue();

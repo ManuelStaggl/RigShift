@@ -23,6 +23,9 @@ public enum CliCommand
 
     /// <summary>Run a game session: profile, companion programs, then the game itself (v2).</summary>
     Play,
+
+    /// <summary>Put a profile's saved desktop symbols back without switching.</summary>
+    Icons,
 }
 
 /// <summary>What <c>RigShift.exe</c> was asked to do.</summary>
@@ -64,7 +67,7 @@ public sealed record CliParseResult(CliRequest? Request, int ExitCode, string Ou
 /// <summary>
 /// Command line of <c>RigShift.exe</c>:
 /// <c>apply &lt;name&gt; [--no-confirm] [--dry-run]</c>, <c>toggle [--no-confirm] [--dry-run]</c>, <c>list</c>,
-/// <c>save &lt;name&gt;</c>, <c>status</c>, <c>games</c>, <c>play &lt;name&gt;</c>.
+/// <c>save &lt;name&gt;</c>, <c>status</c>, <c>games</c>, <c>play &lt;name&gt;</c>, <c>icons &lt;name&gt;</c>.
 /// </summary>
 public static class CliParser
 {
@@ -117,6 +120,9 @@ public static class CliParser
             playName, playFromLink,
         };
 
+        var iconsName = new Argument<string>("name") { Description = "Profile name (not case-sensitive)." };
+        var icons = new Command("icons", "Put the desktop icons back where the profile saved them, without switching.") { iconsName };
+
         var games = new Command("games", "List all games; one whose session is running is marked with *.");
 
         var list = new Command("list", "List all profiles; the active one is marked with *.");
@@ -125,16 +131,18 @@ public static class CliParser
 
         var root = new RootCommand("RigShift switches displays and audio between profiles.")
         {
-            minimized, preview, previewBranding, previewGallery, apply, toggle, list, save, status, surround, games, play,
+            minimized, preview, previewBranding, previewGallery, apply, toggle, list, save, status, surround, games, play, icons,
         };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
-        foreach (Command command in (Command[])[root, apply, toggle, list, save, status, surround, games, play])
+        foreach (Command command in (Command[])[root, apply, toggle, list, save, status, surround, games, play, icons])
         {
             command.SetAction(_ => CliExitCodes.Applied);
         }
 
-        ParseResult parsed = root.Parse(args);
+        // No response files: "@file" would make the parser read that file – and a rigshift:// link can carry such a
+        // name, down to a UNC path on somebody else's server. A profile may simply be called "@Rig".
+        ParseResult parsed = root.Parse(args, new ParserConfiguration { ResponseFileTokenReplacer = null });
         if (parsed.Errors.Count > 0 || parsed.Action != parsed.CommandResult.Command.Action)
         {
             using var output = new StringWriter(CultureInfo.InvariantCulture);
@@ -177,6 +185,7 @@ public static class CliParser
                 GameName = parsed.GetValue(playName),
                 FromLink = parsed.GetValue(playFromLink),
             }
+            : chosen == icons ? request with { Command = CliCommand.Icons, ProfileName = parsed.GetValue(iconsName) }
             : request;
 
         return new CliParseResult(request, CliExitCodes.Applied, string.Empty);

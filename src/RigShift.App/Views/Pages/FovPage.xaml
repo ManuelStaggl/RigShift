@@ -66,62 +66,65 @@
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
+              <!-- Labels and fields in rows of their own: a label that wraps must not push its field below the neighbour. -->
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
-              <StackPanel Grid.Column="0">
-                <TextBlock Margin="0,0,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Diagonal}" />
-                <ui:NumberBox
-                  AutomationProperties.Name="{loc:Tr Fov_Diagonal}"
-                  ClearButtonEnabled="False"
-                  MaxDecimalPlaces="1"
-                  Maximum="120"
-                  Minimum="5"
-                  SmallChange="0.5"
-                  SpinButtonPlacementMode="Hidden"
-                  Style="{StaticResource RigShift.Number}"
-                  ToolTip="{loc:Tr Fov_DiagonalTip}"
-                  Value="{Binding DiagonalInches, UpdateSourceTrigger=PropertyChanged}" />
-              </StackPanel>
-              <StackPanel Grid.Column="2">
-                <TextBlock Margin="0,0,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Distance}" />
-                <ui:NumberBox
-                  AutomationProperties.Name="{loc:Tr Fov_Distance}"
-                  ClearButtonEnabled="False"
-                  MaxDecimalPlaces="0"
-                  Maximum="300"
-                  Minimum="20"
-                  SmallChange="1"
-                  SpinButtonPlacementMode="Hidden"
-                  Style="{StaticResource RigShift.Number}"
-                  ToolTip="{loc:Tr Fov_DistanceTip}"
-                  Value="{Binding DistanceCm, UpdateSourceTrigger=PropertyChanged}" />
-              </StackPanel>
-              <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
-                <TextBlock Margin="0,0,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Curvature}" />
-                <ComboBox
-                  AutomationProperties.Name="{loc:Tr Fov_Curvature}"
-                  DisplayMemberPath="Name"
-                  ItemsSource="{Binding CurvatureChoices}"
-                  SelectedItem="{Binding SelectedCurvature}"
-                  Style="{StaticResource RigShift.Select}"
-                  ToolTip="{loc:Tr Fov_CurvatureTip}" />
-              </StackPanel>
-              <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
-                <TextBlock Margin="0,0,0,4" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Offset}" TextTrimming="CharacterEllipsis" ToolTip="{loc:Tr Fov_Offset}" />
-                <ui:NumberBox
-                  AutomationProperties.Name="{loc:Tr Fov_Offset}"
-                  ClearButtonEnabled="False"
-                  MaxDecimalPlaces="0"
-                  Maximum="60"
-                  Minimum="0"
-                  SmallChange="1"
-                  SpinButtonPlacementMode="Hidden"
-                  Style="{StaticResource RigShift.Number}"
-                  ToolTip="{loc:Tr Fov_OffsetTip}"
-                  Value="{Binding VerticalOffsetCm, UpdateSourceTrigger=PropertyChanged}" />
-              </StackPanel>
+              <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,0,4" VerticalAlignment="Bottom" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Diagonal}" />
+              <ui:NumberBox
+                Grid.Row="1"
+                Grid.Column="0"
+                AutomationProperties.Name="{loc:Tr Fov_Diagonal}"
+                ClearButtonEnabled="False"
+                MaxDecimalPlaces="1"
+                Maximum="120"
+                Minimum="5"
+                SmallChange="0.5"
+                SpinButtonPlacementMode="Hidden"
+                Style="{StaticResource RigShift.Number}"
+                ToolTip="{loc:Tr Fov_DiagonalTip}"
+                Value="{Binding DiagonalInches, UpdateSourceTrigger=PropertyChanged}" />
+              <TextBlock Grid.Row="0" Grid.Column="2" Margin="0,0,0,4" VerticalAlignment="Bottom" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Distance}" />
+              <ui:NumberBox
+                Grid.Row="1"
+                Grid.Column="2"
+                AutomationProperties.Name="{loc:Tr Fov_Distance}"
+                ClearButtonEnabled="False"
+                MaxDecimalPlaces="0"
+                Maximum="300"
+                Minimum="20"
+                SmallChange="1"
+                SpinButtonPlacementMode="Hidden"
+                Style="{StaticResource RigShift.Number}"
+                ToolTip="{loc:Tr Fov_DistanceTip}"
+                Value="{Binding DistanceCm, UpdateSourceTrigger=PropertyChanged}" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,12,0,4" VerticalAlignment="Bottom" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Curvature}" />
+              <ComboBox
+                Grid.Row="3"
+                Grid.Column="0"
+                AutomationProperties.Name="{loc:Tr Fov_Curvature}"
+                DisplayMemberPath="Name"
+                ItemsSource="{Binding CurvatureChoices}"
+                SelectedItem="{Binding SelectedCurvature}"
+                Style="{StaticResource RigShift.Select}"
+                ToolTip="{loc:Tr Fov_CurvatureTip}" />
+              <TextBlock Grid.Row="2" Grid.Column="2" Margin="0,12,0,4" VerticalAlignment="Bottom" Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Fov_Offset}" />
+              <ui:NumberBox
+                Grid.Row="3"
+                Grid.Column="2"
+                AutomationProperties.Name="{loc:Tr Fov_Offset}"
+                ClearButtonEnabled="False"
+                MaxDecimalPlaces="0"
+                Maximum="60"
+                Minimum="0"
+                SmallChange="1"
+                SpinButtonPlacementMode="Hidden"
+                Style="{StaticResource RigShift.Number}"
+                ToolTip="{loc:Tr Fov_OffsetTip}"
+                Value="{Binding VerticalOffsetCm, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
             <ui:NumberBox
               Margin="0,8,0,0"

@@ -103,6 +103,36 @@ public sealed class JsonProfileStoreTests : IDisposable
         (await store.LoadAllAsync(Ct)).Profiles.Single().Name.ShouldBe("Rig renamed");
     }
 
+    /// <summary>
+    /// Valid JSON is not yet a usable profile: <c>"displays": null</c> passes the parser and used to reach the planner,
+    /// where it ended in a NullReferenceException on every start.
+    /// </summary>
+    [Theory]
+    [InlineData("\"displays\": null")]
+    [InlineData("\"displays\": [null]")]
+    [InlineData("\"displays\": [{\"identity\": null, \"width\": 1, \"height\": 1, \"refreshNumerator\": 60, \"refreshDenominator\": 1, \"positionX\": 0, \"positionY\": 0}]")]
+    [InlineData("\"displays\": [], \"name\": null")]
+    [InlineData("\"displays\": [], \"audio\": null")]
+    [InlineData("\"displays\": [], \"apps\": null")]
+    [InlineData("\"displays\": [], \"apps\": [null]")]
+    [InlineData("\"displays\": [], \"apps\": [{\"path\": null}]")]
+    [InlineData("\"displays\": [], \"audio\": {\"playback\": {\"endpointId\": null}}")]
+    [InlineData("\"displays\": [], \"desktopIcons\": {\"icons\": null}")]
+    [InlineData("\"displays\": [], \"surround\": {\"enabled\": true, \"grid\": {\"rows\": 1, \"columns\": 3, \"width\": 1, \"height\": 1, \"displays\": null}}")]
+    public async Task Load_ProfileWithNullWhereDataBelongs_IsReportedInsteadOfLoaded(string members)
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        await store.SaveAsync(Rig(), Ct);
+        string json = "{\"schemaVersion\": 1, \"profile\": {\"id\": \"" + Guid.NewGuid().ToString("D") + "\", "
+            + (members.Contains("\"name\"", StringComparison.Ordinal) ? string.Empty : "\"name\": \"Hand-written\", ") + members + "}}";
+        await File.WriteAllTextAsync(Path.Combine(_directory, "handwritten.json"), json, Ct);
+
+        LoadResult loaded = await store.LoadAllAsync(Ct);
+
+        loaded.Profiles.Single().Name.ShouldBe("Rig");
+        loaded.Unreadable.Single().FileName.ShouldBe("handwritten.json");
+    }
+
     [Fact]
     public async Task Load_SkipsBrokenAndNewerFiles_ButReturnsTheRest()
     {

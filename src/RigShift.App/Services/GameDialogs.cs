@@ -18,8 +18,29 @@ namespace RigShift.App.Services;
 /// <param name="Skipped">Games that were picked but already configured.</param>
 public sealed record AddedGames(IReadOnlyList<GameEntry> Added, int Skipped);
 
+/// <summary>
+/// What the games page asks of the user or builds for them. The page's logic – what happens to unsaved changes, which
+/// game is selected after a delete – runs against this, so it can be tested without a window.
+/// </summary>
+public interface IGamePageDialogs
+{
+    /// <summary>The detail's editor for a game.</summary>
+    Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew);
+
+    /// <summary>Installed games from the picker, saved right away.</summary>
+    Task<AddedGames> AddInstalledAsync();
+
+    /// <summary>A program from the file dialog; <c>null</c> when cancelled.</summary>
+    string? PickExecutable();
+
+    Task<bool> ConfirmDeleteAsync(string name);
+
+    /// <param name="targetName">The game the user picked instead, when the question comes from the list.</param>
+    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
+}
+
 /// <summary>Builds the game detail's editor and opens the pickers, the window capture and the delete confirmation.</summary>
-public sealed class GameDialogs
+public sealed class GameDialogs : IGamePageDialogs
 {
     private readonly GameCatalog _catalog;
     private readonly ProfileCatalog _profiles;
@@ -119,7 +140,7 @@ public sealed class GameDialogs
     public Task<PickedGame?> PickGameAsync() => GamePickerWindow.PickAsync(System.Windows.Application.Current.MainWindow, this);
 
     /// <summary>A program from the file dialog, for "+ New → Choose a program"; <c>null</c> when cancelled.</summary>
-    public static string? PickExecutable()
+    public string? PickExecutable()
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
@@ -174,7 +195,7 @@ public sealed class GameDialogs
     }
 
     /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
-    public static async Task<bool> ConfirmDeleteAsync(string name) =>
+    public async Task<bool> ConfirmDeleteAsync(string name) =>
         await DialogWindow.AskAsync(
             Loc.Instance["Games_DeleteTitle"],
             Loc.Format("Games_DeleteText", name),
@@ -183,4 +204,7 @@ public sealed class GameDialogs
                 new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
             ],
             cancelResult: 0) == 1;
+
+    public Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName) =>
+        ProfileDialogs.ConfirmUnsavedAsync(name, targetName);
 }

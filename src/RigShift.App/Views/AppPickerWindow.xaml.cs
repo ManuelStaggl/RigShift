@@ -26,6 +26,7 @@ public partial class AppPickerWindow : FluentWindow
         _currentPath = currentPath;
         DataContext = viewModel;
         InitializeComponent();
+        TextScale.Apply(this);
         Loaded += async (_, _) =>
         {
             SearchBox.Focus();

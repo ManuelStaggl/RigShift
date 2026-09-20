@@ -25,10 +25,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly ProfileDialogs _dialogs;
+    private readonly IProfilePageDialogs _dialogs;
     private readonly SettingsService _settings;
     private readonly IDisplayConfigurator _display;
     private readonly TopologyPlanner _planner;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly ILogger _log;
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly Dictionary<Guid, TopologyPlan> _plans = [];
@@ -41,17 +42,19 @@ public sealed partial class ProfilesViewModel : ObservableObject
     public ProfilesViewModel(
         ProfileCatalog catalog,
         SwitchCoordinator coordinator,
-        ProfileDialogs dialogs,
+        IProfilePageDialogs dialogs,
         SettingsService settings,
         IDisplayConfigurator display,
         TopologyPlanner planner,
         DisplayChangeWatcher watcher,
+        IDesktopIcons desktopIcons,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(watcher);
+        ArgumentNullException.ThrowIfNull(desktopIcons);
         ArgumentNullException.ThrowIfNull(log);
         _catalog = catalog;
         _coordinator = coordinator;
@@ -59,6 +62,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         _settings = settings;
         _display = display;
         _planner = planner;
+        _desktopIcons = desktopIcons;
         _log = log.ForContext<ProfilesViewModel>();
 
         catalog.Changed += (_, _) => OnUi(() => _ = RebuildAsync());
@@ -95,6 +99,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyCanExecuteChangedFor(nameof(RestoreDesktopIconsCommand))]
     public partial ProfileEditorViewModel? Editor { get; private set; }
 
     public bool HasSelection => Editor is not null;
@@ -161,21 +166,23 @@ public sealed partial class ProfilesViewModel : ObservableObject
     public bool HasStatusMessage => StatusMessage is not null;
 
     /// <summary>Before the page is left or the window navigates: saves, discards or stays. False: stay.</summary>
-    /// <param name="targetName">The profile the user picked instead, when the dialog comes from the list.</param>
-    public async Task<bool> ConfirmLeaveAsync(string? targetName = null)
+    public Task<bool> ConfirmLeaveAsync() => ConfirmLeaveAsync(null);
+
+    /// <param name="target">The profile the user picked instead, when the question comes from the list.</param>
+    private async Task<bool> ConfirmLeaveAsync(ProfileItem? target)
     {
         if (Editor is not { IsDirty: true } editor)
         {
             return true;
         }
 
-        switch (await ProfileDialogs.ConfirmUnsavedAsync(
-            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, targetName))
+        switch (await _dialogs.ConfirmUnsavedAsync(
+            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, target?.Name))
         {
             case UnsavedChoice.Save:
-                return await SaveCoreAsync();
+                return await SaveCoreAsync(target);
             case UnsavedChoice.Discard:
-                DiscardCore();
+                DiscardCore(target);
                 return true;
             default:
                 return false;
@@ -290,7 +297,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (SelectedItem is not { } item || !await ProfileDialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
+        if (SelectedItem is not { } item || !await _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
         {
             return;
         }
@@ -332,6 +339,43 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
     }
 
+    private bool CanRestoreDesktopIcons() => Editor is { HasDesktopIcons: true };
+
+    /// <summary>
+    /// The saved desktop icons and nothing else: Windows reshuffles them now and then while the profile is already
+    /// active, and a full switch is a heavy way to get them back. Takes what the editor shows – a layout captured a
+    /// moment ago counts, saved or not.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRestoreDesktopIcons))]
+    private async Task RestoreDesktopIconsAsync()
+    {
+        if (Editor is not { DesktopIcons: { IsEmpty: false } layout } editor)
+        {
+            return;
+        }
+
+        // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread.
+        DesktopIconResult result = await Task.Run(() => _desktopIcons.Restore(layout));
+        _log.Information("Desktop icons of {Profile} put back on request: {Outcome}, {Placed} placed, {Missing} missing",
+            editor.Name, result.Outcome, result.Placed, result.Missing);
+
+        switch (result.Outcome)
+        {
+            case DesktopIconOutcome.Restored when result.Missing > 0:
+                ShowDetail(Loc.Format("Status_IconsRestoredMissing", result.Placed, result.Missing), InfoKind.Warn);
+                break;
+            case DesktopIconOutcome.Restored:
+                ShowStatus(result.Placed == 1 ? Loc.Instance["Status_IconsRestoredOne"] : Loc.Format("Status_IconsRestored", result.Placed));
+                break;
+            case DesktopIconOutcome.AutoArrange:
+                ShowDetail(Loc.Instance["Status_IconsAutoArrange"], InfoKind.Error);
+                break;
+            default:
+                ShowDetail(Loc.Instance["Status_IconsUnavailable"], InfoKind.Error);
+                break;
+        }
+    }
+
     [RelayCommand]
     private void CopyCommand()
     {
@@ -364,7 +408,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private async Task SelectAsync(ProfileItem? previous, ProfileItem? next)
     {
-        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next?.Name))
+        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next))
         {
             _reverting = true;
             SelectedItem = previous;
@@ -415,6 +459,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private void OnEditorChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(ProfileEditorViewModel.HasDesktopIcons))
+        {
+            RestoreDesktopIconsCommand.NotifyCanExecuteChanged();
+        }
+
         if (e.PropertyName is nameof(ProfileEditorViewModel.IsDirty) or nameof(ProfileEditorViewModel.IsNew) or nameof(ProfileEditorViewModel.Name)
             or nameof(ProfileEditorViewModel.ErrorMessage))
         {
@@ -427,7 +476,8 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> SaveCoreAsync()
+    /// <param name="target">The profile to show afterwards; saving rebuilds the list, which otherwise stays on the saved profile.</param>
+    private async Task<bool> SaveCoreAsync(ProfileItem? target = null)
     {
         if (Editor is not { } editor)
         {
@@ -435,7 +485,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
 
         bool wasNew = editor.IsNew;
-        _selectAfterRebuild = editor.Id;
+        _selectAfterRebuild = target?.Profile.Id ?? editor.Id;
         if (!await editor.SaveAsync())
         {
             _selectAfterRebuild = null;
@@ -452,9 +502,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
     }
 
     /// <summary>Back to the profile as saved; a new profile disappears from the list.</summary>
-    private void DiscardCore()
+    /// <param name="target">The profile the user picked instead; its editor is loaded by whoever asked.</param>
+    private void DiscardCore(ProfileItem? target = null)
     {
-        if (SelectedItem is not { } item)
+        ProfileItem? item = _newItem is not null && Editor is { IsNew: true } ? _newItem : SelectedItem;
+        if (item is null)
         {
             return;
         }
@@ -465,13 +517,20 @@ public sealed partial class ProfilesViewModel : ObservableObject
             Items.Remove(item);
             IsEmpty = Items.Count == 0;
             _reverting = true;
-            SelectedItem = Items.FirstOrDefault();
+            SelectedItem = target is not null && Items.Contains(target) ? target : Items.FirstOrDefault();
             _reverting = false;
-            _ = LoadEditorAsync(SelectedItem);
+            if (target is null)
+            {
+                _ = LoadEditorAsync(SelectedItem);
+            }
+
             return;
         }
 
-        _ = LoadEditorAsync(item);
+        if (target is null)
+        {
+            _ = LoadEditorAsync(item);
+        }
     }
 
     private async Task RunStoreActionAsync(Func<Task> action, string? success)
@@ -521,6 +580,12 @@ public sealed partial class ProfilesViewModel : ObservableObject
         _reverting = true;
         try
         {
+            // The save of a new profile reloads the catalog before it returns here: by then the profile is an ordinary entry.
+            if (_newItem is not null && _catalog.Items.Any(i => i.Profile.Id == _newItem.Profile.Id))
+            {
+                _newItem = null;
+            }
+
             Items.Clear();
             if (_newItem is not null)
             {

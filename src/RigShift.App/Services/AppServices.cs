@@ -31,6 +31,12 @@ public interface IAppShell
     void ShowMainWindow(Type? page = null);
 
     void Quit();
+
+    /// <summary>
+    /// "Exit" chosen by the user: unsaved changes in the profile or game editor are asked about first, and "cancel"
+    /// keeps RigShift running. <see cref="Quit"/> is for exits that must happen – an update, a restart.
+    /// </summary>
+    void QuitByUser();
 }
 
 /// <summary>
@@ -48,10 +54,14 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
 
     public IAutostart Autostart => autostart;
 
+    /// <summary>How reading the file went the last time; the app tells the user when it went wrong.</summary>
+    public SettingsLoadReport LastLoad => store.LastLoad;
+
     public async Task LoadAsync(CancellationToken cancellationToken)
     {
         Current = await store.LoadAsync(cancellationToken);
         Loc.Instance.SetLanguage(Current.Language);
+        AppLogging.SetDetailed(Current.DetailedLogging);
     }
 
     /// <summary>The file was replaced behind our back (a restored backup): read it again and tell everyone. UI thread.</summary>
@@ -68,6 +78,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
         }
 
         Loc.Instance.SetLanguage(Current.Language);
+        AppLogging.SetDetailed(Current.DetailedLogging);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -93,6 +104,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
             await store.SaveAsync(updated, cancellationToken);
             languageChanged = !string.Equals(updated.Language, Current.Language, StringComparison.Ordinal);
             Current = updated;
+            AppLogging.SetDetailed(updated.DetailedLogging);
         }
         finally
         {

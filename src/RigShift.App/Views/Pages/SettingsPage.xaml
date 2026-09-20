@@ -116,10 +116,21 @@
           <controls:SettingRow
             Margin="0,8,0,0"
             Caption="{loc:Tr Settings_AutoUpdateHint}"
-            Title="{loc:Tr Settings_AutoUpdate}">
+            Title="{loc:Tr Settings_AutoUpdate}"
+            Visibility="{Binding ShowUpdateSetting, Converter={StaticResource BoolToVisibility}}">
             <ui:ToggleSwitch
               AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}"
               IsChecked="{Binding InstallUpdatesAutomatically}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_DetailedLogHint}"
+            Title="{loc:Tr Settings_DetailedLog}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_DetailedLog}"
+              IsChecked="{Binding DetailedLogging}"
               Style="{StaticResource RigShift.Toggle}" />
           </controls:SettingRow>
         </StackPanel>

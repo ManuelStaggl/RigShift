@@ -30,6 +30,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly string? _savedWaitDeviceId;
     private readonly string? _savedWaitDeviceName;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
+    private HotkeyUse? _hotkeyConflict;
     private SurroundGrid? _surroundGrid;
     private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
@@ -82,7 +83,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _savedWaitDeviceId = UsbDeviceIds.Normalize(profile.AppsWaitForUsbDeviceId);
         _savedWaitDeviceName = profile.AppsWaitForUsbDeviceName;
         Hotkey = profile.Hotkey;
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
         Rules = rules;
         _log = log.ForContext<ProfileEditorViewModel>();
 
@@ -387,6 +388,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             return;
         }
 
+        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
+        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Profile, _original.Id) is { } use)
+        {
+            _hotkeyConflict = use;
+            HotkeyHint = HotkeyHintText();
+            return;
+        }
+
         Hotkey = hotkey;
         SetHotkeyHint("Editor_HotkeyHint");
         _log.Information("Editor recorded hotkey {Hotkey}", HotkeyText);
@@ -581,8 +590,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         Rules.Changed -= OnPartChanged;
     }
 
+    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
+    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_hotkeyHintKey];
+
     private void SetHotkeyHint(string key)
     {
+        _hotkeyConflict = null;
         _hotkeyHintKey = key;
         HotkeyHint = Loc.Instance[key];
     }
@@ -665,7 +678,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     /// </summary>
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(DesktopIconsText));
         ErrorMessage = null;
@@ -1049,7 +1062,7 @@ public sealed partial class AppEditItem : ObservableObject
 
     /// <summary>Null only for a moment while the list is rebuilt; that counts as "start".</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStart))]
+    [NotifyPropertyChangedFor(nameof(IsStart), nameof(PathNote), nameof(HasPathNote))]
     public partial Choice? SelectedKind { get; set; }
 
     /// <summary>Arguments only apply when starting.</summary>
@@ -1075,7 +1088,10 @@ public sealed partial class AppEditItem : ObservableObject
         FillWhenChoices();
         SelectedKind = KindChoices[start ? 0 : 1];
         SelectedWhen = WhenChoices[after ? 1 : 0];
+        OnPropertyChanged(nameof(PathNote));
     }
+
+    public bool HasPathNote => PathNote is not null;
 
     private void FillKindChoices()
     {
@@ -1092,11 +1108,31 @@ public sealed partial class AppEditItem : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Icon), nameof(DisplayName), nameof(PathMissing))]
+    [NotifyPropertyChangedFor(nameof(Icon), nameof(DisplayName), nameof(PathNote), nameof(HasPathNote))]
     public partial string Path { get; set; }
 
-    /// <summary>The path points to no file: the row shows it in red (component AppRow).</summary>
-    public bool PathMissing => string.IsNullOrWhiteSpace(Path) || !File.Exists(Environment.ExpandEnvironmentVariables(Path.Trim()));
+    /// <summary>
+    /// What is wrong with the path, in words, shown before it; <c>null</c> when nothing is. An empty path is the
+    /// editor's own problem line, and stopping by process name needs no file.
+    /// </summary>
+    public string? PathNote
+    {
+        get
+        {
+            string path = Path.Trim();
+            if (path.Length == 0)
+            {
+                return null;
+            }
+
+            if (!LaunchPath.IsFullyQualified(path))
+            {
+                return IsStart ? Loc.Instance["Restore_WarnNotFullPath"] : null;
+            }
+
+            return File.Exists(LaunchPath.Expand(path)) ? null : Loc.Instance["App_NotFound"];
+        }
+    }
 
     /// <summary>The program's own icon; <c>null</c> while the path is not a file with one.</summary>
     public System.Windows.Media.ImageSource? Icon => AppIcons.Load(Path);

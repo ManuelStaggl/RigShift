@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Used by "dotnet test" with the coverage switches in ci.yml: our own code only, nothing a generator wrote. -->
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <!-- The app's assembly is RigShift.dll, not RigShift.App.dll. -->
+        <ModulePath>.*\\RigShift(\.Core|\.Windows)?\.dll$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <Sources>
+      <Exclude>
+        <Source>.*\\obj\\.*</Source>
+        <Source>.*\.g\.cs$</Source>
+        <Source>.*\.g\.i\.cs$</Source>
+      </Exclude>
+    </Sources>
+  </CodeCoverage>
+</Configuration>

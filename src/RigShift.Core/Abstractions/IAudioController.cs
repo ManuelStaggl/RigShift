@@ -16,7 +16,12 @@ public interface IAudioController
     Task<int> GetVolumeAsync(AudioEndpoint endpoint, CancellationToken cancellationToken);
 }
 
-public sealed record AudioDeviceInfo(AudioEndpoint Endpoint, AudioDirection Direction, bool IsActive, bool IsDefault);
+/// <param name="DefaultRoles">The roles this device is the default for; Windows keeps one default per role.</param>
+public sealed record AudioDeviceInfo(AudioEndpoint Endpoint, AudioDirection Direction, bool IsActive, AudioRoleMask DefaultRoles)
+{
+    /// <summary>The device Windows shows as the default – the one for the console role.</summary>
+    public bool IsDefault => DefaultRoles.HasFlag(AudioRoleMask.Console);
+}
 
 public enum AudioDirection
 {

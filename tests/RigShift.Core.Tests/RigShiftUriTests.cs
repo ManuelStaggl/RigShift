@@ -46,6 +46,8 @@ public sealed class RigShiftUriTests
     [InlineData("rigshift://apply/Rig?no-confirm=1")]
     [InlineData("rigshift://apply/Rig#x")]
     [InlineData("https://apply/Rig")]
+    [InlineData("rigshift://apply/--no-confirm")]
+    [InlineData("rigshift://play/-x")]
     [InlineData("rigshift:")]
     public void ToArguments_AnythingElse_IsRejected(string uri)
     {

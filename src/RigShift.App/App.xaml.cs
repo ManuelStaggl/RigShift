@@ -50,6 +50,37 @@ public partial class App : Application, IAppShell
 
     public bool IsExiting { get; private set; }
 
+#if DEBUG
+    /// <summary>A backup with everything the restore question warns about: a share, a bare name, a rule without the question.</summary>
+    private BackupContent PreviewBackup()
+    {
+        IReadOnlyList<Core.Profiles.Profile> profiles = Services.GetRequiredService<ProfileCatalog>().Profiles;
+        if (profiles.Count == 0)
+        {
+            return new BackupContent([], null);
+        }
+
+        Core.Profiles.Profile first = profiles[0] with
+        {
+            Apps =
+            [
+                new Core.Profiles.AppAction { Path = @"C:\Program Files (x86)\SimHub\SimHubWPF.exe" },
+                new Core.Profiles.AppAction { Path = @"\\nas\tools\CrewChiefV4.exe", Arguments = "-profile rig" },
+                new Core.Profiles.AppAction { Path = "overlay.exe" },
+                new Core.Profiles.AppAction { Kind = Core.Profiles.AppActionKind.Stop, Path = "Discord.exe" },
+            ],
+        };
+        var settings = new AppSettings
+        {
+            AutomationRules =
+            [
+                new Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }], SkipConfirmation = true },
+            ],
+        };
+        return new BackupContent([first, .. profiles.Skip(1)], settings);
+    }
+#endif
+
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
     public void ShowMainWindow(Type? page = null)
@@ -78,6 +109,36 @@ public partial class App : Application, IAppShell
 
         IsExiting = true;
         _ = QuitAsync();
+    }
+
+    public void QuitByUser() => _ = QuitByUserAsync();
+
+    private async Task QuitByUserAsync()
+    {
+        try
+        {
+            var profiles = Services.GetRequiredService<ProfilesViewModel>();
+            var games = Services.GetRequiredService<GamesViewModel>();
+            if (profiles.Editor is { IsDirty: true } || games.Editor is { IsDirty: true })
+            {
+                // The question needs its window: the tray menu also works while the main window is hidden.
+                Log.Information("Exit requested with unsaved changes, asking first");
+                ShowMainWindow();
+                if (!await profiles.ConfirmLeaveAsync() || !await games.ConfirmLeaveAsync())
+                {
+                    Log.Information("Exit cancelled, the unsaved changes stay open");
+                    return;
+                }
+            }
+        }
+#pragma warning disable CA1031 // A question that cannot be asked must not make RigShift impossible to exit.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Log.Error(ex, "Asking about unsaved changes before exiting failed, exiting anyway");
+        }
+
+        Quit();
     }
 
     private async Task QuitAsync()
@@ -195,12 +256,25 @@ public partial class App : Application, IAppShell
                 }
             }
 
-            // Developer aid: the two question dialogs, which otherwise need a profile and a menu to reach.
+            // Developer aid: the question dialogs, which otherwise need a profile and a menu (or a backup file) to reach.
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialogKind)
             {
-                _ = Dispatcher.InvokeAsync(() => string.Equals(dialogKind, "unsaved", StringComparison.OrdinalIgnoreCase)
-                    ? ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default)
-                    : ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default));
+                _ = Dispatcher.InvokeAsync(() => dialogKind.ToUpperInvariant() switch
+                {
+                    "UNSAVED" => ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default),
+                    "RESTORE" => ProfileDialogs.ConfirmRestoreAsync(PreviewBackup()).ContinueWith(_ => { }, TaskScheduler.Default),
+                    _ => ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default),
+                });
+            }
+
+            // Developer aid: a timer that throws on every tick, which is what a broken layout pass or binding looks like.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_CRASH") is { Length: > 0 })
+            {
+                var broken = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                // Thrown from a queued call: a timer whose own tick throws is never re-armed by WPF.
+                broken.Tick += (_, _) => Dispatcher.BeginInvoke(
+                    () => throw new InvalidOperationException("Preview: this timer throws on every tick."));
+                broken.Start();
             }
 
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
@@ -265,6 +339,7 @@ public partial class App : Application, IAppShell
             }
 
             KeepAwakeForActiveProfile(catalog);
+            ReportSettingsProblem();
             await OfferInterruptedRestoreAsync();
             await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
         }
@@ -305,12 +380,34 @@ public partial class App : Application, IAppShell
         });
     }
 
+    /// <summary>
+    /// Defaults in place of the user's settings are not something to find out by accident. Queued, so startup finishes
+    /// before the dialog blocks.
+    /// </summary>
+    private void ReportSettingsProblem()
+    {
+        Core.Settings.SettingsLoadReport report = Services.GetRequiredService<SettingsService>().LastLoad;
+        if (report.Problem == Core.Settings.SettingsLoadProblem.None)
+        {
+            return;
+        }
+
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            if (await ProfileDialogs.ShowSettingsProblemAsync(report))
+            {
+                ShellFolders.Open(Paths.DataDirectory, Log.Logger);
+            }
+        });
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("RigShift exiting with code {ExitCode}", e.ApplicationExitCode);
         // Disposes the singletons in reverse creation order; all of them are IDisposable (none async-only).
         _services?.Dispose();
-        Log.CloseAndFlush();
+
+        // The log stays open: Program.Main closes it, after a restart that may still have something to say.
         base.OnExit(e);
     }
 
@@ -453,9 +550,13 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<SwitchCoordinator>(),
             sp.GetRequiredService<ISurroundController>(),
             sp.GetRequiredService<IGameStore>(),
-            sp.GetRequiredService<GameSessionService>()));
+            sp.GetRequiredService<GameSessionService>(),
+            sp.GetRequiredService<IDesktopIcons>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
+        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
+        services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl));
+        services.AddSingleton<IUpdatePolicy>(_ => new RegistryUpdatePolicy(Log.Logger));
         services.AddSingleton<UpdateService>();
 
         // Games (v2)
@@ -466,6 +567,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
         services.AddSingleton<GameCatalog>();
         services.AddSingleton<GameDialogs>();
+        services.AddSingleton<IGamePageDialogs>(sp => sp.GetRequiredService<GameDialogs>());
 
         // A new runner per session: it keeps the state of exactly one run.
         services.AddSingleton<Func<GameSessionRunner>>(sp => () => new GameSessionRunner(
@@ -503,12 +605,72 @@ public partial class App : Application, IAppShell
         services.AddSingleton<MainWindow>();
     }
 
+    /// <summary>Set when the user asked for a restart; <see cref="Program"/> starts the new process once this one let go.</summary>
+    internal static bool RestartRequested { get; private set; }
+
+    private readonly UiExceptionTracker _uiExceptions = new(TimeProvider.System);
+
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Log.Error(e.Exception, "Unhandled UI exception");
+        // Handled in every case: the alternative is the process ending in the middle of whatever the user was doing.
+        // What differs is whether we keep quiet about it.
         e.Handled = true;
+        UiExceptionVerdict verdict = _uiExceptions.Record(e.Exception);
+        if (verdict == UiExceptionVerdict.Quiet)
+        {
+            // A loop can throw hundreds of times a second; the first ones are in the log with their stack.
+            Log.Debug("Unhandled UI exception again: {Message}", e.Exception.Message);
+            return;
+        }
+
+        Log.Error(e.Exception, "Unhandled UI exception");
+        if (verdict == UiExceptionVerdict.Escalate)
+        {
+            Log.Fatal("The same UI exception keeps coming back, asking the user whether to restart");
+            _ = Dispatcher.InvokeAsync(() => AskAboutRepeatedErrorAsync(e.Exception.Message));
+            return;
+        }
 
         // Only once the tray exists: resolving it here during a failed startup could throw again.
         _tray?.ShowUnexpectedError(e.Exception.Message);
+    }
+
+    private async Task AskAboutRepeatedErrorAsync(string message)
+    {
+        try
+        {
+            while (true)
+            {
+                RepeatedErrorChoice choice = await ProfileDialogs.AskAboutRepeatedErrorAsync(message);
+                if (choice == RepeatedErrorChoice.OpenLog)
+                {
+                    ShellFolders.Open(Paths.Logs, Log.Logger);
+                    continue;
+                }
+
+                if (choice == RepeatedErrorChoice.Restart)
+                {
+                    RestartRequested = true;
+                    Quit();
+                    return;
+                }
+
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            // The dialog is WPF too and may be what is broken. The plain message box is not.
+            Log.Error(ex, "The dialog about the repeated error failed");
+            if (MessageBox.Show($"{message}\n\n{Localization.Loc.Instance["Crash_Restart"]}?", "RigShift", MessageBoxButton.YesNo, MessageBoxImage.Error)
+                == MessageBoxResult.Yes)
+            {
+                RestartRequested = true;
+                Quit();
+                return;
+            }
+        }
+
+        _uiExceptions.Reset();
     }
 }

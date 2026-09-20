@@ -80,6 +80,7 @@
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Neu starten und installieren</value></data>
   <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Neu starten und {0} installieren</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates gibt es nur in der installierten Version.</value></data>
+  <data name="Update_StatusPolicy" xml:space="preserve"><value>Dein Administrator hat die Update-Prüfung abgeschaltet.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Noch nicht nach Updates gesucht.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Suche nach Updates …</value></data>
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Version {0} wird geladen …</value></data>
@@ -89,6 +90,10 @@
   <data name="Update_Available" xml:space="preserve"><value>Version {0} ist verfügbar. Unter „Über &amp; Hilfe“ kannst du sie installieren.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Updates automatisch installieren</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Aus: Neue Versionen werden nur gemeldet.</value></data>
+
+  <data name="Settings_DetailedLog" xml:space="preserve"><value>Ausführliches Protokoll</value></data>
+
+  <data name="Settings_DetailedLogHint" xml:space="preserve"><value>Für eine Fehlermeldung: einschalten, dann das Problem wiederholen.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release-Notes auf GitHub</value></data>
   <data name="About_WhatsNew" xml:space="preserve"><value>Was ist neu</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden. Details stehen im Log.</value></data>
@@ -103,6 +108,17 @@
   <data name="Interrupted_Text" xml:space="preserve"><value>RigShift wurde beim Umschalten auf „{0}“ beendet, das Umschalten wurde also nie bestätigt. Die vorherige Anordnung wiederherstellen?</value></data>
   <data name="Interrupted_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Interrupted_Keep" xml:space="preserve"><value>So lassen</value></data>
+  <data name="SettingsProblem_Title" xml:space="preserve"><value>Die Einstellungen konnten nicht gelesen werden</value></data>
+  <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
+  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei ließ sich nicht kopieren – eine geänderte Einstellung überschreibt sie.</value></data>
+  <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>Diese Einstellungen stammen von einem neueren RigShift</value></data>
+  <data name="SettingsProblem_NewerText" xml:space="preserve"><value>Diese Version behält, was sie kennt, und verwirft den Rest beim nächsten Speichern. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
+  <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Ordner öffnen</value></data>
+  <data name="Crash_Title" xml:space="preserve"><value>RigShift läuft immer wieder in denselben Fehler</value></data>
+  <data name="Crash_Text" xml:space="preserve"><value>„{0}“ kam innerhalb von Sekunden mehrfach. Ein Neustart behebt das meist; die Einzelheiten stehen im Log.</value></data>
+  <data name="Crash_Restart" xml:space="preserve"><value>Neu starten</value></data>
+  <data name="Crash_OpenLog" xml:space="preserve"><value>Log-Ordner öffnen</value></data>
+  <data name="Crash_Continue" xml:space="preserve"><value>Weiterlaufen</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Profil löschen?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>„{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>„{0}“ wird gelöscht. Die USB-Regeln dieses Profils auch. Das lässt sich nicht rückgängig machen.</value></data>
@@ -113,6 +129,8 @@
   <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Verknüpfung „{0}“ auf dem Desktop erstellt. Sie funktioniert auch als Stream-Deck-Aktion.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Fehler: {0}</value></data>
+
+  <data name="Overview_ReadFailed" xml:space="preserve"><value>Windows hat die Bildschirme nicht gemeldet (Fehler {0}). Versuch es gleich noch einmal.</value></data>
   <data name="Editor_NewName" xml:space="preserve"><value>Neues Profil</value></data>
   <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
   <data name="Editor_Icon" xml:space="preserve"><value>Symbol</value></data>
@@ -153,12 +171,14 @@
   <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
+
+  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>„{0}“ nutzt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Keins</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Halte zusätzlich Strg, Alt oder Win.</value></data>
-  <data name="Hotkey_Failed" xml:space="preserve"><value>Eine andere App belegt das Tastenkürzel dieser Profile, es funktioniert daher nicht: {0}</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>Diese Tastenkürzel funktionieren nicht, weil eine andere App oder etwas anderes in RigShift sie schon belegt: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Strg</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Umschalt</value></data>
   <data name="Audio_SetVolume" xml:space="preserve"><value>Lautstärke festlegen</value></data>
@@ -179,6 +199,7 @@
   <data name="AppPicker_BrowseFile" xml:space="preserve"><value>_Datei suchen …</value></data>
   <data name="AppPicker_Choose" xml:space="preserve"><value>Aus_wählen</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programme (*.exe)|*.exe|Alle Dateien (*.*)|*.*</value></data>
+  <data name="App_NotFound" xml:space="preserve"><value>Nicht gefunden</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Wähle für jede App eine Datei.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Nicht alle Apps konnten gestartet oder beendet werden.</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Hilfe</value></data>
@@ -194,7 +215,7 @@
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profile, Spiele, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Speichern …</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Wiederherstellen …</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
@@ -202,11 +223,14 @@
   <data name="About_BackupFailed" xml:space="preserve"><value>Fehler: {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Warte, bis der laufende Wechsel fertig ist.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Sicherung wiederherstellen?</value></data>
-  <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Deine Spiele bleiben, wie sie sind. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="About_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift auf GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
+  <data name="About_ThirdParty" xml:space="preserve"><value>Lizenzen Dritter</value></data>
+  <data name="About_Privacy" xml:space="preserve"><value>Datenschutz</value></data>
+  <data name="About_PrivacyHint" xml:space="preserve"><value>Keine Telemetrie. Die einzige Verbindung ist die Update-Prüfung bei GitHub.</value></data>
   <data name="About_Kofi" xml:space="preserve"><value>Spendier mir einen Kaffee</value></data>
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>
@@ -360,6 +384,8 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gesichert</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gesichert {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gesichert {1}</value></data>
+  <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gesicherten Plätze zurück – ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} Problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} Probleme</value></data>
@@ -420,6 +446,12 @@
   <data name="Behavior_Intro" xml:space="preserve"><value>Wie sich der PC verhält, solange das Profil aktiv ist.</value></data>
   <data name="Profile_SetDefault" xml:space="preserve"><value>Als Standard</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Verknüpfung anlegen</value></data>
+  <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Desktopsymbole wiederherstellen</value></data>
+  <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 Desktopsymbol zurückgesetzt.</value></data>
+  <data name="Status_IconsRestored" xml:space="preserve"><value>{0} Desktopsymbole zurückgesetzt.</value></data>
+  <data name="Status_IconsRestoredMissing" xml:space="preserve"><value>Desktopsymbole zurückgesetzt: {0}. Nicht mehr auf dem Desktop: {1}.</value></data>
+  <data name="Status_IconsAutoArrange" xml:space="preserve"><value>Windows ordnet die Desktopsymbole selbst an. Schalte im Kontextmenü des Desktops (Ansicht) „Symbole automatisch anordnen“ aus und versuche es erneut.</value></data>
+  <data name="Status_IconsUnavailable" xml:space="preserve"><value>Der Desktop war nicht erreichbar. Im Protokoll steht, warum.</value></data>
   <data name="Status_Tested" xml:space="preserve"><value>Getestet: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Änderungen an „{0}“ speichern?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Ungespeicherte Änderungen gehen sonst verloren.</value></data>
@@ -625,6 +657,9 @@
   <data name="Fov_Pinned" xml:space="preserve">
     <value>Eines deiner Spiele</value>
   </data>
+  <data name="Nav_ActiveProfile" xml:space="preserve">
+    <value>Aktives Profil: {0}</value>
+  </data>
   <data name="Nav_Collapse" xml:space="preserve">
     <value>Navigation einklappen</value>
   </data>
@@ -645,5 +680,38 @@
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximiert</value>
+  </data>
+  <data name="About_RestoreTextGames" xml:space="preserve">
+    <value>Alle Profile, Spiele, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e), {1} Spiel(e) und die Einstellungen aus der Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="About_RestoreReview" xml:space="preserve">
+    <value>Die Sicherung bringt Folgendes mit:</value>
+  </data>
+  <data name="About_RestoreReviewAttention" xml:space="preserve">
+    <value>Die Sicherung bringt Folgendes mit – stelle sie nur wieder her, wenn du ihrer Herkunft vertraust:</value>
+  </data>
+  <data name="Restore_Starts" xml:space="preserve">
+    <value>Startet</value>
+  </data>
+  <data name="Restore_Stops" xml:space="preserve">
+    <value>Beendet</value>
+  </data>
+  <data name="Restore_Game" xml:space="preserve">
+    <value>Spiel</value>
+  </data>
+  <data name="Restore_Rule" xml:space="preserve">
+    <value>USB-Regel</value>
+  </data>
+  <data name="Restore_Hotkey" xml:space="preserve">
+    <value>Tastenkürzel</value>
+  </data>
+  <data name="Restore_WarnNetwork" xml:space="preserve">
+    <value>Programm auf einer Netzwerkfreigabe</value>
+  </data>
+  <data name="Restore_WarnNotFullPath" xml:space="preserve">
+    <value>Kein voller Pfad – RigShift startet es nicht</value>
+  </data>
+  <data name="Restore_WarnNoConfirm" xml:space="preserve">
+    <value>Schaltet ohne Rückfrage um</value>
   </data>
 </root>

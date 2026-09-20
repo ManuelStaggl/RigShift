@@ -65,9 +65,17 @@ internal sealed class AppTestHost : IDisposable
     {
         Coordinator.Dispose();
         Settings.Dispose();
-        if (Directory.Exists(Paths.DataDirectory))
+        // A view model may still be saving in the background; its temp file is gone a moment later.
+        for (int attempt = 0; Directory.Exists(Paths.DataDirectory); attempt++)
         {
-            Directory.Delete(Paths.DataDirectory, recursive: true);
+            try
+            {
+                Directory.Delete(Paths.DataDirectory, recursive: true);
+            }
+            catch (IOException) when (attempt < 20)
+            {
+                Thread.Sleep(50);
+            }
         }
     }
 }

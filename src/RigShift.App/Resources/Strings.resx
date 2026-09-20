@@ -80,6 +80,7 @@
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Restart and install</value></data>
   <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Restart and install {0}</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates are only available in the installed version.</value></data>
+  <data name="Update_StatusPolicy" xml:space="preserve"><value>Your administrator has switched off update checks.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Not checked for updates yet.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Checking for updates…</value></data>
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Downloading version {0}…</value></data>
@@ -89,6 +90,10 @@
   <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open “About &amp; help” to install it.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: new versions are only reported.</value></data>
+
+  <data name="Settings_DetailedLog" xml:space="preserve"><value>Detailed log</value></data>
+
+  <data name="Settings_DetailedLogHint" xml:space="preserve"><value>For a bug report: turn on, then reproduce the problem.</value></data>
   <data name="Settings_ReleaseNotesLink" xml:space="preserve"><value>Release notes on GitHub</value></data>
   <data name="About_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
@@ -103,6 +108,17 @@
   <data name="Interrupted_Text" xml:space="preserve"><value>RigShift ended while switching to “{0}”, so the switch was never confirmed. Restore the layout from before?</value></data>
   <data name="Interrupted_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="Interrupted_Keep" xml:space="preserve"><value>Keep as is</value></data>
+  <data name="SettingsProblem_Title" xml:space="preserve"><value>Your settings could not be read</value></data>
+  <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file was kept as “{0}”.</value></data>
+  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file could not be copied – changing a setting now overwrites it.</value></data>
+  <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>These settings come from a newer RigShift</value></data>
+  <data name="SettingsProblem_NewerText" xml:space="preserve"><value>This version keeps what it knows and drops the rest on the next save. The file was kept as “{0}”.</value></data>
+  <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="Crash_Title" xml:space="preserve"><value>RigShift keeps running into the same error</value></data>
+  <data name="Crash_Text" xml:space="preserve"><value>“{0}” came back several times within seconds. A restart usually clears it; the log has the details.</value></data>
+  <data name="Crash_Restart" xml:space="preserve"><value>Restart</value></data>
+  <data name="Crash_OpenLog" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="Crash_Continue" xml:space="preserve"><value>Keep running</value></data>
   <data name="Profile_DeleteTitle" xml:space="preserve"><value>Delete profile?</value></data>
   <data name="Profile_DeleteText" xml:space="preserve"><value>“{0}” will be deleted. This cannot be undone.</value></data>
   <data name="Profile_DeleteTextWithRules" xml:space="preserve"><value>“{0}” will be deleted, and so will this profile’s USB rules. This cannot be undone.</value></data>
@@ -113,6 +129,8 @@
   <data name="Status_Deleted" xml:space="preserve"><value>“{0}” deleted.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Shortcut “{0}” created on the desktop. It also works as a Stream Deck action.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Error: {0}</value></data>
+
+  <data name="Overview_ReadFailed" xml:space="preserve"><value>Windows did not report the displays (error {0}). Try again in a moment.</value></data>
   <data name="Editor_NewName" xml:space="preserve"><value>New profile</value></data>
   <data name="Editor_Name" xml:space="preserve"><value>Name</value></data>
   <data name="Editor_Icon" xml:space="preserve"><value>Icon</value></data>
@@ -153,12 +171,14 @@
   <data name="Problem_NameTaken" xml:space="preserve"><value>A profile with this name already exists.</value></data>
   <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Another profile already uses this keyboard shortcut.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this keyboard shortcut. Choose a different one.</value></data>
+
+  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this keyboard shortcut. Choose a different one.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>None</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Hold Ctrl, Alt or Win as well.</value></data>
-  <data name="Hotkey_Failed" xml:space="preserve"><value>Another app uses the keyboard shortcut of these profiles, so it does not work: {0}</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>These keyboard shortcuts do not work, because another app or something else in RigShift already uses them: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Ctrl</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Shift</value></data>
   <data name="Audio_SetVolume" xml:space="preserve"><value>Set volume</value></data>
@@ -179,6 +199,7 @@
   <data name="AppPicker_BrowseFile" xml:space="preserve"><value>_Browse for file…</value></data>
   <data name="AppPicker_Choose" xml:space="preserve"><value>C_hoose</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programs (*.exe)|*.exe|All files (*.*)|*.*</value></data>
+  <data name="App_NotFound" xml:space="preserve"><value>Not found</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a file for every app.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Help</value></data>
@@ -194,7 +215,7 @@
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
-  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, rules and settings as one ZIP file.</value></data>
+  <data name="About_BackupHint" xml:space="preserve"><value>Profiles, games, rules and settings as one ZIP file.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Save…</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Restore…</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Backup saved with {0} profile(s).</value></data>
@@ -202,11 +223,14 @@
   <data name="About_BackupFailed" xml:space="preserve"><value>Error: {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Wait until the running switch has finished.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Restore backup?</value></data>
-  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. This cannot be undone.</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. Your games stay as they are. This cannot be undone.</value></data>
   <data name="About_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift on GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
   <data name="About_License" xml:space="preserve"><value>License</value></data>
+  <data name="About_ThirdParty" xml:space="preserve"><value>Third-party licenses</value></data>
+  <data name="About_Privacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="About_PrivacyHint" xml:space="preserve"><value>No telemetry. The only connection is the update check at GitHub.</value></data>
   <data name="About_Kofi" xml:space="preserve"><value>Buy me a coffee</value></data>
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift is free. If you like it, you can support it on Ko-fi.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
@@ -360,6 +384,8 @@
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Not saved</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 icon, saved {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} icons, saved {1}</value></data>
+  <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Puts the icons back where they were saved – without switching.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} problems</value></data>
@@ -420,6 +446,12 @@
   <data name="Behavior_Intro" xml:space="preserve"><value>How the PC behaves while the profile is active.</value></data>
   <data name="Profile_SetDefault" xml:space="preserve"><value>Make default</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create shortcut</value></data>
+  <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Restore desktop icons</value></data>
+  <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 desktop icon put back.</value></data>
+  <data name="Status_IconsRestored" xml:space="preserve"><value>{0} desktop icons put back.</value></data>
+  <data name="Status_IconsRestoredMissing" xml:space="preserve"><value>Desktop icons put back: {0}. No longer on the desktop: {1}.</value></data>
+  <data name="Status_IconsAutoArrange" xml:space="preserve"><value>Windows arranges the desktop icons itself. Turn off “Auto arrange icons” in the desktop’s context menu (View), then try again.</value></data>
+  <data name="Status_IconsUnavailable" xml:space="preserve"><value>The desktop could not be reached. The log says why.</value></data>
   <data name="Status_Tested" xml:space="preserve"><value>Tested: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to “{0}”?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
@@ -625,6 +657,9 @@
   <data name="Fov_Pinned" xml:space="preserve">
     <value>One of your games</value>
   </data>
+  <data name="Nav_ActiveProfile" xml:space="preserve">
+    <value>Active profile: {0}</value>
+  </data>
   <data name="Nav_Collapse" xml:space="preserve">
     <value>Collapse navigation</value>
   </data>
@@ -645,5 +680,38 @@
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximized</value>
+  </data>
+  <data name="About_RestoreTextGames" xml:space="preserve">
+    <value>All profiles, games, automation rules and settings are replaced by the {0} profile(s), {1} game(s) and the settings from the backup. This cannot be undone.</value>
+  </data>
+  <data name="About_RestoreReview" xml:space="preserve">
+    <value>The backup brings the following along:</value>
+  </data>
+  <data name="About_RestoreReviewAttention" xml:space="preserve">
+    <value>The backup brings the following along – restore it only if you trust where it comes from:</value>
+  </data>
+  <data name="Restore_Starts" xml:space="preserve">
+    <value>Starts</value>
+  </data>
+  <data name="Restore_Stops" xml:space="preserve">
+    <value>Ends</value>
+  </data>
+  <data name="Restore_Game" xml:space="preserve">
+    <value>Game</value>
+  </data>
+  <data name="Restore_Rule" xml:space="preserve">
+    <value>USB rule</value>
+  </data>
+  <data name="Restore_Hotkey" xml:space="preserve">
+    <value>Shortcut</value>
+  </data>
+  <data name="Restore_WarnNetwork" xml:space="preserve">
+    <value>Program on a network share</value>
+  </data>
+  <data name="Restore_WarnNotFullPath" xml:space="preserve">
+    <value>No full path – RigShift will not start it</value>
+  </data>
+  <data name="Restore_WarnNoConfirm" xml:space="preserve">
+    <value>Switches without asking</value>
   </data>
 </root>

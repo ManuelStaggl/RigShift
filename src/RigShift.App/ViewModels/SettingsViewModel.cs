@@ -19,22 +19,26 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
     private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
+    private HotkeyUse? _hotkeyConflict;
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, ILogger log)
+    public SettingsViewModel(
+        SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, IUpdatePolicy updatePolicy, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(updatePolicy);
         ArgumentNullException.ThrowIfNull(log);
+        ShowUpdateSetting = !updatePolicy.ChecksDisabled;
         _settings = settings;
         _catalog = catalog;
         _hotkeys = hotkeys;
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
-        ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
+        ToggleHotkeyHint = HotkeyHintText();
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
-            ToggleHotkeyHint = Loc.Instance[_toggleHotkeyHintKey];
+            ToggleHotkeyHint = HotkeyHintText();
             Load();
         };
     }
@@ -99,6 +103,14 @@ public sealed partial class SettingsViewModel : ObservableObject
             return;
         }
 
+        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
+        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Toggle, Guid.Empty) is { } use)
+        {
+            _hotkeyConflict = use;
+            ToggleHotkeyHint = HotkeyHintText();
+            return;
+        }
+
         ToggleHotkey = hotkey;
         SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
         _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
@@ -114,8 +126,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         Persist(s => s with { ToggleHotkey = null });
     }
 
+    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
+    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_toggleHotkeyHintKey];
+
     private void SetToggleHotkeyHint(string key)
     {
+        _hotkeyConflict = null;
         _toggleHotkeyHintKey = key;
         ToggleHotkeyHint = Loc.Instance[key];
     }
@@ -145,6 +161,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             ConfirmEnabled = current.ConfirmTimeoutSeconds > 0;
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
+            DetailedLogging = current.DetailedLogging;
             StartWithWindows = _settings.Autostart.IsEnabled;
             ToggleHotkey = current.ToggleHotkey;
             Devices.Refresh();
@@ -158,11 +175,25 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool InstallUpdatesAutomatically { get; set; }
 
+    /// <summary>False when a policy switches update checks off: the choice would have no effect.</summary>
+    public bool ShowUpdateSetting { get; }
+
     partial void OnInstallUpdatesAutomaticallyChanged(bool value)
     {
         if (!_loading)
         {
             Persist(s => s with { OnlyNotifyAboutUpdates = !value });
+        }
+    }
+
+    [ObservableProperty]
+    public partial bool DetailedLogging { get; set; }
+
+    partial void OnDetailedLoggingChanged(bool value)
+    {
+        if (!_loading)
+        {
+            Persist(s => s with { DetailedLogging = value });
         }
     }
 

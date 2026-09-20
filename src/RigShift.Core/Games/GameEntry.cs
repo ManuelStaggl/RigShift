@@ -103,12 +103,27 @@ public sealed record GameLaunch
     /// </summary>
     public string? ProcessName { get; init; }
 
-    /// <summary>The URI a store launch goes through, or <c>null</c> for <see cref="GameLaunchKind.Executable"/>.</summary>
+    /// <summary>
+    /// Whether <see cref="Target"/> has the form its kind calls for: digits for Steam, the characters of an Epic
+    /// <c>AppName</c> for Epic. The value goes into a URI, and <c>games.json</c> can come from somebody else.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasValidTarget => Kind switch
+    {
+        GameLaunchKind.Steam => Target.Length is > 0 and <= 20 && Target.All(char.IsAsciiDigit),
+        GameLaunchKind.Epic => Target.Length is > 0 and <= 128 && Target.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' or '.'),
+        _ => true,
+    };
+
+    /// <summary>
+    /// The URI a store launch goes through; <c>null</c> for <see cref="GameLaunchKind.Executable"/> and for a target
+    /// that is not valid.
+    /// </summary>
     [JsonIgnore]
     public string? Uri => Kind switch
     {
-        GameLaunchKind.Steam => $"steam://rungameid/{Target}",
-        GameLaunchKind.Epic => $"com.epicgames.launcher://apps/{Target}?action=launch&silent=true",
+        GameLaunchKind.Steam when HasValidTarget => $"steam://rungameid/{Target}",
+        GameLaunchKind.Epic when HasValidTarget => $"com.epicgames.launcher://apps/{Target}?action=launch&silent=true",
         _ => null,
     };
 

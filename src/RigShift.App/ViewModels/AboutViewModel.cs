@@ -143,7 +143,7 @@ public sealed partial class AboutViewModel : ObservableObject
             return;
         }
 
-        if (!await ProfileDialogs.ConfirmRestoreAsync(content.Profiles.Count))
+        if (!await ProfileDialogs.ConfirmRestoreAsync(content))
         {
             return;
         }
@@ -167,6 +167,7 @@ public sealed partial class AboutViewModel : ObservableObject
         // Even after a failure halfway, what is on disk now is what counts.
         await _settings.ReloadAsync(CancellationToken.None);
         await _catalog.ReloadAsync(CancellationToken.None);
+        await _games.ReloadAsync(CancellationToken.None);
         if (BackupStatus is null || !BackupStatus.StartsWith(Loc.Format("About_BackupFailed", string.Empty), StringComparison.Ordinal))
         {
             BackupStatus = Loc.Format("About_BackupRestored", content.Profiles.Count);
@@ -284,6 +285,12 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void OpenLicense() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/LICENSE", _log);
 
+    [RelayCommand]
+    private void OpenThirdPartyNotices() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/THIRD-PARTY-NOTICES.md", _log);
+
+    [RelayCommand]
+    private void OpenPrivacy() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/PRIVACY.md", _log);
+
     /// <summary>Voluntary donations; only a link next to the others, never a prompt.</summary>
     [RelayCommand]
     private void OpenKofi() => ShellFolders.OpenUrl("https://ko-fi.com/filthyjoker", _log);
@@ -340,6 +347,7 @@ public sealed partial class AboutViewModel : ObservableObject
         UpdateStatusText = _updates.State switch
         {
             UpdateState.NotInstalled => Loc.Instance["Update_StatusNotInstalled"],
+            UpdateState.DisabledByPolicy => Loc.Instance["Update_StatusPolicy"],
             UpdateState.NotChecked => Loc.Instance["Update_StatusNotChecked"],
             UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
             UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
@@ -352,7 +360,7 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             UpdateState.UpToDate => StatusKind.Ok,
             UpdateState.Ready or UpdateState.Available or UpdateState.Downloading => StatusKind.Accent,
-            UpdateState.NotInstalled or UpdateState.NotChecked or UpdateState.Checking => StatusKind.Neutral,
+            UpdateState.NotInstalled or UpdateState.DisabledByPolicy or UpdateState.NotChecked or UpdateState.Checking => StatusKind.Neutral,
             _ => StatusKind.Warn,
         };
         IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;

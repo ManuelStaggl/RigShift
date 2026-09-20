@@ -21,9 +21,16 @@ public static class Program
     {
         // The log comes first, so Velopack's hooks and update steps are recorded too (analysis finding F-03).
         Log.Logger = AppLogging.Create(App.Paths);
+        CrashLogging.Install(Log.Logger);
         try
         {
             return Run(args);
+        }
+        catch (Exception ex)
+        {
+            // Logged here, then passed on: Windows still gets its crash report, and the log says why.
+            Log.Fatal(ex, "RigShift ended with an exception in Main");
+            throw;
         }
         finally
         {
@@ -72,16 +79,47 @@ public static class Program
             return CommandLineClient.Run(args, request);
         }
 
-        using var instance = new Mutex(initiallyOwned: true, SingleInstanceMutex, out bool isFirstInstance);
-        if (!isFirstInstance)
+        int exitCode;
+        using (var instance = new Mutex(initiallyOwned: true, SingleInstanceMutex, out bool isFirstInstance))
         {
-            // Started again while RigShift runs in the tray: bring the running window forward instead.
-            return CommandLineClient.ShowRunningInstance();
+            if (!isFirstInstance)
+            {
+                // Started again while RigShift runs in the tray: bring the running window forward instead.
+                return CommandLineClient.ShowRunningInstance();
+            }
+
+            var app = new App(request);
+            app.InitializeComponent();
+            exitCode = app.Run();
+            instance.ReleaseMutex();
         }
 
-        var app = new App(request);
-        app.InitializeComponent();
-        return app.Run();
+        // Only now: while the mutex was held, the new process would have taken itself for a second instance.
+        if (App.RestartRequested)
+        {
+            Restart();
+        }
+
+        return exitCode;
+    }
+
+    private static void Restart()
+    {
+        if (Environment.ProcessPath is not { } executable)
+        {
+            return;
+        }
+
+        try
+        {
+            using System.Diagnostics.Process? process = System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(executable) { UseShellExecute = true });
+            Log.Information("Restarted RigShift as process {ProcessId}", process?.Id);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Log.Error(ex, "RigShift could not be restarted");
+        }
     }
 
     /// <summary>Velopack hook: the installed executable handles rigshift:// links.</summary>

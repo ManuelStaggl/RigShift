@@ -30,7 +30,8 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
     {
         CcdRawSnapshot raw = QueryRaw();
         List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
-        _log.Information("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
+        // Debug: the tray, the automation and every open page ask, so at Information this line was most of the log.
+        _log.Debug("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
             raw.Paths.Count, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
 
         return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
@@ -157,7 +158,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         DISPLAYCONFIG_MODE_INFO[] modes;
         try
         {
-            (paths, modes) = CcdPathBuilder.Build(displays, options.UseDatabaseModes);
+            (paths, modes) = CcdPathBuilder.Build(displays, options.UseDatabaseModes, options.AllowClone);
         }
         catch (InvalidOperationException ex)
         {
@@ -173,11 +174,21 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
             flags |= SET_DISPLAY_CONFIG_FLAGS.SDC_SAVE_TO_DATABASE;
         }
 
-        long started = System.Diagnostics.Stopwatch.GetTimestamp();
-        int result = PInvoke.SetDisplayConfig(paths, modes, flags);
-        _log.Information("SetDisplayConfig({Paths} paths, {Modes} modes, {Flags}) returned {Result} after {Milliseconds:0} ms",
-            paths.Length, modes.Length, flags, result, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-        return Task.FromResult(result);
+        // Logged before the native call and run on its own thread, like HDR below: a driver that freezes inside the call
+        // leaves this line as the last trace, and the orchestrator's time limit can give up without blocking a pool thread.
+        _log.Information("Calling SetDisplayConfig({Paths} paths, {Modes} modes, {Flags})", paths.Length, modes.Length, flags);
+        return Task.Factory.StartNew(
+            () =>
+            {
+                long started = System.Diagnostics.Stopwatch.GetTimestamp();
+                int result = PInvoke.SetDisplayConfig(paths, modes, flags);
+                _log.Information("SetDisplayConfig({Paths} paths, {Modes} modes, {Flags}) returned {Result} after {Milliseconds:0} ms",
+                    paths.Length, modes.Length, flags, result, System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                return result;
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
     }
 
     public Task<int> SetHdrAsync(AttachedDisplay display, bool enabled, CancellationToken cancellationToken)

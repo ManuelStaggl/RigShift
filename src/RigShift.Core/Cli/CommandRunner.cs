@@ -25,7 +25,7 @@ public interface IGamePlayer
     bool IsRunning(Guid gameId);
 
     /// <returns><c>false</c> when a session for this game is already running, so nothing was started a second time.</returns>
-    bool Play(GameEntry game);
+    bool Play(GameEntry game, bool fromLink);
 }
 
 public sealed record CliResponse(int ExitCode, string Output);
@@ -44,6 +44,7 @@ public sealed class CommandRunner
     private readonly ISurroundController? _surround;
     private readonly IGameStore? _games;
     private readonly IGamePlayer? _player;
+    private readonly IDesktopIcons? _desktopIcons;
     private readonly ILogger _log;
 
     public CommandRunner(
@@ -55,7 +56,8 @@ public sealed class CommandRunner
         IProfileSwitcher? switcher = null,
         ISurroundController? surround = null,
         IGameStore? games = null,
-        IGamePlayer? player = null)
+        IGamePlayer? player = null,
+        IDesktopIcons? desktopIcons = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(display);
@@ -71,6 +73,7 @@ public sealed class CommandRunner
         _surround = surround;
         _games = games;
         _player = player;
+        _desktopIcons = desktopIcons;
         _log = log.ForContext<CommandRunner>();
     }
 
@@ -93,7 +96,8 @@ public sealed class CommandRunner
                 CliCommand.Toggle => await ToggleAsync(request, cancellationToken),
                 CliCommand.Save => await SaveAsync(request.ProfileName ?? string.Empty, cancellationToken),
                 CliCommand.Games => await GamesAsync(cancellationToken),
-                CliCommand.Play => await PlayAsync(request.GameName ?? string.Empty, cancellationToken),
+                CliCommand.Play => await PlayAsync(request.GameName ?? string.Empty, request.FromLink, cancellationToken),
+                CliCommand.Icons => await IconsAsync(request.ProfileName ?? string.Empty, cancellationToken),
                 _ => new CliResponse(CliExitCodes.InvalidArguments, "No command given."),
             };
         }
@@ -305,7 +309,7 @@ public sealed class CommandRunner
     /// Starts a game session and returns at once: the session outlives the command by hours, so waiting for it would
     /// leave a console process hanging around for the whole evening.
     /// </summary>
-    private async Task<CliResponse> PlayAsync(string name, CancellationToken cancellationToken)
+    private async Task<CliResponse> PlayAsync(string name, bool fromLink, CancellationToken cancellationToken)
     {
         if (_games is null || _player is null)
         {
@@ -319,9 +323,46 @@ public sealed class CommandRunner
             return new CliResponse(CliExitCodes.ProfileNotFound, $"Game '{name}' not found. Available: {available}.");
         }
 
-        return _player.Play(game)
+        return _player.Play(game, fromLink)
             ? new CliResponse(CliExitCodes.Applied, $"Started '{game.Name}'.")
             : new CliResponse(CliExitCodes.Failed, $"'{game.Name}' is already running.");
+    }
+
+    /// <summary>
+    /// <c>icons</c>: the saved desktop symbols of a profile, and nothing else – no display change, no confirmation.
+    /// Only the app answers it: the caller may sit in a session without a desktop (SSH), the app never does.
+    /// </summary>
+    private async Task<CliResponse> IconsAsync(string name, CancellationToken cancellationToken)
+    {
+        if (_desktopIcons is null)
+        {
+            return new CliResponse(CliExitCodes.Failed, "Putting the desktop icons back needs the RigShift app, which is not running.");
+        }
+
+        IReadOnlyList<Profile> profiles = (await _store.LoadAllAsync(cancellationToken)).Profiles;
+        if (ProfileEditing.FindByName(profiles, name) is not { } profile)
+        {
+            return NotFound(name, profiles);
+        }
+
+        if (profile.DesktopIcons is not { IsEmpty: false } layout)
+        {
+            return new CliResponse(CliExitCodes.Failed, $"Profile '{profile.Name}' has no saved desktop icons. Save them in the profile first.");
+        }
+
+        // The shell call blocks for up to ten seconds when Explorer hangs; not on the caller's (UI) thread.
+        DesktopIconResult result = await Task.Run(() => _desktopIcons.Restore(layout), cancellationToken);
+        _log.Information("Desktop symbols of {Profile} put back on request: {Outcome}, {Placed} placed, {Missing} missing",
+            profile.Name, result.Outcome, result.Placed, result.Missing);
+
+        return result.Outcome switch
+        {
+            DesktopIconOutcome.Restored => new CliResponse(CliExitCodes.Applied, string.Create(CultureInfo.InvariantCulture,
+                $"{profile.Name}: {result.Placed} desktop icon(s) put back{(result.Missing > 0 ? $", {result.Missing} no longer on the desktop" : string.Empty)}.")),
+            DesktopIconOutcome.AutoArrange => new CliResponse(CliExitCodes.Failed,
+                "Windows arranges the desktop icons itself. Turn off \"Auto arrange icons\" in the desktop's context menu (View), then try again."),
+            _ => new CliResponse(CliExitCodes.Failed, "The desktop could not be reached. See the log for details."),
+        };
     }
 
     private async Task<AudioEndpoint?> DefaultPlaybackAsync(CancellationToken cancellationToken)

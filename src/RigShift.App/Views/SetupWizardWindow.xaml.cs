@@ -21,6 +21,7 @@ public partial class SetupWizardWindow : FluentWindow
         _watcher = watcher;
         DataContext = viewModel;
         InitializeComponent();
+        TextScale.Apply(this);
 
         viewModel.CloseRequested += (_, _) => Close();
         viewModel.PropertyChanged += OnViewModelChanged;

@@ -450,6 +450,74 @@ public sealed class SwitchOrchestratorTests
         _duckingMemory.Remembered.ShouldBeNull();
     }
 
+    /// <summary>
+    /// Anything thrown between the apply and the answer used to leave the arrangement nobody confirmed – on displays
+    /// the user may not be able to see.
+    /// </summary>
+    [Fact]
+    public async Task Switch_ConfirmationThrows_RollsBackAndRestoresAudio()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default)
+            .ThrowsAsyncForAnyArgs(new InvalidOperationException("the dialog could not be shown"));
+        _power.SetKeepAwake(false);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }) with { KeepAwake = true }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoredPrevious);
+        result.Message.ShouldNotBeNull().ShouldContain("the dialog could not be shown");
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+        _power.IsKeepingAwake.ShouldBeFalse();
+        _journal.Entry.ShouldBeNull();
+    }
+
+    /// <summary>App exit while the audio switches: no answer will come, so the old arrangement comes back first.</summary>
+    [Fact]
+    public async Task Switch_CancelledBetweenApplyAndConfirmation_RollsBackBeforeThrowing()
+    {
+        using var exit = new CancellationTokenSource();
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs<bool>(_ =>
+        {
+            exit.Cancel();
+            throw new OperationCanceledException(exit.Token);
+        });
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Should.ThrowAsync<OperationCanceledException>(() => Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, exit.Token));
+
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.Select(r => r.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight], ignoreOrder: true);
+        await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
+    /// <summary>The rollback asks the driver first; when that throws, the audio still has to come back.</summary>
+    [Fact]
+    public async Task Switch_RollbackQueryThrows_StillRestoresAudioAndReportsFailed()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        display.QueryExceptions.Enqueue(null);
+        display.QueryExceptions.Enqueue(new InvalidOperationException("driver reset"));
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Note.ShouldBe(SwitchNote.RestoreFailed);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Switch_Confirmed_KeepsNewTopology()
     {
@@ -521,7 +589,7 @@ public sealed class SwitchOrchestratorTests
     public async Task Switch_Rollback_RestoresPreviousPlaybackDevice()
     {
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
-            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, IsDefault: true)]);
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
         var display = new FakeDisplayConfigurator(DeskActive());
@@ -535,6 +603,58 @@ public sealed class SwitchOrchestratorTests
             _audio.SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
             _audio.SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
         });
+    }
+
+    /// <summary>Speakers for sound, a headset for calls: a rollback used to hand the calls to the speakers as well.</summary>
+    [Fact]
+    public async Task Switch_Rollback_RestoresTheDefaultOfEachRole()
+    {
+        var headset = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000004}", "Headset");
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns(
+        [
+            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.Console | AudioRoleMask.Multimedia),
+            new AudioDeviceInfo(headset, AudioDirection.Render, IsActive: true, AudioRoleMask.Communications),
+            new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+        ]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.Console | AudioRoleMask.Multimedia, Arg.Any<CancellationToken>());
+        await _audio.Received(1).SetDefaultAsync(headset, AudioRoleMask.Communications, Arg.Any<CancellationToken>());
+        await _audio.DidNotReceive().SetDefaultAsync(Speakers, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Only the way back may duplicate displays: it restores what Windows showed, a profile describes a desktop each.</summary>
+    [Fact]
+    public async Task Switch_Rollback_AllowsDuplicatedDisplays_TheSwitchItselfDoesNot()
+    {
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+
+        display.Applied.Select(a => a.Options.AllowClone).ShouldBe([false, true]);
+    }
+
+    /// <summary>Only the roles the switch touched come back – the call device the profile left alone stays alone.</summary>
+    [Fact]
+    public async Task Switch_Rollback_LeavesUntouchedRolesAlone()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.TimedOut);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).SwitchAsync(
+            Rig(confirm: true, audio: new AudioAssignment { PlaybackCommunications = Headphones }), SwitchRequest.Default, Ct);
+
+        await _audio.Received(1).SetDefaultAsync(Speakers, AudioRoleMask.Communications, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -830,6 +950,20 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+    }
+
+    /// <summary>A driver frozen inside SetDisplayConfig used to freeze the switch with it – no result, no log line, no end.</summary>
+    [Fact]
+    public async Task Switch_ApplyCallHangs_FailsInsteadOfWaitingForever()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive()) { ApplyNeverReturns = true };
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct)
+            .WaitAsync(TimeSpan.FromSeconds(5), Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Failed);
+        result.Message.ShouldNotBeNull().ShouldContain("did not return");
+        display.Applied.Count.ShouldBe(1);
     }
 
     [Fact]

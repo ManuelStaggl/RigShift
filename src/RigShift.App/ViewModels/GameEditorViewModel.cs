@@ -32,6 +32,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     private GameEntry _initial;
     private GameLaunch _launch;
     private string _hotkeyHintKey = "Editor_HotkeyHint";
+    private HotkeyUse? _hotkeyConflict;
     private bool _loading = true;
 
     /// <param name="games">Every configured game, this one included; names and hotkeys are checked against the others.</param>
@@ -76,7 +77,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         StopApps = game.Exit.StopApps;
         WindowLayout = game.WindowLayout;
         Hotkey = game.Hotkey;
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
 
         foreach (Choice choice in usbChoices)
         {
@@ -335,6 +336,14 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
             return;
         }
 
+        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
+        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Game, _original.Id) is { } use)
+        {
+            _hotkeyConflict = use;
+            HotkeyHint = HotkeyHintText();
+            return;
+        }
+
         Hotkey = hotkey;
         SetHotkeyHint("Editor_HotkeyHint");
         _log.Information("Game editor recorded hotkey {Hotkey}", HotkeyText);
@@ -545,8 +554,12 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         _ => nameof(GameExitKind.Stay),
     };
 
+    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
+    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_hotkeyHintKey];
+
     private void SetHotkeyHint(string key)
     {
+        _hotkeyConflict = null;
         _hotkeyHintKey = key;
         HotkeyHint = Loc.Instance[key];
     }
@@ -577,7 +590,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
             _loading = false;
         }
 
-        HotkeyHint = Loc.Instance[_hotkeyHintKey];
+        HotkeyHint = HotkeyHintText();
         ErrorMessage = null;
         OnPropertyChanged(nameof(WindowsText));
         OnPropertyChanged(nameof(ProcessHint));

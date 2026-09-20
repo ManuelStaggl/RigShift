@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.Windows.Games;
@@ -21,9 +22,15 @@ public sealed class ShellGameStarter : IGameStarter
         _log = log.ForContext<ShellGameStarter>();
     }
 
-    public int? Start(GameLaunch launch)
+    public IRunningGame? Start(GameLaunch launch)
     {
         ArgumentNullException.ThrowIfNull(launch);
+        if (!launch.HasValidTarget)
+        {
+            // The id ends up inside a URI that the store client acts on; anything but an id does not belong there.
+            throw new InvalidOperationException($"'{launch.Target}' is not a valid {launch.Kind} id.");
+        }
+
         if (launch.Uri is { Length: > 0 } uri)
         {
             using Process? client = Process.Start(new ProcessStartInfo { FileName = uri, UseShellExecute = true });
@@ -31,7 +38,7 @@ public sealed class ShellGameStarter : IGameStarter
             return null;
         }
 
-        string file = Environment.ExpandEnvironmentVariables(launch.Target.Trim().Trim('"'));
+        string file = LaunchPath.ForStart(launch.Target);
         var start = new ProcessStartInfo
         {
             FileName = file,
@@ -40,13 +47,34 @@ public sealed class ShellGameStarter : IGameStarter
         };
 
         // Many games look for their files next to the executable instead of their own folder.
-        if (Path.IsPathFullyQualified(file) && Path.GetDirectoryName(file) is { Length: > 0 } directory)
+        if (Path.GetDirectoryName(file) is { Length: > 0 } directory)
         {
             start.WorkingDirectory = directory;
         }
 
-        using Process? process = Process.Start(start);
+        // Not disposed here: the session waits on this very handle, see IRunningGame.
+        Process? process = Process.Start(start);
         _log.Information("Started {File} (process {ProcessId})", file, process?.Id);
-        return process?.Id;
+        return process is null ? null : new StartedProcess(process, _log);
+    }
+
+    private sealed class StartedProcess(Process process, ILogger log) : IRunningGame
+    {
+        public int Id { get; } = process.Id;
+
+        public async Task WaitForExitAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken);
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                // No handle to wait on, e.g. the shell started it elevated. The caller falls back to the name.
+                log.Debug(ex, "Waiting for process {ProcessId} failed, treating it as ended", Id);
+            }
+        }
+
+        public void Dispose() => process.Dispose();
     }
 }

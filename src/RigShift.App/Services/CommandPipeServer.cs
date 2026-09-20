@@ -12,7 +12,8 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// Listens on <c>\\.\pipe\RigShift.&lt;SessionId&gt;</c> for command lines of further <c>RigShift.exe</c> processes.
-/// Only this user may connect, enforced by the pipe's own access list - see <see cref="OnlyThisUser"/>.
+/// Only this user may connect, enforced by the pipe's own access list - see <see cref="OnlyThisUser"/> - and the
+/// server never joins a pipe of this name that somebody else put up first, see <see cref="CreateInstance"/>.
 /// Each connection is served on its own, so <c>status</c> still answers while an <c>apply</c> waits for confirmation.
 /// Commands run on the UI thread, like clicks in the window.
 /// </summary>
@@ -32,6 +33,10 @@ public sealed class CommandPipeServer : IDisposable
     private readonly string _pipeName;
     private readonly Func<Func<Task<PipeResponse>>, Task<PipeResponse>> _onUiThread;
     private readonly CancellationTokenSource _stop = new();
+
+    /// <summary>Guards <see cref="_instances"/> together with creating and closing instances.</summary>
+    private readonly Lock _gate = new();
+    private int _instances;
 
     public CommandPipeServer(CommandRunner runner, IAppShell shell, ILogger log)
         : this(runner, shell, log, PipeProtocol.PipeName, work => Application.Current.Dispatcher.InvokeAsync(work).Task.Unwrap())
@@ -72,19 +77,25 @@ public sealed class CommandPipeServer : IDisposable
 
     private async Task ListenAsync(CancellationToken cancellationToken)
     {
+        bool createFailed = false;
         while (!cancellationToken.IsCancellationRequested)
         {
             NamedPipeServerStream server;
             try
             {
-                server = NamedPipeServerStreamAcl.Create(_pipeName, PipeDirection.InOut, MaxConnections,
-                    PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0, OnlyThisUser());
+                server = CreateInstance();
+                createFailed = false;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // All instances busy, or the name is owned by another user or program (access denied):
-                // log and wait instead of spinning or letting the listener die.
-                _log.Warning(ex, "Command pipe {Pipe} could not be created, retrying in {Delay}", _pipeName, RetryDelay);
+                // All instances busy, or the name is owned by another user or program (access denied): wait instead
+                // of spinning or letting the listener die. Said once, not every two seconds.
+                if (!createFailed)
+                {
+                    _log.Warning(ex, "Command pipe {Pipe} could not be created, retrying every {Delay}", _pipeName, RetryDelay);
+                    createFailed = true;
+                }
+
                 try
                 {
                     await Task.Delay(RetryDelay, cancellationToken);
@@ -103,7 +114,7 @@ public sealed class CommandPipeServer : IDisposable
             }
             catch (Exception ex) when (ex is OperationCanceledException or IOException)
             {
-                await server.DisposeAsync();
+                await CloseAsync(server);
                 if (ex is IOException)
                 {
                     _log.Warning(ex, "Command pipe connection failed");
@@ -113,6 +124,34 @@ public sealed class CommandPipeServer : IDisposable
             }
 
             _ = ServeAsync(server, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// The next instance of the pipe. While none of ours exists, the name has to be free: Windows then refuses with
+    /// "access denied" instead of quietly adding us to a pipe somebody else created – whose access list, not ours,
+    /// would decide who may send commands. Once one of ours exists, its access list keeps everybody else from adding
+    /// instances, so the following ones are safe without the flag (and could not carry it). The lock makes "one of
+    /// ours exists" true for the whole creation and not only for the moment it was looked up.
+    /// </summary>
+    private NamedPipeServerStream CreateInstance()
+    {
+        lock (_gate)
+        {
+            PipeOptions options = PipeOptions.Asynchronous | (_instances == 0 ? PipeOptions.FirstPipeInstance : PipeOptions.None);
+            NamedPipeServerStream server = NamedPipeServerStreamAcl.Create(_pipeName, PipeDirection.InOut, MaxConnections,
+                PipeTransmissionMode.Byte, options, 0, 0, OnlyThisUser());
+            _instances++;
+            return server;
+        }
+    }
+
+    private async ValueTask CloseAsync(NamedPipeServerStream server)
+    {
+        await server.DisposeAsync();
+        lock (_gate)
+        {
+            _instances--;
         }
     }
 
@@ -139,7 +178,7 @@ public sealed class CommandPipeServer : IDisposable
 
     private async Task ServeAsync(NamedPipeServerStream server, CancellationToken cancellationToken)
     {
-        await using (server)
+        try
         {
             try
             {
@@ -158,6 +197,11 @@ public sealed class CommandPipeServer : IDisposable
                     }
                 }
 
+                if (!IsThisUser(server))
+                {
+                    return;
+                }
+
                 PipeResponse response = await _onUiThread(() => ExecuteAsync(request.Arguments));
                 await PipeProtocol.WriteResponseAsync(server, response, cancellationToken);
             }
@@ -165,6 +209,35 @@ public sealed class CommandPipeServer : IDisposable
             {
                 _log.Warning(ex, "Command pipe request could not be served");
             }
+        }
+        finally
+        {
+            await CloseAsync(server);
+        }
+    }
+
+    /// <summary>
+    /// A second look at who is asking. The access list already keeps other users out; this catches the case where it
+    /// somehow did not. When Windows will not name the client, the access list stays the judge.
+    /// </summary>
+    private bool IsThisUser(NamedPipeServerStream server)
+    {
+        try
+        {
+            using WindowsIdentity own = WindowsIdentity.GetCurrent();
+            SecurityIdentifier? client = PipeTrust.ClientUser(server);
+            if (client is null || own.User is null || client.Equals(own.User))
+            {
+                return true;
+            }
+
+            _log.Error("Command pipe request from another user ({Client}) refused", client.Value);
+            return false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
+        {
+            _log.Warning(ex, "The command pipe client could not be identified; its access list decides");
+            return true;
         }
     }
 

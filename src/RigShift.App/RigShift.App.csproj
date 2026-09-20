@@ -38,10 +38,16 @@
     <InternalsVisibleTo Include="RigShift.App.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- MIT and Apache-2.0 ask for their notices to travel with every copy. -->
+    <Content Include="$(MSBuildThisFileDirectory)../../LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(Configuration)' != 'Debug'">
     <!-- Developer aids (component gallery) stay out of release builds. -->
-    <Page Remove="ViewsDebug**" />
-    <Compile Remove="ViewsDebug**" />
+    <Page Remove="Views\Debug\**" />
+    <Compile Remove="Views\Debug\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
+using RigShift.Core.Storage;
 using Serilog;
 
 namespace RigShift.Windows.Games;
@@ -42,7 +43,7 @@ public sealed class EpicLibrary
             EpicManifest? manifest;
             try
             {
-                manifest = JsonSerializer.Deserialize(File.ReadAllText(file), EpicJsonContext.Default.EpicManifest);
+                manifest = JsonSerializer.Deserialize(BoundedRead.Text(file), EpicJsonContext.Default.EpicManifest);
             }
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
             {

@@ -21,6 +21,12 @@ public enum DialogButtonKind
 /// <summary>One choice a dialog offers. <paramref name="Result"/> is what <see cref="DialogWindow.AskAsync"/> returns.</summary>
 public sealed record DialogChoice(string Text, DialogButtonKind Kind, int Result);
 
+/// <summary>One line of the list a dialog can show under its question.</summary>
+/// <param name="Heading">What it is and whose, e.g. "Starts · Sim Rig".</param>
+/// <param name="Text">The thing itself, e.g. a path with its arguments; may be empty.</param>
+/// <param name="Warning">Why this line deserves a second look, or <c>null</c>.</param>
+public sealed record DialogDetail(string Heading, string Text, string? Warning = null);
+
 /// <summary>
 /// The question dialog of RigShift 3.0: a heading, one sentence and the choices on the right. Deliberately not the
 /// WPF-UI MessageBox – that one paints a destructive button in a filled red, which R-ACT-3 rules out.
@@ -31,12 +37,23 @@ public partial class DialogWindow : FluentWindow
     private readonly int _cancelResult;
     private bool _answered;
 
-    private DialogWindow(string title, string message, IReadOnlyList<DialogChoice> choices, int cancelResult)
+    private DialogWindow(
+        string title, string message, IReadOnlyList<DialogChoice> choices, int cancelResult, IReadOnlyList<DialogDetail>? details)
     {
         InitializeComponent();
+        TextScale.Apply(this);
         TitleText.Text = title;
         MessageText.Text = message;
         _cancelResult = cancelResult;
+        if (details is { Count: > 0 })
+        {
+            Width = 600; // Paths are long.
+            DetailsBox.Visibility = Visibility.Visible;
+            foreach (DialogDetail detail in details)
+            {
+                Details.Children.Add(DetailBlock(detail));
+            }
+        }
 
         for (int i = 0; i < choices.Count; i++)
         {
@@ -64,10 +81,12 @@ public partial class DialogWindow : FluentWindow
 
     /// <summary>Shows the dialog over the active window and returns the chosen <see cref="DialogChoice.Result"/>.</summary>
     /// <param name="cancelResult">What closing the window without choosing means; Esc picks it too.</param>
-    public static Task<int> AskAsync(string title, string message, IReadOnlyList<DialogChoice> choices, int cancelResult)
+    /// <param name="details">Lines listed under the question in a box that scrolls; none for a plain question.</param>
+    public static Task<int> AskAsync(
+        string title, string message, IReadOnlyList<DialogChoice> choices, int cancelResult, IReadOnlyList<DialogDetail>? details = null)
     {
         ArgumentNullException.ThrowIfNull(choices);
-        var window = new DialogWindow(title, message, choices, cancelResult);
+        var window = new DialogWindow(title, message, choices, cancelResult, details);
         if (ActiveWindow() is { } owner)
         {
             window.Owner = owner;
@@ -79,6 +98,31 @@ public partial class DialogWindow : FluentWindow
 
         window.ShowDialog();
         return window._answer.Task;
+    }
+
+    private System.Windows.Controls.TextBlock DetailBlock(DialogDetail detail)
+    {
+        var block = new System.Windows.Controls.TextBlock
+        {
+            Margin = new Thickness(0, 4, 0, 4),
+            TextWrapping = TextWrapping.Wrap,
+            Style = (Style)FindResource("RigShift.Text.Caption"),
+        };
+        block.Inlines.Add(new System.Windows.Documents.Run(detail.Heading) { Foreground = (System.Windows.Media.Brush)FindResource("RigShift.Brush.TextPrimary") });
+        if (detail.Text.Length > 0)
+        {
+            block.Inlines.Add(new System.Windows.Documents.LineBreak());
+            block.Inlines.Add(new System.Windows.Documents.Run(detail.Text) { Foreground = (System.Windows.Media.Brush)FindResource("RigShift.Brush.TextSecondary") });
+        }
+
+        if (detail.Warning is { Length: > 0 } warning)
+        {
+            // Said in words, not by colour alone.
+            block.Inlines.Add(new System.Windows.Documents.LineBreak());
+            block.Inlines.Add(new System.Windows.Documents.Run("⚠ " + warning) { Foreground = (System.Windows.Media.Brush)FindResource("RigShift.Brush.Warn") });
+        }
+
+        return block;
     }
 
     protected override void OnSourceInitialized(EventArgs e)

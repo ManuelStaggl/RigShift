@@ -70,7 +70,7 @@ and the decisions in `docs/decisions/`.
 | `IWindowRescuer` | `WindowRescuer` | After every successful apply (+1 s): `EnumWindows`, visible/uncloaked/non-tool windows that `MonitorFromRect` places on no monitor move to the primary work area via `SetWindowPlacement`. Geometry in `WindowGeometry` (Core). |
 | `IDuckingPreference` | `RegistryDuckingPreference` | HKCU `Software\Microsoft\Multimedia\Audio\UserDuckingPreference` (undocumented; 3 = do nothing, missing = reduce by 80 %). The previous value is kept by `IDuckingMemory` (`SettingsDuckingMemory`, App). |
 | `IGameLibrary` | `GameLibrary` (Steam + Epic) | Installed games from the stores' own manifests on disk – no sign-in, no token, no account. Steam's `libraryfolders.vdf` and `appmanifest_*.acf` are parsed by `ValveDataFormat`, Epic's by its JSON manifests. |
-| `IGameStarter` | `ShellGameStarter` | Starts a store game through `steam://rungameid/` or `com.epicgames.launcher://`, never the executable: overlay, anti-cheat and DRM expect the client in the chain. Only a direct executable hands back the game's own process id. |
+| `IGameStarter` | `ShellGameStarter` | Starts a store game through `steam://rungameid/` or `com.epicgames.launcher://`, never the executable: overlay, anti-cheat and DRM expect the client in the chain. Only a direct executable hands back the game's own process, held open as `IRunningGame` so its end is never judged by a process id that Windows may have reused. One that ends within ten seconds counts as a launcher stub, and the session follows what it left behind. |
 | `IGameProcesses` | `SystemGameProcesses` | Read-only listing and waiting. `GameProcessLearner` (Core) works out which new process is the game, filtered by the install folder. |
 | `IWindowLayout` | `WindowLayoutManager` | Captures and restores window positions (`SetWindowPlacement`), for the helper windows around a game. |
 | `IAutostart` | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
@@ -91,7 +91,7 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
   access list on this user's SID, not by `CurrentUserOnly`, whose owner comparison already fails for an SSH session
   of an administrator.
 - CLI: `RigShift.exe apply <name> [--no-confirm] [--dry-run] | toggle | list | save <name> | status | surround |
-  games | play <name>`. Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back,
+  games | play <name> | icons <name>`. Exit codes: 0 applied, 1 failed (also: another switch is running), 2 blocked, 3 rolled back,
   4 unknown profile or game, 5 invalid arguments. `play` returns as soon as the session started – it outlives the
   command by hours.
 - Logs: `%AppData%\RigShift\logs\rigshift-<date>.log` (Serilog, daily rolling, 14 files).

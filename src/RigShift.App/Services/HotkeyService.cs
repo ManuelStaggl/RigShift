@@ -1,9 +1,7 @@
-using System.Windows.Interop;
 using RigShift.App.Localization;
 using RigShift.App.Views;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
-using RigShift.Windows.Ui;
 using Serilog;
 
 namespace RigShift.App.Services;
@@ -27,11 +25,14 @@ public sealed class HotkeyService : IDisposable
     private readonly SwitchCoordinator _coordinator;
     private readonly SettingsService _settings;
     private readonly ILogger _log;
-    private readonly HwndSource _source;
+    private readonly IHotkeyRegistrar _registrar;
 
     /// <summary>Registration id → what it belongs to.</summary>
     private readonly Dictionary<int, HotkeyOwner> _registered = [];
     private Dictionary<HotkeyOwner, Hotkey> _wanted = [];
+
+    /// <summary>Failures the user has been told about; the same one is not announced again on every sync.</summary>
+    private HashSet<(HotkeyOwner Owner, Hotkey Hotkey)> _reported = [];
     private bool _suspended;
     private bool _started;
 
@@ -42,6 +43,18 @@ public sealed class HotkeyService : IDisposable
         SwitchCoordinator coordinator,
         SettingsService settings,
         ILogger log)
+        : this(catalog, games, sessions, coordinator, settings, log, registrar: null)
+    {
+    }
+
+    internal HotkeyService(
+        ProfileCatalog catalog,
+        GameCatalog games,
+        GameSessionService sessions,
+        SwitchCoordinator coordinator,
+        SettingsService settings,
+        ILogger log,
+        IHotkeyRegistrar? registrar)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(games);
@@ -55,25 +68,24 @@ public sealed class HotkeyService : IDisposable
         _coordinator = coordinator;
         _settings = settings;
         _log = log.ForContext<HotkeyService>();
-
-        // Message-only window: WM_HOTKEY is posted to the registering window, no broadcast needed.
-        _source = new HwndSource(new HwndSourceParameters("RigShift.Hotkeys") { ParentWindow = new nint(-3), Width = 0, Height = 0, WindowStyle = 0 });
-        _source.AddHook(WndProc);
+        _registrar = registrar ?? new Win32HotkeyRegistrar();
+        _registrar.Pressed += OnRegistrarPressed;
     }
 
     /// <summary>
-    /// Raised once at startup with the names of profiles whose hotkey another application holds; the toggle hotkey is
-    /// listed under its settings label.
+    /// Raised with the names of profiles and games whose hotkey does not work – another application holds it, or
+    /// something else in RigShift does. At startup and whenever a new one turns up later; the toggle hotkey is listed
+    /// under its settings label.
     /// </summary>
     public event EventHandler<IReadOnlyList<string>>? RegistrationFailed;
 
     public void Start()
     {
         _started = true;
-        _catalog.Changed += (_, _) => Sync(reportFailures: false);
-        _games.Changed += (_, _) => Sync(reportFailures: false);
-        _settings.Changed += (_, _) => Sync(reportFailures: false);
-        Sync(reportFailures: true);
+        _catalog.Changed += (_, _) => Sync();
+        _games.Changed += (_, _) => Sync();
+        _settings.Changed += (_, _) => Sync();
+        Sync();
     }
 
     /// <summary>Releases all hotkeys, e.g. while the profile editor records a new one.</summary>
@@ -88,7 +100,7 @@ public sealed class HotkeyService : IDisposable
     {
         _suspended = false;
         _log.Information("Hotkeys resumed");
-        Sync(reportFailures: false, force: true);
+        Sync(force: true);
     }
 
     /// <summary>
@@ -98,41 +110,59 @@ public sealed class HotkeyService : IDisposable
     public bool IsAvailable(Hotkey hotkey)
     {
         ArgumentNullException.ThrowIfNull(hotkey);
-        if (!NativeWindow.RegisterHotkey(_source.Handle, ProbeId, (int)hotkey.Modifiers, hotkey.VirtualKey, out int error))
+        if (!_registrar.Register(ProbeId, hotkey, out int error))
         {
             _log.Information("Hotkey {Modifiers}+0x{Key:X2} is not available, error {Error}", hotkey.Modifiers, hotkey.VirtualKey, error);
             return false;
         }
 
-        NativeWindow.UnregisterHotkey(_source.Handle, ProbeId);
+        _registrar.Unregister(ProbeId);
         return true;
+    }
+
+    /// <summary>
+    /// What else in RigShift already uses <paramref name="hotkey"/> – a profile, a game or the toggle hotkey – or
+    /// <c>null</c>. <see cref="IsAvailable"/> cannot see these: the own hotkeys are released while one is recorded.
+    /// </summary>
+    public HotkeyUse? UsedBy(Hotkey hotkey, HotkeyUseKind kind, Guid id)
+    {
+        ArgumentNullException.ThrowIfNull(hotkey);
+        return HotkeyConflicts.Find(hotkey, new HotkeyUse(kind, id, null), _catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey);
+    }
+
+    /// <summary>The hint for a combination <see cref="UsedBy"/> found taken.</summary>
+    public static string UsedByText(HotkeyUse use)
+    {
+        ArgumentNullException.ThrowIfNull(use);
+        return Loc.Format("Problem_HotkeyUsedBy", use.Name ?? Loc.Instance["Settings_ToggleHotkey"]);
     }
 
     public void Dispose()
     {
         UnregisterAll();
-        _source.RemoveHook(WndProc);
-        _source.Dispose();
+        _registrar.Pressed -= OnRegistrarPressed;
+        _registrar.Dispose();
     }
 
-    private void Sync(bool reportFailures, bool force = false)
+    private void Sync(bool force = false)
     {
         if (!_started || _suspended)
         {
             return;
         }
 
-        Dictionary<HotkeyOwner, Hotkey> wanted = _catalog.Profiles
-            .Where(p => p.Hotkey is { IsValid: true })
-            .ToDictionary(p => new HotkeyOwner(p.Id, IsGame: false), p => p.Hotkey!);
-        foreach (GameEntry game in _games.Games.Where(g => g.Hotkey is { IsValid: true }))
+        // Windows registers a combination once. When two things in RigShift carry the same one – a file edited by hand,
+        // a restored backup – the first keeps it and the other is reported, instead of failing as "another application".
+        var wanted = new Dictionary<HotkeyOwner, Hotkey>();
+        var names = new Dictionary<HotkeyOwner, string>();
+        var holders = new Dictionary<Hotkey, string>();
+        var failed = new List<(HotkeyOwner Owner, Hotkey Hotkey, string Name)>();
+        foreach ((HotkeyUse use, Hotkey hotkey) in HotkeyConflicts.All(_catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey))
         {
-            wanted[new HotkeyOwner(game.Id, IsGame: true)] = game.Hotkey!;
-        }
-
-        if (_settings.Current.ToggleHotkey is { IsValid: true } toggle)
-        {
-            wanted[ToggleKey] = toggle;
+            var owner = new HotkeyOwner(use.Id, use.Kind == HotkeyUseKind.Game);
+            string name = use.Name ?? Loc.Instance["Settings_ToggleHotkey"];
+            wanted[owner] = hotkey;
+            names[owner] = name;
         }
 
         // The catalog also changes whenever the active profile is refreshed; only re-register on real changes.
@@ -144,24 +174,25 @@ public sealed class HotkeyService : IDisposable
         UnregisterAll();
         _wanted = wanted;
 
-        var failed = new List<string>();
         int id = 1;
-        IEnumerable<(HotkeyOwner Key, string Name)> owners = _catalog.Profiles
-            .Select(p => (Key: new HotkeyOwner(p.Id, IsGame: false), p.Name))
-            .Concat(_games.Games.Select(g => (Key: new HotkeyOwner(g.Id, IsGame: true), g.Name)))
-            .Where(o => wanted.ContainsKey(o.Key))
-            .Concat(wanted.ContainsKey(ToggleKey) ? [(ToggleKey, Loc.Instance["Settings_ToggleHotkey"])] : []);
-        foreach ((HotkeyOwner key, string name) in owners)
+        foreach ((HotkeyOwner owner, Hotkey hotkey) in wanted)
         {
-            Hotkey hotkey = wanted[key];
-            if (NativeWindow.RegisterHotkey(_source.Handle, id, (int)hotkey.Modifiers, hotkey.VirtualKey, out int error))
+            string name = names[owner];
+            if (holders.TryGetValue(hotkey, out string? holder))
             {
-                _registered[id] = key;
+                failed.Add((owner, hotkey, name));
+                _log.Warning("Hotkey {Modifiers}+0x{Key:X2} for {Owner} is not registered: {Holder} already uses it",
+                    hotkey.Modifiers, hotkey.VirtualKey, name, holder);
+            }
+            else if (_registrar.Register(id, hotkey, out int error))
+            {
+                holders[hotkey] = name;
+                _registered[id] = owner;
                 _log.Information("Hotkey {Modifiers}+0x{Key:X2} registered for {Owner}", hotkey.Modifiers, hotkey.VirtualKey, name);
             }
             else
             {
-                failed.Add(name);
+                failed.Add((owner, hotkey, name));
                 _log.Warning("Hotkey {Modifiers}+0x{Key:X2} for {Owner} could not be registered, error {Error} ({Reason})",
                     hotkey.Modifiers, hotkey.VirtualKey, name, error,
                     error == ErrorHotkeyAlreadyRegistered ? "taken by another application" : "unexpected");
@@ -170,9 +201,12 @@ public sealed class HotkeyService : IDisposable
             id++;
         }
 
-        if (reportFailures && failed.Count > 0)
+        // A hotkey that stopped working after a change is as broken as one at startup; only the repeat is left out.
+        List<string> news = [.. failed.Where(f => !_reported.Contains((f.Owner, f.Hotkey))).Select(f => f.Name)];
+        _reported = [.. failed.Select(f => (f.Owner, f.Hotkey))];
+        if (news.Count > 0)
         {
-            RegistrationFailed?.Invoke(this, failed);
+            RegistrationFailed?.Invoke(this, news);
         }
     }
 
@@ -180,22 +214,19 @@ public sealed class HotkeyService : IDisposable
     {
         foreach (int id in _registered.Keys)
         {
-            NativeWindow.UnregisterHotkey(_source.Handle, id);
+            _registrar.Unregister(id);
         }
 
         _registered.Clear();
         _wanted = [];
     }
 
-    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    private void OnRegistrarPressed(object? sender, int id)
     {
-        if (msg == NativeWindow.WmHotkey && _registered.TryGetValue((int)wParam, out HotkeyOwner owner))
+        if (_registered.TryGetValue(id, out HotkeyOwner owner))
         {
-            handled = true;
             OnPressed(owner);
         }
-
-        return 0;
     }
 
     private void OnPressed(HotkeyOwner key)

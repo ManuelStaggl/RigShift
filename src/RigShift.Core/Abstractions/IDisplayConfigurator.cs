@@ -37,4 +37,11 @@ public sealed record ApplyOptions
 
     /// <summary>Persist the resulting topology to the OS display database (SDC_SAVE_TO_DATABASE).</summary>
     public bool SaveToDatabase { get; init; } = true;
+
+    /// <summary>
+    /// Displays with the same position and size are duplicated ("Duplicate these displays") instead of getting a desktop
+    /// each. Only for restoring what Windows showed before: in a profile, two displays on the same spot are a mistake in
+    /// the editor, not a wish to duplicate.
+    /// </summary>
+    public bool AllowClone { get; init; }
 }

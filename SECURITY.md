@@ -21,6 +21,11 @@ you prefer otherwise.
   at the next start of RigShift, unless updates are set to notify only.
 - **What is checked.** Velopack verifies the SHA-256 hash of every package against the release feed it downloaded from
   the same GitHub release. That protects against broken or truncated downloads, not against a tampered release.
+- **What you can check yourself** (releases after 3.5.1). Every release carries `SHA256SUMS`, a CycloneDX SBOM
+  (`RigShift-<version>.cdx.json`) and a build provenance attestation: a signed statement that the file was built by
+  this repository's release workflow from the tagged commit. Verify a download with
+  `gh attestation verify RigShift-win-Setup.exe --repo ManuelStaggl/RigShift`. The `main` branch and the `v*` tags
+  are protected against force pushes, moves and deletion (`.github/rulesets`).
 - **No code signing.** The installer, the executable and the update packages are not signed (a deliberate decision
   for a free hobby project). Windows SmartScreen may warn on the first install, and there is no signature that would
   expose a manipulated update.

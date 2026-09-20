@@ -6,6 +6,7 @@ using RigShift.App.ViewModels;
 using RigShift.App.Views;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 using Wpf.Ui.Controls;
@@ -13,6 +14,14 @@ using Wpf.Ui.Controls;
 namespace RigShift.App.Services;
 
 /// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
+/// <summary>The answer to "the same error keeps coming back".</summary>
+public enum RepeatedErrorChoice
+{
+    Continue,
+    Restart,
+    OpenLog,
+}
+
 public enum UnsavedChoice
 {
     Save,
@@ -20,8 +29,29 @@ public enum UnsavedChoice
     Cancel,
 }
 
+/// <summary>
+/// What the profiles page asks of the user or builds for them. The page's logic – what happens to unsaved changes,
+/// which profile is selected after a delete – runs against this, so it can be tested without a window.
+/// </summary>
+public interface IProfilePageDialogs
+{
+    /// <summary>A new, unsaved profile from the active displays.</summary>
+    Task<Profile> NewFromCurrentAsync();
+
+    /// <summary>The detail's editor for a profile.</summary>
+    Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew);
+
+    Task ShowSetupAssistantAsync();
+
+    /// <param name="ruleCount">USB rules that go with the profile.</param>
+    Task<bool> ConfirmDeleteAsync(string name, int ruleCount);
+
+    /// <param name="targetName">The profile the user picked instead, when the question comes from the list.</param>
+    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
+}
+
 /// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
-public sealed class ProfileDialogs
+public sealed class ProfileDialogs : IProfilePageDialogs
 {
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
@@ -58,6 +88,12 @@ public sealed class ProfileDialogs
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
+
+    Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task<bool> IProfilePageDialogs.ConfirmDeleteAsync(string name, int ruleCount) => ConfirmDeleteAsync(name, ruleCount);
+
+    Task<UnsavedChoice> IProfilePageDialogs.ConfirmUnsavedAsync(string name, string? targetName) => ConfirmUnsavedAsync(name, targetName);
 
     /// <summary>A new, unsaved profile from the active displays and the default playback device (F3, R-FLOW-3).</summary>
     public async Task<Profile> NewFromCurrentAsync()
@@ -165,6 +201,36 @@ public sealed class ProfileDialogs
             Loc.Instance["Interrupted_Title"], Loc.Format("Interrupted_Text", targetProfileName),
             Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
 
+    /// <summary>
+    /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
+    /// (rules, hotkeys, the update choice) changes how the machine behaves, and the copy is only useful if the user
+    /// knows it exists.
+    /// </summary>
+    /// <returns><c>true</c> when the user wants to see the folder with the copy.</returns>
+    public static async Task<bool> ShowSettingsProblemAsync(Core.Settings.SettingsLoadReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        string? copy = report.BackupFile is null ? null : System.IO.Path.GetFileName(report.BackupFile);
+        bool newer = report.Problem == Core.Settings.SettingsLoadProblem.FromNewerVersion;
+        string text = newer ? Loc.Format("SettingsProblem_NewerText", copy ?? "–")
+            : copy is null ? Loc.Instance["SettingsProblem_TextNoCopy"]
+            : Loc.Format("SettingsProblem_TextCopy", copy);
+        return await Ask(
+            Loc.Instance[newer ? "SettingsProblem_NewerTitle" : "SettingsProblem_Title"], text,
+            Loc.Instance["SettingsProblem_OpenFolder"], DialogButtonKind.Secondary, Loc.Instance["Common_Close"]);
+    }
+
+    /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
+    public static async Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>
+        (RepeatedErrorChoice)await DialogWindow.AskAsync(
+            Loc.Instance["Crash_Title"], Loc.Format("Crash_Text", message),
+            [
+                new DialogChoice(Loc.Instance["Crash_Restart"], DialogButtonKind.Primary, (int)RepeatedErrorChoice.Restart),
+                new DialogChoice(Loc.Instance["Crash_OpenLog"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.OpenLog),
+                new DialogChoice(Loc.Instance["Crash_Continue"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.Continue),
+            ],
+            cancelResult: (int)RepeatedErrorChoice.Continue);
+
     /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
     public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName) =>
@@ -173,9 +239,50 @@ public sealed class ProfileDialogs
             deviceName is null ? Loc.Instance["Automation_DeleteTextNoDevice"] : Loc.Format("Automation_DeleteText", deviceName),
             Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
 
-    /// <summary>Restoring a backup replaces everything: same style as deleting (1.7.0).</summary>
-    public static async Task<bool> ConfirmRestoreAsync(int profileCount) =>
-        await Ask(Loc.Instance["About_RestoreTitle"], Loc.Format("About_RestoreText", profileCount), Loc.Instance["About_Restore"], DialogButtonKind.Danger);
+    /// <summary>
+    /// Restoring a backup replaces everything: same style as deleting (1.7.0). A backup also brings programs to
+    /// start and end, rules and hotkeys – and it may come from somebody else – so all of those are listed first.
+    /// </summary>
+    public static async Task<bool> ConfirmRestoreAsync(BackupContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        IReadOnlyList<BackupItem> items = BackupReview.Review(content);
+        string message = Loc.Format(content.Games is null ? "About_RestoreText" : "About_RestoreTextGames", content.Profiles.Count, content.Games?.Count ?? 0);
+        if (items.Count > 0)
+        {
+            message += " " + Loc.Instance[items.Any(i => i.NeedsAttention) ? "About_RestoreReviewAttention" : "About_RestoreReview"];
+        }
+
+        return await DialogWindow.AskAsync(
+            Loc.Instance["About_RestoreTitle"], message,
+            [
+                new DialogChoice(Loc.Instance["About_Restore"], DialogButtonKind.Danger, 1),
+                new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0,
+            [.. items.OrderByDescending(i => i.NeedsAttention).Select(Describe)]) == 1;
+    }
+
+    /// <summary>One backup item in words; internal so the wording is covered by a test.</summary>
+    internal static DialogDetail Describe(BackupItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        string what = Loc.Instance[item.Kind switch
+        {
+            BackupItemKind.StartsProgram => "Restore_Starts",
+            BackupItemKind.StopsProgram => "Restore_Stops",
+            BackupItemKind.StartsGame => "Restore_Game",
+            BackupItemKind.Rule => "Restore_Rule",
+            _ => "Restore_Hotkey",
+        }];
+        string owner = item.Owner.Length > 0 ? item.Owner : Loc.Instance["Settings_ToggleHotkey"];
+        string text = item.Keys is { } keys ? HotkeyFormat.Format(keys) : item.Detail;
+        string? warning = item.IsNetworkPath ? Loc.Instance["Restore_WarnNetwork"]
+            : item.IsNotFullPath ? Loc.Instance["Restore_WarnNotFullPath"]
+            : item.SkipsConfirmation ? Loc.Instance["Restore_WarnNoConfirm"]
+            : null;
+        return new DialogDetail($"{what} · {owner}", text, warning);
+    }
 
     /// <summary>
     /// Asked when the selection or the navigation leaves a profile with unsaved changes (R-NAV-3): "Save changes to X?"

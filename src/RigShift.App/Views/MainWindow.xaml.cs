@@ -43,6 +43,7 @@ public partial class MainWindow : FluentWindow
         _automation = services.GetService<AutomationService>();
         _updates = services.GetRequiredService<UpdateService>();
         InitializeComponent();
+        _textScale = TextScale.Apply(this);
 
         // The pages paint square backgrounds; without this they cover the rounded corner of the page surface.
         PageHost.SizeChanged += (_, e) => PageHost.Clip = TopLeftRounded(e.NewSize, 7);
@@ -91,7 +92,10 @@ public partial class MainWindow : FluentWindow
         };
     }
 
-    private bool IsCompact => _compactChoice ?? ActualWidth < 1200;
+    /// <summary>Windows' text size setting as a factor; the rail's width check counts in layout pixels.</summary>
+    private readonly double _textScale;
+
+    private bool IsCompact => _compactChoice ?? ActualWidth / _textScale < 1200;
 
     private void OnNavToggleClick(object sender, RoutedEventArgs e)
     {
@@ -128,7 +132,13 @@ public partial class MainWindow : FluentWindow
     {
         string active = _catalog.ActiveProfile?.Name ?? Loc.Instance["Tray_ActiveNone"];
         ActiveText.Text = active;
-        NavFooter.ToolTip = active;
+
+        // The narrow rail shows only the dot: its meaning comes as a whole sentence, at once, and for a screen reader.
+        string state = _catalog.ActiveProfile is { } profile
+            ? string.Format(Loc.Instance.UICulture, Loc.Instance["Nav_ActiveProfile"], profile.Name)
+            : active;
+        NavFooter.ToolTip = state;
+        AutomationProperties.SetName(NavFooter, state);
         ActiveDot.Fill = (System.Windows.Media.Brush)FindResource(_catalog.ActiveProfile is null ? "RigShift.Brush.TextDisabled" : "RigShift.Brush.Ok");
         bool paused = _automation?.IsPaused == true;
         PausedIcon.Visibility = paused ? Visibility.Visible : Visibility.Collapsed;
@@ -258,7 +268,8 @@ public partial class MainWindow : FluentWindow
             content.Children.Insert(1, _updateDot);
         }
 
-        AutomationProperties.SetName(item, Loc.Instance[textKey]);
+        // Bound like the text and the tooltip: a name set once kept the old language for screen readers.
+        item.SetBinding(AutomationProperties.NameProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
         list.Items.Add(item);
         _navItems[page] = item;
         InputBindings.Add(new KeyBinding(new NavigateCommand(this, page), shortcut, ModifierKeys.Control));

@@ -64,6 +64,11 @@ public sealed class JsonProfileStore : IProfileStore
                         file, document.SchemaVersion, CurrentSchemaVersion);
                     unreadable.Add(new UnreadableProfileFile(name, "The file is from a newer RigShift version."));
                 }
+                else if (StoredDataCheck.Problem(document.Profile) is { } problem)
+                {
+                    _log.Warning("Profile file {File} is not a usable profile ({Problem}), skipped", file, problem);
+                    unreadable.Add(new UnreadableProfileFile(name, problem));
+                }
                 else
                 {
                     Profile profile = document.Profile.WithMigratedConfirmation();
@@ -116,19 +121,14 @@ public sealed class JsonProfileStore : IProfileStore
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        Directory.CreateDirectory(_directory);
-
         string target = FileFor(profile.Id);
-        string temp = target + ".tmp";
 
-        // Write to a temp file and move it over the original, so a crash never leaves a half-written profile.
-        await using (FileStream stream = File.Create(temp))
-        {
-            await JsonSerializer.SerializeAsync(
-                stream, new ProfileDocument(CurrentSchemaVersion, profile), ProfileJsonContext.Default.ProfileDocument, cancellationToken);
-        }
-
-        File.Move(temp, target, overwrite: true);
+        // Written next to the original and moved over it, so a crash never leaves a half-written profile.
+        await AtomicFile.WriteAsync(
+            target,
+            stream => JsonSerializer.SerializeAsync(
+                stream, new ProfileDocument(CurrentSchemaVersion, profile), ProfileJsonContext.Default.ProfileDocument, cancellationToken),
+            cancellationToken);
         _log.Information("Saved profile {Profile} to {File}", profile.Name, target);
     }
 

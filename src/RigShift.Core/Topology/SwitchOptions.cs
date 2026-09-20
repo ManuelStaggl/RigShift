@@ -27,6 +27,12 @@ public sealed record SwitchOptions
     /// </summary>
     public TimeSpan HdrCallTimeout { get; init; } = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    /// Longest time one native apply may take. Four displays re-training their links take seconds, not a minute; a call
+    /// that is still out after this belongs to a frozen driver, and the switch ends as failed rather than never.
+    /// </summary>
+    public TimeSpan ApplyCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
+
     /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 

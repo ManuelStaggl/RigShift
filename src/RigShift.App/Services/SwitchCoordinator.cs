@@ -21,6 +21,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private readonly ILogger _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>
+    /// The thread this was created on – the UI thread in the app, none in most tests. Everything that touches
+    /// <see cref="IsSwitching"/>, <see cref="History"/> and the events runs there, whoever calls: a game session
+    /// switches from a pool thread, and bound collections and the tray cannot be touched from one.
+    /// </summary>
+    private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
+    private readonly int _uiThread = Environment.CurrentManagedThreadId;
+
     /// <summary>Cancelled when the app exits; a running switch rolls back and ends (analysis finding B-02).</summary>
     private readonly CancellationTokenSource _stopping = new();
 
@@ -38,6 +46,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         _settings = settings;
         _time = time;
         _log = log.ForContext<SwitchCoordinator>();
+        if (_ui is null)
+        {
+            _log.Debug("Created without a synchronization context; switches run on the calling thread");
+        }
+
         orchestrator.WaitingForDisplays += (_, displays) =>
             WaitingForDisplays?.Invoke(this, [.. displays.Select(d => SwitchMessages.NameOf(d))]);
     }
@@ -168,7 +181,42 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    private async Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken = default)
+    private Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken = default) =>
+        OnUiThreadAsync(() => RunCoreAsync(profile, request, rethrow, cancellationToken));
+
+    /// <summary>
+    /// Runs <paramref name="work"/> on the UI thread and hands its result or exception back to the caller. A comparison
+    /// of contexts would not do: WPF hands out a new context instance per dispatcher operation.
+    /// </summary>
+    private Task<T> OnUiThreadAsync<T>(Func<Task<T>> work)
+    {
+        if (_ui is null || Environment.CurrentManagedThreadId == _uiThread)
+        {
+            return work();
+        }
+
+        var done = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _ui.Post(_ => _ = RelayAsync(work, done), null);
+        return done.Task;
+    }
+
+    private static async Task RelayAsync<T>(Func<Task<T>> work, TaskCompletionSource<T> done)
+    {
+        try
+        {
+            done.SetResult(await work());
+        }
+        catch (OperationCanceledException ex)
+        {
+            done.SetCanceled(ex.CancellationToken);
+        }
+        catch (Exception ex)
+        {
+            done.SetException(ex);
+        }
+    }
+
+    private async Task<SwitchResult?> RunCoreAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken)
     {
         if (request.DryRun)
         {
@@ -244,7 +292,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     /// its profile is still active, re-applies it once more of them are there. No time limit: a spacedesk viewer often
     /// connects minutes after the switch (deviation from the 60 s in PLAN 4.3, decided in M5).
     /// </summary>
-    public async Task CatchUpAsync()
+    public Task CatchUpAsync() =>
+        OnUiThreadAsync(async () =>
+        {
+            await CatchUpCoreAsync();
+            return true;
+        });
+
+    private async Task CatchUpCoreAsync()
     {
         if (_pendingCatchUp is not { } pending)
         {

@@ -40,6 +40,7 @@ public partial class ConfirmationWindow : FluentWindow
     private ConfirmationWindow(ConfirmationView view, TimeSpan timeout, CancellationToken cancellationToken)
     {
         InitializeComponent();
+        TextScale.Apply(this);
         BeforeTopology.Displays = view.BeforeTopology;
         BeforeName.Text = view.BeforeName;
         AfterTopology.Displays = view.AfterTopology;
