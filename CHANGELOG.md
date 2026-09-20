@@ -11,6 +11,56 @@ All notable changes to this project are documented here. The format follows
 - **Restore the desktop icons on their own**: "Restore" next to "Save positions" in the profile, the same entry in
   the profile's "…" menu, and `RigShift.exe icons <name>`. Until now the saved positions only came back as part of a
   switch – no help when Windows reshuffles the icons while the profile is already active.
+- **Windows' "Text size" setting is followed** (Settings → Accessibility): every RigShift window grows by that factor,
+  as far as the screen allows.
+- **A backup includes the games**, and restoring first shows what the backup brings along – programs it starts, USB
+  rules, hotkeys – with a warning for a program on a network share, a program without a full path and a rule that
+  switches without asking.
+- An administrator can switch the update check off by policy
+  (`HKLM\Software\Policies\RigShift\DisableUpdateCheck`); see `docs/deployment.md`.
+- Setting "Detailed log" for a problem report. The normal log is quieter and carries no device paths.
+- Releases carry an SBOM, `SHA256SUMS` and a build provenance attestation. New: third-party notices, a privacy
+  statement and a deployment guide (silent install, uninstall, offline use).
+
+### Changed
+
+- Apps in a profile or game start **by full path only**; a bare name like `tool.exe` is no longer started (stopping
+  by name still works). The app row says "Not found" or "No full path" in words instead of only turning red.
+- The USB device picker no longer offers what is built into the PC (Bluetooth adapters, mainboard lighting).
+  Existing rules are untouched.
+- Help page: the actions stand right below their text, the two folder links stay together.
+- "Exit" asks when there are unsaved changes.
+
+### Fixed
+
+- A game session waits for the game to show up before it waits for its end, follows what a launcher stub leaves
+  behind, and no longer stays "running" when it could not be started.
+- Whatever goes wrong before a switch is confirmed ends in the rollback; a rollback gives each audio role back to the
+  device that held it and brings duplicated displays back as duplicates.
+- A frozen display driver or a hanging Explorer ends the switch with an error instead of freezing RigShift.
+- Profiles, games and settings reach the disk completely before they replace the old file. A settings file that
+  cannot be read is kept aside and you are told; a profile or game with broken content is reported instead of
+  silently dropped.
+- Restoring a backup no longer risks the existing profiles when it fails half way.
+- One check for hotkey conflicts between profiles, games and "previous profile"; a hotkey Windows refuses is reported
+  whenever it happens, not only at start.
+- A failed update check is tried again after 1, 5 and 30 minutes and after waking from standby; an update that was
+  reported already is not reported again with every check.
+- Profiles and games pages: "Save" or "Discard" in the unsaved-changes question opens the entry that was clicked, and
+  a new entry is no longer listed twice after saving.
+- A crash leaves a line in the log; an error that keeps coming back asks for a restart instead of flooding the screen.
+- Field of view: a label that wraps no longer pushes its field below its neighbour.
+- A display number in the hundreds (remote session) fits its badge.
+- The state dot in the folded navigation explains itself in its tooltip and to screen readers.
+- The component gallery (a developer aid) no longer ships in release builds.
+
+### Security
+
+- The command pipe cannot be squatted by another process, and the command line checks whose pipe it talks to.
+- `rigshift://` links cannot read response files (`@file`), and a `play` link makes the profile switch ask first.
+- `nvapi64.dll` loads from System32 only; files from outside (backups, imports) are read with a size limit.
+- Repository: `main` and release tags are protected, dependencies are locked and watched by Dependabot, CodeQL is on,
+  builds carry embedded symbols with SourceLink.
 
 ## [3.5.1] - 2026-09-20
 
