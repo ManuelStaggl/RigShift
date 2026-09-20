@@ -20,6 +20,7 @@ public sealed class UpdateServiceTests : IDisposable
 
     private readonly AppTestHost _host = new(new FakeDisplayConfigurator(DeskActive()));
     private readonly ScriptedFeed _feed = new();
+    private readonly IUpdatePolicy _policy = Substitute.For<IUpdatePolicy>();
     private readonly IAppShell _shell = Substitute.For<IAppShell>();
     private readonly StepClock _clock = new();
     private readonly List<string> _ready = [];
@@ -34,7 +35,7 @@ public sealed class UpdateServiceTests : IDisposable
 
     private UpdateService Service()
     {
-        _service = new UpdateService(_feed, _host.Coordinator, _host.Settings, _shell, _clock, Logger.None);
+        _service = new UpdateService(_feed, _policy, _host.Coordinator, _host.Settings, _shell, _clock, Logger.None);
         _service.UpdateReady += (_, version) => _ready.Add(version);
         _service.UpdateAvailable += (_, version) => _available.Add(version);
         return _service;
@@ -76,6 +77,34 @@ public sealed class UpdateServiceTests : IDisposable
         _feed.Checks.ShouldBe(0);
         _clock.Pending.ShouldBe(0);
     }
+
+    [Fact]
+    public async Task ChecksDisabledByPolicy_NeverChecks()
+    {
+        _policy.ChecksDisabled.Returns(true);
+        UpdateService service = Service();
+
+        service.Start();
+        await service.CheckNowAsync();
+        service.Resumed();
+
+        service.State.ShouldBe(UpdateState.DisabledByPolicy);
+        service.CanCheck.ShouldBeFalse();
+        service.CanInstallNow.ShouldBeFalse();
+        _feed.Checks.ShouldBe(0);
+        _clock.Pending.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(1, null, true)]
+    [InlineData(null, 1, true)]
+    [InlineData("1", null, true)]
+    [InlineData(0, 1, false)]
+    [InlineData(0, null, false)]
+    [InlineData(null, null, false)]
+    [InlineData("yes", null, false)]
+    public void Policy_MachineValueWinsOverUserValue(object? machine, object? user, bool disabled) =>
+        RegistryUpdatePolicy.IsDisabled(machine, user).ShouldBe(disabled);
 
     [Fact]
     public async Task Check_NothingNewer_IsUpToDate()

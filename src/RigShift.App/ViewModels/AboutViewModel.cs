@@ -347,6 +347,7 @@ public sealed partial class AboutViewModel : ObservableObject
         UpdateStatusText = _updates.State switch
         {
             UpdateState.NotInstalled => Loc.Instance["Update_StatusNotInstalled"],
+            UpdateState.DisabledByPolicy => Loc.Instance["Update_StatusPolicy"],
             UpdateState.NotChecked => Loc.Instance["Update_StatusNotChecked"],
             UpdateState.Checking => Loc.Instance["Update_StatusChecking"],
             UpdateState.Downloading => Loc.Format("Update_StatusDownloading", _updates.TargetVersion ?? "?"),
@@ -359,7 +360,7 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             UpdateState.UpToDate => StatusKind.Ok,
             UpdateState.Ready or UpdateState.Available or UpdateState.Downloading => StatusKind.Accent,
-            UpdateState.NotInstalled or UpdateState.NotChecked or UpdateState.Checking => StatusKind.Neutral,
+            UpdateState.NotInstalled or UpdateState.DisabledByPolicy or UpdateState.NotChecked or UpdateState.Checking => StatusKind.Neutral,
             _ => StatusKind.Warn,
         };
         IsUpdateInstallable = _updates.State is UpdateState.Ready or UpdateState.Available;

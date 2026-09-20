@@ -80,6 +80,7 @@
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Restart and install</value></data>
   <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Restart and install {0}</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates are only available in the installed version.</value></data>
+  <data name="Update_StatusPolicy" xml:space="preserve"><value>Your administrator has switched off update checks.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Not checked for updates yet.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Checking for updates…</value></data>
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Downloading version {0}…</value></data>

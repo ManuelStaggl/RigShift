@@ -116,7 +116,8 @@
           <controls:SettingRow
             Margin="0,8,0,0"
             Caption="{loc:Tr Settings_AutoUpdateHint}"
-            Title="{loc:Tr Settings_AutoUpdate}">
+            Title="{loc:Tr Settings_AutoUpdate}"
+            Visibility="{Binding ShowUpdateSetting, Converter={StaticResource BoolToVisibility}}">
             <ui:ToggleSwitch
               AutomationProperties.Name="{loc:Tr Settings_AutoUpdate}"
               IsChecked="{Binding InstallUpdatesAutomatically}"

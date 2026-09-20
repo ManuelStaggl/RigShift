@@ -11,6 +11,9 @@ public enum UpdateState
     /// <summary>Not installed by Velopack (development build); updates are off.</summary>
     NotInstalled,
 
+    /// <summary>An administrator switched update checks off (<see cref="IUpdatePolicy"/>); GitHub is never contacted.</summary>
+    DisabledByPolicy,
+
     /// <summary>Installed, but no check has finished yet.</summary>
     NotChecked,
 
@@ -33,7 +36,7 @@ public enum UpdateState
 /// again after 1, 5 and 30 minutes (<see cref="UpdateSchedule"/>). With automatic
 /// installation a newer version is downloaded and Velopack installs it the next time the tray app starts; otherwise
 /// RigShift only reports it until the user installs it. Does nothing when RigShift was not installed by Velopack
-/// (development builds). All members are used on the UI thread; events are raised there.
+/// (development builds) or when a policy switches the checks off. All members are used on the UI thread; events are raised there.
 /// </summary>
 public sealed class UpdateService : IDisposable
 {
@@ -56,9 +59,10 @@ public sealed class UpdateService : IDisposable
     private volatile TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public UpdateService(
-        IUpdateFeed feed, SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
+        IUpdateFeed feed, IUpdatePolicy policy, SwitchCoordinator coordinator, SettingsService settings, IAppShell shell, TimeProvider time, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(feed);
+        ArgumentNullException.ThrowIfNull(policy);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(log);
@@ -86,7 +90,10 @@ public sealed class UpdateService : IDisposable
         };
 
         IsInstalled = _feed.IsInstalled;
-        State = IsInstalled ? UpdateState.NotChecked : UpdateState.NotInstalled;
+        DisabledByPolicy = policy.ChecksDisabled;
+        State = !IsInstalled ? UpdateState.NotInstalled
+            : DisabledByPolicy ? UpdateState.DisabledByPolicy
+            : UpdateState.NotChecked;
         CurrentVersion = _feed.InstalledVersion is { } installed
             ? installed
             : Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?";
@@ -103,6 +110,8 @@ public sealed class UpdateService : IDisposable
 
     public bool IsInstalled { get; }
 
+    public bool DisabledByPolicy { get; }
+
     public string CurrentVersion { get; }
 
     public UpdateState State { get; private set; }
@@ -118,7 +127,7 @@ public sealed class UpdateService : IDisposable
     /// <summary>GitHub release page of <see cref="TargetVersion"/>.</summary>
     public string? ReleaseUrl => TargetVersion is null ? null : RepositoryUrl + "/releases/tag/v" + TargetVersion;
 
-    public bool CanCheck => IsInstalled && !_busy;
+    public bool CanCheck => IsInstalled && !DisabledByPolicy && !_busy;
 
     /// <summary>An update can be installed now; never while checking, downloading or switching.</summary>
     public bool CanInstallNow => State is UpdateState.Ready or UpdateState.Available && !_busy && !_coordinator.IsSwitching;
@@ -128,6 +137,11 @@ public sealed class UpdateService : IDisposable
         if (!IsInstalled)
         {
             _log.Information("Not installed by Velopack, update checks are off");
+            return;
+        }
+
+        if (DisabledByPolicy)
+        {
             return;
         }
 

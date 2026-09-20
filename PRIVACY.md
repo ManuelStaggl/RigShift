@@ -11,7 +11,8 @@ the [GitHub privacy statement](https://docs.github.com/site-policy/privacy-polic
 RigShift sends nothing else: no identifier, no profile data, no hardware data.
 
 Builds from source never check. "Only notify about updates" in the settings stops the
-download, not the check.
+download, not the check. To switch the check off entirely, set the policy described in
+[deployment](docs/deployment.md#updates).
 
 ## What stays on your PC
 

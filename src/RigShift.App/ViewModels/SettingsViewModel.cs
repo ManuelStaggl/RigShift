@@ -22,9 +22,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     private HotkeyUse? _hotkeyConflict;
     private bool _loading;
 
-    public SettingsViewModel(SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, ILogger log)
+    public SettingsViewModel(
+        SettingsService settings, ProfileCatalog catalog, HotkeyService hotkeys, UsbDevicesViewModel devices, IUpdatePolicy updatePolicy, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(updatePolicy);
         ArgumentNullException.ThrowIfNull(log);
+        ShowUpdateSetting = !updatePolicy.ChecksDisabled;
         _settings = settings;
         _catalog = catalog;
         _hotkeys = hotkeys;
@@ -171,6 +174,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool InstallUpdatesAutomatically { get; set; }
+
+    /// <summary>False when a policy switches update checks off: the choice would have no effect.</summary>
+    public bool ShowUpdateSetting { get; }
 
     partial void OnInstallUpdatesAutomaticallyChanged(bool value)
     {

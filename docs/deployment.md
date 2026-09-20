@@ -59,6 +59,20 @@ See [SECURITY.md](../SECURITY.md#updates-and-their-residual-risk) for where upda
 and [PRIVACY.md](../PRIVACY.md) for what the check transmits. "Only notify about updates" in the settings keeps a PC on
 its version until someone installs the update by hand.
 
+**Switching the check off by policy.** RigShift then never contacts GitHub, "Check for updates" is disabled and the
+update setting disappears:
+
+```powershell
+reg add HKLM\Software\Policies\RigShift /v DisableUpdateCheck /t REG_DWORD /d 1 /f
+```
+
+The same value under `HKCU\Software\Policies\RigShift` works per user; the machine value wins, also when it is 0.
+It is read when RigShift starts.
+
+**Proxy and firewall.** The check uses the Windows system proxy (or `HTTPS_PROXY`); there is no proxy setting in
+RigShift. Hosts, all HTTPS: `api.github.com`, `github.com`, `release-assets.githubusercontent.com` and
+`objects.githubusercontent.com`. A proxy that asks for credentials RigShift cannot give makes the check fail quietly.
+
 ## Command line
 
 `RigShift.exe list | status | apply <profile> [--dry-run] | toggle | games | play <game>` talks to the running tray

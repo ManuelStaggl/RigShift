@@ -521,6 +521,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
         services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl));
+        services.AddSingleton<IUpdatePolicy>(_ => new RegistryUpdatePolicy(Log.Logger));
         services.AddSingleton<UpdateService>();
 
         // Games (v2)

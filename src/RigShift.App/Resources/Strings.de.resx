@@ -80,6 +80,7 @@
   <data name="Settings_RestartToUpdate" xml:space="preserve"><value>Neu starten und installieren</value></data>
   <data name="Tray_RestartToUpdate" xml:space="preserve"><value>Neu starten und {0} installieren</value></data>
   <data name="Update_StatusNotInstalled" xml:space="preserve"><value>Updates gibt es nur in der installierten Version.</value></data>
+  <data name="Update_StatusPolicy" xml:space="preserve"><value>Dein Administrator hat die Update-Prüfung abgeschaltet.</value></data>
   <data name="Update_StatusNotChecked" xml:space="preserve"><value>Noch nicht nach Updates gesucht.</value></data>
   <data name="Update_StatusChecking" xml:space="preserve"><value>Suche nach Updates …</value></data>
   <data name="Update_StatusDownloading" xml:space="preserve"><value>Version {0} wird geladen …</value></data>
