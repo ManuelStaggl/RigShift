@@ -29,8 +29,29 @@ public enum UnsavedChoice
     Cancel,
 }
 
+/// <summary>
+/// What the profiles page asks of the user or builds for them. The page's logic – what happens to unsaved changes,
+/// which profile is selected after a delete – runs against this, so it can be tested without a window.
+/// </summary>
+public interface IProfilePageDialogs
+{
+    /// <summary>A new, unsaved profile from the active displays.</summary>
+    Task<Profile> NewFromCurrentAsync();
+
+    /// <summary>The detail's editor for a profile.</summary>
+    Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew);
+
+    Task ShowSetupAssistantAsync();
+
+    /// <param name="ruleCount">USB rules that go with the profile.</param>
+    Task<bool> ConfirmDeleteAsync(string name, int ruleCount);
+
+    /// <param name="targetName">The profile the user picked instead, when the question comes from the list.</param>
+    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
+}
+
 /// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
-public sealed class ProfileDialogs
+public sealed class ProfileDialogs : IProfilePageDialogs
 {
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
@@ -67,6 +88,12 @@ public sealed class ProfileDialogs
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
+
+    Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task<bool> IProfilePageDialogs.ConfirmDeleteAsync(string name, int ruleCount) => ConfirmDeleteAsync(name, ruleCount);
+
+    Task<UnsavedChoice> IProfilePageDialogs.ConfirmUnsavedAsync(string name, string? targetName) => ConfirmUnsavedAsync(name, targetName);
 
     /// <summary>A new, unsaved profile from the active displays and the default playback device (F3, R-FLOW-3).</summary>
     public async Task<Profile> NewFromCurrentAsync()

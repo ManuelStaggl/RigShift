@@ -519,6 +519,7 @@ public partial class App : Application, IAppShell
             sp.GetRequiredService<GameSessionService>()));
         services.AddSingleton<CommandPipeServer>();
         services.AddSingleton<ProfileDialogs>();
+        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
         services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl));
         services.AddSingleton<UpdateService>();
 

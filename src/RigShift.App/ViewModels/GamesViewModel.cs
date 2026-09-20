@@ -482,6 +482,12 @@ public sealed partial class GamesViewModel : ObservableObject
         _reverting = true;
         try
         {
+            // The save of a new game reloads the catalog before it returns here: by then the game is an ordinary entry.
+            if (_newItem is not null && _catalog.Items.Any(i => i.Game.Id == _newItem.Game.Id))
+            {
+                _newItem = null;
+            }
+
             Items.Clear();
             if (_newItem is not null)
             {

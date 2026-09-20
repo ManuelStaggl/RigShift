@@ -25,7 +25,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly ProfileDialogs _dialogs;
+    private readonly IProfilePageDialogs _dialogs;
     private readonly SettingsService _settings;
     private readonly IDisplayConfigurator _display;
     private readonly TopologyPlanner _planner;
@@ -41,7 +41,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     public ProfilesViewModel(
         ProfileCatalog catalog,
         SwitchCoordinator coordinator,
-        ProfileDialogs dialogs,
+        IProfilePageDialogs dialogs,
         SettingsService settings,
         IDisplayConfigurator display,
         TopologyPlanner planner,
@@ -161,21 +161,23 @@ public sealed partial class ProfilesViewModel : ObservableObject
     public bool HasStatusMessage => StatusMessage is not null;
 
     /// <summary>Before the page is left or the window navigates: saves, discards or stays. False: stay.</summary>
-    /// <param name="targetName">The profile the user picked instead, when the dialog comes from the list.</param>
-    public async Task<bool> ConfirmLeaveAsync(string? targetName = null)
+    public Task<bool> ConfirmLeaveAsync() => ConfirmLeaveAsync(null);
+
+    /// <param name="target">The profile the user picked instead, when the question comes from the list.</param>
+    private async Task<bool> ConfirmLeaveAsync(ProfileItem? target)
     {
         if (Editor is not { IsDirty: true } editor)
         {
             return true;
         }
 
-        switch (await ProfileDialogs.ConfirmUnsavedAsync(
-            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, targetName))
+        switch (await _dialogs.ConfirmUnsavedAsync(
+            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, target?.Name))
         {
             case UnsavedChoice.Save:
-                return await SaveCoreAsync();
+                return await SaveCoreAsync(target);
             case UnsavedChoice.Discard:
-                DiscardCore();
+                DiscardCore(target);
                 return true;
             default:
                 return false;
@@ -290,7 +292,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (SelectedItem is not { } item || !await ProfileDialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
+        if (SelectedItem is not { } item || !await _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
         {
             return;
         }
@@ -364,7 +366,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     private async Task SelectAsync(ProfileItem? previous, ProfileItem? next)
     {
-        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next?.Name))
+        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next))
         {
             _reverting = true;
             SelectedItem = previous;
@@ -427,7 +429,8 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> SaveCoreAsync()
+    /// <param name="target">The profile to show afterwards; saving rebuilds the list, which otherwise stays on the saved profile.</param>
+    private async Task<bool> SaveCoreAsync(ProfileItem? target = null)
     {
         if (Editor is not { } editor)
         {
@@ -435,7 +438,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
 
         bool wasNew = editor.IsNew;
-        _selectAfterRebuild = editor.Id;
+        _selectAfterRebuild = target?.Profile.Id ?? editor.Id;
         if (!await editor.SaveAsync())
         {
             _selectAfterRebuild = null;
@@ -452,9 +455,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
     }
 
     /// <summary>Back to the profile as saved; a new profile disappears from the list.</summary>
-    private void DiscardCore()
+    /// <param name="target">The profile the user picked instead; its editor is loaded by whoever asked.</param>
+    private void DiscardCore(ProfileItem? target = null)
     {
-        if (SelectedItem is not { } item)
+        ProfileItem? item = _newItem is not null && Editor is { IsNew: true } ? _newItem : SelectedItem;
+        if (item is null)
         {
             return;
         }
@@ -465,13 +470,20 @@ public sealed partial class ProfilesViewModel : ObservableObject
             Items.Remove(item);
             IsEmpty = Items.Count == 0;
             _reverting = true;
-            SelectedItem = Items.FirstOrDefault();
+            SelectedItem = target is not null && Items.Contains(target) ? target : Items.FirstOrDefault();
             _reverting = false;
-            _ = LoadEditorAsync(SelectedItem);
+            if (target is null)
+            {
+                _ = LoadEditorAsync(SelectedItem);
+            }
+
             return;
         }
 
-        _ = LoadEditorAsync(item);
+        if (target is null)
+        {
+            _ = LoadEditorAsync(item);
+        }
     }
 
     private async Task RunStoreActionAsync(Func<Task> action, string? success)
@@ -521,6 +533,12 @@ public sealed partial class ProfilesViewModel : ObservableObject
         _reverting = true;
         try
         {
+            // The save of a new profile reloads the catalog before it returns here: by then the profile is an ordinary entry.
+            if (_newItem is not null && _catalog.Items.Any(i => i.Profile.Id == _newItem.Profile.Id))
+            {
+                _newItem = null;
+            }
+
             Items.Clear();
             if (_newItem is not null)
             {
