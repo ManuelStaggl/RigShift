@@ -1062,7 +1062,7 @@ public sealed partial class AppEditItem : ObservableObject
 
     /// <summary>Null only for a moment while the list is rebuilt; that counts as "start".</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStart))]
+    [NotifyPropertyChangedFor(nameof(IsStart), nameof(PathNote), nameof(HasPathNote))]
     public partial Choice? SelectedKind { get; set; }
 
     /// <summary>Arguments only apply when starting.</summary>
@@ -1088,7 +1088,10 @@ public sealed partial class AppEditItem : ObservableObject
         FillWhenChoices();
         SelectedKind = KindChoices[start ? 0 : 1];
         SelectedWhen = WhenChoices[after ? 1 : 0];
+        OnPropertyChanged(nameof(PathNote));
     }
+
+    public bool HasPathNote => PathNote is not null;
 
     private void FillKindChoices()
     {
@@ -1105,11 +1108,31 @@ public sealed partial class AppEditItem : ObservableObject
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Icon), nameof(DisplayName), nameof(PathMissing))]
+    [NotifyPropertyChangedFor(nameof(Icon), nameof(DisplayName), nameof(PathNote), nameof(HasPathNote))]
     public partial string Path { get; set; }
 
-    /// <summary>The path points to no file: the row shows it in red (component AppRow).</summary>
-    public bool PathMissing => string.IsNullOrWhiteSpace(Path) || !File.Exists(Environment.ExpandEnvironmentVariables(Path.Trim()));
+    /// <summary>
+    /// What is wrong with the path, in words, shown before it; <c>null</c> when nothing is. An empty path is the
+    /// editor's own problem line, and stopping by process name needs no file.
+    /// </summary>
+    public string? PathNote
+    {
+        get
+        {
+            string path = Path.Trim();
+            if (path.Length == 0)
+            {
+                return null;
+            }
+
+            if (!LaunchPath.IsFullyQualified(path))
+            {
+                return IsStart ? Loc.Instance["Restore_WarnNotFullPath"] : null;
+            }
+
+            return File.Exists(LaunchPath.Expand(path)) ? null : Loc.Instance["App_NotFound"];
+        }
+    }
 
     /// <summary>The program's own icon; <c>null</c> while the path is not a file with one.</summary>
     public System.Windows.Media.ImageSource? Icon => AppIcons.Load(Path);

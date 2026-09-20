@@ -199,6 +199,7 @@
   <data name="AppPicker_BrowseFile" xml:space="preserve"><value>_Browse for file…</value></data>
   <data name="AppPicker_Choose" xml:space="preserve"><value>C_hoose</value></data>
   <data name="App_FileFilter" xml:space="preserve"><value>Programs (*.exe)|*.exe|All files (*.*)|*.*</value></data>
+  <data name="App_NotFound" xml:space="preserve"><value>Not found</value></data>
   <data name="Problem_AppPathMissing" xml:space="preserve"><value>Choose a file for every app.</value></data>
   <data name="Result_AppsIncomplete" xml:space="preserve"><value>Not every app could be started or stopped.</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Help</value></data>
