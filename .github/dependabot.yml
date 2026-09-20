@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # Versions are pinned in Directory.Packages.props; one pull request a week for all minor and patch updates.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  # The SDK version in global.json. (The tools in .config/dotnet-tools.json belong to the nuget entry above.)
+  - package-ecosystem: dotnet-sdk
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+
+  # Actions are pinned to a commit; Dependabot moves the hash and the version comment together.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
