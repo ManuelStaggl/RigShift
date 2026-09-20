@@ -226,6 +226,9 @@
   <data name="About_Repository" xml:space="preserve"><value>RigShift auf GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Problem melden</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz</value></data>
+  <data name="About_ThirdParty" xml:space="preserve"><value>Lizenzen Dritter</value></data>
+  <data name="About_Privacy" xml:space="preserve"><value>Datenschutz</value></data>
+  <data name="About_PrivacyHint" xml:space="preserve"><value>Keine Telemetrie. Die einzige Verbindung ist die Update-Prüfung bei GitHub.</value></data>
   <data name="About_Kofi" xml:space="preserve"><value>Spendier mir einen Kaffee</value></data>
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift ist kostenlos. Wenn es dir gefällt, kannst du es auf Ko-fi unterstützen.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Frei und quelloffen unter der MIT-Lizenz. © 2026 Manuel Staggl</value></data>

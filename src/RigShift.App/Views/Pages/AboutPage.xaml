@@ -285,6 +285,17 @@
           Style="{StaticResource RigShift.Link}" />
         <Button
           Margin="0,0,16,4"
+          Command="{Binding OpenThirdPartyNoticesCommand}"
+          Content="{loc:Tr About_ThirdParty}"
+          Style="{StaticResource RigShift.Link}" />
+        <Button
+          Margin="0,0,16,4"
+          Command="{Binding OpenPrivacyCommand}"
+          Content="{loc:Tr About_Privacy}"
+          Style="{StaticResource RigShift.Link}"
+          ToolTip="{loc:Tr About_PrivacyHint}" />
+        <Button
+          Margin="0,0,16,4"
           Command="{Binding OpenKofiCommand}"
           Content="{loc:Tr About_Kofi}"
           Style="{StaticResource RigShift.Link}"

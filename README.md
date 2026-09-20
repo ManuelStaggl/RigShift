@@ -120,4 +120,6 @@ and the [display topology rules](docs/display-topology.md).
 ## License
 
 [MIT](LICENSE) © 2026 Manuel Staggl. The RigShift logo and icons are not covered by the MIT license, see
-[brand assets](docs/brand/README.md).
+[brand assets](docs/brand/README.md). Bundled components: [third-party notices](THIRD-PARTY-NOTICES.md).
+
+No telemetry – see [privacy](PRIVACY.md). Silent install, uninstall and offline use: [deployment](docs/deployment.md).
