@@ -46,8 +46,8 @@
 
   <ItemGroup Condition="'$(Configuration)' != 'Debug'">
     <!-- Developer aids (component gallery) stay out of release builds. -->
-    <Page Remove="ViewsDebug**" />
-    <Compile Remove="ViewsDebug**" />
+    <Page Remove="Views\Debug\**" />
+    <Compile Remove="Views\Debug\**" />
   </ItemGroup>
 
   <ItemGroup>
