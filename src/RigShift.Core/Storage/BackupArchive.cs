@@ -261,9 +261,9 @@ public static class BackupArchive
             throw new InvalidDataException($"'{entry.FullName}' is from a newer RigShift version.");
         }
 
-        if (string.IsNullOrWhiteSpace(profile.Name) || profile.Displays is null || profile.Apps is null)
+        if (StoredDataCheck.Problem(profile) is { } problem)
         {
-            throw new InvalidDataException($"'{entry.FullName}' is not a complete profile.");
+            throw new InvalidDataException($"'{entry.FullName}' is not a complete profile. {problem}");
         }
 
         return profile.WithMigratedConfirmation();
@@ -296,9 +296,9 @@ public static class BackupArchive
         var ids = new HashSet<Guid>();
         foreach (GameEntry game in games)
         {
-            if (game is null || string.IsNullOrWhiteSpace(game.Name) || game.Launch is null || game.Apps is null)
+            if (StoredDataCheck.Problem(game) is { } problem)
             {
-                throw new InvalidDataException("games.json contains an incomplete game.");
+                throw new InvalidDataException("games.json contains an incomplete game. " + problem);
             }
 
             if (!ids.Add(game.Id))

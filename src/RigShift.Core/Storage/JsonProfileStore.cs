@@ -64,6 +64,11 @@ public sealed class JsonProfileStore : IProfileStore
                         file, document.SchemaVersion, CurrentSchemaVersion);
                     unreadable.Add(new UnreadableProfileFile(name, "The file is from a newer RigShift version."));
                 }
+                else if (StoredDataCheck.Problem(document.Profile) is { } problem)
+                {
+                    _log.Warning("Profile file {File} is not a usable profile ({Problem}), skipped", file, problem);
+                    unreadable.Add(new UnreadableProfileFile(name, problem));
+                }
                 else
                 {
                     Profile profile = document.Profile.WithMigratedConfirmation();

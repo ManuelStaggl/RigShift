@@ -144,6 +144,35 @@ public sealed class JsonGameStoreTests : IDisposable
         loaded.IsComplete.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("[null]")]
+    [InlineData("[{\"id\": \"5f0c1c52-0d5e-4c4e-9d0e-0a3f3c7f0001\", \"name\": null, \"launch\": {\"kind\": \"Executable\", \"target\": \"C:\\\\sim.exe\"}}]")]
+    [InlineData("[{\"id\": \"5f0c1c52-0d5e-4c4e-9d0e-0a3f3c7f0001\", \"name\": \"Sim\", \"launch\": null}]")]
+    [InlineData("[{\"id\": \"5f0c1c52-0d5e-4c4e-9d0e-0a3f3c7f0001\", \"name\": \"Sim\", \"launch\": {\"kind\": \"Executable\", \"target\": \"C:\\\\sim.exe\"}, \"apps\": null}]")]
+    public async Task Load_GameWithNullWhereDataBelongs_IsReportedInsteadOfLoaded(string games)
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File_, "{\"schemaVersion\": 1, \"games\": " + games + "}", Ct);
+        var store = new JsonGameStore(_directory, Logger.None);
+
+        GameLoadResult loaded = await store.LoadAllAsync(Ct);
+
+        loaded.Games.ShouldBeEmpty();
+        loaded.IsComplete.ShouldBeFalse();
+    }
+
+    /// <summary>Save reads, changes and writes the one file; two saves at once used to both read the old list, and the later write dropped the other's game.</summary>
+    [Fact]
+    public async Task Save_FromManyCallersAtOnce_KeepsEveryGame()
+    {
+        var store = new JsonGameStore(_directory, Logger.None);
+        GameEntry[] games = [.. Enumerable.Range(0, 12).Select(i => Iracing(Guid.NewGuid()) with { Name = "Game " + i })];
+
+        await Task.WhenAll(games.Select(g => Task.Run(() => store.SaveAsync(g, Ct), Ct)));
+
+        (await store.LoadAllAsync(Ct)).Games.Select(g => g.Id).ShouldBe(games.Select(g => g.Id), ignoreOrder: true);
+    }
+
     /// <summary>Overwriting a file we could not read would throw away every entry in it.</summary>
     [Fact]
     public async Task Save_RefusesWhenTheExistingFileIsUnreadable()
