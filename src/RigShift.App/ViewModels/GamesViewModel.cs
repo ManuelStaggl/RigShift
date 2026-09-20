@@ -26,7 +26,7 @@ public sealed partial class GamesViewModel : ObservableObject
 
     private readonly GameCatalog _catalog;
     private readonly GameSessionService _sessions;
-    private readonly GameDialogs _dialogs;
+    private readonly IGamePageDialogs _dialogs;
     private readonly ILogger _log;
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly Dictionary<Guid, GameSessionEvent> _lastEnded = [];
@@ -37,7 +37,7 @@ public sealed partial class GamesViewModel : ObservableObject
     private bool _reverting;
     private CancellationTokenSource? _statusTimer;
 
-    public GamesViewModel(GameCatalog catalog, GameSessionService sessions, GameDialogs dialogs, ILogger log)
+    public GamesViewModel(GameCatalog catalog, GameSessionService sessions, IGamePageDialogs dialogs, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(sessions);
@@ -121,21 +121,23 @@ public sealed partial class GamesViewModel : ObservableObject
     public bool HasStatusMessage => StatusMessage is not null;
 
     /// <summary>Before the page is left or the window navigates: saves, discards or stays. False: stay.</summary>
-    /// <param name="targetName">The game the user picked instead, when the dialog comes from the list.</param>
-    public async Task<bool> ConfirmLeaveAsync(string? targetName = null)
+    public Task<bool> ConfirmLeaveAsync() => ConfirmLeaveAsync(null);
+
+    /// <param name="target">The game the user picked instead, when the question comes from the list.</param>
+    private async Task<bool> ConfirmLeaveAsync(GameItem? target)
     {
         if (Editor is not { IsDirty: true } editor)
         {
             return true;
         }
 
-        switch (await ProfileDialogs.ConfirmUnsavedAsync(
-            editor.Name.Trim().Length == 0 ? Loc.Instance["Games_NewName"] : editor.Name, targetName))
+        switch (await _dialogs.ConfirmUnsavedAsync(
+            editor.Name.Trim().Length == 0 ? Loc.Instance["Games_NewName"] : editor.Name, target?.Name))
         {
             case UnsavedChoice.Save:
-                return await SaveCoreAsync();
+                return await SaveCoreAsync(target);
             case UnsavedChoice.Discard:
-                DiscardCore();
+                DiscardCore(target);
                 return true;
             default:
                 return false;
@@ -172,7 +174,7 @@ public sealed partial class GamesViewModel : ObservableObject
     [RelayCommand]
     private async Task AddProgramAsync()
     {
-        if (!await ConfirmLeaveAsync() || GameDialogs.PickExecutable() is not { } path)
+        if (!await ConfirmLeaveAsync() || _dialogs.PickExecutable() is not { } path)
         {
             return;
         }
@@ -222,7 +224,7 @@ public sealed partial class GamesViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (SelectedItem is not { } item || !await GameDialogs.ConfirmDeleteAsync(item.Name))
+        if (SelectedItem is not { } item || !await _dialogs.ConfirmDeleteAsync(item.Name))
         {
             return;
         }
@@ -317,7 +319,7 @@ public sealed partial class GamesViewModel : ObservableObject
 
     private async Task SelectAsync(GameItem? previous, GameItem? next)
     {
-        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next?.Name))
+        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next))
         {
             _reverting = true;
             SelectedItem = previous;
@@ -382,7 +384,8 @@ public sealed partial class GamesViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> SaveCoreAsync()
+    /// <param name="target">The game to show afterwards; saving rebuilds the list, which otherwise stays on the saved game.</param>
+    private async Task<bool> SaveCoreAsync(GameItem? target = null)
     {
         if (Editor is not { } editor)
         {
@@ -390,7 +393,7 @@ public sealed partial class GamesViewModel : ObservableObject
         }
 
         bool wasNew = editor.IsNew;
-        _selectAfterRebuild = editor.Id;
+        _selectAfterRebuild = target?.Game.Id ?? editor.Id;
         if (!await editor.SaveAsync())
         {
             _selectAfterRebuild = null;
@@ -407,9 +410,11 @@ public sealed partial class GamesViewModel : ObservableObject
     }
 
     /// <summary>Back to the game as saved; a new game disappears from the list.</summary>
-    private void DiscardCore()
+    /// <param name="target">The game the user picked instead; its editor is loaded by whoever asked.</param>
+    private void DiscardCore(GameItem? target = null)
     {
-        if (SelectedItem is not { } item)
+        GameItem? item = _newItem is not null && Editor is { IsNew: true } ? _newItem : SelectedItem;
+        if (item is null)
         {
             return;
         }
@@ -420,13 +425,20 @@ public sealed partial class GamesViewModel : ObservableObject
             Items.Remove(item);
             IsEmpty = Items.Count == 0;
             _reverting = true;
-            SelectedItem = Items.FirstOrDefault();
+            SelectedItem = target is not null && Items.Contains(target) ? target : Items.FirstOrDefault();
             _reverting = false;
-            _ = LoadEditorAsync(SelectedItem);
+            if (target is null)
+            {
+                _ = LoadEditorAsync(SelectedItem);
+            }
+
             return;
         }
 
-        _ = LoadEditorAsync(item);
+        if (target is null)
+        {
+            _ = LoadEditorAsync(item);
+        }
     }
 
     private async Task RunStoreActionAsync(Func<Task> action, string? success)

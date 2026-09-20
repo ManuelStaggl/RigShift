@@ -530,6 +530,7 @@ public partial class App : Application, IAppShell
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
         services.AddSingleton<GameCatalog>();
         services.AddSingleton<GameDialogs>();
+        services.AddSingleton<IGamePageDialogs>(sp => sp.GetRequiredService<GameDialogs>());
 
         // A new runner per session: it keeps the state of exactly one run.
         services.AddSingleton<Func<GameSessionRunner>>(sp => () => new GameSessionRunner(

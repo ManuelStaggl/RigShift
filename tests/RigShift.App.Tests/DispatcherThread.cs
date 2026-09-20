@@ -35,6 +35,9 @@ internal sealed class DispatcherThread : IDisposable
 
     public void Invoke(Action call) => _dispatcher!.Invoke(call);
 
+    /// <summary>Runs an async body on the thread; its awaits come back to it, as they do for a view model in the app.</summary>
+    public Task RunAsync(Func<Task> body) => _dispatcher!.InvokeAsync(body).Task.Unwrap();
+
     /// <summary>Completes once everything queued so far has run.</summary>
     public void Drain() => _dispatcher!.Invoke(() => { }, DispatcherPriority.ContextIdle);
 
