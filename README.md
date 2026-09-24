@@ -35,7 +35,8 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 - **Desktop icons.** Windows keeps one icon layout for all arrangements and reshuffles it whenever your screens change.
   A profile can carry its own, and puts it back after the switch.
 - **One atomic switch.** Windows gets the whole layout at once, so the switch either works or nothing changes. No
-  picture afterwards? It reverts on its own.
+  picture afterwards? It reverts on its own; Enter or any wheel, button box or controller button keeps it. A screen
+  that stays dark anyway: **Ctrl+Alt+Shift+D** turns every display on.
 - **Made for real hardware.** Wakes sleeping monitors, waits for one that is off, tolerates optional screens such as a
   spacedesk tablet, and moves windows off screens that are now dark.
 - **Field of view.** Your monitors report their size, so the page only asks for the curve, how far away you sit and
