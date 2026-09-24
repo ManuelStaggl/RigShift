@@ -31,7 +31,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
 
     private DisplaySnapshot Query()
     {
-        CcdRawSnapshot raw = QueryRaw();
+        CcdRawSnapshot raw = QueryRaw(_log);
         List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
         // Debug: the tray, the automation and every open page ask, so at Information this line was most of the log.
         _log.Debug("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
@@ -42,10 +42,11 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
 
     /// <summary>
     /// Read-only: queries the CCD paths and modes and asks for the names (and HDR state) that <see cref="CcdSnapshotBuilder"/>
-    /// needs. Contains device paths of this machine.
+    /// needs, plus the serial number fingerprint from each monitor's EDID. Contains device paths of this machine.
     /// </summary>
-    public static CcdRawSnapshot QueryRaw()
+    public static CcdRawSnapshot QueryRaw(ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(log);
         (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdNative.QueryAllPaths();
 
         var rawPaths = new List<CcdRawPath>(paths.Length);
@@ -112,7 +113,8 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
                 name.flags.edidIdsValid,
                 name.edidManufactureId,
                 name.edidProductCodeId,
-                hasMonitor && activeTargets.Contains((adapter, targetId)) ? CcdNative.TryGetHdr(adapter.ToLuid(), targetId) : null));
+                hasMonitor && activeTargets.Contains((adapter, targetId)) ? CcdNative.TryGetHdr(adapter.ToLuid(), targetId) : null,
+                hasMonitor && Edid.Read(monitorPath, log) is { } edid ? Edid.SerialHash(edid) : null));
         }
 
         var rawAdapters = monitorAdapters

@@ -205,6 +205,27 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_IdenticalDisplaysOnNewPorts_BlockAtOnceWithoutAskingToSwitchThemOn()
+    {
+        // K-03: both desk monitors are on, only on other ports – "switch your display on" and 30 s of waiting helped nobody.
+        DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
+        DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
+        var display = new FakeDisplayConfigurator(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(leftMoved), Attached(rightMoved)));
+        SwitchOrchestrator orchestrator = Create(display);
+        bool asked = false;
+        orchestrator.WaitingForDisplays += (_, _) => asked = true;
+
+        SwitchResult result = await orchestrator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Blocked);
+        result.Plan.IsAmbiguous.ShouldBeTrue();
+        result.Message.ShouldNotBeNull().ShouldContain("Ambiguous");
+        asked.ShouldBeFalse();
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+        display.Applied.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Switch_RequiredDisplaySwitchedOnWhileWaiting_Applies()
     {
         // HW-16: the G9 had left the bus; the user switches it on after the notification.

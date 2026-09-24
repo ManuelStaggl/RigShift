@@ -240,6 +240,11 @@ public sealed class SwitchOrchestrator
     {
         TopologyPlan plan = _planner.Plan(profile, snapshot);
         _topology.LogPlan(plan);
+        if (plan.IsAmbiguous)
+        {
+            // Identical monitors on new ports: switching one on would change nothing, so neither ask for it nor wait (K-03).
+            return plan;
+        }
 
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
         List<DisplayAssignment> notConnected = [.. plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached).Select(m => m.Assignment)];

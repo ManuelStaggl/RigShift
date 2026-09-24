@@ -8,7 +8,19 @@ namespace RigShift.Core.Tests;
 
 public sealed class TopologyPlannerTests
 {
+    private const string OldCard = @"\\?\PCI#VEN_10DE&DEV_0000#OLDSLOT#1";
+    private const string NewCard = @"\\?\PCI#VEN_10DE&DEV_0000#NEWSLOT#1";
+    private const ushort TwinMaker = 0x630E;
+
     private readonly TopologyPlanner _planner = new(new TopologyPlannerOptions());
+
+    /// <summary>An identical desk monitor as Windows names it: model, the card's instance part, then the port.</summary>
+    private static DisplayIdentity Twin(string adapter, string cardInstance, int port, string? serial = null) =>
+        Identity(adapter, $@"\\?\DISPLAY#XEC2389#{cardInstance}&0&UID{port}#{{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}}", TwinMaker, 0x2389, "CM27X3")
+            with { EdidSerialHash = serial };
+
+    private static Profile TwinDesk(DisplayIdentity left, DisplayIdentity right) =>
+        Profile("Desk", [Mode(left, 2560, 1440, 144, primary: true), Mode(right, 2560, 1440, 144, x: 2560)]);
 
     [Fact]
     public void Plan_MatchesByDevicePath()
@@ -96,15 +108,125 @@ public sealed class TopologyPlannerTests
     }
 
     [Fact]
-    public void Plan_AmbiguousEdid_IsNotMatched()
+    public void Plan_AmbiguousEdid_IsNotMatched_AndSaysWhy()
     {
+        // Both candidates are attached: asking the user to switch the monitor on would be wrong (K-03).
         DisplayIdentity twinA = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
         DisplayIdentity twinB = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
 
         TopologyPlan plan = _planner.Plan(Profile("Desk", [DeskModes[1]]), Snapshot(Attached(twinA), Attached(twinB)));
 
         plan.Resolved.ShouldBeEmpty();
+        plan.Missing.Single().Reason.ShouldBe(MissingReason.Ambiguous);
+        plan.IsAmbiguous.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Plan_TwinsOnANewCard_AreToldApartByTheirSerialNumbers()
+    {
+        // K-03: after a new graphics card every path is new. The right twin even sits on the left one's old port number,
+        // so only the serial number puts each back in its place.
+        DisplayIdentity left = Twin(OldCard, "5&old", 4352, "AAAA");
+        DisplayIdentity right = Twin(OldCard, "5&old", 4353, "BBBB");
+        DisplayIdentity newLeft = Twin(NewCard, "5&new", 4355, "AAAA");
+        DisplayIdentity newRight = Twin(NewCard, "5&new", 4352, "BBBB");
+
+        TopologyPlan plan = _planner.Plan(TwinDesk(left, right), Snapshot(Attached(newRight), Attached(newLeft)));
+
+        plan.Resolved.Single(r => r.Assignment.Identity == left).Target.Identity.ShouldBe(newLeft);
+        plan.Resolved.Single(r => r.Assignment.Identity == right).Target.Identity.ShouldBe(newRight);
+        plan.Warnings.Select(w => w.Kind).ShouldBe([PlanWarningKind.MatchedByEdidFallback, PlanWarningKind.MatchedByEdidFallback]);
+    }
+
+    [Fact]
+    public void Plan_SerialNumberTwoDisplaysShare_TellsNothing()
+    {
+        // A filler value several monitors report leaves them exactly as ambiguous as their model does.
+        DisplayIdentity left = Twin(Gpu, "5&a", 4352, "FILL");
+        DisplayIdentity right = Twin(Gpu, "5&a", 4353, "FILL");
+
+        TopologyPlan plan = _planner.Plan(
+            TwinDesk(left, right), Snapshot(Attached(Twin(Gpu, "5&a", 4355, "FILL")), Attached(Twin(Gpu, "5&a", 4356, "FILL"))));
+
+        plan.Resolved.ShouldBeEmpty();
+        plan.Missing.Select(m => m.Reason).ShouldBe([MissingReason.Ambiguous, MissingReason.Ambiguous]);
+    }
+
+    [Fact]
+    public void Plan_SerialNumber_OnlyCountsForTheSameModel()
+    {
+        DisplayIdentity otherModel = Identity(Gpu, @"\\?\DISPLAY#XEC9999#5&a&0&UID4352#{x}", TwinMaker, 0x9999, "Other") with { EdidSerialHash = "AAAA" };
+
+        TopologyPlan plan = _planner.Plan(
+            Profile("Desk", [Mode(Twin(OldCard, "5&old", 4352, "AAAA"), 2560, 1440, 144, primary: true)]), Snapshot(Attached(otherModel)));
+
+        plan.Resolved.ShouldBeEmpty();
         plan.Missing.Single().Reason.ShouldBe(MissingReason.NotAttached);
+    }
+
+    [Fact]
+    public void Plan_TwinsAfterACardOrSlotChange_AreMatchedByTheirConnectors()
+    {
+        // Another slot or a BIOS update gives the card a new identity: every path changes, the ports keep their numbers.
+        DisplayIdentity left = Twin(OldCard, "5&old", 4352);
+        DisplayIdentity right = Twin(OldCard, "5&old", 4353);
+        DisplayIdentity newLeft = Twin(NewCard, "5&new", 4352);
+        DisplayIdentity newRight = Twin(NewCard, "5&new", 4353);
+
+        TopologyPlan plan = _planner.Plan(TwinDesk(left, right), Snapshot(Attached(newRight), Attached(newLeft)));
+
+        plan.Resolved.Single(r => r.Assignment.Identity == left).Target.Identity.ShouldBe(newLeft);
+        plan.Resolved.Single(r => r.Assignment.Identity == right).Target.Identity.ShouldBe(newRight);
+        plan.Warnings.Select(w => w.Kind).ShouldBe([PlanWarningKind.MatchedByEdidFallback, PlanWarningKind.MatchedByEdidFallback]);
+    }
+
+    [Fact]
+    public void Plan_TwinsByConnector_OnlyWhenEveryOneIsFound()
+    {
+        // One twin is on a port it never was on: matching the other alone would leave a guess for the rest.
+        TopologyPlan plan = _planner.Plan(
+            TwinDesk(Twin(OldCard, "5&old", 4352), Twin(OldCard, "5&old", 4353)),
+            Snapshot(Attached(Twin(NewCard, "5&new", 4352)), Attached(Twin(NewCard, "5&new", 4355))));
+
+        plan.Resolved.ShouldBeEmpty();
+        plan.Missing.Select(m => m.Reason).ShouldBe([MissingReason.Ambiguous, MissingReason.Ambiguous]);
+        plan.Warnings.Count(w => w.Kind == PlanWarningKind.AmbiguousTwin).ShouldBe(2);
+    }
+
+    [Fact]
+    public void Plan_Connector_CountsOnlyWhenTheSavedCardIsGone()
+    {
+        // The saved card is still there, driving the ultrawide: the same port numbers on another card mean nothing.
+        TopologyPlan plan = _planner.Plan(
+            TwinDesk(Twin(Gpu, "5&old", 4352), Twin(Gpu, "5&old", 4353)),
+            Snapshot(Attached(Ultrawide), Attached(Twin(NewCard, "5&new", 4352)), Attached(Twin(NewCard, "5&new", 4353))));
+
+        plan.Resolved.ShouldBeEmpty();
+        plan.IsAmbiguous.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Plan_SingleMonitorAfterACardChange_TakesTheOneOnItsConnector()
+    {
+        // The profile has one of two identical monitors; on the new card only its port says which one.
+        DisplayIdentity newLeft = Twin(NewCard, "5&new", 4352);
+        DisplayIdentity newRight = Twin(NewCard, "5&new", 4353);
+
+        TopologyPlan plan = _planner.Plan(
+            Profile("Right only", [Mode(Twin(OldCard, "5&old", 4353), 2560, 1440, 144, primary: true)]), Snapshot(Attached(newLeft), Attached(newRight)));
+
+        plan.Resolved.Single().Target.Identity.ShouldBe(newRight);
+    }
+
+    [Fact]
+    public void Plan_OneTwinOffAfterACardChange_AsksToSwitchItOn()
+    {
+        // Fewer identical monitors attached than the profile misses: one is off, and switching it on can help.
+        TopologyPlan plan = _planner.Plan(
+            TwinDesk(Twin(OldCard, "5&old", 4352), Twin(OldCard, "5&old", 4353)), Snapshot(Attached(Twin(NewCard, "5&new", 4355))));
+
+        plan.Missing.Select(m => m.Reason).ShouldBe([MissingReason.NotAttached, MissingReason.NotAttached]);
+        plan.IsAmbiguous.ShouldBeFalse();
     }
 
     [Fact]

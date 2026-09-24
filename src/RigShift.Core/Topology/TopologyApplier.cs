@@ -158,11 +158,13 @@ internal sealed class TopologyApplier
 
     // After an attempt: wait for vanished required displays, and for optional ones when nothing else is left to apply –
     // the rollback profile marks every display optional (M5 log 2026-09-13 19:59: rollback to a G9 that fell asleep).
+    // Never for identical monitors that cannot be told apart: no display that turns up changes that (K-03).
     private static bool IsWaitingForTarget(TopologyPlan plan, bool includeDetached) =>
-        includeDetached
+        !plan.IsAmbiguous
+        && (includeDetached
             ? plan.Missing.Any(m => !m.Assignment.IsOptional) || (plan.Resolved.Count == 0 && plan.Missing.Count > 0)
             : plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.AttachedButUnavailable)
-              && !plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached);
+              && !plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached));
 
     /// <summary>Why the plan cannot be applied, or <c>null</c> when it can.</summary>
     public static string? BlockReason(TopologyPlan plan)

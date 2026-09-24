@@ -74,6 +74,7 @@ internal static class CcdSnapshotBuilder
                 TargetDevicePath = name.MonitorDevicePath,
                 EdidManufacturerId = name.EdidIdsValid ? name.EdidManufacturerId : (ushort)0,
                 EdidProductCodeId = name.EdidIdsValid ? name.EdidProductCodeId : (ushort)0,
+                EdidSerialHash = name.EdidSerialHash,
                 FriendlyName = name.FriendlyName,
             };
 

@@ -18,6 +18,13 @@ public sealed record DisplayIdentity
 
     public ushort EdidProductCodeId { get; init; }
 
+    /// <summary>
+    /// Fingerprint of the serial number in the monitor's EDID (the 32-bit number and the serial text); <c>null</c> when the
+    /// monitor reports none or it could not be read, and in profiles saved before 4.0. Tells identical monitors apart where
+    /// model and name cannot. A hash, so the serial number itself never ends up in a profile file.
+    /// </summary>
+    public string? EdidSerialHash { get; init; }
+
     /// <summary>Human-readable name from EDID, for UI and logs only – never used for matching. <c>set</c>: an <c>init</c> initializer is skipped when the key is missing.</summary>
     public string FriendlyName { get; set; } = string.Empty;
 }

@@ -122,7 +122,9 @@ public static partial class DiagnosticsReport
         }
 
         text.AppendLine();
-        text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}"));
+        // Four digits of the fingerprint are enough to see whether identical monitors report different serial numbers (K-03).
+        string serial = display.Identity.EdidSerialHash is { Length: >= 4 } hash ? "serial " + hash[..4] : "no serial number";
+        text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}, {serial}"));
         text.AppendLine(FormattableString.Invariant($"  target {ShortTargetPath(display.Identity.TargetDevicePath)}"));
         text.AppendLine(FormattableString.Invariant($"  adapter {ShortAdapterPath(display.Identity.AdapterDevicePath)}"));
     }

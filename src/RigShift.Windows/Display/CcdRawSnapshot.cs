@@ -50,7 +50,10 @@ public enum CcdModeKind
 /// <summary>Source modes use size and position, target modes the vertical sync frequency.</summary>
 public sealed record CcdRawMode(CcdModeKind Kind, uint Width, uint Height, int PositionX, int PositionY, uint VSyncNumerator, uint VSyncDenominator);
 
-/// <summary>The target name request; <paramref name="Hdr"/> is only asked for targets with an active path.</summary>
+/// <summary>
+/// The target name request; <paramref name="Hdr"/> is only asked for targets with an active path. <paramref name="EdidSerialHash"/>
+/// comes from the EDID in the registry (<see cref="Edid.SerialHash"/>); recordings made before 4.0 have none.
+/// </summary>
 public sealed record CcdRawTarget(
     string Adapter,
     uint TargetId,
@@ -60,6 +63,7 @@ public sealed record CcdRawTarget(
     bool EdidIdsValid,
     ushort EdidManufacturerId,
     ushort EdidProductCodeId,
-    bool? Hdr);
+    bool? Hdr,
+    string? EdidSerialHash = null);
 
 public sealed record CcdRawAdapter(string Adapter, int Error, string DevicePath);

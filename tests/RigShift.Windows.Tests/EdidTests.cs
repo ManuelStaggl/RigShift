@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+using System.Text;
 using RigShift.Core.Fov;
 using RigShift.Windows.Display;
 using Shouldly;
@@ -49,5 +51,49 @@ public sealed class EdidTests
 
         Edid.PictureSize(new byte[128]).ShouldBeNull();
         Edid.PictureSize(new byte[64]).ShouldBeNull();
+    }
+
+    [Fact]
+    public void SerialHash_TellsTwinsApart_AndStaysTheSame()
+    {
+        // The two CM27X3 of the reference rig report 0x11 and 0x22 in bytes 12–15 and no serial text (K-03).
+        string first = Edid.SerialHash(WithSerial(0x11)).ShouldNotBeNull();
+
+        first.Length.ShouldBe(16);
+        Edid.SerialHash(WithSerial(0x22)).ShouldNotBe(first);
+        Edid.SerialHash(WithSerial(0x11)).ShouldBe(first);
+    }
+
+    [Fact]
+    public void SerialHash_ReadsTheSerialText_WhereTheNumberIsAFiller()
+    {
+        // The XG32UCWG reports 0x01010101 as number and its real serial number as text in a 0xFF descriptor.
+        string? one = Edid.SerialHash(WithSerial(0x01010101, "T9LMQS000001"));
+
+        one.ShouldNotBeNull();
+        Edid.SerialHash(WithSerial(0x01010101, "T9LMQS000002")).ShouldNotBe(one);
+        Edid.SerialHash(WithSerial(0x01010101)).ShouldNotBe(one);
+    }
+
+    [Fact]
+    public void SerialHash_IsNull_WithoutSerialNumber()
+    {
+        Edid.SerialHash(new byte[128]).ShouldBeNull();
+        Edid.SerialHash(new byte[64]).ShouldBeNull();
+    }
+
+    /// <summary>128 bytes with the serial number in bytes 12–15 and, optionally, a serial text in the second descriptor.</summary>
+    private static byte[] WithSerial(uint number, string? text = null)
+    {
+        byte[] edid = new byte[128];
+        BinaryPrimitives.WriteUInt32LittleEndian(edid.AsSpan(12), number);
+        if (text is not null)
+        {
+            // Descriptor at 72: 00 00 00 FF 00, then 13 bytes of text, ended by a line feed and padded with spaces.
+            edid[75] = 0xFF;
+            Encoding.ASCII.GetBytes((text + "\n").PadRight(13, ' ')).CopyTo(edid, 77);
+        }
+
+        return edid;
     }
 }
