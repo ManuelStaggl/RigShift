@@ -1557,6 +1557,46 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_RecordsTheSoundToGoBackTo()
+    {
+        // K-14: after a crash the way back restored the displays, but the sound stayed on the rig's headset.
+        var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns([
+            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All),
+            new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        Task<SwitchResult> switching = Create(new FakeDisplayConfigurator(DeskActive()))
+            .SwitchAsync(Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        AudioAssignment recorded = _journal.Entry.ShouldNotBeNull().Previous.Audio;
+        recorded.Playback.ShouldBe(Speakers);
+        recorded.PlaybackCommunications.ShouldBeNull();
+        answer.SetResult(ConfirmationResult.Confirmed);
+        (await switching).Outcome.ShouldBe(SwitchOutcome.Applied);
+    }
+
+    [Fact]
+    public async Task Switch_Confirmed_DropsTheRecordBeforeTheTidyUp()
+    {
+        // K-14: an exit while windows are moved into place must not ask to undo a switch the user kept.
+        InterruptedSwitch? duringTidy = null;
+        bool tidied = false;
+        _windows.When(w => w.RescueOffscreenWindows()).Do(_ =>
+        {
+            duringTidy = _journal.Entry;
+            tidied = true;
+        });
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        tidied.ShouldBeTrue();
+        duringTidy.ShouldBeNull();
+        _journal.Written.ShouldHaveSingleItem();
+    }
+
+    [Fact]
     public async Task DryRunDuringASwitch_KeepsItsRecord()
     {
         // K-05: "Check" on the profile page or `apply --dry-run` while a switch waits for "keep" took its way back away.

@@ -315,6 +315,33 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
     internal sealed record AudioRestore(IReadOnlyList<DefaultRestore> Defaults, IReadOnlyList<(AudioEndpoint Endpoint, int Percent)> Volumes)
     {
         public static AudioRestore Nothing { get; } = new([], []);
+
+        /// <summary>
+        /// The captured defaults and volumes as a profile's audio, so the switch journal can put the sound back after a crash
+        /// the same way a switch sets it (K-14). Empty when nothing was captured.
+        /// </summary>
+        public AudioAssignment AsAssignment()
+        {
+            AudioEndpoint? Holding(AudioDirection direction, AudioRoleMask role) =>
+                Defaults.FirstOrDefault(d => d.Direction == direction && d.Roles.HasFlag(role))?.Endpoint;
+
+            int? VolumeOf(AudioEndpoint? endpoint) =>
+                endpoint is null ? null : Volumes.Where(v => v.Endpoint == endpoint).Select(v => (int?)v.Percent).FirstOrDefault();
+
+            AudioEndpoint? playback = Holding(AudioDirection.Render, AudioRoleMask.Console) ?? Holding(AudioDirection.Render, AudioRoleMask.Multimedia);
+            AudioEndpoint? playbackCalls = Holding(AudioDirection.Render, AudioRoleMask.Communications);
+            AudioEndpoint? recording = Holding(AudioDirection.Capture, AudioRoleMask.Console) ?? Holding(AudioDirection.Capture, AudioRoleMask.Multimedia);
+            AudioEndpoint? recordingCalls = Holding(AudioDirection.Capture, AudioRoleMask.Communications);
+            return new AudioAssignment
+            {
+                Playback = playback,
+                PlaybackCommunications = playbackCalls == playback ? null : playbackCalls,
+                Recording = recording,
+                RecordingCommunications = recordingCalls == recording ? null : recordingCalls,
+                PlaybackVolumePercent = VolumeOf(playback),
+                RecordingVolumePercent = VolumeOf(recording),
+            };
+        }
     }
 
     private sealed record AudioStep(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);

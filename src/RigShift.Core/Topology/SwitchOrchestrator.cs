@@ -110,6 +110,13 @@ public sealed class SwitchOrchestrator
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
 
+        // Before anything is recorded, so the record holds the sound to go back to as well (K-14).
+        TimeSpan? confirmTimeout = ConfirmTimeout(profile, request);
+        if (confirmTimeout is not null)
+        {
+            await CaptureRestAsync(profile, wayBack, cancellationToken);
+        }
+
         // Surround first: switching it on or off turns several monitors into one wide one and back, so it decides which
         // displays the arrangement can address at all - planning before it would plan against displays about to vanish.
         SurroundApplyResult surround = SurroundApplyResult.NotConfigured;
@@ -152,12 +159,6 @@ public sealed class SwitchOrchestrator
         // 31 still needs time for its retries (analysis finding B-09).
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
 
-        TimeSpan? confirmTimeout = ConfirmTimeout(profile, request);
-        if (confirmTimeout is not null)
-        {
-            await CaptureRestAsync(profile, wayBack, cancellationToken);
-        }
-
         await RecordAsync(profile, wayBack, cancellationToken);
         ApplyOutcome applied = await _topology.ApplyAsync(profile, plan, deadline, cancellationToken);
         if (!applied.Succeeded)
@@ -181,6 +182,9 @@ public sealed class SwitchOrchestrator
         {
             return await RollBackAsync(profile, wayBack, applied, answer, started, cancellationToken);
         }
+
+        // The switch stays: an exit during the tidy-up below must not bring the question "undo it?" at the next start (K-14).
+        await _journal.ClearAsync(CancellationToken.None);
 
         // Windows move only once the switch stays: a rejected one would leave them moved without a way back (B-14).
         await _tidy.RunAsync(profile, cancellationToken);
@@ -304,7 +308,7 @@ public sealed class SwitchOrchestrator
         await _journal.BeginAsync(
             new InterruptedSwitch
             {
-                Previous = TopologyApplier.PreviousTopology(wayBack.Displays) with { Surround = wayBack.Surround },
+                Previous = TopologyApplier.PreviousTopology(wayBack.Displays) with { Surround = wayBack.Surround, Audio = wayBack.Audio.AsAssignment() },
                 TargetProfileName = profile.Name,
                 StartedUtc = _time.GetUtcNow(),
             },
