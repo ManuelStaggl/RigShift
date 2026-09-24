@@ -1,4 +1,5 @@
 using RigShift.Core.Automation;
+using RigShift.Core.Profiles;
 using RigShift.Core.Settings;
 using Serilog.Core;
 using Shouldly;
@@ -149,6 +150,21 @@ public sealed class JsonSettingsStoreTests : IDisposable
 
         await store.SaveAsync(settings, Ct);
         (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldNotContain("isEnabled", Case.Insensitive);
+    }
+
+    [Fact]
+    public async Task Save_Hotkey_WritesOnlyWhatDefinesIt_AndReadsOldFilesWithIsValid()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(
+            File, """{ "toggleHotkey": { "modifiers": 3, "virtualKey": 112, "isValid": true } }""", Ct);
+        var store = new JsonSettingsStore(File, Logger.None);
+
+        AppSettings settings = await store.LoadAsync(Ct);
+        await store.SaveAsync(settings, Ct);
+
+        settings.ToggleHotkey.ShouldBe(new Hotkey { Modifiers = HotkeyModifiers.Alt | HotkeyModifiers.Control, VirtualKey = 112 });
+        (await System.IO.File.ReadAllTextAsync(File, Ct)).ShouldNotContain("isValid", Case.Insensitive);
     }
 
     [Fact]

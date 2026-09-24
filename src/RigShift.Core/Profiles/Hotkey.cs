@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RigShift.Core.Profiles;
 
 /// <summary>Modifier keys of a <see cref="Hotkey"/>; the values match the Win32 <c>MOD_*</c> flags of <c>RegisterHotKey</c>.</summary>
@@ -25,6 +27,8 @@ public sealed record Hotkey
     /// <summary>Win32 virtual-key code of the non-modifier key.</summary>
     public required int VirtualKey { get; init; }
 
+    /// <summary>Computed, so not stored: settings and profiles written before 4.0 carry it and are read as before.</summary>
+    [JsonIgnore]
     public bool IsValid =>
         (Modifiers & RequiredModifiers) != HotkeyModifiers.None
         && (Modifiers & ~AllModifiers) == HotkeyModifiers.None
