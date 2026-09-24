@@ -210,6 +210,17 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [ObservableProperty]
     public partial AudioSlot? Playback { get; private set; }
 
+    /// <summary>The microphone, preset with the current default: the headset's at the rig (finding U-09).</summary>
+    [ObservableProperty]
+    public partial AudioSlot? Recording { get; private set; }
+
+    /// <summary>The three lines under "How?" on the rig step: how Windows turns a display off (finding U-09).</summary>
+    [ObservableProperty]
+    public partial bool ShowHow { get; set; }
+
+    [RelayCommand]
+    private void ToggleHow() => ShowHow = !ShowHow;
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(CreateRuleCommand), nameof(BackCommand))]
     [NotifyPropertyChangedFor(nameof(CanGoBack))]
@@ -359,7 +370,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSurroundHint));
 
         // A monitor's own speakers appear with the monitor; the choice made so far stays if the device is still there.
-        await FillPlaybackAsync(Playback?.Endpoint);
+        await FillAudioAsync(Playback?.Endpoint, Recording?.Endpoint);
         _log.Information("Setup assistant sees {Count} active display(s) at step {Step}, same as first profile: {Same}", _currentDisplays.Count, Step, MatchesFirst);
     }
 
@@ -370,7 +381,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         try
         {
             DisplaySnapshot snapshot = await QueryAsync();
-            Profile profile = ProfileEditing.Capture(ProfileName, snapshot, new AudioAssignment { Playback = Playback?.Endpoint }, _catalog.KnownDisplayNames) with
+            Profile profile = ProfileEditing.Capture(ProfileName, snapshot, new AudioAssignment { Playback = Playback?.Endpoint, Recording = Recording?.Endpoint }, _catalog.KnownDisplayNames) with
             {
                 // Coming back to a step overwrites what it saved before instead of leaving a second profile behind.
                 Id = _editingId ?? Guid.NewGuid(),
@@ -567,6 +578,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _editingId = existing?.Id;
         ProfileName = existing?.Name ?? ProfileEditing.UniqueName(baseName, _catalog.Profiles.Select(p => p.Name));
         Playback = null;
+        Recording = null;
+        ShowHow = false;
         await RefreshDisplaysAsync();
     }
 
@@ -704,23 +717,32 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     }
 #endif
 
-    private async Task FillPlaybackAsync(AudioEndpoint? keep)
+    private async Task FillAudioAsync(AudioEndpoint? keepPlayback, AudioEndpoint? keepRecording)
+    {
+        (IReadOnlyList<AudioDeviceInfo> render, AudioEndpoint? playback) = await ListAudioAsync(AudioDirection.Render, keepPlayback);
+        (IReadOnlyList<AudioDeviceInfo> capture, AudioEndpoint? recording) = await ListAudioAsync(AudioDirection.Capture, keepRecording);
+        Playback = new AudioSlot("Audio_Playback", "Audio_Unchanged", render, playback);
+        Recording = new AudioSlot("Audio_Recording", "Audio_Unchanged", capture, recording);
+    }
+
+    /// <summary>The devices of one direction and the one to preselect: the choice so far while it exists, else the default.</summary>
+    private async Task<(IReadOnlyList<AudioDeviceInfo> Devices, AudioEndpoint? Selected)> ListAudioAsync(AudioDirection direction, AudioEndpoint? keep)
     {
         IReadOnlyList<AudioDeviceInfo> devices;
         try
         {
-            devices = await _audio.ListAsync(AudioDirection.Render, CancellationToken.None);
+            devices = await _audio.ListAsync(direction, CancellationToken.None);
         }
         catch (COMException ex)
         {
-            _log.Warning(ex, "Playback devices could not be listed for the setup assistant");
+            _log.Warning(ex, "{Direction} devices could not be listed for the setup assistant", direction);
             devices = [];
         }
 
         AudioEndpoint? selected = keep is not null && devices.Any(d => string.Equals(d.Endpoint.EndpointId, keep.EndpointId, StringComparison.OrdinalIgnoreCase))
             ? keep
             : devices.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
-        Playback = new AudioSlot("Audio_Playback", "Audio_Unchanged", devices, selected);
+        return (devices, selected);
     }
 
     private async Task<DisplaySnapshot> QueryAsync()

@@ -250,6 +250,22 @@
                   Text="{Binding SurroundHint}"
                   TextWrapping="Wrap"
                   Visibility="{Binding HasSurroundHint, Converter={StaticResource BoolToVisibility}}" />
+                <!-- The hardest part for a newcomer: how Windows turns a display off (U-09). -->
+                <StackPanel Margin="0,6,0,0" Visibility="{Binding IsSecond, Converter={StaticResource BoolToVisibility}}">
+                  <Button
+                    HorizontalAlignment="Left"
+                    Command="{Binding ToggleHowCommand}"
+                    Content="{loc:Tr Setup_How}"
+                    Style="{StaticResource RigShift.Link}" />
+                  <ItemsControl
+                    Margin="0,6,0,0"
+                    Focusable="False"
+                    Visibility="{Binding ShowHow, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Setup_HowStep1}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Setup_HowStep2}" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Setup_HowStep3}" TextWrapping="Wrap" />
+                  </ItemsControl>
+                </StackPanel>
               </StackPanel>
 
               <controls:InfoBar
@@ -319,6 +335,10 @@
                     <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="260" />
                   </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
                   <StackPanel Grid.Column="0">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_Name}" />
                     <TextBox
@@ -333,13 +353,22 @@
                       Text="{Binding NameProblem}"
                       Visibility="{Binding HasNameProblem, Converter={StaticResource BoolToVisibility}}" />
                   </StackPanel>
-                  <StackPanel Grid.Column="2">
+                  <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{Binding Playback.Label}" />
                     <ComboBox
                       AutomationProperties.Name="{Binding Playback.Label}"
                       DisplayMemberPath="Name"
                       ItemsSource="{Binding Playback.Choices}"
                       SelectedItem="{Binding Playback.Selected}"
+                      Style="{StaticResource RigShift.Select}" />
+                  </StackPanel>
+                  <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{Binding Recording.Label}" />
+                    <ComboBox
+                      AutomationProperties.Name="{Binding Recording.Label}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding Recording.Choices}"
+                      SelectedItem="{Binding Recording.Selected}"
                       Style="{StaticResource RigShift.Select}" />
                   </StackPanel>
                 </Grid>

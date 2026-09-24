@@ -291,7 +291,7 @@
   <data name="Setup_FirstTitle" xml:space="preserve"><value>Dein erster Aufbau</value></data>
   <data name="Setup_FirstText" xml:space="preserve"><value>Schalte die Bildschirme ein, die du am Schreibtisch nutzt, und ordne sie in den Windows-Anzeigeeinstellungen an. RigShift speichert, was gerade aktiv ist.</value></data>
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Dein zweiter Aufbau</value></data>
-  <data name="Setup_SecondText" xml:space="preserve"><value>Wechsle jetzt zum zweiten Aufbau, zum Beispiel dem Rig: dessen Bildschirme ein-, die anderen ausschalten und anordnen. „{0}“ ist schon gespeichert.</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>„{0}“ ist gespeichert. Stell Windows jetzt auf dein Rig um: dessen Bildschirme einschalten, die vom Schreibtisch trennen und alles anordnen.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Schalte es aus und wieder ein, dann wählt RigShift es hier aus – oder wähle es aus der Liste.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
@@ -799,5 +799,17 @@
   </data>
   <data name="Trigger_AutostartTurnOn" xml:space="preserve">
     <value>Einschalten</value>
+  </data>
+  <data name="Setup_How" xml:space="preserve">
+    <value>Wie?</value>
+  </data>
+  <data name="Setup_HowStep1" xml:space="preserve">
+    <value>1. Öffne die Anzeigeeinstellungen mit dem Knopf unten.</value>
+  </data>
+  <data name="Setup_HowStep2" xml:space="preserve">
+    <value>2. Wähle einen Bildschirm vom Schreibtisch und trenne ihn unter „Mehrere Bildschirme“.</value>
+  </data>
+  <data name="Setup_HowStep3" xml:space="preserve">
+    <value>3. Schalte die Rig-Bildschirme ein und zieh sie an ihren Platz. RigShift sieht jede Änderung sofort.</value>
   </data>
 </root>

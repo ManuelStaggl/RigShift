@@ -21,6 +21,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
 
     private static readonly AudioEndpoint Speakers = new("speakers", "Speakers");
     private static readonly AudioEndpoint Headset = new("headset", "Headset");
+    private static readonly AudioEndpoint DeskMic = new("desk-mic", "Desk microphone");
 
     private readonly AppTestHost _host = new(new FakeDisplayConfigurator(DeskActive()));
     private static readonly Hotkey CtrlAltF1 = new() { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 };
@@ -37,6 +38,10 @@ public sealed class SetupWizardViewModelTests : IDisposable
         [
             new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All),
             new AudioDeviceInfo(Headset, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+        ]);
+        _audio.ListAsync(AudioDirection.Capture, Arg.Any<CancellationToken>()).Returns(
+        [
+            new AudioDeviceInfo(DeskMic, AudioDirection.Capture, IsActive: true, AudioRoleMask.All),
         ]);
         _host.Usb.ConnectedDevices().Returns([new UsbDevice(Dongle, "Dongle")]);
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
@@ -70,6 +75,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _viewModel.Step.ShouldBe(SetupStep.First);
         _viewModel.DisplayLines.Count.ShouldBe(3);
         _viewModel.Playback.ShouldNotBeNull().Endpoint.ShouldBe(Speakers);
+        _viewModel.Recording.ShouldNotBeNull().Endpoint.ShouldBe(DeskMic);
         _viewModel.ProfileName.ShouldNotBeNullOrWhiteSpace();
         _viewModel.HasNameProblem.ShouldBeFalse();
         _viewModel.SaveProfileCommand.CanExecute(null).ShouldBeTrue();
@@ -81,6 +87,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         desk.Name.ShouldBe("Desk");
         desk.Displays.Count.ShouldBe(3);
         desk.Audio.Playback.ShouldBe(Speakers);
+        desk.Audio.Recording.ShouldBe(DeskMic, "the microphone moves with the profile too (finding U-09)");
         desk.Icon.ShouldBe(ProfileIcons.Desk);
         _viewModel.Step.ShouldBe(SetupStep.Second);
     }

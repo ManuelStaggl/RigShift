@@ -291,7 +291,7 @@
   <data name="Setup_FirstTitle" xml:space="preserve"><value>Your first setup</value></data>
   <data name="Setup_FirstText" xml:space="preserve"><value>Turn on the displays you use at your desk and arrange them in the Windows display settings. RigShift saves what is active right now.</value></data>
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Your second setup</value></data>
-  <data name="Setup_SecondText" xml:space="preserve"><value>Now switch to your second setup, for example the rig: turn its displays on, the others off, and arrange them. “{0}” is already saved.</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now set Windows up for your rig: turn its screens on, disconnect the desk screens and arrange them.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on again and RigShift picks it here, or choose it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
@@ -799,5 +799,17 @@
   </data>
   <data name="Trigger_AutostartTurnOn" xml:space="preserve">
     <value>Turn on</value>
+  </data>
+  <data name="Setup_How" xml:space="preserve">
+    <value>How?</value>
+  </data>
+  <data name="Setup_HowStep1" xml:space="preserve">
+    <value>1. Open the display settings with the button below.</value>
+  </data>
+  <data name="Setup_HowStep2" xml:space="preserve">
+    <value>2. Select a desk screen and choose “Disconnect this display” under “Multiple displays”.</value>
+  </data>
+  <data name="Setup_HowStep3" xml:space="preserve">
+    <value>3. Turn on the rig screens and drag them into place. RigShift sees every change right away.</value>
   </data>
 </root>
