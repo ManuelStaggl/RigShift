@@ -637,16 +637,16 @@
                 <!-- Hidden without an NVIDIA card: nothing here would mean anything then. -->
                 <controls:SettingRow
                   Margin="0,8,0,0"
-                  Caption="{Binding SurroundHint}"
-                  IsCaptionError="{Binding SurroundHintIsError}"
+                  Caption="{Binding Surround.Hint}"
+                  IsCaptionError="{Binding Surround.HintIsError}"
                   Title="{loc:Tr Editor_Surround}"
-                  Visibility="{Binding ShowSurround, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
+                  Visibility="{Binding Surround.IsVisible, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
                   <ListBox
                     Width="240"
                     AutomationProperties.Name="{loc:Tr Editor_Surround}"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding SurroundChoices}"
-                    SelectedItem="{Binding SelectedSurround}"
+                    ItemsSource="{Binding Surround.Choices}"
+                    SelectedItem="{Binding Surround.Selected}"
                     Style="{StaticResource RigShift.Segment}" />
                 </controls:SettingRow>
                 <!-- Desktop symbols: captured on demand, because they are only right while this profile's screens are

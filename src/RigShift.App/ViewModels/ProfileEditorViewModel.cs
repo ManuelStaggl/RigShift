@@ -22,13 +22,8 @@ namespace RigShift.App.ViewModels;
 public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEditor, IHotkeyField
 {
     private readonly HotkeyRecorder _hotkeyRecorder;
-    private SurroundGrid? _surroundGrid;
     private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
-
-    private const string SurroundUnchanged = "unchanged";
-    private const string SurroundOff = "off";
-    private const string SurroundOn = "on";
 
     private readonly Profile _original;
     private Profile _initial;
@@ -84,7 +79,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         DesktopIcons = profile.DesktopIcons;
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
-        FillSurroundChoices(context.Surround, profile.Surround);
+        Surround = new SurroundSection(context.Surround, profile.Surround);
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
@@ -92,6 +87,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         Displays.CollectionChanged += OnDisplaysChanged;
         AppList.Changed += OnPartChanged;
+        Surround.Changed += OnPartChanged;
         Rules.Changed += OnPartChanged;
 
         // Texts built here follow a language change while the editor is open (I-13); Dispose unsubscribes.
@@ -230,22 +226,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     [ObservableProperty]
     public partial bool DisableCommunicationsDucking { get; set; }
 
-    /// <summary>"Leave alone", "off", and "on" once a grid is known. Empty on a machine Surround is no topic for.</summary>
-    public ObservableCollection<Choice> SurroundChoices { get; } = [];
-
-    [ObservableProperty]
-    public partial Choice? SelectedSurround { get; set; }
-
-    /// <summary>The grid in words, or why there is none to switch on.</summary>
-    [ObservableProperty]
-    public partial string SurroundHint { get; private set; } = string.Empty;
-
-    /// <summary>The hint is a problem when the profile wants Surround on but there is no grid to switch to.</summary>
-    [ObservableProperty]
-    public partial bool SurroundHintIsError { get; private set; }
-
-    /// <summary>False hides the whole section: a machine without an NVIDIA card has nothing to say here.</summary>
-    public bool ShowSurround { get; private set; }
+    public SurroundSection Surround { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CommandText))]
@@ -499,6 +480,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     {
         Loc.Instance.PropertyChanged -= OnLanguageChanged;
         Rules.Changed -= OnPartChanged;
+        Surround.Changed -= OnPartChanged;
         AppList.Changed -= OnPartChanged;
         AppList.Dispose();
     }
@@ -548,7 +530,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         AppsProblem = ProblemTexts.Of(problems, ProfileProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
         IsDirty = IsNew || Rules.IsDirty || !StoredForm.Same(built, _initial);
-        UpdateSurroundHint();
     }
 
     private void UpdateTopology() => TopologyDisplays = Services.TopologyDisplays.From(Displays.Select(d => d.Assignment), _missingDisplays);
@@ -570,9 +551,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         {
             FillIconChoices(SelectedIcon?.Key);
             AppList.Relabel();
-            string? surround = SelectedSurround?.Key;
-            SurroundChoices.Clear();
-            FillSurroundChoices(_surroundState, _original.Surround, surround);
+            Surround.Relabel();
             foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
             {
                 slot.Relabel();
@@ -605,61 +584,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == selectedKey) ?? IconChoices.First(c => c.Key == ProfileIcons.Rig);
     }
 
-    private SurroundState _surroundState = SurroundState.Unavailable(SurroundAvailability.Unknown, string.Empty);
-
-    /// <summary>
-    /// Surround has three answers per profile: leave it alone (the default, and what every profile before 1.9 means),
-    /// switch it off, or run this grid. There is no grid editor: a grid is built once in the NVIDIA control panel and
-    /// taken over from there, because the driver needs a reload to create one and that closes running games.
-    /// </summary>
-    private void FillSurroundChoices(SurroundState state, SurroundSetting? saved, string? selectedKey = null)
-    {
-        _surroundState = state;
-        // Nothing to offer without an NVIDIA driver - unless the profile already carries a setting from another machine.
-        ShowSurround = state.Availability == SurroundAvailability.Available || saved is not null;
-        if (!ShowSurround)
-        {
-            return;
-        }
-
-        _surroundGrid = saved?.Grid ?? (state.Grids.Count > 0 ? state.Grids[0] : null);
-        SurroundChoices.Add(new Choice(SurroundUnchanged, Loc.Instance["Editor_SurroundUnchanged"]));
-        SurroundChoices.Add(new Choice(SurroundOff, Loc.Instance["Editor_SurroundOff"]));
-        SurroundChoices.Add(new Choice(SurroundOn, Loc.Instance["Editor_SurroundOn"]));
-
-        string wanted = selectedKey ?? (saved is null ? SurroundUnchanged : saved.Enabled ? SurroundOn : SurroundOff);
-        SelectedSurround = SurroundChoices.FirstOrDefault(c => c.Key == wanted) ?? SurroundChoices[0];
-        UpdateSurroundHint();
-    }
-
-    private void UpdateSurroundHint()
-    {
-        if (!ShowSurround)
-        {
-            return;
-        }
-
-        bool wantsOn = SelectedSurround?.Key == SurroundOn;
-        if (_surroundGrid is { } grid)
-        {
-            SurroundHint = Loc.Format("Editor_SurroundGrid", grid.Displays.Count, grid.Width, grid.Height, grid.TotalWidth, grid.TotalHeight);
-            SurroundHintIsError = false;
-            return;
-        }
-
-        SurroundHint = _surroundState.Availability == SurroundAvailability.Available
-            ? Loc.Instance["Editor_SurroundNoGrid"]
-            : Loc.Instance["Editor_SurroundNoDriver"];
-        SurroundHintIsError = wantsOn;
-    }
-
-    private SurroundSetting? BuildSurround() => SelectedSurround?.Key switch
-    {
-        SurroundOff => new SurroundSetting { Enabled = false },
-        SurroundOn when _surroundGrid is { } grid => new SurroundSetting { Enabled = true, Grid = grid },
-        _ => null,
-    };
-
     private Profile Build() => _original with
     {
         Name = Name.Trim(),
@@ -683,6 +607,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         KeepAwake = KeepAwake,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
         DesktopIcons = DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
-        Surround = BuildSurround(),
+        Surround = Surround.Build(),
     };
 }

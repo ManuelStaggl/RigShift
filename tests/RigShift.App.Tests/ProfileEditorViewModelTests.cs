@@ -93,7 +93,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
         editor.ProblemCount.ShouldBe(0);
         editor.ShowCommunicationsAudio.ShouldBeTrue();
-        editor.ShowSurround.ShouldBeTrue("a setting from another machine must stay visible");
+        editor.Surround.IsVisible.ShouldBeTrue("a setting from another machine must stay visible");
         await SaveAsync(editor, expected: true);
         Profile saved = _host.Store.Profiles.ShouldHaveSingleItem();
         saved.Displays.ShouldBe(rig.Displays);
@@ -142,7 +142,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
             e => e.KeepAwake = true,
             e => e.DisableCommunicationsDucking = true,
             e => e.DesktopIcons = icons,
-            e => e.SelectedSurround = e.SurroundChoices.First(c => c.Key == "off"),
+            e => e.Surround.Selected = e.Surround.Choices.First(c => c.Key == "off"),
         ];
 
         for (int i = 0; i < changes.Length; i++)
@@ -419,8 +419,8 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     {
         ProfileEditorViewModel editor = await EditorAsync(Rig());
 
-        editor.ShowSurround.ShouldBeFalse();
-        editor.SurroundChoices.ShouldBeEmpty();
+        editor.Surround.IsVisible.ShouldBeFalse();
+        editor.Surround.Choices.ShouldBeEmpty();
     }
 
     [Fact]
@@ -428,14 +428,14 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     {
         var state = new SurroundState { Availability = SurroundAvailability.Available, Grids = [Triple] };
         ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: state);
-        editor.SelectedSurround.ShouldNotBeNull().Key.ShouldBe("unchanged");
+        editor.Surround.Selected.ShouldNotBeNull().Key.ShouldBe("unchanged");
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "on");
-        editor.SurroundHintIsError.ShouldBeFalse();
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "on");
+        editor.Surround.HintIsError.ShouldBeFalse();
         await SaveAsync(editor, expected: true);
         _host.Store.Profiles.ShouldHaveSingleItem().Surround.ShouldBe(new SurroundSetting { Enabled = true, Grid = Triple });
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "off");
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "off");
         await SaveAsync(editor, expected: true);
         _host.Store.Profiles.ShouldHaveSingleItem().Surround.ShouldBe(new SurroundSetting { Enabled = false });
     }
@@ -446,10 +446,10 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         var state = new SurroundState { Availability = SurroundAvailability.Available };
         ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: state);
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "on");
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "on");
 
-        editor.SurroundHintIsError.ShouldBeTrue();
-        editor.SurroundHint.ShouldBe(Loc.Instance["Editor_SurroundNoGrid"]);
+        editor.Surround.HintIsError.ShouldBeTrue();
+        editor.Surround.Hint.ShouldBe(Loc.Instance["Editor_SurroundNoGrid"]);
         editor.IsDirty.ShouldBeFalse("there is nothing to switch on, so nothing changed");
     }
 
