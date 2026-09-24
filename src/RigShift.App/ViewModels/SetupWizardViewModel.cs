@@ -324,17 +324,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenDisplaySettings()
-    {
-        try
-        {
-            using Process? process = Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true });
-        }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
-        {
-            _log.Warning(ex, "Windows display settings could not be opened");
-        }
-    }
+    private void OpenDisplaySettings() => ShellFolders.OpenDisplaySettings(_log);
 
     /// <summary>Reads the active displays again; the window calls it after every display change.</summary>
     public async Task RefreshDisplaysAsync()

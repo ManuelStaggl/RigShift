@@ -186,6 +186,7 @@
                   </Border>
                   <DockPanel Grid.Row="1" Margin="0,12,0,0">
                     <Grid Margin="12,0,0,0" VerticalAlignment="Center" DockPanel.Dock="Right">
+                      <!-- Secondary: the overview has no single main action (R-ACT-1); the tooltip names missing displays. -->
                       <Button
                         Height="28"
                         Padding="12,0"
@@ -193,7 +194,8 @@
                         Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                         CommandParameter="{Binding}"
                         Content="{loc:Tr Overview_Switch}"
-                        Style="{StaticResource RigShift.Button.Primary}"
+                        Style="{StaticResource RigShift.Button}"
+                        ToolTip="{Binding ReadyTip}"
                         Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibility}}" />
                       <Button
                         Height="28"
@@ -214,13 +216,19 @@
                         ToolTip="{Binding Name}" />
                       <Grid Margin="0,2,0,0">
                         <controls:StatusLine
-                          Kind="Ok"
+                          Kind="Active"
                           Text="{loc:Tr Profile_Active}"
                           Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}" />
+                        <!-- A required display is off: say which and what to do, as the profile list does (U-10). -->
+                        <controls:StatusLine
+                          Kind="{Binding ReadyKind}"
+                          Text="{Binding ReadyText}"
+                          ToolTip="{Binding ReadyTip}"
+                          Visibility="{Binding ShowsReadiness, Converter={StaticResource BoolToVisibility}}" />
                         <TextBlock
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap"
-                          Visibility="{Binding IsActive, Converter={StaticResource InverseBoolToVisibility}}">
+                          Visibility="{Binding ShowsHotkeyLine, Converter={StaticResource BoolToVisibility}}">
                           <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Caption}">
                               <Setter Property="Text" Value="{Binding HotkeyText}" />

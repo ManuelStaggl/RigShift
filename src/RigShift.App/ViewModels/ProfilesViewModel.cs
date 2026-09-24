@@ -129,6 +129,30 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     public bool HasBlockedMessage => BlockedMessage is not null;
 
+    /// <summary>Warning while displays are off (the switch waits for them), error for twins that cannot be told apart.</summary>
+    [ObservableProperty]
+    public partial InfoKind BlockedKind { get; private set; } = InfoKind.Warn;
+
+    /// <summary>"Help" beside the note while displays are off: the guide to monitors in standby.</summary>
+    [ObservableProperty]
+    public partial bool ShowMonitorHelp { get; private set; }
+
+    /// <summary>"Mark optional" beside the note: the profile then switches without those displays (v4 finding U-11).</summary>
+    [ObservableProperty]
+    public partial bool CanMarkOptional { get; private set; }
+
+    [RelayCommand]
+    private void MarkMissingOptional()
+    {
+        if (Editor is not { } editor || SelectedItem is not { } item || !_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
+        {
+            return;
+        }
+
+        int marked = editor.MarkOptional(plan.Missing.Where(m => !m.Assignment.IsOptional).Select(m => m.Assignment.Identity.TargetDevicePath));
+        Log.Information("Marked {Count} missing display(s) of {Profile} as optional", marked, item.Name);
+    }
+
     protected override IEnumerable<ProfileItem> CatalogItems => _catalog.Items;
 
     protected override string UnnamedText => Loc.Instance["Editor_NewName"];
@@ -311,7 +335,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     }
 
     [RelayCommand]
-    private void OpenDisplaySettings() => ShellFolders.OpenUrl("ms-settings:display", Log);
+    private void OpenDisplaySettings() => ShellFolders.OpenDisplaySettings(Log);
 
     /// <summary>Reads the displays itself – only when the catalog has not read them yet.</summary>
     private async Task RefreshPlansAsync()
@@ -365,7 +389,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         string suffix = item.IsDefault ? " · " + Loc.Instance["Profile_Default"] : string.Empty;
         if (item.IsActive)
         {
-            return (StatusKind.Ok, Loc.Instance["Profile_Active"] + suffix);
+            return (StatusKind.Active, Loc.Instance["Profile_Active"] + suffix);
         }
 
         if (!_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
@@ -373,21 +397,9 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return (StatusKind.Neutral, Loc.Instance["List_Checking"] + suffix);
         }
 
-        if (plan.IsBlocked)
-        {
-            return (StatusKind.Error, Loc.Instance["List_BlockedShort"] + suffix);
-        }
-
-        if (plan.Missing.Count > 0)
-        {
-            return (StatusKind.Ok, Loc.Format("List_OptionalMissing", Names(plan.Missing)) + suffix);
-        }
-
-        return (StatusKind.Ok, Loc.Instance["List_Ready"] + suffix);
+        (StatusKind kind, string text, _) = ProfileReadiness.Of(plan);
+        return (kind, text + suffix);
     }
-
-    private static string Names(IEnumerable<MissingDisplay> missing) =>
-        string.Join(", ", missing.Select(m => SwitchMessages.NameOf(m.Assignment)));
 
     protected override void UpdateHead()
     {
@@ -406,13 +418,15 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return;
         }
 
-        bool blocked = _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan) && plan.IsBlocked;
-        MissingDisplay[] missing = blocked ? plan!.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
-        MissingDisplay[] ambiguous = [.. missing.Where(m => m.Reason == MissingReason.Ambiguous)];
-        BlockedMessage = missing.Length == 0 || item.IsActive ? null
-            : ambiguous.Length > 0 ? Loc.Format("Detail_AmbiguousNames", Names(ambiguous))
-            : Loc.Format("Detail_BlockedNames", Names(missing));
-        CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && !blocked;
+        // A display that is off does not block: the switch asks for it and waits (K-06). Twin displays do (K-03).
+        _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan);
+        MissingDisplay[] missing = plan is { IsBlocked: true } ? plan.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
+        (StatusKind readyKind, _, string? tip) = plan is null ? (StatusKind.Neutral, string.Empty, null) : ProfileReadiness.Of(plan);
+        BlockedMessage = missing.Length == 0 || item.IsActive ? null : tip;
+        BlockedKind = readyKind == StatusKind.Error ? InfoKind.Error : InfoKind.Warn;
+        ShowMonitorHelp = BlockedMessage is not null && readyKind != StatusKind.Error;
+        CanMarkOptional = ShowMonitorHelp && missing.Any(m => !m.Assignment.IsPrimary);
+        CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && plan is not { IsAmbiguous: true };
         TestCommand.NotifyCanExecuteChanged();
 
         if (IsBusy)

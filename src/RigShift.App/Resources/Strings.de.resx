@@ -54,8 +54,8 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
-  <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} nicht möglich</value></data>
-  <data name="Result_BlockedText" xml:space="preserve"><value>Fehlende Bildschirme: {0}</value></data>
+  <data name="Result_BlockedTitle" xml:space="preserve"><value>Wechsel zu {0} nicht möglich</value></data>
+  <data name="Result_BlockedText" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, dann erneut umschalten.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Wechsel zu {0} fehlgeschlagen</value></data>
   <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
@@ -613,7 +613,7 @@
   <data name="List_BlockedShort" xml:space="preserve"><value>Blockiert</value></data>
   <data name="Head_MissingOne" xml:space="preserve"><value>1 Bildschirm fehlt</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} Bildschirme fehlen</value></data>
-  <data name="Detail_BlockedNames" xml:space="preserve"><value>Nicht angeschlossen: {0}. Umschalten geht wieder, sobald sie da sind.</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken – RigShift wartet beim Umschalten darauf. Oder als optional markieren.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB-Geräte</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet hierher, sobald alle Geräte einer Regel verbunden sind.</value></data>
@@ -811,5 +811,17 @@
   </data>
   <data name="Setup_HowStep3" xml:space="preserve">
     <value>3. Schalte die Rig-Bildschirme ein und zieh sie an ihren Platz. RigShift sieht jede Änderung sofort.</value>
+  </data>
+  <data name="List_MissingOne" xml:space="preserve">
+    <value>{0} fehlt</value>
+  </data>
+  <data name="Detail_MarkOptional" xml:space="preserve">
+    <value>Als optional markieren</value>
+  </data>
+  <data name="Detail_Help" xml:space="preserve">
+    <value>Hilfe</value>
+  </data>
+  <data name="Automation_PowerSavingFix" xml:space="preserve">
+    <value>So behebst du es</value>
   </data>
 </root>

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
@@ -325,6 +326,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         ActiveProfile = active;
         _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
         LastSnapshot = snapshot;
+        UpdateReadiness();
         DisplaysRefreshed?.Invoke(this, snapshot);
     }
 
@@ -350,7 +352,23 @@ public sealed partial class ProfileCatalog : ObservableObject
             ? Loc.Format("Profiles_UnreadableFiles", _unreadable.Count, string.Join(", ", _unreadable.Select(f => f.FileName)))
             : null;
         UpdateFlags();
+        UpdateReadiness();
         ProfilesChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Each profile against the displays as read last, so the overview and the tray say what the list says (U-10).</summary>
+    private void UpdateReadiness()
+    {
+        if (LastSnapshot is not { } snapshot)
+        {
+            return;
+        }
+
+        foreach (ProfileItem item in Items)
+        {
+            (StatusKind kind, string text, string? tip) = ProfileReadiness.Of(_matcher.Plan(item.Profile, snapshot));
+            item.SetReadiness(kind, text, tip);
+        }
     }
 
     private void UpdateFlags()

@@ -1253,12 +1253,21 @@
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <!-- A dot for plain states; active, warning and error carry a symbol, so color is never the only signal. -->
             <Ellipse
+              x:Name="Dot"
               Width="8"
               Height="8"
               Margin="0,0,8,0"
               VerticalAlignment="Center"
               Fill="{TemplateBinding DotBrush}" />
+            <ui:SymbolIcon
+              x:Name="Mark"
+              Margin="0,0,6,0"
+              VerticalAlignment="Center"
+              FontSize="12"
+              Foreground="{TemplateBinding DotBrush}"
+              Visibility="Collapsed" />
             <TextBlock
               Grid.Column="1"
               VerticalAlignment="Center"
@@ -1268,6 +1277,23 @@
               TextTrimming="CharacterEllipsis"
               TextWrapping="NoWrap" />
           </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Kind" Value="Active">
+              <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+              <Setter TargetName="Mark" Property="Symbol" Value="Checkmark12" />
+            </Trigger>
+            <Trigger Property="Kind" Value="Warn">
+              <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+              <Setter TargetName="Mark" Property="Symbol" Value="Warning12" />
+            </Trigger>
+            <Trigger Property="Kind" Value="Error">
+              <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+              <Setter TargetName="Mark" Property="Symbol" Value="ErrorCircle12" />
+            </Trigger>
+          </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>
@@ -1283,6 +1309,9 @@
         <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.Error}" />
       </Trigger>
       <Trigger Property="Kind" Value="Accent">
+        <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+      </Trigger>
+      <Trigger Property="Kind" Value="Active">
         <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
       </Trigger>
     </Style.Triggers>

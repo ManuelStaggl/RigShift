@@ -301,6 +301,20 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         OnPropertyChanged(nameof(ShowAutostartOff));
     }
 
+    /// <summary>Makes the given displays optional where they can be; the primary display cannot. Returns how many changed.</summary>
+    public int MarkOptional(IEnumerable<string> targetDevicePaths)
+    {
+        var paths = targetDevicePaths.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        int marked = 0;
+        foreach (DisplayEditItem display in Displays.Where(d => paths.Contains(d.Key) && d.CanBeOptional && !d.IsOptional))
+        {
+            display.IsOptional = true;
+            marked++;
+        }
+
+        return marked;
+    }
+
     /// <summary>The page shows the editor again; start with Windows may have changed on the settings page meanwhile.</summary>
     public void RefreshAutostartNote() => OnPropertyChanged(nameof(ShowAutostartOff));
 

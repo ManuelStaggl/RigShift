@@ -376,6 +376,23 @@ public static class ShellFolders
         }
     }
 
+    /// <summary>
+    /// The Windows display settings. Not through <see cref="OpenUrl"/>: that opens https pages only, and refused
+    /// "ms-settings:" – the profile page's button did nothing.
+    /// </summary>
+    public static void OpenDisplaySettings(ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            log.Warning(ex, "Could not open the display settings");
+        }
+    }
+
     public static void Open(string path, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);

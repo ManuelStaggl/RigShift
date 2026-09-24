@@ -86,9 +86,9 @@ public sealed class ProfilesViewModelTests : IDisposable
 
         page.Items.Select(i => (i.Name, i.ListKind, i.ListStatus)).ShouldBe(
         [
-            ("Desk", StatusKind.Ok, Loc.Instance["Profile_Active"] + " · " + Loc.Instance["Profile_Default"]),
+            ("Desk", StatusKind.Active, Loc.Instance["Profile_Active"] + " · " + Loc.Instance["Profile_Default"]),
             ("Side", StatusKind.Ok, Loc.Instance["List_Ready"]),
-            ("Rig", StatusKind.Error, Loc.Instance["List_BlockedShort"]),
+            ("Rig", StatusKind.Warn, Loc.Format("List_MissingOne", "Ultrawide 49")),
         ]);
         page.IsSelectedActive.ShouldBeTrue();
         page.IsSelectedDefault.ShouldBeTrue();
@@ -96,19 +96,59 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.SwitchLabel.ShouldBe(Loc.Instance["Profile_Reapply"]);
     });
 
+    /// <summary>
+    /// A display that is off does not block: the switch asks for it and waits (K-06). The detail says which one and
+    /// offers the two ways out (U-10, U-11).
+    /// </summary>
     [Fact]
-    public Task BlockedProfile_CannotBeSwitchedTo_AndTheHeadNamesWhatIsMissing() => _ui.RunAsync(async () =>
+    public Task ProfileWithADisplayOff_CanStillSwitch_AndTheHeadNamesWhatIsMissing() => _ui.RunAsync(async () =>
     {
         await SavedAsync(Rig());
 
         ProfilesViewModel page = await PageAsync();
         await UntilAsync(() => page.HasBlockedMessage, "the missing display was not reported");
 
-        page.CanSwitch.ShouldBeFalse();
+        page.CanSwitch.ShouldBeTrue();
         page.BlockedMessage.ShouldNotBeNull().ShouldContain("Ultrawide 49");
-        page.HeadStatusKind.ShouldBe(StatusKind.Error);
+        page.BlockedKind.ShouldBe(InfoKind.Warn);
+        page.CanMarkOptional.ShouldBeFalse("the missing display is the main one, which cannot be optional");
+        page.HeadStatusKind.ShouldBe(StatusKind.Warn);
         page.HeadStatusText.ShouldBe(Loc.Instance["Head_MissingOne"]);
         page.Editor.ShouldNotBeNull().TopologyDisplays.Count(d => d.State == TopologyDisplayState.Missing).ShouldBe(1);
+    });
+
+    [Fact]
+    public Task MarkMissingOptional_MakesTheMissingDisplaysOptional_ButNotThePrimary() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Wide", [Mode(Desk4K, 3840, 2160, 165, primary: true), Mode(Ultrawide, 5120, 1440, 240, x: 3840)]));
+        ProfilesViewModel page = await PageAsync();
+        await UntilAsync(() => page.HasBlockedMessage, "the missing display was not reported");
+        page.CanMarkOptional.ShouldBeTrue();
+
+        page.MarkMissingOptionalCommand.Execute(null);
+
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Displays.Single(d => !d.IsPrimary).IsOptional.ShouldBeTrue();
+        editor.Displays.Single(d => d.IsPrimary).IsOptional.ShouldBeFalse();
+        editor.IsDirty.ShouldBeTrue("the change waits for Save like any other");
+    });
+
+    /// <summary>The overview and the tray read the same state from the catalog's items (U-10).</summary>
+    [Fact]
+    public Task CatalogItems_CarryTheReadinessForOverviewAndTray() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        await SavedAsync(Rig());
+        await _host.Catalog.RefreshActiveAsync(Ct);
+
+        ProfileItem desk = _host.Catalog.Items.Single(i => i.Name == "Desk");
+        ProfileItem rig = _host.Catalog.Items.Single(i => i.Name == "Rig");
+        desk.ShowsReadiness.ShouldBeFalse("the active profile shows Active, not a readiness line");
+        rig.ShowsReadiness.ShouldBeTrue();
+        rig.ShowsHotkeyLine.ShouldBeFalse();
+        rig.ReadyKind.ShouldBe(StatusKind.Warn);
+        rig.ReadyText.ShouldBe(Loc.Format("List_MissingOne", "Ultrawide 49"));
+        rig.ReadyTip.ShouldNotBeNull().ShouldContain("Ultrawide 49");
     });
 
     [Fact]

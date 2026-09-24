@@ -70,7 +70,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         .ToList();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus), nameof(ShowsReadiness), nameof(ShowsHotkeyLine))]
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
@@ -101,6 +101,34 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     {
         ListKind = kind;
         ListStatus = text;
+    }
+
+    /// <summary>
+    /// The profile against the displays as the catalog read them last, for the overview and the tray (v4 finding U-10):
+    /// "XG32UCWG missing" with the next step as tooltip. The list keeps its own <see cref="ListStatus"/>.
+    /// </summary>
+    [ObservableProperty]
+    public partial StatusKind ReadyKind { get; private set; } = StatusKind.Ok;
+
+    [ObservableProperty]
+    public partial string? ReadyText { get; private set; }
+
+    [ObservableProperty]
+    public partial string? ReadyTip { get; private set; }
+
+    /// <summary>A required display is missing and the profile is not on screen: the tile shows why instead of the hotkey.</summary>
+    public bool ShowsReadiness => !IsActive && ReadyKind is StatusKind.Warn or StatusKind.Error;
+
+    /// <summary>The overview's line under the name: the hotkey while there is nothing more important to say.</summary>
+    public bool ShowsHotkeyLine => !IsActive && !ShowsReadiness;
+
+    public void SetReadiness(StatusKind kind, string text, string? tip)
+    {
+        ReadyKind = kind;
+        ReadyText = text;
+        ReadyTip = tip;
+        OnPropertyChanged(nameof(ShowsReadiness));
+        OnPropertyChanged(nameof(ShowsHotkeyLine));
     }
 
     private static string Describe(DisplayAssignment display)

@@ -54,8 +54,8 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop symbols could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>
-  <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} not possible</value></data>
-  <data name="Result_BlockedText" xml:space="preserve"><value>Missing displays: {0}</value></data>
+  <data name="Result_BlockedTitle" xml:space="preserve"><value>Can't switch to {0}</value></data>
+  <data name="Result_BlockedText" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up, then switch again.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
   <data name="Result_FailedText" xml:space="preserve"><value>Windows reported error {0}. Details are in the log.</value></data>
@@ -613,7 +613,7 @@
   <data name="List_BlockedShort" xml:space="preserve"><value>Blocked</value></data>
   <data name="Head_MissingOne" xml:space="preserve"><value>1 display missing</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} displays missing</value></data>
-  <data name="Detail_BlockedNames" xml:space="preserve"><value>Not connected: {0}. The profile can switch once they are back.</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up – RigShift waits for them when you switch. Or mark them optional.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement”.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches here as soon as every device of a rule is connected.</value></data>
@@ -811,5 +811,17 @@
   </data>
   <data name="Setup_HowStep3" xml:space="preserve">
     <value>3. Turn on the rig screens and drag them into place. RigShift sees every change right away.</value>
+  </data>
+  <data name="List_MissingOne" xml:space="preserve">
+    <value>{0} missing</value>
+  </data>
+  <data name="Detail_MarkOptional" xml:space="preserve">
+    <value>Mark optional</value>
+  </data>
+  <data name="Detail_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Automation_PowerSavingFix" xml:space="preserve">
+    <value>How to fix</value>
   </data>
 </root>

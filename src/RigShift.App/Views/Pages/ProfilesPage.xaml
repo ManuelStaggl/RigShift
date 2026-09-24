@@ -6,6 +6,7 @@
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  xmlns:services="clr-namespace:RigShift.App.Services"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
@@ -399,9 +400,28 @@
         <StackPanel Grid.Row="3">
           <controls:InfoBar
             Margin="24,12,24,0"
-            Kind="Error"
+            Kind="{Binding BlockedKind}"
             Text="{Binding BlockedMessage}"
-            Visibility="{Binding HasBlockedMessage, Converter={StaticResource BoolToVisibility}}" />
+            Visibility="{Binding HasBlockedMessage, Converter={StaticResource BoolToVisibility}}">
+            <!-- The two ways out (U-11): switch without those displays, or read how to wake them. -->
+            <controls:InfoBar.Action>
+              <StackPanel Orientation="Horizontal">
+                <Button
+                  Height="28"
+                  Margin="0,0,4,0"
+                  Command="{Binding MarkMissingOptionalCommand}"
+                  Content="{loc:Tr Detail_MarkOptional}"
+                  Style="{StaticResource RigShift.Button.Ghost}"
+                  Visibility="{Binding CanMarkOptional, Converter={StaticResource BoolToVisibility}}" />
+                <Button
+                  Height="28"
+                  Command="{x:Static services:HelpLinks.MonitorStandby}"
+                  Content="{loc:Tr Detail_Help}"
+                  Style="{StaticResource RigShift.Button.Ghost}"
+                  Visibility="{Binding ShowMonitorHelp, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+            </controls:InfoBar.Action>
+          </controls:InfoBar>
           <!-- The profile changed on disk under unsaved changes: they stay, the saved version is one click away. -->
           <controls:InfoBar
             Margin="24,12,24,0"
@@ -975,14 +995,22 @@
                                 Text="{loc:Tr Automation_DuplicateDevice}"
                                 TextWrapping="Wrap"
                                 Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
-                              <TextBlock
-                                Margin="0,4,0,0"
-                                Foreground="{DynamicResource RigShift.Brush.Warn}"
-                                Style="{StaticResource RigShift.Text.Caption}"
-                                Text="{loc:Tr Automation_PowerSavingText}"
-                                TextWrapping="Wrap"
-                                ToolTip="{loc:Tr Automation_PowerSavingTitle}"
-                                Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}" />
+                              <StackPanel Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock
+                                  Margin="0,4,0,0"
+                                  Foreground="{DynamicResource RigShift.Brush.Warn}"
+                                  Style="{StaticResource RigShift.Text.Caption}"
+                                  Text="{loc:Tr Automation_PowerSavingText}"
+                                  TextWrapping="Wrap"
+                                  ToolTip="{loc:Tr Automation_PowerSavingTitle}" />
+                                <!-- What to do about it (U-11): the guide on the project page. -->
+                                <Button
+                                  Margin="0,4,0,0"
+                                  HorizontalAlignment="Left"
+                                  Command="{x:Static services:HelpLinks.UsbPowerSaving}"
+                                  Content="{loc:Tr Automation_PowerSavingFix}"
+                                  Style="{StaticResource RigShift.Link}" />
+                              </StackPanel>
                             </StackPanel>
                           </StackPanel>
                         </DataTemplate>

@@ -19,6 +19,9 @@ public sealed class ActiveProfileMatcher
         _planner = planner;
     }
 
+    /// <summary>What switching to <paramref name="profile"/> would find: the displays it resolves and those it misses.</summary>
+    public TopologyPlan Plan(Profile profile, DisplaySnapshot snapshot) => _planner.Plan(profile, snapshot);
+
     /// <param name="lastApplied">
     /// The profile RigShift applied last. Among profiles that fit the displays equally well – the same layout saved twice,
     /// once with HDR "don't change" – it wins over the one first in the list (v4 finding K-13).

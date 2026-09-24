@@ -284,10 +284,12 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileItem}">
               <Button
+                AutomationProperties.HelpText="{Binding ReadyTip}"
                 AutomationProperties.Name="{Binding AccessibleName}"
                 Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
-                Style="{StaticResource Tile}">
+                Style="{StaticResource Tile}"
+                ToolTip="{Binding ReadyTip}">
                 <Grid>
                   <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -299,20 +301,28 @@
                     IsHitTestVisible="False"
                     ShowLabels="False"
                     Size="M" />
-                  <!-- "Active" in the corner of the active tile. -->
+                  <!-- "Active" in the corner of the active tile: the check mark used everywhere (U-20). -->
                   <StackPanel
                     Margin="0,-4,-4,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Orientation="Horizontal"
                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                    <Ellipse Width="7" Height="7" Margin="0,0,5,0" VerticalAlignment="Center" Fill="{DynamicResource RigShift.Brush.Accent}" />
+                    <ui:SymbolIcon Margin="0,0,4,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource RigShift.Brush.Accent}" Symbol="Checkmark12" />
                     <TextBlock
                       FontSize="11"
                       FontWeight="SemiBold"
                       Foreground="{DynamicResource RigShift.Brush.Accent}"
                       Text="{loc:Tr Profile_Active}" />
                   </StackPanel>
+                  <!-- A required display is off: the words of the profile list, the next step on hover (U-10). -->
+                  <controls:StatusLine
+                    Margin="0,-4,-4,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Kind="{Binding ReadyKind}"
+                    Text="{Binding ReadyText}"
+                    Visibility="{Binding ShowsReadiness, Converter={StaticResource BoolToVisibility}}" />
                   <DockPanel Grid.Row="1">
                     <TextBlock
                       Margin="8,0,0,0"
@@ -352,10 +362,12 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:ProfileItem}">
                 <Button
+                  AutomationProperties.HelpText="{Binding ReadyTip}"
                   AutomationProperties.Name="{Binding AccessibleName}"
                   Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   CommandParameter="{Binding}"
-                  Style="{StaticResource Row}">
+                  Style="{StaticResource Row}"
+                  ToolTip="{Binding ReadyTip}">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="56" />
@@ -377,7 +389,15 @@
                       VerticalAlignment="Center"
                       Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                       Style="{StaticResource RigShift.Text.Caption}"
-                      Text="{Binding HotkeyText}" />
+                      Text="{Binding HotkeyText}"
+                      Visibility="{Binding ShowsReadiness, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <controls:StatusLine
+                      Grid.Column="2"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Kind="{Binding ReadyKind}"
+                      Text="{Binding ReadyText}"
+                      Visibility="{Binding ShowsReadiness, Converter={StaticResource BoolToVisibility}}" />
                   </Grid>
                 </Button>
               </DataTemplate>

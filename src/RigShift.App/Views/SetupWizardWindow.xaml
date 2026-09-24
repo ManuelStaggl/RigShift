@@ -6,6 +6,7 @@
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  xmlns:services="clr-namespace:RigShift.App.Services"
   d:DataContext="{d:DesignInstance vm:SetupWizardViewModel}"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -419,7 +420,15 @@
                   Kind="Warn"
                   Text="{loc:Tr Automation_PowerSavingText}"
                   ToolTip="{loc:Tr Automation_PowerSavingTitle}"
-                  Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}" />
+                  Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
+                  <controls:InfoBar.Action>
+                    <Button
+                      Height="28"
+                      Command="{x:Static services:HelpLinks.UsbPowerSaving}"
+                      Content="{loc:Tr Automation_PowerSavingFix}"
+                      Style="{StaticResource RigShift.Button.Ghost}" />
+                  </controls:InfoBar.Action>
+                </controls:InfoBar>
               </StackPanel>
 
               <!-- Done: the two profiles as cards and the rule as a sentence. -->
