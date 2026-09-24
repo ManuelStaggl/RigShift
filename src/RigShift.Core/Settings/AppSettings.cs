@@ -231,11 +231,10 @@ public sealed class JsonSettingsStore
 
         try
         {
-            AppSettings? settings;
-            await using (FileStream stream = File.OpenRead(_file))
-            {
-                settings = await JsonSerializer.DeserializeAsync(stream, SettingsJsonContext.Default.AppSettings, cancellationToken);
-            }
+            // With one retry, like the profiles: a virus scanner holding the file for a moment at startup used to mean
+            // defaults – rules, names and hotkeys gone until the next start (v4 finding K-17).
+            AppSettings? settings = await Storage.JsonFile.ReadWithRetryAsync(
+                _file, SettingsJsonContext.Default.AppSettings, _time, _log, cancellationToken);
 
             if (settings is null)
             {
