@@ -140,7 +140,8 @@ public sealed class ProfileDialogs : IProfilePageDialogs
             profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDevices,
             UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
         var context = new ProfileEditorContext(
-            playback, recording, appsWaitDevice, surround, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0);
+            playback, recording, appsWaitDevice, surround, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
+            SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, _catalog.Profiles)?.Name);
         return new ProfileEditorViewModel(profile, isNew, context, _editorServices);
     }
 
@@ -148,7 +149,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
     public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
     {
-        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _log);
+        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _surround, _log);
 #if DEBUG
         if (previewStep is { } step)
         {

@@ -318,6 +318,7 @@
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} Bildschirme mit je {1}x{2} als ein Bildschirm mit {3}x{4}.</value></data>
   <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround ist gerade aus. Richte das Raster einmal in der NVIDIA-Systemsteuerung ein und speichere das Profil dann erneut.</value></data>
   <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>Auf diesem PC wurde kein NVIDIA-Grafiktreiber gefunden.</value></data>
+  <data name="Editor_SurroundOffBecause" xml:space="preserve"><value>Aus, weil „{0}“ Surround einschaltet.</value></data>
   <data name="Nav_Games" xml:space="preserve"><value>Spiele</value></data>
   <data name="Games_Add" xml:space="preserve"><value>Spiel _hinzufügen</value></data>
   <data name="Games_Scan" xml:space="preserve"><value>Installierte Spiele suchen</value></data>
@@ -509,6 +510,8 @@
   <data name="Setup_Now" xml:space="preserve"><value>Jetzt angezeigt</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Anders als „{0}“ – kann gespeichert werden.</value></data>
+  <data name="Setup_SurroundHint" xml:space="preserve"><value>Mit NVIDIA Surround? Jetzt in der NVIDIA-Systemsteuerung einschalten – dieses Profil schaltet es dann selbst ein.</value></data>
+  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround ist an – dieses Profil schaltet es selbst ein.</value></data>
   <data name="Nav_Fov" xml:space="preserve"><value>Sichtfeld</value></data>
   <data name="Fov_Intro" xml:space="preserve"><value>Die Größe kommt vom Bildschirm. Sag, wie weit deine Augen weg sind und wie das Rig steht – jede Sim bekommt dann ihre eigene Zahl.</value></data>
   <data name="Fov_Rig" xml:space="preserve"><value>Dein Rig</value></data>

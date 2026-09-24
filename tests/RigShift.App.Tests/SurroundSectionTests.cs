@@ -57,4 +57,30 @@ public sealed class SurroundSectionTests
         section.Selected = section.Choices.First(c => c.Key == "on");
         changes.ShouldBe(1);
     }
+
+    /// <summary>
+    /// Once another profile runs a grid, a profile without a setting switches Surround off. The editor shows that
+    /// instead of "leave", says why, and does not count its own reading as a change (findings K-09, U-05).
+    /// </summary>
+    [Fact]
+    public void AnotherProfileUsesSurround_NothingSaved_ShowsOffWithTheReason()
+    {
+        var section = new SurroundSection(new SurroundState { Availability = SurroundAvailability.Available }, saved: null, usedBy: "Triple");
+
+        section.Choices.Select(c => c.Key).ShouldBe(["off", "on"]);
+        section.Selected.ShouldNotBeNull().Key.ShouldBe("off");
+        section.Hint.ShouldBe(Loc.Format("Editor_SurroundOffBecause", "Triple"));
+        section.Build().ShouldBeNull();
+    }
+
+    [Fact]
+    public void AnotherProfileUsesSurround_SavedOff_StaysAnExplicitOff()
+    {
+        var section = new SurroundSection(
+            new SurroundState { Availability = SurroundAvailability.Available, Grids = [Triple] }, new SurroundSetting { Enabled = false }, usedBy: "Triple");
+
+        section.Selected.ShouldNotBeNull().Key.ShouldBe("off");
+        section.Build().ShouldBe(new SurroundSetting { Enabled = false });
+        section.Hint.ShouldBe(Loc.Format("Editor_SurroundGrid", 3, 2560, 1440, Triple.TotalWidth, Triple.TotalHeight));
+    }
 }

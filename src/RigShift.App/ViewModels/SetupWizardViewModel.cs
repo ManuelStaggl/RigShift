@@ -44,7 +44,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private readonly IUsbPowerCheck _powerCheck;
     private readonly ActiveProfileMatcher _matcher;
     private readonly SettingsService _settings;
+    private readonly ISurroundController _surround;
     private readonly ILogger _log;
+
+    /// <summary>Resource key of <see cref="SurroundHint"/>; <c>null</c> says nothing.</summary>
+    private string? _surroundHintKey;
 
     /// <summary>Devices seen so far on the trigger step; a device outside this set has just been turned on.</summary>
     private readonly HashSet<string> _seenDevices = new(StringComparer.OrdinalIgnoreCase);
@@ -64,6 +68,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         IUsbPowerCheck powerCheck,
         ActiveProfileMatcher matcher,
         SettingsService settings,
+        ISurroundController surround,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
@@ -74,6 +79,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _powerCheck = powerCheck;
         _matcher = matcher;
         _settings = settings;
+        _surround = surround;
         _log = log.ForContext<SetupWizardViewModel>();
         ProfileName = string.Empty;
         RebuildLists();
@@ -82,7 +88,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         PropertyChangedEventManager.AddHandler(Loc.Instance, OnLanguageChanged, string.Empty);
     }
 
-    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) => RebuildLists();
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RebuildLists();
+        OnPropertyChanged(nameof(SurroundHint));
+    }
 
     /// <summary>The two numbered lists; both carry translated text, so they are built, not bound to resources.</summary>
     private void RebuildLists()
@@ -105,7 +115,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary), nameof(HasRuleSummary), nameof(CanGoBack), nameof(DifferentText))]
+    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary), nameof(HasRuleSummary), nameof(CanGoBack), nameof(DifferentText), nameof(SurroundHint), nameof(HasSurroundHint))]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(BackCommand))]
     public partial SetupStep Step { get; private set; }
 
@@ -174,6 +184,14 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public bool IsDifferent => IsSecond && HasDisplays && !MatchesFirst;
 
     public string DifferentText => Loc.Format("Setup_DifferentText", FirstProfile?.Name);
+
+    /// <summary>
+    /// One line on NVIDIA Surround for the profile steps: that the running grid comes along, or on the second step how
+    /// to get one in (finding U-05). Empty without an NVIDIA driver.
+    /// </summary>
+    public string SurroundHint => HasSurroundHint ? Loc.Instance[_surroundHintKey!] : string.Empty;
+
+    public bool HasSurroundHint => IsProfileStep && _surroundHintKey is not null;
 
     [ObservableProperty]
     public partial AudioSlot? Playback { get; private set; }
@@ -317,6 +335,15 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(HasNameProblem));
         SaveProfileCommand.NotifyCanExecuteChanged();
 
+        // Switching Surround on or off changes the displays, so this runs again after it.
+        SurroundState surround = await ReadSurroundAsync();
+        _surroundHintKey = surround.Availability != SurroundAvailability.Available ? null
+            : surround.IsActive ? "Setup_SurroundOn"
+            : Step == SetupStep.Second ? "Setup_SurroundHint"
+            : null;
+        OnPropertyChanged(nameof(SurroundHint));
+        OnPropertyChanged(nameof(HasSurroundHint));
+
         // A monitor's own speakers appear with the monitor; the choice made so far stays if the device is still there.
         await FillPlaybackAsync(Playback?.Endpoint);
         _log.Information("Setup assistant sees {Count} active display(s) at step {Step}, same as first profile: {Same}", _currentDisplays.Count, Step, MatchesFirst);
@@ -335,6 +362,14 @@ public sealed partial class SetupWizardViewModel : ObservableObject
                 Id = _editingId ?? Guid.NewGuid(),
                 Icon = Step == SetupStep.First ? ProfileIcons.Desk : ProfileIcons.Rig,
             };
+
+            // A running grid is part of the arrangement, as in "From the current arrangement": without it the profile could
+            // never bring the wide display back (finding U-05). The other profile needs nothing - without a setting of
+            // its own it switches Surround off once this one uses it.
+            if (await ReadSurroundAsync() is { IsActive: true } surround)
+            {
+                profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
+            }
 
             if (ProfileEditing.Validate(profile, _catalog.Profiles).Count > 0
                 || (Step == SetupStep.Second && FirstProfile is { } first && _matcher.FindActive([first], snapshot) is not null))
@@ -596,6 +631,20 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         {
             _log.Warning(ex, "Setup assistant could not read the current arrangement");
             return new DisplaySnapshot { TakenAt = DateTimeOffset.Now, Displays = [] };
+        }
+    }
+
+    /// <summary>The Surround state; when it cannot be read, the assistant says nothing about Surround and saves none.</summary>
+    private async Task<SurroundState> ReadSurroundAsync()
+    {
+        try
+        {
+            return await _surround.QueryAsync(CancellationToken.None);
+        }
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
+        {
+            _log.Warning(ex, "Setup assistant could not read the Surround state");
+            return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
         }
     }
 

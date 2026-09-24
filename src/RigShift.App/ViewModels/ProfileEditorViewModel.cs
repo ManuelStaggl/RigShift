@@ -79,7 +79,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         DesktopIcons = profile.DesktopIcons;
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
-        Surround = new SurroundSection(context.Surround, profile.Surround);
+        Surround = new SurroundSection(context.Surround, profile.Surround, context.SurroundUsedBy);
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();

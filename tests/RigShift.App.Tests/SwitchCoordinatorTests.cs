@@ -228,5 +228,33 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Coordinator.History.Count.ShouldBe(1);
     }
 
+    /// <summary>
+    /// The triple with Surround and the desk without a setting: the way back to the desk switches the grid off, or the
+    /// desk's monitors stay hidden inside it (findings K-09, U-05).
+    /// </summary>
+    [Fact]
+    public async Task Switch_ProfileWithoutSurroundWhileAnotherUsesIt_SwitchesSurroundOff()
+    {
+        var grid = new SurroundGrid
+        {
+            Rows = 1,
+            Columns = 3,
+            Width = 2560,
+            Height = 1440,
+            Displays = [new SurroundDisplay { DisplayId = 1 }, new SurroundDisplay { DisplayId = 2 }, new SurroundDisplay { DisplayId = 3 }],
+        };
+        Profile triple = Rig() with { Id = Guid.NewGuid(), Name = "Triple", Surround = new SurroundSetting { Enabled = true, Grid = grid } };
+        Profile desk = Rig() with { Id = Guid.NewGuid(), Name = "Desk" };
+        await _host.Store.SaveAsync(triple, TestContext.Current.CancellationToken);
+        await _host.Store.SaveAsync(desk, TestContext.Current.CancellationToken);
+        await _host.Catalog.ReloadAsync(TestContext.Current.CancellationToken);
+        _host.Surround.ActiveGrid = grid;
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(desk, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Surround.ShouldBe(SurroundOutcome.Changed);
+        _host.Surround.ActiveGrid.ShouldBeNull();
+    }
+
     public void Dispose() => _host.Dispose();
 }

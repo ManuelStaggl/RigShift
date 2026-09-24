@@ -4,8 +4,8 @@ namespace RigShift.Core.Profiles;
 
 /// <summary>
 /// What a profile wants from NVIDIA Surround (Mosaic): several physical displays driven as one wide display, or none.
-/// A profile without this setting leaves Surround exactly as it is – that is the default, because turning Surround on
-/// or off is a rebuild of the whole desktop and must never happen as a side effect.
+/// A profile without this setting leaves Surround exactly as it is while no other profile uses it (see
+/// <see cref="SurroundDefaults"/>), because turning Surround on or off rebuilds the whole desktop.
 /// </summary>
 public sealed record SurroundSetting
 {
@@ -14,6 +14,37 @@ public sealed record SurroundSetting
 
     /// <summary>The grid to build. Required while <see cref="Enabled"/> is true, ignored otherwise.</summary>
     public SurroundGrid? Grid { get; init; }
+}
+
+/// <summary>
+/// What a profile without a Surround setting means. On its own: leave Surround as it is. Once another profile switches
+/// Surround on: off – otherwise the profile's own displays stay hidden inside that grid, the switch waits for monitors
+/// that are on and then blocks (findings K-09, U-05). A profile that should keep the grid says "on" itself.
+/// </summary>
+public static class SurroundDefaults
+{
+    public static SurroundSetting Off { get; } = new() { Enabled = false };
+
+    /// <summary>
+    /// The setting a switch to <paramref name="profile"/> uses. A profile that is not one of <paramref name="profiles"/> –
+    /// the way back of an interrupted switch – keeps its own: it records what it found, and nothing means nothing there.
+    /// </summary>
+    public static SurroundSetting? Effective(Profile profile, IReadOnlyCollection<Profile> profiles)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(profiles);
+
+        if (profile.Surround is not null || !profiles.Any(p => p.Id == profile.Id))
+        {
+            return profile.Surround;
+        }
+
+        return UsedByAnother(profile.Id, profiles) is null ? null : Off;
+    }
+
+    /// <summary>The first profile other than <paramref name="id"/> that switches Surround on, or <c>null</c>.</summary>
+    public static Profile? UsedByAnother(Guid id, IEnumerable<Profile> profiles) =>
+        profiles.FirstOrDefault(p => p.Id != id && p.Surround is { Enabled: true });
 }
 
 /// <summary>

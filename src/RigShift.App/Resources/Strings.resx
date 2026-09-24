@@ -318,6 +318,7 @@
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} displays at {1}x{2} as one {3}x{4} display.</value></data>
   <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround is off right now. Set the grid up once in the NVIDIA control panel, then save the profile again to take it over.</value></data>
   <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>No NVIDIA graphics driver was found on this PC.</value></data>
+  <data name="Editor_SurroundOffBecause" xml:space="preserve"><value>Off, because “{0}” switches Surround on.</value></data>
   <data name="Nav_Games" xml:space="preserve"><value>Games</value></data>
   <data name="Games_Add" xml:space="preserve"><value>_Add game</value></data>
   <data name="Games_Scan" xml:space="preserve"><value>Find installed games</value></data>
@@ -509,6 +510,8 @@
   <data name="Setup_Now" xml:space="preserve"><value>On screen now</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
+  <data name="Setup_SurroundHint" xml:space="preserve"><value>Using NVIDIA Surround? Switch it on in the NVIDIA control panel now – this profile then switches it on by itself.</value></data>
+  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround is on – this profile switches it on by itself.</value></data>
   <data name="Nav_Fov" xml:space="preserve"><value>Field of view</value></data>
   <data name="Fov_Intro" xml:space="preserve"><value>The size comes from the display. Say how far your eyes are and how the rig stands – every sim then gets the number it wants.</value></data>
   <data name="Fov_Rig" xml:space="preserve"><value>Your rig</value></data>

@@ -244,6 +244,12 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{Binding StepText}"
                   TextWrapping="Wrap" />
+                <TextBlock
+                  Margin="0,6,0,0"
+                  Style="{StaticResource RigShift.Text.Caption}"
+                  Text="{Binding SurroundHint}"
+                  TextWrapping="Wrap"
+                  Visibility="{Binding HasSurroundHint, Converter={StaticResource BoolToVisibility}}" />
               </StackPanel>
 
               <controls:InfoBar

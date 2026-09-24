@@ -47,9 +47,10 @@ public sealed record Profile
     public bool KeepAwake { get; init; }
 
     /// <summary>
-    /// NVIDIA Surround for this profile, or <c>null</c> to leave it exactly as it is. Null is the default on purpose:
-    /// building or removing a Surround grid rebuilds the whole desktop, and profiles written before 1.9 knew nothing
-    /// about it. Applied before the display arrangement, because it decides which displays Windows sees at all.
+    /// NVIDIA Surround for this profile, or <c>null</c> to leave it as it is – "off" once another profile switches it
+    /// on (<see cref="SurroundDefaults"/>). Null is the default on purpose: building or removing a Surround grid rebuilds
+    /// the whole desktop, and profiles written before 1.9 knew nothing about it. Applied before the display arrangement,
+    /// because it decides which displays Windows sees at all.
     /// </summary>
     public SurroundSetting? Surround { get; init; }
 

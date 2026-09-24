@@ -133,7 +133,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public Task<SwitchResult?> CheckAsync(Profile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        return CheckCoreAsync(profile, rethrow: false, CancellationToken.None);
+        return CheckCoreAsync(AsSwitched(profile), rethrow: false, CancellationToken.None);
     }
 
     /// <summary>Where "back to the previous profile" goes right now: the hotkey, <c>toggle</c> and <c>rigshift://toggle</c> share it.</summary>
@@ -216,8 +216,15 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
+    /// <summary>The profile as it switches: without a Surround setting it means "off" once another profile uses Surround.</summary>
+    private Profile AsSwitched(Profile profile) =>
+        SurroundDefaults.Effective(profile, _catalog.Profiles) is var surround && surround != profile.Surround
+            ? profile with { Surround = surround }
+            : profile;
+
     private async Task<SwitchResult?> RunCoreAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken)
     {
+        profile = AsSwitched(profile);
         if (request.DryRun)
         {
             return await CheckCoreAsync(profile, rethrow, cancellationToken);

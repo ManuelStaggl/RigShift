@@ -1,4 +1,5 @@
 using NSubstitute;
+using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
@@ -37,7 +38,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
 
         _viewModel = new SetupWizardViewModel(
             _host.Catalog, _host.Display, _audio, _host.Usb, powerCheck,
-            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _host.Settings, Logger.None);
+            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _host.Settings, _host.Surround, Logger.None);
     }
 
     private static DisplaySnapshot RigActive() => Snapshot(
@@ -251,6 +252,37 @@ public sealed class SetupWizardViewModelTests : IDisposable
     }
 
     public void Dispose() => _host.Dispose();
+
+    /// <summary>
+    /// The triple rig saved while Surround runs keeps its grid, as "From the current arrangement" does; before, the
+    /// assistant saved none and the first real switch blocked (finding U-05). The desk needs no setting of its own.
+    /// </summary>
+    [Fact]
+    public async Task SecondStep_WhileSurroundRuns_SavesTheGrid()
+    {
+        await SaveFirstAsync();
+        _viewModel.SurroundHint.ShouldBe(Loc.Instance["Setup_SurroundHint"]);
+
+        var grid = new SurroundGrid
+        {
+            Rows = 1,
+            Columns = 3,
+            Width = 2560,
+            Height = 1440,
+            BezelCorrected = true,
+            Displays = [new SurroundDisplay { DisplayId = 1, OverlapX = -64 }, new SurroundDisplay { DisplayId = 2, OverlapX = -64 }, new SurroundDisplay { DisplayId = 3 }],
+        };
+        _host.Surround.ActiveGrid = grid;
+        _host.Display.SetSnapshot(RigActive());
+        await _viewModel.RefreshDisplaysAsync();
+        _viewModel.SurroundHint.ShouldBe(Loc.Instance["Setup_SurroundOn"]);
+        _viewModel.ProfileName = "Rig";
+        await _viewModel.SaveProfileCommand.ExecuteAsync(null);
+
+        _host.Catalog.Profiles.Single(p => p.Name == "Rig").Surround.ShouldNotBeNull().Grid.ShouldBe(grid);
+        _host.Catalog.Profiles.Single(p => p.Name == "Desk").Surround.ShouldBeNull();
+        _viewModel.HasSurroundHint.ShouldBeFalse();
+    }
 
     private async Task SaveFirstAsync()
     {
