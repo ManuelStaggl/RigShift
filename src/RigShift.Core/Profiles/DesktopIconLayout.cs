@@ -52,6 +52,9 @@ public enum DesktopIconOutcome
 
     /// <summary>The desktop view was not reachable; the log says why.</summary>
     Unavailable,
+
+    /// <summary>Only in a switch result: the symbols go back after it, the outcome follows (v4 finding K-04).</summary>
+    Pending,
 }
 
 /// <param name="Outcome">What happened.</param>

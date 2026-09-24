@@ -92,7 +92,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
         DisplaySnapshot previous = first;
         while (true)
         {
-            await Task.Delay(_options.PollInterval, _time, cancellationToken);
+            await Task.Delay(_options.HdrSettlePollInterval, _time, cancellationToken);
             DisplaySnapshot current = await _display.QueryAsync(cancellationToken);
             if (LayoutKey(current).SetEquals(LayoutKey(previous)))
             {

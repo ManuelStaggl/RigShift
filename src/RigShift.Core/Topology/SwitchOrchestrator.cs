@@ -106,8 +106,9 @@ public sealed class SwitchOrchestrator
         _log.Information("Switching to profile {Profile} (skip confirmation: {SkipConfirmation}, from link: {FromLink})",
             profile.Name, request.SkipConfirmation, request.FromLink);
 
-        // A new switch ends the apps of the previous one, e.g. still waiting for their device (analysis finding B-03).
-        _ = CancelPendingAppsAsync();
+        // A new switch ends what the previous one left running: apps, e.g. still waiting for their device (analysis finding
+        // B-03), and its tidy-up (K-04).
+        _ = CancelPendingAsync();
 
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
@@ -167,7 +168,7 @@ public sealed class SwitchOrchestrator
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
             SwitchNote restored = await RestoreAfterFailureAsync(wayBack.Displays, wayBack.Surround, cancellationToken);
-            return await Finish(new SwitchResult
+            SwitchResult failed = await Finish(new SwitchResult
             {
                 Outcome = SwitchOutcome.Failed,
                 Plan = applied.Plan,
@@ -177,30 +178,21 @@ public sealed class SwitchOrchestrator
                 Surround = surround.Outcome,
                 Note = restored,
             }, started);
+            return restored == SwitchNote.RestoredPrevious ? failed with { TidyCompletion = _tidy.Start(null) } : failed;
         }
 
-        Answer answer = await ApplyRestAndAskAsync(profile, wayBack, applied, confirmTimeout, cancellationToken);
+        Answer answer = await ApplyRestAndAskAsync(profile, wayBack, applied, confirmTimeout, started, cancellationToken);
         if (answer.Result != ConfirmationResult.Confirmed)
         {
             return await RollBackAsync(profile, wayBack, applied, answer, started, cancellationToken);
         }
 
-        // The switch stays: an exit during the tidy-up below must not bring the question "undo it?" at the next start (K-14).
-        await _journal.ClearAsync(CancellationToken.None);
-
-        // Windows move only once the switch stays: a rejected one would leave them moved without a way back (B-14).
-        DesktopIconOutcome icons = await _tidy.RunAsync(profile, cancellationToken);
-
-        // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
-        // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
-        Task<AppsOutcome> appsRun = _appRunner.Start(profile);
-        AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
-
         // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it (finding HW-03).
         SwitchOutcome outcome = answer.Modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
+        AppsOutcome apps = PendingApps(profile);
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, answer.Audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
-        return await Finish(new SwitchResult
+        SwitchResult result = await Finish(new SwitchResult
         {
             Outcome = outcome,
             Plan = answer.Modes.Plan,
@@ -208,13 +200,29 @@ public sealed class SwitchOrchestrator
             LastNativeError = applied.LastNativeError,
             Audio = answer.Audio,
             Apps = apps,
-            AppsCompletion = appsRun,
             Surround = surround.Outcome,
             Note = answer.Modes.Note,
             Hdr = applied.Hdr,
-            DesktopIcons = icons,
+            DesktopIcons = PendingDesktopIcons(profile),
         }, started);
+        return AfterResult(result, profile);
     }
+
+    /// <summary>
+    /// What follows a switch that stays, started once its result is there (v4 finding K-04). Only then: a rejected switch
+    /// must not leave windows moved without a way back (B-14), programs started or someone's work closed. In the
+    /// background: neither Windows' own rearranging nor an app waiting for its device may hold up the result, the hotkeys,
+    /// the automation or the next switch (B-03). The journal is gone by then, so an exit meanwhile brings no question
+    /// "undo it?" at the next start (K-14).
+    /// </summary>
+    private SwitchResult AfterResult(SwitchResult result, Profile profile) =>
+        result with { TidyCompletion = _tidy.Start(profile), AppsCompletion = _appRunner.Start(profile) };
+
+    private static AppsOutcome PendingApps(Profile profile) =>
+        profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
+
+    private static DesktopIconOutcome PendingDesktopIcons(Profile profile) =>
+        profile.DesktopIcons is { IsEmpty: false } ? DesktopIconOutcome.Pending : DesktopIconOutcome.NotConfigured;
 
     /// <summary>
     /// The displays after a Surround change. Windows lists the displays of a grid that was just built or taken apart
@@ -333,7 +341,7 @@ public sealed class SwitchOrchestrator
     /// back, never in that arrangement staying.
     /// </summary>
     private async Task<Answer> ApplyRestAndAskAsync(
-        Profile profile, WayBack wayBack, ApplyOutcome applied, TimeSpan? confirmTimeout, CancellationToken cancellationToken)
+        Profile profile, WayBack wayBack, ApplyOutcome applied, TimeSpan? confirmTimeout, long started, CancellationToken cancellationToken)
     {
         bool confirm = confirmTimeout is not null;
         ModeCheck modes = ModeCheck.AsPlanned(applied.Plan);
@@ -357,6 +365,9 @@ public sealed class SwitchOrchestrator
             // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
             SwitchKeepAwake(profile);
             await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
+
+            // What the user waits for, from the click until picture and sound are there (v4 finding K-04).
+            _log.Information("Picture and sound of {Profile} ready after {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
 
             if (confirmTimeout is not { } timeout)
             {
@@ -391,20 +402,19 @@ public sealed class SwitchOrchestrator
     {
         long started = _time.GetTimestamp();
         _log.Information("Applying the rest of profile {Profile}; Windows already restored its displays", profile.Name);
-        _ = CancelPendingAppsAsync();
+        _ = CancelPendingAsync();
 
         TopologyPlan plan = _planner.Plan(profile, await _display.QueryAsync(cancellationToken));
         AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn: true, cancellationToken);
         SwitchKeepAwake(profile);
         await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
-        DesktopIconOutcome icons = await _tidy.RunAsync(profile, cancellationToken);
 
-        Task<AppsOutcome> appsRun = _appRunner.Start(profile);
-        AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
+        AppsOutcome apps = PendingApps(profile);
         _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
-        return await Finish(
-            new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun, DesktopIcons = icons },
+        SwitchResult result = await Finish(
+            new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, DesktopIcons = PendingDesktopIcons(profile) },
             started);
+        return AfterResult(result, profile);
     }
 
     /// <summary>
@@ -427,10 +437,10 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
-    /// The cancellation is requested before this method first yields.
+    /// Cancels what an earlier switch left running after its result – apps that still start or wait for their device, and
+    /// the tidy-up – and completes once it ended. The cancellation is requested before this method first yields.
     /// </summary>
-    public Task CancelPendingAppsAsync() => _appRunner.CancelPendingAsync();
+    public Task CancelPendingAsync() => Task.WhenAll(_appRunner.CancelPendingAsync(), _tidy.CancelPendingAsync());
 
     /// <summary>
     /// The emergency hotkey: every display that is ready, at 60 Hz when the card cannot drive them all otherwise. No
@@ -459,11 +469,6 @@ public sealed class SwitchOrchestrator
         _topology.LogPlan(plan);
 
         ApplyOutcome applied = await _topology.ApplyAsync(profile, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
-        if (applied.Succeeded)
-        {
-            await _tidy.RescueWindowsAsync(cancellationToken);
-        }
-
         ModeCheck modes = applied.Succeeded && applied.UsedDatabaseModes
             ? await _topology.CheckDatabaseModesAsync(applied.Plan, cancellationToken)
             : ModeCheck.AsPlanned(applied.Plan);
@@ -476,7 +481,9 @@ public sealed class SwitchOrchestrator
         // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
         SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, null, cancellationToken);
 
-        return await Finish(new SwitchResult
+        // Tidied up like a switch, after the result (K-04): the arrangement changed, so Explorer lays out the symbols anew.
+        bool tidy = applied.Succeeded || note == SwitchNote.RestoredPrevious;
+        SwitchResult result = await Finish(new SwitchResult
         {
             Outcome = outcome,
             Plan = modes.Plan,
@@ -484,7 +491,9 @@ public sealed class SwitchOrchestrator
             LastNativeError = applied.LastNativeError,
             Message = applied.Message,
             Note = note,
+            DesktopIcons = tidy ? PendingDesktopIcons(profile) : DesktopIconOutcome.NotConfigured,
         }, started);
+        return tidy ? result with { TidyCompletion = _tidy.Start(profile) } : result;
     }
 
     /// <summary>
@@ -648,8 +657,8 @@ public sealed class SwitchOrchestrator
             return SwitchNote.RestoreFailed;
         }
 
+        // The caller moves lost windows over once its result is out.
         _log.Information("Previous topology restored after failed switch ({Attempts} attempts)", restored.Attempts);
-        await _tidy.RescueWindowsAsync(cancellationToken);
         return SwitchNote.RestoredPrevious;
     }
 

@@ -43,6 +43,12 @@ public sealed record SwitchOptions
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 
     /// <summary>
+    /// Interval between the snapshots that must agree before HDR is switched. Short: the arrangement usually stands long
+    /// before, and a full <see cref="PollInterval"/> cost every HDR switch a second (v4 finding K-04).
+    /// </summary>
+    public TimeSpan HdrSettlePollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
     /// How long Windows may take to list the displays of a Surround grid that was just built or taken apart, before the
     /// switch treats a missing one as switched off (finding K-09).
     /// </summary>

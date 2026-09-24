@@ -74,7 +74,7 @@ public sealed partial class OverviewViewModel : ObservableObject
             }
         };
         coordinator.History.CollectionChanged += (_, _) => OnUi(RebuildHistory);
-        coordinator.AppsCompleted += (_, _) => OnUi(RebuildHistory);
+        coordinator.FollowUpCompleted += (_, _) => OnUi(RebuildHistory);
         // The catalog reads the displays after every change and every switch; showing that read saves one of our own (v4 finding A-03).
         catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowDisplays(snapshot));
         Loc.Instance.PropertyChanged += (_, _) => OnUi(() =>

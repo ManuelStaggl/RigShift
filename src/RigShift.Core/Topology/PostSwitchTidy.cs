@@ -6,8 +6,9 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// Tidies up after an arrangement that stays: windows left on displays that are off, and the profile's desktop symbols.
-/// Neither ever fails a switch – an untidy desktop is a log line. Logs under the orchestrator's context, so the log
-/// source stays the same.
+/// Neither ever fails a switch – an untidy desktop is a log line. Both run after the result, in the background: they wait
+/// for Windows to finish its own rearranging first, and that used to hold up the result, the hotkeys and the next switch
+/// by one to eleven seconds (v4 finding K-04). Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
 internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons desktopIcons, SwitchOptions options, TimeProvider time, ILogger log)
 {
@@ -17,21 +18,90 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
     private readonly TimeProvider _time = time;
     private readonly ILogger _log = log;
 
+    private readonly Lock _gate = new();
+
+    /// <summary>The tidy-up after the last result, running until done or cancelled.</summary>
+    private Pending? _pending;
+
     /// <summary>
-    /// Windows first, then the symbols. Both wait a moment before they start, because right after the arrangement changed
-    /// Windows moves each of them itself. Returns what became of the symbols, so the user learns it (K-15).
+    /// Starts the tidy-up in the background: the windows, and with a <paramref name="profile"/> its desktop symbols, side by
+    /// side. Ends the tidy-up of an earlier result first. Completes with what became of the symbols (K-15); never faults.
     /// </summary>
-    public async Task<DesktopIconOutcome> RunAsync(Profile profile, CancellationToken cancellationToken)
+    public Task<DesktopIconOutcome> Start(Profile? profile)
     {
-        await RescueWindowsAsync(cancellationToken);
-        return await RestoreDesktopIconsAsync(profile, cancellationToken);
+        var cancellation = new CancellationTokenSource();
+        CancellationToken token = cancellation.Token;
+        Task<DesktopIconOutcome> run = Task.Run(() => RunAsync(profile, token), CancellationToken.None);
+        Pending? previous;
+        lock (_gate)
+        {
+            previous = _pending;
+            _pending = new Pending(run, cancellation);
+        }
+
+        if (previous is not null)
+        {
+            _ = EndAsync(previous);
+        }
+
+        return run;
     }
 
     /// <summary>
-    /// After every successful apply (switch, rollback, restore, catch-up): windows left on a display that is off now
-    /// move to the primary display.
+    /// Cancels the tidy-up of an earlier result and completes once it ended. The cancellation is requested before this
+    /// method first yields: a new switch must not have its windows moved by the old one.
     /// </summary>
-    public async Task RescueWindowsAsync(CancellationToken cancellationToken)
+    public Task CancelPendingAsync()
+    {
+        Pending? pending;
+        lock (_gate)
+        {
+            pending = _pending;
+            _pending = null;
+        }
+
+        return pending is null ? Task.CompletedTask : EndAsync(pending);
+    }
+
+    private static async Task EndAsync(Pending pending)
+    {
+        try
+        {
+            if (!pending.Run.IsCompleted)
+            {
+                await pending.Cancellation.CancelAsync();
+            }
+
+            await pending.Run;
+        }
+        finally
+        {
+            pending.Cancellation.Dispose();
+        }
+    }
+
+    private async Task<DesktopIconOutcome> RunAsync(Profile? profile, CancellationToken cancellationToken)
+    {
+        Task rescue = RescueWindowsAsync(cancellationToken);
+        Task<DesktopIconOutcome> icons = profile is null ? SwitchResult.NothingToTidy : RestoreDesktopIconsAsync(profile, cancellationToken);
+        try
+        {
+            await Task.WhenAll(rescue, icons);
+            return await icons;
+        }
+        catch (OperationCanceledException)
+        {
+            _log.Information("Tidy-up after the switch cancelled");
+            return DesktopIconOutcome.NotConfigured;
+        }
+    }
+
+    /// <summary>
+    /// After every apply that stays (switch, restore after a failure, catch-up): windows left on a display that is off
+    /// now move to the primary display. Waits a moment first, because right after the arrangement changed Windows moves
+    /// them itself.
+    /// </summary>
+    private async Task RescueWindowsAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -119,4 +189,6 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
 
         return settled.Icons.Any(icon => current.TryGetValue(icon.Item, out DesktopIcon? at) && (at.X != icon.X || at.Y != icon.Y));
     }
+
+    private sealed record Pending(Task<DesktopIconOutcome> Run, CancellationTokenSource Cancellation);
 }

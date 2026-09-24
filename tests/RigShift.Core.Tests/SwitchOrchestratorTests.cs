@@ -1164,7 +1164,7 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_HdrNotReportedRightAfterApply_AsksAgainAfterOneSecond()
+    public async Task Switch_HdrNotReportedRightAfterApply_AsksAgainOnTheNextLook()
     {
         var display = new FakeDisplayConfigurator([
             DeskActive(),
@@ -1178,7 +1178,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+        _time.Elapsed.ShouldBe(options.HdrSettlePollInterval);
     }
 
     [Fact]
@@ -1293,7 +1293,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(2));
+        _time.Elapsed.ShouldBe(options.HdrSettlePollInterval * 2);
     }
 
     [Fact]
@@ -1301,7 +1301,7 @@ public sealed class SwitchOrchestratorTests
     {
         DisplaySnapshot a = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet));
         DisplaySnapshot b = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet, activeMode: TabletMode));
-        var display = new FakeDisplayConfigurator([DeskActive(), .. Enumerable.Range(0, 40).Select(i => i % 2 == 0 ? a : b)]);
+        var display = new FakeDisplayConfigurator([DeskActive(), .. Enumerable.Range(0, 100).Select(i => i % 2 == 0 ? a : b)]);
 
         SwitchResult result = await Create(display).SwitchAsync(
             Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode] }, SwitchRequest.Default, Ct);
@@ -1316,10 +1316,60 @@ public sealed class SwitchOrchestratorTests
         var options = new SwitchOptions { WindowRescueDelay = TimeSpan.FromSeconds(1) };
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive()), options).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         _windows.Received(1).RescueOffscreenWindows();
         _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+    }
+
+    /// <summary>
+    /// K-04, the budget: a plain switch with the shipped options – sound, apps and desktop symbols, no HDR, no countdown –
+    /// reports within two seconds. Moving windows and putting symbols back wait for Windows' own rearranging first; they
+    /// used to come before the result and cost every switch one to eleven seconds.
+    /// </summary>
+    [Fact]
+    public async Task Switch_WithTheShippedOptions_ReportsWithinTwoSeconds()
+    {
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _apps.IsRunning(default!).ReturnsForAnyArgs(false);
+        Profile rig = Rig(audio: new AudioAssignment { Playback = Headphones }) with
+        {
+            DesktopIcons = Layout,
+            Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }],
+        };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive()), new SwitchOptions()).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Duration.ShouldBeLessThanOrEqualTo(TimeSpan.FromSeconds(2));
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _windows.Received(1).RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_NewSwitch_CancelsTheTidyUpOfThePreviousOne()
+    {
+        // The first switch's symbols are still going back when the next switch starts: its second pass must not follow.
+        var restoring = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        DesktopIcons.MovesAfterRestore = 1;
+        DesktopIcons.DuringRestore = () =>
+        {
+            restoring.TrySetResult();
+            _ = release.Wait(TimeSpan.FromSeconds(30), Ct);
+        };
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        SwitchResult first = await orchestrator.SwitchAsync(Rig() with { DesktopIcons = Layout }, SwitchRequest.Default, Ct);
+        await restoring.Task;
+        SwitchResult second = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        release.Set();
+
+        second.Outcome.ShouldBe(SwitchOutcome.Applied);
+        (await first.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
+        DesktopIcons.Restores.ShouldBe(1);
     }
 
     [Fact]
@@ -1330,7 +1380,8 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        result.DesktopIcons.ShouldBe(DesktopIconOutcome.Restored);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.Pending);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
         DesktopIcons.Restores.ShouldBe(1);
         DesktopIcons.Capture().ShouldNotBeNull().Icons.ShouldBe(Layout.Icons);
     }
@@ -1349,6 +1400,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.Applied.ShouldBeEmpty();
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
         DesktopIcons.Restores.ShouldBe(1);
     }
 
@@ -1358,6 +1410,8 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.NotConfigured);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
         DesktopIcons.Restores.ShouldBe(0);
     }
 
@@ -1368,7 +1422,8 @@ public sealed class SwitchOrchestratorTests
         DesktopIcons.MovesAfterRestore = 1;
         Profile rig = Rig() with { DesktopIcons = Layout };
 
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         DesktopIcons.Restores.ShouldBe(2);
     }
@@ -1382,8 +1437,8 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.AutoArrange);
         DesktopIcons.Restores.ShouldBe(1);
-        result.DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
     }
 
     [Fact]
@@ -1417,6 +1472,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         Received.InOrder(() =>
@@ -1433,17 +1489,21 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [87, 87, 0]);
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         _windows.Received(1).RescueOffscreenWindows();
     }
 
     [Fact]
-    public async Task CatchUp_RescuesWindows()
+    public async Task CatchUp_RescuesWindowsAndPutsTheSymbolsBack()
     {
-        await Create(new FakeDisplayConfigurator(DeskActive())).CatchUpAsync(Rig(), appliedDisplays: 1, Ct);
+        // The catch-up changes the arrangement, and Explorer lays the symbols out anew with it.
+        SwitchResult? result = await Create(new FakeDisplayConfigurator(DeskActive())).CatchUpAsync(Rig() with { DesktopIcons = Layout }, appliedDisplays: 1, Ct);
 
+        (await result.ShouldNotBeNull().TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
         _windows.Received(1).RescueOffscreenWindows();
+        DesktopIcons.Restores.ShouldBe(1);
     }
 
     [Fact]
@@ -1456,6 +1516,7 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
         (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
     }
 
@@ -1782,7 +1843,8 @@ public sealed class SwitchOrchestratorTests
             tidied = true;
         });
 
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         tidied.ShouldBeTrue();
         duringTidy.ShouldBeNull();

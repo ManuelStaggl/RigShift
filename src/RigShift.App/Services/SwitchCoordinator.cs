@@ -82,10 +82,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler<Profile>? RestoredByWindows;
 
     /// <summary>
-    /// The apps of a switch ended after its result: the history record, now with the final apps outcome (analysis
-    /// finding B-03). Raised on the context that started the switch.
+    /// What a switch left running after its result ended – its apps (analysis finding B-03) and its tidy-up with the
+    /// desktop symbols (v4 finding K-04): the history record, now with their final outcomes. Raised on the context that
+    /// started the switch.
     /// </summary>
-    public event EventHandler<SwitchRecord>? AppsCompleted;
+    public event EventHandler<SwitchRecord>? FollowUpCompleted;
 
     public ObservableCollection<SwitchRecord> History { get; } = [];
 
@@ -112,8 +113,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public async Task<bool> StopAsync(TimeSpan timeout)
     {
         await _stopping.CancelAsync();
-        Task apps = _orchestrator.CancelPendingAppsAsync();
-        Task current = _current is { IsCompleted: false } running ? Task.WhenAll(running, apps) : apps;
+        Task pending = _orchestrator.CancelPendingAsync();
+        Task current = _current is { IsCompleted: false } running ? Task.WhenAll(running, pending) : pending;
         if (current.IsCompleted)
         {
             return true;
@@ -280,11 +281,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             RememberApplied(profile, result);
             SwitchRecord record = ToRecord(started, profile, result);
             await CompleteAsync(record);
-            if (result.Apps == AppsOutcome.Pending)
-            {
-                _ = FollowAppsAsync(record, result.AppsCompletion);
-            }
-
+            FollowUp(record, result);
             await HealAsync(result);
             return result;
         }
@@ -424,7 +421,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             if (result is not null)
             {
                 RememberCatchUp(pending.Profile, result);
-                await CompleteAsync(ToRecord(started, pending.Profile, result));
+                SwitchRecord record = ToRecord(started, pending.Profile, result);
+                await CompleteAsync(record);
+                FollowUp(record, result);
                 await HealAsync(result);
             }
             else if (_catalog.ActiveProfile is { } active && active.Id != pending.Profile.Id)
@@ -579,23 +578,36 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    private async Task FollowAppsAsync(SwitchRecord record, Task<AppsOutcome> apps)
+    /// <summary>Follows what the switch left running after its result, when anything still runs.</summary>
+    private void FollowUp(SwitchRecord record, SwitchResult result)
+    {
+        if (result.Apps == AppsOutcome.Pending || result.DesktopIcons == DesktopIconOutcome.Pending)
+        {
+            _ = FollowUpAsync(record, result.AppsCompletion, result.TidyCompletion);
+        }
+    }
+
+    /// <summary>
+    /// One record update and one event once both ended, not one each: the record in the history is replaced by value, and
+    /// a second update would no longer find the first one's.
+    /// </summary>
+    private async Task FollowUpAsync(SwitchRecord record, Task<AppsOutcome> apps, Task<DesktopIconOutcome> tidy)
     {
         try
         {
-            AppsOutcome outcome = await apps;
-            SwitchRecord updated = record with { Apps = outcome };
+            await Task.WhenAll(apps, tidy);
+            SwitchRecord updated = record with { Apps = await apps, DesktopIcons = await tidy };
             int index = History.IndexOf(record);
             if (index >= 0)
             {
                 History[index] = updated;
             }
 
-            AppsCompleted?.Invoke(this, updated);
+            FollowUpCompleted?.Invoke(this, updated);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _log.Error(ex, "Reporting the apps of {Profile} failed", record.ProfileName);
+            _log.Error(ex, "Reporting what followed the switch to {Profile} failed", record.ProfileName);
         }
     }
 }

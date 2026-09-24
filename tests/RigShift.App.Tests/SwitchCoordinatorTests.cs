@@ -226,7 +226,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
             return new HashSet<string>();
         });
         var appsCompleted = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _host.Coordinator.AppsCompleted += (_, record) => appsCompleted.TrySetResult(record);
+        _host.Coordinator.FollowUpCompleted += (_, record) => appsCompleted.TrySetResult(record);
         bool busy = false;
         _host.Coordinator.BusyRejected += (_, _) => busy = true;
         Profile rig = Rig() with
@@ -249,6 +249,27 @@ public sealed class SwitchCoordinatorTests : IDisposable
         SwitchRecord apps = await appsCompleted.Task;
         apps.Apps.ShouldBe(AppsOutcome.Cancelled);
         _host.Coordinator.History.Single(r => r.ProfileName == "Rig").Apps.ShouldBe(AppsOutcome.Cancelled);
+    }
+
+    [Fact]
+    public async Task Switch_DesktopSymbolsFollowTheResult_TheirProblemComesInASecondNotification()
+    {
+        // K-04: the symbols no longer hold up the result; what went wrong with them comes once they are done.
+        _host.DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
+        var followUp = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _host.Coordinator.FollowUpCompleted += (_, record) => followUp.TrySetResult(record);
+        SwitchRecord? reported = null;
+        _host.Coordinator.SwitchCompleted += (_, record) => reported = record;
+        var layout = new DesktopIconLayout { Icons = [new DesktopIcon { Item = "::{645FF040-5081-101B-9F08-00AA002F954E}", X = 20, Y = 20 }] };
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(Rig() with { DesktopIcons = layout }, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().DesktopIcons.ShouldBe(DesktopIconOutcome.Pending);
+        SwitchMessages.ForNotification(reported.ShouldNotBeNull()).Text.ShouldNotContain(Loc.Instance["Result_IconsAutoArrange"]);
+        SwitchRecord done = await followUp.Task;
+        done.DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
+        SwitchMessages.ForFollowUpNotification(done).ShouldNotBeNull().Text.ShouldBe(Loc.Instance["Result_IconsAutoArrange"]);
+        _host.Coordinator.History.Single().DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
     }
 
     [Fact]

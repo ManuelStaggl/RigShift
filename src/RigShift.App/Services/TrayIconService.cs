@@ -128,11 +128,11 @@ public sealed class TrayIconService : IDisposable
             // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
             Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked);
         });
-        coordinator.AppsCompleted += (_, record) => OnUi(() =>
+        coordinator.FollowUpCompleted += (_, record) => OnUi(() =>
         {
-            if (SwitchMessages.ForAppsNotification(record) is { } apps)
+            if (SwitchMessages.ForFollowUpNotification(record) is { } followUp)
             {
-                Notify(apps);
+                Notify(followUp);
             }
         });
         coordinator.WaitingForDisplays += (_, names) => OnUi(() => Notify((

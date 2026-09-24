@@ -303,6 +303,30 @@ public static class SwitchMessages
             text += Environment.NewLine + Loc.Instance["Result_HdrIncomplete"];
         }
 
+        foreach (string problem in FollowUpProblems(record))
+        {
+            text += Environment.NewLine + problem;
+        }
+
+        return (title, text, icon);
+    }
+
+    /// <summary>
+    /// Apps and desktop symbols follow the switch result (B-03, K-04): a second notification only when something went wrong
+    /// with them.
+    /// </summary>
+    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForFollowUpNotification(SwitchRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        List<string> problems = [.. FollowUpProblems(record)];
+        return problems.Count > 0
+            ? (Loc.Format("Result_AppliedTitle", record.ProfileName), string.Join(Environment.NewLine, problems), H.NotifyIcon.Core.NotificationIcon.Warning)
+            : null;
+    }
+
+    /// <summary>What went wrong with the desktop symbols and the apps; nothing while they still run.</summary>
+    private static IEnumerable<string> FollowUpProblems(SwitchRecord record)
+    {
         string? icons = record.DesktopIcons switch
         {
             DesktopIconOutcome.AutoArrange => Loc.Instance["Result_IconsAutoArrange"],
@@ -311,32 +335,20 @@ public static class SwitchMessages
         };
         if (icons is not null)
         {
-            text += Environment.NewLine + icons;
+            yield return icons;
         }
 
-        if (AppsProblem(record) is { } apps)
+        string? apps = record.Apps switch
         {
-            text += Environment.NewLine + apps;
+            AppsOutcome.Incomplete => Loc.Instance["Result_AppsIncomplete"],
+            AppsOutcome.DeviceMissing => Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds),
+            _ => null,
+        };
+        if (apps is not null)
+        {
+            yield return apps;
         }
-
-        return (title, text, icon);
     }
-
-    /// <summary>Apps run after the switch result (B-03): a second notification only when something went wrong with them.</summary>
-    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForAppsNotification(SwitchRecord record)
-    {
-        ArgumentNullException.ThrowIfNull(record);
-        return AppsProblem(record) is { } text
-            ? (Loc.Format("Result_AppliedTitle", record.ProfileName), text, H.NotifyIcon.Core.NotificationIcon.Warning)
-            : null;
-    }
-
-    private static string? AppsProblem(SwitchRecord record) => record.Apps switch
-    {
-        AppsOutcome.Incomplete => Loc.Instance["Result_AppsIncomplete"],
-        AppsOutcome.DeviceMissing => Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds),
-        _ => null,
-    };
 
     private static string Names(IEnumerable<MissingDisplay> missing) =>
         string.Join(", ", missing.Select(m => NameOf(m.Assignment)));
