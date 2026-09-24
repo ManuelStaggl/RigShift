@@ -146,6 +146,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                   </Grid.ColumnDefinitions>
                   <StackPanel Margin="0,0,8,0">
@@ -188,8 +189,19 @@
                       ToolTip="{loc:Tr App_Wait}"
                       Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
                   </StackPanel>
-                  <StackPanel
+                  <CheckBox
                     Grid.Column="3"
+                    Margin="0,0,8,6"
+                    VerticalAlignment="Bottom"
+                    AutomationProperties.HelpText="{loc:Tr App_WaitForWindowTip}"
+                    AutomationProperties.Name="{loc:Tr App_WaitForWindow}"
+                    Content="{loc:Tr App_WaitForWindow}"
+                    IsChecked="{Binding WaitForWindow}"
+                    Style="{StaticResource RigShift.Check}"
+                    ToolTip="{loc:Tr App_WaitForWindowTip}"
+                    Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}" />
+                  <StackPanel
+                    Grid.Column="4"
                     Margin="8,0,0,0"
                     Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />

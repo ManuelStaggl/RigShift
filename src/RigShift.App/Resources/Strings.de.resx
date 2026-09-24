@@ -764,4 +764,10 @@
   <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
     <value>Notfalltaste, wenn ein Bildschirm dunkel bleibt. Fest, wirkt ohne RigShift-Fenster.</value>
   </data>
+  <data name="App_WaitForWindow" xml:space="preserve">
+    <value>Bis sein Fenster da ist</value>
+  </data>
+  <data name="App_WaitForWindowTip" xml:space="preserve">
+    <value>Geht weiter, sobald das Programm ein Fenster zeigt – spätestens nach den Sekunden. Nicht für Programme, die im Tray starten.</value>
+  </data>
 </root>

@@ -956,6 +956,67 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_AppWaitingForItsWindow_GoesOnAsSoonAsItShows()
+    {
+        _apps.HasWindow("C:\\Fanatec\\FanatecApp.exe").Returns(false, false, true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true },
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromMilliseconds(500));
+    }
+
+    [Theory]
+    [InlineData(10, 10)]
+    [InlineData(0, 60)]
+    public async Task Switch_AppWaitingForItsWindow_NeverShows_GoesOnAfterItsSecondsOrAMinute(int seconds, int expected)
+    {
+        // A program that starts into the tray: the next one still starts.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = seconds, WaitForWindow = true },
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(expected));
+    }
+
+    [Fact]
+    public async Task Switch_AppWaitingForItsWindow_AlreadyRunning_IsNotWaitedFor()
+    {
+        _apps.IsRunning("C:\\Fanatec\\FanatecApp.exe").Returns(true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true }],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.DidNotReceiveWithAnyArgs().HasWindow(default!);
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Fact]
     public async Task Switch_DoesNotStartRunningApp_OrStopMissingOne()
     {
         _apps.IsRunning("C:\\SimHub\\SimHubWPF.exe").Returns(true);

@@ -69,6 +69,12 @@ public sealed record SwitchOptions
     /// <summary>How long an app may take to close after its windows were asked to, before it is ended.</summary>
     public TimeSpan AppStopGrace { get; init; } = TimeSpan.FromSeconds(5);
 
+    /// <summary>Longest wait for an app's window when the app sets no wait time of its own.</summary>
+    public TimeSpan AppWindowWaitLimit { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>Interval for looking for that window: short, the next app waits for nothing else.</summary>
+    public TimeSpan AppWindowPollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
     /// <summary>
     /// Pause between a successful apply and moving lost windows: Windows and the apps rearrange windows themselves
     /// right after a topology change, and a move before that would be undone.

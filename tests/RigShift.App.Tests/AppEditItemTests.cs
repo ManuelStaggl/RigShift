@@ -13,6 +13,37 @@ public sealed class AppEditItemTests
     private static readonly string Existing = Path.Combine(Environment.SystemDirectory, "notepad.exe");
 
     [Fact]
+    public void WaitForWindow_TickedWithoutSeconds_ShowsTheMinuteItWaitsAtMost()
+    {
+        var row = new AppEditItem(new AppAction { Path = Existing });
+
+        row.WaitForWindow = true;
+
+        row.WaitSeconds.ShouldBe(AppEditItem.DefaultWindowWaitSeconds);
+        row.ToAction().ShouldSatisfyAllConditions(
+            action => action.WaitForWindow.ShouldBeTrue(),
+            action => action.WaitSeconds.ShouldBe(AppEditItem.DefaultWindowWaitSeconds));
+    }
+
+    [Fact]
+    public void WaitForWindow_TickedWithSeconds_KeepsThem()
+    {
+        var row = new AppEditItem(new AppAction { Path = Existing, WaitSeconds = 20 });
+
+        row.WaitForWindow = true;
+
+        row.ToAction().WaitSeconds.ShouldBe(20);
+    }
+
+    [Fact]
+    public void WaitForWindow_OnAStop_IsNotSaved()
+    {
+        var row = new AppEditItem(new AppAction { Kind = AppActionKind.Stop, Path = "notepad.exe", WaitForWindow = true });
+
+        row.ToAction().WaitForWindow.ShouldBeFalse();
+    }
+
+    [Fact]
     public void PathNote_FileExists_IsNull()
     {
         new AppEditItem(new AppAction { Path = Existing }).PathNote.ShouldBeNull();

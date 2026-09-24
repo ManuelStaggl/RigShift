@@ -28,6 +28,36 @@ public sealed class ProcessAppLauncher : IAppLauncher
         return processes.Length > 0;
     }
 
+    /// <summary>
+    /// A visible top-level window without an owner, the way .NET picks a process's main window – a splash screen counts,
+    /// a tray icon does not.
+    /// </summary>
+    public bool HasWindow(string path)
+    {
+        Process[] processes = Find(path);
+        try
+        {
+            return processes.Any(HasMainWindow);
+        }
+        finally
+        {
+            DisposeAll(processes);
+        }
+    }
+
+    private static bool HasMainWindow(Process process)
+    {
+        try
+        {
+            return process.MainWindowHandle != 0;
+        }
+        catch (InvalidOperationException)
+        {
+            // Exited in the meantime.
+            return false;
+        }
+    }
+
     public void Start(string path, string? arguments)
     {
         string file = LaunchPath.ForStart(path);

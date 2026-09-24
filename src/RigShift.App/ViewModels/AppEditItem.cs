@@ -27,7 +27,11 @@ public sealed partial class AppEditItem : ObservableObject
         _pickedName = action.Name;
         Arguments = action.Arguments ?? string.Empty;
         WaitSeconds = action.WaitSeconds;
+        WaitForWindow = action.WaitForWindow;
     }
+
+    /// <summary>What the seconds become when "until its window is open" is ticked with none: a limit that is visible.</summary>
+    internal const int DefaultWindowWaitSeconds = 60;
 
     private string? _pickedPath;
     private string? _pickedName;
@@ -132,6 +136,18 @@ public sealed partial class AppEditItem : ObservableObject
     [ObservableProperty]
     public partial double? WaitSeconds { get; set; }
 
+    /// <summary>The wait ends once the program shows a window; the seconds are the longest wait.</summary>
+    [ObservableProperty]
+    public partial bool WaitForWindow { get; set; }
+
+    partial void OnWaitForWindowChanged(bool value)
+    {
+        if (value && (WaitSeconds ?? 0) <= 0)
+        {
+            WaitSeconds = DefaultWindowWaitSeconds;
+        }
+    }
+
     public AppAction ToAction() => new()
     {
         Kind = IsStart ? AppActionKind.Start : AppActionKind.Stop,
@@ -139,6 +155,7 @@ public sealed partial class AppEditItem : ObservableObject
         Name = _pickedName is not null && string.Equals(Path.Trim(), _pickedPath, StringComparison.OrdinalIgnoreCase) ? _pickedName : null,
         Arguments = IsStart && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
         WaitSeconds = (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
+        WaitForWindow = IsStart && WaitForWindow,
         When = IsAfterGame ? AppTiming.AfterGame : AppTiming.BeforeGame,
     };
 }

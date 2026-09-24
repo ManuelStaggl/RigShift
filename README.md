@@ -31,7 +31,8 @@ starts the sim with the right screens, its tools and their windows, and puts eve
   a hotkey or its own desktop shortcut – or let RigShift notice when you start the game from Steam yourself.
   **Find installed games** picks your sims off the list of what Steam and Epic have on this PC, on any drive, with no
   sign-in and nothing to type.
-- **Apps.** Start SimHub, Crew Chief or anything else with a profile and close what you do not need.
+- **Apps.** Start SimHub, Crew Chief or anything else with a profile and close what you do not need. The next one can
+  wait until the previous one shows its window, instead of a guessed delay.
 - **Desktop icons.** Windows keeps one icon layout for all arrangements and reshuffles it whenever your screens change.
   A profile can carry its own, and puts it back after the switch.
 - **One atomic switch.** Windows gets the whole layout at once, so the switch either works or nothing changes. No
