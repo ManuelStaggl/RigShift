@@ -169,7 +169,9 @@ public sealed record SwitchRecord(
     string? AppsWaitDevice = null,
     int AppsWaitSeconds = 0,
     SwitchNote Note = SwitchNote.None,
-    bool Ambiguous = false)
+    bool Ambiguous = false,
+    HdrOutcome Hdr = HdrOutcome.NotConfigured,
+    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -269,6 +271,23 @@ public static class SwitchMessages
         if (record.Audio == AudioOutcome.Incomplete && record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
         {
             text += Environment.NewLine + Loc.Instance["Result_AudioIncomplete"];
+        }
+
+        // Only in the log before 4.0 (K-15).
+        if (record.Hdr == HdrOutcome.Incomplete)
+        {
+            text += Environment.NewLine + Loc.Instance["Result_HdrIncomplete"];
+        }
+
+        string? icons = record.DesktopIcons switch
+        {
+            DesktopIconOutcome.AutoArrange => Loc.Instance["Result_IconsAutoArrange"],
+            DesktopIconOutcome.Unavailable => Loc.Instance["Result_IconsUnavailable"],
+            _ => null,
+        };
+        if (icons is not null)
+        {
+            text += Environment.NewLine + icons;
         }
 
         if (AppsProblem(record) is { } apps)

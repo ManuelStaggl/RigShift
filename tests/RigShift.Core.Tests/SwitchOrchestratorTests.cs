@@ -953,8 +953,9 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        // The tablet reports no HDR support (null) and stays untouched.
+        // The tablet reports no HDR support (null) and stays untouched – which is as off as the profile wants it.
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+        result.Hdr.ShouldBe(HdrOutcome.Applied);
     }
 
     [Fact]
@@ -1020,7 +1021,21 @@ public sealed class SwitchOrchestratorTests
             Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
         display.HdrSet.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Switch_HdrWantedOnADisplayWithoutHdr_IsReported()
+    {
+        // K-15: only the log knew that the monitor cannot do HDR; the notification said "switched".
+        var display = new FakeDisplayConfigurator([DeskActive(), Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = null }))]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
+        display.HdrSet.ShouldBeEmpty();
     }
 
     [Fact]
@@ -1057,6 +1072,7 @@ public sealed class SwitchOrchestratorTests
             Rig() with { Displays = [UltrawideMode with { Hdr = true }, left with { Hdr = true }] }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
     }
 
@@ -1139,6 +1155,7 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.Restored);
         DesktopIcons.Restores.ShouldBe(1);
         DesktopIcons.Capture().ShouldNotBeNull().Icons.ShouldBe(Layout.Icons);
     }
@@ -1188,9 +1205,10 @@ public sealed class SwitchOrchestratorTests
         DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
         Profile rig = Rig() with { DesktopIcons = Layout };
 
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         DesktopIcons.Restores.ShouldBe(1);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
     }
 
     [Fact]

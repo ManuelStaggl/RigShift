@@ -412,6 +412,16 @@ public sealed class CommandRunner
                 text.Append(CultureInfo.InvariantCulture, $", audio {result.Audio}");
             }
 
+            if (result.Hdr != HdrOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", HDR {result.Hdr}");
+            }
+
+            if (result.DesktopIcons != DesktopIconOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", desktop symbols {result.DesktopIcons}");
+            }
+
             if (result.Apps == AppsOutcome.Pending)
             {
                 text.Append(", apps start in the background");

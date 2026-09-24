@@ -95,8 +95,8 @@ internal sealed class TopologyApplier
                 {
                     _log.Information("Attempt {Attempt} succeeded ({ModeSource} modes, {Displays} displays, {Milliseconds:0} ms)",
                         attempts, modeSource, plan.Resolved.Count, milliseconds);
-                    await _hdr.SwitchAsync(profile, cancellationToken);
-                    return new ApplyOutcome(true, plan, attempts, lastError, null, databaseModes);
+                    HdrOutcome hdr = await _hdr.SwitchAsync(profile, cancellationToken);
+                    return new ApplyOutcome(true, plan, attempts, lastError, null, databaseModes, hdr);
                 }
 
                 lastError = code;
@@ -288,7 +288,8 @@ internal sealed class TopologyApplier
 }
 
 /// <param name="UsedDatabaseModes">Windows chose the modes: what runs may differ from the plan (see <see cref="TopologyApplier.CheckDatabaseModesAsync"/>).</param>
-internal sealed record ApplyOutcome(bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message, bool UsedDatabaseModes)
+internal sealed record ApplyOutcome(
+    bool Succeeded, TopologyPlan Plan, int Attempts, int? LastNativeError, string? Message, bool UsedDatabaseModes, HdrOutcome Hdr = HdrOutcome.NotConfigured)
 {
     public static ApplyOutcome Failure(TopologyPlan plan, int attempts, int? lastNativeError, string message) =>
         new(false, plan, attempts, lastNativeError, message, UsedDatabaseModes: false);

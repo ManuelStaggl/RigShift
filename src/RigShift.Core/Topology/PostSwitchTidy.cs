@@ -19,12 +19,12 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
 
     /// <summary>
     /// Windows first, then the symbols. Both wait a moment before they start, because right after the arrangement changed
-    /// Windows moves each of them itself.
+    /// Windows moves each of them itself. Returns what became of the symbols, so the user learns it (K-15).
     /// </summary>
-    public async Task RunAsync(Profile profile, CancellationToken cancellationToken)
+    public async Task<DesktopIconOutcome> RunAsync(Profile profile, CancellationToken cancellationToken)
     {
         await RescueWindowsAsync(cancellationToken);
-        await RestoreDesktopIconsAsync(profile, cancellationToken);
+        return await RestoreDesktopIconsAsync(profile, cancellationToken);
     }
 
     /// <summary>
@@ -55,11 +55,11 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
     /// one attempt can be undone again right after it. Each pass therefore checks whether what it placed is still in
     /// place and repeats while something moved.
     /// </summary>
-    private async Task RestoreDesktopIconsAsync(Profile profile, CancellationToken cancellationToken)
+    private async Task<DesktopIconOutcome> RestoreDesktopIconsAsync(Profile profile, CancellationToken cancellationToken)
     {
         if (profile.DesktopIcons is not { IsEmpty: false } wanted)
         {
-            return;
+            return DesktopIconOutcome.NotConfigured;
         }
 
         try
@@ -71,7 +71,7 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
                 if (result.Outcome != DesktopIconOutcome.Restored)
                 {
                     _log.Information("Desktop symbols for {Profile}: {Outcome}", profile.Name, result.Outcome);
-                    return;
+                    return result.Outcome;
                 }
 
                 _log.Information("Desktop symbols for {Profile}: {Placed} placed, {Missing} gone (attempt {Attempt})",
@@ -82,13 +82,13 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
                 DesktopIconLayout? settled = _desktopIcons.Capture();
                 if (settled is null || attempt == _options.DesktopIconAttempts)
                 {
-                    return;
+                    return DesktopIconOutcome.Restored;
                 }
 
                 await Task.Delay(_options.DesktopIconDelay, _time, cancellationToken);
                 if (!Moved(settled, _desktopIcons.Capture()))
                 {
-                    return;
+                    return DesktopIconOutcome.Restored;
                 }
 
                 _log.Information("Desktop symbols for {Profile} moved again, putting them back once more", profile.Name);
@@ -97,7 +97,10 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning(ex, "Restoring the desktop symbols failed");
+            return DesktopIconOutcome.Unavailable;
         }
+
+        return DesktopIconOutcome.Restored;
     }
 
     /// <summary>Whether any symbol sits somewhere else than it did in <paramref name="settled"/>.</summary>

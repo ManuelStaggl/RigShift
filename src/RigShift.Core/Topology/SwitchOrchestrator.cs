@@ -187,7 +187,7 @@ public sealed class SwitchOrchestrator
         await _journal.ClearAsync(CancellationToken.None);
 
         // Windows move only once the switch stays: a rejected one would leave them moved without a way back (B-14).
-        await _tidy.RunAsync(profile, cancellationToken);
+        DesktopIconOutcome icons = await _tidy.RunAsync(profile, cancellationToken);
 
         // Only now: a rejected switch must not have started programs or closed someone's work. The apps run after the
         // result, so waiting for their device holds up neither hotkeys nor automation nor the next switch (B-03).
@@ -209,6 +209,8 @@ public sealed class SwitchOrchestrator
             AppsCompletion = appsRun,
             Surround = surround.Outcome,
             Note = answer.Modes.Note,
+            Hdr = applied.Hdr,
+            DesktopIcons = icons,
         }, started);
     }
 
@@ -386,12 +388,14 @@ public sealed class SwitchOrchestrator
         AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn: true, cancellationToken);
         SwitchKeepAwake(profile);
         await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
-        await _tidy.RunAsync(profile, cancellationToken);
+        DesktopIconOutcome icons = await _tidy.RunAsync(profile, cancellationToken);
 
         Task<AppsOutcome> appsRun = _appRunner.Start(profile);
         AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
         _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
-        return await Finish(new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun }, started);
+        return await Finish(
+            new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, AppsCompletion = appsRun, DesktopIcons = icons },
+            started);
     }
 
     /// <summary>

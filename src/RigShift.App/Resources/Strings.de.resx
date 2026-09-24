@@ -49,6 +49,9 @@
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (beenden)</value></data>
   <data name="Profile_AppsWait" xml:space="preserve"><value>wartet auf {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
+  <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR ließ sich nicht auf jedem Bildschirm setzen.</value></data>
+  <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktopsymbole nicht platziert: Windows ordnet sie selbst an („Symbole automatisch anordnen“ im Kontextmenü des Desktops).</value></data>
+  <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} nicht möglich</value></data>
