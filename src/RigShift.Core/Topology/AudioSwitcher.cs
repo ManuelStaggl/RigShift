@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using Serilog;
@@ -8,7 +9,7 @@ namespace RigShift.Core.Topology;
 /// The audio part of a switch: default devices and volumes per profile, and what a rollback needs to undo them.
 /// Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
-internal sealed class AudioSwitcher(IAudioController audio, SwitchOptions options, TimeProvider time, ILogger log)
+internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOptions options, TimeProvider time, ILogger log)
 {
     private readonly IAudioController _audio = audio;
     private readonly SwitchOptions _options = options;
@@ -27,6 +28,8 @@ internal sealed class AudioSwitcher(IAudioController audio, SwitchOptions option
             return AudioOutcome.NotConfigured;
         }
 
+        audio = await ResolveAsync(audio, cancellationToken);
+        steps = AudioSteps(audio);
         DateTimeOffset? wakeDeadline = displaysTurnedOn ? _time.GetUtcNow() + _options.AudioWakeBudget : null;
         bool complete = true;
         foreach (AudioStep step in steps)
@@ -178,6 +181,7 @@ internal sealed class AudioSwitcher(IAudioController audio, SwitchOptions option
     /// </summary>
     public async Task<AudioRestore> CaptureAsync(AudioAssignment audio, CancellationToken cancellationToken)
     {
+        audio = await ResolveAsync(audio, cancellationToken);
         var defaults = new List<DefaultRestore>();
         foreach (IGrouping<AudioDirection, AudioStep> direction in AudioSteps(audio).GroupBy(s => s.Direction))
         {
@@ -232,6 +236,79 @@ internal sealed class AudioSwitcher(IAudioController audio, SwitchOptions option
             await TrySetVolumeAsync(endpoint, percent, cancellationToken);
         }
     }
+
+    /// <summary>
+    /// The assignment with every device Windows does not know under its saved ID replaced by the one active device of the
+    /// same direction and name (v4 finding K-08): a USB headset or DAC on another port gets a new ID. Between two devices
+    /// of that name nothing is guessed, and a device that is there but not active stays, so it can be waited for.
+    /// </summary>
+    private async Task<AudioAssignment> ResolveAsync(AudioAssignment audio, CancellationToken cancellationToken)
+    {
+        var lists = new Dictionary<AudioDirection, IReadOnlyList<AudioDeviceInfo>?>();
+
+        async Task<AudioEndpoint?> ResolveOne(AudioEndpoint? saved, AudioDirection direction)
+        {
+            if (saved is null)
+            {
+                return null;
+            }
+
+            if (!lists.TryGetValue(direction, out IReadOnlyList<AudioDeviceInfo>? devices))
+            {
+                devices = await TryListAsync(direction, cancellationToken);
+                lists[direction] = devices;
+            }
+
+            if (devices is null || devices.Any(d => string.Equals(d.Endpoint.EndpointId, saved.EndpointId, StringComparison.OrdinalIgnoreCase)))
+            {
+                return saved;
+            }
+
+            List<AudioDeviceInfo> named = [.. devices.Where(d => d.IsActive && SameDevice(d.Endpoint.FriendlyName, saved.FriendlyName))];
+            if (named.Count != 1)
+            {
+                return saved;
+            }
+
+            _log.Warning("Audio device {Device} is not known under its saved ID any more; using the active device of that name, {Found}",
+                saved.FriendlyName, named[0].Endpoint.FriendlyName);
+            return named[0].Endpoint;
+        }
+
+        return audio with
+        {
+            Playback = await ResolveOne(audio.Playback, AudioDirection.Render),
+            PlaybackCommunications = await ResolveOne(audio.PlaybackCommunications, AudioDirection.Render),
+            Recording = await ResolveOne(audio.Recording, AudioDirection.Capture),
+            RecordingCommunications = await ResolveOne(audio.RecordingCommunications, AudioDirection.Capture),
+        };
+    }
+
+    /// <returns>The devices, or <c>null</c> when they could not be listed – then the saved ones stay.</returns>
+    private async Task<IReadOnlyList<AudioDeviceInfo>?> TryListAsync(AudioDirection direction, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _audio.ListAsync(direction, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "{Direction} audio devices could not be listed; the profile's devices are used as saved", direction);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Names compare without case and without the number Windows gives a second instance of a device: "Speakers
+    /// (2- USB Audio DAC)" after the DAC was plugged into another port is still "Speakers (USB Audio DAC)".
+    /// </summary>
+    private static bool SameDevice(string a, string b) =>
+        !string.IsNullOrWhiteSpace(a) && string.Equals(Unnumbered(a), Unnumbered(b), StringComparison.OrdinalIgnoreCase);
+
+    private static string Unnumbered(string name) => NumberedInstance().Replace(name.Trim(), "(");
+
+    [GeneratedRegex(@"\(\d+-\s*", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex NumberedInstance();
 
     internal sealed record DefaultRestore(AudioEndpoint Endpoint, AudioRoleMask Roles, AudioDirection Direction);
 

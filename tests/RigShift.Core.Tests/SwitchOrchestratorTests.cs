@@ -631,6 +631,56 @@ public sealed class SwitchOrchestratorTests
         await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("Headphones")]
+    [InlineData("headphones ")]
+    public async Task Switch_SoundDeviceOnAnotherPort_IsFoundByItsName(string listedAs)
+    {
+        // K-08: a USB headset on another port has a new ID; the profile only knows the old one.
+        var moved = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000009}", listedAs);
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(moved, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+                      new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            Rig(audio: new AudioAssignment { Playback = Headphones, PlaybackVolumePercent = 40 }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(1).SetDefaultAsync(moved, AudioRoleMask.All, Arg.Any<CancellationToken>());
+        await _audio.Received(1).SetVolumeAsync(moved, 40, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_SoundDeviceOnAnotherPort_WindowsNumberedIt_IsStillFound()
+    {
+        // Windows calls a device it finds on a second port "2- …".
+        var saved = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000010}", "Speakers (USB Audio DAC)");
+        var numbered = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000011}", "Speakers (2- USB Audio DAC)");
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(numbered, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(audio: new AudioAssignment { Playback = saved }), SwitchRequest.Default, Ct);
+
+        await _audio.Received(1).SetDefaultAsync(numbered, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_TwoSoundDevicesWithTheName_AreNotGuessedBetween()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Headphones with { EndpointId = "a" }, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+                      new AudioDeviceInfo(Headphones with { EndpointId = "b" }, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(false);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Incomplete);
+        await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Switch_AudioFailure_DoesNotFailDisplaySwitch()
     {
