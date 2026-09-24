@@ -37,6 +37,30 @@ public sealed class ActiveProfileMatcherTests
     }
 
     [Fact]
+    public void FindActive_SameLayoutTwice_TheOneWithTheRunningRefreshRateWins()
+    {
+        // K-13: "Rig 144 Hz" and "Rig 240 Hz" – the one first in the list used to win whatever ran.
+        Profile rig144 = Profile("Rig 144 Hz", [UltrawideMode with { RefreshNumerator = 144_000 }]);
+        Profile rig240 = Profile("Rig 240 Hz", [UltrawideMode]);
+        DisplaySnapshot running240 = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode));
+
+        _matcher.FindActive([rig144, rig240], running240).ShouldBe(rig240);
+        _matcher.FindActive([rig240, rig144], running240).ShouldBe(rig240);
+    }
+
+    [Fact]
+    public void FindActive_ProfilesThatFitEquallyWell_TheLastAppliedWins()
+    {
+        Profile plain = Profile("Rig", [UltrawideMode]);
+        Profile hdr = Profile("Rig HDR", [UltrawideMode with { Hdr = true }]);
+        DisplaySnapshot hdrOn = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = true }));
+
+        _matcher.FindActive([plain, hdr], hdrOn, lastApplied: hdr.Id).ShouldBe(hdr);
+        _matcher.FindActive([plain, hdr], hdrOn, lastApplied: plain.Id).ShouldBe(plain);
+        _matcher.FindActive([plain, hdr], Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false })), lastApplied: hdr.Id).ShouldBe(plain);
+    }
+
+    [Fact]
     public void FindActive_ExtraActiveDisplay_MatchesNothing()
     {
         DisplaySnapshot snapshot = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Desk4K, activeMode: DeskModes[0] with { PositionX = 5120, IsPrimary = false }));

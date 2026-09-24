@@ -71,6 +71,9 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// </summary>
     public Guid? PreviousProfileId { get; private set; }
 
+    /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout (K-13).</summary>
+    public Guid? LastAppliedProfileId { get; set; }
+
     [ObservableProperty]
     public partial bool IsEmpty { get; set; }
 
@@ -312,7 +315,8 @@ public sealed partial class ProfileCatalog : ObservableObject
             return;
         }
 
-        Profile? active = _matcher.FindActive(_profiles, snapshot);
+        // Between profiles with the same layout, the one RigShift applied – or showed – last stays (K-13).
+        Profile? active = _matcher.FindActive(_profiles, snapshot, LastAppliedProfileId ?? ActiveProfile?.Id);
         if (ActiveProfile is { } before && before.Id != active?.Id)
         {
             PreviousProfileId = before.Id;

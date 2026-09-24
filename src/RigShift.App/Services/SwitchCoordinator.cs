@@ -259,6 +259,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             SwitchResult result = await running;
 
             RememberCatchUp(profile, result);
+            RememberApplied(profile, result);
             SwitchRecord record = ToRecord(started, profile, result);
             await CompleteAsync(record);
             if (result.Apps == AppsOutcome.Pending)
@@ -384,6 +385,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         || profile.DisableCommunicationsDucking
         || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
             or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };
+
+    private void RememberApplied(Profile profile, SwitchResult result)
+    {
+        if (result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
+        {
+            _catalog.LastAppliedProfileId = profile.Id;
+        }
+    }
 
     private void RememberCatchUp(Profile profile, SwitchResult result) =>
         _pendingCatchUp = result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially && result.Plan.ShouldRetryLater
