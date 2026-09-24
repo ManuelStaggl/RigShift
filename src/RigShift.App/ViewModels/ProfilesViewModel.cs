@@ -407,7 +407,10 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
         bool blocked = _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan) && plan.IsBlocked;
         MissingDisplay[] missing = blocked ? plan!.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
-        BlockedMessage = missing.Length > 0 && !item.IsActive ? Loc.Format("Detail_BlockedNames", Names(missing)) : null;
+        MissingDisplay[] ambiguous = [.. missing.Where(m => m.Reason == MissingReason.Ambiguous)];
+        BlockedMessage = missing.Length == 0 || item.IsActive ? null
+            : ambiguous.Length > 0 ? Loc.Format("Detail_AmbiguousNames", Names(ambiguous))
+            : Loc.Format("Detail_BlockedNames", Names(missing));
         CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && !blocked;
         TestCommand.NotifyCanExecuteChanged();
 

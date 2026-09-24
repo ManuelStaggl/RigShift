@@ -394,11 +394,17 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             profile.AppsWaitForUsbDeviceId is null && profile.AppsWaitForUsbDeviceName is null
                 ? null
                 : Core.Automation.UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, _settings.Current.UsbDeviceNames),
-            Profile.AppsDeviceWaitSeconds, result.Note);
+            Profile.AppsDeviceWaitSeconds, result.Note, Ambiguous: IsAmbiguous(result));
 
-    /// <summary>A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14).</summary>
+    private static bool IsAmbiguous(SwitchResult result) => result.Outcome == SwitchOutcome.Blocked && result.Plan.IsAmbiguous;
+
+    /// <summary>
+    /// A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14) – and of those
+    /// only the identical ones that could not be told apart, when that is why (K-03): the switch did not wait for the others.
+    /// </summary>
     private static IEnumerable<MissingDisplay> MissingForRecord(SwitchResult result) =>
-        result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
+        IsAmbiguous(result) ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous)
+        : result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
             ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional)
             : result.Plan.Missing;
 

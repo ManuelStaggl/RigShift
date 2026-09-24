@@ -17,6 +17,7 @@
   <data name="Check_Ready" xml:space="preserve"><value>Bereit: alle Bildschirme sind verfügbar.</value></data>
   <data name="Check_OptionalMissing" xml:space="preserve"><value>Bereit. Nicht verfügbar (optional, wird übersprungen): {0}</value></data>
   <data name="Check_Blocked" xml:space="preserve"><value>Gerade nicht möglich. Fehlende Bildschirme: {0}</value></data>
+  <data name="Check_Ambiguous" xml:space="preserve"><value>Gerade nicht möglich: baugleiche Bildschirme an neuen Anschlüssen ({0}). In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>Die Grafikkarte kann bei diesen Auflösungen und Bildraten eventuell nicht alle Bildschirme ansteuern.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>Ein Bildschirm wurde an einem anderen Anschluss oder Kabel erkannt.</value></data>
   <data name="Warning_MatchedByNameFallback" xml:space="preserve"><value>Ein Bildschirm wurde nur an seinem Namen erkannt; an diesem Eingang meldet er eine andere Kennung.</value></data>
@@ -52,6 +53,7 @@
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} nicht möglich</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>Fehlende Bildschirme: {0}</value></data>
+  <data name="Result_AmbiguousText" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Wechsel zu {0} fehlgeschlagen</value></data>
   <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details stehen im Log.</value></data>
@@ -603,6 +605,7 @@
   <data name="Head_MissingOne" xml:space="preserve"><value>1 Bildschirm fehlt</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} Bildschirme fehlen</value></data>
   <data name="Detail_BlockedNames" xml:space="preserve"><value>Nicht angeschlossen: {0}. Umschalten geht wieder, sobald sie da sind.</value></data>
+  <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB-Geräte</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet hierher, sobald alle Geräte einer Regel verbunden sind.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Befehl</value></data>

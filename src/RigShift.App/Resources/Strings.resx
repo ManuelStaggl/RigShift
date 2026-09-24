@@ -17,6 +17,7 @@
   <data name="Check_Ready" xml:space="preserve"><value>Ready: all displays are available.</value></data>
   <data name="Check_OptionalMissing" xml:space="preserve"><value>Ready. Not available (optional, skipped): {0}</value></data>
   <data name="Check_Blocked" xml:space="preserve"><value>Not possible right now. Missing displays: {0}</value></data>
+  <data name="Check_Ambiguous" xml:space="preserve"><value>Not possible right now: identical displays on new ports ({0}). Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
   <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>The graphics card may not drive all displays at these resolutions and refresh rates.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>A display was recognized on a different port or cable.</value></data>
   <data name="Warning_MatchedByNameFallback" xml:space="preserve"><value>A display was recognized only by its name; it reports a different ID on this input.</value></data>
@@ -52,6 +53,7 @@
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>{0} not possible</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>Missing displays: {0}</value></data>
+  <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
   <data name="Result_FailedText" xml:space="preserve"><value>Windows reported error {0}. Details are in the log.</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details are in the log.</value></data>
@@ -603,6 +605,7 @@
   <data name="Head_MissingOne" xml:space="preserve"><value>1 display missing</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} displays missing</value></data>
   <data name="Detail_BlockedNames" xml:space="preserve"><value>Not connected: {0}. The profile can switch once they are back.</value></data>
+  <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement”.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches here as soon as every device of a rule is connected.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Command</value></data>

@@ -168,7 +168,8 @@ public sealed record SwitchRecord(
     IReadOnlyList<string> MissingDisplays,
     string? AppsWaitDevice = null,
     int AppsWaitSeconds = 0,
-    SwitchNote Note = SwitchNote.None)
+    SwitchNote Note = SwitchNote.None,
+    bool Ambiguous = false)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -210,7 +211,11 @@ public static class SwitchMessages
         ArgumentNullException.ThrowIfNull(plan);
 
         var lines = new List<string>();
-        if (plan.IsBlocked)
+        if (plan.IsAmbiguous)
+        {
+            lines.Add(Loc.Format("Check_Ambiguous", Names(plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous))));
+        }
+        else if (plan.IsBlocked)
         {
             lines.Add(Loc.Format("Check_Blocked", Names(plan.Missing.Where(m => !m.Assignment.IsOptional))));
         }
@@ -240,7 +245,8 @@ public static class SwitchMessages
             SwitchOutcome.Applied => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Instance["Result_AppliedText"], H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.AppliedPartially => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_PartialText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.RolledBack => (Loc.Format("Result_RolledBackTitle", record.ProfileName), Loc.Instance["Result_RolledBackText"], H.NotifyIcon.Core.NotificationIcon.Warning),
-            SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName), Loc.Format("Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),
+            SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName),
+                Loc.Format(record.Ambiguous ? "Result_AmbiguousText" : "Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),
             _ => (Loc.Format("Result_FailedTitle", record.ProfileName),
                 record.NativeError is { } code ? Loc.Format("Result_FailedText", code) : Loc.Instance["Result_FailedUnexpected"],
                 H.NotifyIcon.Core.NotificationIcon.Error),

@@ -1,4 +1,5 @@
 using NSubstitute;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
@@ -73,6 +74,25 @@ public sealed class SwitchCoordinatorTests : IDisposable
         result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
         asked.ShouldNotBeNull().ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
         _host.Coordinator.History[0].MissingDisplays.ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
+    }
+
+    [Fact]
+    public async Task Blocked_ByIdenticalDisplaysOnNewPorts_SaysSoInsteadOfAskingToSwitchThemOn()
+    {
+        DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
+        DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
+        _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(leftMoved), Attached(rightMoved), Attached(Ultrawide)));
+        bool asked = false;
+        _host.Coordinator.WaitingForDisplays += (_, _) => asked = true;
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
+        asked.ShouldBeFalse();
+        SwitchRecord record = _host.Coordinator.History[0];
+        record.Ambiguous.ShouldBeTrue();
+        record.MissingDisplays.ShouldBe(["Desk left", "Desk right"]);
+        SwitchMessages.ForNotification(record).Text.ShouldBe(Loc.Format("Result_AmbiguousText", "Desk left, Desk right"));
     }
 
     [Fact]
