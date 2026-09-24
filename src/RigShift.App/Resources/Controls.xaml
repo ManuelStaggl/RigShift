@@ -381,7 +381,7 @@
                   x:Name="Placeholder"
                   Margin="{TemplateBinding Padding}"
                   VerticalAlignment="Center"
-                  Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                  Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
                   IsHitTestVisible="False"
                   Text="{TemplateBinding Tag}"
                   TextTrimming="CharacterEllipsis"

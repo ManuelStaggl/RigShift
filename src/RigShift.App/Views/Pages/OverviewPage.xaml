@@ -227,7 +227,7 @@
                               <Style.Triggers>
                                 <DataTrigger Binding="{Binding HotkeyText}" Value="">
                                   <Setter Property="Text" Value="{loc:Tr Overview_NoHotkey}" />
-                                  <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+                                  <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPlaceholder}" />
                                 </DataTrigger>
                               </Style.Triggers>
                             </Style>

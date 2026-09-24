@@ -292,7 +292,7 @@
           <TextBlock
             Margin="33,0,0,0"
             VerticalAlignment="Center"
-            Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+            Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
             IsHitTestVisible="False"
             Text="{loc:Tr Fov_Search}">
             <TextBlock.Style>

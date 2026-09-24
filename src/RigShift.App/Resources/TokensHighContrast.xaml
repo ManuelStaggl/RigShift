@@ -19,6 +19,7 @@
   <SolidColorBrush x:Key="RigShift.Brush.TextPrimary" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.TextSecondary" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.TextDisabled" Color="{x:Static SystemColors.GrayTextColor}" />
+  <SolidColorBrush x:Key="RigShift.Brush.TextPlaceholder" Color="{x:Static SystemColors.GrayTextColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.Accent" Color="{x:Static SystemColors.HighlightColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.AccentHover" Color="{x:Static SystemColors.HighlightColor}" />
   <SolidColorBrush x:Key="RigShift.Brush.AccentPressed" Color="{x:Static SystemColors.HighlightColor}" />

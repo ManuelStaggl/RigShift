@@ -319,7 +319,7 @@
                       VerticalAlignment="Center"
                       DockPanel.Dock="Right"
                       Style="{StaticResource RigShift.Text.Caption}"
-                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                       Text="{Binding HotkeyText}" />
                     <TextBlock
                       Style="{StaticResource RigShift.Text.BodyStrong}"
@@ -375,7 +375,7 @@
                       Grid.Column="2"
                       Margin="12,0,0,0"
                       VerticalAlignment="Center"
-                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                       Style="{StaticResource RigShift.Text.Caption}"
                       Text="{Binding HotkeyText}" />
                   </Grid>

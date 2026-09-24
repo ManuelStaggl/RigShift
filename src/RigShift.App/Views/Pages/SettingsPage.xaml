@@ -188,7 +188,7 @@
                       <TextBlock
                         Margin="11,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                        Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
                         IsHitTestVisible="False"
                         Style="{StaticResource RigShift.Text.Body}"
                         Text="{loc:Tr Editor_CustomName}">
