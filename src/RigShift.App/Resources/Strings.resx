@@ -387,6 +387,9 @@
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Restore</value></data>
   <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Puts the icons back where they were saved – without switching.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="Detail_ChangedElsewhere" xml:space="preserve"><value>This was changed elsewhere while you were editing. Saving replaces that change.</value></data>
+  <data name="Detail_Reload" xml:space="preserve"><value>Load saved version</value></data>
+  <data name="Detail_ReloadTip" xml:space="preserve"><value>Drops your unsaved changes.</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} problems</value></data>
   <data name="Common_Discard" xml:space="preserve"><value>Discard</value></data>

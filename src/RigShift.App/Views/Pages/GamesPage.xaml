@@ -356,35 +356,53 @@
           </Grid>
         </Border>
 
-        <!-- Session results and store errors (R-FLOW-2); after "not recognised" the bar leads to the Game tab. -->
-        <controls:InfoBar
-          Grid.Row="2"
-          Margin="24,12,24,0"
-          Kind="{Binding DetailKind}"
-          Text="{Binding DetailMessage}"
-          Visibility="{Binding HasDetailMessage, Converter={StaticResource BoolToVisibility}}"
-          controls:LiveRegion.IsLive="True">
-          <controls:InfoBar.Action>
-            <StackPanel Orientation="Horizontal">
+        <!-- The game changed on disk under unsaved changes (a learned process name): they stay, the saved version is one click away. -->
+        <StackPanel Grid.Row="2">
+          <controls:InfoBar
+            Margin="24,12,24,0"
+            Kind="Warn"
+            Text="{loc:Tr Detail_ChangedElsewhere}"
+            Visibility="{Binding IsStale, Converter={StaticResource BoolToVisibility}}"
+            controls:LiveRegion.IsLive="True">
+            <controls:InfoBar.Action>
               <Button
                 Height="28"
-                Margin="0,0,8,0"
-                Command="{Binding ShowGameTabCommand}"
-                Content="{loc:Tr Game_OpenGameTab}"
+                Command="{Binding ReloadCommand}"
+                Content="{loc:Tr Detail_Reload}"
                 Style="{StaticResource RigShift.Button.Ghost}"
-                Visibility="{Binding DetailOffersGameTab, Converter={StaticResource BoolToVisibility}}" />
-              <Button
-                Height="28"
-                Width="28"
-                AutomationProperties.Name="{loc:Tr Common_Close}"
-                Command="{Binding CloseDetailMessageCommand}"
-                Style="{StaticResource RigShift.Button.Icon}"
-                ToolTip="{loc:Tr Common_Close}">
-                <ui:SymbolIcon FontSize="12" Symbol="Dismiss12" />
-              </Button>
-            </StackPanel>
-          </controls:InfoBar.Action>
-        </controls:InfoBar>
+                ToolTip="{loc:Tr Detail_ReloadTip}" />
+            </controls:InfoBar.Action>
+          </controls:InfoBar>
+
+          <!-- Session results and store errors (R-FLOW-2); after "not recognised" the bar leads to the Game tab. -->
+          <controls:InfoBar
+            Margin="24,12,24,0"
+            Kind="{Binding DetailKind}"
+            Text="{Binding DetailMessage}"
+            Visibility="{Binding HasDetailMessage, Converter={StaticResource BoolToVisibility}}"
+            controls:LiveRegion.IsLive="True">
+            <controls:InfoBar.Action>
+              <StackPanel Orientation="Horizontal">
+                <Button
+                  Height="28"
+                  Margin="0,0,8,0"
+                  Command="{Binding ShowGameTabCommand}"
+                  Content="{loc:Tr Game_OpenGameTab}"
+                  Style="{StaticResource RigShift.Button.Ghost}"
+                  Visibility="{Binding DetailOffersGameTab, Converter={StaticResource BoolToVisibility}}" />
+                <Button
+                  Height="28"
+                  Width="28"
+                  AutomationProperties.Name="{loc:Tr Common_Close}"
+                  Command="{Binding CloseDetailMessageCommand}"
+                  Style="{StaticResource RigShift.Button.Icon}"
+                  ToolTip="{loc:Tr Common_Close}">
+                  <ui:SymbolIcon FontSize="12" Symbol="Dismiss12" />
+                </Button>
+              </StackPanel>
+            </controls:InfoBar.Action>
+          </controls:InfoBar>
+        </StackPanel>
 
         <!-- Tabs = the run of a session, numbered with arrows (F5). -->
         <TabControl

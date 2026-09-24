@@ -12,11 +12,13 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>A profile as shown in the tray popup, the tray menu and the profile page.</summary>
 /// <param name="usbDeviceNames">Custom USB device names, for the device the apps wait for.</param>
-public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject
+public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject, IMasterItem
 {
     private IReadOnlyList<ImageSource>? _appIcons;
 
     public Profile Profile { get; } = profile;
+
+    public Guid Id => Profile.Id;
 
     public string Name => Profile.Name;
 

@@ -45,7 +45,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
             automation.Changed += (_, _) => OnAutomationChanged();
         }
 
-        catalog.Changed += (_, _) => OnStatusChanged();
+        catalog.ProfilesChanged += (_, _) => OnStatusChanged();
         Loc.Instance.PropertyChanged += (_, _) => OnStatusChanged();
 
         // The games list is the catalog's own; nobody else marks its items as running, so the popup does it.

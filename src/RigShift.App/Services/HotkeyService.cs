@@ -82,7 +82,7 @@ public sealed class HotkeyService : IDisposable
     public void Start()
     {
         _started = true;
-        _catalog.Changed += (_, _) => Sync();
+        _catalog.ProfilesChanged += (_, _) => Sync();
         _games.Changed += (_, _) => Sync();
         _settings.Changed += (_, _) => Sync();
         Sync();

@@ -30,7 +30,6 @@ public sealed class ProfilesViewModelTests : IDisposable
     private readonly GameCatalog _games;
     private readonly GameSessionService _sessions;
     private readonly HotkeyService _hotkeys;
-    private readonly DisplayChangeWatcher _watcher;
     private readonly Dialogs _dialogs;
     private readonly IDesktopIcons _desktopIcons = Substitute.For<IDesktopIcons>();
 
@@ -45,7 +44,6 @@ public sealed class ProfilesViewModelTests : IDisposable
             () => throw new InvalidOperationException("no session is started in these tests"), TimeProvider.System, Logger.None));
         _hotkeys = _ui.Invoke(() => new HotkeyService(
             _host.Catalog, _games, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar()));
-        _watcher = _ui.Invoke(() => new DisplayChangeWatcher());
 
         IAudioController audio = Substitute.For<IAudioController>();
         audio.ListAsync(Arg.Any<AudioDirection>(), Arg.Any<CancellationToken>()).Returns([]);
@@ -411,6 +409,150 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse();
     });
 
+    /// <summary>Windows rearranged the displays while the profile was being edited (v4 finding A-01).</summary>
+    [Fact]
+    public Task DirtyEditor_SurvivesADisplayChange() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Desk 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _host.Catalog.RefreshActiveAsync(Ct);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        editor.Name.ShouldBe("Desk 2");
+        page.IsStale.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task DirtyEditor_SurvivesASwitch() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        Profile side = await SavedAsync(Profile("Side", [Mode(DeskLeft, 1920, 1080, 100, primary: true)]));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Desk 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _host.Coordinator.SwitchAsync(side);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        editor.IsDirty.ShouldBeTrue();
+    });
+
+    /// <summary>Another profile saved elsewhere (the tray, the command line) reloads the whole list.</summary>
+    [Fact]
+    public Task DirtyEditor_SurvivesAnotherProfileBeingSaved() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Desk 2";
+        int created = _dialogs.EditorsCreated;
+
+        await SavedAsync(Profile("Side", [Mode(DeskLeft, 1920, 1080, 100, primary: true)]));
+
+        page.Items.Count.ShouldBe(2);
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        page.SelectedItem.ShouldNotBeNull().Id.ShouldBe(editor.Id);
+        page.IsStale.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task NewUnsavedProfile_SurvivesAnotherProfileBeingSaved() => _ui.RunAsync(async () =>
+    {
+        ProfilesViewModel page = await PageAsync();
+        await page.NewFromCurrentCommand.ExecuteAsync(null);
+        await UntilAsync(() => page.Editor is { IsNew: true }, "the new profile's editor did not open");
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Rig";
+
+        await SavedAsync(Profile("Side", [Mode(DeskLeft, 1920, 1080, 100, primary: true)]));
+
+        page.Items.Count.ShouldBe(2);
+        page.Items[0].IsNew.ShouldBeTrue();
+        page.SelectedItem.ShouldBeSameAs(page.Items[0]);
+        page.Editor.ShouldBeSameAs(editor);
+        editor.Name.ShouldBe("Rig");
+    });
+
+    /// <summary>Unsaved changes stay; the bar says the profile changed on disk and offers the saved version.</summary>
+    [Fact]
+    public Task DirtyEditor_ProfileChangedOnDisk_OffersAReload() => _ui.RunAsync(async () =>
+    {
+        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Desk 2";
+
+        await SavedAsync(desk with { Name = "Desk (renamed elsewhere)" });
+
+        page.Editor.ShouldBeSameAs(editor);
+        page.IsStale.ShouldBeTrue();
+
+        await page.ReloadCommand.ExecuteAsync(null);
+        await UntilAsync(() => page.Editor is { } fresh && fresh != editor, "the saved version was not loaded");
+
+        page.Editor.ShouldNotBeNull().Name.ShouldBe("Desk (renamed elsewhere)");
+        page.Editor.IsDirty.ShouldBeFalse();
+        page.IsStale.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task CleanEditor_ProfileChangedOnDisk_ShowsTheNewVersion() => _ui.RunAsync(async () =>
+    {
+        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await SavedAsync(desk with { Name = "Desk (renamed elsewhere)" });
+        await UntilAsync(() => page.Editor is { } fresh && fresh != editor, "the editor was not reloaded");
+
+        page.Editor.ShouldNotBeNull().Name.ShouldBe("Desk (renamed elsewhere)");
+        page.IsStale.ShouldBeFalse();
+    });
+
+    /// <summary>The assistant added a USB rule for the profile that is open: a clean editor shows it (v4 finding A-02).</summary>
+    [Fact]
+    public Task CleanEditor_ItsRulesChangedOnDisk_ShowsThem() => _ui.RunAsync(async () =>
+    {
+        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Rules.Rules.ShouldBeEmpty();
+
+        var rule = new AutomationRule { ProfileId = desk.Id, Devices = [new RuleDevice { Id = "VID_0EB7&PID_0020" }] };
+        await _host.Settings.UpdateAsync(s => s with { AutomationRules = [rule] }, Ct);
+        await UntilAsync(() => page.Editor is { } fresh && fresh != editor, "the editor was not reloaded");
+
+        page.Editor.ShouldNotBeNull().Rules.Rules.ShouldHaveSingleItem();
+        page.Editor.IsDirty.ShouldBeFalse();
+    });
+
+    /// <summary>Saving keeps the editor: its tab and scroll position stay where the user left them.</summary>
+    [Fact]
+    public Task Save_KeepsTheEditor() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        ProfilesViewModel page = await PageAsync();
+        ProfileEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "Desk 2";
+        int created = _dialogs.EditorsCreated;
+
+        await page.SaveCommand.ExecuteAsync(null);
+
+        page.Editor.ShouldBeSameAs(editor);
+        editor.IsDirty.ShouldBeFalse();
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.IsStale.ShouldBeFalse();
+        page.SelectedItem.ShouldNotBeNull().Name.ShouldBe("Desk 2");
+    });
+
     private static DesktopIconLayout Icons => new()
     {
         CapturedAt = DateTimeOffset.UnixEpoch,
@@ -425,7 +567,6 @@ public sealed class ProfilesViewModelTests : IDisposable
     {
         _ui.Invoke(() =>
         {
-            _watcher.Dispose();
             _hotkeys.Dispose();
             _sessions.Dispose();
         });
@@ -443,7 +584,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     private async Task<ProfilesViewModel> PageAsync()
     {
         var page = new ProfilesViewModel(
-            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _watcher, _desktopIcons, Logger.None);
+            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Logger.None);
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }
@@ -475,7 +616,14 @@ public sealed class ProfilesViewModelTests : IDisposable
 
         public Task<Profile> NewFromCurrentAsync() => real.NewFromCurrentAsync();
 
-        public Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew) => real.CreateEditorAsync(profile, isNew);
+        /// <summary>How many editors the page asked for; counted when asked, before the editor is ready.</summary>
+        public int EditorsCreated { get; private set; }
+
+        public Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew)
+        {
+            EditorsCreated++;
+            return real.CreateEditorAsync(profile, isNew);
+        }
 
         public Task ShowSetupAssistantAsync() => Task.CompletedTask;
 

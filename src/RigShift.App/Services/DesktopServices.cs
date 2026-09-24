@@ -177,7 +177,14 @@ public sealed class TrayIconService : IDisposable
             popup.Resources.MergedDictionaries.Remove(nudge);
             _log.Debug("Tray popup resources refreshed for theme {Theme}", theme);
         });
-        catalog.Changed += (_, _) => OnUi(Refresh);
+        catalog.ProfilesChanged += (_, _) => OnUi(Refresh);
+        catalog.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ProfileCatalog.ActiveProfile))
+            {
+                OnUi(Refresh);
+            }
+        };
         Loc.Instance.PropertyChanged += (_, _) => OnUi(Refresh);
         coordinator.SwitchCompleted += (_, record) => OnUi(() =>
         {

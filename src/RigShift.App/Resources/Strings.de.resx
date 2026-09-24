@@ -387,6 +387,9 @@
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gesicherten Plätze zurück – ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
+  <data name="Detail_ChangedElsewhere" xml:space="preserve"><value>Wurde inzwischen an anderer Stelle geändert. Speichern ersetzt diese Änderung.</value></data>
+  <data name="Detail_Reload" xml:space="preserve"><value>Gespeicherten Stand laden</value></data>
+  <data name="Detail_ReloadTip" xml:space="preserve"><value>Verwirft deine ungespeicherten Änderungen.</value></data>
   <data name="SaveBar_Problem" xml:space="preserve"><value>{0} Problem</value></data>
   <data name="SaveBar_Problems" xml:space="preserve"><value>{0} Probleme</value></data>
   <data name="Common_Discard" xml:space="preserve"><value>Verwerfen</value></data>

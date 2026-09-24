@@ -56,7 +56,7 @@ public sealed partial class AboutViewModel : ObservableObject
         _games = games;
         _dialogs = dialogs;
         _log = log.ForContext<AboutViewModel>();
-        catalog.Changed += (_, _) => RebuildShortcuts();
+        catalog.ProfilesChanged += (_, _) => RebuildShortcuts();
         games.Changed += (_, _) => RebuildShortcuts();
         settings.Changed += (_, _) => RebuildShortcuts();
         RebuildShortcuts();

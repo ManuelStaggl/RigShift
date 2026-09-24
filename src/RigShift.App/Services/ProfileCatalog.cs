@@ -44,8 +44,19 @@ public sealed partial class ProfileCatalog : ObservableObject
         Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
-    /// <summary>Raised after profiles or the active profile changed.</summary>
-    public event EventHandler? Changed;
+    /// <summary>Raised after the profiles themselves changed: loaded, saved, deleted, or rebuilt for another language.</summary>
+    public event EventHandler? ProfilesChanged;
+
+    /// <summary>
+    /// Raised after the displays were read again and the active profile worked out – on a display change, after a switch
+    /// or a reload – whether the active profile changed or not. Carries what was read, so a page that shows the displays
+    /// does not read them once more (v4 finding A-03). A new active profile alone is <see cref="ActiveProfile"/>'s
+    /// property change; the items' flags are already up to date when it is raised.
+    /// </summary>
+    public event EventHandler<DisplaySnapshot>? DisplaysRefreshed;
+
+    /// <summary>The displays as last read; <c>null</c> before the first read.</summary>
+    public DisplaySnapshot? LastSnapshot { get; private set; }
 
     public string ProfileDirectory { get; }
 
@@ -239,26 +250,31 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     public async Task RefreshActiveAsync(CancellationToken cancellationToken)
     {
+        DisplaySnapshot snapshot;
         try
         {
-            DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(cancellationToken), cancellationToken);
-            Profile? active = _matcher.FindActive(_profiles, snapshot);
-            if (ActiveProfile is { } before && before.Id != active?.Id)
-            {
-                PreviousProfileId = before.Id;
-            }
-
-            ActiveProfile = active;
-            _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
+            snapshot = await Task.Run(() => _display.QueryAsync(cancellationToken), cancellationToken);
         }
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "Could not determine the active profile");
+            return;
         }
 
-        UpdateFlags();
-        Changed?.Invoke(this, EventArgs.Empty);
+        Profile? active = _matcher.FindActive(_profiles, snapshot);
+        if (ActiveProfile is { } before && before.Id != active?.Id)
+        {
+            PreviousProfileId = before.Id;
+        }
+
+        ActiveProfile = active;
+        _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
+        LastSnapshot = snapshot;
+        DisplaysRefreshed?.Invoke(this, snapshot);
     }
+
+    /// <summary>Before the property change goes out, so its listeners see the items' flags right.</summary>
+    partial void OnActiveProfileChanged(Profile? value) => UpdateFlags();
 
     private static bool SameNames(IReadOnlyDictionary<string, string>? a, IReadOnlyDictionary<string, string>? b) =>
         (a?.Count ?? 0) == (b?.Count ?? 0)
@@ -279,7 +295,7 @@ public sealed partial class ProfileCatalog : ObservableObject
             ? Loc.Format("Profiles_UnreadableFiles", _unreadable.Count, string.Join(", ", _unreadable.Select(f => f.FileName)))
             : null;
         UpdateFlags();
-        Changed?.Invoke(this, EventArgs.Empty);
+        ProfilesChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateFlags()

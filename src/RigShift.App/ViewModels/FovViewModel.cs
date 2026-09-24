@@ -35,7 +35,7 @@ public sealed partial class FovViewModel : ObservableObject
     private readonly ILogger _log;
     private readonly Dictionary<string, ScreenSize?> _measured = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _curvature = new(StringComparer.OrdinalIgnoreCase);
-    private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
+    private readonly UiThread _ui = new();
     private bool _loading;
 
     public FovViewModel(
@@ -43,7 +43,6 @@ public sealed partial class FovViewModel : ObservableObject
         ProfileCatalog catalog,
         IDisplaySizeReader sizes,
         SettingsService settings,
-        DisplayChangeWatcher? watcher,
         ILogger log,
         GameCatalog? games = null)
     {
@@ -74,11 +73,8 @@ public sealed partial class FovViewModel : ObservableObject
         FillCurvatureChoices();
         _loading = false;
 
-        // Null only in tests: the watcher owns a window handle and needs a running WPF app.
-        if (watcher is not null)
-        {
-            watcher.DisplaysChanged += (_, _) => OnUi(() => RefreshCommand.Execute(null));
-        }
+        // The catalog reads the displays after every change and every switch; showing that read saves one of our own (v4 finding A-03).
+        catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowDisplays(snapshot));
 
         Loc.Instance.PropertyChanged += (_, _) => OnUi(() =>
         {
@@ -235,16 +231,27 @@ public sealed partial class FovViewModel : ObservableObject
     /// <summary>The picture used for the numbers: the display's aspect ratio at the diagonal in the field.</summary>
     public ScreenSize CurrentScreen { get; private set; } = new(0, 0);
 
-    /// <summary>Reads the attached displays; the page calls it when it is shown and the watcher when they change.</summary>
+    /// <summary>Reads the attached displays; the page calls it when it is shown. Changes arrive from the catalog.</summary>
     [RelayCommand]
     public async Task RefreshAsync()
     {
-        string? selected = SelectedDisplay?.Identity.TargetDevicePath;
         try
         {
-            DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
-            IReadOnlyDictionary<string, string> names = _catalog.KnownDisplayNames;
-            _loading = true;
+            ShowDisplays(await Task.Run(() => _display.QueryAsync(CancellationToken.None)));
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            _log.Error(ex, "Displays could not be read for the field of view page");
+        }
+    }
+
+    private void ShowDisplays(DisplaySnapshot snapshot)
+    {
+        string? selected = SelectedDisplay?.Identity.TargetDevicePath;
+        IReadOnlyDictionary<string, string> names = _catalog.KnownDisplayNames;
+        _loading = true;
+        try
+        {
             Displays.Clear();
             foreach (AttachedDisplay display in snapshot.Displays.Where(d => d.IsActive && d.ActiveMode is not null))
             {
@@ -255,15 +262,14 @@ public sealed partial class FovViewModel : ObservableObject
             SelectedDisplay = Displays.FirstOrDefault(d => d.Identity.TargetDevicePath == selected)
                 ?? Displays.FirstOrDefault(d => d.Mode.IsPrimary)
                 ?? Displays.FirstOrDefault();
-            _loading = false;
-            LoadDisplay();
-            _log.Information("Field of view page shows {Count} active displays", Displays.Count);
         }
-        catch (System.ComponentModel.Win32Exception ex)
+        finally
         {
             _loading = false;
-            _log.Error(ex, "Displays could not be read for the field of view page");
         }
+
+        LoadDisplay();
+        _log.Information("Field of view page shows {Count} active displays", Displays.Count);
     }
 
     partial void OnSelectedDisplayChanged(FovDisplay? value)
@@ -618,17 +624,7 @@ public sealed partial class FovViewModel : ObservableObject
         }
     }
 
-    private void OnUi(Action action)
-    {
-        if (_ui is null || SynchronizationContext.Current == _ui)
-        {
-            action();
-        }
-        else
-        {
-            _ui.Post(_ => action(), null);
-        }
-    }
+    private void OnUi(Action action) => _ui.Run(action);
 
     private static string Degrees(double value) => value > 0 ? value.ToString("0.0", Loc.Instance.Culture) + "°" : "—";
 }

@@ -19,7 +19,7 @@ namespace RigShift.App.ViewModels;
 /// validated at once; the save bar shows the problem count, and saving writes the profile and its USB rules together.
 /// Resolutions and positions are not editable; they come from "use current arrangement" (docs/display-topology.md).
 /// </summary>
-public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposable
+public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEditor
 {
     private static readonly IReadOnlyList<DisplayAssignment> NoDisplays = [];
     private static readonly IReadOnlyList<AppAction> NoApps = [];
@@ -71,6 +71,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         ArgumentNullException.ThrowIfNull(log);
 
         _original = profile;
+        Saved = profile;
         _catalog = catalog;
         _display = display;
         _hotkeys = hotkeys;
@@ -141,6 +142,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     }
 
     public Guid Id => _original.Id;
+
+    /// <summary>The profile as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
+    public Profile Saved { get; private set; }
 
     /// <summary>Not saved yet: the save bar stays until the first save, and switching is not possible (F3).</summary>
     [ObservableProperty]
@@ -494,6 +498,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         try
         {
             await _catalog.SaveAsync(profile, CancellationToken.None);
+            Saved = profile;
             if (Rules.IsDirty)
             {
                 await _settings.UpdateAsync(s => s with { AutomationRules = Rules.MergeInto(s.AutomationRules) }, CancellationToken.None);

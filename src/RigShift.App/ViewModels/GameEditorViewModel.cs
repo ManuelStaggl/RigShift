@@ -19,7 +19,7 @@ namespace RigShift.App.ViewModels;
 /// The game detail's editor: the tabs in the order a session runs them (game, profile, tools, windows, end), live
 /// validation with a problem count, and the dirty flag for the save bar. Nothing is written until <see cref="SaveAsync"/>.
 /// </summary>
-public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
+public sealed partial class GameEditorViewModel : ObservableObject, IDetailEditor
 {
     private static readonly IReadOnlyList<AppAction> NoApps = [];
 
@@ -60,6 +60,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
 
         _original = game;
         _initial = game;
+        Saved = game;
         _profiles = profiles;
         _games = games;
         _catalog = catalog;
@@ -107,6 +108,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     }
 
     public Guid Id => _original.Id;
+
+    /// <summary>The game as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
+    public GameEntry Saved { get; private set; }
 
     /// <summary>Not saved yet: the save bar stays until the first save, and playing is not possible.</summary>
     [ObservableProperty]
@@ -427,6 +431,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         }
 
         _initial = game;
+        Saved = game;
         ErrorMessage = null;
         IsNew = false;
         Recalculate();

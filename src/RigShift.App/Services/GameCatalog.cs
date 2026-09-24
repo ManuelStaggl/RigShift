@@ -31,8 +31,9 @@ public sealed partial class GameCatalog : ObservableObject
         _log = log.ForContext<GameCatalog>();
         IsEmpty = true;
 
-        // The cards name the profile a game switches to, so a renamed profile has to reach them.
-        _profiles.Changed += (_, _) => Rebuild();
+        // The cards name the profile a game switches to, so a renamed profile has to reach them. Only the profiles
+        // themselves: a display change is no reason to rebuild every game (v4 finding A-03).
+        _profiles.ProfilesChanged += (_, _) => Rebuild();
         Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 

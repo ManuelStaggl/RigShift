@@ -385,6 +385,71 @@ public sealed class GamesViewModelTests : IDisposable
         page.HasDetailMessage.ShouldBeFalse();
     });
 
+    /// <summary>The first start learned the process name while the game was being edited (v4 finding A-01).</summary>
+    [Fact]
+    public Task DirtyEditor_ProcessNameLearned_KeepsTheChanges_AndOffersAReload() => _ui.RunAsync(async () =>
+    {
+        GameEntry game = await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "iRacing 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _catalog.RememberProcessNameAsync(game.Id, "iRacingSim64DX11", Ct);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        editor.Name.ShouldBe("iRacing 2");
+        page.IsStale.ShouldBeTrue();
+    });
+
+    [Fact]
+    public Task CleanEditor_ProcessNameLearned_ShowsIt() => _ui.RunAsync(async () =>
+    {
+        GameEntry game = await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await _catalog.RememberProcessNameAsync(game.Id, "iRacingSim64DX11", Ct);
+        await UntilAsync(() => page.Editor is { } fresh && fresh != editor, "the editor was not reloaded");
+
+        page.Editor.ShouldNotBeNull().ProcessName.ShouldBe("iRacingSim64DX11");
+        page.IsStale.ShouldBeFalse();
+    });
+
+    /// <summary>A renamed profile rebuilds every game card; a game being edited keeps its changes.</summary>
+    [Fact]
+    public Task DirtyEditor_SurvivesAProfileBeingSaved() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "iRacing 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _host.Catalog.SaveAsync(Profile("Desk", DeskModes), Ct);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        page.IsStale.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task NewUnsavedGame_SurvivesAnotherGameBeingSaved() => _ui.RunAsync(async () =>
+    {
+        GamesViewModel page = await PageAsync();
+        _dialogs.Executable = @"C:\Games\rFactor2.exe";
+        await page.AddProgramCommand.ExecuteAsync(null);
+        await UntilAsync(() => page.Editor is { IsNew: true }, "the new game's editor did not open");
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await SavedAsync("iRacing");
+
+        page.Items.Count.ShouldBe(2);
+        page.Items[0].IsNew.ShouldBeTrue();
+        page.Editor.ShouldBeSameAs(editor);
+    });
+
     public void Dispose()
     {
         _ui.Invoke(() =>
@@ -417,7 +482,7 @@ public sealed class GamesViewModelTests : IDisposable
     /// <summary>The page with its first editor loaded; that happens in the background after the constructor.</summary>
     private async Task<GamesViewModel> PageAsync()
     {
-        var page = new GamesViewModel(_catalog, _sessions, _dialogs, Logger.None);
+        var page = new GamesViewModel(_catalog, _sessions, _dialogs, _host.Paths, Logger.None);
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }
@@ -451,7 +516,14 @@ public sealed class GamesViewModelTests : IDisposable
 
         public List<string> DeleteAsked { get; } = [];
 
-        public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew) => real.CreateEditorAsync(game, isNew);
+        /// <summary>How many editors the page asked for; counted when asked, before the editor is ready.</summary>
+        public int EditorsCreated { get; private set; }
+
+        public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew)
+        {
+            EditorsCreated++;
+            return real.CreateEditorAsync(game, isNew);
+        }
 
         public Task<AddedGames> AddInstalledAsync() => Installed();
 
