@@ -2,6 +2,7 @@ using System.IO;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Profiles;
+using RigShift.Core.Tests.Fakes;
 using Shouldly;
 using Xunit;
 
@@ -44,17 +45,35 @@ public sealed class AppEditItemTests
     }
 
     [Fact]
-    public void PathNote_FileExists_IsNull()
+    public async Task PathNote_FileExists_IsNull_AndTheIconIsThere()
     {
-        new AppEditItem(new AppAction { Path = Existing }).PathNote.ShouldBeNull();
+        var row = new AppEditItem(new AppAction { Path = Existing });
+
+        await row.PathChecked;
+
+        row.PathNote.ShouldBeNull();
+        row.Icon.ShouldNotBeNull();
     }
 
     [Fact]
-    public void PathNote_FullPathWithoutFile_SaysNotFound()
+    public async Task PathNote_FullPathWithoutFile_SaysNotFound()
     {
         var row = new AppEditItem(new AppAction { Path = @"C:\nowhere\missing-rigshift-test.exe" });
 
+        await row.PathChecked;
+
         row.PathNote.ShouldBe(Loc.Instance["App_NotFound"]);
+    }
+
+    /// <summary>A-12: a path on a sleeping NAS froze the editor for the network's timeout, at every key.</summary>
+    [Fact]
+    public void PathNote_NetworkPath_IsNotLookedFor()
+    {
+        var row = new AppEditItem(new AppAction { Path = @"\\nas-asleep\tools\SimHub.exe" });
+
+        row.PathChecked.IsCompleted.ShouldBeTrue();
+        row.PathNote.ShouldBeNull();
+        row.Icon.ShouldBeNull();
     }
 
     [Fact]
@@ -80,16 +99,20 @@ public sealed class AppEditItemTests
     }
 
     [Fact]
-    public void PathNote_FollowsPathAndKind()
+    public async Task PathNote_FollowsPathAndKind()
     {
-        var row = new AppEditItem(new AppAction { Path = "notepad.exe" });
-        List<string?> changed = [];
-        row.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var row = new AppEditItem(new AppAction { Path = "notepad.exe" }, time: new AutoAdvanceTimeProvider());
+        row.PathNote.ShouldBe(Loc.Instance["Restore_WarnNotFullPath"]);
 
         row.SelectedKind = row.KindChoices[1];
         row.PathNote.ShouldBeNull();
-        row.Path = Existing;
 
-        changed.Count(name => name == nameof(AppEditItem.PathNote)).ShouldBe(2);
+        row.Path = @"C:\nowhere\missing-rigshift-test.exe";
+        await row.PathChecked;
+        row.PathNote.ShouldBe(Loc.Instance["App_NotFound"]);
+
+        row.Path = Existing;
+        await row.PathChecked;
+        row.PathNote.ShouldBeNull();
     }
 }

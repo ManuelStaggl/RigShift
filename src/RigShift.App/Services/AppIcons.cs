@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.App.Services;
@@ -13,21 +14,31 @@ namespace RigShift.App.Services;
 /// <summary>Program icons for the app picker, the editor and the profile cards; frozen, so they can be made off the UI thread.</summary>
 internal static class AppIcons
 {
-    private static readonly ConcurrentDictionary<string, ImageSource?> Cache = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Only icons that were found: a miss per typed character used to stay in here for good (v4 finding A-12).</summary>
+    private static readonly ConcurrentDictionary<string, ImageSource> Cache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <returns>The file's icon, or <c>null</c> for a path that is not a file with one.</returns>
+    /// <returns>
+    /// The file's icon, or <c>null</c> for a path that is not a file with one. A network path gets none: a share that
+    /// sleeps would hold the caller for the network's timeout.
+    /// </returns>
     public static ImageSource? Load(string? path)
     {
         string file = Environment.ExpandEnvironmentVariables((path ?? string.Empty).Trim().Trim('"'));
-        if (!Path.IsPathFullyQualified(file))
+        if (!Path.IsPathFullyQualified(file) || LaunchPath.IsNetwork(file))
         {
             return null;
         }
 
-        return Cache.GetOrAdd(file, Extract);
+        if (Cache.TryGetValue(file, out ImageSource? cached))
+        {
+            return cached;
+        }
+
+        BitmapSource? icon = Extract(file);
+        return icon is null ? null : Cache.GetOrAdd(file, icon);
     }
 
-    private static ImageSource? Extract(string file)
+    private static BitmapSource? Extract(string file)
     {
         try
         {

@@ -199,24 +199,36 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     public bool HasDesktopIcons => DesktopIcons is { IsEmpty: false };
 
-    public string DesktopIconsText => DesktopIcons is { IsEmpty: false } layout
+    public string DesktopIconsText => _desktopUnreachable ? Loc.Instance["Status_IconsUnavailable"]
+        : DesktopIcons is { IsEmpty: false } layout
         ? Loc.Format(
             layout.Icons.Count == 1 ? "Editor_DesktopIconsSavedOne" : "Editor_DesktopIconsSaved",
             layout.Icons.Count,
             layout.CapturedAt.ToLocalTime().ToString("g", Loc.Instance.Culture))
         : Loc.Instance["Editor_DesktopIconsNone"];
 
+    /// <summary>The last "save positions" did not reach the desktop; the caption says so until the symbols change.</summary>
+    private bool _desktopUnreachable;
+
+    partial void OnDesktopIconsChanged(DesktopIconLayout? value) => _desktopUnreachable = false;
+
     [RelayCommand]
-    private void CaptureDesktopIcons()
+    private async Task CaptureDesktopIconsAsync()
     {
-        if (_desktopIcons.Capture() is { IsEmpty: false } layout)
+        // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread (v4 finding A-12).
+        DesktopIconLayout? layout = await Task.Run(_desktopIcons.Capture);
+        if (layout is { IsEmpty: false })
         {
             DesktopIcons = layout;
             _log.Information("Desktop symbols captured for {Profile}: {Count}", Name, layout.Icons.Count);
         }
         else
         {
-            _log.Warning("Desktop symbols not captured for {Profile}: the desktop reported none", Name);
+            // Before, a desktop that did not answer left the button without any visible effect.
+            _desktopUnreachable = layout is null;
+            OnPropertyChanged(nameof(DesktopIconsText));
+            _log.Warning("Desktop symbols not captured for {Profile}: {Reason}", Name,
+                layout is null ? "the desktop was not reachable" : "the desktop reported none");
         }
     }
 

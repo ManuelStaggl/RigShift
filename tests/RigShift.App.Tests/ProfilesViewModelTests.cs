@@ -420,7 +420,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse("nothing is saved yet");
 
         _desktopIcons.Capture().Returns(Icons);
-        page.Editor.ShouldNotBeNull().CaptureDesktopIconsCommand.Execute(null);
+        await page.Editor.ShouldNotBeNull().CaptureDesktopIconsCommand.ExecuteAsync(null);
 
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeTrue("what the row shows is what the button restores");
 

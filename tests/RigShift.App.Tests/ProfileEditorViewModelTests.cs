@@ -399,15 +399,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         ProfileEditorViewModel editor = await EditorAsync(Rig());
         _desktopIcons.Capture().Returns((DesktopIconLayout?)null);
 
-        editor.CaptureDesktopIconsCommand.Execute(null);
+        await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
         editor.HasDesktopIcons.ShouldBeFalse();
-        editor.DesktopIconsText.ShouldBe(Loc.Instance["Editor_DesktopIconsNone"]);
+        editor.DesktopIconsText.ShouldBe(Loc.Instance["Status_IconsUnavailable"]);
 
         var layout = new DesktopIconLayout { CapturedAt = DateTimeOffset.UtcNow, Icons = [new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 }] };
         _desktopIcons.Capture().Returns(layout);
-        editor.CaptureDesktopIconsCommand.Execute(null);
+        await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
 
         editor.HasDesktopIcons.ShouldBeTrue();
+        editor.DesktopIconsText.ShouldNotBe(Loc.Instance["Status_IconsUnavailable"]);
         editor.IsDirty.ShouldBeTrue();
 
         editor.ClearDesktopIconsCommand.Execute(null);

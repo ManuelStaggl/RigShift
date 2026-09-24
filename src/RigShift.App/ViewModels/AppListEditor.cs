@@ -159,7 +159,17 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void OnItemChanged(object? sender, PropertyChangedEventArgs e) => Changed?.Invoke(this, EventArgs.Empty);
+    /// <summary>
+    /// Not for what an entry learns about its file: note and icon arrive from the background a moment after each change
+    /// and change nothing that is built (v4 finding A-12).
+    /// </summary>
+    private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not (nameof(AppEditItem.PathNote) or nameof(AppEditItem.HasPathNote) or nameof(AppEditItem.Icon)))
+        {
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     private void OnWaitDeviceChanged(object? sender, PropertyChangedEventArgs e)
     {
