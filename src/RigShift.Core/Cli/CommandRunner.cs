@@ -282,7 +282,7 @@ public sealed class CommandRunner
             ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
             : existing with
             {
-                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
+                Displays = ProfileEditing.CapturedArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
                 Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
             };
 

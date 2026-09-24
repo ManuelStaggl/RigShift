@@ -349,7 +349,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         try
         {
             DisplaySnapshot snapshot = await _display.QueryAsync(CancellationToken.None);
-            IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CurrentArrangement(snapshot, Displays.Select(d => d.Assignment), _catalog.KnownDisplayNames);
+            IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CapturedArrangement(snapshot, Displays.Select(d => d.Assignment), _catalog.KnownDisplayNames);
             SetDisplays(arrangement);
             ArrangementNote = Loc.Format("Editor_Taken", arrangement.Count);
             _log.Information("Editor took the current arrangement with {Count} displays", arrangement.Count);
