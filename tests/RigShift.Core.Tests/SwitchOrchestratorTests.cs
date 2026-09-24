@@ -587,6 +587,34 @@ public sealed class SwitchOrchestratorTests
         await _confirmation.Received(1).ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), SwitchOptions.DefaultConfirmTimeout, Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData(15, 30)]
+    [InlineData(60, 60)]
+    public async Task Switch_MinimumConfirmTimeout_LengthensOnlyAShorterCountdown(int appSeconds, int expectedSeconds)
+    {
+        // v4 finding U-04: after a USB rule the user may still be on the way to the seat.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+
+        await Create(display).SwitchAsync(
+            Rig(confirm: true), new SwitchRequest { DefaultConfirmTimeoutSeconds = appSeconds, MinimumConfirmTimeoutSeconds = 30 }, Ct);
+
+        await _confirmation.Received(1).ConfirmAsync(
+            Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), TimeSpan.FromSeconds(expectedSeconds), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_MinimumConfirmTimeout_DoesNotMakeASwitchAsk()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true), new SwitchRequest { SkipConfirmation = true, MinimumConfirmTimeoutSeconds = 30 }, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
     [Fact]
     public async Task Switch_SetsPlaybackForAllRoles()
     {

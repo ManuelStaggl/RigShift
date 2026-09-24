@@ -1,9 +1,11 @@
 using System.IO;
 using NSubstitute;
 using RigShift.App.Services;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
+using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -53,6 +55,27 @@ public sealed class AutomationServiceTests : IDisposable
         await automation.PollAsync();
 
         _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Rig");
+    }
+
+    [Fact]
+    public async Task Tick_RuleSwitch_CountsDownAtLeastTheRuleMinimum()
+    {
+        // U-04: the wheelbase is on, its owner may still be on the way to the seat; the app setting says 15 s.
+        _host.Confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(ConfirmationResult.Confirmed);
+        using AutomationService automation = await CreateAsync();
+        _host.Store.Profiles[0] = _rig with { SwitchWithoutAsking = false };
+        await _host.Catalog.ReloadAsync(Ct);
+        await automation.PollAsync();
+
+        Connected(true);
+        await automation.PollAsync();
+
+        await _host.Confirmation.Received(1).ConfirmAsync(
+            Arg.Any<Profile>(),
+            Arg.Any<DisplaySnapshot>(),
+            TimeSpan.FromSeconds(AutomationService.RuleConfirmSeconds),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

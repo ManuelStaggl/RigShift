@@ -505,6 +505,7 @@
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
   <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Gilt beim Start, wenn kein Profil erkannt wird.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne Bestätigung kommt die vorherige Anordnung zurück.</value></data>
+  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Tray-Menü.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Geräte erscheinen hier, sobald eine Regel oder ein Profil sie verwendet. Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>

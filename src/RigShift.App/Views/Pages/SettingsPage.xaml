@@ -77,7 +77,10 @@
               Style="{StaticResource RigShift.Toggle}" />
           </controls:SettingRow>
 
-          <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_ConfirmSeconds}">
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_ConfirmSecondsHint}"
+            Title="{loc:Tr Settings_ConfirmSeconds}">
             <ui:NumberBox
               Width="100"
               AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"

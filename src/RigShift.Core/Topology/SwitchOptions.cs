@@ -113,4 +113,10 @@ public sealed record SwitchRequest
 
     /// <summary>Confirmation timeout for profiles that do not set their own (application setting).</summary>
     public int DefaultConfirmTimeoutSeconds { get; init; } = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
+
+    /// <summary>
+    /// The shortest countdown when the switch asks at all. A USB rule sets it: the user who switched on the wheelbase may
+    /// still be on the way to the seat (v4 finding U-04).
+    /// </summary>
+    public int MinimumConfirmTimeoutSeconds { get; init; }
 }

@@ -274,17 +274,24 @@ public sealed class SwitchOrchestrator
     /// <summary>How long the switch waits for "keep", or <c>null</c> when it does not ask.</summary>
     private static TimeSpan? ConfirmTimeout(Profile profile, SwitchRequest request)
     {
+        TimeSpan? timeout;
+
         // A link may come from a web page: it always asks, at least with the default timeout (analysis finding H-02).
         if (request.FromLink)
         {
-            return request.DefaultConfirmTimeoutSeconds > 0
+            timeout = request.DefaultConfirmTimeoutSeconds > 0
                 ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds)
                 : SwitchOptions.DefaultConfirmTimeout;
         }
+        else
+        {
+            timeout = request.DefaultConfirmTimeoutSeconds > 0 && !profile.SwitchWithoutAsking && !request.SkipConfirmation
+                ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds)
+                : null;
+        }
 
-        return request.DefaultConfirmTimeoutSeconds > 0 && !profile.SwitchWithoutAsking && !request.SkipConfirmation
-            ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds)
-            : null;
+        TimeSpan minimum = TimeSpan.FromSeconds(request.MinimumConfirmTimeoutSeconds);
+        return timeout < minimum ? minimum : timeout;
     }
 
     /// <summary>Audio, keep-awake and call ducking as they are now: only a switch that asks can be rejected and undo them.</summary>

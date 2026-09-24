@@ -505,6 +505,7 @@
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Devices</value></data>
   <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Used at start when no profile is recognised.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Without a confirmation the previous arrangement comes back.</value></data>
+  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>

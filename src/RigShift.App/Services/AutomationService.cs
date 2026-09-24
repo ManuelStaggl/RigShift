@@ -21,6 +21,9 @@ public sealed class AutomationService : IDisposable
     /// <summary>ERROR_ACCESS_DENIED: the display calls of a session without its desktop.</summary>
     private const int ErrorAccessDenied = 5;
 
+    /// <summary>Shortest countdown after a rule switched: the wheelbase is on, its owner not yet in the seat (U-04).</summary>
+    internal const int RuleConfirmSeconds = 30;
+
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
@@ -238,7 +241,8 @@ public sealed class AutomationService : IDisposable
         string reason = action.Reason == TriggerReason.Started ? "connected" : "disconnected";
         _log.Information("{Subject} {Reason}: switching to {Profile} (skip confirmation: {SkipConfirmation})",
             subject, reason, profile.Name, action.SkipConfirmation);
-        SwitchResult? result = await _coordinator.SwitchAsync(profile, new SwitchRequest { SkipConfirmation = action.SkipConfirmation });
+        var request = new SwitchRequest { SkipConfirmation = action.SkipConfirmation, MinimumConfirmTimeoutSeconds = RuleConfirmSeconds };
+        SwitchResult? result = await _coordinator.SwitchAsync(profile, request);
         if (action.Reason != TriggerReason.Started)
         {
             return;
