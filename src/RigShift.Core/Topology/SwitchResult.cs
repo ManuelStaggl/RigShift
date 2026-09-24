@@ -58,6 +58,9 @@ public enum SwitchNote
 
     /// <summary>The stored modes did not work; Windows picked the modes from its own database.</summary>
     ModesFromDatabase,
+
+    /// <summary>A call into the graphics driver did not return; nothing could be restored (v4 finding K-07).</summary>
+    DriverHung,
 }
 
 public enum AppsOutcome

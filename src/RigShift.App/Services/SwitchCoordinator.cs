@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
@@ -278,7 +279,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             // The orchestrator reports expected failures as results; anything thrown is a bug or an OS surprise.
             _log.Error(ex, "Switch to {Profile} threw", profile.Name);
             await CompleteAsync(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 0,
-                _time.GetLocalNow() - started, null, ex.Message, []));
+                _time.GetLocalNow() - started, null, ex.Message, [], Note: ex is DisplayDriverHungException ? SwitchNote.DriverHung : SwitchNote.None));
 
             if (rethrow)
             {

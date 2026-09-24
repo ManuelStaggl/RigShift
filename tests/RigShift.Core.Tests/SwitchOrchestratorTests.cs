@@ -1021,6 +1021,21 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.Message.ShouldNotBeNull().ShouldContain("did not return");
+        result.Note.ShouldBe(SwitchNote.DriverHung);
+        display.Applied.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Switch_WhileTheDriverStillHangs_FailsAtOnce()
+    {
+        // K-07: the next switch used to queue behind the stuck call for good; now it fails right away.
+        var display = new FakeDisplayConfigurator(DeskActive()) { ApplyNeverReturns = true };
+        SwitchOrchestrator orchestrator = Create(display);
+        await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        await Should.ThrowAsync<DisplayDriverHungException>(
+            () => orchestrator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default, Ct).WaitAsync(TimeSpan.FromSeconds(5), Ct));
+
         display.Applied.Count.ShouldBe(1);
     }
 

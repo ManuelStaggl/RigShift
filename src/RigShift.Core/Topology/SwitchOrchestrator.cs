@@ -12,7 +12,7 @@ namespace RigShift.Core.Topology;
 /// </summary>
 public sealed class SwitchOrchestrator
 {
-    private readonly IDisplayConfigurator _display;
+    private readonly HungDriverGuard _display;
     private readonly IPowerController _power;
     private readonly ISwitchConfirmation _confirmation;
     private readonly ISwitchJournal _journal;
@@ -62,7 +62,8 @@ public sealed class SwitchOrchestrator
         ArgumentNullException.ThrowIfNull(time);
         ArgumentNullException.ThrowIfNull(log);
 
-        _display = display;
+        // The app hands in the guard all its pages share; anything else (tests, the command line) gets one of its own.
+        _display = display as HungDriverGuard ?? new HungDriverGuard(display, options, time, log);
         _power = power;
         _confirmation = confirmation;
         _journal = journal;
@@ -70,7 +71,7 @@ public sealed class SwitchOrchestrator
         _options = options;
         _time = time;
         _log = log.ForContext<SwitchOrchestrator>();
-        _topology = new TopologyApplier(display, planner, options, time, _log);
+        _topology = new TopologyApplier(_display, planner, options, time, _log);
         _tidy = new PostSwitchTidy(windows, desktopIcons, options, time, _log);
         _audioSwitcher = new AudioSwitcher(audio, options, time, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
@@ -549,7 +550,7 @@ public sealed class SwitchOrchestrator
                 Attempts = applied.Attempts + rolledBack.Attempts,
                 LastNativeError = rolledBack.LastNativeError,
                 Message = message,
-                Note = SwitchNote.RestoreFailed,
+                Note = _display.IsHung ? SwitchNote.DriverHung : SwitchNote.RestoreFailed,
                 Audio = answer.Audio,
             }, started);
         }
@@ -587,6 +588,13 @@ public sealed class SwitchOrchestrator
     private async Task<SwitchNote> RestoreAfterFailureAsync(
         DisplaySnapshot before, SurroundSetting? surroundBefore, CancellationToken cancellationToken)
     {
+        if (_display.IsHung)
+        {
+            // Every display call fails at once until the stuck one returns; only a restart helps (K-07).
+            _log.Error("Nothing restored after the failed switch: the graphics driver does not answer");
+            return SwitchNote.DriverHung;
+        }
+
         // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
         await _surroundSwitcher.RestoreAsync(surroundBefore, cancellationToken);
 

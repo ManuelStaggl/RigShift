@@ -449,6 +449,7 @@ public sealed class CommandRunner
             SwitchNote.RestoredPrevious when result.Outcome != SwitchOutcome.RolledBack => "previous displays restored",
             SwitchNote.RestoreFailed => "the previous displays could not be restored",
             SwitchNote.ModesFromDatabase => "Windows used its own display modes, the stored ones did not work",
+            SwitchNote.DriverHung => "the graphics driver does not answer; restart the PC if the displays stay wrong",
             _ => null,
         };
         if (note is not null)

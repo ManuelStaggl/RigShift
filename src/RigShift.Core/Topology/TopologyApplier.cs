@@ -72,10 +72,10 @@ internal sealed class TopologyApplier
                 int code;
                 try
                 {
-                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes, AllowClone = restoring }, cancellationToken)
-                        .WaitAsync(_options.ApplyCallTimeout, _time, cancellationToken);
+                    // The time limit is the driver guard's (K-07): it also makes every later call fail at once.
+                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes, AllowClone = restoring }, cancellationToken);
                 }
-                catch (TimeoutException)
+                catch (DisplayDriverHungException)
                 {
                     // No second attempt: a call stuck in the driver holds whatever the next one would wait for.
                     _log.Error("Attempt {Attempt} did not return within {Timeout} ({ModeSource} modes); the graphics driver may hang",

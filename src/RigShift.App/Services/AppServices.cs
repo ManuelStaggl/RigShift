@@ -258,6 +258,7 @@ public static class SwitchMessages
             SwitchNote.RestoredPrevious when record.Outcome != SwitchOutcome.RolledBack => Loc.Instance["Note_RestoredPrevious"],
             SwitchNote.RestoreFailed => Loc.Instance["Note_RestoreFailed"],
             SwitchNote.ModesFromDatabase => Loc.Instance["Note_ModesFromDatabase"],
+            SwitchNote.DriverHung => Loc.Instance["Note_DriverHung"],
             _ => null,
         };
         if (note is not null)

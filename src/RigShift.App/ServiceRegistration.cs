@@ -36,7 +36,9 @@ public static class ServiceRegistration
         services.AddSingleton<IProfileStore>(sp => new JsonProfileStore(paths.Profiles, log, sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton(_ => new JsonSettingsStore(paths.SettingsFile, log));
         services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", log));
-        services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
+        // Everyone shares the guard, so a call stuck in the driver makes the pages fail fast too, not just the switch (K-07).
+        services.AddSingleton<IDisplayConfigurator>(sp => new HungDriverGuard(
+            new CcdDisplayConfigurator(log, sp.GetRequiredService<TimeProvider>()), sp.GetRequiredService<SwitchOptions>(), sp.GetRequiredService<TimeProvider>(), log));
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();
         services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
         services.AddSingleton<IPowerController, Windows.Power.PowerController>();

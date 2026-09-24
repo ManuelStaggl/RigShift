@@ -60,6 +60,7 @@
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>Die vorherigen Bildschirme sind wiederhergestellt.</value></data>
   <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden – manche bleiben eventuell dunkel. Wähle erneut ein Profil oder drücke Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>Die gespeicherte Auflösung ging nicht; Windows hat die Anzeigemodi gewählt.</value></data>
+  <data name="Note_DriverHung" xml:space="preserve"><value>Der Grafiktreiber antwortet nicht. Bleiben die Bildschirme falsch, starte den PC neu.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>Es läuft bereits ein Wechsel.</value></data>
   <data name="Update_Ready" xml:space="preserve"><value>Version {0} ist bereit und wird beim nächsten Start von RigShift installiert.</value></data>
   <data name="Outcome_Applied" xml:space="preserve"><value>Umgeschaltet</value></data>

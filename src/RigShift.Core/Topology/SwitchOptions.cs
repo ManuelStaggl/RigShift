@@ -33,6 +33,12 @@ public sealed record SwitchOptions
     /// </summary>
     public TimeSpan ApplyCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
 
+    /// <summary>
+    /// Longest time one native query may take (v4 finding K-07). As long as an apply: a query waits behind a running apply
+    /// in the kernel, and a shorter limit would take a slow but working apply for a hung driver.
+    /// </summary>
+    public TimeSpan QueryCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
+
     /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 

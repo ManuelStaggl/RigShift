@@ -133,9 +133,10 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
                 int code;
                 try
                 {
-                    code = await _display.SetHdrAsync(target, enabled, cancellationToken).WaitAsync(_options.HdrCallTimeout, _time, cancellationToken);
+                    // The time limit is the driver guard's (K-07).
+                    code = await _display.SetHdrAsync(target, enabled, cancellationToken);
                 }
-                catch (TimeoutException)
+                catch (DisplayDriverHungException)
                 {
                     _log.Error("HDR of {Display} did not return within {Timeout}; the graphics driver may hang. HDR is left alone for the rest of this switch",
                         DisplayNames.Of(wanted), _options.HdrCallTimeout);
