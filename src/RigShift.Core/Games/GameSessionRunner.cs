@@ -255,13 +255,16 @@ public sealed class GameSessionRunner
         {
             TimeSpan? ranFor = await lifetime;
             cancellationToken.ThrowIfCancellationRequested();
-            if (ranFor is { } span && span < StubLifetime)
+            if (ranFor is { } span)
             {
                 // Launchers, "Play" stubs and executables that restart themselves end within seconds and leave the game
-                // running. Taking their end for the game's would switch the displays back under it.
-                _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking for the game it left behind",
-                    game.Name, span.TotalSeconds);
-                await WaitForSuccessorAsync(game, session.Before, cancellationToken);
+                // running. Taking their end for the game's would switch the displays back under it. A launcher with a
+                // choice to make (DX11 or VR) can stay open for minutes, so a long run gets a look too – a short one,
+                // because it is far more often the game itself ending (v4 finding K-16).
+                TimeSpan grace = span < StubLifetime ? StubGrace : LongRunGrace;
+                _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking {Grace} for a game it left behind",
+                    game.Name, span.TotalSeconds, grace);
+                await WaitForSuccessorAsync(game, session.Before, grace, cancellationToken);
             }
 
             return;
@@ -289,14 +292,20 @@ public sealed class GameSessionRunner
     public static readonly TimeSpan StubGrace = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
-    /// folder. Returns once that has ended, or when nothing showed up.
+    /// How long to look after a started process that ran longer than <see cref="StubLifetime"/>. A launcher starts the game
+    /// before it closes, so the game is there at once; a longer look would hold up the way back after every game.
     /// </summary>
-    private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, CancellationToken cancellationToken)
+    public static readonly TimeSpan LongRunGrace = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
+    /// folder. Returns once that has ended, or when nothing showed up within <paramref name="grace"/>.
+    /// </summary>
+    private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, TimeSpan grace, CancellationToken cancellationToken)
     {
         string? name = game.Launch.KnownProcessName();
         string? folder = GameFolder(game.Launch);
-        DateTimeOffset deadline = _time.GetUtcNow() + StubGrace;
+        DateTimeOffset deadline = _time.GetUtcNow() + grace;
         while (true)
         {
             if (name is not null && _processes.IsRunning(name))
