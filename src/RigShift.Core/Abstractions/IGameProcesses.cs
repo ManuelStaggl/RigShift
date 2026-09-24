@@ -9,6 +9,12 @@ public interface IGameProcesses
     /// <summary>Every process that could be a game: it has a main window. Never throws for a single unreadable process.</summary>
     IReadOnlyList<RunningProcess> List();
 
+    /// <summary>
+    /// Which of <paramref name="names"/> run now with a main window, compared the way the set compares. Cheap enough for a
+    /// timer: only a process whose name is asked for has its windows looked at (v4 finding A-05).
+    /// </summary>
+    IReadOnlySet<string> FindRunning(IReadOnlySet<string> names);
+
     /// <summary>Completes when the process has ended, or right away when it is already gone.</summary>
     Task WaitForExitAsync(int processId, CancellationToken cancellationToken);
 

@@ -22,6 +22,34 @@ public sealed class AutomationServiceTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    /// <summary>E-08: without a rule that can act, the timer only woke the UI thread every two seconds for nothing.</summary>
+    [Fact]
+    public async Task Timer_RunsOnlyWhileARuleCanAct()
+    {
+        using var ui = new DispatcherThread();
+        await _host.Settings.UpdateAsync(s => s with { AutomationRules = [] }, Ct);
+        AutomationService automation = ui.Invoke(() => new AutomationService(
+            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None));
+        try
+        {
+            ui.Invoke(automation.Start);
+            ui.Invoke(() => automation.IsPolling).ShouldBeFalse();
+
+            await _host.Settings.UpdateAsync(
+                s => s with { AutomationRules = [new AutomationRule { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id }] }, Ct);
+            ui.Drain();
+            ui.Invoke(() => automation.IsPolling).ShouldBeTrue();
+
+            (await automation.SetPausedAsync(true)).ShouldBeTrue();
+            ui.Drain();
+            ui.Invoke(() => automation.IsPolling).ShouldBeFalse();
+        }
+        finally
+        {
+            ui.Invoke(automation.Dispose);
+        }
+    }
+
     [Fact]
     public async Task Tick_WhileSwitching_EvaluatesNothing()
     {

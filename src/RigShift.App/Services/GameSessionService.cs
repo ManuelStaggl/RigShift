@@ -27,11 +27,21 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
     private readonly CancellationTokenSource _stopping = new();
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+    private readonly Lock _watchGate = new();
 
     private ITimer? _watch;
+    private bool _watching;
+
+    /// <summary>What the timer looks for; replaced as a whole, so a look always belongs to one set.</summary>
+    private volatile WatchSet _watchSet = new(NoNames, NoNames);
+
+    /// <summary>The set whose new names already set their starting point; UI thread only.</summary>
+    private WatchSet? _baselined;
 
     /// <summary>How often to look for a game that was started outside RigShift.</summary>
     private static readonly TimeSpan WatchInterval = TimeSpan.FromSeconds(5);
+
+    private static readonly IReadOnlySet<string> NoNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public GameSessionService(
         GameCatalog catalog,
@@ -68,24 +78,82 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     public DateTimeOffset? RunningSince(Guid gameId) => _running.TryGetValue(gameId, out RunningSession? session) ? session.StartedAt : null;
 
     /// <summary>
-    /// Starts watching for games that run without RigShift having started them. Games that already run when this is
-    /// called only set the starting point – switching the whole machine because the app was started while a game was
-    /// open would be a nasty surprise.
+    /// Starts watching for games that run without RigShift having started them – but only while a game asks for it and
+    /// its process name is known; without one, looking at every process every five seconds was the only noticeable load
+    /// of an idle RigShift (v4 findings A-05, E-08). Games that already run when watching starts only set the starting
+    /// point – switching the whole machine because the app was started while a game was open would be a nasty surprise.
     /// </summary>
     public void StartWatching()
     {
-        if (_watch is not null)
+        if (_watching)
         {
             return;
         }
 
-        foreach (string name in RunningGameNames())
+        _watching = true;
+        _catalog.Changed += OnGamesChanged;
+        UpdateWatch();
+    }
+
+    private void OnGamesChanged(object? sender, EventArgs e) => UpdateWatch();
+
+    /// <summary>Starts or stops the timer as the games ask for it.</summary>
+    private void UpdateWatch()
+    {
+        var watched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (GameEntry game in _catalog.Games)
         {
-            _seen.Add(name);
+            if (game.StartWithGame && game.Launch.KnownProcessName() is { } name)
+            {
+                watched.Add(name);
+            }
         }
 
-        _log.Information("Watching for games started outside RigShift ({Count} already running)", _seen.Count);
-        _watch = _time.CreateTimer(_ => _dispatcher.BeginInvoke(CheckForStartedGames), null, WatchInterval, WatchInterval);
+        lock (_watchGate)
+        {
+            WatchSet current = _watchSet;
+            if (_stopping.IsCancellationRequested || watched.SetEquals(current.Names))
+            {
+                return;
+            }
+
+            _watchSet = new WatchSet(watched, watched.Where(name => !current.Names.Contains(name)).ToHashSet(StringComparer.OrdinalIgnoreCase));
+            if (watched.Count == 0)
+            {
+                _watch?.Dispose();
+                _watch = null;
+                _log.Information("Not watching for games started outside RigShift: no game asks for it");
+            }
+            else if (_watch is null)
+            {
+                _log.Information("Watching for {Count} game(s) started outside RigShift", watched.Count);
+                _watch = _time.CreateTimer(_ => Look(), null, TimeSpan.Zero, WatchInterval);
+            }
+        }
+    }
+
+    /// <summary>On the timer's thread: the process list stays off the UI thread, only the answer goes there.</summary>
+    private void Look()
+    {
+        WatchSet set = _watchSet;
+        if (_stopping.IsCancellationRequested || set.Names.Count == 0)
+        {
+            return;
+        }
+
+        IReadOnlySet<string> running;
+        try
+        {
+            running = _processes.FindRunning(set.Names);
+        }
+        catch (Exception ex)
+        {
+            // Nothing is decided on a failed look: taking it for "nothing runs" would start a running game's session again.
+            _log.Warning(ex, "Running programs could not be listed");
+            return;
+        }
+
+        _dispatcher.BeginInvoke(() => CheckForStartedGames(set, running));
     }
 
     /// <summary>
@@ -165,14 +233,23 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     /// Looks for a game whose process turned up without us starting it. Only games that ask for it
     /// (<see cref="GameEntry.StartWithGame"/>) and whose process name is known – which the first start learns.
     /// </summary>
-    private void CheckForStartedGames()
+    private void CheckForStartedGames(WatchSet set, IReadOnlySet<string> running)
     {
-        if (_stopping.IsCancellationRequested)
+        // A look for names that changed meanwhile decides nothing; the next one belongs to the new set.
+        if (_stopping.IsCancellationRequested || !ReferenceEquals(set, _watchSet))
         {
             return;
         }
 
-        HashSet<string> running = RunningGameNames();
+        if (!ReferenceEquals(set, _baselined))
+        {
+            // A game that runs already when watching for it begins only sets the starting point.
+            _baselined = set;
+            List<string> already = [.. set.Added.Where(running.Contains)];
+            _seen.UnionWith(already);
+            _log.Information("{Count} watched game(s) already running, left alone", already.Count);
+        }
+
         foreach (GameEntry game in _catalog.Games)
         {
             if (!game.StartWithGame || game.Launch.KnownProcessName() is not { } name)
@@ -190,26 +267,12 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         _seen.RemoveWhere(name => !running.Contains(name));
     }
 
-    private HashSet<string> RunningGameNames()
-    {
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            foreach (RunningProcess process in _processes.List())
-            {
-                names.Add(process.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _log.Warning(ex, "Running programs could not be listed");
-        }
-
-        return names;
-    }
-
     private void Raise(GameEntry game, bool running, string? status, GameSessionOutcome? outcome) =>
         SessionChanged?.Invoke(this, new GameSessionEvent(game.Id, running, status, outcome, _time.GetUtcNow()));
+
+    /// <param name="Names">The process names of the games that start their session when started elsewhere.</param>
+    /// <param name="Added">Those not in the set before: when they already run, they only set the starting point.</param>
+    private sealed record WatchSet(IReadOnlySet<string> Names, IReadOnlySet<string> Added);
 
     private sealed class RunningSession(DateTimeOffset startedAt)
     {
@@ -220,8 +283,14 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     public void Dispose()
     {
-        _watch?.Dispose();
-        _stopping.Cancel();
+        _catalog.Changed -= OnGamesChanged;
+        lock (_watchGate)
+        {
+            _stopping.Cancel();
+            _watch?.Dispose();
+            _watch = null;
+        }
+
         _stopping.Dispose();
     }
 }

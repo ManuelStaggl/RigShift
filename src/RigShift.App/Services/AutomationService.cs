@@ -11,8 +11,8 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Polls the connected USB devices every 2 seconds and switches when a rule's device connects or disappears
-///. Polling needs no window and no administrator rights.
+/// Polls the connected USB devices every 2 seconds while a rule can act, and switches when a rule's device connects or
+/// disappears. Polling needs no window and no administrator rights.
 /// </summary>
 public sealed class AutomationService : IDisposable
 {
@@ -37,6 +37,7 @@ public sealed class AutomationService : IDisposable
 
     /// <summary>Origin of the monotonic time handed to the trigger: wall-clock jumps and sleep must not end a delay.</summary>
     private readonly long _started;
+    private bool _running;
     private bool _polling;
     private bool _idle = true;
     private bool _skipLogged;
@@ -67,7 +68,7 @@ public sealed class AutomationService : IDisposable
         _started = time.GetTimestamp();
         _log = log.ForContext<AutomationService>();
         _timer.Tick += OnTick;
-        settings.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
+        settings.Changed += OnSettingsChanged;
         session.Changed += OnSessionChanged;
     }
 
@@ -80,13 +81,57 @@ public sealed class AutomationService : IDisposable
 
     public bool IsPaused => _settings.Current.AutomationPaused;
 
+    /// <summary>Whether the poll timer runs; for tests.</summary>
+    internal bool IsPolling => _timer.IsEnabled;
+
     private TimeSpan Now => _time.GetElapsedTime(_started);
 
     public void Start()
     {
-        _timer.Start();
+        _running = true;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         _log.Information("Automation started with {Count} rule(s), paused {Paused}", Rules.Count, IsPaused);
+        UpdateTimer();
+    }
+
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        Changed?.Invoke(this, EventArgs.Empty);
+        _timer.Dispatcher.BeginInvoke(UpdateTimer);
+    }
+
+    /// <summary>
+    /// The timer runs only while a rule can act: without rules or paused, a tick every two seconds only woke the UI thread
+    /// for nothing (v4 finding E-08). Going idle forgets what the devices did, as the idle poll did before.
+    /// </summary>
+    private void UpdateTimer()
+    {
+        if (!_running)
+        {
+            return;
+        }
+
+        bool active = !IsPaused && Rules.Count > 0;
+        if (active && !_timer.IsEnabled)
+        {
+            _timer.Start();
+        }
+        else if (!active && _timer.IsEnabled)
+        {
+            _timer.Stop();
+            GoIdle();
+        }
+    }
+
+    private void GoIdle()
+    {
+        // Resuming must not treat a device that connected meanwhile as a fresh start.
+        if (!_idle)
+        {
+            _trigger.Reset();
+            _idle = true;
+            _log.Information("Automation idle ({Reason}), baseline reset", IsPaused ? "paused" : "no rules");
+        }
     }
 
     /// <returns><c>false</c> if the settings could not be saved; the paused state stays as it was (analysis finding A-07).</returns>
@@ -108,8 +153,10 @@ public sealed class AutomationService : IDisposable
 
     public void Dispose()
     {
+        _running = false;
         _timer.Stop();
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        _settings.Changed -= OnSettingsChanged;
         _session.Changed -= OnSessionChanged;
     }
 
@@ -162,14 +209,7 @@ public sealed class AutomationService : IDisposable
         IReadOnlyList<AutomationRule> rules = Rules;
         if (IsPaused || rules.Count == 0)
         {
-            // Resuming must not treat a device that connected meanwhile as a fresh start.
-            if (!_idle)
-            {
-                _trigger.Reset();
-                _idle = true;
-                _log.Information("Automation idle ({Reason}), baseline reset", IsPaused ? "paused" : "no rules");
-            }
-
+            GoIdle();
             return;
         }
 
