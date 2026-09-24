@@ -12,13 +12,17 @@ public sealed class GameLibrary : IGameLibrary
     private readonly ILogger _log;
     private readonly SteamLibrary _steam;
     private readonly EpicLibrary _epic;
+    private readonly UninstallLibrary _uninstall;
+    private readonly XboxLibrary _xbox;
 
-    public GameLibrary(ILogger log, SteamLibrary? steam = null, EpicLibrary? epic = null)
+    public GameLibrary(ILogger log, SteamLibrary? steam = null, EpicLibrary? epic = null, UninstallLibrary? uninstall = null, XboxLibrary? xbox = null)
     {
         ArgumentNullException.ThrowIfNull(log);
         _log = log.ForContext<GameLibrary>();
         _steam = steam ?? new SteamLibrary(log);
         _epic = epic ?? new EpicLibrary(log);
+        _uninstall = uninstall ?? new UninstallLibrary(log);
+        _xbox = xbox ?? new XboxLibrary(log);
     }
 
     public IReadOnlyList<InstalledGame> Find()
@@ -26,6 +30,8 @@ public sealed class GameLibrary : IGameLibrary
         var games = new List<InstalledGame>();
         games.AddRange(From("Steam", _steam.Find));
         games.AddRange(From("Epic", _epic.Find));
+        games.AddRange(From("Uninstall list", _uninstall.Find));
+        games.AddRange(From("Xbox", _xbox.Find));
 
         return [.. games
             .DistinctBy(g => (g.Launch.Kind, g.Launch.Target))

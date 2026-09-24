@@ -373,9 +373,9 @@
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>The game could not be started</value></data>
   <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognised – set it in the entry</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
-  <data name="GamePicker_Intro" xml:space="preserve"><value>Installed Steam and Epic games, read from this PC. No sign-in.</value></data>
+  <data name="GamePicker_Intro" xml:space="preserve"><value>Installed games, read from this PC. No sign-in.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Add games</value></data>
-  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed Steam and Epic games, read from this PC. Tick everything you want to add; profile and tools follow afterwards.</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed games, read from this PC. Tick everything you want to add; profile and tools follow afterwards.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>No installed game found. Use “Browse for program” for everything else.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Search installed games</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Browse for program…</value></data>

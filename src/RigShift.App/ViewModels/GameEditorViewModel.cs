@@ -146,11 +146,12 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     [NotifyPropertyChangedFor(nameof(LaunchText), nameof(HasLaunch))]
     public partial string LaunchTarget { get; set; }
 
-    /// <summary>"Steam", "Epic" or "EXE": the chip in front of the launch text.</summary>
+    /// <summary>"Steam", "Epic", "Xbox" or "EXE": the chip in front of the launch text.</summary>
     public string LaunchKindText => _launch.Kind switch
     {
         GameLaunchKind.Steam => "Steam",
         GameLaunchKind.Epic => "Epic",
+        GameLaunchKind.Xbox => "Xbox",
         _ => "EXE",
     };
 

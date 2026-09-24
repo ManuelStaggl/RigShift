@@ -57,6 +57,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
             {
                 GameLaunchKind.Steam => "Steam",
                 GameLaunchKind.Epic => "Epic",
+                GameLaunchKind.Xbox => "Xbox",
                 _ => Path.GetFileName(Game.Launch.Target),
             };
 

@@ -373,9 +373,9 @@
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>Das Spiel ließ sich nicht starten</value></data>
   <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>Kein Spielprozess erkannt – im Eintrag eintragen</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Spiel wählen</value></data>
-  <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
+  <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Spiele hinzufügen</value></data>
-  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installierte Steam- und Epic-Spiele, von diesem PC gelesen. Alles anhaken, was dazu soll; Profil und Tools kommen danach.</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installierte Spiele, von diesem PC gelesen. Alles anhaken, was dazu soll; Profil und Tools kommen danach.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>Kein installiertes Spiel gefunden. Für alles andere „Programm suchen“.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Installierte Spiele durchsuchen</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Programm suchen…</value></data>

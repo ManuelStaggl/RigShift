@@ -84,7 +84,8 @@ public sealed record GameLaunch
 
     /// <summary>
     /// Executable path for <see cref="GameLaunchKind.Executable"/>, the Steam app id for
-    /// <see cref="GameLaunchKind.Steam"/>, the Epic <c>AppName</c> for <see cref="GameLaunchKind.Epic"/>.
+    /// <see cref="GameLaunchKind.Steam"/>, the Epic <c>AppName</c> for <see cref="GameLaunchKind.Epic"/>, the app user model
+    /// id (<c>PackageFamilyName!AppId</c>) for <see cref="GameLaunchKind.Xbox"/>.
     /// </summary>
     public required string Target { get; init; }
 
@@ -112,6 +113,8 @@ public sealed record GameLaunch
     {
         GameLaunchKind.Steam => Target.Length is > 0 and <= 20 && Target.All(char.IsAsciiDigit),
         GameLaunchKind.Epic => Target.Length is > 0 and <= 128 && Target.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' or '.'),
+        GameLaunchKind.Xbox => Target.Length is > 0 and <= 256 && Target.Count(c => c == '!') == 1
+            && Target.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' or '.' or '!'),
         _ => true,
     };
 
@@ -124,6 +127,7 @@ public sealed record GameLaunch
     {
         GameLaunchKind.Steam when HasValidTarget => $"steam://rungameid/{Target}",
         GameLaunchKind.Epic when HasValidTarget => $"com.epicgames.launcher://apps/{Target}?action=launch&silent=true",
+        GameLaunchKind.Xbox when HasValidTarget => $@"shell:AppsFolder\{Target}",
         _ => null,
     };
 
@@ -146,6 +150,12 @@ public enum GameLaunchKind
 
     /// <summary>Epic <c>AppName</c>, started through <c>com.epicgames.launcher://</c> for the same reason.</summary>
     Epic,
+
+    /// <summary>
+    /// A game from the Xbox app or the Microsoft Store (v4 finding U-07), started through <c>shell:AppsFolder</c> with
+    /// its app user model id: its files sit in a package that cannot be started directly.
+    /// </summary>
+    Xbox,
 }
 
 /// <summary>What RigShift does once the game has ended.</summary>
