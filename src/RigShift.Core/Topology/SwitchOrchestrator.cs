@@ -26,6 +26,7 @@ public sealed class SwitchOrchestrator
     private readonly AppRunner _appRunner;
     private readonly DuckingSwitcher _duckingSwitcher;
     private readonly SurroundSwitcher _surroundSwitcher;
+    private readonly AllDisplaysOn _allDisplaysOn;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -77,6 +78,7 @@ public sealed class SwitchOrchestrator
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
         _surroundSwitcher = new SurroundSwitcher(surround, _log);
+        _allDisplaysOn = new AllDisplaysOn(_display, _log);
     }
 
     /// <summary>
@@ -429,6 +431,12 @@ public sealed class SwitchOrchestrator
     /// The cancellation is requested before this method first yields.
     /// </summary>
     public Task CancelPendingAppsAsync() => _appRunner.CancelPendingAsync();
+
+    /// <summary>
+    /// The emergency hotkey: every display that is ready, at 60 Hz when the card cannot drive them all otherwise. No
+    /// profile, no confirmation – whoever presses it sees no picture. The caller makes sure no switch runs meanwhile.
+    /// </summary>
+    public Task<AllDisplaysOnResult> TurnAllDisplaysOnAsync(CancellationToken cancellationToken) => _allDisplaysOn.RunAsync(cancellationToken);
 
     /// <summary>
     /// After a partial switch, a skipped optional display (spacedesk viewer) may appear later. Re-plans the profile and

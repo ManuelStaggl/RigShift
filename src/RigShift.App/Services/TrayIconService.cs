@@ -140,6 +140,7 @@ public sealed class TrayIconService : IDisposable
             Loc.Format("Result_WaitingText", string.Join(", ", names), (int)switchOptions.MissingDisplayWaitBudget.TotalSeconds),
             NotificationIcon.Info)));
         coordinator.BusyRejected += (_, _) => OnUi(() => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info)));
+        coordinator.AllDisplaysOnCompleted += (_, report) => OnUi(() => Notify(SwitchMessages.ForAllDisplaysOn(report)));
         _updates = updates;
         updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true));
         updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true));

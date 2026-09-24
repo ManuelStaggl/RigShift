@@ -195,9 +195,32 @@ public sealed record SwitchRecord(
 }
 
 /// <summary>User-facing texts for switch results and plans.</summary>
+/// <summary>What the emergency hotkey did, and the profile it switches to because that failed.</summary>
+public sealed record AllDisplaysOnReport(AllDisplaysOnResult Result, string? FallbackProfile);
+
 public static class SwitchMessages
 {
     public static string Outcome(SwitchOutcome outcome) => Loc.Instance["Outcome_" + outcome];
+
+    /// <summary>The tray message after the emergency hotkey.</summary>
+    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon) ForAllDisplaysOn(AllDisplaysOnReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        AllDisplaysOnResult result = report.Result;
+        string text = result.Outcome switch
+        {
+            AllDisplaysOnOutcome.Failed when report.FallbackProfile is { } fallback => Loc.Format("AllOn_FailedFallback", result.Error, fallback),
+            AllDisplaysOnOutcome.Failed => Loc.Format("AllOn_Failed", result.Error),
+            _ => Loc.Instance["AllOn_" + result.Outcome],
+        };
+        H.NotifyIcon.Core.NotificationIcon icon = result.Outcome switch
+        {
+            AllDisplaysOnOutcome.Failed => H.NotifyIcon.Core.NotificationIcon.Error,
+            AllDisplaysOnOutcome.NoDisplays => H.NotifyIcon.Core.NotificationIcon.Warning,
+            _ => H.NotifyIcon.Core.NotificationIcon.Info,
+        };
+        return (Loc.Instance["AllOn_Title"], text, icon);
+    }
 
     /// <summary>"Left · CM27X3", or the model alone without a custom name.</summary>
     public static string NameOf(string? customName, DisplayIdentity identity) =>

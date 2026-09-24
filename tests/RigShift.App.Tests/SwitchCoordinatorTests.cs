@@ -298,5 +298,78 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Surround.ActiveGrid.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task TurnAllDisplaysOn_DuringACountdown_TakesTheSwitchBackFirst()
+    {
+        // The emergency hotkey while a countdown waits on a dark screen: the switch is cancelled and takes itself back,
+        // and only then is every display turned on – in a call of its own, never next to the switch's.
+        _host.Confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(call =>
+        {
+            var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            call.Arg<CancellationToken>().Register(() => answer.TrySetResult(ConfirmationResult.Cancelled));
+            return answer.Task;
+        });
+        Task<SwitchResult?> running = _host.Coordinator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default);
+        await UntilAsync(() => _host.Display.Applied.Count == 1);
+
+        AllDisplaysOnResult? result = await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        await running;
+        result.ShouldNotBeNull().Outcome.ShouldBe(AllDisplaysOnOutcome.TurnedOn);
+        _host.Display.Applied.Count.ShouldBe(3);
+        _host.Display.Applied[1].Plan.Profile.Name.ShouldNotBe("All displays on");
+        _host.Display.Applied[2].Options.ShouldBe(new ApplyOptions { UseDatabaseModes = true, SaveToDatabase = false });
+        _host.Coordinator.IsSwitching.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_WindowsRefuses_SwitchesToTheDefaultProfileWithoutAsking()
+    {
+        Profile desk = Profile("Desk", DeskModes, confirm: true);
+        await _host.Store.SaveAsync(desk, CancellationToken.None);
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+        await _host.Settings.UpdateAsync(s => s with { DefaultProfileId = desk.Id }, CancellationToken.None);
+        _host.Display.SetSnapshot(Snapshot([Attached(Ultrawide, activeMode: UltrawideMode), .. DeskModes.Select(m => Attached(m.Identity))]));
+        _host.Display.EnqueueApplyResults(31, 31);
+        AllDisplaysOnReport? report = null;
+        _host.Coordinator.AllDisplaysOnCompleted += (_, r) => report = r;
+
+        AllDisplaysOnResult? result = await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(AllDisplaysOnOutcome.Failed);
+        report.ShouldNotBeNull().FallbackProfile.ShouldBe("Desk");
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Desk");
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_WindowsRefuses_WithoutADefaultProfile_OnlyReports()
+    {
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Desk4K)));
+        _host.Display.EnqueueApplyResults(31, 31);
+        AllDisplaysOnReport? report = null;
+        _host.Coordinator.AllDisplaysOnCompleted += (_, r) => report = r;
+
+        await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        report.ShouldNotBeNull().FallbackProfile.ShouldBeNull();
+        _host.Coordinator.History.ShouldBeEmpty();
+        _host.Display.Applied.Count.ShouldBe(2);
+    }
+
     public void Dispose() => _host.Dispose();
+
+    private static async Task UntilAsync(Func<bool> condition)
+    {
+        DateTime giveUp = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > giveUp)
+            {
+                throw new TimeoutException("condition not met");
+            }
+
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+    }
 }

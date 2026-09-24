@@ -232,6 +232,9 @@ public sealed partial class AboutViewModel : ObservableObject
         }
 
         HasShortcuts = Shortcuts.Count > 0;
+
+        // Always listed: the emergency hotkey has to be known before a screen stays dark.
+        Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_AllOnHotkey"], HotkeyFormat.Format(HotkeyService.AllDisplaysOnHotkey)));
     }
 
     public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);

@@ -47,6 +47,7 @@ public sealed class LocalizationTests
             .. Enum.GetNames<PlanWarningKind>().Select(name => "Warning_" + name),
             .. Enum.GetNames<SwitchOutcome>().Select(name => "Outcome_" + name),
             .. Enum.GetNames<GameSessionOutcome>().Select(name => "GameOutcome_" + name),
+            .. Enum.GetNames<AllDisplaysOnOutcome>().Select(name => "AllOn_" + name),
             .. ProfileIcons.All.Select(key => "Icon_" + char.ToUpperInvariant(key[0]) + key[1..]),
         ];
 

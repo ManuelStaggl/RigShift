@@ -18,6 +18,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
     private readonly ProfileCatalog _catalog;
     private readonly HotkeyRecorder _toggleHotkeyRecorder;
     private readonly ILogger _log;
+    private readonly Hotkey _allDisplaysOnHotkey = HotkeyService.AllDisplaysOnHotkey;
     private bool _loading;
 
     public SettingsViewModel(
@@ -36,6 +37,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         Loc.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ToggleHotkeyHint));
+            OnPropertyChanged(nameof(AllDisplaysOnHotkeyText));
             Load();
         };
     }
@@ -74,6 +76,9 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
     public string ToggleHotkeyText => ToggleHotkey is null ? string.Empty : HotkeyFormat.Format(ToggleHotkey);
 
     public bool HasToggleHotkey => ToggleHotkey is not null;
+
+    /// <summary>The emergency hotkey, fixed (<see cref="HotkeyService.AllDisplaysOnHotkey"/>); in the language shown.</summary>
+    public string AllDisplaysOnHotkeyText => HotkeyFormat.Format(_allDisplaysOnHotkey);
 
     /// <summary>The line under the hotkey field: what it does, or why the last combination was refused.</summary>
     public string ToggleHotkeyHint => _toggleHotkeyRecorder.Hint;

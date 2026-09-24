@@ -616,6 +616,92 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task TurnAllDisplaysOn_EveryReadyDisplay_InOneCallWithWindowsModes()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.TurnedOn, 5, 0));
+        (TopologyPlan plan, ApplyOptions options) = display.Applied.ShouldHaveSingleItem();
+        plan.Resolved.Select(p => p.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight, Ultrawide, Tablet]);
+        options.UseDatabaseModes.ShouldBeTrue();
+        options.SaveToDatabase.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_ActiveDisplaysKeepTheirRefreshRate_TheOthersGetWhatWindowsPicks()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        TopologyPlan plan = display.Applied.ShouldHaveSingleItem().Plan;
+        plan.Resolved.Single(p => p.Target.Identity == Desk4K).Assignment.RefreshNumerator.ShouldBe(DeskModes[0].RefreshNumerator);
+        plan.Resolved.Single(p => p.Target.Identity == Ultrawide).Assignment.RefreshNumerator.ShouldBe(0u);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_DisplayNotReady_IsLeftOut()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.Displays.ShouldBe(4);
+        display.Applied.ShouldHaveSingleItem().Plan.Resolved.ShouldNotContain(p => p.Target.Identity == Ultrawide);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_TooManyForTheCard_TriesAgainAt60Hz()
+    {
+        // Rule 1 of docs/display-topology.md: 4K@165 and 5120x1440@240 take two heads each; at 60 Hz one is enough.
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [31]);
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.Outcome.ShouldBe(AllDisplaysOnOutcome.TurnedOnAt60Hz);
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.ShouldAllBe(p => p.Assignment.RefreshNumerator == 60 && p.Assignment.RefreshDenominator == 1);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_60HzFailsToo_ReportsTheError()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [31, 1610]);
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.Failed, 5, 1610));
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_AllOnAlready_AppliesNothing()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false, tabletAttached: false) with
+        {
+            Displays = [.. DeskModes.Select(m => Attached(m.Identity, activeMode: m)), Attached(Ultrawide, available: false)],
+        });
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.AlreadyOn, 3, 0));
+        display.Applied.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_QueryRefused_Fails()
+    {
+        // A locked session: every display call answers "access denied".
+        var display = new FakeDisplayConfigurator(DeskActive());
+        display.QueryExceptions.Enqueue(new System.ComponentModel.Win32Exception(5));
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.Failed, 0, 5));
+    }
+
+    [Fact]
     public async Task Switch_SetsPlaybackForAllRoles()
     {
         _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);

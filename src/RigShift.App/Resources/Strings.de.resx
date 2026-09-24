@@ -737,4 +737,31 @@
   <data name="Restore_WarnNoConfirm" xml:space="preserve">
     <value>Schaltet ohne Rückfrage um</value>
   </data>
+  <data name="AllOn_Title" xml:space="preserve">
+    <value>Alle Bildschirme an</value>
+  </data>
+  <data name="AllOn_TurnedOn" xml:space="preserve">
+    <value>Alle bereiten Bildschirme sind an. Ein Profil ordnet sie wieder.</value>
+  </data>
+  <data name="AllOn_TurnedOnAt60Hz" xml:space="preserve">
+    <value>Alle bereiten Bildschirme sind an, mit 60 Hz: schneller schafft die Grafikkarte nicht alle.</value>
+  </data>
+  <data name="AllOn_AlreadyOn" xml:space="preserve">
+    <value>Alle Bildschirme, die Windows meldet, sind schon an.</value>
+  </data>
+  <data name="AllOn_NoDisplays" xml:space="preserve">
+    <value>Windows meldet keinen Bildschirm, der bereit ist.</value>
+  </data>
+  <data name="AllOn_Failed" xml:space="preserve">
+    <value>Windows hat nicht alle Bildschirme eingeschaltet (Fehler {0}).</value>
+  </data>
+  <data name="AllOn_FailedFallback" xml:space="preserve">
+    <value>Windows hat nicht alle Bildschirme eingeschaltet (Fehler {0}). Wechsel zu {1}.</value>
+  </data>
+  <data name="Settings_AllOnHotkey" xml:space="preserve">
+    <value>Alle Bildschirme an</value>
+  </data>
+  <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
+    <value>Notfalltaste, wenn ein Bildschirm dunkel bleibt. Fest, wirkt ohne RigShift-Fenster.</value>
+  </data>
 </root>

@@ -737,4 +737,31 @@
   <data name="Restore_WarnNoConfirm" xml:space="preserve">
     <value>Switches without asking</value>
   </data>
+  <data name="AllOn_Title" xml:space="preserve">
+    <value>All displays on</value>
+  </data>
+  <data name="AllOn_TurnedOn" xml:space="preserve">
+    <value>Every display that is ready is on. A profile arranges them again.</value>
+  </data>
+  <data name="AllOn_TurnedOnAt60Hz" xml:space="preserve">
+    <value>Every display that is ready is on, at 60 Hz: the graphics card cannot drive all of them faster.</value>
+  </data>
+  <data name="AllOn_AlreadyOn" xml:space="preserve">
+    <value>Every display Windows reports is on already.</value>
+  </data>
+  <data name="AllOn_NoDisplays" xml:space="preserve">
+    <value>Windows reports no display that is ready.</value>
+  </data>
+  <data name="AllOn_Failed" xml:space="preserve">
+    <value>Windows did not turn all displays on (error {0}).</value>
+  </data>
+  <data name="AllOn_FailedFallback" xml:space="preserve">
+    <value>Windows did not turn all displays on (error {0}). Switching to {1}.</value>
+  </data>
+  <data name="Settings_AllOnHotkey" xml:space="preserve">
+    <value>All displays on</value>
+  </data>
+  <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
+    <value>Emergency key for a screen that stays dark. Fixed, works without a RigShift window.</value>
+  </data>
 </root>

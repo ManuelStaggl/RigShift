@@ -69,6 +69,16 @@
 
           <controls:SettingRow
             Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_AllOnHotkeyHint}"
+            Title="{loc:Tr Settings_AllOnHotkey}">
+            <ContentControl
+              AutomationProperties.Name="{Binding AllDisplaysOnHotkeyText}"
+              Content="{Binding AllDisplaysOnHotkeyText}"
+              Style="{StaticResource RigShift.Keycap}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
             Caption="{loc:Tr Settings_ConfirmHint}"
             Title="{loc:Tr Settings_ConfirmTimeout}">
             <ui:ToggleSwitch
