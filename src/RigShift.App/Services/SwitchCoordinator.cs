@@ -395,12 +395,23 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional)
             : result.Plan.Missing;
 
+    /// <summary>
+    /// Records the result and tells the listeners. Never throws: a listener that fails must not turn a switch that worked
+    /// into a second, failed history entry (v4 finding A-15).
+    /// </summary>
     private async Task CompleteAsync(SwitchRecord record)
     {
-        History.Insert(0, record);
-        while (History.Count > HistoryLength)
+        try
         {
-            History.RemoveAt(History.Count - 1);
+            History.Insert(0, record);
+            while (History.Count > HistoryLength)
+            {
+                History.RemoveAt(History.Count - 1);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "A listener of the switch history threw for {Profile}", record.ProfileName);
         }
 
         // Awaited: whoever gets the result next (automation, tray) must see the profile that is active now (C-06, A-07).
@@ -419,7 +430,17 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _ = _catalog.RememberActiveRefreshRatesAsync(CancellationToken.None);
         }
 
-        SwitchCompleted?.Invoke(this, record);
+        foreach (EventHandler<SwitchRecord> listener in SwitchCompleted?.GetInvocationList().Cast<EventHandler<SwitchRecord>>() ?? [])
+        {
+            try
+            {
+                listener(this, record);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.Error(ex, "A listener of the switch result threw for {Profile}; the result stands as {Outcome}", record.ProfileName, record.Outcome);
+            }
+        }
     }
 
     private async Task FollowAppsAsync(SwitchRecord record, Task<AppsOutcome> apps)

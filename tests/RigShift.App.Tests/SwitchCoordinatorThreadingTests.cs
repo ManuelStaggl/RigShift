@@ -45,11 +45,30 @@ public sealed class SwitchCoordinatorThreadingTests : IDisposable
     [Fact]
     public async Task Switch_FromAPoolThread_StillPassesTheExceptionOn()
     {
-        _host.Coordinator.SwitchCompleted += (_, _) => throw new InvalidOperationException("listener");
+        // Thrown by the switch itself: the command line has to report it, not "busy".
+        _host.Display.QueryExceptions.Enqueue(new InvalidOperationException("driver"));
         IProfileSwitcher switcher = _host.Coordinator;
 
         await Should.ThrowAsync<InvalidOperationException>(() => Task.Run(
             () => switcher.SwitchAsync(Rig(), SwitchRequest.Default, CancellationToken.None), TestContext.Current.CancellationToken));
+
+        _host.Coordinator.History.ShouldHaveSingleItem().Outcome.ShouldBe(SwitchOutcome.Failed);
+    }
+
+    [Fact]
+    public async Task Switch_ListenerThrows_TheSwitchStaysOneAppliedEntry()
+    {
+        _host.Coordinator.SwitchCompleted += (_, _) => throw new InvalidOperationException("listener");
+        var seen = new List<SwitchRecord>();
+        _host.Coordinator.SwitchCompleted += (_, record) => seen.Add(record);
+        IProfileSwitcher switcher = _host.Coordinator;
+
+        SwitchResult? result = await Task.Run(
+            () => switcher.SwitchAsync(Rig(), SwitchRequest.Default, CancellationToken.None), TestContext.Current.CancellationToken);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
+        _host.Coordinator.History.ShouldHaveSingleItem().Outcome.ShouldBe(SwitchOutcome.Applied);
+        seen.ShouldHaveSingleItem().Outcome.ShouldBe(SwitchOutcome.Applied);
     }
 
     public void Dispose()
