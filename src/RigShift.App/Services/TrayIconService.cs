@@ -32,7 +32,8 @@ public sealed class TrayIconService : IDisposable
     private ApplicationTheme? _popupTheme;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly ProfilesViewModel _profiles;
+    /// <summary>Resolved on use: the profiles page must not be built before the tray icon appears (v4 finding A-06).</summary>
+    private readonly Func<ProfilesViewModel> _profiles;
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
     private readonly AutomationService _automation;
@@ -50,7 +51,7 @@ public sealed class TrayIconService : IDisposable
         SwitchCoordinator coordinator,
         TrayPopupView popup,
         TrayPopupViewModel popupViewModel,
-        ProfilesViewModel profiles,
+        Func<ProfilesViewModel> profiles,
         IAppShell shell,
         UpdateService updates,
         HotkeyService hotkeys,
@@ -121,13 +122,9 @@ public sealed class TrayIconService : IDisposable
             }
         };
         Loc.Instance.PropertyChanged += (_, _) => OnUi(Refresh);
+        // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
         coordinator.SwitchCompleted += (_, record) => OnUi(() =>
-        {
-            profiles.ShowSwitchResult(record);
-
-            // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
-            Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked);
-        });
+            Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked));
         coordinator.FollowUpCompleted += (_, record) => OnUi(() =>
         {
             if (SwitchMessages.ForFollowUpNotification(record) is { } followUp)
@@ -379,7 +376,7 @@ public sealed class TrayIconService : IDisposable
                 break;
             case TrayMenuCommand.SaveCurrent:
                 _shell.ShowMainWindow(typeof(ProfilesPage));
-                _profiles.NewFromCurrentCommand.Execute(null);
+                _profiles().NewFromCurrentCommand.Execute(null);
                 break;
             case TrayMenuCommand.Open:
                 _shell.ShowMainWindow();

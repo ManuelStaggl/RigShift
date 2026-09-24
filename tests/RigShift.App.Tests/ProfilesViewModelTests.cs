@@ -339,16 +339,32 @@ public sealed class ProfilesViewModelTests : IDisposable
     });
 
     [Fact]
-    public Task ShowSwitchResult_AFailedSwitch_IsAnErrorInTheDetail() => _ui.RunAsync(async () =>
+    public Task SwitchResult_LandsInTheDetail_WithoutTheTray() => _ui.RunAsync(async () =>
     {
-        await SavedAsync(Profile("Desk", DeskModes));
+        // A-06: the tray used to hand every result to the page, and so built the page before the tray icon appeared.
+        Profile rig = await SavedAsync(Rig());
         ProfilesViewModel page = await PageAsync();
 
-        page.ShowSwitchResult(new SwitchRecord(
-            DateTimeOffset.Now, "Desk", SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 1, TimeSpan.FromSeconds(1), null, null, []));
+        (await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default)).ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
 
-        page.DetailKind.ShouldBe(InfoKind.Error);
-        page.DetailMessage.ShouldNotBeNull().ShouldContain("Desk");
+        page.DetailKind.ShouldBe(InfoKind.Warn);
+        page.DetailMessage.ShouldNotBeNull().ShouldContain("Rig");
+    });
+
+    /// <summary>A-06: the first editor reads audio and USB devices and Surround; nobody looks at it before the page is shown.</summary>
+    [Fact]
+    public Task NewPage_OpensNoEditorUntilItIsShown() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync(Profile("Desk", DeskModes));
+        var page = new ProfilesViewModel(
+            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Logger.None);
+
+        page.SelectedItem.ShouldNotBeNull().Name.ShouldBe("Desk");
+        _dialogs.EditorsCreated.ShouldBe(0);
+
+        page.PageShown();
+        await UntilAsync(() => page.Editor is not null, "the editor did not open once the page was shown");
+        _dialogs.EditorsCreated.ShouldBe(1);
     });
 
     [Fact]
@@ -589,6 +605,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     {
         var page = new ProfilesViewModel(
             _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Logger.None);
+        page.PageShown();
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }

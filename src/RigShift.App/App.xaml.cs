@@ -173,14 +173,19 @@ public partial class App : Application, IAppShell
             ProfileCatalog catalog = Services.GetRequiredService<ProfileCatalog>();
             await catalog.ReloadAsync(CancellationToken.None);
 
+            // Games are loaded before the page is opened: the command line plays them, the watcher for games started
+            // elsewhere needs them, and a game that already runs must only set the starting point, not trigger a switch.
+            await Services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
+
+            // The pipe first: a rigshift:// link or a Stream Deck key that started RigShift waits for it (v4 finding A-06).
+            CommandRunner runner = Services.GetRequiredService<CommandRunner>();
+            runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
+            Services.GetRequiredService<CommandPipeServer>().Start();
+
             _tray = Services.GetRequiredService<TrayIconService>();
             _tray.Start();
             Services.GetRequiredService<HotkeyService>().Start();
             Services.GetRequiredService<AutomationService>().Start();
-
-            // Games are loaded before the page is opened: the watcher for games started elsewhere needs them, and a
-            // game that already runs must only set the starting point, not trigger a switch.
-            await Services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
             Services.GetRequiredService<GameSessionService>().StartWatching();
 #if DEBUG
             await StartPreviewsAsync(catalog);
@@ -196,9 +201,6 @@ public partial class App : Application, IAppShell
                     coordinator.NoticeDisplayChange(before, catalog.ActiveProfile);
                 };
 
-            CommandRunner runner = Services.GetRequiredService<CommandRunner>();
-            runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
-            Services.GetRequiredService<CommandPipeServer>().Start();
             Services.GetRequiredService<UpdateService>().Start();
 
             if (!_request.Minimized)

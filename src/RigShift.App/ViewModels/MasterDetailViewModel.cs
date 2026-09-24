@@ -68,12 +68,32 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
     private bool _reverting;
     private bool _saving;
     private bool _rebuildAfterSave;
+    private bool _shown;
     private CancellationTokenSource? _statusTimer;
 
     protected MasterDetailViewModel(ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
         Log = log;
+    }
+
+    /// <summary>
+    /// The page is on screen for the first time: the selected entry gets its editor now. Until then the list is there but
+    /// no editor – building one reads audio and USB devices and Surround, and nobody looks at it while the window shows
+    /// another page or RigShift starts into the tray (v4 finding A-06).
+    /// </summary>
+    public void PageShown()
+    {
+        if (_shown)
+        {
+            return;
+        }
+
+        _shown = true;
+        if (Editor is null && SelectedItem is { } item)
+        {
+            _ = LoadEditorAsync(item);
+        }
     }
 
     /// <summary>The detail wants the keyboard focus in the name field: a new entry is named first.</summary>
@@ -428,6 +448,13 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         if (item is null)
         {
             CloseEditor();
+            UpdateHead();
+            return;
+        }
+
+        if (!_shown)
+        {
+            // PageShown loads it.
             UpdateHead();
             return;
         }

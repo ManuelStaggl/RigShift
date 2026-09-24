@@ -75,6 +75,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             }
         };
         Loc.Instance.PropertyChanged += (_, _) => OnUi(UpdateStatuses);
+        coordinator.SwitchCompleted += (_, record) => OnUi(() => ShowSwitchResult(record));
         Rebuild();
         if (catalog.LastSnapshot is { } snapshot)
         {
@@ -136,7 +137,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     /// Every switch result also on the profile page: Windows suppresses tray balloons while a full-screen game runs,
     /// which is exactly when RigShift switches (analysis finding I-04).
     /// </summary>
-    public void ShowSwitchResult(SwitchRecord record)
+    private void ShowSwitchResult(SwitchRecord record)
     {
         ArgumentNullException.ThrowIfNull(record);
 

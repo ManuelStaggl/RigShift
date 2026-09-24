@@ -19,6 +19,7 @@ public partial class ProfilesPage : Page
         InitializeComponent();
         viewModel.FocusNameRequested += (_, _) => FocusName();
         PreviewKeyDown += OnPagePreviewKeyDown;
+        Loaded += (_, _) => viewModel.PageShown();
     }
 
     /// <summary>F2 edits the name (R-NAV-5).</summary>
@@ -161,6 +162,7 @@ public partial class GamesPage : Page
         InitializeComponent();
         viewModel.FocusNameRequested += (_, _) => FocusName();
         PreviewKeyDown += OnPagePreviewKeyDown;
+        Loaded += (_, _) => viewModel.PageShown();
     }
 
     /// <summary>F2 edits the name (R-NAV-5).</summary>

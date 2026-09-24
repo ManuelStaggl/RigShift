@@ -531,6 +531,7 @@ public sealed class GamesViewModelTests : IDisposable
     private async Task<GamesViewModel> PageAsync()
     {
         var page = new GamesViewModel(_catalog, _sessions, _dialogs, _host.Paths, Logger.None);
+        page.PageShown();
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }
