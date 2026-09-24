@@ -52,6 +52,10 @@ public partial class ConfirmationWindow : FluentWindow
 
         _timer.Tick += OnTick;
         SourceInitialized += OnSourceInitialized;
+
+        // The countdown starts at Loaded at the latest: a window that never renders after the display change – a driver
+        // reset – must still take the switch back (v4 finding A-08).
+        Loaded += (_, _) => StartCountdown();
         ContentRendered += OnContentRendered;
         _cancellation = cancellationToken.Register(() => Dispatcher.InvokeAsync(() => Finish(ConfirmationResult.Cancelled)));
     }
@@ -107,8 +111,19 @@ public partial class ConfirmationWindow : FluentWindow
         NativeWindow.CenterOnPrimaryMonitor(_hwnd);
         Activate();
         KeepButton.Focus();
-        _timer.Start();
+        StartCountdown();
     }
+
+    private void StartCountdown()
+    {
+        if (!_timer.IsEnabled && !_result.Task.IsCompleted)
+        {
+            _timer.Start();
+        }
+    }
+
+    /// <summary>Ends the open countdown as timed out; for the deadline that answers when the window never did (A-08).</summary>
+    public static void CloseOpen() => s_open?.Finish(ConfirmationResult.TimedOut);
 
     private void OnTick(object? sender, EventArgs e)
     {
