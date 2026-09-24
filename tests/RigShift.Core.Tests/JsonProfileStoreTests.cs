@@ -58,7 +58,11 @@ public sealed class JsonProfileStoreTests : IDisposable
                     Width = 1920,
                     Height = 1080,
                     RefreshRateHz = 60,
-                    Displays = new List<SurroundDisplay> { new() { DisplayId = 0x80061086, Name = "CM27X3" } },
+                    BezelCorrected = true,
+                    Displays = new List<SurroundDisplay>
+                    {
+                        new() { DisplayId = 0x80061086, Name = "CM27X3", OverlapX = -64, Rotation = DisplayRotation.Rotate90 },
+                    },
                 },
             },
         };
@@ -75,6 +79,29 @@ public sealed class JsonProfileStoreTests : IDisposable
         // The computed sizes are not written: they would come back as unknown keys on a later read.
         string json = await File.ReadAllTextAsync(Path.Combine(_directory, rig.Id.ToString("D") + ".json"), Ct);
         json.ShouldNotContain("totalWidth");
+        json.ShouldNotContain("hasLayout");
+    }
+
+    /// <summary>
+    /// A grid saved before 4.0 has neither correction nor rotation. It must load as "not recorded", not as "none": the
+    /// controller takes a running grid as it is only then, instead of rebuilding it without the correction.
+    /// </summary>
+    [Fact]
+    public async Task Load_SurroundGridFromBefore40_KnowsItHasNoLayout()
+    {
+        var store = new JsonProfileStore(_directory, Logger.None);
+        Directory.CreateDirectory(_directory);
+        string json = "{\"schemaVersion\": 1, \"profile\": {\"id\": \"" + Guid.NewGuid().ToString("D") + "\", \"name\": \"Old rig\", "
+            + "\"displays\": [], \"surround\": {\"enabled\": true, \"grid\": {\"rows\": 1, \"columns\": 3, \"width\": 1920, "
+            + "\"height\": 1080, \"refreshRateHz\": 60, \"displays\": [{\"displayId\": 2147881094, \"name\": \"CM27X3\"}]}}}}";
+        await File.WriteAllTextAsync(Path.Combine(_directory, "old.json"), json, Ct);
+
+        LoadResult loaded = await store.LoadAllAsync(Ct);
+
+        SurroundGrid grid = loaded.Profiles.Single().Surround!.Grid!;
+        grid.HasLayout.ShouldBeFalse();
+        grid.Displays.Single().Rotation.ShouldBe(DisplayRotation.Identity);
+        grid.Displays.Single().OverlapX.ShouldBe(0);
     }
 
     [Fact]

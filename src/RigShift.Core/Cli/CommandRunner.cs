@@ -182,6 +182,25 @@ public sealed class CommandRunner
             }
 
             text.Append(CultureInfo.InvariantCulture, $" as {grid.TotalWidth}x{grid.TotalHeight}");
+            if (grid.BezelCorrected == true)
+            {
+                text.Append(", bezel-corrected");
+            }
+
+            if (grid.Displays.FirstOrDefault(d => d.Rotation != DisplayRotation.Identity) is { } rotated)
+            {
+                text.Append(", rotated ").Append(rotated.Rotation switch
+                {
+                    DisplayRotation.Rotate90 => "90",
+                    DisplayRotation.Rotate180 => "180",
+                    _ => "270",
+                });
+            }
+
+            foreach (SurroundDisplay display in grid.Displays.Where(d => d.OverlapX != 0 || d.OverlapY != 0))
+            {
+                text.AppendLine().Append(CultureInfo.InvariantCulture, $"    {display.DisplayId:X8} overlap {display.OverlapX},{display.OverlapY}");
+            }
         }
 
         IReadOnlyList<SurroundDisplay> displays = await _surround.ListDisplaysAsync(cancellationToken);

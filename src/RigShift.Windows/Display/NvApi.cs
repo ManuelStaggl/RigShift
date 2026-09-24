@@ -188,15 +188,23 @@ internal sealed unsafe class NvApi : IDisposable
         return status;
     }
 
-    /// <summary>Checks a grid without changing anything. Error flags other than zero mean the grid is not possible.</summary>
-    internal int ValidateDisplayGrids(ref MosaicGridTopoV2 grid, out MosaicDisplayTopoStatus topoStatus)
+    /// <summary>
+    /// Checks grids without changing anything, one verdict per grid in <paramref name="verdicts"/>. Error flags other
+    /// than zero mean that grid is not possible.
+    /// </summary>
+    internal int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts)
     {
-        topoStatus = default;
-        topoStatus.Version = MosaicDisplayTopoStatus.StructVersion;
-        fixed (MosaicGridTopoV2* one = &grid)
-        fixed (MosaicDisplayTopoStatus* status = &topoStatus)
+        ArgumentOutOfRangeException.ThrowIfLessThan(verdicts.Length, grids.Length, nameof(verdicts));
+        for (int i = 0; i < grids.Length; i++)
         {
-            return _validateDisplayGrids(SetTopologyFlags, one, status, 1);
+            verdicts[i] = default;
+            verdicts[i].Version = MosaicDisplayTopoStatus.StructVersion;
+        }
+
+        fixed (MosaicGridTopoV2* first = grids)
+        fixed (MosaicDisplayTopoStatus* status = verdicts)
+        {
+            return _validateDisplayGrids(SetTopologyFlags, first, status, (uint)grids.Length);
         }
     }
 

@@ -37,6 +37,17 @@ public sealed record SurroundGrid
     /// <summary>Displays in grid order, cell <c>row * <see cref="Columns"/> + column</c>.</summary>
     public required IReadOnlyList<SurroundDisplay> Displays { get; init; }
 
+    /// <summary>
+    /// Whether the grid runs at the bezel-corrected resolution, so the picture continues behind the frames between the
+    /// displays (their overlaps say by how much). <c>null</c> in profiles saved before 4.0, which recorded neither the
+    /// correction nor the rotation: a running grid is then taken as it is instead of rebuilt without them.
+    /// </summary>
+    public bool? BezelCorrected { get; init; }
+
+    /// <summary>Whether the grid knows its bezel correction and rotation, i.e. was saved by 4.0 or later.</summary>
+    [JsonIgnore]
+    public bool HasLayout => BezelCorrected is not null;
+
     /// <summary>Grid width in pixels, ignoring bezel correction.</summary>
     [JsonIgnore]
     public int TotalWidth => Width * Columns;
@@ -62,4 +73,19 @@ public sealed record SurroundDisplay
 
     /// <summary>Monitor name when the profile was saved, for messages only – never used to find the display.</summary>
     public string? Name { get; init; }
+
+    /// <summary>
+    /// Bezel correction towards the neighbouring display as the driver reports it, in pixels: negative leaves a gap the
+    /// picture continues behind (the frames), positive overlaps. Zero without correction.
+    /// </summary>
+    public int OverlapX { get; init; }
+
+    /// <inheritdoc cref="OverlapX"/>
+    public int OverlapY { get; init; }
+
+    /// <summary>
+    /// Rotation of this display inside the grid, e.g. a portrait triple. <c>set</c>: an <c>init</c> initializer is skipped
+    /// when the key is missing.
+    /// </summary>
+    public DisplayRotation Rotation { get; set; } = DisplayRotation.Identity;
 }

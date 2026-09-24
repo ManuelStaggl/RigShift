@@ -179,37 +179,8 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             return SurroundApplyResult.Unchanged;
         }
 
-        MosaicGridTopoV2 topo = ToTopo(grid);
-        int status = api.ValidateDisplayGrids(ref topo, out MosaicDisplayTopoStatus check);
-        if (status != NvApi.Status.Ok)
-        {
-            return Failure(api, "The graphics driver refused to check the Surround grid", status);
-        }
-
-        string? problems = DisplayProblems(check);
-        if (check.ErrorFlags != 0 || problems is not null)
-        {
-            string detail = MosaicProblems.Describe(check.ErrorFlags) ?? problems ?? "no reason given";
-            _log.Warning("Surround grid rejected by the driver: {Detail}", detail);
-            return new SurroundApplyResult
-            {
-                Outcome = SurroundOutcome.Failed,
-                Message = "The graphics driver cannot build this Surround grid: " + detail + ".",
-            };
-        }
-
-        if ((check.WarningFlags & MosaicDisplayTopoStatus.WarningDriverReloadRequired) != 0)
-        {
-            // Reloading the driver takes down every running GPU application; we never force it (plan point 21).
-            return new SurroundApplyResult
-            {
-                Outcome = SurroundOutcome.Failed,
-                Message = "Surround would only start if the graphics driver reloaded itself, which would close running games. "
-                    + "Switch Surround on once in the NVIDIA control panel, then this profile can do it without a reload.",
-            };
-        }
-
-        return Set(api, [topo], "switch Surround on", before);
+        MosaicGridTopoV2[] topo = [ToTopo(grid)];
+        return Refusal(api, topo, switchingOn: true) ?? Set(api, topo, "switch Surround on", before);
     }
 
     private SurroundApplyResult Disable(NvApi api, SurroundState before)
@@ -219,19 +190,69 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             return SurroundApplyResult.Unchanged;
         }
 
-        // Surround goes away by giving every display of every grid its own 1x1 grid again.
-        MosaicGridTopoV2[] singles = [.. before.Grids
-            .SelectMany(g => g.Displays)
-            .Select(d => ToTopo(new SurroundGrid
-            {
-                Rows = 1,
-                Columns = 1,
-                Width = 0,
-                Height = 0,
-                Displays = [d],
-            }))];
+        MosaicGridTopoV2[] singles = [.. Singles(before.Grids).Select(ToTopo)];
+        return Refusal(api, singles, switchingOn: false) ?? Set(api, singles, "switch Surround off", before);
+    }
 
-        return Set(api, singles, "switch Surround off", before);
+    /// <summary>
+    /// Surround goes away by giving every display of every grid its own 1x1 grid again: in the mode and rotation it runs
+    /// now, without overlap. A mode of 0x0 at 0 Hz, as before 4.0, is nowhere documented to mean "the driver's choice".
+    /// </summary>
+    internal static IEnumerable<SurroundGrid> Singles(IEnumerable<SurroundGrid> grids) =>
+        grids.SelectMany(grid => grid.Displays.Select(display => new SurroundGrid
+        {
+            Rows = 1,
+            Columns = 1,
+            Width = grid.Width,
+            Height = grid.Height,
+            RefreshRateHz = grid.RefreshRateHz,
+            BezelCorrected = false,
+            Displays = [display with { OverlapX = 0, OverlapY = 0 }],
+        }));
+
+    /// <summary>
+    /// Lets the driver check the grids before they are set. Returns why it refuses them, or <c>null</c> when they can be
+    /// set - a grid that needs a driver reload counts as refused: the reload closes running games (plan point 21).
+    /// </summary>
+    private SurroundApplyResult? Refusal(NvApi api, MosaicGridTopoV2[] grids, bool switchingOn)
+    {
+        var verdicts = new MosaicDisplayTopoStatus[grids.Length];
+        int status = api.ValidateDisplayGrids(grids, verdicts);
+        if (status != NvApi.Status.Ok)
+        {
+            return Failure(api, "The graphics driver refused to check the Surround grid", status);
+        }
+
+        foreach (MosaicDisplayTopoStatus check in verdicts)
+        {
+            string? problems = DisplayProblems(check);
+            if (check.ErrorFlags != 0 || problems is not null)
+            {
+                string detail = MosaicProblems.Describe(check.ErrorFlags) ?? problems ?? "no reason given";
+                _log.Warning("Surround grid rejected by the driver: {Detail}", detail);
+                return new SurroundApplyResult
+                {
+                    Outcome = SurroundOutcome.Failed,
+                    Message = (switchingOn ? "The graphics driver cannot build this Surround grid: " : "The graphics driver cannot switch Surround off: ")
+                        + detail + ".",
+                };
+            }
+
+            if ((check.WarningFlags & MosaicDisplayTopoStatus.WarningDriverReloadRequired) != 0)
+            {
+                return new SurroundApplyResult
+                {
+                    Outcome = SurroundOutcome.Failed,
+                    Message = switchingOn
+                        ? "Surround would only start if the graphics driver reloaded itself, which would close running games. "
+                            + "Switch Surround on once in the NVIDIA control panel, then this profile can do it without a reload."
+                        : "Surround would only stop if the graphics driver reloaded itself, which would close running games. "
+                            + "Switch Surround off once in the NVIDIA control panel, then this profile can do it without a reload.",
+                };
+            }
+        }
+
+        return null;
     }
 
     private SurroundApplyResult Set(NvApi api, MosaicGridTopoV2[] grids, string what, SurroundState before)
@@ -368,21 +389,36 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         left.Grids.Count == right.Grids.Count
         && left.Grids.Zip(right.Grids).All(pair => Matches(pair.First, pair.Second));
 
-    /// <summary>Whether a running grid is the one a profile asks for. A refresh rate of 0 means "whatever the driver picked".</summary>
-    private static bool Matches(SurroundGrid active, SurroundGrid wanted) =>
+    /// <summary>
+    /// Whether a running grid is the one a profile asks for. A refresh rate of 0 means "whatever the driver picked"; a
+    /// grid saved before 4.0 knows no bezel correction or rotation and accepts whatever runs, as it always did.
+    /// </summary>
+    internal static bool Matches(SurroundGrid active, SurroundGrid wanted) =>
         active.Rows == wanted.Rows
         && active.Columns == wanted.Columns
         && active.Width == wanted.Width
         && active.Height == wanted.Height
         && (wanted.RefreshRateHz == 0 || active.RefreshRateHz == wanted.RefreshRateHz)
-        && active.Displays.Select(d => d.DisplayId).SequenceEqual(wanted.Displays.Select(d => d.DisplayId));
+        && (wanted.HasLayout
+            ? active.Displays.Select(Layout).SequenceEqual(wanted.Displays.Select(Layout))
+            : active.Displays.Select(d => d.DisplayId).SequenceEqual(wanted.Displays.Select(d => d.DisplayId)));
 
-    private static SurroundGrid ToGrid(in MosaicGridTopoV2 topo)
+    private static (uint Id, int OverlapX, int OverlapY, DisplayRotation Rotation) Layout(SurroundDisplay display) =>
+        (display.DisplayId, display.OverlapX, display.OverlapY, display.Rotation);
+
+    internal static SurroundGrid ToGrid(in MosaicGridTopoV2 topo)
     {
         List<SurroundDisplay> displays = [];
         for (int cell = 0; cell < topo.DisplayCount && cell < NvApi.MaxMosaicDisplays; cell++)
         {
-            displays.Add(new SurroundDisplay { DisplayId = topo.Displays[cell].DisplayId });
+            MosaicGridTopoDisplayV2 display = topo.Displays[cell];
+            displays.Add(new SurroundDisplay
+            {
+                DisplayId = display.DisplayId,
+                OverlapX = display.OverlapX,
+                OverlapY = display.OverlapY,
+                Rotation = FromNvRotation(display.Rotation),
+            });
         }
 
         return new SurroundGrid
@@ -392,22 +428,31 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             Width = (int)topo.DisplaySettings.Width,
             Height = (int)topo.DisplaySettings.Height,
             RefreshRateHz = (int)topo.DisplaySettings.Frequency,
+            BezelCorrected = (topo.Flags & MosaicGridTopoV2.FlagApplyWithBezelCorrect) != 0,
             Displays = displays,
         };
     }
 
-    private static MosaicGridTopoV2 ToTopo(SurroundGrid grid)
+    internal static MosaicGridTopoV2 ToTopo(SurroundGrid grid)
     {
         MosaicGridTopoV2 topo = default;
         topo.Version = MosaicGridTopoV2.StructVersion;
         topo.Rows = (uint)grid.Rows;
         topo.Columns = (uint)grid.Columns;
         topo.DisplayCount = (uint)grid.Displays.Count;
-        topo.Flags = 0;
+
+        // Overlaps alone build the grid at the uncorrected resolution. They also count in case a driver leaves the flag
+        // out when it reports a running grid - losing the correction on every rebuild is what 4.0 fixes.
+        bool corrected = grid.BezelCorrected == true || grid.Displays.Any(d => d.OverlapX != 0 || d.OverlapY != 0);
+        topo.Flags = corrected ? MosaicGridTopoV2.FlagApplyWithBezelCorrect : 0;
         for (int cell = 0; cell < grid.Displays.Count && cell < NvApi.MaxMosaicDisplays; cell++)
         {
+            SurroundDisplay display = grid.Displays[cell];
             topo.Displays[cell].Version = MosaicGridTopoDisplayV2.Version2;
-            topo.Displays[cell].DisplayId = grid.Displays[cell].DisplayId;
+            topo.Displays[cell].DisplayId = display.DisplayId;
+            topo.Displays[cell].OverlapX = display.OverlapX;
+            topo.Displays[cell].OverlapY = display.OverlapY;
+            topo.Displays[cell].Rotation = ToNvRotation(display.Rotation);
         }
 
         topo.DisplaySettings.Version = MosaicDisplaySettingV1.Version1;
@@ -417,6 +462,23 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         topo.DisplaySettings.Frequency = (uint)grid.RefreshRateHz;
         return topo;
     }
+
+    /// <summary>NV_ROTATE: 0, 90, 180 and 270 degrees as 0 to 3; 4 ("ignored") reads as none.</summary>
+    private static DisplayRotation FromNvRotation(uint rotation) => rotation switch
+    {
+        1 => DisplayRotation.Rotate90,
+        2 => DisplayRotation.Rotate180,
+        3 => DisplayRotation.Rotate270,
+        _ => DisplayRotation.Identity,
+    };
+
+    private static uint ToNvRotation(DisplayRotation rotation) => rotation switch
+    {
+        DisplayRotation.Rotate90 => 1,
+        DisplayRotation.Rotate180 => 2,
+        DisplayRotation.Rotate270 => 3,
+        _ => 0,
+    };
 
     /// <summary>Enough for every display the driver can drive, each as its own grid.</summary>
     private const int MaxGrids = NvApi.MaxDisplays;

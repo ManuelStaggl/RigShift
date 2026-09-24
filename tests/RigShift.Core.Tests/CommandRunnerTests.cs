@@ -66,7 +66,8 @@ public sealed class CommandRunnerTests
                 Width = 1920,
                 Height = 1080,
                 RefreshRateHz = 60,
-                Displays = [new() { DisplayId = 0x80061086, Name = "CM27X3" }],
+                BezelCorrected = true,
+                Displays = [new() { DisplayId = 0x80061086, Name = "CM27X3", OverlapX = -64, Rotation = DisplayRotation.Rotate90 }],
             },
         };
 
@@ -75,8 +76,8 @@ public sealed class CommandRunnerTests
         response.ExitCode.ShouldBe(CliExitCodes.Applied);
         response.Output.ShouldContain("Surround: on");
         response.Output.ShouldContain("Grid 3x1");
-        response.Output.ShouldContain("as 5760x1080");
-        response.Output.ShouldContain("80061086");
+        response.Output.ShouldContain("as 5760x1080, bezel-corrected, rotated 90");
+        response.Output.ShouldContain("80061086 overlap -64,0");
     }
 
     /// <summary>On a machine without an NVIDIA driver the command says so instead of failing.</summary>

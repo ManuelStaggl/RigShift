@@ -50,7 +50,7 @@ internal struct MosaicGridTopoDisplays
 }
 
 /// <summary>
-/// NV_MOSAIC_GRID_TOPO_V2. The five one-bit flags plus 26 reserved bits of the header are one 32-bit word here:
+/// NV_MOSAIC_GRID_TOPO_V2. The six one-bit flags plus 26 reserved bits of the header are one 32-bit word here:
 /// C# has no bit fields, and the only flag this code ever sets is the lowest one.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
