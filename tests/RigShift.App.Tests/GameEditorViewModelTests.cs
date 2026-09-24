@@ -252,7 +252,7 @@ public sealed class GameEditorViewModelTests : IDisposable
 
         editor.Hotkey.ShouldBe(CtrlAltD);
         editor.HasHotkey.ShouldBeTrue();
-        editor.HotkeyHint.ShouldBe(Loc.Instance["Editor_HotkeyHint"]);
+        editor.HotkeyHint.ShouldBe(Loc.Instance["Game_HotkeyHint"]);
         _registrar.Held.ShouldBeEmpty("the probe must not keep the combination");
 
         editor.ClearHotkeyCommand.Execute(null);

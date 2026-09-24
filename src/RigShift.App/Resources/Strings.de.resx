@@ -503,7 +503,7 @@
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
-  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Gilt beim Start, wenn kein Profil erkannt wird.</value></data>
+  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Ziel von „Vorheriges Profil“, solange es noch kein vorheriges gibt.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne Bestätigung kommt die vorherige Anordnung zurück.</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
@@ -769,5 +769,11 @@
   </data>
   <data name="App_WaitForWindowTip" xml:space="preserve">
     <value>Geht weiter, sobald das Programm ein Fenster zeigt – spätestens nach den Sekunden. Nicht für Programme, die im Tray starten.</value>
+  </data>
+  <data name="Profile_DefaultTip" xml:space="preserve">
+    <value>Standardprofil: Ziel von „Vorheriges Profil“, solange es noch kein vorheriges gibt. Ändern unter Einstellungen.</value>
+  </data>
+  <data name="Game_HotkeyHint" xml:space="preserve">
+    <value>Startet die Sitzung von überall, solange RigShift läuft.</value>
   </data>
 </root>

@@ -40,6 +40,9 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         _ => null,
     };
 
+    /// <summary>What "Default" in the status means (finding U-13); <c>null</c> for any other profile, so there is no tooltip.</summary>
+    public string? DefaultTip => IsDefault ? Loc.Instance["Profile_DefaultTip"] : null;
+
     /// <summary>Whether <see cref="StatusText"/> says anything, for a caption that is hidden when it would be empty.</summary>
     public bool HasStatus => StatusText is not null;
 
@@ -69,7 +72,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus))]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus), nameof(DefaultTip))]
     public partial bool IsDefault { get; set; }
 
     [ObservableProperty]

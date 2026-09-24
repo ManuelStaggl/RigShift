@@ -43,7 +43,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         _profiles = context.Profiles;
         _games = context.Games;
         _catalog = services.Catalog;
-        _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id);
+        _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id, "Game_HotkeyHint");
         _log = services.Log.ForContext<GameEditorViewModel>();
         _launch = game.Launch;
         IsNew = isNew;

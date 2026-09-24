@@ -164,7 +164,8 @@
                   <controls:StatusLine
                     Margin="0,2,0,0"
                     Kind="{Binding ListKind}"
-                    Text="{Binding ListStatus}" />
+                    Text="{Binding ListStatus}"
+                    ToolTip="{Binding DefaultTip}" />
                 </StackPanel>
               </DockPanel>
             </DataTemplate>
