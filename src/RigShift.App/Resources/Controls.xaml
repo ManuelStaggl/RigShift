@@ -657,16 +657,17 @@
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
-  <!-- A long label wraps; without this the text is cut at the column's edge (the box content is always a string). -->
+  <!-- A long label wraps; without this the text is cut at the column's edge. Element content stays as it is. -->
   <DataTemplate x:Key="RigShift.WrappingLabel">
     <TextBlock Text="{Binding}" TextWrapping="Wrap" />
   </DataTemplate>
+  <controls:LabelTemplateSelector x:Key="RigShift.LabelSelector" TextTemplate="{StaticResource RigShift.WrappingLabel}" />
   <Style x:Key="RigShift.Check" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="MinHeight" Value="24" />
     <Setter Property="Padding" Value="10,0,0,0" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
+    <Setter Property="ContentTemplateSelector" Value="{StaticResource RigShift.LabelSelector}" />
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
   <!-- Number box on the field's measurements; the WPF-UI default is a few pixels taller than a text field. -->
@@ -688,7 +689,7 @@
     <Setter Property="MinHeight" Value="24" />
     <Setter Property="Padding" Value="10,0,0,0" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="ContentTemplate" Value="{StaticResource RigShift.WrappingLabel}" />
+    <Setter Property="ContentTemplateSelector" Value="{StaticResource RigShift.LabelSelector}" />
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
     <Setter Property="Template">
       <Setter.Value>
