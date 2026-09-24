@@ -367,7 +367,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     {
         try
         {
-            DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            DisplaySnapshot snapshot = await _display.QueryAsync(CancellationToken.None);
             IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CurrentArrangement(snapshot, Displays.Select(d => d.Assignment), _catalog.KnownDisplayNames);
             SetDisplays(arrangement);
             ArrangementNote = Loc.Format("Editor_Taken", arrangement.Count);
@@ -472,8 +472,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
             DisplayAssignment assignment = item.Assignment;
             try
             {
-                IReadOnlyList<RefreshRate> rates = await Task.Run(() =>
-                    _display.ListRefreshRatesAsync(assignment.Identity, assignment.Width, assignment.Height, CancellationToken.None));
+                IReadOnlyList<RefreshRate> rates =
+                    await _display.ListRefreshRatesAsync(assignment.Identity, assignment.Width, assignment.Height, CancellationToken.None);
                 if (rates.Count > 0)
                 {
                     found.Add((assignment.Identity, assignment.Width, assignment.Height, rates));
@@ -486,7 +486,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
                 item.OfferRefreshRates(rates);
             }
-            catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+            catch (Exception ex) when (DisplayApiFailure.Is(ex))
             {
                 _log.Warning(ex, "Refresh rates of {Display} could not be read", DisplayNames.Of(assignment));
             }

@@ -317,7 +317,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     {
         try
         {
-            ShowPlans(await Task.Run(() => _display.QueryAsync(CancellationToken.None)));
+            ShowPlans(await _display.QueryAsync(CancellationToken.None));
         }
         catch (Win32Exception ex)
         {

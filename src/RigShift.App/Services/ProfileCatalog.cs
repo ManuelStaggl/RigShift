@@ -101,24 +101,20 @@ public sealed partial class ProfileCatalog : ObservableObject
     {
         try
         {
-            List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)> found = await Task.Run(async () =>
+            DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+            var found = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
+            foreach (AttachedDisplay display in snapshot.Displays)
             {
-                DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
-                var rates = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
-                foreach (AttachedDisplay display in snapshot.Displays)
+                if (display.ActiveMode is { } mode)
                 {
-                    if (display.ActiveMode is { } mode)
-                    {
-                        rates.Add((display.Identity, mode.Width, mode.Height,
-                            await _display.ListRefreshRatesAsync(display.Identity, mode.Width, mode.Height, cancellationToken)));
-                    }
+                    found.Add((display.Identity, mode.Width, mode.Height,
+                        await _display.ListRefreshRatesAsync(display.Identity, mode.Width, mode.Height, cancellationToken)));
                 }
+            }
 
-                return rates;
-            }, cancellationToken);
             await RememberRefreshRatesAsync(found, cancellationToken);
         }
-        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
         {
             _log.Warning(ex, "Refresh rates of the active displays could not be read");
         }
@@ -253,7 +249,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         DisplaySnapshot snapshot;
         try
         {
-            snapshot = await Task.Run(() => _display.QueryAsync(cancellationToken), cancellationToken);
+            snapshot = await _display.QueryAsync(cancellationToken);
         }
         catch (Win32Exception ex)
         {

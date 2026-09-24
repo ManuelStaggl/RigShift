@@ -302,7 +302,7 @@ public sealed partial class AboutViewModel : ObservableObject
         string? displayError = null;
         try
         {
-            snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            snapshot = await _display.QueryAsync(CancellationToken.None);
         }
         catch (Win32Exception ex)
         {
@@ -315,8 +315,8 @@ public sealed partial class AboutViewModel : ObservableObject
         string? audioError = null;
         try
         {
-            playback = await Task.Run(() => _audio.ListAsync(AudioDirection.Render, CancellationToken.None));
-            recording = await Task.Run(() => _audio.ListAsync(AudioDirection.Capture, CancellationToken.None));
+            playback = await _audio.ListAsync(AudioDirection.Render, CancellationToken.None);
+            recording = await _audio.ListAsync(AudioDirection.Capture, CancellationToken.None);
         }
         catch (Exception ex) when (ex is COMException or InvalidOperationException)
         {

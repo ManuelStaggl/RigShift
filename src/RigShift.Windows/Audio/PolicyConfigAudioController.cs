@@ -15,7 +15,8 @@ namespace RigShift.Windows.Audio;
 
 /// <summary>
 /// <see cref="IAudioController"/> using Core Audio (enumeration, state, volume) and the undocumented
-/// <c>IPolicyConfig</c> COM interface (default endpoint). The Core Audio objects are free-threaded.
+/// <c>IPolicyConfig</c> COM interface (default endpoint). The Core Audio objects are free-threaded, so every call runs
+/// on a pool thread and the pages can await it from the UI thread.
 /// </summary>
 public sealed class PolicyConfigAudioController : IAudioController
 {
@@ -36,7 +37,28 @@ public sealed class PolicyConfigAudioController : IAudioController
         _log = log.ForContext<PolicyConfigAudioController>();
     }
 
-    public Task<IReadOnlyList<AudioDeviceInfo>> ListAsync(AudioDirection direction, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<AudioDeviceInfo>> ListAsync(AudioDirection direction, CancellationToken cancellationToken) =>
+        Task.Run<IReadOnlyList<AudioDeviceInfo>>(() => List(direction), cancellationToken);
+
+    public Task<bool> SetDefaultAsync(AudioEndpoint endpoint, AudioRoleMask roles, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return Task.Run(() => SetDefault(endpoint, roles), cancellationToken);
+    }
+
+    public Task SetVolumeAsync(AudioEndpoint endpoint, int percent, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return Task.Run(() => SetVolume(endpoint, percent), cancellationToken);
+    }
+
+    public Task<int> GetVolumeAsync(AudioEndpoint endpoint, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return Task.Run(() => GetVolume(endpoint), cancellationToken);
+    }
+
+    private List<AudioDeviceInfo> List(AudioDirection direction)
     {
         var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
         try
@@ -75,7 +97,7 @@ public sealed class PolicyConfigAudioController : IAudioController
                 }
 
                 _log.Debug("Listed {Count} {Direction} endpoints", devices.Count, direction);
-                return Task.FromResult<IReadOnlyList<AudioDeviceInfo>>(devices);
+                return devices;
             }
             finally
             {
@@ -88,13 +110,11 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
     }
 
-    public Task<bool> SetDefaultAsync(AudioEndpoint endpoint, AudioRoleMask roles, CancellationToken cancellationToken)
+    private bool SetDefault(AudioEndpoint endpoint, AudioRoleMask roles)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
-
         if (!IsActive(endpoint))
         {
-            return Task.FromResult(false);
+            return false;
         }
 
         var client = new PolicyConfigClient();
@@ -116,13 +136,11 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
 
         _log.Information("Default {Roles} endpoint set to {Device}", roles, endpoint.FriendlyName);
-        return Task.FromResult(true);
+        return true;
     }
 
-    public Task SetVolumeAsync(AudioEndpoint endpoint, int percent, CancellationToken cancellationToken)
+    private void SetVolume(AudioEndpoint endpoint, int percent)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
-
         var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
         try
         {
@@ -142,14 +160,10 @@ public sealed class PolicyConfigAudioController : IAudioController
         {
             Marshal.ReleaseComObject(enumerator);
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task<int> GetVolumeAsync(AudioEndpoint endpoint, CancellationToken cancellationToken)
+    private int GetVolume(AudioEndpoint endpoint)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
-
         var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
         try
         {
@@ -166,7 +180,7 @@ public sealed class PolicyConfigAudioController : IAudioController
 
             int percent = (int)Math.Round(level * 100);
             _log.Debug("Volume of {Device} is {Volume} %", endpoint.FriendlyName, percent);
-            return Task.FromResult(percent);
+            return percent;
         }
         finally
         {

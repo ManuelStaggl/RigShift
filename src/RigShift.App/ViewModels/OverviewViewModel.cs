@@ -141,7 +141,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     {
         try
         {
-            ShowDisplays(await Task.Run(() => _display.QueryAsync(CancellationToken.None)));
+            ShowDisplays(await _display.QueryAsync(CancellationToken.None));
         }
         catch (Win32Exception ex)
         {

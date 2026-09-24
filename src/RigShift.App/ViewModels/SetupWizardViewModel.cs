@@ -579,7 +579,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         IReadOnlyList<AudioDeviceInfo> devices;
         try
         {
-            devices = await Task.Run(() => _audio.ListAsync(AudioDirection.Render, CancellationToken.None));
+            devices = await _audio.ListAsync(AudioDirection.Render, CancellationToken.None);
         }
         catch (COMException ex)
         {
@@ -597,7 +597,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     {
         try
         {
-            return await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            return await _display.QueryAsync(CancellationToken.None);
         }
         catch (Win32Exception ex)
         {

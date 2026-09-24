@@ -26,7 +26,10 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         _time = time;
     }
 
-    public Task<DisplaySnapshot> QueryAsync(CancellationToken cancellationToken)
+    /// <summary>On a pool thread: the query takes a noticeable moment, and the pages ask from the UI thread.</summary>
+    public Task<DisplaySnapshot> QueryAsync(CancellationToken cancellationToken) => Task.Run(Query, cancellationToken);
+
+    private DisplaySnapshot Query()
     {
         CcdRawSnapshot raw = QueryRaw();
         List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
@@ -34,7 +37,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         _log.Debug("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
             raw.Paths.Count, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
 
-        return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
+        return new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered };
     }
 
     /// <summary>
@@ -220,7 +223,11 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
     public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identity);
+        return Task.Run(() => ListRefreshRates(identity, width, height), cancellationToken);
+    }
 
+    private IReadOnlyList<RefreshRate> ListRefreshRates(DisplayIdentity identity, int width, int height)
+    {
         (DISPLAYCONFIG_PATH_INFO[] paths, _) = CcdNative.QueryAllPaths();
         foreach (DISPLAYCONFIG_PATH_INFO path in paths)
         {
@@ -238,10 +245,9 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
 
             IReadOnlyList<RefreshRate> rates = DxgiModes.RefreshRates(gdiName, width, height);
             _log.Debug("{Display} offers {Count} refresh rates at {Width}x{Height}", DisplayNames.Of(identity), rates.Count, width, height);
-            return Task.FromResult(rates);
+            return rates;
         }
 
-        return Task.FromResult<IReadOnlyList<RefreshRate>>([]);
+        return [];
     }
-
 }

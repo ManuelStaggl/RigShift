@@ -100,7 +100,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         DisplaySnapshot snapshot;
         try
         {
-            snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            snapshot = await _display.QueryAsync(CancellationToken.None);
         }
         catch (Win32Exception ex)
         {
@@ -325,7 +325,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         {
             return await _surround.QueryAsync(CancellationToken.None);
         }
-        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
         {
             _log.Warning(ex, "Surround state could not be read for the editor");
             return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
@@ -349,7 +349,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     {
         try
         {
-            return await Task.Run(() => _audio.ListAsync(direction, CancellationToken.None));
+            return await _audio.ListAsync(direction, CancellationToken.None);
         }
         catch (COMException ex)
         {

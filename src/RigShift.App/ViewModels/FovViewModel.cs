@@ -237,7 +237,7 @@ public sealed partial class FovViewModel : ObservableObject
     {
         try
         {
-            ShowDisplays(await Task.Run(() => _display.QueryAsync(CancellationToken.None)));
+            ShowDisplays(await _display.QueryAsync(CancellationToken.None));
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
