@@ -38,13 +38,13 @@
         Style="{StaticResource RigShift.Text.Body}"
         Text="{Binding Intro}"
         TextWrapping="Wrap" />
-      <ui:TextBox
+      <TextBox
         x:Name="SearchBox"
         Margin="0,14,0,0"
         AutomationProperties.Name="{loc:Tr GamePicker_Search}"
-        Icon="{ui:SymbolIcon Search16}"
-        PlaceholderText="{loc:Tr GamePicker_Search}"
         PreviewKeyDown="OnSearchKeyDown"
+        Style="{StaticResource RigShift.Field.Search}"
+        Tag="{loc:Tr GamePicker_Search}"
         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
     </StackPanel>
 

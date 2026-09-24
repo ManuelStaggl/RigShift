@@ -287,7 +287,7 @@
               Margin="-2"
               BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
               BorderThickness="2"
-              CornerRadius="8"
+              CornerRadius="{DynamicResource RigShift.Radius.FocusRing}"
               Visibility="Collapsed" />
             <!-- No padding here: a TextBox lays out its own Padding around the text, so a second one would double it. -->
             <Border
@@ -367,7 +367,7 @@
               Margin="-2"
               BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
               BorderThickness="2"
-              CornerRadius="8"
+              CornerRadius="{DynamicResource RigShift.Radius.FocusRing}"
               Visibility="Collapsed" />
             <Border
               x:Name="Root"
@@ -419,6 +419,67 @@
               <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
               <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed" />
               <Setter TargetName="Pen" Property="Opacity" Value="0" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <!-- Search field (v4 U-26): the field with a magnifier in front and the hint from Tag while it is empty. -->
+  <Style x:Key="RigShift.Field.Search" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
+    <Setter Property="Padding" Value="32,0,10,0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Grid>
+            <Border
+              x:Name="Ring"
+              Margin="-2"
+              BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
+              BorderThickness="2"
+              CornerRadius="{DynamicResource RigShift.Radius.FocusRing}"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Root"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              SnapsToDevicePixels="True">
+              <Grid>
+                <ui:SymbolIcon
+                  Margin="10,0,0,0"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center"
+                  FontSize="14"
+                  Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                  IsHitTestVisible="False"
+                  Symbol="Search16" />
+                <TextBlock
+                  x:Name="Placeholder"
+                  Margin="{TemplateBinding Padding}"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
+                  IsHitTestVisible="False"
+                  Text="{TemplateBinding Tag}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="Collapsed" />
+                <ScrollViewer
+                  x:Name="PART_ContentHost"
+                  Margin="0"
+                  Padding="0"
+                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                  Focusable="False" />
+              </Grid>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -510,7 +571,7 @@
               Margin="-2"
               BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
               BorderThickness="2"
-              CornerRadius="8"
+              CornerRadius="{DynamicResource RigShift.Radius.FocusRing}"
               Visibility="Collapsed" />
             <Border
               x:Name="Root"
@@ -670,15 +731,89 @@
     <Setter Property="ContentTemplateSelector" Value="{StaticResource RigShift.LabelSelector}" />
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
-  <!-- Number box on the field's measurements; the WPF-UI default is a few pixels taller than a text field. -->
+  <!--
+    Number box in the field's look (v4 U-26): the WPF-UI template marks the focus with a line under the box whose
+    corners come out slanted. None of our number boxes shows spin or clear buttons, so the template needs no parts.
+  -->
   <Style x:Key="RigShift.Number" TargetType="ui:NumberBox" BasedOn="{StaticResource {x:Type ui:NumberBox}}">
     <Setter Property="Height" Value="32" />
     <Setter Property="MinHeight" Value="32" />
     <Setter Property="Padding" Value="10,0" />
+    <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Page}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.LineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+    <Setter Property="SelectionOpacity" Value="0.4" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="ClearButtonEnabled" Value="False" />
+    <Setter Property="SpinButtonPlacementMode" Value="Hidden" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden" />
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ui:NumberBox">
+          <Grid>
+            <Border
+              x:Name="Ring"
+              Margin="-2"
+              BorderBrush="{DynamicResource RigShift.Brush.AccentRing}"
+              BorderThickness="2"
+              CornerRadius="{DynamicResource RigShift.Radius.FocusRing}"
+              Visibility="Collapsed" />
+            <Border
+              x:Name="Root"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{DynamicResource RigShift.Radius.Control}"
+              SnapsToDevicePixels="True">
+              <Grid>
+                <TextBlock
+                  x:Name="Placeholder"
+                  Margin="{TemplateBinding Padding}"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
+                  IsHitTestVisible="False"
+                  Text="{TemplateBinding PlaceholderText}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="Collapsed" />
+                <ScrollViewer
+                  x:Name="PART_ContentHost"
+                  Margin="0"
+                  Padding="0"
+                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                  Focusable="False" />
+              </Grid>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
+              <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+            </Trigger>
+            <Trigger Property="controls:Interaction.IsInvalid" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="Validation.HasError" Value="True">
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Background" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
+              <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
+              <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
   <!-- Radio (Z-01): 20 px, 1.5 px ring; chosen = accent disc with an 8 px dot, 10 px on hover. One look everywhere. -->
   <Style x:Key="RigShift.Radio" TargetType="RadioButton">

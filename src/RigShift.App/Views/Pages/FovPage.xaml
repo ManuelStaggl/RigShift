@@ -275,38 +275,14 @@
 
       <!-- One line per sim (V-03): the value as a chip right behind its kind, copy with a short answer, search. -->
       <DockPanel Margin="0,24,0,10">
-        <Grid Width="240" DockPanel.Dock="Right">
-          <TextBox
-            x:Name="SimSearch"
-            Padding="32,0,10,0"
-            AutomationProperties.Name="{loc:Tr Fov_Search}"
-            Style="{StaticResource RigShift.Field}"
-            Text="{Binding SimFilter, UpdateSourceTrigger=PropertyChanged}" />
-          <ui:SymbolIcon
-            Margin="10,0,0,0"
-            HorizontalAlignment="Left"
-            FontSize="14"
-            Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
-            IsHitTestVisible="False"
-            Symbol="Search16" />
-          <TextBlock
-            Margin="33,0,0,0"
-            VerticalAlignment="Center"
-            Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
-            IsHitTestVisible="False"
-            Text="{loc:Tr Fov_Search}">
-            <TextBlock.Style>
-              <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
-                <Setter Property="Visibility" Value="Collapsed" />
-                <Style.Triggers>
-                  <DataTrigger Binding="{Binding Text, ElementName=SimSearch}" Value="">
-                    <Setter Property="Visibility" Value="Visible" />
-                  </DataTrigger>
-                </Style.Triggers>
-              </Style>
-            </TextBlock.Style>
-          </TextBlock>
-        </Grid>
+        <TextBox
+          x:Name="SimSearch"
+          Width="240"
+          AutomationProperties.Name="{loc:Tr Fov_Search}"
+          DockPanel.Dock="Right"
+          Style="{StaticResource RigShift.Field.Search}"
+          Tag="{loc:Tr Fov_Search}"
+          Text="{Binding SimFilter, UpdateSourceTrigger=PropertyChanged}" />
         <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Fov_PerGame}" />
       </DockPanel>
       <Border Padding="0" ClipToBounds="True" Style="{StaticResource RigShift.Card}">

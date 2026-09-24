@@ -78,6 +78,9 @@
   <FontWeight x:Key="RigShift.Type.Weight.Strong">SemiBold</FontWeight>
 
   <CornerRadius x:Key="RigShift.Radius.Control">6</CornerRadius>
+  <!-- Focus ring around a control: the radius counts to the middle of its 2 px stroke, so 6 + 0.5 + 1 keeps it
+       concentric with the control's outer edge (6 + 0.5). -->
+  <CornerRadius x:Key="RigShift.Radius.FocusRing">7.5</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Chip">11</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Row">6</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Card">12</CornerRadius>
