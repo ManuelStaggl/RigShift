@@ -2,6 +2,7 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
+using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
@@ -182,6 +183,26 @@ public sealed class JsonGameStoreTests : IDisposable
         var store = new JsonGameStore(_directory, Logger.None);
 
         await Should.ThrowAsync<InvalidOperationException>(() => store.SaveAsync(Iracing(), Ct));
+    }
+
+    /// <summary>A lock that outlasts the second attempt shows as an incomplete load, never as "no games".</summary>
+    [Fact]
+    public async Task Load_LockedFile_TriesTwiceAndIsReported()
+    {
+        var time = new AutoAdvanceTimeProvider();
+        var store = new JsonGameStore(_directory, Logger.None, time);
+        await store.SaveAsync(Iracing(), Ct);
+
+        GameLoadResult loaded;
+        await using (new FileStream(File_, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            loaded = await store.LoadAllAsync(Ct);
+        }
+
+        loaded.Games.ShouldBeEmpty();
+        loaded.IsComplete.ShouldBeFalse();
+        time.Elapsed.ShouldBe(TimeSpan.FromMilliseconds(100));
+        (await store.LoadAllAsync(Ct)).Games.ShouldHaveSingleItem();
     }
 
     [Fact]

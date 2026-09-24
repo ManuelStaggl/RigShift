@@ -16,8 +16,6 @@ public sealed class JsonProfileStore : IProfileStore
 {
     public const int CurrentSchemaVersion = 1;
 
-    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(100);
-
     private readonly string _directory;
     private readonly ILogger _log;
     private readonly TimeProvider _time;
@@ -51,7 +49,8 @@ public sealed class JsonProfileStore : IProfileStore
             string name = Path.GetFileName(file);
             try
             {
-                ProfileDocument? document = await ReadWithRetryAsync(file, cancellationToken);
+                ProfileDocument? document = await JsonFile.ReadWithRetryAsync(
+                    file, ProfileJsonContext.Default.ProfileDocument, _time, _log, cancellationToken);
 
                 if (document?.Profile is null)
                 {
@@ -91,31 +90,6 @@ public sealed class JsonProfileStore : IProfileStore
         _log.Information("Loaded {Count} profiles from {Directory}, {Unreadable} file(s) unreadable",
             profiles.Count, _directory, unreadable.Count);
         return new LoadResult(profiles.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList(), unreadable);
-    }
-
-    /// <summary>
-    /// Opens without blocking writers or deleters (an editor or antivirus holding the file must not hide it) and tries a
-    /// second time after <see cref="RetryDelay"/>, because such locks are usually brief.
-    /// </summary>
-    private async Task<ProfileDocument?> ReadWithRetryAsync(string file, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await ReadAsync(file, cancellationToken);
-        }
-        catch (IOException ex)
-        {
-            _log.Information(ex, "Profile file {File} is not readable right now, retrying in {Delay} ms", file, RetryDelay.TotalMilliseconds);
-            await Task.Delay(RetryDelay, _time, cancellationToken);
-            return await ReadAsync(file, cancellationToken);
-        }
-    }
-
-    private static async Task<ProfileDocument?> ReadAsync(string file, CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, bufferSize: 4096, useAsync: true);
-        return await JsonSerializer.DeserializeAsync(stream, ProfileJsonContext.Default.ProfileDocument, cancellationToken);
     }
 
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
