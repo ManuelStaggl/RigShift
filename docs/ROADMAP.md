@@ -25,5 +25,5 @@ Reviewed and dropped, because they do not belong to the core or are covered by w
 - Power plan, wallpaper, taskbar or DPI scaling per profile.
 - Per-app volume and audio-only profiles.
 - Local HTTP API, Home Assistant / MQTT: the CLI, hotkeys and `rigshift://` links cover scripts and Stream Deck.
-- DDC/CI monitor input switching, a Stream Deck plugin, confirmation with a wheel button.
+- DDC/CI monitor input switching, a Stream Deck plugin.
 - Focus assist, game mode, night light: no official API.

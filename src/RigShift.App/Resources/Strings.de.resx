@@ -696,7 +696,7 @@
     <value>Ein Update ist bereit</value>
   </data>
   <data name="Confirm_KeyKeep" xml:space="preserve">
-    <value>behält</value>
+    <value>behält – ebenso jede Taste an Lenkrad oder Controller</value>
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
     <value>setzt zurück – von jedem Bildschirm aus</value>

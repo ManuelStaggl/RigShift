@@ -696,7 +696,7 @@
     <value>An update is ready</value>
   </data>
   <data name="Confirm_KeyKeep" xml:space="preserve">
-    <value>keeps</value>
+    <value>keeps – so does any wheel or controller button</value>
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
     <value>reverts – from any screen</value>

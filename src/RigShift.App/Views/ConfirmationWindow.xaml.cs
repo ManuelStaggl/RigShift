@@ -7,6 +7,7 @@ using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Windows.Input;
 using RigShift.Windows.Ui;
 using Serilog;
 using Wpf.Ui.Appearance;
@@ -16,8 +17,9 @@ namespace RigShift.App.Views;
 
 /// <summary>
 /// "Keep these display settings?" with a countdown, centered on the new primary display.
-/// Only Enter/click keeps the new topology; mouse movement proves nothing. Esc is registered globally for the
-/// countdown, so the switch can be reverted even if this window landed on a screen without a picture.
+/// Only Enter/click or a button on a wheel, button box or controller keeps the new topology; mouse movement proves
+/// nothing. Esc is registered globally for the countdown, so the switch can be reverted even if this window landed on a
+/// screen without a picture.
 /// </summary>
 public partial class ConfirmationWindow : FluentWindow
 {
@@ -32,6 +34,7 @@ public partial class ConfirmationWindow : FluentWindow
     private static ConfirmationWindow? s_open;
 
     private HwndSource? _source;
+    private ControllerButtons? _buttons;
     private nint _hwnd;
     private int _remaining;
     private readonly int _total;
@@ -99,6 +102,9 @@ public partial class ConfirmationWindow : FluentWindow
             Log.Warning("Global Esc hotkey for the confirmation window could not be registered; Esc works only while the window has focus");
         }
 
+        // At the rig there may be no keyboard, only the wheel (v4 finding U-04).
+        _buttons = ControllerButtons.Listen(_hwnd, Log.Logger);
+
         BrandWindow.ApplyChrome(this, "RigShift.Brush.Page");
     }
 
@@ -149,6 +155,14 @@ public partial class ConfirmationWindow : FluentWindow
             handled = true;
             Finish(ConfirmationResult.Rejected);
         }
+        else if (msg == ControllerButtons.WmInput && _buttons is { } buttons && buttons.IsButtonChange(lParam))
+        {
+            // Not handled: DefWindowProc frees the input. The window closes after this message, not inside it.
+            _buttons = null;
+            buttons.Dispose();
+            Log.Information("A button on a wheel, button box or controller confirmed the switch");
+            Dispatcher.BeginInvoke(() => Finish(ConfirmationResult.Confirmed));
+        }
 
         return 0;
     }
@@ -181,6 +195,7 @@ public partial class ConfirmationWindow : FluentWindow
         }
 
         _source?.RemoveHook(WndProc);
+        _buttons?.Dispose();
         if (!_closing)
         {
             Close();
