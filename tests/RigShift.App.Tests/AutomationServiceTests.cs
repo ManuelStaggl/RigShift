@@ -37,6 +37,25 @@ public sealed class AutomationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Tick_WhileLocked_DoesNothing_AndTheUnlockStartsTheRule()
+    {
+        // A-04: the driver sits down in the rig, switches the wheelbase on, then unlocks. While locked every display call
+        // fails with "access denied", and the failed start used to disarm the rule until the wheelbase was switched again.
+        using AutomationService automation = await CreateAsync();
+        await automation.PollAsync();
+
+        _host.Session.IsInteractive = false;
+        Connected(true);
+        await automation.PollAsync();
+        _host.Coordinator.History.ShouldBeEmpty();
+
+        _host.Session.IsInteractive = true;
+        await automation.PollAsync();
+
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Rig");
+    }
+
+    [Fact]
     public async Task Tick_Paused_ResetsBaselineOnce()
     {
         using AutomationService automation = await CreateAsync();
@@ -109,6 +128,6 @@ public sealed class AutomationServiceTests : IDisposable
         await _host.Catalog.ReloadAsync(Ct);
         await _host.Settings.UpdateAsync(
             s => s with { AutomationRules = [new AutomationRule { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id }] }, Ct);
-        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
+        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None);
     }
 }

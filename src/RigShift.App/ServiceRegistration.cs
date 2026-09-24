@@ -65,6 +65,7 @@ public static class ServiceRegistration
         services.AddSingleton<SwitchCoordinator>();
         services.AddSingleton<DisplayChangeWatcher>();
         services.AddSingleton<HotkeyService>();
+        services.AddSingleton<ISessionWatch>(_ => new SystemSessionWatch(log));
         services.AddSingleton<AutomationService>();
         services.AddSingleton<TrayIconService>();
 

@@ -18,11 +18,15 @@ public sealed class AutomationService : IDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
 
+    /// <summary>ERROR_ACCESS_DENIED: the display calls of a session without its desktop.</summary>
+    private const int ErrorAccessDenied = 5;
+
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
     private readonly IUsbDeviceList _devices;
     private readonly IFullscreenCheck _fullscreen;
+    private readonly ISessionWatch _session;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
     private readonly AutomationTrigger _trigger = new();
@@ -33,6 +37,7 @@ public sealed class AutomationService : IDisposable
     private bool _polling;
     private bool _idle = true;
     private bool _skipLogged;
+    private bool _awayLogged;
 
     public AutomationService(
         SettingsService settings,
@@ -40,10 +45,12 @@ public sealed class AutomationService : IDisposable
         SwitchCoordinator coordinator,
         IUsbDeviceList devices,
         IFullscreenCheck fullscreen,
+        ISessionWatch session,
         TimeProvider time,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(time);
         ArgumentNullException.ThrowIfNull(log);
 
@@ -52,11 +59,13 @@ public sealed class AutomationService : IDisposable
         _coordinator = coordinator;
         _devices = devices;
         _fullscreen = fullscreen;
+        _session = session;
         _time = time;
         _started = time.GetTimestamp();
         _log = log.ForContext<AutomationService>();
         _timer.Tick += OnTick;
         settings.Changed += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
+        session.Changed += OnSessionChanged;
     }
 
     /// <summary>Rules or the paused state may have changed.</summary>
@@ -98,6 +107,25 @@ public sealed class AutomationService : IDisposable
     {
         _timer.Stop();
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        _session.Changed -= OnSessionChanged;
+    }
+
+    /// <summary>
+    /// Back in the session: look at the devices at once. What happened while it was locked is decided now – a wheelbase
+    /// switched on then starts its rule, one switched off ends it (A-04).
+    /// </summary>
+    private void OnSessionChanged(object? sender, EventArgs e)
+    {
+        if (!_session.IsInteractive)
+        {
+            return;
+        }
+
+        _timer.Dispatcher.InvokeAsync(async () =>
+        {
+            _log.Information("Session is interactive again, automation looks at the devices");
+            await PollAsync();
+        });
     }
 
     /// <summary>
@@ -142,6 +170,20 @@ public sealed class AutomationService : IDisposable
             return;
         }
 
+        // Locked or away from the console: every display call would fail with "access denied". The devices are looked at
+        // again once the session is back, with the rules' state as it was before (A-04).
+        if (!_session.IsInteractive)
+        {
+            if (!_awayLogged)
+            {
+                _log.Information("Automation waits while the session is locked or disconnected");
+                _awayLogged = true;
+            }
+
+            return;
+        }
+
+        _awayLogged = false;
         _idle = false;
         _polling = true;
         try
@@ -203,10 +245,12 @@ public sealed class AutomationService : IDisposable
         }
 
         // A start that did not succeed must not count as started (analysis finding C-01).
-        RetryMode? retry = result?.Outcome switch
+        // "Access denied" means the session lost the desktop while switching (locked): try again later, not only after a
+        // reconnect of the device (A-04).
+        RetryMode? retry = result switch
         {
-            null or SwitchOutcome.Blocked => RetryMode.Later,
-            SwitchOutcome.Failed or SwitchOutcome.RolledBack => RetryMode.AfterReconnect,
+            null or { Outcome: SwitchOutcome.Blocked } or { Outcome: SwitchOutcome.Failed, LastNativeError: ErrorAccessDenied } => RetryMode.Later,
+            { Outcome: SwitchOutcome.Failed or SwitchOutcome.RolledBack } => RetryMode.AfterReconnect,
             _ => null,
         };
 

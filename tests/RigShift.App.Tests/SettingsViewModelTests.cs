@@ -36,7 +36,7 @@ public sealed class SettingsViewModelTests : IDisposable
             Logger.None);
         _hotkeys = new HotkeyService(_host.Catalog, _games, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar());
         _automation = new AutomationService(
-            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
+            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
