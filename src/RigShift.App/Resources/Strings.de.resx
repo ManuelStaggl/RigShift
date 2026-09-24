@@ -295,8 +295,8 @@
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Schalte es aus und wieder ein, dann wählt RigShift es hier aus – oder wähle es aus der Liste.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
-  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol neben der Uhr oder per Tastenkürzel. Einen USB-Auslöser kannst du später im Profil ergänzen.</value></data>
-  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol neben der Uhr, per Tastenkürzel oder über das Gerät.</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol oder mit den Tastenkürzeln unten. Einen USB-Auslöser kannst du später unter Profile ergänzen.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Tray-Symbol, mit den Tastenkürzeln unten oder über das Gerät.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Schreibtisch</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim Rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen</value></data>
@@ -775,5 +775,29 @@
   </data>
   <data name="Game_HotkeyHint" xml:space="preserve">
     <value>Startet die Sitzung von überall, solange RigShift läuft.</value>
+  </data>
+  <data name="Setup_DoneWithRuleNoHotkey" xml:space="preserve">
+    <value>Umschalten geht ab jetzt über das Tray-Symbol oder über das Gerät. Tastenkürzel legst du unter Profile fest.</value>
+  </data>
+  <data name="Setup_DoneNoRuleNoHotkey" xml:space="preserve">
+    <value>Umschalten geht ab jetzt über das Tray-Symbol. Tastenkürzel und einen USB-Auslöser kannst du später unter Profile ergänzen.</value>
+  </data>
+  <data name="Setup_TryIt" xml:space="preserve">
+    <value>Ausprobieren: zu {0} wechseln</value>
+  </data>
+  <data name="Setup_AutostartHint" xml:space="preserve">
+    <value>Tastenkürzel und USB-Auslöser wirken nur, solange RigShift läuft.</value>
+  </data>
+  <data name="Setup_TrayHint" xml:space="preserve">
+    <value>Wenn du das Fenster schließt, läuft RigShift im Infobereich weiter. Windows versteckt das Symbol eventuell hinter dem ^ neben der Uhr – zieh es heraus, dann bleibt es sichtbar.</value>
+  </data>
+  <data name="Tray_KeepsRunning" xml:space="preserve">
+    <value>RigShift läuft im Infobereich weiter. Zieh das Symbol neben die Uhr, dann bleibt es sichtbar.</value>
+  </data>
+  <data name="Trigger_AutostartOff" xml:space="preserve">
+    <value>RigShift startet nicht mit Windows: Nach einem Neustart tun Tastenkürzel und USB-Regeln nichts, bis du es öffnest.</value>
+  </data>
+  <data name="Trigger_AutostartTurnOn" xml:space="preserve">
+    <value>Einschalten</value>
   </data>
 </root>

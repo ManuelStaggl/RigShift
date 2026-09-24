@@ -246,6 +246,23 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
     }
 
+    /// <summary>A hotkey on a PC where RigShift does not start with Windows stops working after a restart (U-01).</summary>
+    [Fact]
+    public async Task Hotkey_WhileNotStartingWithWindows_ShowsTheNote_AndTurnOnFixesIt()
+    {
+        ProfileEditorViewModel editor = await EditorAsync(Rig());
+        editor.ShowAutostartOff.ShouldBeFalse("nothing needs RigShift running yet");
+
+        editor.RecordHotkey(CtrlAltR.Modifiers, CtrlAltR.VirtualKey);
+        editor.ShowAutostartOff.ShouldBeTrue();
+
+        _host.Settings.Autostart.IsEnabled.Returns(true);
+        editor.TurnOnAutostartCommand.Execute(null);
+
+        _host.Settings.Autostart.Received(1).SetEnabled(true);
+        editor.ShowAutostartOff.ShouldBeFalse();
+    }
+
     [Fact]
     public async Task MakingAnotherDisplayPrimary_MovesTheOriginThere_AndTheOldPrimaryLosesTheFlag()
     {

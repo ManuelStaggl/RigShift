@@ -70,6 +70,12 @@ public sealed record AppSettings
     public bool AutomationPaused { get; init; }
 
     /// <summary>
+    /// The note "RigShift keeps running in the tray" was shown on the first close of the window (v4 finding U-03).
+    /// <c>false</c> for files without the key: users of older versions see it once.
+    /// </summary>
+    public bool TrayHintShown { get; init; }
+
+    /// <summary>
     /// A communications ducking value is remembered in <see cref="DuckingBeforeProfiles"/> (analysis finding B-01). Separate
     /// flag because the remembered value itself may be <c>null</c> (registry value missing). Regular setters on purpose,
     /// see <see cref="ConfirmTimeoutSeconds"/>.

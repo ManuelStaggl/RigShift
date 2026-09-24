@@ -49,6 +49,8 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     /// <summary>"Ctrl+Alt+F1" for the tray row; empty without a hotkey. Rebuilt with the item, so it follows the language.</summary>
     public string HotkeyText => Profile.Hotkey is { } hotkey ? HotkeyFormat.Format(hotkey) : string.Empty;
 
+    public bool HasHotkey => Profile.Hotkey is not null;
+
     /// <summary>Left to right, as the displays stand on the desk.</summary>
     public IReadOnlyList<string> DisplayLines { get; } = profile.Displays
         .OrderBy(d => d.PositionX)

@@ -57,7 +57,7 @@ public sealed class ProfilesViewModelTests : IDisposable
             _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, new FakeAppPicker(), Logger.None);
         _dialogs = new Dialogs(new ProfileDialogs(
             editorServices, audio, _host.Usb, surround, powerCheck,
-            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _displayChanges));
+            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _displayChanges, _host.Coordinator));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -19,7 +19,11 @@ public partial class ProfilesPage : Page
         InitializeComponent();
         viewModel.FocusNameRequested += (_, _) => FocusName();
         PreviewKeyDown += OnPagePreviewKeyDown;
-        Loaded += (_, _) => viewModel.PageShown();
+        Loaded += (_, _) =>
+        {
+            viewModel.PageShown();
+            viewModel.Editor?.RefreshAutostartNote();
+        };
     }
 
     /// <summary>F2 edits the name (R-NAV-5).</summary>

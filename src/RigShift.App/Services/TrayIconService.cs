@@ -290,6 +290,10 @@ public sealed class TrayIconService : IDisposable
         Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
     }
 
+    /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
+    public void ShowKeepsRunningHint() =>
+        OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NotificationIcon.Info), click: null));
+
     private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false) =>
         Notify(message, opensAbout ? () => _shell.ShowMainWindow(typeof(AboutPage)) : null);
 

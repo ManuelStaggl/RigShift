@@ -765,6 +765,20 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Trigger_Intro}" />
+                <!-- Hotkeys and USB rules need RigShift running after a restart (U-01). -->
+                <controls:InfoBar
+                  Margin="0,0,0,12"
+                  Kind="Warn"
+                  Text="{loc:Tr Trigger_AutostartOff}"
+                  Visibility="{Binding ShowAutostartOff, Converter={StaticResource BoolToVisibility}}">
+                  <controls:InfoBar.Action>
+                    <Button
+                      Height="28"
+                      Command="{Binding TurnOnAutostartCommand}"
+                      Content="{loc:Tr Trigger_AutostartTurnOn}"
+                      Style="{StaticResource RigShift.Button.Ghost}" />
+                  </controls:InfoBar.Action>
+                </controls:InfoBar>
                 <!-- Three cards of one kind (L-06): USB devices, hotkey, shortcut and command. -->
                 <Border DataContext="{Binding Rules}" Style="{StaticResource RigShift.Card.Group}">
                   <StackPanel>

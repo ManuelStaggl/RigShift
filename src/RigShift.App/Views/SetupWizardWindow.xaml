@@ -430,6 +430,21 @@
                             Text="{Binding StatusText}"
                             TextTrimming="CharacterEllipsis"
                             Visibility="{Binding HasStatus, Converter={StaticResource BoolToVisibility}}" />
+                          <!-- The hotkey the assistant gave the profile (U-02), so the text above can point to it. -->
+                          <StackPanel
+                            Margin="0,6,0,0"
+                            Orientation="Horizontal"
+                            Visibility="{Binding HasHotkey, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon
+                              Margin="0,0,6,0"
+                              FontSize="14"
+                              Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                              Symbol="Keyboard16" />
+                            <TextBlock
+                              AutomationProperties.Name="{Binding HotkeyText}"
+                              Style="{StaticResource RigShift.Text.Caption}"
+                              Text="{Binding HotkeyText}" />
+                          </StackPanel>
                         </StackPanel>
                       </Border>
                     </DataTemplate>
@@ -455,6 +470,42 @@
                       TextWrapping="Wrap" />
                   </StackPanel>
                 </Border>
+
+                <!-- Preset on (U-01): without it nothing switches after the next restart. -->
+                <Border Margin="0,12,0,0" Padding="16,10" Style="{StaticResource RigShift.Card}">
+                  <DockPanel>
+                    <ui:ToggleSwitch
+                      Margin="16,0,0,0"
+                      AutomationProperties.HelpText="{loc:Tr Setup_AutostartHint}"
+                      AutomationProperties.Name="{loc:Tr Settings_Autostart}"
+                      DockPanel.Dock="Right"
+                      IsChecked="{Binding StartWithWindows}"
+                      Style="{StaticResource RigShift.Toggle}" />
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="{loc:Tr Settings_Autostart}" />
+                      <TextBlock
+                        Style="{StaticResource RigShift.Text.Caption}"
+                        Text="{loc:Tr Setup_AutostartHint}"
+                        TextWrapping="Wrap" />
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
+
+                <!-- Windows 11 puts a new tray icon behind the "^" – say where RigShift went (U-03). -->
+                <DockPanel Margin="0,14,0,0">
+                  <ui:SymbolIcon
+                    Margin="0,1,10,0"
+                    VerticalAlignment="Top"
+                    DockPanel.Dock="Left"
+                    FontSize="16"
+                    Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                    Symbol="Info16" />
+                  <TextBlock
+                    Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
+                    Style="{StaticResource RigShift.Text.Body}"
+                    Text="{loc:Tr Setup_TrayHint}"
+                    TextWrapping="Wrap" />
+                </DockPanel>
               </StackPanel>
             </StackPanel>
           </ScrollViewer>
@@ -496,10 +547,19 @@
                 Visibility="{Binding IsTrigger, Converter={StaticResource BoolToVisibility}}" />
               <Button
                 MinWidth="120"
-                Command="{Binding SkipCommand}"
+                Margin="0,0,8,0"
+                Command="{Binding FinishCommand}"
                 Content="{loc:Tr Setup_Finish}"
-                Style="{StaticResource RigShift.Button.Primary}"
+                Style="{StaticResource RigShift.Button}"
                 Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
+              <!-- The aha moment (U-02): one real switch, with the countdown that takes it back. -->
+              <Button
+                x:Name="TryButton"
+                MinWidth="120"
+                Command="{Binding TryItCommand}"
+                Content="{Binding TryText}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                Visibility="{Binding ShowTry, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
           </Grid>
         </Grid>

@@ -279,6 +279,31 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     public bool HasHotkey => Hotkey is not null;
 
+    /// <summary>
+    /// A hotkey or USB rule while RigShift does not start with Windows: after the next restart neither works (finding
+    /// U-01). The Triggers tab says so and offers to turn it on.
+    /// </summary>
+    public bool ShowAutostartOff => (Hotkey is not null || Rules.Rules.Count > 0) && !_settings.Autostart.IsEnabled;
+
+    [RelayCommand]
+    private void TurnOnAutostart()
+    {
+        try
+        {
+            _settings.Autostart.SetEnabled(true);
+            _log.Information("Start with Windows turned on from the Triggers tab");
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            _log.Warning(ex, "Start with Windows could not be turned on");
+        }
+
+        OnPropertyChanged(nameof(ShowAutostartOff));
+    }
+
+    /// <summary>The page shows the editor again; start with Windows may have changed on the settings page meanwhile.</summary>
+    public void RefreshAutostartNote() => OnPropertyChanged(nameof(ShowAutostartOff));
+
     /// <summary>The line under the hotkey field: how to record one, or why the last combination was refused.</summary>
     public string HotkeyHint => _hotkeyRecorder.Hint;
 
@@ -542,6 +567,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         AppsProblem = ProblemTexts.Of(problems, ProfileProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
         IsDirty = IsNew || Rules.IsDirty || !StoredForm.Same(built, _initial);
+        OnPropertyChanged(nameof(ShowAutostartOff));
     }
 
     private void UpdateTopology() => TopologyDisplays = Services.TopologyDisplays.From(Displays.Select(d => d.Assignment), _missingDisplays);

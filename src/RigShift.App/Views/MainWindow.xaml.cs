@@ -229,12 +229,16 @@ public partial class MainWindow : FluentWindow
         BrandWindow.ApplyChrome(this);
     }
 
+    /// <summary>The window was closed by the user and went to the tray; RigShift keeps running.</summary>
+    public event EventHandler? HiddenToTray;
+
     protected override void OnClosing(CancelEventArgs e)
     {
         if (!_shell.IsExiting)
         {
             e.Cancel = true;
             Hide();
+            HiddenToTray?.Invoke(this, EventArgs.Empty);
         }
 
         base.OnClosing(e);

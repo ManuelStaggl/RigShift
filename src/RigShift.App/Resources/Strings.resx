@@ -295,8 +295,8 @@
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on again and RigShift picks it here, or choose it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
-  <data name="Setup_DoneNoRule" xml:space="preserve"><value>From now on you switch from the tray icon next to the clock or with a hotkey. You can add a USB trigger later in the profile.</value></data>
-  <data name="Setup_DoneWithRule" xml:space="preserve"><value>From now on you switch from the tray icon next to the clock, with a hotkey, or with the device.</value></data>
+  <data name="Setup_DoneNoRule" xml:space="preserve"><value>From now on you switch from the tray icon or with the hotkeys below. You can add a USB trigger later under Profiles.</value></data>
+  <data name="Setup_DoneWithRule" xml:space="preserve"><value>From now on you switch from the tray icon, with the hotkeys below or with the device.</value></data>
   <data name="Setup_FirstName" xml:space="preserve"><value>Desk</value></data>
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows display settings</value></data>
@@ -775,5 +775,29 @@
   </data>
   <data name="Game_HotkeyHint" xml:space="preserve">
     <value>Starts the session from anywhere while RigShift is running.</value>
+  </data>
+  <data name="Setup_DoneWithRuleNoHotkey" xml:space="preserve">
+    <value>From now on you switch from the tray icon or with the device. Hotkeys can be set under Profiles.</value>
+  </data>
+  <data name="Setup_DoneNoRuleNoHotkey" xml:space="preserve">
+    <value>From now on you switch from the tray icon. Hotkeys and a USB trigger can be added later under Profiles.</value>
+  </data>
+  <data name="Setup_TryIt" xml:space="preserve">
+    <value>Try it: switch to {0}</value>
+  </data>
+  <data name="Setup_AutostartHint" xml:space="preserve">
+    <value>Hotkeys and USB triggers only work while RigShift is running.</value>
+  </data>
+  <data name="Setup_TrayHint" xml:space="preserve">
+    <value>Closing the window keeps RigShift running in the tray. Windows may hide its icon behind the ^ next to the clock – drag it out to keep it in view.</value>
+  </data>
+  <data name="Tray_KeepsRunning" xml:space="preserve">
+    <value>RigShift keeps running in the tray. Drag its icon next to the clock to keep it in view.</value>
+  </data>
+  <data name="Trigger_AutostartOff" xml:space="preserve">
+    <value>RigShift does not start with Windows: after a restart, hotkeys and USB rules do nothing until you open it.</value>
+  </data>
+  <data name="Trigger_AutostartTurnOn" xml:space="preserve">
+    <value>Turn on</value>
   </data>
 </root>

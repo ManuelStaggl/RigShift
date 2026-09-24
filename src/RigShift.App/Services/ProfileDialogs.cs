@@ -62,6 +62,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     private readonly IUsbPowerCheck _powerCheck;
     private readonly ActiveProfileMatcher _matcher;
     private readonly DisplayChangeWatcher _displayChanges;
+    private readonly SwitchCoordinator _coordinator;
     private readonly ILogger _log;
 
     /// <param name="editorServices">Handed to every editor; its catalog, displays, settings and log serve the dialogs too.</param>
@@ -72,7 +73,8 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         ISurroundController surround,
         IUsbPowerCheck powerCheck,
         ActiveProfileMatcher matcher,
-        DisplayChangeWatcher displayChanges)
+        DisplayChangeWatcher displayChanges,
+        SwitchCoordinator coordinator)
     {
         ArgumentNullException.ThrowIfNull(editorServices);
         _editorServices = editorServices;
@@ -85,6 +87,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         _powerCheck = powerCheck;
         _matcher = matcher;
         _displayChanges = displayChanges;
+        _coordinator = coordinator;
         _log = editorServices.Log.ForContext<ProfileDialogs>();
     }
 
@@ -149,7 +152,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
     public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
     {
-        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _surround, _log);
+        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _surround, _editorServices.Hotkeys, _log);
 #if DEBUG
         if (previewStep is { } step)
         {
@@ -182,6 +185,12 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         _log.Information("Setup assistant opening at step {Step}", viewModel.Step);
         window.ShowDialog();
         _log.Information("Setup assistant closed");
+
+        // "Try it" on the last step: the first real switch, with the countdown that takes it back (finding U-02).
+        if (viewModel.SwitchAfterClose is { } target)
+        {
+            await _coordinator.SwitchAsync(target);
+        }
     }
 
     /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>

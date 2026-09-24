@@ -20,6 +20,7 @@ public partial class App : Application, IAppShell
     private readonly AppPaths _paths;
     private ServiceProvider? _services;
     private TrayIconService? _tray;
+    private bool _hiddenToTrayWatched;
 
     public App(CliRequest request, AppPaths paths)
     {
@@ -39,6 +40,12 @@ public partial class App : Application, IAppShell
     public void ShowMainWindow(Type? page = null)
     {
         MainWindow window = Services.GetRequiredService<MainWindow>();
+        if (!_hiddenToTrayWatched)
+        {
+            window.HiddenToTray += OnMainWindowHiddenToTray;
+            _hiddenToTrayWatched = true;
+        }
+
         window.ShowPage(page);
         window.Show();
         if (window.WindowState == WindowState.Minimized)
@@ -47,6 +54,29 @@ public partial class App : Application, IAppShell
         }
 
         window.Activate();
+    }
+
+    /// <summary>
+    /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
+    /// window that simply vanishes looks like a closed app (v4 finding U-03). Once, remembered in the settings.
+    /// </summary>
+    private async void OnMainWindowHiddenToTray(object? sender, EventArgs e)
+    {
+        SettingsService settings = Services.GetRequiredService<SettingsService>();
+        if (settings.Current.TrayHintShown)
+        {
+            return;
+        }
+
+        _tray?.ShowKeepsRunningHint();
+        try
+        {
+            await settings.UpdateAsync(s => s with { TrayHintShown = true }, CancellationToken.None, notify: false);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            Log.Warning(ex, "Could not remember that the tray hint was shown");
+        }
     }
 
     /// <summary>
