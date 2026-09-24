@@ -110,6 +110,12 @@ public sealed class AutomationTrigger
 
     private const int PollsGoneForExit = 2;
 
+    /// <summary>
+    /// The shortest gap after which a device that comes back counts as connected anew, unless the rule's own delay is
+    /// longer (v4 finding K-10): a wheelbase re-enumerating after interference or a hub reset is gone for a poll or two.
+    /// </summary>
+    private static readonly TimeSpan MinimumGapForStart = TimeSpan.FromSeconds(5);
+
     private readonly Dictionary<Guid, RuleState> _states = [];
     private bool _hasBaseline;
 
@@ -165,6 +171,8 @@ public sealed class AutomationTrigger
         state.PreviousProfileId = null;
         state.GoneSince = null;
         state.PollsGone = 0;
+        state.MissingSince = null;
+        state.MissingPolls = 0;
         state.ExitHeld = false;
         if (retry == RetryMode.Later)
         {
@@ -230,8 +238,12 @@ public sealed class AutomationTrigger
             if (running)
             {
                 bool restarted = state.GoneSince is not null;
+                bool briefGap = state.MissingSince is { } missingSince
+                    && (state.MissingPolls < PollsGoneForExit || now - missingSince < Max(MinimumGapForStart, ExitDelayOf(rule)));
                 state.GoneSince = null;
                 state.PollsGone = 0;
+                state.MissingSince = null;
+                state.MissingPolls = 0;
                 state.ExitHeld = false;
                 if (restarted)
                 {
@@ -243,8 +255,10 @@ public sealed class AutomationTrigger
                     state.IsRunning = true;
                     state.RetryAt = null;
 
-                    // Back within the delay continues the session the rule started; otherwise it is a new start.
-                    if (!restarted || !state.StartedByRule)
+                    // Back within the delay continues the session the rule started. A short gap in a session the rule did not
+                    // start – the device was there at startup, or its start was turned down – is no reconnect either: that
+                    // switched to the rig in the middle of desk work (K-10). Otherwise it is a new start.
+                    if (!(restarted && state.StartedByRule) && !(briefGap && !state.StartedByRule))
                     {
                         events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceConnected));
                         OnStarted(rule, state, activeProfileId, actions, events);
@@ -256,16 +270,26 @@ public sealed class AutomationTrigger
                 state.IsRunning = false;
                 state.GoneSince = now;
                 state.PollsGone = 1;
+                state.MissingSince = now;
+                state.MissingPolls = 1;
                 events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceGone) { Delay = ExitDelayOf(rule) });
-            }
-            else if (state.GoneSince is not null)
-            {
-                state.PollsGone++;
             }
             else
             {
-                // Gone and waiting for a retry that no longer applies.
-                state.RetryAt = null;
+                if (state.MissingSince is not null)
+                {
+                    state.MissingPolls++;
+                }
+
+                if (state.GoneSince is not null)
+                {
+                    state.PollsGone++;
+                }
+                else
+                {
+                    // Gone and waiting for a retry that no longer applies.
+                    state.RetryAt = null;
+                }
             }
 
             if (!running && state.GoneSince is { } gone && state.PollsGone >= PollsGoneForExit && now - gone >= ExitDelayOf(rule))
@@ -291,12 +315,20 @@ public sealed class AutomationTrigger
                 {
                     events.Add(new TriggerEvent(rule, TriggerEventKind.ExitSkipped) { SkipReason = skipped });
                 }
+                else
+                {
+                    // The end switched away: whenever the device comes back, that is a new start.
+                    state.MissingSince = null;
+                    state.MissingPolls = 0;
+                }
             }
         }
 
         _hasBaseline = true;
         return new TriggerEvaluation(actions, events);
     }
+
+    private static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
 
     private static void OnStarted(
         AutomationRule rule, RuleState state, Guid? activeProfileId, List<TriggerAction> actions, List<TriggerEvent> events)
@@ -364,6 +396,15 @@ public sealed class AutomationTrigger
 
         /// <summary>Polls in a row without the device since <see cref="GoneSince"/>.</summary>
         public int PollsGone { get; set; }
+
+        /// <summary>
+        /// Monotonic time the device went missing, kept through an end action that did not switch, so a device that comes
+        /// back can be told from a short gap (K-10). Cleared when it is back and when an end action switched away.
+        /// </summary>
+        public TimeSpan? MissingSince { get; set; }
+
+        /// <summary>Polls in a row without the device since <see cref="MissingSince"/>.</summary>
+        public int MissingPolls { get; set; }
 
         /// <summary>The end action is due but waits for a full-screen application to close; reported once.</summary>
         public bool ExitHeld { get; set; }
