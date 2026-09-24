@@ -468,16 +468,12 @@ public sealed class GameEditorViewModelTests : IDisposable
         IReadOnlyList<GameEntry>? games = null,
         GameCatalog? catalog = null)
     {
-        var editor = new GameEditorViewModel(
-            game,
-            isNew,
+        var context = new GameEditorContext(
             profiles ?? [],
             games ?? [game],
-            new AppsWaitDeviceChoice(game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, [new UsbDevice(Wheelbase, "Fanatec Wheelbase")], [], null),
-            new FakeAppPicker(),
-            catalog ?? _catalog,
-            _hotkeys,
-            Logger.None);
+            new AppsWaitDeviceChoice(game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, [new UsbDevice(Wheelbase, "Fanatec Wheelbase")], [], null));
+        var editor = new GameEditorViewModel(
+            game, isNew, context, new GameEditorServices(catalog ?? _catalog, _hotkeys, new FakeAppPicker(), Logger.None));
         _editors.Add(editor);
         return editor;
     }

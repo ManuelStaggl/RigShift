@@ -44,7 +44,12 @@ public sealed class GamesViewModelTests : IDisposable
         _hotkeys = _ui.Invoke(() => new HotkeyService(
             _host.Catalog, _catalog, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar()));
         _dialogs = new Dialogs(new GameDialogs(
-            _catalog, _host.Catalog, Substitute.For<IGameLibrary>(), Substitute.For<IWindowLayout>(), _host.Usb, _host.Settings, _hotkeys, new FakeAppPicker(), Logger.None));
+            new GameEditorServices(_catalog, _hotkeys, new FakeAppPicker(), Logger.None),
+            _host.Catalog,
+            Substitute.For<IGameLibrary>(),
+            Substitute.For<IWindowLayout>(),
+            _host.Usb,
+            _host.Settings));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -95,6 +95,7 @@ public static class ServiceRegistration
         services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
         services.AddSingleton<GameCatalog>();
+        services.AddSingleton<GameEditorServices>();
         services.AddSingleton<GameDialogs>();
         services.AddSingleton<IGamePageDialogs>(sp => sp.GetRequiredService<GameDialogs>());
 

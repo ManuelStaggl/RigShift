@@ -49,37 +49,33 @@ public interface IGamePageDialogs
 /// <summary>Builds the game detail's editor and opens the pickers, the window capture and the delete confirmation.</summary>
 public sealed class GameDialogs : IGamePageDialogs
 {
+    private readonly GameEditorServices _editorServices;
     private readonly GameCatalog _catalog;
     private readonly ProfileCatalog _profiles;
     private readonly IGameLibrary _library;
     private readonly IWindowLayout _windows;
     private readonly IUsbDeviceList _usbDevices;
     private readonly SettingsService _settings;
-    private readonly HotkeyService _hotkeys;
-    private readonly IAppPicker _appPicker;
     private readonly ILogger _log;
 
+    /// <param name="editorServices">Handed to every editor; its catalog and log serve the dialogs too.</param>
     public GameDialogs(
-        GameCatalog catalog,
+        GameEditorServices editorServices,
         ProfileCatalog profiles,
         IGameLibrary library,
         IWindowLayout windows,
         IUsbDeviceList usbDevices,
-        SettingsService settings,
-        HotkeyService hotkeys,
-        IAppPicker appPicker,
-        ILogger log)
+        SettingsService settings)
     {
-        ArgumentNullException.ThrowIfNull(log);
-        _catalog = catalog;
+        ArgumentNullException.ThrowIfNull(editorServices);
+        _editorServices = editorServices;
+        _catalog = editorServices.Catalog;
         _profiles = profiles;
         _library = library;
         _windows = windows;
         _usbDevices = usbDevices;
         _settings = settings;
-        _hotkeys = hotkeys;
-        _appPicker = appPicker;
-        _log = log.ForContext<GameDialogs>();
+        _log = editorServices.Log.ForContext<GameDialogs>();
     }
 
     /// <summary>The detail's editor for a game: profiles for the choice, the USB devices the tools can wait for.</summary>
@@ -104,7 +100,7 @@ public sealed class GameDialogs : IGamePageDialogs
         var appsWaitDevice = new AppsWaitDeviceChoice(
             game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, connected, known, _settings.Current.UsbDeviceNames);
 
-        return new GameEditorViewModel(game, isNew, _profiles.Profiles, _catalog.Games, appsWaitDevice, _appPicker, _catalog, _hotkeys, _log);
+        return new GameEditorViewModel(game, isNew, new GameEditorContext(_profiles.Profiles, _catalog.Games, appsWaitDevice), _editorServices);
     }
 
     /// <summary>

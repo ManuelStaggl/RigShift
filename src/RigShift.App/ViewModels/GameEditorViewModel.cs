@@ -31,34 +31,20 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     private GameLaunch _launch;
     private bool _loading = true;
 
-    /// <param name="games">Every configured game, this one included; names and hotkeys are checked against the others.</param>
-    /// <param name="appsWaitDevice">The device the tools wait for, with the devices to choose from.</param>
-    public GameEditorViewModel(
-        GameEntry game,
-        bool isNew,
-        IReadOnlyList<Profile> profiles,
-        IReadOnlyList<GameEntry> games,
-        AppsWaitDeviceChoice appsWaitDevice,
-        IAppPicker appPicker,
-        GameCatalog catalog,
-        HotkeyService hotkeys,
-        ILogger log)
+    public GameEditorViewModel(GameEntry game, bool isNew, GameEditorContext context, GameEditorServices services)
     {
         ArgumentNullException.ThrowIfNull(game);
-        ArgumentNullException.ThrowIfNull(profiles);
-        ArgumentNullException.ThrowIfNull(games);
-        ArgumentNullException.ThrowIfNull(catalog);
-        ArgumentNullException.ThrowIfNull(hotkeys);
-        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(services);
 
         _original = game;
         _initial = game;
         Saved = game;
-        _profiles = profiles;
-        _games = games;
-        _catalog = catalog;
-        _hotkeyRecorder = new HotkeyRecorder(hotkeys, HotkeyUseKind.Game, game.Id);
-        _log = log.ForContext<GameEditorViewModel>();
+        _profiles = context.Profiles;
+        _games = context.Games;
+        _catalog = services.Catalog;
+        _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id);
+        _log = services.Log.ForContext<GameEditorViewModel>();
         _launch = game.Launch;
         IsNew = isNew;
 
@@ -77,7 +63,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == ExitKeyOf(game.Exit)) ?? ExitChoices[0];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(game.Icon)) ?? IconChoices[0];
 
-        AppList = new AppListEditor(game.Apps, showWhen: true, appsWaitDevice, appPicker, "Game_AddTool");
+        AppList = new AppListEditor(game.Apps, showWhen: true, context.AppsWaitDevice, services.AppPicker, "Game_AddTool");
         AppList.Changed += OnPartChanged;
         Loc.Instance.PropertyChanged += OnLanguageChanged;
         _loading = false;
