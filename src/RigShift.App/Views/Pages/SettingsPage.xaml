@@ -49,18 +49,16 @@
                 Width="180"
                 AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
                 AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
-                GotKeyboardFocus="OnToggleHotkeyGotFocus"
+                controls:HotkeyBox.Field="{Binding}"
                 IsReadOnly="True"
                 IsReadOnlyCaretVisible="False"
-                LostKeyboardFocus="OnToggleHotkeyLostFocus"
-                PreviewKeyDown="OnToggleHotkeyKeyDown"
                 Style="{StaticResource RigShift.Field.Value}"
                 Text="{Binding ToggleHotkeyText, Mode=OneWay}"
                 ToolTip="{loc:Tr Hotkey_RecordTip}" />
               <Button
                 Margin="8,0,0,0"
                 AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
-                Command="{Binding ClearToggleHotkeyCommand}"
+                Command="{Binding ClearHotkeyCommand}"
                 IsEnabled="{Binding HasToggleHotkey}"
                 Style="{StaticResource RigShift.Button.Icon}"
                 ToolTip="{loc:Tr Editor_HotkeyClear}">

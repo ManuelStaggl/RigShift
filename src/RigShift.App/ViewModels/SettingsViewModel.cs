@@ -10,16 +10,14 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-public sealed partial class SettingsViewModel : ObservableObject
+public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
 {
     private const int DefaultConfirmSeconds = 15;
 
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
-    private readonly HotkeyService _hotkeys;
+    private readonly HotkeyRecorder _toggleHotkeyRecorder;
     private readonly ILogger _log;
-    private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
-    private HotkeyUse? _hotkeyConflict;
     private bool _loading;
 
     public SettingsViewModel(
@@ -30,15 +28,14 @@ public sealed partial class SettingsViewModel : ObservableObject
         ShowUpdateSetting = !updatePolicy.ChecksDisabled;
         _settings = settings;
         _catalog = catalog;
-        _hotkeys = hotkeys;
+        _toggleHotkeyRecorder = new HotkeyRecorder(hotkeys, HotkeyUseKind.Toggle, Guid.Empty, "Settings_ToggleHotkeyHint");
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
-        ToggleHotkeyHint = HotkeyHintText();
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
-            ToggleHotkeyHint = HotkeyHintText();
+            OnPropertyChanged(nameof(ToggleHotkeyHint));
             Load();
         };
     }
@@ -78,62 +75,35 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public bool HasToggleHotkey => ToggleHotkey is not null;
 
-    [ObservableProperty]
-    public partial string ToggleHotkeyHint { get; set; }
+    /// <summary>The line under the hotkey field: what it does, or why the last combination was refused.</summary>
+    public string ToggleHotkeyHint => _toggleHotkeyRecorder.Hint;
 
     /// <summary>The hotkey field took the focus: RigShift's own hotkeys must not fire while a combination is pressed.</summary>
-    public void BeginHotkeyRecording() => _hotkeys.Suspend();
+    public void BeginHotkeyRecording() => _toggleHotkeyRecorder.Begin();
 
-    public void EndHotkeyRecording() => _hotkeys.Resume();
+    public void EndHotkeyRecording() => _toggleHotkeyRecorder.End();
 
-    /// <summary>A key combination pressed in the hotkey field; only Ctrl, Alt or Win with another key is accepted.</summary>
-    internal void RecordToggleHotkey(HotkeyModifiers modifiers, int virtualKey)
+    /// <summary>A key combination pressed in the hotkey field; saved at once, like every setting on this page.</summary>
+    public void RecordHotkey(HotkeyModifiers modifiers, int virtualKey)
     {
-        var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
-        if (!hotkey.IsValid)
+        if (_toggleHotkeyRecorder.Record(modifiers, virtualKey) is { } hotkey)
         {
-            SetToggleHotkeyHint("Editor_HotkeyNeedsModifier");
-            return;
+            ToggleHotkey = hotkey;
+            _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
+            Persist(s => s with { ToggleHotkey = hotkey });
         }
 
-        // Hotkeys are suspended while the field has the focus, so this only sees other applications.
-        if (!_hotkeys.IsAvailable(hotkey))
-        {
-            SetToggleHotkeyHint("Problem_HotkeyInUse");
-            return;
-        }
-
-        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
-        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Toggle, Guid.Empty) is { } use)
-        {
-            _hotkeyConflict = use;
-            ToggleHotkeyHint = HotkeyHintText();
-            return;
-        }
-
-        ToggleHotkey = hotkey;
-        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
-        _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
-        Persist(s => s with { ToggleHotkey = hotkey });
+        OnPropertyChanged(nameof(ToggleHotkeyHint));
     }
 
     [RelayCommand]
-    private void ClearToggleHotkey()
+    public void ClearHotkey()
     {
         ToggleHotkey = null;
-        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
+        _toggleHotkeyRecorder.Reset();
+        OnPropertyChanged(nameof(ToggleHotkeyHint));
         _log.Information("Toggle hotkey removed");
         Persist(s => s with { ToggleHotkey = null });
-    }
-
-    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
-    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_toggleHotkeyHintKey];
-
-    private void SetToggleHotkeyHint(string key)
-    {
-        _hotkeyConflict = null;
-        _toggleHotkeyHintKey = key;
-        ToggleHotkeyHint = Loc.Instance[key];
     }
 
     public void Load()

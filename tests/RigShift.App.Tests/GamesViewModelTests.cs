@@ -3,9 +3,11 @@ using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
+using RigShift.App.Views;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
 using Serilog.Core;
@@ -42,7 +44,7 @@ public sealed class GamesViewModelTests : IDisposable
         _hotkeys = _ui.Invoke(() => new HotkeyService(
             _host.Catalog, _catalog, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar()));
         _dialogs = new Dialogs(new GameDialogs(
-            _catalog, _host.Catalog, Substitute.For<IGameLibrary>(), Substitute.For<IWindowLayout>(), _host.Usb, _host.Settings, _hotkeys, Logger.None));
+            _catalog, _host.Catalog, Substitute.For<IGameLibrary>(), Substitute.For<IWindowLayout>(), _host.Usb, _host.Settings, _hotkeys, new FakeAppPicker(), Logger.None));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -114,6 +116,47 @@ public sealed class GamesViewModelTests : IDisposable
         _store.Games.Select(g => g.Name).ShouldBe(["iRacing 2", "Assetto Corsa"]);
         page.SelectedItem.ShouldNotBeNull().Game.Id.ShouldBe(game.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Saved", "iRacing 2"));
+    });
+
+    [Fact]
+    public Task PickGame_AProgram_GoesIntoTheEditor_AndCancellingChangesNothing() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing", process: "iRacingSim64DX11");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await page.PickGameCommand.ExecuteAsync(null);
+        editor.IsDirty.ShouldBeFalse();
+
+        _dialogs.PickedGame = new PickedGame(null, @"D:GamesAMS2AMS2AVX.exe");
+        await page.PickGameCommand.ExecuteAsync(null);
+
+        editor.LaunchText.ShouldBe(@"D:GamesAMS2AMS2AVX.exe");
+        editor.ProcessName.ShouldBeEmpty("the learned process belongs to the old game");
+        editor.IsDirty.ShouldBeTrue();
+    });
+
+    [Fact]
+    public Task CaptureWindows_StartsFromTheEntrysWindows_AndTakesWhatWasCaptured() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        var layout = new WindowLayout
+        {
+            CapturedAt = DateTimeOffset.UtcNow,
+            Windows = [new WindowPlacement { ProcessName = "SimHub", Title = "SimHub", Bounds = new PixelRect(0, 0, 800, 600) }],
+        };
+
+        page.CaptureWindowsCommand.Execute(null);
+        editor.HasWindows.ShouldBeFalse();
+
+        _dialogs.Captured = layout;
+        page.CaptureWindowsCommand.Execute(null);
+
+        _dialogs.CaptureOpenedWith.ShouldBe([null, null]);
+        editor.WindowLayout.ShouldBe(layout);
+        editor.IsDirty.ShouldBeTrue();
     });
 
     [Fact]
@@ -528,6 +571,20 @@ public sealed class GamesViewModelTests : IDisposable
         public Task<AddedGames> AddInstalledAsync() => Installed();
 
         public string? PickExecutable() => Executable;
+
+        public PickedGame? PickedGame { get; set; }
+
+        public WindowLayout? Captured { get; set; }
+
+        public List<WindowLayout?> CaptureOpenedWith { get; } = [];
+
+        public Task<PickedGame?> PickGameAsync() => Task.FromResult(PickedGame);
+
+        public WindowLayout? CaptureWindows(WindowLayout? current)
+        {
+            CaptureOpenedWith.Add(current);
+            return Captured;
+        }
 
         public Task<bool> ConfirmDeleteAsync(string name)
         {

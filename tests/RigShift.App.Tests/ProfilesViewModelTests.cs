@@ -54,7 +54,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         IServiceProvider services = Substitute.For<IServiceProvider>();
         services.GetService(typeof(IUsbPowerCheck)).Returns(powerCheck);
         _dialogs = new Dialogs(new ProfileDialogs(
-            _host.Catalog, _display, audio, _host.Settings, _hotkeys, _host.Usb, _desktopIcons, surround, services, Logger.None));
+            _host.Catalog, _display, audio, _host.Settings, _hotkeys, _host.Usb, _desktopIcons, surround, new FakeAppPicker(), services, Logger.None));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

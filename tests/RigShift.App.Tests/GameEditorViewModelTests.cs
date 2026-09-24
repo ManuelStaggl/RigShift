@@ -5,6 +5,7 @@ using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
@@ -123,14 +124,14 @@ public sealed class GameEditorViewModelTests : IDisposable
         GameEditorViewModel editor = Editor(Game("iRacing"));
 
         editor.LaunchTarget = " ";
-        editor.AddApp(string.Empty);
+        editor.AppList.Add(string.Empty);
 
         editor.HasLaunchProblem.ShouldBeTrue();
         editor.HasGameTabProblem.ShouldBeTrue();
         editor.HasAppsProblem.ShouldBeTrue();
         editor.ProblemCount.ShouldBe(2);
 
-        editor.Apps[0].Path = @"C:\Tools\CrewChief.exe";
+        editor.AppList.Items[0].Path = @"C:\Tools\CrewChief.exe";
         editor.HasAppsProblem.ShouldBeFalse();
         editor.ProblemCount.ShouldBe(1);
     }
@@ -275,11 +276,11 @@ public sealed class GameEditorViewModelTests : IDisposable
         };
         GameEditorViewModel editor = Editor(game);
 
-        editor.MoveAppUpCommand.Execute(editor.Apps[0]);
+        editor.AppList.MoveUpCommand.Execute(editor.AppList.Items[0]);
         editor.IsDirty.ShouldBeFalse("the first app cannot move up");
 
-        editor.MoveAppDownCommand.Execute(editor.Apps[0]);
-        editor.RemoveAppCommand.Execute(editor.Apps[2]);
+        editor.AppList.MoveDownCommand.Execute(editor.AppList.Items[0]);
+        editor.AppList.RemoveCommand.Execute(editor.AppList.Items[2]);
 
         editor.ToGame().Apps.Select(a => a.Path).ShouldBe([@"C:\b.exe", @"C:\a.exe"]);
         editor.IsDirty.ShouldBeTrue();
@@ -301,7 +302,7 @@ public sealed class GameEditorViewModelTests : IDisposable
     {
         GameEditorViewModel editor = Editor(Game("iRacing"));
 
-        editor.SelectedUsbDevice = editor.UsbDevices.First(c => c.Key == Wheelbase);
+        editor.AppList.WaitDevice.Selected = editor.AppList.WaitDevice.Choices.First(c => c.Key == Wheelbase);
 
         GameEntry built = editor.ToGame();
         built.AppsWaitForUsbDeviceId.ShouldBe(Wheelbase);
@@ -420,8 +421,8 @@ public sealed class GameEditorViewModelTests : IDisposable
             isNew,
             profiles ?? [],
             games ?? [game],
-            [new Choice(null, "Start right away"), new Choice(Wheelbase, "Wheelbase")],
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [Wheelbase] = "Fanatec Wheelbase" },
+            new AppsWaitDeviceChoice(game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, [new UsbDevice(Wheelbase, "Fanatec Wheelbase")], [], null),
+            new FakeAppPicker(),
             catalog ?? _catalog,
             _hotkeys,
             Logger.None);

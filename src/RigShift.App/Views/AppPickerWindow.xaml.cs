@@ -11,9 +11,6 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Views;
 
-/// <summary>Result of the picker: the path and, for an installed or running app, its display name.</summary>
-public sealed record PickedApp(string Path, string? Name);
-
 /// <summary>Picks a program for a profile: installed and running apps, or any file (finding HW-11).</summary>
 public partial class AppPickerWindow : FluentWindow
 {

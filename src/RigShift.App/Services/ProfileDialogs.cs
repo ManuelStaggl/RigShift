@@ -61,6 +61,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     private readonly HotkeyService _hotkeys;
     private readonly IUsbDeviceList _usbDevices;
     private readonly ISurroundController _surround;
+    private readonly IAppPicker _appPicker;
     private readonly IServiceProvider _services;
     private readonly ILogger _log;
 
@@ -73,6 +74,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         IUsbDeviceList usbDevices,
         IDesktopIcons desktopIcons,
         ISurroundController surround,
+        IAppPicker appPicker,
         IServiceProvider services,
         ILogger log)
     {
@@ -85,6 +87,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         _usbDevices = usbDevices;
         _desktopIcons = desktopIcons;
         _surround = surround;
+        _appPicker = appPicker;
         _services = services;
         _log = log.ForContext<ProfileDialogs>();
     }
@@ -137,9 +140,11 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         var rules = new ProfileRulesEditor(
             profile.Id, settings.AutomationRules ?? [], _catalog.Profiles, settings.DefaultProfileId, usbDevices, settings.UsbDeviceNames,
             _services.GetRequiredService<IUsbPowerCheck>(), _log);
+        var appsWaitDevice = new AppsWaitDeviceChoice(
+            profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDevices,
+            UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
         return new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
-            [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
+            profile, isNew, playback, recording, appsWaitDevice, _appPicker,
             confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, rules, _catalog, _display, _desktopIcons, _hotkeys, _settings, _log);
     }
 

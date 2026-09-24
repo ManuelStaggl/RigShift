@@ -18,6 +18,10 @@ public static class HotkeyBox
     public static readonly DependencyProperty FieldProperty = DependencyProperty.RegisterAttached(
         "Field", typeof(IHotkeyField), typeof(HotkeyBox), new PropertyMetadata(null, OnFieldChanged));
 
+    /// <summary>The field recording began on; it ends there, also when another editor took the box meanwhile.</summary>
+    private static readonly DependencyProperty RecordingProperty = DependencyProperty.RegisterAttached(
+        "Recording", typeof(IHotkeyField), typeof(HotkeyBox), new PropertyMetadata(null));
+
     public static IHotkeyField? GetField(DependencyObject element)
     {
         ArgumentNullException.ThrowIfNull(element);
@@ -32,15 +36,37 @@ public static class HotkeyBox
 
     private static void OnFieldChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        // The handlers look the field up when they run, so a new editor behind the same box needs no new handlers.
-        if (d is not TextBox box || e.OldValue is not null || e.NewValue is null)
+        if (d is not TextBox box)
         {
             return;
         }
 
-        box.GotKeyboardFocus += (_, _) => GetField(box)?.BeginHotkeyRecording();
-        box.LostKeyboardFocus += (_, _) => GetField(box)?.EndHotkeyRecording();
+        // The handlers look the field up when they run, so a new editor behind the same box needs no new handlers.
+        // Removing first keeps them single when the field goes to null and back (no selection, then a new one).
+        box.GotKeyboardFocus -= OnGotKeyboardFocus;
+        box.LostKeyboardFocus -= OnLostKeyboardFocus;
+        box.PreviewKeyDown -= OnPreviewKeyDown;
+        box.GotKeyboardFocus += OnGotKeyboardFocus;
+        box.LostKeyboardFocus += OnLostKeyboardFocus;
         box.PreviewKeyDown += OnPreviewKeyDown;
+    }
+
+    private static void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (sender is TextBox box && GetField(box) is { } field && box.GetValue(RecordingProperty) is null)
+        {
+            box.SetValue(RecordingProperty, field);
+            field.BeginHotkeyRecording();
+        }
+    }
+
+    private static void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (sender is TextBox box && box.GetValue(RecordingProperty) is IHotkeyField field)
+        {
+            box.ClearValue(RecordingProperty);
+            field.EndHotkeyRecording();
+        }
     }
 
     private static void OnPreviewKeyDown(object sender, KeyEventArgs e)

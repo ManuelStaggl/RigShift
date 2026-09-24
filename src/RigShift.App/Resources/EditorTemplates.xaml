@@ -1,0 +1,218 @@
+<!--
+  Parts the profile and the game editor share. The app list: the USB device the programs wait for, one card per program,
+  the add button. "Before / after the game" only shows in the game editor (AppEditItem.ShowWhen).
+-->
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:controls="clr-namespace:RigShift.App.Controls"
+  xmlns:loc="clr-namespace:RigShift.App.Localization"
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels">
+
+  <!-- Its own copy: a template in a merged dictionary sees the dictionaries merged before it, not the resources App.xaml
+       declares after them (a missing BoolToVisibility left the Apps tab blank). -->
+  <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+  <DataTemplate DataType="{x:Type vm:AppListEditor}">
+    <StackPanel>
+      <controls:SettingRow Caption="{loc:Tr Editor_AppsWaitHint}" Title="{loc:Tr Editor_AppsWaitDevice}">
+        <ComboBox
+          Width="260"
+          AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
+          AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
+          DisplayMemberPath="Name"
+          ItemsSource="{Binding WaitDevice.Choices}"
+          SelectedItem="{Binding WaitDevice.Selected}"
+          Style="{StaticResource RigShift.Select}" />
+      </controls:SettingRow>
+      <controls:InfoBar
+        Margin="0,16,0,0"
+        Kind="Error"
+        Text="{Binding Problem}"
+        Visibility="{Binding HasProblem, Converter={StaticResource BoolToVisibility}}" />
+      <ItemsControl
+        Margin="0,16,0,0"
+        Focusable="False"
+        ItemsSource="{Binding Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:AppEditItem}">
+            <!-- Two rows so the name and path keep their room at the smallest window width: program and
+                 card actions on top, the settings of the action below. -->
+            <Border
+              Margin="0,0,0,8"
+              Padding="16,12"
+              Style="{StaticResource RigShift.Card}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" MinWidth="160" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
+                <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
+                  <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
+                    <ui:SymbolIcon.Style>
+                      <Style TargetType="ui:SymbolIcon">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </ui:SymbolIcon.Style>
+                  </ui:SymbolIcon>
+                  <Image Source="{Binding Icon}" />
+                </Grid>
+                <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                  <TextBlock
+                    Style="{StaticResource RigShift.Text.BodyStrong}"
+                    Text="{Binding DisplayName}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap" />
+                  <!-- What is wrong with the path stands in words before it; colour alone does not carry it. -->
+                  <DockPanel>
+                    <TextBlock
+                      Margin="0,0,8,0"
+                      DockPanel.Dock="Left"
+                      Foreground="{DynamicResource RigShift.Brush.Error}"
+                      Style="{StaticResource RigShift.Text.ValueSecondary}"
+                      Text="{Binding PathNote}"
+                      Visibility="{Binding HasPathNote, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock
+                      Style="{StaticResource RigShift.Text.ValueSecondary}"
+                      Text="{Binding Path}"
+                      TextTrimming="CharacterEllipsis"
+                      TextWrapping="NoWrap"
+                      ToolTip="{Binding Path}" />
+                  </DockPanel>
+                </StackPanel>
+                <Button
+                  Grid.Column="2"
+                  Height="28"
+                  Margin="0,0,8,0"
+                  VerticalAlignment="Center"
+                  AutomationProperties.HelpText="{Binding DisplayName}"
+                  Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding}"
+                  Content="{loc:Tr App_Change}"
+                  Style="{StaticResource RigShift.Button}"
+                  ToolTip="{loc:Tr App_Browse}" />
+                <Button
+                  Grid.Column="3"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{loc:Tr App_MoveUp}"
+                  Command="{Binding DataContext.MoveUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding}"
+                  Style="{StaticResource RigShift.Button.Icon}"
+                  ToolTip="{loc:Tr App_MoveUp}">
+                  <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
+                </Button>
+                <Button
+                  Grid.Column="4"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{loc:Tr App_MoveDown}"
+                  Command="{Binding DataContext.MoveDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding}"
+                  Style="{StaticResource RigShift.Button.Icon}"
+                  ToolTip="{loc:Tr App_MoveDown}">
+                  <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
+                </Button>
+                <Button
+                  Grid.Column="5"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{loc:Tr App_Remove}"
+                  Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding}"
+                  Style="{StaticResource RigShift.Button.IconDanger}"
+                  ToolTip="{loc:Tr App_Remove}">
+                  <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
+                </Button>
+
+                <Grid
+                  Grid.Row="1"
+                  Grid.Column="1"
+                  Grid.ColumnSpan="5"
+                  Margin="0,12,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Margin="0,0,8,0">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Action}" />
+                    <ComboBox
+                      Width="120"
+                      AutomationProperties.Name="{loc:Tr App_Action}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding KindChoices}"
+                      SelectedItem="{Binding SelectedKind}"
+                      Style="{StaticResource RigShift.Select}" />
+                  </StackPanel>
+                  <StackPanel
+                    Grid.Column="1"
+                    Margin="0,0,8,0"
+                    Visibility="{Binding ShowWhen, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_When}" />
+                    <ComboBox
+                      Width="175"
+                      AutomationProperties.Name="{loc:Tr App_When}"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{Binding WhenChoices}"
+                      SelectedItem="{Binding SelectedWhen}"
+                      Style="{StaticResource RigShift.Select}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_WaitShort}" />
+                    <ui:NumberBox
+                      Width="64"
+                      HorizontalAlignment="Left"
+                      AutomationProperties.Name="{loc:Tr App_Wait}"
+                      ClearButtonEnabled="False"
+                      MaxDecimalPlaces="0"
+                      Maximum="300"
+                      Minimum="0"
+                      PlaceholderText="0"
+                      SmallChange="1"
+                      SpinButtonPlacementMode="Hidden"
+                      Style="{StaticResource RigShift.Number}"
+                      ToolTip="{loc:Tr App_Wait}"
+                      Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                  </StackPanel>
+                  <StackPanel
+                    Grid.Column="3"
+                    Margin="8,0,0,0"
+                    Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
+                    <TextBox
+                      AutomationProperties.Name="{loc:Tr App_Arguments}"
+                      Style="{StaticResource RigShift.Field.Value}"
+                      Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                  </StackPanel>
+                </Grid>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Button
+        HorizontalAlignment="Left"
+        Command="{Binding AddPickedCommand}"
+        Style="{StaticResource RigShift.Button}">
+        <StackPanel Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Add16" />
+          <TextBlock Text="{Binding AddText}" />
+        </StackPanel>
+      </Button>
+    </StackPanel>
+  </DataTemplate>
+</ResourceDictionary>

@@ -47,6 +47,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     private readonly FakeHotkeyRegistrar _registrar = new();
     private readonly HotkeyService _hotkeys;
     private readonly IDesktopIcons _desktopIcons = Substitute.For<IDesktopIcons>();
+    private readonly FakeAppPicker _picker = new();
     private readonly List<ProfileEditorViewModel> _editors = [];
 
     public ProfileEditorViewModelTests()
@@ -322,11 +323,12 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         Profile rig = Rig() with { Apps = [new AppAction { Path = @"C:\a.exe" }, new AppAction { Path = @"C:\b.exe" }] };
         ProfileEditorViewModel editor = await EditorAsync(rig);
 
-        editor.AddApp(string.Empty);
+        editor.AppList.Add(string.Empty);
         editor.AppsProblem.ShouldBe(Loc.Instance["Problem_AppPathMissing"]);
+        editor.AppList.Problem.ShouldBe(editor.AppsProblem, "the list shows it above the cards");
 
-        editor.RemoveAppCommand.Execute(editor.Apps[2]);
-        editor.MoveAppDownCommand.Execute(editor.Apps[0]);
+        editor.AppList.RemoveCommand.Execute(editor.AppList.Items[2]);
+        editor.AppList.MoveDownCommand.Execute(editor.AppList.Items[0]);
         editor.HasAppsProblem.ShouldBeFalse();
 
         await SaveAsync(editor, expected: true);
@@ -340,11 +342,11 @@ public sealed class ProfileEditorViewModelTests : IDisposable
 
         ProfileEditorViewModel editor = await EditorAsync(rig);
 
-        editor.SelectedAppsWaitDevice.ShouldNotBeNull().Key.ShouldBe("VID_1111&PID_2222");
-        editor.SelectedAppsWaitDevice.Name.ShouldContain("Pedals");
+        editor.AppList.WaitDevice.Selected.ShouldNotBeNull().Key.ShouldBe("VID_1111&PID_2222");
+        editor.AppList.WaitDevice.Selected.Name.ShouldContain("Pedals");
         editor.IsDirty.ShouldBeFalse();
 
-        editor.SelectedAppsWaitDevice = editor.AppsWaitDeviceChoices.First(c => c.Key == Wheelbase);
+        editor.AppList.WaitDevice.Selected = editor.AppList.WaitDevice.Choices.First(c => c.Key == Wheelbase);
         await SaveAsync(editor, expected: true);
         Profile saved = _host.Store.Profiles.ShouldHaveSingleItem();
         saved.AppsWaitForUsbDeviceId.ShouldBe(Wheelbase);
@@ -492,9 +494,8 @@ public sealed class ProfileEditorViewModelTests : IDisposable
             isNew,
             [new AudioDeviceInfo(Speakers, AudioDirection.Render, true, AudioRoleMask.Console), new AudioDeviceInfo(Headset, AudioDirection.Render, true, 0)],
             [new AudioDeviceInfo(Microphone, AudioDirection.Capture, true, AudioRoleMask.Console)],
-            connected,
-            null,
-            [],
+            new AppsWaitDeviceChoice(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, connected, [], null),
+            _picker,
             confirmationEnabled: true,
             surround ?? SurroundState.Unavailable(SurroundAvailability.Unknown),
             rules,

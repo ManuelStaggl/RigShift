@@ -9,12 +9,15 @@ using RigShift.Core.Profiles;
 
 namespace RigShift.App.ViewModels;
 
+/// <summary>Result of the picker: the path and, for an installed or running app, its display name.</summary>
+public sealed record PickedApp(string Path, string? Name);
+
 /// <summary>Picks a program for an app entry; a window in the app, a script in tests.</summary>
 public interface IAppPicker
 {
     /// <summary>The program picked, or <c>null</c> when the user cancelled.</summary>
     /// <param name="currentPath">The entry's program, to start from; <c>null</c> for a new entry.</param>
-    Views.PickedApp? Pick(string? currentPath);
+    PickedApp? Pick(string? currentPath);
 }
 
 /// <summary>
@@ -48,7 +51,10 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
         waitDevice.PropertyChanged += OnWaitDeviceChanged;
     }
 
-    /// <summary>Raised on every change to the list, an entry or the device.</summary>
+    /// <summary>
+    /// Raised on every change to the list, an entry or the device – and on new texts of an entry, which change nothing:
+    /// the editor compares what it builds with what is saved, so it does not need to tell them apart.
+    /// </summary>
     public event EventHandler? Changed;
 
     public ObservableCollection<AppEditItem> Items { get; } = [];
@@ -58,6 +64,13 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
     public AppsWaitDeviceChoice WaitDevice { get; }
 
     public string AddText => Loc.Instance[_addTextKey];
+
+    /// <summary>What is wrong with the list, shown above it; set by the editor, which validates the whole entry.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProblem))]
+    public partial string? Problem { get; set; }
+
+    public bool HasProblem => Problem is not null;
 
     public IReadOnlyList<AppAction> Build() => [.. Items.Select(a => a.ToAction())];
 

@@ -158,6 +158,34 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         Log.Information("New game started from {Path}", path);
     }
 
+    /// <summary>"Choose…" on the Game tab: an installed game or a program for the entry being edited.</summary>
+    [RelayCommand]
+    private async Task PickGameAsync()
+    {
+        if (Editor is not { } editor || await _dialogs.PickGameAsync() is not { } picked)
+        {
+            return;
+        }
+
+        if (picked.Installed is { } installed)
+        {
+            editor.SetLaunch(installed);
+        }
+        else if (picked.ExecutablePath is { } path)
+        {
+            editor.SetExecutable(path);
+        }
+    }
+
+    [RelayCommand]
+    private void CaptureWindows()
+    {
+        if (Editor is { } editor && _dialogs.CaptureWindows(editor.WindowLayout) is { } captured)
+        {
+            editor.WindowLayout = captured;
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanPlay))]
     private void Play()
     {

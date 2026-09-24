@@ -442,7 +442,7 @@
                     <Button
                       Margin="16,0,0,0"
                       VerticalAlignment="Center"
-                      Click="OnPickGame"
+                      Command="{Binding DataContext.PickGameCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                       Content="{loc:Tr Game_Choose}"
                       DockPanel.Dock="Right"
                       Style="{StaticResource RigShift.Button}" />
@@ -546,15 +546,12 @@
                   </controls:SettingRow.Style>
                   <StackPanel Orientation="Horizontal">
                     <TextBox
-                      x:Name="HotkeyBox"
                       Width="200"
                       AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
                       AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
-                      GotKeyboardFocus="OnHotkeyGotFocus"
+                      controls:HotkeyBox.Field="{Binding}"
                       IsReadOnly="True"
                       IsReadOnlyCaretVisible="False"
-                      LostKeyboardFocus="OnHotkeyLostFocus"
-                      PreviewKeyDown="OnHotkeyKeyDown"
                       Style="{StaticResource RigShift.Field.Value}"
                       Text="{Binding HotkeyText, Mode=OneWay}"
                       ToolTip="{loc:Tr Hotkey_RecordTip}"
@@ -683,200 +680,7 @@
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Game_ToolsIntro}"
                   TextWrapping="Wrap" />
-                <controls:SettingRow Caption="{loc:Tr Editor_AppsWaitHint}" Title="{loc:Tr Editor_AppsWaitDevice}">
-                  <ComboBox
-                    Width="260"
-                    AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
-                    AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding UsbDevices}"
-                    SelectedItem="{Binding SelectedUsbDevice}"
-                    Style="{StaticResource RigShift.Select}" />
-                </controls:SettingRow>
-                <controls:InfoBar
-                  Margin="0,16,0,0"
-                  Kind="Error"
-                  Text="{Binding AppsProblem}"
-                  Visibility="{Binding HasAppsProblem, Converter={StaticResource BoolToVisibility}}" />
-                <ItemsControl
-                  Margin="0,16,0,0"
-                  Focusable="False"
-                  ItemsSource="{Binding Apps}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:AppEditItem}">
-                      <!-- Two rows so the name and path keep their room at the smallest window width: program and
-                           card actions on top, the settings of the action below. -->
-                      <Border
-                        Margin="0,0,0,8"
-                        Padding="16,12"
-                        Style="{StaticResource RigShift.Card}">
-                        <Grid>
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" MinWidth="160" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                          </Grid.ColumnDefinitions>
-                          <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                          </Grid.RowDefinitions>
-                          <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
-                          <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
-                            <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
-                              <ui:SymbolIcon.Style>
-                                <Style TargetType="ui:SymbolIcon">
-                                  <Setter Property="Visibility" Value="Collapsed" />
-                                  <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
-                                      <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                  </Style.Triggers>
-                                </Style>
-                              </ui:SymbolIcon.Style>
-                            </ui:SymbolIcon>
-                            <Image Source="{Binding Icon}" />
-                          </Grid>
-                          <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
-                            <TextBlock
-                              Style="{StaticResource RigShift.Text.BodyStrong}"
-                              Text="{Binding DisplayName}"
-                              TextTrimming="CharacterEllipsis"
-                              TextWrapping="NoWrap" />
-                            <!-- What is wrong with the path stands in words before it; colour alone does not carry it. -->
-                            <DockPanel>
-                              <TextBlock
-                                Margin="0,0,8,0"
-                                DockPanel.Dock="Left"
-                                Foreground="{DynamicResource RigShift.Brush.Error}"
-                                Style="{StaticResource RigShift.Text.ValueSecondary}"
-                                Text="{Binding PathNote}"
-                                Visibility="{Binding HasPathNote, Converter={StaticResource BoolToVisibility}}" />
-                              <TextBlock
-                                Style="{StaticResource RigShift.Text.ValueSecondary}"
-                                Text="{Binding Path}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap"
-                                ToolTip="{Binding Path}" />
-                            </DockPanel>
-                          </StackPanel>
-                          <Button
-                            Grid.Column="2"
-                            Height="28"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            AutomationProperties.HelpText="{Binding DisplayName}"
-                            Click="OnBrowseApp"
-                            Content="{loc:Tr App_Change}"
-                            Style="{StaticResource RigShift.Button}"
-                            ToolTip="{loc:Tr App_Browse}" />
-                          <Button
-                            Grid.Column="3"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_MoveUp}"
-                            Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.Icon}"
-                            ToolTip="{loc:Tr App_MoveUp}">
-                            <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
-                          </Button>
-                          <Button
-                            Grid.Column="4"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_MoveDown}"
-                            Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.Icon}"
-                            ToolTip="{loc:Tr App_MoveDown}">
-                            <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
-                          </Button>
-                          <Button
-                            Grid.Column="5"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_Remove}"
-                            Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.IconDanger}"
-                            ToolTip="{loc:Tr App_Remove}">
-                            <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
-                          </Button>
-
-                          <Grid
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="5"
-                            Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,8,0">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Action}" />
-                              <ComboBox
-                                Width="120"
-                                AutomationProperties.Name="{loc:Tr App_Action}"
-                                DisplayMemberPath="Name"
-                                ItemsSource="{Binding KindChoices}"
-                                SelectedItem="{Binding SelectedKind}"
-                                Style="{StaticResource RigShift.Select}" />
-                            </StackPanel>
-                              <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_When}" />
-                                <ComboBox
-                                  Width="175"
-                                  AutomationProperties.Name="{loc:Tr App_When}"
-                                  DisplayMemberPath="Name"
-                                  ItemsSource="{Binding WhenChoices}"
-                                  SelectedItem="{Binding SelectedWhen}"
-                                  Style="{StaticResource RigShift.Select}" />
-                              </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_WaitShort}" />
-                              <StackPanel Orientation="Horizontal">
-                                <ui:NumberBox
-                                  Width="64"
-                                  AutomationProperties.Name="{loc:Tr App_Wait}"
-                                  ClearButtonEnabled="False"
-                                  MaxDecimalPlaces="0"
-                                  Maximum="300"
-                                  Minimum="0"
-                                  PlaceholderText="0"
-                                  SmallChange="1"
-                                  SpinButtonPlacementMode="Hidden"
-                                  Style="{StaticResource RigShift.Number}"
-                                  ToolTip="{loc:Tr App_Wait}"
-                                  Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                              </StackPanel>
-                            </StackPanel>
-                            <StackPanel
-                              Grid.Column="3"
-                              Margin="8,0,0,0"
-                              Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
-                              <TextBox
-                                AutomationProperties.Name="{loc:Tr App_Arguments}"
-                                Style="{StaticResource RigShift.Field.Value}"
-                                Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-                          </Grid>
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <Button
-                  HorizontalAlignment="Left"
-                  Click="OnAddApp"
-                  Style="{StaticResource RigShift.Button}">
-                  <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Add16" />
-                    <TextBlock Text="{loc:Tr Game_AddTool}" />
-                  </StackPanel>
-                </Button>
+                <ContentPresenter Content="{Binding AppList}" />
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>
@@ -902,7 +706,7 @@
                       Visibility="{Binding HasWindows, Converter={StaticResource BoolToVisibility}}" />
                     <Button
                       Margin="8,0,0,0"
-                      Click="OnCaptureWindows"
+                      Command="{Binding DataContext.CaptureWindowsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                       Content="{loc:Tr Game_CaptureWindows}"
                       Style="{StaticResource RigShift.Button}" />
                   </StackPanel>
