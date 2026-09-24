@@ -42,7 +42,7 @@
   <data name="Restored_Title" xml:space="preserve"><value>{0} erkannt</value></data>
   <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Klicke hier, um auch Audio, Apps und die übrigen Einstellungen anzuwenden.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
-  <data name="Result_WaitingText" xml:space="preserve"><value>Nicht verbunden: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
+  <data name="Result_WaitingText" xml:space="preserve"><value>Nicht an oder nicht bereit: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>In den Einstellungen aus: Jedes Profil schaltet ohne Nachfrage um.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen umschalten. Bei manchen Monitoren, vor allem über HDMI, kann das Umschalten von HDR den Grafiktreiber einfrieren.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten erscheinen, sobald der Bildschirm einmal eingeschaltet war, während RigShift lief.</value></data>

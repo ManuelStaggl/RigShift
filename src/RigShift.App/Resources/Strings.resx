@@ -42,7 +42,7 @@
   <data name="Restored_Title" xml:space="preserve"><value>{0} recognized</value></data>
   <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to apply its audio, apps and other settings too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Switch on your display</value></data>
-  <data name="Result_WaitingText" xml:space="preserve"><value>Not connected: {0}. RigShift waits up to {1} seconds for it.</value></data>
+  <data name="Result_WaitingText" xml:space="preserve"><value>Not on or not ready: {0}. RigShift waits up to {1} seconds for it.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>Off in the settings: every profile switches without asking.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>Switch HDR on this display once in the Windows settings first. On some monitors, especially over HDMI, switching HDR can freeze the graphics driver.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates show up once this display was switched on while RigShift was running.</value></data>

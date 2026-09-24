@@ -175,16 +175,21 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_RequiredDisplayNeverWakes_IsBlockedAfterBudget_WithoutApplying()
+    public async Task Switch_RequiredDisplayNeverWakes_AsksForItAndBlocksAfterTheWait()
     {
+        // K-06: a monitor Windows lists but that does not answer used to mean 20 silent seconds and then a block.
         var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
+        SwitchOrchestrator orchestrator = Create(display);
+        IReadOnlyList<DisplayAssignment>? asked = null;
+        orchestrator.WaitingForDisplays += (_, displays) => asked = displays;
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Blocked);
         result.Message.ShouldNotBeNull().ShouldContain("AttachedButUnavailable");
+        asked.ShouldNotBeNull().ShouldHaveSingleItem().Identity.ShouldBe(Ultrawide);
         display.Applied.ShouldBeEmpty();
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(20));
+        _time.Elapsed.ShouldBe(new SwitchOptions().MissingDisplayWaitBudget);
     }
 
     [Fact]

@@ -79,8 +79,8 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Raised on the switch's thread when required displays are not connected and the switch waits for the user to switch
-    /// them on (finding HW-16). Carries those displays.
+    /// Raised on the switch's thread when required displays are not connected or not ready and the switch waits for the
+    /// user to switch them on (findings HW-16, K-06). Carries those displays.
     /// </summary>
     public event EventHandler<IReadOnlyList<DisplayAssignment>>? WaitingForDisplays;
 
@@ -233,8 +233,8 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Plans the profile and waits for its required displays: up to <see cref="SwitchOptions.TargetWaitBudget"/> for one
-    /// that sleeps, up to <see cref="SwitchOptions.MissingDisplayWaitBudget"/> for one that is not connected at all.
+    /// Plans the profile and waits up to <see cref="SwitchOptions.MissingDisplayWaitBudget"/> for its required displays
+    /// that are not connected or not ready, after asking the user to switch them on.
     /// </summary>
     private async Task<TopologyPlan> PlanAndWaitAsync(Profile profile, DisplaySnapshot snapshot, CancellationToken cancellationToken)
     {
@@ -246,19 +246,22 @@ public sealed class SwitchOrchestrator
             return plan;
         }
 
-        DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
-        List<DisplayAssignment> notConnected = [.. plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached).Select(m => m.Assignment)];
-        if (notConnected.Count > 0)
+        List<DisplayAssignment> notThere = [.. plan.Missing
+            .Where(m => !m.Assignment.IsOptional && m.Reason is MissingReason.NotAttached or MissingReason.AttachedButUnavailable)
+            .Select(m => m.Assignment)];
+        if (notThere.Count == 0)
         {
-            // A monitor that left the bus cannot be woken by software (no CEC on GPUs, DDC/CI needs the link): ask the user
-            // to switch it on and wait for it instead of blocking at once (finding HW-16).
-            _log.Information("Waiting up to {Seconds:0} s for required displays that are not connected: {Displays}",
-                _options.MissingDisplayWaitBudget.TotalSeconds, string.Join(", ", notConnected.Select(d => DisplayNames.Of(d))));
-            deadline = _time.GetUtcNow() + _options.MissingDisplayWaitBudget;
-            WaitingForDisplays?.Invoke(this, notConnected);
+            return plan;
         }
 
-        return await _topology.WaitForDisplaysAsync(profile, plan, deadline, force: false, includeDetached: notConnected.Count > 0, cancellationToken);
+        // A monitor that left the bus cannot be woken by software (no CEC on GPUs, DDC/CI needs the link): ask the user to
+        // switch it on and wait for it instead of blocking at once (finding HW-16). The same for one Windows still lists but
+        // that does not answer - that used to be 20 silent seconds and then a block (K-06).
+        _log.Information("Waiting up to {Seconds:0} s for required displays that are not connected or not ready: {Displays}",
+            _options.MissingDisplayWaitBudget.TotalSeconds, string.Join(", ", notThere.Select(d => DisplayNames.Of(d))));
+        WaitingForDisplays?.Invoke(this, notThere);
+        return await _topology.WaitForDisplaysAsync(
+            profile, plan, _time.GetUtcNow() + _options.MissingDisplayWaitBudget, force: false, includeDetached: true, cancellationToken);
     }
 
     /// <summary>How long the switch waits for "keep", or <c>null</c> when it does not ask.</summary>
