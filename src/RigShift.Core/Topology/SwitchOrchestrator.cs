@@ -400,7 +400,9 @@ public sealed class SwitchOrchestrator
         TopologyPlan plan = _planner.Plan(profile, snapshot);
         _topology.LogPlan(plan);
         _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
-        return await Finish(new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan }, started);
+
+        // Not through Finish: a switch waiting for "keep" next to this dry run still needs its record (K-05).
+        return new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan, Duration = _time.GetElapsedTime(started) };
     }
 
     /// <summary>
@@ -666,7 +668,8 @@ public sealed class SwitchOrchestrator
     /// Every way out of a switch passes here, so this is where the journal entry goes again – whether the switch was
     /// applied, blocked, failed or rolled back. Only an exception leaves it behind, and that is the case the next start
     /// should ask about. Clearing a record this switch never wrote is harmless: the app reads it once at startup,
-    /// before any switch can run.
+    /// before any switch can run, and only one switch runs at a time. A dry run runs next to a switch (B-13), so it never
+    /// comes here (K-05).
     /// </summary>
     private async Task<SwitchResult> Finish(SwitchResult result, long started)
     {

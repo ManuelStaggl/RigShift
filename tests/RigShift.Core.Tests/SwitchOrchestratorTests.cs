@@ -1486,6 +1486,23 @@ public sealed class SwitchOrchestratorTests
         _journal.Entry.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task DryRunDuringASwitch_KeepsItsRecord()
+    {
+        // K-05: "Check" on the profile page or `apply --dry-run` while a switch waits for "keep" took its way back away.
+        var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        Task<SwitchResult> switching = orchestrator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+        await orchestrator.CheckAsync(Profile("Desk", DeskModes), Ct);
+
+        _journal.Entry.ShouldNotBeNull().TargetProfileName.ShouldBe("Rig");
+        answer.SetResult(ConfirmationResult.Confirmed);
+        (await switching).Outcome.ShouldBe(SwitchOutcome.Applied);
+        _journal.Entry.ShouldBeNull();
+    }
+
     /// <summary>A blocked switch never touches the screens, so it must not leave a record asking to undo anything.</summary>
     [Fact]
     public async Task Switch_Blocked_RecordsNothing()
