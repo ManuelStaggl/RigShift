@@ -2,6 +2,8 @@ using System.Collections;
 using System.Globalization;
 using System.Resources;
 using RigShift.App.Localization;
+using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using Shouldly;
 using Xunit;
 
@@ -27,6 +29,25 @@ public sealed class LocalizationTests
         string[] extra = [.. Keys(CultureInfo.GetCultureInfo("de")).Except(Keys(CultureInfo.InvariantCulture)).Order(StringComparer.Ordinal)];
 
         extra.ShouldBeEmpty($"only in Strings.de.resx: {string.Join(", ", extra)}");
+    }
+
+    /// <summary>
+    /// The editors look a problem's text up by its name ("Problem_" + name), so no search for the key finds its users –
+    /// the 3.0 cleanup dropped four of them as unused, and the editor showed the bare key.
+    /// </summary>
+    [Fact]
+    public void EveryEditorProblem_HasAText()
+    {
+        string[] missing =
+        [
+            .. Enum.GetNames<ProfileProblem>().Concat(Enum.GetNames<GameProblem>())
+                .Select(name => "Problem_" + name)
+                .Distinct()
+                .Except(Keys(CultureInfo.InvariantCulture))
+                .Order(StringComparer.Ordinal),
+        ];
+
+        missing.ShouldBeEmpty($"missing in Strings.resx: {string.Join(", ", missing)}");
     }
 
     private static IEnumerable<string> Keys(CultureInfo culture)

@@ -168,8 +168,12 @@
   <data name="Audio_Unknown" xml:space="preserve"><value>{0} (auf diesem PC nicht gefunden)</value></data>
   <data name="Problem_NameMissing" xml:space="preserve"><value>Gib einen Namen ein.</value></data>
   <data name="Problem_NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 60 Zeichen lang sein.</value></data>
-  <data name="Problem_NameTaken" xml:space="preserve"><value>Es gibt schon ein Profil mit diesem Namen.</value></data>
-  <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Ein anderes Profil nutzt dieses Tastenkürzel schon.</value></data>
+  <data name="Problem_NameTaken" xml:space="preserve"><value>Dieser Name ist schon vergeben.</value></data>
+  <data name="Problem_HotkeyTaken" xml:space="preserve"><value>Dieses Tastenkürzel ist schon vergeben.</value></data>
+  <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>Das Tastenkürzel braucht Strg, Alt oder Win.</value></data>
+  <data name="Problem_NoDisplays" xml:space="preserve"><value>Das Profil braucht mindestens einen Bildschirm.</value></data>
+  <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Wähle eine Hauptanzeige.</value></data>
+  <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>Die Hauptanzeige kann nicht optional sein.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Eine andere App belegt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
 
   <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>„{0}“ nutzt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
