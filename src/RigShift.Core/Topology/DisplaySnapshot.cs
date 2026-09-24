@@ -11,6 +11,14 @@ public sealed record DisplaySnapshot
     public required DateTimeOffset TakenAt { get; init; }
 
     public required IReadOnlyList<AttachedDisplay> Displays { get; init; }
+
+    /// <summary>The active display on this monitor's target, or <c>null</c> while it is off or not connected.</summary>
+    public AttachedDisplay? FindActive(DisplayIdentity identity)
+    {
+        ArgumentNullException.ThrowIfNull(identity);
+        return Displays.FirstOrDefault(d => d.IsActive
+            && string.Equals(d.Identity.TargetDevicePath, identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase));
+    }
 }
 
 /// <summary>A display target the OS currently knows about, whether active or not.</summary>

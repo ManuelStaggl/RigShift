@@ -328,7 +328,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         {
             snapshot = await _display.QueryAsync(cancellationToken);
         }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
         {
             _log.Debug(ex, "Display names for Surround could not be read");
             return names;
