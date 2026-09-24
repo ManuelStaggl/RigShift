@@ -24,8 +24,8 @@ internal static class CommandLineClient
 
     private static ILogger Logger => Log.ForContext(typeof(CommandLineClient));
 
-    public static int Run(IReadOnlyList<string> args, CliRequest request) =>
-        Task.Run(() => RunAsync(args, request)).GetAwaiter().GetResult();
+    public static int Run(IReadOnlyList<string> args, CliRequest request, AppPaths paths) =>
+        Task.Run(() => RunAsync(args, request, paths)).GetAwaiter().GetResult();
 
     public static int ShowRunningInstance()
     {
@@ -38,7 +38,7 @@ internal static class CommandLineClient
         }).GetAwaiter().GetResult();
     }
 
-    private static async Task<int> RunAsync(IReadOnlyList<string> args, CliRequest request)
+    private static async Task<int> RunAsync(IReadOnlyList<string> args, CliRequest request, AppPaths paths)
     {
         try
         {
@@ -47,7 +47,7 @@ internal static class CommandLineClient
             {
                 if (request.Command is CliCommand.List or CliCommand.Status or CliCommand.Surround or CliCommand.Games)
                 {
-                    return Print(await RunHeadlessAsync(request));
+                    return Print(await RunHeadlessAsync(request, paths));
                 }
 
                 if (!StartTrayApp())
@@ -134,18 +134,18 @@ internal static class CommandLineClient
             && name.AsSpan(PipePrefix.Length).IndexOfAnyExceptInRange('0', '9') < 0;
     }
 
-    private static async Task<CliResponse> RunHeadlessAsync(CliRequest request)
+    private static async Task<CliResponse> RunHeadlessAsync(CliRequest request, AppPaths paths)
     {
         ILogger log = Log.Logger;
         var runner = new CommandRunner(
-            new JsonProfileStore(App.Paths.Profiles, log),
+            new JsonProfileStore(paths.Profiles, log),
             new CcdDisplayConfigurator(log, TimeProvider.System),
             new PolicyConfigAudioController(log),
             new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())),
             log,
             switcher: null,
             new NvSurroundController(new CcdDisplayConfigurator(log, TimeProvider.System), log),
-            new JsonGameStore(App.Paths.DataDirectory, log, TimeProvider.System),
+            new JsonGameStore(paths.DataDirectory, log, TimeProvider.System),
             player: null);
         return await runner.RunAsync(request, CancellationToken.None);
     }

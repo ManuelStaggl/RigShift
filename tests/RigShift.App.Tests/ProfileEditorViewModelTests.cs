@@ -489,22 +489,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
         powerCheck.Check(Arg.Any<string>()).Returns(new UsbPowerFindings());
         var rules = new ProfileRulesEditor(profile.Id, [], [profile], null, connected, null, powerCheck, Logger.None);
-        var editor = new ProfileEditorViewModel(
-            profile,
-            isNew,
+        var context = new ProfileEditorContext(
             [new AudioDeviceInfo(Speakers, AudioDirection.Render, true, AudioRoleMask.Console), new AudioDeviceInfo(Headset, AudioDirection.Render, true, 0)],
             [new AudioDeviceInfo(Microphone, AudioDirection.Capture, true, AudioRoleMask.Console)],
             new AppsWaitDeviceChoice(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, connected, [], null),
-            _picker,
-            confirmationEnabled: true,
             surround ?? SurroundState.Unavailable(SurroundAvailability.Unknown),
             rules,
-            catalog ?? _host.Catalog,
-            _display,
-            _desktopIcons,
-            _hotkeys,
-            _host.Settings,
-            Logger.None);
+            ConfirmationEnabled: true);
+        var services = new ProfileEditorServices(
+            catalog ?? _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, _picker, Logger.None);
+        var editor = new ProfileEditorViewModel(profile, isNew, context, services);
         _editors.Add(editor);
         await RatesLoadedAsync(editor);
         return editor;

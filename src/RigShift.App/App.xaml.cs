@@ -6,16 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
-using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
-using RigShift.Core.Games;
-using RigShift.Core.Settings;
-using RigShift.Core.Storage;
 using RigShift.Core.Topology;
-using RigShift.Windows.Audio;
-using RigShift.Windows.Display;
-using RigShift.Windows.Startup;
 using Serilog;
 using Wpf.Ui.Appearance;
 
@@ -24,12 +17,14 @@ namespace RigShift.App;
 public partial class App : Application, IAppShell
 {
     private readonly CliRequest _request;
+    private readonly AppPaths _paths;
     private ServiceProvider? _services;
     private TrayIconService? _tray;
 
-    public App(CliRequest request)
+    public App(CliRequest request, AppPaths paths)
     {
         _request = request;
+        _paths = paths;
 
         // Tooltips a little sooner than the Windows default (B-10); the look is the implicit style in Controls.xaml.
         System.Windows.Controls.ToolTipService.InitialShowDelayProperty.OverrideMetadata(
@@ -37,49 +32,7 @@ public partial class App : Application, IAppShell
         Controls.Interaction.TrackKeyboardFocus();
     }
 
-    /// <summary>
-    /// <c>%AppData%\RigShift</c>: Velopack installs into <c>%LocalAppData%\RigShift</c> and deletes that folder on
-    /// uninstall, so profiles and settings must live elsewhere.
-    /// </summary>
-    public static AppPaths Paths { get; } = new(Path.GetFullPath(
-#if DEBUG
-        // Developer aid: screenshots of steps that save profiles, without touching the real data.
-        Environment.GetEnvironmentVariable("RIGSHIFT_DATA_DIR") is { Length: > 0 } previewData ? previewData :
-#endif
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift")));
-
     public bool IsExiting { get; private set; }
-
-#if DEBUG
-    /// <summary>A backup with everything the restore question warns about: a share, a bare name, a rule without the question.</summary>
-    private BackupContent PreviewBackup()
-    {
-        IReadOnlyList<Core.Profiles.Profile> profiles = Services.GetRequiredService<ProfileCatalog>().Profiles;
-        if (profiles.Count == 0)
-        {
-            return new BackupContent([], null);
-        }
-
-        Core.Profiles.Profile first = profiles[0] with
-        {
-            Apps =
-            [
-                new Core.Profiles.AppAction { Path = @"C:\Program Files (x86)\SimHub\SimHubWPF.exe" },
-                new Core.Profiles.AppAction { Path = @"\\nas\tools\CrewChiefV4.exe", Arguments = "-profile rig" },
-                new Core.Profiles.AppAction { Path = "overlay.exe" },
-                new Core.Profiles.AppAction { Kind = Core.Profiles.AppActionKind.Stop, Path = "Discord.exe" },
-            ],
-        };
-        var settings = new AppSettings
-        {
-            AutomationRules =
-            [
-                new Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }], SkipConfirmation = true },
-            ],
-        };
-        return new BackupContent([first, .. profiles.Skip(1)], settings);
-    }
-#endif
 
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
@@ -178,30 +131,28 @@ public partial class App : Application, IAppShell
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        Directory.CreateDirectory(Paths.DataDirectory);
+        Directory.CreateDirectory(_paths.DataDirectory);
 
         // Log.Logger was created in Program.Main, before Velopack ran.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         Controls.WheelScrolling.Register();
-        Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, Paths.DataDirectory);
+        Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, _paths.DataDirectory);
 
         try
         {
             ApplyWindowsTheme();
 #if DEBUG
-            // Developer aid: the component gallery as PNG; needs the resources only, so nothing else starts.
-            if (_request.PreviewGallery is { } galleryDirectory)
+            if (WriteGalleryPreview())
             {
-                GalleryPreview.Write(galleryDirectory);
                 Shutdown();
                 return;
             }
 #endif
 
-            // A plain container: the app has no hosted services, configuration or Microsoft.Extensions.Logging users,
-            // and every service logs through Serilog directly (analysis finding A-05).
-            var services = new ServiceCollection();
-            RegisterServices(services);
+            IServiceCollection services = new ServiceCollection().AddRigShift(_paths, this, Log.Logger);
+#if DEBUG
+            AddPreviewServices(services);
+#endif
             _services = services.BuildServiceProvider();
 
             await Services.GetRequiredService<SettingsService>().LoadAsync(CancellationToken.None);
@@ -217,72 +168,10 @@ public partial class App : Application, IAppShell
             // game that already runs must only set the starting point, not trigger a switch.
             await Services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
             Services.GetRequiredService<GameSessionService>().StartWatching();
-
 #if DEBUG
-            // Developer aid: the confirmation window cannot be reached on a machine without the profile's displays.
-            if (_request.PreviewConfirmation)
-            {
-                // Two of the stored profiles, or the live arrangement twice, so both pictures show something.
-                ConfirmationResult answer = await ConfirmationWindow.ShowAsync(
-                    await PreviewConfirmationAsync(catalog), TimeSpan.FromSeconds(12), CancellationToken.None);
-                Log.Information("Confirmation preview answered {Answer}", answer);
-            }
-
-            // Developer aid: the tray popup and the tray icon for other taskbars and DPI steps cannot be captured over RDP.
-            if (_request.PreviewBranding is { } previewDirectory)
-            {
-                BrandingPreview.Show(previewDirectory, Services.GetRequiredService<TrayPopupViewModel>());
-            }
-
-            // Developer aid: the app picker with a demo list (JSON array of name, path, isRunning) for README screenshots.
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_APPS") is { Length: > 0 } demoApps)
-            {
-                AppPickerWindow.Pick(null, null, () => System.Text.Json.JsonSerializer.Deserialize<List<Windows.Apps.DiscoveredApp>>(
-                    System.IO.File.ReadAllText(demoApps), PreviewJson) ?? []);
-            }
-
-            // Developer aid: the game picker and the window capture, which otherwise only open from inside the editor.
-            // "multi" opens the picker the way the games page does, with tick boxes for several games at once.
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMEPICKER") is { Length: > 0 } picker)
-            {
-                GameDialogs dialogs = Services.GetRequiredService<GameDialogs>();
-                if (string.Equals(picker, "multi", StringComparison.OrdinalIgnoreCase))
-                {
-                    _ = Views.GamePickerWindow.PickManyAsync(null, dialogs);
-                }
-                else
-                {
-                    _ = Views.GamePickerWindow.PickAsync(null, dialogs);
-                }
-            }
-
-            // Developer aid: the question dialogs, which otherwise need a profile and a menu (or a backup file) to reach.
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialogKind)
-            {
-                _ = Dispatcher.InvokeAsync(() => dialogKind.ToUpperInvariant() switch
-                {
-                    "UNSAVED" => ProfileDialogs.ConfirmUnsavedAsync("Sim Rig", "Schreibtisch").ContinueWith(_ => { }, TaskScheduler.Default),
-                    "RESTORE" => ProfileDialogs.ConfirmRestoreAsync(PreviewBackup()).ContinueWith(_ => { }, TaskScheduler.Default),
-                    _ => ProfileDialogs.ConfirmDeleteAsync("Rig · Dreifach", ruleCount: 1).ContinueWith(_ => { }, TaskScheduler.Default),
-                });
-            }
-
-            // Developer aid: a timer that throws on every tick, which is what a broken layout pass or binding looks like.
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_CRASH") is { Length: > 0 })
-            {
-                var broken = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-                // Thrown from a queued call: a timer whose own tick throws is never re-armed by WPF.
-                broken.Tick += (_, _) => Dispatcher.BeginInvoke(
-                    () => throw new InvalidOperationException("Preview: this timer throws on every tick."));
-                broken.Start();
-            }
-
-            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
-            {
-                _ = Dispatcher.InvokeAsync(() =>
-                    Views.WindowCaptureWindow.Capture(null, Services.GetRequiredService<GameDialogs>(), null));
-            }
+            await StartPreviewsAsync(catalog);
 #endif
+
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) =>
                 {
@@ -301,41 +190,18 @@ public partial class App : Application, IAppShell
             if (!_request.Minimized)
             {
                 ShowMainWindow();
+#if DEBUG
+                bool assistantPreview = StartWindowPreviews();
+#else
+                const bool assistantPreview = false;
+#endif
 
                 // First start: guide through the first two profiles. Queued, so startup finishes before the dialog blocks.
-#if DEBUG
-                // Developer aid: the games page in its states as PNG, rendered from the visual tree (works over disconnected RDP).
-                if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE") is { Length: > 0 } pageDirectory)
+                if (!assistantPreview && catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles
+                    && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
                 {
-                    _ = Dispatcher.InvokeAsync(async () =>
-                    {
-                        await PagePreview.WriteGamesAsync(Services, pageDirectory);
-                        Quit();
-                    });
+                    _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());
                 }
-
-                // Developer aid: the assistant at a later step with demo profiles (second, trigger, done).
-                if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep previewStep))
-                {
-                    // Logged, not discarded: a XAML error in the assistant would otherwise leave no trace at all.
-                    _ = Dispatcher.InvokeAsync(async () =>
-                    {
-                        try
-                        {
-                            await Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync(previewStep);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Setup assistant preview failed");
-                        }
-                    });
-                }
-                else
-#endif
-                    if (catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles && !Services.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
-                    {
-                        _ = Dispatcher.InvokeAsync(() => Services.GetRequiredService<ProfileDialogs>().ShowSetupAssistantAsync());
-                    }
             }
 
             KeepAwakeForActiveProfile(catalog);
@@ -396,7 +262,7 @@ public partial class App : Application, IAppShell
         {
             if (await ProfileDialogs.ShowSettingsProblemAsync(report))
             {
-                ShellFolders.Open(Paths.DataDirectory, Log.Logger);
+                ShellFolders.Open(_paths.DataDirectory, Log.Logger);
             }
         });
     }
@@ -448,27 +314,6 @@ public partial class App : Application, IAppShell
         _ => ApplicationTheme.Dark,
     };
 
-#if DEBUG
-    private static readonly System.Text.Json.JsonSerializerOptions PreviewJson = new(System.Text.Json.JsonSerializerDefaults.Web);
-
-    /// <summary>Developer aid: a filled confirmation view from the stored profiles, or from the live arrangement.</summary>
-    private async Task<RigShift.App.Services.ConfirmationView> PreviewConfirmationAsync(ProfileCatalog catalog)
-    {
-        IReadOnlyList<Core.Profiles.Profile> profiles = catalog.Profiles;
-        if (profiles.Count >= 2)
-        {
-            return new RigShift.App.Services.ConfirmationView(
-                profiles[1].Id,
-                RigShift.App.Services.TopologyDisplays.From(profiles[0].Displays), profiles[0].Name,
-                RigShift.App.Services.TopologyDisplays.From(profiles[1].Displays), profiles[1].Name);
-        }
-
-        Core.Topology.DisplaySnapshot now = await Services.GetRequiredService<IDisplayConfigurator>().QueryAsync(CancellationToken.None);
-        IReadOnlyList<Core.Topology.TopologyDisplay> live = RigShift.App.Services.TopologyDisplays.From(Core.Profiles.ProfileEditing.CurrentArrangement(now, []));
-        return new RigShift.App.Services.ConfirmationView(Guid.Empty, live, "Schreibtisch", live, "Sim Rig");
-    }
-
-#endif
     /// <summary>The keep-awake request ends with the process; after a restart it follows the profile that is still active.</summary>
     private void KeepAwakeForActiveProfile(ProfileCatalog catalog)
     {
@@ -486,124 +331,6 @@ public partial class App : Application, IAppShell
         {
             Log.Warning(ex, "Keep-awake for {Profile} could not be set at startup", active.Name);
         }
-    }
-
-    private void RegisterServices(IServiceCollection services)
-    {
-        services.AddSingleton(Log.Logger);
-        services.AddSingleton(TimeProvider.System);
-        services.AddSingleton(Paths);
-        services.AddSingleton<IAppShell>(this);
-
-        // Core and OS boundary
-        services.AddSingleton<IProfileStore>(sp => new JsonProfileStore(Paths.Profiles, Log.Logger, sp.GetRequiredService<TimeProvider>()));
-        services.AddSingleton(_ => new JsonSettingsStore(Paths.SettingsFile, Log.Logger));
-        services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", Log.Logger));
-#if DEBUG
-        // Developer aid: demo profiles whose monitors are not on this machine, so the pages can be shown in a working state.
-        string? previewActive = Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DISPLAYS");
-        if (previewActive is { Length: > 0 })
-        {
-            services.AddSingleton<IDisplayConfigurator>(sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), previewActive));
-        }
-        else
-        {
-            services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
-        }
-#else
-        services.AddSingleton<IDisplayConfigurator, CcdDisplayConfigurator>();
-#endif
-        services.AddSingleton<IAudioController, PolicyConfigAudioController>();
-        services.AddSingleton<IAppLauncher, Windows.Apps.ProcessAppLauncher>();
-        services.AddSingleton<IPowerController, Windows.Power.PowerController>();
-        services.AddSingleton<IUsbDeviceList, Windows.Apps.UsbDeviceList>();
-        services.AddSingleton<IUsbPowerCheck, Windows.Power.UsbPowerCheck>();
-        services.AddSingleton<IFullscreenCheck, Windows.Shell.ShellFullscreenCheck>();
-        services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
-        services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
-        services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
-        services.AddSingleton<IDesktopIcons, Windows.Shell.DesktopIcons>();
-        services.AddSingleton<IDisplaySizeReader, Windows.Display.EdidDisplaySizeReader>();
-        services.AddSingleton<ISurroundController, NvSurroundController>();
-        services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
-        services.AddSingleton<ISwitchJournal>(_ => new JsonSwitchJournal(Paths.DataDirectory, Log.Logger));
-        services.AddSingleton(new TopologyPlannerOptions());
-        services.AddSingleton(new SwitchOptions());
-        services.AddSingleton<TopologyPlanner>();
-        services.AddSingleton<ActiveProfileMatcher>();
-        services.AddSingleton<SwitchOrchestrator>();
-
-        // App services
-        services.AddSingleton<SettingsService>();
-        services.AddSingleton<ProfileCatalog>();
-        services.AddSingleton<SwitchCoordinator>();
-        services.AddSingleton<DisplayChangeWatcher>();
-        services.AddSingleton<HotkeyService>();
-        services.AddSingleton<AutomationService>();
-        services.AddSingleton<TrayIconService>();
-        services.AddSingleton(sp => new CommandRunner(
-            sp.GetRequiredService<IProfileStore>(),
-            sp.GetRequiredService<IDisplayConfigurator>(),
-            sp.GetRequiredService<IAudioController>(),
-            sp.GetRequiredService<ActiveProfileMatcher>(),
-            Log.Logger,
-            sp.GetRequiredService<SwitchCoordinator>(),
-            sp.GetRequiredService<ISurroundController>(),
-            sp.GetRequiredService<IGameStore>(),
-            sp.GetRequiredService<GameSessionService>(),
-            sp.GetRequiredService<IDesktopIcons>()));
-        services.AddSingleton<CommandPipeServer>();
-        services.AddSingleton<IAppPicker, Views.WindowAppPicker>();
-        services.AddSingleton<ProfileDialogs>();
-        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
-        services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl));
-        services.AddSingleton<IUpdatePolicy>(_ => new RegistryUpdatePolicy(Log.Logger));
-        services.AddSingleton<UpdateService>();
-
-        // Games (v2)
-        services.AddSingleton<IGameStore>(sp => new JsonGameStore(Paths.DataDirectory, Log.Logger, sp.GetRequiredService<TimeProvider>()));
-        services.AddSingleton<IGameLibrary, Windows.Games.GameLibrary>();
-        services.AddSingleton<IGameProcesses, Windows.Games.SystemGameProcesses>();
-        services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
-        services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
-        services.AddSingleton<GameCatalog>();
-        services.AddSingleton<GameDialogs>();
-        services.AddSingleton<IGamePageDialogs>(sp => sp.GetRequiredService<GameDialogs>());
-
-        // A new runner per session: it keeps the state of exactly one run.
-        services.AddSingleton<Func<GameSessionRunner>>(sp => () => new GameSessionRunner(
-            sp.GetRequiredService<IGameStarter>(),
-            sp.GetRequiredService<IGameProcesses>(),
-            sp.GetRequiredService<SwitchCoordinator>(),
-            id => sp.GetRequiredService<ProfileCatalog>().Find(id),
-            sp.GetRequiredService<IAppLauncher>(),
-            sp.GetRequiredService<IUsbDeviceList>(),
-            sp.GetRequiredService<SwitchOptions>(),
-            sp.GetRequiredService<TimeProvider>(),
-            Log.Logger,
-            sp.GetRequiredService<IWindowLayout>()));
-        services.AddSingleton<GameSessionService>();
-
-        // UI
-        services.AddSingleton<TrayPopupViewModel>();
-        services.AddSingleton<TrayPopupView>();
-        services.AddSingleton<ProfilesViewModel>();
-
-        // The tray popup only needs the page view model when "save arrangement" is clicked.
-        services.AddSingleton<Func<ProfilesViewModel>>(sp => sp.GetRequiredService<ProfilesViewModel>);
-        services.AddSingleton<UsbDevicesViewModel>();
-        services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<OverviewViewModel>();
-        services.AddSingleton<AboutViewModel>();
-        services.AddSingleton<FovViewModel>();
-        services.AddSingleton<GamesViewModel>();
-        services.AddSingleton<GamesPage>();
-        services.AddSingleton<ProfilesPage>();
-        services.AddSingleton<SettingsPage>();
-        services.AddSingleton<OverviewPage>();
-        services.AddSingleton<AboutPage>();
-        services.AddSingleton<FovPage>();
-        services.AddSingleton<MainWindow>();
     }
 
     /// <summary>Set when the user asked for a restart; <see cref="Program"/> starts the new process once this one let go.</summary>
@@ -645,7 +372,7 @@ public partial class App : Application, IAppShell
                 RepeatedErrorChoice choice = await ProfileDialogs.AskAboutRepeatedErrorAsync(message);
                 if (choice == RepeatedErrorChoice.OpenLog)
                 {
-                    ShellFolders.Open(Paths.Logs, Log.Logger);
+                    ShellFolders.Open(_paths.Logs, Log.Logger);
                     continue;
                 }
 

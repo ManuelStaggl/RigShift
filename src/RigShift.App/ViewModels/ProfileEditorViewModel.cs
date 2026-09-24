@@ -38,39 +38,23 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     private readonly SettingsService _settings;
     private readonly ILogger _log;
 
-    /// <param name="appsWaitDevice">The device the apps wait for, with the devices to choose from.</param>
-    public ProfileEditorViewModel(
-        Profile profile,
-        bool isNew,
-        IReadOnlyList<AudioDeviceInfo> playbackDevices,
-        IReadOnlyList<AudioDeviceInfo> recordingDevices,
-        AppsWaitDeviceChoice appsWaitDevice,
-        IAppPicker appPicker,
-        bool confirmationEnabled,
-        SurroundState surround,
-        ProfileRulesEditor rules,
-        ProfileCatalog catalog,
-        IDisplayConfigurator display,
-        IDesktopIcons desktopIcons,
-        HotkeyService hotkeys,
-        SettingsService settings,
-        ILogger log)
+    public ProfileEditorViewModel(Profile profile, bool isNew, ProfileEditorContext context, ProfileEditorServices services)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(services);
 
         _original = profile;
         Saved = profile;
-        _catalog = catalog;
-        _display = display;
-        _settings = settings;
+        _catalog = services.Catalog;
+        _display = services.Display;
+        _settings = services.Settings;
         IsNew = isNew;
-        ConfirmationEnabled = confirmationEnabled;
+        ConfirmationEnabled = context.ConfirmationEnabled;
         Hotkey = profile.Hotkey;
-        _hotkeyRecorder = new HotkeyRecorder(hotkeys, HotkeyUseKind.Profile, profile.Id);
-        Rules = rules;
-        _log = log.ForContext<ProfileEditorViewModel>();
+        _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Profile, profile.Id);
+        Rules = context.Rules;
+        _log = services.Log.ForContext<ProfileEditorViewModel>();
 
         Name = profile.Name;
         FillIconChoices(ProfileIcons.Normalize(profile.Icon));
@@ -80,13 +64,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         AudioAssignment audio = profile.Audio;
         AudioSlots =
         [
-            new AudioSlot("Audio_Playback", "Audio_Unchanged", playbackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
-            new AudioSlot("Audio_Recording", "Audio_Unchanged", recordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
+            new AudioSlot("Audio_Playback", "Audio_Unchanged", context.PlaybackDevices, audio.Playback, audio.PlaybackVolumePercent, supportsVolume: true),
+            new AudioSlot("Audio_Recording", "Audio_Unchanged", context.RecordingDevices, audio.Recording, audio.RecordingVolumePercent, supportsVolume: true),
         ];
         CommunicationsAudioSlots =
         [
-            new AudioSlot("Audio_PlaybackComms", "Audio_SameAsPlayback", playbackDevices, audio.PlaybackCommunications),
-            new AudioSlot("Audio_RecordingComms", "Audio_SameAsRecording", recordingDevices, audio.RecordingCommunications),
+            new AudioSlot("Audio_PlaybackComms", "Audio_SameAsPlayback", context.PlaybackDevices, audio.PlaybackCommunications),
+            new AudioSlot("Audio_RecordingComms", "Audio_SameAsRecording", context.RecordingDevices, audio.RecordingCommunications),
         ];
         ShowCommunicationsAudio = audio.PlaybackCommunications is not null || audio.RecordingCommunications is not null;
         foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
@@ -94,13 +78,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
             slot.PropertyChanged += OnPartChanged;
         }
 
-        AppList = new AppListEditor(profile.Apps, showWhen: false, appsWaitDevice, appPicker, "App_Path");
+        AppList = new AppListEditor(profile.Apps, showWhen: false, context.AppsWaitDevice, services.AppPicker, "App_Path");
 
-        _desktopIcons = desktopIcons;
+        _desktopIcons = services.DesktopIcons;
         DesktopIcons = profile.DesktopIcons;
         KeepAwake = profile.KeepAwake;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
-        FillSurroundChoices(surround, profile.Surround);
+        FillSurroundChoices(context.Surround, profile.Surround);
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
@@ -108,7 +92,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         Displays.CollectionChanged += OnDisplaysChanged;
         AppList.Changed += OnPartChanged;
-        rules.Changed += OnPartChanged;
+        Rules.Changed += OnPartChanged;
 
         // Texts built here follow a language change while the editor is open (I-13); Dispose unsubscribes.
         Loc.Instance.PropertyChanged += OnLanguageChanged;

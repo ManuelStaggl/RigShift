@@ -30,6 +30,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     private readonly GameCatalog _games;
     private readonly GameSessionService _sessions;
     private readonly HotkeyService _hotkeys;
+    private readonly DisplayChangeWatcher _displayChanges;
     private readonly Dialogs _dialogs;
     private readonly IDesktopIcons _desktopIcons = Substitute.For<IDesktopIcons>();
 
@@ -51,10 +52,12 @@ public sealed class ProfilesViewModelTests : IDisposable
         surround.QueryAsync(Arg.Any<CancellationToken>()).Returns(SurroundState.Unavailable(SurroundAvailability.Unknown));
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
         powerCheck.Check(Arg.Any<string>()).Returns(new UsbPowerFindings());
-        IServiceProvider services = Substitute.For<IServiceProvider>();
-        services.GetService(typeof(IUsbPowerCheck)).Returns(powerCheck);
+        _displayChanges = _ui.Invoke(() => new DisplayChangeWatcher());
+        var editorServices = new ProfileEditorServices(
+            _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, new FakeAppPicker(), Logger.None);
         _dialogs = new Dialogs(new ProfileDialogs(
-            _host.Catalog, _display, audio, _host.Settings, _hotkeys, _host.Usb, _desktopIcons, surround, new FakeAppPicker(), services, Logger.None));
+            editorServices, audio, _host.Usb, surround, powerCheck,
+            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _displayChanges));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -569,6 +572,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         {
             _hotkeys.Dispose();
             _sessions.Dispose();
+            _displayChanges.Dispose();
         });
         _ui.Dispose();
         _host.Dispose();
