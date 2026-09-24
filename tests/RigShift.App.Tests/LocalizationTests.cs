@@ -4,6 +4,7 @@ using System.Resources;
 using RigShift.App.Localization;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
+using RigShift.Core.Topology;
 using Shouldly;
 using Xunit;
 
@@ -32,20 +33,24 @@ public sealed class LocalizationTests
     }
 
     /// <summary>
-    /// The editors look a problem's text up by its name ("Problem_" + name), so no search for the key finds its users –
-    /// the 3.0 cleanup dropped four of them as unused, and the editor showed the bare key.
+    /// Some texts are looked up by an enum member's name ("Problem_" + name), so no search for the key finds its users:
+    /// the 3.0 cleanup dropped four problem texts as unused, and a warning added in 2.1.2 never got one. Both showed the
+    /// bare key.
     /// </summary>
     [Fact]
-    public void EveryEditorProblem_HasAText()
+    public void EveryTextLookedUpByName_Exists()
     {
-        string[] missing =
+        IEnumerable<string> wanted =
         [
-            .. Enum.GetNames<ProfileProblem>().Concat(Enum.GetNames<GameProblem>())
-                .Select(name => "Problem_" + name)
-                .Distinct()
-                .Except(Keys(CultureInfo.InvariantCulture))
-                .Order(StringComparer.Ordinal),
+            .. Enum.GetNames<ProfileProblem>().Select(name => "Problem_" + name),
+            .. Enum.GetNames<GameProblem>().Select(name => "Problem_" + name),
+            .. Enum.GetNames<PlanWarningKind>().Select(name => "Warning_" + name),
+            .. Enum.GetNames<SwitchOutcome>().Select(name => "Outcome_" + name),
+            .. Enum.GetNames<GameSessionOutcome>().Select(name => "GameOutcome_" + name),
+            .. ProfileIcons.All.Select(key => "Icon_" + char.ToUpperInvariant(key[0]) + key[1..]),
         ];
+
+        string[] missing = [.. wanted.Distinct().Except(Keys(CultureInfo.InvariantCulture)).Order(StringComparer.Ordinal)];
 
         missing.ShouldBeEmpty($"missing in Strings.resx: {string.Join(", ", missing)}");
     }

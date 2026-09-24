@@ -19,6 +19,7 @@
   <data name="Check_Blocked" xml:space="preserve"><value>Not possible right now. Missing displays: {0}</value></data>
   <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>The graphics card may not drive all displays at these resolutions and refresh rates.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>A display was recognized on a different port or cable.</value></data>
+  <data name="Warning_MatchedByNameFallback" xml:space="preserve"><value>A display was recognized only by its name; it reports a different ID on this input.</value></data>
   <data name="Warning_AmbiguousTwin" xml:space="preserve"><value>Two identical displays are no longer on their saved ports, so RigShift cannot tell them apart.</value></data>
   <data name="Warning_NoPrimary" xml:space="preserve"><value>No display is marked as main display; Windows will choose one.</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>Open RigShift</value></data>
