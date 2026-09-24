@@ -127,6 +127,46 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
     }
 
+    /// <summary>Every field counts for the save bar: a hand-kept list of names used to decide, and a field missing from it lost changes.</summary>
+    [Fact]
+    public async Task EveryField_MakesDirty()
+    {
+        var surround = new SurroundState { Availability = SurroundAvailability.Available, Grids = [Triple] };
+        var icons = new DesktopIconLayout { CapturedAt = DateTimeOffset.UtcNow, Icons = [new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 }] };
+        Action<ProfileEditorViewModel>[] changes =
+        [
+            e => e.Name = "Rig 2",
+            e => e.SelectedIcon = e.IconChoices.First(c => c.Key != e.SelectedIcon?.Key),
+            e => e.SwitchWithoutAsking = !e.SwitchWithoutAsking,
+            e => e.Hotkey = CtrlAltR,
+            e => e.KeepAwake = true,
+            e => e.DisableCommunicationsDucking = true,
+            e => e.DesktopIcons = icons,
+            e => e.SelectedSurround = e.SurroundChoices.First(c => c.Key == "off"),
+        ];
+
+        for (int i = 0; i < changes.Length; i++)
+        {
+            ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: surround);
+            changes[i](editor);
+            editor.IsDirty.ShouldBeTrue($"change {i}");
+        }
+    }
+
+    [Fact]
+    public async Task NoDisplayLeft_IsAProblemWithItsOwnText()
+    {
+        ProfileEditorViewModel editor = await EditorAsync(Rig());
+
+        foreach (DisplayEditItem display in editor.Displays.ToList())
+        {
+            editor.RemoveDisplayCommand.Execute(display);
+        }
+
+        editor.DisplaysProblem.ShouldBe(Loc.Instance["Problem_NoDisplays"]);
+        editor.ProblemCount.ShouldBe(1);
+    }
+
     [Fact]
     public async Task Name_MissingOrTakenByAnotherProfile_IsAProblem()
     {

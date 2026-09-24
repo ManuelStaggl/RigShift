@@ -290,7 +290,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public string HotkeyHint => _hotkeyRecorder.Hint;
 
     [ObservableProperty]
-    public partial string? ArrangementNote { get; set; }
+    public partial string? ArrangementNote { get; private set; }
 
     /// <summary>Recording a hotkey RigShift holds would switch right away, so they rest while the field has the focus.</summary>
     public void BeginHotkeyRecording() => _hotkeyRecorder.Begin();
@@ -525,8 +525,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is nameof(Name) or nameof(SelectedIcon) or nameof(SwitchWithoutAsking) or nameof(Hotkey)
-            or nameof(KeepAwake) or nameof(DisableCommunicationsDucking) or nameof(DesktopIcons) or nameof(SelectedSurround))
+        if (EditorFields<ProfileEditorViewModel>.Contains(e.PropertyName))
         {
             Recalculate();
         }
@@ -543,19 +542,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         Profile built = Build();
         IReadOnlyList<ProfileProblem> problems = ProfileEditing.Validate(built, _catalog.Profiles);
         ProblemCount = problems.Count;
-        NameProblem = TextOf(problems, ProfileProblem.NameMissing, ProfileProblem.NameTooLong, ProfileProblem.NameTaken);
-        DisplaysProblem = TextOf(problems, ProfileProblem.NoDisplays, ProfileProblem.NoSinglePrimary, ProfileProblem.PrimaryIsOptional);
-        HotkeyProblem = TextOf(problems, ProfileProblem.HotkeyInvalid, ProfileProblem.HotkeyTaken);
-        AppsProblem = TextOf(problems, ProfileProblem.AppPathMissing);
+        NameProblem = ProblemTexts.Of(problems, ProfileProblem.NameMissing, ProfileProblem.NameTooLong, ProfileProblem.NameTaken);
+        DisplaysProblem = ProblemTexts.Of(problems, ProfileProblem.NoDisplays, ProfileProblem.NoSinglePrimary, ProfileProblem.PrimaryIsOptional);
+        HotkeyProblem = ProblemTexts.Of(problems, ProfileProblem.HotkeyInvalid, ProfileProblem.HotkeyTaken);
+        AppsProblem = ProblemTexts.Of(problems, ProfileProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
         IsDirty = IsNew || Rules.IsDirty || !StoredForm.Same(built, _initial);
         UpdateSurroundHint();
-    }
-
-    private static string? TextOf(IReadOnlyList<ProfileProblem> problems, params ProfileProblem[] kinds)
-    {
-        List<string> texts = kinds.Where(problems.Contains).Select(p => Loc.Instance["Problem_" + p]).ToList();
-        return texts.Count == 0 ? null : string.Join(" ", texts);
     }
 
     private void UpdateTopology() => TopologyDisplays = Services.TopologyDisplays.From(Displays.Select(d => d.Assignment), _missingDisplays);

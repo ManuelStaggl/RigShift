@@ -109,7 +109,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
 
     /// <summary>Nothing chosen to start – the tab "Game" carries the dot.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasLaunchProblem))]
+    [NotifyPropertyChangedFor(nameof(HasLaunchProblem), nameof(HasGameTabProblem))]
     public partial string? LaunchProblem { get; private set; }
 
     public bool HasLaunchProblem => LaunchProblem is not null;
@@ -149,6 +149,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public bool ProcessHintIsError => ProcessNotRecognised;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CommandText))]
     public partial string Name { get; set; }
 
     /// <summary>What the game is started with: a program path, or the store's id.</summary>
@@ -384,22 +385,17 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is nameof(Name) or nameof(LaunchTarget) or nameof(ProcessName) or nameof(LauncherProcessName)
-            or nameof(StartWithGame) or nameof(StopApps) or nameof(WindowLayout) or nameof(Hotkey)
-            or nameof(SelectedProfile) or nameof(SelectedEnd) or nameof(SelectedExit) or nameof(SelectedIcon))
+        if (!EditorFields<GameEditorViewModel>.Contains(e.PropertyName))
         {
-            if (e.PropertyName == nameof(ProcessName))
-            {
-                ProcessNotRecognised = false;
-            }
-
-            if (e.PropertyName == nameof(Name))
-            {
-                OnPropertyChanged(nameof(CommandText));
-            }
-
-            Recalculate();
+            return;
         }
+
+        if (e.PropertyName == nameof(ProcessName))
+        {
+            ProcessNotRecognised = false;
+        }
+
+        Recalculate();
     }
 
     private void OnPartChanged(object? sender, EventArgs e) => Recalculate();
@@ -413,41 +409,14 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
 
         GameEntry built = ToGame();
-        var problems = new List<string>();
-
-        string name = built.Name;
-        NameProblem = name.Length == 0
-            ? Loc.Instance["Problem_NameMissing"]
-            : name.Length > GameEntry.MaxNameLength
-                ? Loc.Instance["Problem_NameTooLong"]
-                : _games.Any(g => g.Id != Id && string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase))
-                    ? Loc.Instance["Problem_NameTaken"]
-                    : null;
-        Add(problems, NameProblem);
-
-        LaunchProblem = built.Launch.Target.Length == 0 ? Loc.Instance["Problem_LaunchMissing"] : null;
-        Add(problems, LaunchProblem);
-
-        HotkeyProblem = built.Hotkey is { } hotkey
-            && (_games.Any(g => g.Id != Id && g.Hotkey == hotkey) || _profiles.Any(p => p.Hotkey == hotkey))
-            ? Loc.Instance["Problem_HotkeyTaken"]
-            : null;
-        Add(problems, HotkeyProblem);
-
-        AppsProblem = built.Apps.Any(a => a.Path.Length == 0) ? Loc.Instance["Problem_AppPathMissing"] : null;
-        AppList.Problem = AppsProblem;
-        Add(problems, AppsProblem);
-
+        IReadOnlyList<GameProblem> problems = GameEditing.Validate(built, _games, _profiles);
         ProblemCount = problems.Count;
+        NameProblem = ProblemTexts.Of(problems, GameProblem.NameMissing, GameProblem.NameTooLong, GameProblem.NameTaken);
+        LaunchProblem = ProblemTexts.Of(problems, GameProblem.LaunchMissing);
+        HotkeyProblem = ProblemTexts.Of(problems, GameProblem.HotkeyInvalid, GameProblem.HotkeyTaken);
+        AppsProblem = ProblemTexts.Of(problems, GameProblem.AppPathMissing);
+        AppList.Problem = AppsProblem;
         IsDirty = IsNew || !StoredForm.Same(built, _initial);
-    }
-
-    private static void Add(List<string> problems, string? problem)
-    {
-        if (problem is not null)
-        {
-            problems.Add(problem);
-        }
     }
 
     private GameExitAction ExitFromChoice() => SelectedExit?.Key switch

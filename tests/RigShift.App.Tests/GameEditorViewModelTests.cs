@@ -9,6 +9,7 @@ using RigShift.Core.Automation;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
+using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -94,6 +95,57 @@ public sealed class GameEditorViewModelTests : IDisposable
 
         editor.Name = " iRacing ";
         editor.IsDirty.ShouldBeFalse();
+    }
+
+    /// <summary>Every field counts for the save bar: a hand-kept list of names used to decide, and a field missing from it lost changes.</summary>
+    [Fact]
+    public void EveryField_MakesDirty()
+    {
+        Profile rig = Rig();
+        GameEntry game = Game("iRacing");
+        var windows = new WindowLayout
+        {
+            CapturedAt = DateTimeOffset.UtcNow,
+            Windows = [new WindowPlacement { ProcessName = "SimHub", Title = "SimHub", Bounds = new PixelRect(0, 0, 800, 600) }],
+        };
+        Action<GameEditorViewModel>[] changes =
+        [
+            e => e.Name = "iRacing 2",
+            e => e.LaunchTarget = "44690",
+            e => e.ProcessName = "iRacingSim64DX11",
+            e => e.LauncherProcessName = "iRacingUI",
+            e => e.StartWithGame = true,
+            e => e.StopApps = !e.StopApps,
+            e => e.WindowLayout = windows,
+            e => e.Hotkey = CtrlAltR,
+            e => e.SelectedProfile = e.ProfileOptions.First(o => o.Key == rig.Id.ToString()),
+            e => e.SelectedEnd = e.EndChoices.First(c => c.Key == nameof(SessionEnd.LauncherProcess)),
+            e => e.SelectedExit = e.ExitChoices.First(c => c.Key == nameof(GameExitKind.PreviousProfile)),
+            e => e.SelectedIcon = e.IconChoices.First(c => c.Key is not null),
+        ];
+
+        for (int i = 0; i < changes.Length; i++)
+        {
+            GameEditorViewModel editor = Editor(game, profiles: [rig], games: [game]);
+            changes[i](editor);
+            editor.IsDirty.ShouldBeTrue($"change {i}");
+        }
+    }
+
+    /// <summary>The tab carries one dot for launch and hotkey; picking what starts has to clear it.</summary>
+    [Fact]
+    public void PickingWhatStarts_ClearsTheDotOnTheGameTab()
+    {
+        GameEntry blank = Game("iRacing") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = string.Empty } };
+        GameEditorViewModel editor = Editor(blank, isNew: true);
+        editor.HasGameTabProblem.ShouldBeTrue();
+        var changed = new List<string?>();
+        editor.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        editor.SetExecutable(@"D:\Games\AMS2\AMS2AVX.exe");
+
+        editor.HasGameTabProblem.ShouldBeFalse();
+        changed.ShouldContain(nameof(GameEditorViewModel.HasGameTabProblem));
     }
 
     [Fact]
