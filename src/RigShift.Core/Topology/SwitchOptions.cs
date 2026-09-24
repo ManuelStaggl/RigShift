@@ -36,6 +36,15 @@ public sealed record SwitchOptions
     /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    /// How long Windows may take to list the displays of a Surround grid that was just built or taken apart, before the
+    /// switch treats a missing one as switched off (finding K-09).
+    /// </summary>
+    public TimeSpan SurroundSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>Interval for looking for those displays: short, the switch waits for nothing else meanwhile.</summary>
+    public TimeSpan SurroundPollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
     /// <summary>Interval for re-querying the topology while waiting.</summary>
     public TimeSpan PollInterval { get; init; } = TimeSpan.FromSeconds(1);
 

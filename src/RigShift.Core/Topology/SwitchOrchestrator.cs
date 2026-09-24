@@ -133,7 +133,7 @@ public sealed class SwitchOrchestrator
             if (surround.Outcome == SurroundOutcome.Changed)
             {
                 // Plan against what exists now. The way back stays the state before Surround.
-                planFrom = await _display.QueryAsync(cancellationToken);
+                planFrom = await SettleAfterSurroundAsync(profile, cancellationToken);
             }
         }
 
@@ -205,6 +205,31 @@ public sealed class SwitchOrchestrator
             Surround = surround.Outcome,
             Note = answer.Modes.Note,
         }, started);
+    }
+
+    /// <summary>
+    /// The displays after a Surround change. Windows lists the displays of a grid that was just built or taken apart
+    /// seconds later, not at once; until the profile's required displays are there, this looks again quietly. Planning
+    /// at once used to ask the user to switch on monitors that were on (finding K-09).
+    /// </summary>
+    private async Task<DisplaySnapshot> SettleAfterSurroundAsync(Profile profile, CancellationToken cancellationToken)
+    {
+        long started = _time.GetTimestamp();
+        DateTimeOffset deadline = _time.GetUtcNow() + _options.SurroundSettleBudget;
+        while (true)
+        {
+            DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+            bool complete = !_planner.Plan(profile, snapshot).Missing
+                .Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached);
+            if (complete || _time.GetUtcNow() >= deadline)
+            {
+                _log.Information("Displays after the Surround change {State} after {Milliseconds:0} ms",
+                    complete ? "complete" : "still incomplete", _time.GetElapsedTime(started).TotalMilliseconds);
+                return snapshot;
+            }
+
+            await Task.Delay(_options.SurroundPollInterval, _time, cancellationToken);
+        }
     }
 
     /// <summary>
