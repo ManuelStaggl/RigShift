@@ -219,10 +219,15 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         try
         {
             _settings.Autostart.SetEnabled(value);
+            ErrorMessage = null;
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
         {
             _log.Warning(ex, "Autostart could not be changed");
+            ErrorMessage = Loc.Instance["Settings_AutostartFailed"];
+            _loading = true;
+            StartWithWindows = _settings.Autostart.IsEnabled;
+            _loading = false;
         }
     }
 
@@ -233,10 +238,20 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         try
         {
             await _settings.UpdateAsync(change, CancellationToken.None);
+            ErrorMessage = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Settings could not be saved");
+            ErrorMessage = Loc.Instance["Settings_SaveFailed"];
+            Load();
         }
     }
+
+    /// <summary>A setting that could not be stored (v4 finding A-16); the fields show the stored values again.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    public partial string? ErrorMessage { get; private set; }
+
+    public bool HasError => ErrorMessage is not null;
 }

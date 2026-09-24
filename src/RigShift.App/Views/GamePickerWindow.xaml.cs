@@ -74,9 +74,17 @@ public partial class GamePickerWindow : FluentWindow
 
         Task<IReadOnlyList<InstalledGame>> finding = dialogs.FindInstalledAsync();
         _ = finding.ContinueWith(
-            t => window.Dispatcher.Invoke(() => viewModel.Fill(t.Result)),
+            t =>
+            {
+                if (t.Exception is { } failure)
+                {
+                    Serilog.Log.Error(failure, "Installed games could not be listed");
+                }
+
+                window.Dispatcher.Invoke(() => viewModel.Fill(t.IsCompletedSuccessfully ? t.Result : []));
+            },
             CancellationToken.None,
-            TaskContinuationOptions.OnlyOnRanToCompletion,
+            TaskContinuationOptions.None,
             TaskScheduler.Default);
 
         return window;

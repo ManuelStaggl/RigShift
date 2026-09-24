@@ -20,6 +20,7 @@ public partial class App : Application, IAppShell
     private readonly AppPaths _paths;
     private ServiceProvider? _services;
     private TrayIconService? _tray;
+    private Core.Profiles.Profile? _lastActive;
     private bool _hiddenToTrayWatched;
 
     public App(CliRequest request, AppPaths paths)
@@ -168,6 +169,10 @@ public partial class App : Application, IAppShell
         {
             Log.Warning("Windows session ending ({Reason}) during a switch, refusing until it has rolled back", e.ReasonSessionEnding);
             e.Cancel = true;
+            if (_services?.GetService<DisplayChangeWatcher>() is { } watcher)
+            {
+                RigShift.Windows.Ui.NativeWindow.ExplainShutdownBlock(watcher.Handle, Localization.Loc.Instance["Session_SwitchRunning"]);
+            }
             Quit();
         }
     }
@@ -226,11 +231,14 @@ public partial class App : Application, IAppShell
             Services.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) =>
                 {
-                    Core.Profiles.Profile? before = catalog.ActiveProfile;
+                    // Monitors in standby or a return over RDP pass through "no profile": the same profile coming back
+                    // is not one Windows restored on its own (v4 finding A-16).
+                    Core.Profiles.Profile? before = catalog.ActiveProfile ?? _lastActive;
                     SwitchCoordinator coordinator = Services.GetRequiredService<SwitchCoordinator>();
                     await catalog.RefreshActiveAsync(CancellationToken.None);
                     await coordinator.CatchUpAsync();
                     coordinator.NoticeDisplayChange(before, catalog.ActiveProfile);
+                    _lastActive = catalog.ActiveProfile ?? before;
                 };
 
             Services.GetRequiredService<UpdateService>().Start();

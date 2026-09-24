@@ -866,4 +866,13 @@
   <data name="Tray_RulesPausedTip" xml:space="preserve">
     <value>USB rules are paused. Click to turn them back on.</value>
   </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>The setting could not be saved; the page shows what is stored. Details are in the log (Help → Logs).</value>
+  </data>
+  <data name="Settings_AutostartFailed" xml:space="preserve">
+    <value>Start with Windows could not be changed. Details are in the log (Help → Logs).</value>
+  </data>
+  <data name="Session_SwitchRunning" xml:space="preserve">
+    <value>RigShift is putting the displays back. This takes a few seconds.</value>
+  </data>
 </root>

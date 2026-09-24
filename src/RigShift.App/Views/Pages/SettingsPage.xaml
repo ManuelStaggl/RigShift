@@ -20,6 +20,11 @@
         Kind="Error"
         Text="{Binding Devices.ErrorMessage}"
         Visibility="{Binding Devices.HasError, Converter={StaticResource BoolToVisibility}}" />
+      <controls:InfoBar
+        Margin="0,12,0,0"
+        Kind="Error"
+        Text="{Binding ErrorMessage}"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
 
       <controls:AdaptiveColumns Margin="0,20,0,0" Gap="32">
 

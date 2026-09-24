@@ -866,4 +866,13 @@
   <data name="Tray_RulesPausedTip" xml:space="preserve">
     <value>USB-Regeln sind pausiert. Klicken schaltet sie wieder ein.</value>
   </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>Die Einstellung ließ sich nicht speichern; die Seite zeigt, was gespeichert ist. Details im Log (Hilfe → Logs).</value>
+  </data>
+  <data name="Settings_AutostartFailed" xml:space="preserve">
+    <value>„Mit Windows starten“ ließ sich nicht ändern. Details im Log (Hilfe → Logs).</value>
+  </data>
+  <data name="Session_SwitchRunning" xml:space="preserve">
+    <value>RigShift stellt die Bildschirme zurück. Das dauert ein paar Sekunden.</value>
+  </data>
 </root>

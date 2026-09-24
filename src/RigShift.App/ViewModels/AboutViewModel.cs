@@ -154,6 +154,7 @@ public sealed partial class AboutViewModel : ObservableObject
             return;
         }
 
+        bool failed = false;
         try
         {
             await Task.Run(() => BackupArchive.Restore(_paths.DataDirectory, content, _log));
@@ -162,13 +163,14 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             _log.Error(ex, "Backup {File} could not be restored", dialog.FileName);
             BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+            failed = true;
         }
 
         // Even after a failure halfway, what is on disk now is what counts.
         await _settings.ReloadAsync(CancellationToken.None);
         await _catalog.ReloadAsync(CancellationToken.None);
         await _games.ReloadAsync(CancellationToken.None);
-        if (BackupStatus is null || !BackupStatus.StartsWith(Loc.Format("About_BackupFailed", string.Empty), StringComparison.Ordinal))
+        if (!failed)
         {
             BackupStatus = Loc.Format("About_BackupRestored", content.Profiles.Count);
         }

@@ -8,6 +8,9 @@ namespace RigShift.App.Services;
 public sealed class DisplayChangeWatcher : IDisposable
 {
     private readonly HwndSource _source;
+
+    /// <summary>A top-level window of the app that always exists, e.g. for the reason Windows shows when logging off.</summary>
+    public nint Handle => _source.Handle;
     private readonly DispatcherTimer _debounce;
 
     public DisplayChangeWatcher()
