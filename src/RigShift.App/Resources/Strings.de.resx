@@ -442,7 +442,7 @@
   <data name="List_OptionalMissing" xml:space="preserve"><value>Bereit · {0} fehlt (optional)</value></data>
   <data name="List_Blocked" xml:space="preserve"><value>Blockiert: {0} fehlt</value></data>
   <data name="Detail_TestTip" xml:space="preserve"><value>Prüft ohne Umschalten, ob alle Bildschirme da sind.</value></data>
-  <data name="Detail_SwitchTip" xml:space="preserve"><value>Schaltet auf dieses Profil um.</value></data>
+  <data name="Detail_SwitchTip" xml:space="preserve"><value>Schaltet auf dieses Profil um (Strg+Eingabe).</value></data>
   <data name="Tab_Displays" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Tab_Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Tab_Apps" xml:space="preserve"><value>Apps</value></data>
@@ -841,5 +841,29 @@
   </data>
   <data name="Tray_LinkInvalid" xml:space="preserve">
     <value>Dieser Link funktioniert nicht: {0}. RigShift-Links sehen so aus: rigshift://apply/&lt;Profil&gt;.</value>
+  </data>
+  <data name="List_NewProfileTip" xml:space="preserve">
+    <value>Neues Profil (Strg+N: aus der aktuellen Anordnung)</value>
+  </data>
+  <data name="List_NewGameTip" xml:space="preserve">
+    <value>Neues Spiel (Strg+N: aus den installierten Spielen)</value>
+  </data>
+  <data name="Editor_NameTip" xml:space="preserve">
+    <value>Name (F2)</value>
+  </data>
+  <data name="SaveBar_SaveTip" xml:space="preserve">
+    <value>Speichern (Strg+S)</value>
+  </data>
+  <data name="Help_KeysPages" xml:space="preserve">
+    <value>Seite wechseln</value>
+  </data>
+  <data name="Help_KeysEdit" xml:space="preserve">
+    <value>Neu · Speichern · Umschalten oder Spielen</value>
+  </data>
+  <data name="Help_KeysName" xml:space="preserve">
+    <value>Namen bearbeiten</value>
+  </data>
+  <data name="Tray_RulesPausedTip" xml:space="preserve">
+    <value>USB-Regeln sind pausiert. Klicken schaltet sie wieder ein.</value>
   </data>
 </root>

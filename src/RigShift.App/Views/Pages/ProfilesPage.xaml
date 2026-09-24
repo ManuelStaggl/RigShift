@@ -107,7 +107,8 @@
             AutomationProperties.Name="{loc:Tr List_New}"
             Click="OnNewClick"
             DockPanel.Dock="Right"
-            Style="{StaticResource RigShift.Button}">
+            Style="{StaticResource RigShift.Button}"
+            ToolTip="{loc:Tr List_NewProfileTip}">
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,6,0" VerticalAlignment="Center" FontSize="16" Symbol="Add16" />
               <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
@@ -281,7 +282,7 @@
                   MaxLength="60"
                   Style="{StaticResource RigShift.Field.Title}"
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
-                  ToolTip="{loc:Tr Editor_Name}"
+                  ToolTip="{loc:Tr Editor_NameTip}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
                 <!-- The name is a field: a pencil shows it on hover (P-02), the frame comes from the field style. -->
                 <ui:SymbolIcon
@@ -897,10 +898,22 @@
                                               </Ellipse.Style>
                                             </Ellipse>
                                           </Grid>
+                                          <!-- The state for screen readers too; a device that is not there is dimmed (U-25). -->
                                           <TextBlock
                                             VerticalAlignment="Center"
-                                            Style="{StaticResource RigShift.Text.Body}"
-                                            Text="{Binding Name}" />
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                              <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+                                                <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+                                                <Style.Triggers>
+                                                  <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+                                                  </DataTrigger>
+                                                </Style.Triggers>
+                                              </Style>
+                                            </TextBlock.Style>
+                                          </TextBlock>
                                           <Button
                                             Width="24"
                                             Height="24"

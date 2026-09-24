@@ -235,7 +235,15 @@ public sealed partial class AboutViewModel : ObservableObject
 
         // Always listed: the emergency hotkey has to be known before a screen stays dark.
         Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_AllOnHotkey"], HotkeyFormat.Format(HotkeyService.AllDisplaysOnHotkey)));
+
+        // The keys inside the window (v4 finding U-24).
+        Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysPages"], Ctrl(0x31) + " … " + Ctrl(0x36)));
+        Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysEdit"], string.Join(" · ", Ctrl(0x4E), Ctrl(0x53), Ctrl(0x0D))));
+        Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysName"], "F2"));
     }
+
+    private static string Ctrl(int virtualKey) =>
+        HotkeyFormat.Format(new Core.Profiles.Hotkey { Modifiers = Core.Profiles.HotkeyModifiers.Control, VirtualKey = virtualKey });
 
     public string VersionText => Loc.Format(_updates.IsInstalled ? "Settings_Version" : "Settings_VersionDev", _updates.CurrentVersion);
 

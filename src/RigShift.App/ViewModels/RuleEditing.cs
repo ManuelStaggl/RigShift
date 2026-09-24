@@ -322,7 +322,7 @@ public sealed partial class RuleDeviceSlot : ObservableObject
     public RuleCard Card { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Name), nameof(IsConnected), nameof(HasDevice))]
+    [NotifyPropertyChangedFor(nameof(Name), nameof(IsConnected), nameof(HasDevice), nameof(AccessibleName))]
     public partial Choice? SelectedDevice { get; set; }
 
     public bool HasDevice => SelectedDevice is not null;
@@ -331,6 +331,9 @@ public sealed partial class RuleDeviceSlot : ObservableObject
     public string Name => Card.Owner.DeviceNameFor(SelectedDevice?.Key) ?? SelectedDevice?.Name ?? Loc.Instance["Automation_NoDevice"];
 
     public bool IsConnected => Card.Owner.IsDeviceConnected(SelectedDevice?.Key);
+
+    /// <summary>"Fanatec Wheel Base, not connected": the state is more than a dot's color (v4 finding U-25).</summary>
+    public string AccessibleName => $"{Name}, {Loc.Instance[IsConnected ? "Automation_NameConnected" : "Automation_NameNotConnected"]}";
 
     partial void OnSelectedDeviceChanged(Choice? value)
     {

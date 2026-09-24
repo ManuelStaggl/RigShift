@@ -78,6 +78,9 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
     public bool IsPaused => _automation?.IsPaused == true;
 
+    /// <summary>What the pause button does next, and that rules are paused (v4 finding U-22).</summary>
+    public string PauseTip => Loc.Instance[IsPaused ? "Tray_RulesPausedTip" : "Automation_Pause"];
+
     /// <summary>"Switching to Sim Rig …" above the progress line; the plain sentence when the target is unknown.</summary>
     public string SwitchingText => Coordinator.SwitchingProfile is { } profile
         ? Loc.Format("Tray_SwitchingTo", profile.Name)
@@ -152,6 +155,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasRules));
         OnPropertyChanged(nameof(IsPaused));
+        OnPropertyChanged(nameof(PauseTip));
     }
 
     private void OnCoordinatorChanged(object? sender, PropertyChangedEventArgs e)

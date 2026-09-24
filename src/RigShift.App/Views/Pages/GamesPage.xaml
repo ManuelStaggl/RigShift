@@ -62,7 +62,8 @@
             AutomationProperties.Name="{loc:Tr List_New}"
             Click="OnNewClick"
             DockPanel.Dock="Right"
-            Style="{StaticResource RigShift.Button}">
+            Style="{StaticResource RigShift.Button}"
+            ToolTip="{loc:Tr List_NewGameTip}">
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,6,0" VerticalAlignment="Center" FontSize="16" Symbol="Add16" />
               <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
@@ -268,7 +269,7 @@
                   MaxLength="60"
                   Style="{StaticResource RigShift.Field.Title}"
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
-                  ToolTip="{loc:Tr Editor_Name}"
+                  ToolTip="{loc:Tr Editor_NameTip}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
                 <!-- The name is a field: a pencil shows it on hover (P-02). -->
                 <ui:SymbolIcon
@@ -650,11 +651,14 @@
                           Text="{Binding Name}"
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap" />
+                        <!-- Two lines (U-21): the displays of a triple rig no longer end in "…" at 1280 px. -->
                         <TextBlock
+                          MinHeight="32"
+                          MaxHeight="32"
                           Style="{StaticResource RigShift.Text.Caption}"
                           Text="{Binding Sub}"
                           TextTrimming="CharacterEllipsis"
-                          TextWrapping="NoWrap"
+                          TextWrapping="Wrap"
                           ToolTip="{Binding Sub}" />
                       </StackPanel>
                     </DataTemplate>

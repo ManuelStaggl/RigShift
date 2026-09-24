@@ -274,7 +274,18 @@ public partial class MainWindow : FluentWindow
 
         // The chosen page shows its symbol filled (N-03); the name is the tooltip while the rail is narrow.
         icon.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(ListBoxItem.IsSelected)) { Source = item });
-        item.SetBinding(ToolTipProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
+        // "Profiles (Ctrl+2)": the page keys are otherwise nowhere to be seen (v4 finding U-24).
+        var tip = new System.Windows.Controls.TextBlock();
+        tip.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new MultiBinding
+        {
+            StringFormat = "{0} ({1}+" + (shortcut - Key.D0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ")",
+            Bindings =
+            {
+                new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay },
+                new Binding("[Key_Ctrl]") { Source = Loc.Instance, Mode = BindingMode.OneWay },
+            },
+        });
+        item.ToolTip = new ToolTip { Content = tip };
         ToolTipService.SetPlacement(item, System.Windows.Controls.Primitives.PlacementMode.Right);
         _navTexts.Add(text);
         if (page == typeof(AboutPage))

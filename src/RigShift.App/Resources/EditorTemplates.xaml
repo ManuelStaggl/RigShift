@@ -24,7 +24,8 @@
           DisplayMemberPath="Name"
           ItemsSource="{Binding WaitDevice.Choices}"
           SelectedItem="{Binding WaitDevice.Selected}"
-          Style="{StaticResource RigShift.Select}" />
+          Style="{StaticResource RigShift.Select}"
+          ToolTip="{Binding WaitDevice.Selected.Name}" />
       </controls:SettingRow>
       <controls:InfoBar
         Margin="0,16,0,0"

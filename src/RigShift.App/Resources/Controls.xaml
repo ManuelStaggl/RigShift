@@ -1637,7 +1637,8 @@
                 DockPanel.Dock="Right"
                 IsDefault="True"
                 IsEnabled="{TemplateBinding CanSave}"
-                Style="{StaticResource RigShift.Button.Primary}" />
+                Style="{StaticResource RigShift.Button.Primary}"
+                ToolTip="{loc:Tr SaveBar_SaveTip}" />
               <Button
                 Command="{TemplateBinding DiscardCommand}"
                 Content="{loc:Tr Common_Discard}"

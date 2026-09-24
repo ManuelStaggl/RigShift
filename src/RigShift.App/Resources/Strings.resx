@@ -442,7 +442,7 @@
   <data name="List_OptionalMissing" xml:space="preserve"><value>Ready · {0} missing (optional)</value></data>
   <data name="List_Blocked" xml:space="preserve"><value>Blocked: {0} missing</value></data>
   <data name="Detail_TestTip" xml:space="preserve"><value>Checks without switching whether every display is there.</value></data>
-  <data name="Detail_SwitchTip" xml:space="preserve"><value>Switches to this profile.</value></data>
+  <data name="Detail_SwitchTip" xml:space="preserve"><value>Switches to this profile (Ctrl+Enter).</value></data>
   <data name="Tab_Displays" xml:space="preserve"><value>Displays</value></data>
   <data name="Tab_Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Tab_Apps" xml:space="preserve"><value>Apps</value></data>
@@ -841,5 +841,29 @@
   </data>
   <data name="Tray_LinkInvalid" xml:space="preserve">
     <value>This link does not work: {0}. RigShift links look like rigshift://apply/&lt;profile&gt;.</value>
+  </data>
+  <data name="List_NewProfileTip" xml:space="preserve">
+    <value>New profile (Ctrl+N: from the current layout)</value>
+  </data>
+  <data name="List_NewGameTip" xml:space="preserve">
+    <value>New game (Ctrl+N: from the installed games)</value>
+  </data>
+  <data name="Editor_NameTip" xml:space="preserve">
+    <value>Name (F2)</value>
+  </data>
+  <data name="SaveBar_SaveTip" xml:space="preserve">
+    <value>Save (Ctrl+S)</value>
+  </data>
+  <data name="Help_KeysPages" xml:space="preserve">
+    <value>Go to a page</value>
+  </data>
+  <data name="Help_KeysEdit" xml:space="preserve">
+    <value>New · Save · Switch or play</value>
+  </data>
+  <data name="Help_KeysName" xml:space="preserve">
+    <value>Edit the name</value>
+  </data>
+  <data name="Tray_RulesPausedTip" xml:space="preserve">
+    <value>USB rules are paused. Click to turn them back on.</value>
   </data>
 </root>

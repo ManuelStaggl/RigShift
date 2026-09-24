@@ -195,11 +195,11 @@
             </Button.ContextMenu>
           </Button>
           <ToggleButton
-            AutomationProperties.Name="{loc:Tr Automation_Pause}"
+            AutomationProperties.Name="{Binding PauseTip}"
             Command="{Binding TogglePauseCommand}"
             DockPanel.Dock="Right"
             IsChecked="{Binding IsPaused, Mode=OneWay}"
-            ToolTip="{loc:Tr Automation_Pause}"
+            ToolTip="{Binding PauseTip}"
             Visibility="{Binding HasRules, Converter={StaticResource BoolToVisibility}}">
             <ToggleButton.Style>
               <Style TargetType="ToggleButton">
@@ -229,7 +229,7 @@
                 </Setter>
               </Style>
             </ToggleButton.Style>
-            <ui:SymbolIcon FontSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Symbol="Pause16" />
+            <ui:SymbolIcon FontSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Symbol="PlugDisconnected20" />
           </ToggleButton>
           <Button
             AutomationProperties.Name="{loc:Tr Tray_Open}"
@@ -237,7 +237,7 @@
             DockPanel.Dock="Right"
             Style="{StaticResource HeaderButton}"
             ToolTip="{loc:Tr Tray_Open}">
-            <ui:SymbolIcon FontSize="16" Symbol="Open16" />
+            <ui:SymbolIcon FontSize="16" Symbol="Window16" />
           </Button>
           <TextBlock
             Margin="10,0,0,0"
