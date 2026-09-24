@@ -83,6 +83,19 @@ internal static class CommandLineClient
     /// it to the instance that does sit on the desktop is the only way such a command can be answered at all.
     /// Only this user's instance will accept us; the pipe's access list on the server side sees to that.
     /// </summary>
+    /// <summary>
+    /// A rigshift:// link that cannot be read: a Stream Deck key or a web page has no console, so the running instance
+    /// says it in the tray (v4 finding A-09). Nothing is started for it.
+    /// </summary>
+    public static void ReportInvalidLink(string link) =>
+        Task.Run(async () =>
+        {
+            if (FindRunningInstance() is { } pipe)
+            {
+                await SendAsync(pipe, [link], TimeSpan.FromSeconds(5));
+            }
+        }).GetAwaiter().GetResult();
+
     private static string? FindRunningInstance()
     {
         string own = PipeProtocol.PipeName;

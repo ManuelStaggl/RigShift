@@ -97,6 +97,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     public Guid Id => _original.Id;
 
+    /// <summary>The name before the last save, when that save renamed the profile.</summary>
+    public string? RenamedFrom { get; private set; }
+
     /// <summary>The profile as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
     public Profile Saved { get; private set; }
 
@@ -437,6 +440,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         try
         {
             await _catalog.SaveAsync(profile, CancellationToken.None);
+            RenamedFrom = !IsNew && !string.Equals(Saved.Name, profile.Name, StringComparison.Ordinal) ? Saved.Name : null;
             Saved = profile;
             if (Rules.IsDirty)
             {

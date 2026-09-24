@@ -38,6 +38,9 @@ public interface IDetailEditor : INotifyPropertyChanged, IDisposable
     /// <summary>Why the last save failed; shown in the detail bar.</summary>
     string? ErrorMessage { get; }
 
+    /// <summary>The name before the last save, when that save renamed the entry; otherwise <c>null</c>.</summary>
+    string? RenamedFrom { get; }
+
     /// <summary>The URL that runs the entry from a shortcut, a Stream Deck or the command line.</summary>
     string CommandText { get; }
 
@@ -568,7 +571,13 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
 
         _selectAfterRebuild = target?.Id ?? editor.Id;
         Rebuild();
+        OnSaved(editor);
         return true;
+    }
+
+    /// <summary>After a save that went through, e.g. to take shortcuts along with a new name.</summary>
+    protected virtual void OnSaved(TEditor editor)
+    {
     }
 
     /// <summary>Back to the entry as saved; a new entry disappears from the list.</summary>

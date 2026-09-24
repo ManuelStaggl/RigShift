@@ -281,12 +281,12 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return;
         }
 
-        string title = "RigShift – " + RigShift.Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
-        string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
+        string title = DesktopShortcuts.ProfileTitle(item.Name);
+        string file = DesktopShortcuts.ProfileFile(item.Name);
         try
         {
             RigShift.Windows.Shell.ShortcutWriter.Create(
-                file, executable, "apply " + RigShift.Core.Cli.CommandLineArguments.Quote(item.Name), Loc.Format("Shortcut_Description", item.Name));
+                file, executable, DesktopShortcuts.ProfileArguments(item.Name), Loc.Format("Shortcut_Description", item.Name));
             Log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
             ShowStatus(Loc.Format("Status_ShortcutCreated", title));
         }
@@ -295,6 +295,19 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             Log.Error(ex, "Shortcut {File} could not be created", file);
             ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
         }
+    }
+
+    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot (v4 finding U-12).</summary>
+    protected override void OnSaved(ProfileEditorViewModel editor)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        if (editor.RenamedFrom is not { } oldName)
+        {
+            return;
+        }
+
+        bool moved = DesktopShortcuts.FollowProfileRename(oldName, editor.Name, Log);
+        ShowDetail(Loc.Format(moved ? "Detail_RenamedShortcut" : "Detail_Renamed", oldName), InfoKind.Info);
     }
 
     private bool CanRestoreDesktopIcons() => Editor is { HasDesktopIcons: true };

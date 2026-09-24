@@ -75,6 +75,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     /// <summary>The game as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
     public GameEntry Saved { get; private set; }
 
+    /// <summary>The name before the last save, when that save renamed the game.</summary>
+    public string? RenamedFrom { get; private set; }
+
     /// <summary>Not saved yet: the save bar stays until the first save, and playing is not possible.</summary>
     [ObservableProperty]
     public partial bool IsNew { get; private set; }
@@ -353,6 +356,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
 
         _initial = game;
+        RenamedFrom = !IsNew && !string.Equals(Saved.Name, game.Name, StringComparison.Ordinal) ? Saved.Name : null;
         Saved = game;
         ErrorMessage = null;
         IsNew = false;

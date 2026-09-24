@@ -824,4 +824,22 @@
   <data name="Automation_PowerSavingFix" xml:space="preserve">
     <value>How to fix</value>
   </data>
+  <data name="Detail_Renamed" xml:space="preserve">
+    <value>Renamed. Links, Stream Deck keys and shortcuts that still use “{0}” need the new name.</value>
+  </data>
+  <data name="Detail_RenamedShortcut" xml:space="preserve">
+    <value>Renamed. The desktop shortcut came along; links and Stream Deck keys that still use “{0}” need the new name.</value>
+  </data>
+  <data name="Tray_ProfileNotFound" xml:space="preserve">
+    <value>There is no profile “{0}”. A shortcut or Stream Deck key may still use an old name.</value>
+  </data>
+  <data name="Tray_GameNotFound" xml:space="preserve">
+    <value>There is no game “{0}”. A shortcut or Stream Deck key may still use an old name.</value>
+  </data>
+  <data name="Tray_NoPreviousProfile" xml:space="preserve">
+    <value>There is no previous profile to go back to yet. A default profile in the settings fills in.</value>
+  </data>
+  <data name="Tray_LinkInvalid" xml:space="preserve">
+    <value>This link does not work: {0}. RigShift links look like rigshift://apply/&lt;profile&gt;.</value>
+  </data>
 </root>

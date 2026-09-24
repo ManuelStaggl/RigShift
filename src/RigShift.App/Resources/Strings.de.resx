@@ -824,4 +824,22 @@
   <data name="Automation_PowerSavingFix" xml:space="preserve">
     <value>So behebst du es</value>
   </data>
+  <data name="Detail_Renamed" xml:space="preserve">
+    <value>Umbenannt. Links, Stream-Deck-Tasten und Verknüpfungen mit „{0}“ brauchen den neuen Namen.</value>
+  </data>
+  <data name="Detail_RenamedShortcut" xml:space="preserve">
+    <value>Umbenannt. Die Desktop-Verknüpfung ist mitgezogen; Links und Stream-Deck-Tasten mit „{0}“ brauchen den neuen Namen.</value>
+  </data>
+  <data name="Tray_ProfileNotFound" xml:space="preserve">
+    <value>Es gibt kein Profil „{0}“. Eine Verknüpfung oder Stream-Deck-Taste nutzt vielleicht noch einen alten Namen.</value>
+  </data>
+  <data name="Tray_GameNotFound" xml:space="preserve">
+    <value>Es gibt kein Spiel „{0}“. Eine Verknüpfung oder Stream-Deck-Taste nutzt vielleicht noch einen alten Namen.</value>
+  </data>
+  <data name="Tray_NoPreviousProfile" xml:space="preserve">
+    <value>Noch gibt es kein vorheriges Profil. Ein Standardprofil in den Einstellungen springt ein.</value>
+  </data>
+  <data name="Tray_LinkInvalid" xml:space="preserve">
+    <value>Dieser Link funktioniert nicht: {0}. RigShift-Links sehen so aus: rigshift://apply/&lt;Profil&gt;.</value>
+  </data>
 </root>

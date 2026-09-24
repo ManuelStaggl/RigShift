@@ -210,7 +210,9 @@ public partial class App : Application, IAppShell
             // The pipe first: a rigshift:// link or a Stream Deck key that started RigShift waits for it (v4 finding A-06).
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
-            Services.GetRequiredService<CommandPipeServer>().Start();
+            CommandPipeServer pipe = Services.GetRequiredService<CommandPipeServer>();
+            pipe.Refused += (_, text) => _tray?.ShowRefusedCommand(text);
+            pipe.Start();
 
             _tray = Services.GetRequiredService<TrayIconService>();
             _tray.Start();

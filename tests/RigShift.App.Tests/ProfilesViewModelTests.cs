@@ -179,6 +179,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         _host.Store.Profiles.Select(p => p.Name).ShouldBe(["Desk 2", "Side"], ignoreOrder: true);
         page.SelectedItem.ShouldNotBeNull().Profile.Id.ShouldBe(desk.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Saved", "Desk 2"));
+        page.DetailMessage.ShouldBe(Loc.Format("Detail_Renamed", "Desk"), "links and keys with the old name stop working (U-12)");
     });
 
     [Fact]

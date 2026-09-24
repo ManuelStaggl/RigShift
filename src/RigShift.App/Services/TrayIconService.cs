@@ -290,6 +290,10 @@ public sealed class TrayIconService : IDisposable
         Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
     }
 
+    /// <summary>A link, Stream Deck key or shortcut that could not run: its caller has no console to say why.</summary>
+    public void ShowRefusedCommand(string text) =>
+        OnUi(() => Notify(("RigShift", text, NotificationIcon.Warning), click: null));
+
     /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
     public void ShowKeepsRunningHint() =>
         OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NotificationIcon.Info), click: null));

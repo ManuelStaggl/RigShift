@@ -198,6 +198,19 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
     [RelayCommand]
     private void ShowGameTab() => SelectedTabIndex = 0;
 
+    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot (v4 finding U-12).</summary>
+    protected override void OnSaved(GameEditorViewModel editor)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        if (editor.RenamedFrom is not { } oldName)
+        {
+            return;
+        }
+
+        bool moved = DesktopShortcuts.FollowGameRename(oldName, editor.Name, Log);
+        ShowDetail(Loc.Format(moved ? "Detail_RenamedShortcut" : "Detail_Renamed", oldName), InfoKind.Info);
+    }
+
     /// <summary>
     /// A desktop shortcut that starts the whole session. Unlike a profile's it carries the game's own name and icon –
     /// it stands next to the game's other shortcuts and should look like one, not like a RigShift setting.
@@ -210,8 +223,8 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
             return;
         }
 
-        string title = Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
-        string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
+        string title = DesktopShortcuts.GameTitle(item.Name);
+        string file = DesktopShortcuts.GameFile(item.Name);
 
         // No icon found is the fallback, not the error case: the shortcut then shows the RigShift symbol. A found one
         // gets the RigShift card behind it; if that cannot be drawn, the game's plain icon still beats the symbol.
@@ -226,7 +239,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
             Windows.Shell.ShortcutWriter.Create(
                 file,
                 executable,
-                "play " + Core.Cli.CommandLineArguments.Quote(item.Name),
+                DesktopShortcuts.GameArguments(item.Name),
                 Loc.Format("Shortcut_GameDescription", item.Name),
                 icon);
             Log.Information("Shortcut {File} created for game {Game} with icon {Icon}", file, item.Name, icon ?? "(RigShift)");

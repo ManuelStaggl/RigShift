@@ -63,6 +63,7 @@ public static class Program
                 Log.Warning(
                     "Ignored invalid link {Link}; only rigshift://apply/<profile name>, rigshift://toggle and rigshift://play/<game name> are supported",
                     args[0]);
+                CommandLineClient.ReportInvalidLink(args[0]);
                 return CliExitCodes.InvalidArguments;
             }
 

@@ -4,6 +4,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text.Json;
 using System.Windows;
+using RigShift.App.Localization;
 using RigShift.Core.Cli;
 using RigShift.Core.Ipc;
 using Serilog;
@@ -60,6 +61,12 @@ public sealed class CommandPipeServer : IDisposable
         _onUiThread = onUiThread;
         _requestTimeout = requestTimeout ?? RequestTimeout;
     }
+
+    /// <summary>
+    /// A request the caller cannot show the answer of: a link, a Stream Deck key or a desktop shortcut has no console
+    /// (v4 finding A-09). The text is for the tray, in the app's language.
+    /// </summary>
+    public event EventHandler<string>? Refused;
 
     public void Start()
     {
@@ -243,6 +250,15 @@ public sealed class CommandPipeServer : IDisposable
 
     private async Task<PipeResponse> ExecuteAsync(IReadOnlyList<string> args)
     {
+        // A valid rigshift:// link arrives as a command; a raw one is a link the caller could not read.
+        if (args.Count == 1 && RigShiftUri.IsUri(args[0]))
+        {
+            string link = args[0].Length > 200 ? args[0][..200] + "…" : args[0];
+            _log.Warning("Invalid link {Link} reported by its caller", link);
+            Refused?.Invoke(this, Loc.Format("Tray_LinkInvalid", link));
+            return new PipeResponse(CliExitCodes.InvalidArguments, "Invalid link.");
+        }
+
         CliParseResult parsed = CliParser.Parse(args);
         if (parsed.Request is not { } request)
         {
@@ -256,6 +272,23 @@ public sealed class CommandPipeServer : IDisposable
         }
 
         CliResponse response = await _runner.RunAsync(request, CancellationToken.None);
+        if (RefusalText(request, response.ExitCode) is { } text)
+        {
+            Refused?.Invoke(this, text);
+        }
+
         return new PipeResponse(response.ExitCode, response.Output);
     }
+
+    /// <summary>
+    /// What the tray says when a name is not found: most often a profile or game was renamed after the shortcut or Stream
+    /// Deck key was made (v4 finding U-12). A blocked or rolled back switch has told the user already.
+    /// </summary>
+    private static string? RefusalText(CliRequest request, int exitCode) => (request.Command, exitCode) switch
+    {
+        (CliCommand.Apply, CliExitCodes.ProfileNotFound) => Loc.Format("Tray_ProfileNotFound", request.ProfileName),
+        (CliCommand.Play, CliExitCodes.ProfileNotFound) => Loc.Format("Tray_GameNotFound", request.GameName),
+        (CliCommand.Toggle, CliExitCodes.ProfileNotFound) => Loc.Instance["Tray_NoPreviousProfile"],
+        _ => null,
+    };
 }
