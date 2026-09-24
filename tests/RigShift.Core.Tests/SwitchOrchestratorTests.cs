@@ -573,6 +573,38 @@ public sealed class SwitchOrchestratorTests
         await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
     }
 
+    /// <summary>
+    /// The sound device of a display the switch turned on (TV, AV receiver, monitor speakers) wakes a moment after the
+    /// picture. It is tried again instead of given up at once, which left the sound on the old device (finding K-02).
+    /// </summary>
+    [Fact]
+    public async Task Switch_SoundDeviceOfADisplayJustTurnedOn_IsWaitedFor()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: false, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>()).Returns(false, false, true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(3).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A device Windows does not know at all will not wake up: no wait, the switch reports it at once.</summary>
+    [Fact]
+    public async Task Switch_SoundDeviceNotThereAtAll_IsNotWaitedFor()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns([]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(false);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Incomplete);
+        await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Switch_AudioFailure_DoesNotFailDisplaySwitch()
     {
