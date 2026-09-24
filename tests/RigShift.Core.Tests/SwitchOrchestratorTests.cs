@@ -1052,6 +1052,23 @@ public sealed class SwitchOrchestratorTests
         DesktopIcons.Capture().ShouldNotBeNull().Icons.ShouldBe(Layout.Icons);
     }
 
+    /// <summary>
+    /// "Profile recognized – apply the rest" after Windows restored the displays itself: the rest includes the desktop
+    /// symbols, which came in 2.2.0 and were left out of this path.
+    /// </summary>
+    [Fact]
+    public async Task Switch_KeepDisplays_PutsTheDesktopSymbolsBackToo()
+    {
+        Profile rig = Rig() with { DesktopIcons = Layout };
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default with { KeepDisplays = true }, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.Applied.ShouldBeEmpty();
+        DesktopIcons.Restores.ShouldBe(1);
+    }
+
     [Fact]
     public async Task Switch_WithoutSavedSymbols_LeavesTheDesktopAlone()
     {

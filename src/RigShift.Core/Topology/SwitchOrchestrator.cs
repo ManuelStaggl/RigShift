@@ -373,7 +373,7 @@ public sealed class SwitchOrchestrator
         AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn: true, cancellationToken);
         SwitchKeepAwake(profile);
         await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
-        await _tidy.RescueWindowsAsync(cancellationToken);
+        await _tidy.RunAsync(profile, cancellationToken);
 
         Task<AppsOutcome> appsRun = _appRunner.Start(profile);
         AppsOutcome apps = profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
