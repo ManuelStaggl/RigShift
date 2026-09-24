@@ -162,6 +162,61 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Writes what a switch found out about the monitors into every profile (v4 finding K-03): a monitor now on another port
+    /// or graphics card, and the EDID serial number that profiles from before 4.0 lack. Custom names and curvature move
+    /// with a monitor. Call only for a switch that stayed; failures are logged, the switch result stands.
+    /// </summary>
+    public async Task HealIdentitiesAsync(TopologyPlan plan, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        IReadOnlyList<IdentityUpdate> updates = DisplayIdentityHealing.Find(plan, _profiles);
+        if (updates.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<Profile> changed = DisplayIdentityHealing.Apply(_profiles, updates);
+            foreach (Profile profile in changed)
+            {
+                await _store.SaveAsync(profile, cancellationToken);
+            }
+
+            await _settings.UpdateAsync(
+                s => s with
+                {
+                    DisplayNames = DisplayIdentityHealing.Rekey(s.DisplayNames, updates),
+                    FovCurvatureMm = DisplayIdentityHealing.Rekey(s.FovCurvatureMm, updates),
+                },
+                cancellationToken,
+                notify: false);
+
+            foreach (IdentityUpdate update in updates)
+            {
+                if (update.Moved)
+                {
+                    _log.Information("Display {Display} moved from {Saved} to {Target}; updated in {Count} profile(s)",
+                        DisplayNames.Of(update.Identity), DiagnosticsReport.ShortTargetPath(update.SavedPath),
+                        DiagnosticsReport.ShortTargetPath(update.Identity.TargetDevicePath), changed.Count);
+                }
+                else
+                {
+                    _log.Information("Display {Display} at {Target} saved with its EDID serial number; updated in {Count} profile(s)",
+                        DisplayNames.Of(update.Identity), DiagnosticsReport.ShortTargetPath(update.Identity.TargetDevicePath), changed.Count);
+                }
+            }
+
+            await ReloadAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The identities of {Count} display(s) could not be updated in the profiles", updates.Count);
+        }
+    }
+
     /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {

@@ -265,6 +265,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
                 _ = FollowAppsAsync(record, result.AppsCompletion);
             }
 
+            await HealAsync(result);
             return result;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)
@@ -333,6 +334,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             {
                 RememberCatchUp(pending.Profile, result);
                 await CompleteAsync(ToRecord(started, pending.Profile, result));
+                await HealAsync(result);
             }
             else if (_catalog.ActiveProfile is { } active && active.Id != pending.Profile.Id)
             {
@@ -453,6 +455,27 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             {
                 _log.Error(ex, "A listener of the switch result threw for {Profile}; the result stands as {Outcome}", record.ProfileName, record.Outcome);
             }
+        }
+    }
+
+    /// <summary>
+    /// A switch that stayed tells where the monitors are now: monitors found on another port or graphics card, and serial
+    /// numbers older profiles lack, go into every profile (v4 finding K-03). After the result, so nothing waits for the disk.
+    /// </summary>
+    private async Task HealAsync(SwitchResult result)
+    {
+        if (result.Outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
+        {
+            return;
+        }
+
+        try
+        {
+            await _catalog.HealIdentitiesAsync(result.Plan, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "The displays of {Profile} could not be written back into the profiles", result.Plan.Profile.Name);
         }
     }
 

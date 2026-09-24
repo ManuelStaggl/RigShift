@@ -77,6 +77,28 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
+    public async Task Switch_ThatStays_WritesAMonitorOnANewPortIntoEveryProfile()
+    {
+        // K-03: the ultrawide moved to another port and is found by its EDID. Afterwards every profile with it and its
+        // custom name know the new path, so the next switch finds it directly.
+        DisplayIdentity moved = Ultrawide with { TargetDevicePath = @"\\?\DISPLAY#SAM0001#OTHERPORT&9", EdidSerialHash = "0123456789ABCDEF" };
+        Profile rig = Rig();
+        Profile wide = Profile("Wide only", [UltrawideMode]);
+        await _host.Store.SaveAsync(rig, CancellationToken.None);
+        await _host.Store.SaveAsync(wide, CancellationToken.None);
+        await _host.Settings.UpdateAsync(
+            s => s with { DisplayNames = new Dictionary<string, string> { [Ultrawide.TargetDevicePath] = "Big one" } }, CancellationToken.None);
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+        _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(moved), Attached(Tablet)));
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
+        _host.Catalog.Profiles.Select(p => p.Displays[0].Identity).ShouldAllBe(identity => identity == moved);
+        _host.Settings.Current.DisplayNames.ShouldNotBeNull()[moved.TargetDevicePath].ShouldBe("Big one");
+    }
+
+    [Fact]
     public async Task Blocked_ByIdenticalDisplaysOnNewPorts_SaysSoInsteadOfAskingToSwitchThemOn()
     {
         DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
