@@ -83,6 +83,20 @@ public partial class App : Application, IAppShell
                     return;
                 }
             }
+
+            // Without RigShift nothing switches back when the game ends (v4 findings A-14, E-06).
+            GameCatalog catalog = Services.GetRequiredService<GameCatalog>();
+            string running = string.Join(", ", Services.GetRequiredService<GameSessionService>().RunningGames
+                .Select(id => catalog.Find(id)?.Name).OfType<string>());
+            if (running.Length > 0)
+            {
+                Log.Information("Exit requested while {Games} runs, asking first", running);
+                if (!await ProfileDialogs.ConfirmQuitDuringGameAsync(running))
+                {
+                    Log.Information("Exit cancelled, the game session goes on");
+                    return;
+                }
+            }
         }
 #pragma warning disable CA1031 // A question that cannot be asked must not make RigShift impossible to exit.
         catch (Exception ex)

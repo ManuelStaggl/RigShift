@@ -115,6 +115,10 @@
   <data name="Interrupted_Text" xml:space="preserve"><value>RigShift ended while switching to “{0}”, so the switch was never confirmed. Restore the layout from before?</value></data>
   <data name="Interrupted_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="Interrupted_Keep" xml:space="preserve"><value>Keep as is</value></data>
+  <data name="QuitGame_Title" xml:space="preserve"><value>A game is running</value></data>
+  <data name="QuitGame_Text" xml:space="preserve"><value>RigShift is watching {0}. If it quits now, nothing switches back or closes the tools when the game ends.</value></data>
+  <data name="QuitGame_Quit" xml:space="preserve"><value>Quit anyway</value></data>
+  <data name="QuitGame_Stay" xml:space="preserve"><value>Keep running</value></data>
   <data name="SettingsProblem_Title" xml:space="preserve"><value>Your settings could not be read</value></data>
   <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file was kept as “{0}”.</value></data>
   <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file could not be copied – changing a setting now overwrites it.</value></data>

@@ -203,6 +203,15 @@ public sealed class ProfileDialogs : IProfilePageDialogs
             Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
 
     /// <summary>
+    /// Asks before quitting while a game session runs: without RigShift nothing switches back or closes the tools when the
+    /// game ends (v4 findings A-14, E-06). An update waits for the exit, so it simply comes later.
+    /// </summary>
+    public static async Task<bool> ConfirmQuitDuringGameAsync(string games) =>
+        await Ask(
+            Loc.Instance["QuitGame_Title"], Loc.Format("QuitGame_Text", games),
+            Loc.Instance["QuitGame_Quit"], DialogButtonKind.Danger, Loc.Instance["QuitGame_Stay"]);
+
+    /// <summary>
     /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
     /// (rules, hotkeys, the update choice) changes how the machine behaves, and the copy is only useful if the user
     /// knows it exists.

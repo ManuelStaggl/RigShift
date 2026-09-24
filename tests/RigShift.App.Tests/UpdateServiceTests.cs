@@ -250,8 +250,10 @@ public sealed class UpdateServiceTests : IDisposable
 
         _feed.Downloads.ShouldBe(1);
         _feed.Applied.ShouldBe(["9.9.9"]);
-        _shell.Received(1).Quit();
-        _shell.DidNotReceive().QuitByUser();
+
+        // The user's exit with its questions: a hidden editor with unsaved changes, a running game (A-14, E-06).
+        _shell.Received(1).QuitByUser();
+        _shell.DidNotReceive().Quit();
     }
 
     [Fact]
@@ -268,6 +270,7 @@ public sealed class UpdateServiceTests : IDisposable
         service.State.ShouldBe(UpdateState.Failed);
         _feed.Applied.ShouldBeEmpty();
         _shell.DidNotReceive().Quit();
+        _shell.DidNotReceive().QuitByUser();
     }
 
     [Fact]
@@ -282,6 +285,7 @@ public sealed class UpdateServiceTests : IDisposable
 
         service.State.ShouldBe(UpdateState.Failed);
         _shell.DidNotReceive().Quit();
+        _shell.DidNotReceive().QuitByUser();
     }
 
     [Fact]
@@ -294,6 +298,7 @@ public sealed class UpdateServiceTests : IDisposable
 
         _feed.Applied.ShouldBeEmpty();
         _shell.DidNotReceive().Quit();
+        _shell.DidNotReceive().QuitByUser();
     }
 
     /// <summary>The check at login often runs before the network is up; a PC that is off every night must still update.</summary>

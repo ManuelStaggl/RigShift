@@ -194,7 +194,9 @@ public sealed class UpdateService : IDisposable
             return;
         }
 
-        _shell.Quit();
+        // The user's exit, with its questions: an editor with unsaved changes in the hidden window, or a game session whose
+        // way back would be lost (v4 findings A-14, E-06). Staying is fine – the updater waits for the exit either way.
+        _shell.QuitByUser();
     }
 
     public void Dispose()

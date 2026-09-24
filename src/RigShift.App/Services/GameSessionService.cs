@@ -61,6 +61,9 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     public bool IsRunning(Guid gameId) => _running.ContainsKey(gameId);
 
+    /// <summary>The games whose session runs now; quitting would lose their way back (v4 findings A-14, E-06).</summary>
+    public IReadOnlyList<Guid> RunningGames => [.. _running.Keys];
+
     /// <summary>When the running session of this game started, or <c>null</c> when none runs.</summary>
     public DateTimeOffset? RunningSince(Guid gameId) => _running.TryGetValue(gameId, out RunningSession? session) ? session.StartedAt : null;
 

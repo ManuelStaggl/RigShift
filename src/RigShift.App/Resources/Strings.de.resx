@@ -115,6 +115,10 @@
   <data name="Interrupted_Text" xml:space="preserve"><value>RigShift wurde beim Umschalten auf „{0}“ beendet, das Umschalten wurde also nie bestätigt. Die vorherige Anordnung wiederherstellen?</value></data>
   <data name="Interrupted_Restore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Interrupted_Keep" xml:space="preserve"><value>So lassen</value></data>
+  <data name="QuitGame_Title" xml:space="preserve"><value>Ein Spiel läuft</value></data>
+  <data name="QuitGame_Text" xml:space="preserve"><value>RigShift begleitet {0}. Wird es jetzt beendet, schaltet nach dem Spiel nichts zurück und die Tools bleiben offen.</value></data>
+  <data name="QuitGame_Quit" xml:space="preserve"><value>Trotzdem beenden</value></data>
+  <data name="QuitGame_Stay" xml:space="preserve"><value>Weiterlaufen lassen</value></data>
   <data name="SettingsProblem_Title" xml:space="preserve"><value>Die Einstellungen konnten nicht gelesen werden</value></data>
   <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
   <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei ließ sich nicht kopieren – eine geänderte Einstellung überschreibt sie.</value></data>
