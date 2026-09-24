@@ -72,7 +72,7 @@ public sealed class SwitchOrchestrator
         _log = log.ForContext<SwitchOrchestrator>();
         _topology = new TopologyApplier(display, planner, options, time, _log);
         _tidy = new PostSwitchTidy(windows, desktopIcons, options, time, _log);
-        _audioSwitcher = new AudioSwitcher(audio, _log);
+        _audioSwitcher = new AudioSwitcher(audio, options, time, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
         _surroundSwitcher = new SurroundSwitcher(surround, _log);
@@ -322,7 +322,9 @@ public sealed class SwitchOrchestrator
             }
 
             long audioStarted = _time.GetTimestamp();
-            audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
+            // A display that was off may carry the profile's sound device, which wakes a moment after its picture (K-02).
+            bool displaysTurnedOn = applied.Plan.Resolved.Any(d => !d.Target.IsActive);
+            audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn, cancellationToken);
             if (audio != AudioOutcome.NotConfigured)
             {
                 _log.Information("Audio for {Profile}: {Audio} after {Milliseconds:0} ms", profile.Name, audio, _time.GetElapsedTime(audioStarted).TotalMilliseconds);
@@ -368,7 +370,7 @@ public sealed class SwitchOrchestrator
         _ = CancelPendingAppsAsync();
 
         TopologyPlan plan = _planner.Plan(profile, await _display.QueryAsync(cancellationToken));
-        AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, cancellationToken);
+        AudioOutcome audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn: true, cancellationToken);
         SwitchKeepAwake(profile);
         await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
         await _tidy.RescueWindowsAsync(cancellationToken);

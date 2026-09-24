@@ -45,6 +45,15 @@ public sealed record SwitchOptions
     /// <summary>Interval for looking for those displays: short, the switch waits for nothing else meanwhile.</summary>
     public TimeSpan SurroundPollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>
+    /// How long the sound device of a display the switch turned on may take to become active: a TV, an AV receiver or
+    /// a monitor's own speakers appear with the picture, half a second to three seconds after it (finding K-02).
+    /// </summary>
+    public TimeSpan AudioWakeBudget { get; init; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>Interval for trying such a device again.</summary>
+    public TimeSpan AudioWakePollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
     /// <summary>Interval for re-querying the topology while waiting.</summary>
     public TimeSpan PollInterval { get; init; } = TimeSpan.FromSeconds(1);
 
