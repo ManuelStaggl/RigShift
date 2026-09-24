@@ -400,11 +400,19 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
 
     public IReadOnlyList<AutomationRule> Build() => Rules.Select(r => r.ToRule()).ToList();
 
-    /// <summary>All rules for the settings: the other profiles' rules as they were, then this profile's.</summary>
-    public IReadOnlyList<AutomationRule> Merge() => [.. _others, .. Build()];
+    /// <summary>
+    /// All rules for the settings: the other profiles' rules as they are on disk <em>now</em>, then this profile's. Not
+    /// the copy taken when the editor opened – the assistant or a restore may have changed them since (v4 finding A-02).
+    /// </summary>
+    public IReadOnlyList<AutomationRule> MergeInto(IReadOnlyList<AutomationRule>? current) =>
+        [.. (current ?? []).Where(r => r.ProfileId != _profileId), .. Build()];
 
     /// <summary>After a save: the rules as they stand are the ones on disk.</summary>
     public void MarkSaved() => _initial = Build();
+
+    /// <summary>Whether <paramref name="current"/> holds other rules for this profile than the editor was opened (or last saved) with.</summary>
+    public bool ChangedOnDisk(IReadOnlyList<AutomationRule>? current) =>
+        !SameRules((current ?? []).Where(r => r.ProfileId == _profileId).ToList(), _initial);
 
     /// <summary>New texts after a language change, same rules.</summary>
     public void Relabel() => Rebuild(Build());

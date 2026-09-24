@@ -496,8 +496,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             await _catalog.SaveAsync(profile, CancellationToken.None);
             if (Rules.IsDirty)
             {
-                IReadOnlyList<AutomationRule> rules = Rules.Merge();
-                await _settings.UpdateAsync(s => s with { AutomationRules = rules }, CancellationToken.None);
+                await _settings.UpdateAsync(s => s with { AutomationRules = Rules.MergeInto(s.AutomationRules) }, CancellationToken.None);
                 Rules.MarkSaved();
             }
         }

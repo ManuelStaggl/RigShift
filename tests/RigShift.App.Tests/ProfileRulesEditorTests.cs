@@ -141,8 +141,32 @@ public sealed class ProfileRulesEditorTests
             _rig.Id, [other, RuleFor(Wheelbase)], [desk, _rig], null, Connected, null, PowerCheck(), Logger.None);
 
         editor.Rules.ShouldHaveSingleItem();
-        editor.Merge().Select(r => r.ProfileId).ShouldBe([desk.Id, _rig.Id]);
+        editor.MergeInto([other, RuleFor(Wheelbase)]).Select(r => r.ProfileId).ShouldBe([desk.Id, _rig.Id]);
         editor.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MergeInto_TakesTheOtherRulesAsTheyAreNow()
+    {
+        Profile desk = Profile("Desk", []);
+        var other = new AutomationRule { Devices = [new RuleDevice { Id = Dongle }], ProfileId = desk.Id };
+        var editor = new ProfileRulesEditor(_rig.Id, [RuleFor(Wheelbase)], [desk, _rig], null, Connected, null, PowerCheck(), Logger.None);
+
+        // The assistant added a rule for Desk while this editor was open.
+        editor.MergeInto([RuleFor(Wheelbase), other]).Select(r => r.ProfileId).ShouldBe([desk.Id, _rig.Id]);
+    }
+
+    [Fact]
+    public void ChangedOnDisk_OnlyForThisProfilesRules()
+    {
+        Profile desk = Profile("Desk", []);
+        AutomationRule own = RuleFor(Wheelbase);
+        var other = new AutomationRule { Devices = [new RuleDevice { Id = Dongle }], ProfileId = desk.Id };
+        var editor = new ProfileRulesEditor(_rig.Id, [own], [desk, _rig], null, Connected, null, PowerCheck(), Logger.None);
+
+        editor.ChangedOnDisk([own, other]).ShouldBeFalse();
+        editor.ChangedOnDisk([own with { SkipConfirmation = !own.SkipConfirmation }]).ShouldBeTrue();
+        editor.ChangedOnDisk([]).ShouldBeTrue();
     }
 
     [Fact]

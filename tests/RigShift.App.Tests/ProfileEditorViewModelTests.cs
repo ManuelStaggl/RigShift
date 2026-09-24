@@ -427,6 +427,21 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Rules_Save_KeepsARuleAnotherProfileGotWhileTheEditorWasOpen()
+    {
+        Profile rig = Rig();
+        Guid desk = Guid.NewGuid();
+        ProfileEditorViewModel editor = await EditorAsync(rig);
+        var added = new AutomationRule { ProfileId = desk, Devices = [new RuleDevice { Id = "VID_046D&PID_C547" }] };
+        await _host.Settings.UpdateAsync(s => s with { AutomationRules = [added] }, TestContext.Current.CancellationToken);
+
+        editor.Rules.AddRuleCommand.Execute(null);
+        await SaveAsync(editor, expected: true);
+
+        _host.Settings.Current.AutomationRules.ShouldNotBeNull().Select(r => r.ProfileId).ShouldBe([desk, rig.Id]);
+    }
+
+    [Fact]
     public async Task Save_DiskSaysNo_ShowsTheError_AndTheProfileStaysNewAndDirty()
     {
         IProfileStore store = Substitute.For<IProfileStore>();
