@@ -95,12 +95,20 @@ public sealed class GameSessionRunner
     {
         long started = _time.GetTimestamp();
 
-        SwitchOutcome? applied = await ApplyProfileAsync(game, fromLink, cancellationToken);
+        (SwitchOutcome? applied, Task<AppsOutcome> profileApps) = await ApplyProfileAsync(game, fromLink, cancellationToken);
         if (applied is { } outcome && outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
         {
             // Starting a game into a layout that was not applied is worse than not starting it.
             _log.Warning("Game {Game}: the profile ended as {Outcome}, so the game was not started", game.Name, outcome);
             return new GameSessionResult(GameSessionOutcome.ProfileFailed, outcome, null);
+        }
+
+        // The profile's apps first: wheelbase software often belongs to the rig rather than to one game, and may still wait
+        // for its USB device. The game used to start meanwhile and saw no wheel (v4 finding K-11).
+        if (!profileApps.IsCompleted)
+        {
+            _log.Information("Game {Game}: waiting for the apps of its profile before starting", game.Name);
+            await profileApps.WaitAsync(cancellationToken);
         }
 
         // Wheelbase software, Trading Paints and anything else the game must already see when it comes up.
@@ -196,17 +204,19 @@ public sealed class GameSessionRunner
         }
     }
 
-    private async Task<SwitchOutcome?> ApplyProfileAsync(GameEntry game, bool fromLink, CancellationToken cancellationToken)
+    /// <returns>How the switch ended (<c>null</c> without a profile) and the apps the profile started after it.</returns>
+    private async Task<(SwitchOutcome? Outcome, Task<AppsOutcome> Apps)> ApplyProfileAsync(GameEntry game, bool fromLink, CancellationToken cancellationToken)
     {
+        Task<AppsOutcome> noApps = Task.FromResult(AppsOutcome.NotConfigured);
         if (game.ProfileId is not { } id)
         {
-            return null;
+            return (null, noApps);
         }
 
         if (_profile(id) is not { } profile)
         {
             _log.Warning("Game {Game} names a profile that no longer exists, switching nothing", game.Name);
-            return null;
+            return (null, noApps);
         }
 
         SwitchRequest request = fromLink ? new SwitchRequest { FromLink = true } : SwitchRequest.Default;
@@ -214,10 +224,10 @@ public sealed class GameSessionRunner
         if (result is null)
         {
             _log.Warning("Game {Game}: another switch was running, so nothing was applied", game.Name);
-            return SwitchOutcome.Blocked;
+            return (SwitchOutcome.Blocked, noApps);
         }
 
-        return result.Outcome;
+        return (result.Outcome, result.AppsCompletion);
     }
 
     /// <summary>

@@ -77,6 +77,34 @@ public sealed class GameSessionRunnerTests
         _apps.Received().Start(@"C:\SimHub\SimHubWPF.exe", null);
     }
 
+    [Fact]
+    public async Task Run_WaitsForTheProfilesApps_BeforeTheGameAndItsTools()
+    {
+        // K-11: the wheelbase software is in the profile and waits for the wheelbase; the game must not start before it.
+        var profileApps = new TaskCompletionSource<AppsOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _switcher.SwitchAsync(Arg.Any<Profile>(), Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<SwitchResult?>(new SwitchResult
+            {
+                Outcome = SwitchOutcome.Applied,
+                Plan = new TopologyPlan { Profile = Rig(), Resolved = [], Missing = [], Warnings = [] },
+                Apps = AppsOutcome.Pending,
+                AppsCompletion = profileApps.Task,
+            }));
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\Tools\Before.exe" } },
+        };
+
+        Task<GameSessionResult> session = Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        session.IsCompleted.ShouldBeFalse();
+        _starter.DidNotReceiveWithAnyArgs().Start(default!);
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
+        profileApps.SetResult(AppsOutcome.Applied);
+        (await session).Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _starter.ReceivedWithAnyArgs(1).Start(default!);
+    }
+
     /// <summary>Starting a game into a layout that was not applied is worse than not starting it.</summary>
     [Fact]
     public async Task Run_DoesNotStartTheGameWhenTheProfileWasBlocked()
