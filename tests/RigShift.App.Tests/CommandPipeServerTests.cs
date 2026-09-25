@@ -88,7 +88,7 @@ public sealed class CommandPipeServerTests
 
         // Someone else owns the name with a single instance: the server cannot create its own.
         var blocker = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work());
+        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work(), retryDelay: TimeSpan.FromMilliseconds(50));
         server.Start();
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
@@ -124,7 +124,7 @@ public sealed class CommandPipeServerTests
 
         var squatter = new NamedPipeServerStream(pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
             PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work());
+        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work(), retryDelay: TimeSpan.FromMilliseconds(50));
         server.Start();
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);

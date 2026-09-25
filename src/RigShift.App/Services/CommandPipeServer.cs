@@ -27,6 +27,7 @@ public sealed class CommandPipeServer : IDisposable
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     private readonly TimeSpan _requestTimeout;
+    private readonly TimeSpan _retryDelay;
 
     private readonly CommandRunner _runner;
     private readonly IAppShell _shell;
@@ -44,14 +45,15 @@ public sealed class CommandPipeServer : IDisposable
     {
     }
 
-    /// <summary>Tests: an own pipe name, no WPF dispatcher and optionally a shorter request timeout.</summary>
+    /// <summary>Tests: an own pipe name, no WPF dispatcher and optionally shorter waits.</summary>
     internal CommandPipeServer(
         CommandRunner runner,
         IAppShell shell,
         ILogger log,
         string pipeName,
         Func<Func<Task<PipeResponse>>, Task<PipeResponse>> onUiThread,
-        TimeSpan? requestTimeout = null)
+        TimeSpan? requestTimeout = null,
+        TimeSpan? retryDelay = null)
     {
         ArgumentNullException.ThrowIfNull(log);
         _runner = runner;
@@ -60,6 +62,7 @@ public sealed class CommandPipeServer : IDisposable
         _pipeName = pipeName;
         _onUiThread = onUiThread;
         _requestTimeout = requestTimeout ?? RequestTimeout;
+        _retryDelay = retryDelay ?? RetryDelay;
     }
 
     /// <summary>
@@ -99,13 +102,13 @@ public sealed class CommandPipeServer : IDisposable
                 // of spinning or letting the listener die. Said once, not every two seconds.
                 if (!createFailed)
                 {
-                    _log.Warning(ex, "Command pipe {Pipe} could not be created, retrying every {Delay}", _pipeName, RetryDelay);
+                    _log.Warning(ex, "Command pipe {Pipe} could not be created, retrying every {Delay}", _pipeName, _retryDelay);
                     createFailed = true;
                 }
 
                 try
                 {
-                    await Task.Delay(RetryDelay, cancellationToken);
+                    await Task.Delay(_retryDelay, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
