@@ -55,30 +55,8 @@ public static class ShortcutWriter
             return false;
         }
 
-        var link = new ShellLink();
-        string target, arguments, iconFile;
-        int iconIndex;
-        try
-        {
-            ((IPersistFile)link).Load(oldFile, STGM.STGM_READ);
-            var shellLink = (IShellLinkW)link;
-            Span<char> buffer = stackalloc char[1024];
-            WIN32_FIND_DATAW data = default;
-            shellLink.GetPath(buffer, ref data, 0);
-            target = Text(buffer);
-            shellLink.GetArguments(buffer);
-            arguments = Text(buffer);
-            shellLink.GetIconLocation(buffer, out iconIndex);
-            iconFile = Text(buffer);
-        }
-        finally
-        {
-            Marshal.ReleaseComObject(link);
-        }
-
-        if (target.Length == 0
-            || !string.Equals(Path.GetFullPath(target), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(arguments, oldArguments, StringComparison.Ordinal))
+        (string target, string arguments, string iconFile, int iconIndex) = Read(oldFile);
+        if (!Starts(target, executable) || !string.Equals(arguments, oldArguments, StringComparison.Ordinal))
         {
             return false;
         }
@@ -91,6 +69,68 @@ public static class ShortcutWriter
 
         return true;
     }
+
+    /// <summary>
+    /// Deletes the shortcuts RigShift made in <paramref name="folder"/>: those that start <paramref name="executable"/>
+    /// with a profile or game. Called before an uninstall, so the desktop keeps no dead symbols (v4 finding E-16). A
+    /// shortcut that cannot be read or deleted is left alone; the others still go.
+    /// </summary>
+    /// <returns>The deleted files.</returns>
+    public static IReadOnlyList<string> DeleteOwn(string folder, string executable)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(folder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(executable);
+        var deleted = new List<string>();
+        if (!Directory.Exists(folder))
+        {
+            return deleted;
+        }
+
+        foreach (string file in Directory.EnumerateFiles(folder, "*.lnk"))
+        {
+            try
+            {
+                (string target, string arguments, _, _) = Read(file);
+                if (Starts(target, executable)
+                    && (arguments.StartsWith("apply ", StringComparison.Ordinal) || arguments.StartsWith("play ", StringComparison.Ordinal)))
+                {
+                    File.Delete(file);
+                    deleted.Add(file);
+                }
+            }
+            catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException)
+            {
+                // Someone else's broken or locked shortcut is not ours to deal with.
+            }
+        }
+
+        return deleted;
+    }
+
+    private static (string Target, string Arguments, string IconFile, int IconIndex) Read(string file)
+    {
+        var link = new ShellLink();
+        try
+        {
+            ((IPersistFile)link).Load(file, STGM.STGM_READ);
+            var shellLink = (IShellLinkW)link;
+            Span<char> buffer = stackalloc char[1024];
+            WIN32_FIND_DATAW data = default;
+            shellLink.GetPath(buffer, ref data, 0);
+            string target = Text(buffer);
+            shellLink.GetArguments(buffer);
+            string arguments = Text(buffer);
+            shellLink.GetIconLocation(buffer, out int iconIndex);
+            return (target, arguments, Text(buffer), iconIndex);
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(link);
+        }
+    }
+
+    private static bool Starts(string target, string executable) =>
+        target.Length > 0 && string.Equals(Path.GetFullPath(target), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
 
     private static string Text(ReadOnlySpan<char> buffer) => buffer.IndexOf('\0') is var end and >= 0 ? new string(buffer[..end]) : new string(buffer);
 

@@ -17,6 +17,28 @@ public sealed class ShortcutWriterTests : IDisposable
     }
 
     [Fact]
+    public void DeleteOwn_RemovesProfileAndGameShortcuts_KeepsEverythingElse()
+    {
+        string profile = Path.Combine(_folder, "RigShift – Rig.lnk");
+        string game = Path.Combine(_folder, "iRacing.lnk");
+        string installer = Path.Combine(_folder, "iRacing (installer).lnk");
+        string plainRigShift = Path.Combine(_folder, "RigShift.lnk");
+        ShortcutWriter.Create(profile, _executable, "apply \"Rig\"", "Switch to Rig");
+        ShortcutWriter.Create(game, _executable, "play \"iRacing\"", "iRacing");
+        ShortcutWriter.Create(installer, Path.Combine(_folder, "iRacingUI.exe"), string.Empty, "iRacing");
+        ShortcutWriter.Create(plainRigShift, _executable, string.Empty, "RigShift");
+        File.WriteAllText(Path.Combine(_folder, "broken.lnk"), "not a shortcut");
+
+        ShortcutWriter.DeleteOwn(_folder, _executable).ShouldBe([profile, game], ignoreOrder: true);
+
+        File.Exists(profile).ShouldBeFalse();
+        File.Exists(game).ShouldBeFalse();
+        File.Exists(installer).ShouldBeTrue();
+        File.Exists(plainRigShift).ShouldBeTrue("Velopack removes its own shortcut");
+        File.Exists(Path.Combine(_folder, "broken.lnk")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void Retarget_OwnShortcut_GetsTheNewNameAndFile()
     {
         string oldFile = Path.Combine(_folder, "RigShift – Rig.lnk");

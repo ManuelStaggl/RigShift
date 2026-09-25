@@ -153,6 +153,13 @@ public static class Program
         {
             Log.Warning(ex, "Autostart entry could not be removed before uninstall");
         }
+
+        // The profile and game shortcuts would point at a deleted RigShift.exe.
+        if (Environment.ProcessPath is { } executable)
+        {
+            IReadOnlyList<string> deleted = ShortcutWriter.DeleteOwn(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), executable);
+            Log.Information("Removed {Count} desktop shortcut(s) before uninstall", deleted.Count);
+        }
     }
 
     /// <summary>Runs before logging is set up; an unreadable file means defaults, and the app logs that later.</summary>
