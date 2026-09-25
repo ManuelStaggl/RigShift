@@ -1,0 +1,74 @@
+name: VirusTotal
+
+# Uploads the setup and the portable ZIP of a published release to VirusTotal and adds the scan links to the
+# release page. Called by release.yml after publishing; started by hand, it scans the release of the given tag.
+# The links work as soon as the upload is in; VirusTotal fills in the result a few minutes later.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      VIRUSTOTAL_API_KEY:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, e.g. v4.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Download the release files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release download "${{ inputs.tag }}" --repo ${{ github.repository }} --dir files
+          --pattern RigShift-win-Setup.exe --pattern RigShift-win-Portable.zip
+
+      # Unsigned downloads get asked "is this a virus?" - the release answers with a public scan of both files.
+      # curl as in VirusTotal's own examples: Invoke-RestMethod -Form got a bare 400 on 4.0.0. Failures print the answer.
+      - name: Upload to VirusTotal
+        env:
+          VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        shell: pwsh
+        run: |
+          if (-not $env:VT_API_KEY) { Write-Output '::warning::VIRUSTOTAL_API_KEY is not set - no scan links.'; exit 0 }
+          $links = foreach ($name in 'RigShift-win-Setup.exe', 'RigShift-win-Portable.zip') {
+            $path = "files/$name"
+            $hash = (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant()
+            # Files over 32 MB need a one-time upload address.
+            $answer = curl -sS --fail-with-body -H "x-apikey: $env:VT_API_KEY" https://www.virustotal.com/api/v3/files/upload_url
+            if ($LASTEXITCODE -ne 0) { throw "VirusTotal upload_url failed for ${name}: $answer" }
+            $target = ($answer | ConvertFrom-Json).data
+            $answer = curl -sS --fail-with-body --max-time 600 -H "x-apikey: $env:VT_API_KEY" -F "file=@$path" $target
+            if ($LASTEXITCODE -ne 0) { throw "VirusTotal upload failed for ${name}: $answer" }
+            Write-Output "Uploaded $name ($hash): $answer" | Out-Host
+            "[$name](https://www.virustotal.com/gui/file/$hash)"
+          }
+          "VirusTotal: $($links -join ' · ')" | Set-Content virustotal-line.md
+
+      - name: Add the links to the release page
+        if: hashFiles('virustotal-line.md') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $line = (Get-Content virustotal-line.md -Raw).Trim()
+          $page = gh release view "${{ inputs.tag }}" --repo ${{ github.repository }} --json body -q .body | Out-String
+          # A second run replaces the links of the first instead of adding another line.
+          $page = [regex]::Replace($page, '(?m)^VirusTotal: .*\r?\n', '')
+          $page = [regex]::new('\r?\n---').Replace($page, { param($m) "`n$line`n$($m.Value)" }, 1)
+          Set-Content release-page.md $page.TrimEnd() -NoNewline
+          gh release edit "${{ inputs.tag }}" --repo ${{ github.repository }} --notes-file release-page.md

@@ -215,36 +215,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ github.ref_name }} Releases/SHA256SUMS Releases/RigShift-${{ needs.package.outputs.version }}.cdx.json --clobber
 
-      # Unsigned downloads get asked "is this a virus?" - the release answers with a public scan of both files.
-      # The links work as soon as the upload is in; VirusTotal fills in the result a few minutes later.
-      - name: Scan on VirusTotal
-        env:
-          VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
-        shell: pwsh
-        run: |
-          if (-not $env:VT_API_KEY) { Write-Output '::warning::VIRUSTOTAL_API_KEY is not set - the release goes out without scan links.'; exit 0 }
-          $headers = @{ 'x-apikey' = $env:VT_API_KEY }
-          try {
-            $links = foreach ($name in 'RigShift-win-Setup.exe', 'RigShift-win-Portable.zip') {
-              $file = Get-Item "Releases/$name"
-              $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-              # Files over 32 MB need a one-time upload address.
-              $target = (Invoke-RestMethod -Uri 'https://www.virustotal.com/api/v3/files/upload_url' -Headers $headers).data
-              Invoke-RestMethod -Uri $target -Method Post -Headers $headers -Form @{ file = $file } -TimeoutSec 600 | Out-Null
-              Write-Output "Uploaded $name ($hash)" | Out-Host
-              "[$name](https://www.virustotal.com/gui/file/$hash)"
-            }
-          }
-          catch {
-            Write-Output "::warning::VirusTotal upload failed, the release goes out without scan links: $($_.Exception.Message)"
-            exit 0
-          }
-          $page = Get-Content release-page.md -Raw
-          $line = "VirusTotal: $($links -join ' · ')"
-          $page = [regex]::new('\r?\n---').Replace($page, { param($m) "`n$line`n$($m.Value)" }, 1)
-          Set-Content release-page.md $page -NoNewline
-
       - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release edit ${{ github.ref_name }} --notes-file release-page.md --draft=false --latest
+
+  # After publishing: a failed scan must not hold the release back, and the same workflow scans older releases by hand.
+  virustotal:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/virustotal.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
