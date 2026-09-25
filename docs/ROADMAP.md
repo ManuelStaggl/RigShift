@@ -14,7 +14,6 @@ RigShift is meant to stay small: switch into the rig and back, reliably. Release
 Ideas that come up regularly and are not ruled out, but need a real use case before they get built:
 
 - VR headsets as part of a profile (today: audio and apps work, the display side is untested).
-- winget distribution.
 
 ## Not planned
 
