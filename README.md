@@ -71,7 +71,7 @@ Updates install on the next start (Settings). Data lives in `%AppData%\RigShift`
 
 | Setup | Result |
 |---|---|
-| Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 (G93SC) + spacedesk display | my own PC, daily use since September 2026 |
+| Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 (G93SC) + CM27X3 as SimHub dash | my own PC, daily use since September 2026 |
 | Windows 10 code base (Server 2022, build 20348) | every change in CI: tests and a live read of the display configuration |
 | NVIDIA Surround on/off | not tested on a Surround rig yet – reports welcome |
 | AMD / Intel graphics | not tested yet – [report your setup](https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml) |
