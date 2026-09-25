@@ -6,6 +6,71 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-09-25
+
+RigShift went from 1.0 to 3.6 in its first week because every fix shipped the same day. 4.0 bundles the work since
+then: a full review of every part of the app, with the rig – not the desk – as the place it has to work.
+
+**What's new in 4.0**
+
+- **Confirm from the seat:** any button on the wheel, button box or controller keeps a switch.
+- **More reliable at the real rig:** Surround keeps its bezel correction, an HDMI/DP monitor's sound device is waited
+  for, identical monitors are told apart after a new graphics card, and a wheelbase dropout no longer flips the PC.
+- **Faster start into the rig:** the setup assistant ends with hotkeys, start with Windows and a first test switch.
+- **Games from more launchers:** iRacing, EA app and Xbox games next to Steam and Epic.
+- **Help that helps:** error messages say what to do, and "Save support package" fills in a bug report for you.
+
+### Added
+
+- Any button on a wheel, button box, game pad or joystick keeps a switch while the countdown runs. Switches from a USB
+  rule get at least 30 seconds to confirm, so you can get to the seat first.
+- **Ctrl+Alt+Shift+D** turns every display on, from anywhere, for a screen that stays dark.
+- The game picker finds iRacing, EA app games, Xbox app games and a few standalone sims, and names the source of each.
+- An app in a profile or game can wait for the previous one's window instead of a fixed delay.
+- The setup assistant saves the microphone with each profile, ends with hotkeys (Ctrl+Alt+F1/F2 when free), start with
+  Windows and "Try it" as its last step. The Triggers tab warns when hotkeys or USB rules can't work because RigShift
+  doesn't start with Windows.
+- **Help → Save support package:** a ZIP with diagnostics, the last three logs, settings, profiles and games, without
+  your Windows user name, and the bug report form opens with the version filled in. The diagnostics now include the
+  graphics driver and the settings.
+- Renaming a profile or game moves its desktop shortcut along. A link, key or shortcut that points to nothing says so
+  in the tray.
+- Keyboard shortcuts show in tooltips and on the Help page.
+
+### Changed
+
+- A missing display is shown the same way on the overview, the profile list and the tray, with the next step. A
+  display that is off no longer blocks "Switch": RigShift asks for it and waits.
+- Error messages say what to do instead of what went wrong inside .NET. One word per thing in both languages,
+  placeholders in empty fields, higher contrast for field borders and hints.
+- Each day's log starts with the RigShift version, Windows version and graphics driver; the Windows user name is
+  replaced everywhere.
+- Smaller download (about 80 MB instead of 93 MB). Uninstalling removes the desktop shortcuts RigShift created.
+- Faster: the tray icon appears before the profiles page is built, file and USB checks run in the background, a switch
+  reports its result before tidying up.
+
+### Fixed
+
+- NVIDIA Surround keeps its bezel correction and rotation, RigShift waits for the displays after a Surround change,
+  and a profile without a Surround setting turns Surround off once another profile turns it on.
+- The sound device of a monitor that was just turned on is waited for; a USB sound device on another port is found by
+  its name.
+- Identical monitors are told apart after a graphics card change, monitors on new ports are carried over into every
+  profile, and RigShift says when two monitors can't be told apart.
+- Profiles with the same layout but different refresh rate or HDR are told apart.
+- A short USB dropout no longer starts a rule again. USB rules wait while the PC is locked.
+- A display driver call that never returns ends the switch with a hint instead of blocking RigShift.
+- A switch whose countdown window never answers is taken back; the crash record keeps the audio.
+- A game starts only after its profile's apps; a game started through a launcher that stays open is followed.
+- Quitting or updating while a game runs asks first. A failed update download is tried again after 1, 5 and 30 minutes.
+- Unsaved edits are never replaced when profiles or games change on disk; USB rules are merged, not overwritten.
+- A language change updates every open list at once.
+
+### Security
+
+- Every release is installed over the previous version, started and checked in CI before it is published, and its
+  page links a VirusTotal scan of the setup and the portable ZIP.
+
 ## [3.6.0] - 2026-09-20
 
 ### Added
