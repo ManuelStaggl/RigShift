@@ -21,15 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The NuGet cache is keyed on the lock files. Only here: the release workflow restores from nuget.org.
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Restore
         run: dotnet restore RigShift.slnx
 
-      - name: Check formatting
-        run: dotnet format RigShift.slnx --verify-no-changes --no-restore
+      # Code style and analyzers fail the build already (EnforceCodeStyleInBuild); whitespace is all that is left.
+      - name: Check whitespace
+        run: dotnet format whitespace RigShift.slnx --verify-no-changes
 
       - name: Build
         run: dotnet build RigShift.slnx --no-restore -c Release
@@ -51,6 +55,40 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Restore tools
+        run: dotnet tool restore
+
+      # Coverage per assembly on the run's summary page. The floors are a ratchet: raise them when coverage grows.
+      - name: Coverage summary and floors
+        shell: pwsh
+        run: |
+          dotnet tool run reportgenerator "-reports:TestResults/*.cobertura.xml" "-targetdir:coverage" "-reporttypes:MarkdownSummaryGithub;JsonSummary"
+          Get-Content coverage/SummaryGithub.md >> $env:GITHUB_STEP_SUMMARY
+          $floors = @{ 'RigShift.Core' = 90; 'RigShift' = 48; 'RigShift.Windows' = 33 }
+          $assemblies = (Get-Content coverage/Summary.json -Raw | ConvertFrom-Json).coverage.assemblies
+          $low = foreach ($name in $floors.Keys) {
+            $line = ($assemblies | Where-Object name -eq $name).coverage
+            if ($null -eq $line -or $line -lt $floors[$name]) { "$name has $line % line coverage, the floor is $($floors[$name]) %" }
+          }
+          if ($low) { throw ($low -join "`n") }
+
       # Same publish as release.yml, so single-file or ReadyToRun errors show up before a tag.
       - name: Publish
         run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
+
+  # Windows 10 is supported but neither CI nor the author's PCs run it. Server 2022 (build 20348) shares its Windows 10
+  # code base, so the tests running here show nothing assumes a Windows 11 API.
+  windows-10-base:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Test
+        run: dotnet test --solution RigShift.slnx -c Release

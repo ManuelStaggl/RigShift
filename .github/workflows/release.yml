@@ -1,17 +1,16 @@
 name: Release
 
-# Builds the Velopack package for tag vX.Y.Z and publishes it as a GitHub release.
+# Builds the Velopack package for tag vX.Y.Z, installs and starts it, and publishes it as a GitHub release.
 # The release notes are the matching section of CHANGELOG.md.
+# Started by hand, it runs the package job as a dry run (version X.Y.(Z+1)-ci.N) and publishes nothing.
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
-  contents: write
-  # Both for the build provenance attestation: a signed statement that these files came out of this workflow run.
-  id-token: write
-  attestations: write
+  contents: read
 
 # Two release runs at once would upload to the same GitHub release; a second tag waits instead of cancelling.
 concurrency:
@@ -19,49 +18,81 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Everything that runs code from packages - restore, build, analyzers, tests - runs here with a read-only token.
   package:
     runs-on: windows-latest
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
+      # main takes changes only through a pull request with a green build. A tag on any other commit would skip that
+      # and still reach every user through the updater.
+      - name: Check that the tag is on main
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor $env:GITHUB_SHA origin/main
+          if ($LASTEXITCODE -ne 0) { throw "${{ github.ref_name }} is not on main; merge the pull request first" }
+
       - name: Verify version and extract release notes
         id: version
         shell: pwsh
         run: |
-          $tag = '${{ github.ref_name }}'.TrimStart('v')
           $props = [xml](Get-Content Directory.Build.props)
           $v = $props.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          if ($v -ne $tag) { throw "Directory.Build.props has $v, tag is $tag" }
           $changelog = Get-Content CHANGELOG.md -Raw
-          $section = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## \[|\z)")
-          if (-not $section.Success) { throw "CHANGELOG.md has no section for $v" }
-          $unreleased = [regex]::Match($changelog, "(?ms)^## \[Unreleased\][^\n]*\n(.*?)(?=^## \[|\z)")
-          if ($unreleased.Success -and $unreleased.Groups[1].Value.Trim()) { throw "CHANGELOG.md [Unreleased] is not empty" }
-          $date = [regex]::Match($changelog, "(?m)^## \[$([regex]::Escape($v))\] - (\d{4}-\d{2}-\d{2})")
-          if (-not $date.Success) { throw "CHANGELOG.md section $v has no date" }
-          # The heading uses the author's local date, which may be one day ahead of or behind UTC.
-          $days = ([datetime]::ParseExact($date.Groups[1].Value, 'yyyy-MM-dd', $null) - [datetime]::UtcNow.Date).TotalDays
-          if ([math]::Abs($days) -gt 1) { throw "CHANGELOG.md section $v is dated $($date.Groups[1].Value)" }
-          $section.Groups[1].Value.Trim() | Set-Content release-notes.md
+          if ('${{ github.event_name }}' -eq 'push') {
+            $tag = '${{ github.ref_name }}'.TrimStart('v')
+            if ($v -ne $tag) { throw "Directory.Build.props has $v, tag is $tag" }
+            $section = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## \[|\z)")
+            if (-not $section.Success) { throw "CHANGELOG.md has no section for $v" }
+            $unreleased = [regex]::Match($changelog, "(?ms)^## \[Unreleased\][^\n]*\n(.*?)(?=^## \[|\z)")
+            if ($unreleased.Success -and $unreleased.Groups[1].Value.Trim()) { throw "CHANGELOG.md [Unreleased] is not empty" }
+            $date = [regex]::Match($changelog, "(?m)^## \[$([regex]::Escape($v))\] - (\d{4}-\d{2}-\d{2})")
+            if (-not $date.Success) { throw "CHANGELOG.md section $v has no date" }
+            # The heading uses the author's local date, which may be one day ahead of or behind UTC.
+            $days = ([datetime]::ParseExact($date.Groups[1].Value, 'yyyy-MM-dd', $null) - [datetime]::UtcNow.Date).TotalDays
+            if ([math]::Abs($days) -gt 1) { throw "CHANGELOG.md section $v is dated $($date.Groups[1].Value)" }
+            $notes = $section.Groups[1].Value.Trim()
+          } else {
+            # Above the latest release, so vpk builds a delta and the updater would take it.
+            $parts = $v.Split('.')
+            $v = "$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)-ci.${{ github.run_number }}"
+            $notes = 'Dry run.'
+          }
+          $notes | Set-Content release-notes.md
           "version=$v" >> $env:GITHUB_OUTPUT
+
+      # The library applies the updates that the tool packs; two versions of them have never been tested together.
+      - name: Check that Velopack and vpk match
+        shell: pwsh
+        run: |
+          $library = ([xml](Get-Content Directory.Packages.props)).Project.ItemGroup.PackageVersion |
+            Where-Object Include -eq 'Velopack' | Select-Object -ExpandProperty Version
+          $tool = (Get-Content .config/dotnet-tools.json -Raw | ConvertFrom-Json).tools.vpk.version
+          if ($library -ne $tool) { throw "Velopack $library, vpk $tool" }
 
       # The same gates as ci.yml: a tag can point at a commit CI never saw.
       - name: Restore
         run: dotnet restore RigShift.slnx
 
-      - name: Check formatting
-        run: dotnet format RigShift.slnx --verify-no-changes --no-restore
+      - name: Check whitespace
+        run: dotnet format whitespace RigShift.slnx --verify-no-changes
 
       - name: Test
         run: dotnet test --solution RigShift.slnx -c Release
 
       - name: Publish
-        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
+        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish -p:Version=${{ steps.version.outputs.version }}
 
       # vpk and CycloneDX in the versions of .config/dotnet-tools.json.
       - name: Restore tools
@@ -77,6 +108,23 @@ jobs:
           --packAuthors "Manuel Staggl" --packDir publish --mainExe RigShift.exe
           --icon src/RigShift.App/Assets/Brand/rigshift-app-light.ico --releaseNotes release-notes.md --outputDir Releases
 
+      # Without a delta every user downloads the full package; vpk leaves it out silently when the download failed.
+      - name: Check the delta package
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+          $previous = Get-ChildItem Releases -Filter '*-full.nupkg' | Where-Object Name -ne "RigShift-$v-full.nupkg"
+          if ($previous -and -not (Test-Path "Releases/RigShift-$v-delta.nupkg")) { throw "No delta package next to $($previous.Name)" }
+
+      # Install, start, ask, uninstall - and once more as an upgrade over the latest release, the path every user takes.
+      - name: Smoke test
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          gh release download --repo ${{ github.repository }} --pattern RigShift-win-Setup.exe --dir previous
+          ./tools/smoke-test.ps1 -Setup Releases/RigShift-win-Setup.exe -ExpectedVersion '${{ steps.version.outputs.version }}' -PreviousSetup previous/RigShift-win-Setup.exe
+
       # Every NuGet package that ends up in the shipped app, as CycloneDX JSON.
       - name: Write SBOM
         run: >
@@ -86,7 +134,6 @@ jobs:
 
       # Only what this run built: the previous release's package lies in the same folder.
       - name: Write SHA256SUMS
-        id: sums
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
@@ -94,28 +141,81 @@ jobs:
           if (-not $files) { throw 'Nothing to checksum' }
           $files | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)" } | Set-Content Releases/SHA256SUMS -Encoding ascii
           Get-Content Releases/SHA256SUMS
-          "paths<<EOF" >> $env:GITHUB_OUTPUT
-          $files | ForEach-Object { "Releases/$($_.Name)" } >> $env:GITHUB_OUTPUT
-          "EOF" >> $env:GITHUB_OUTPUT
+
+      # Someone coming from a forum sees eight files; the head says which one they want and how to check it.
+      - name: Write the release page
+        shell: pwsh
+        run: |
+          $base = 'https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}'
+          @"
+          **Download [RigShift-win-Setup.exe]($base/RigShift-win-Setup.exe)** - installs for your Windows user without administrator rights and keeps itself up to date. [RigShift-win-Portable.zip]($base/RigShift-win-Portable.zip) runs from a folder without installing. The other files are for the updater and for checking the download.
+
+          RigShift is not code-signed, so Windows SmartScreen may ask first: *More info* → *Run anyway*. To check a download, compare it with ``SHA256SUMS`` or run ``gh attestation verify RigShift-win-Setup.exe --repo ${{ github.repository }}``.
+
+          ---
+
+          "@ | Set-Content release-page.md
+          Get-Content release-notes.md | Add-Content release-page.md
+
+      # The previous release's full package stays behind; the publish job uploads what this run built.
+      - name: Keep the release files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: |
+            Releases/*${{ steps.version.outputs.version }}*
+            Releases/RigShift-win-Setup.exe
+            Releases/RigShift-win-Portable.zip
+            Releases/RELEASES
+            Releases/*.win.json
+            Releases/SHA256SUMS
+            release-page.md
+          if-no-files-found: error
+          retention-days: 7
+
+  # Only uploads: the write token never meets a build step.
+  publish:
+    needs: package
+    if: github.event_name == 'push'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      # Both for the build provenance attestation: a signed statement that these files came out of this workflow run.
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: ${{ steps.sums.outputs.paths }}
+          subject-checksums: Releases/SHA256SUMS
 
       # Without --publish the release stays a draft, so nobody sees it before the checksums and the SBOM are there.
       - name: Upload to a draft GitHub release
         run: >
           dotnet vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
-          --outputDir Releases --releaseName "RigShift ${{ steps.version.outputs.version }}"
+          --outputDir Releases --releaseName "RigShift ${{ needs.package.outputs.version }}"
           --tag ${{ github.ref_name }}
 
       - name: Add SBOM and checksums
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref_name }} Releases/SHA256SUMS Releases/RigShift-${{ steps.version.outputs.version }}.cdx.json --clobber
+        run: gh release upload ${{ github.ref_name }} Releases/SHA256SUMS Releases/RigShift-${{ needs.package.outputs.version }}.cdx.json --clobber
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release edit ${{ github.ref_name }} --draft=false --latest
+        run: gh release edit ${{ github.ref_name }} --notes-file release-page.md --draft=false --latest

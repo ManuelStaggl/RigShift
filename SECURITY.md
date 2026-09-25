@@ -4,6 +4,9 @@
 
 Only the latest release gets fixes. RigShift updates itself, so staying current needs no action.
 
+RigShift brings its own .NET runtime. When Microsoft ships a .NET security update, a RigShift patch release with the
+new runtime follows on the day the update reaches this repository.
+
 ## Reporting a vulnerability
 
 Please do not open a public issue. Report it privately via
@@ -17,8 +20,10 @@ you prefer otherwise.
 
 - **Where updates come from.** RigShift uses [Velopack](https://velopack.io) and checks the
   [GitHub releases](https://github.com/ManuelStaggl/RigShift/releases) of this repository. A release is built and
-  uploaded by the `release.yml` GitHub Actions workflow when a version tag is pushed. A downloaded update is applied
-  at the next start of RigShift, unless updates are set to notify only.
+  uploaded by the `release.yml` GitHub Actions workflow when a version tag on `main` is pushed. Before anything is
+  uploaded, the workflow installs the previous release, installs the new setup over it, starts it, checks that the
+  profile saved before is still there and uninstalls it again. The upload runs in a separate job, the only one with
+  write access. A downloaded update is applied at the next start of RigShift, unless updates are set to notify only.
 - **What is checked.** Velopack verifies the SHA-256 hash of every package against the release feed it downloaded from
   the same GitHub release. That protects against broken or truncated downloads, not against a tampered release.
 - **What you can check yourself** (releases after 3.5.1). Every release carries `SHA256SUMS`, a CycloneDX SBOM
