@@ -24,8 +24,8 @@ internal static class CommandLineClient
 
     private static ILogger Logger => Log.ForContext(typeof(CommandLineClient));
 
-    public static int Run(IReadOnlyList<string> args, CliRequest request) =>
-        Task.Run(() => RunAsync(args, request)).GetAwaiter().GetResult();
+    public static int Run(IReadOnlyList<string> args, CliRequest request, AppPaths paths) =>
+        Task.Run(() => RunAsync(args, request, paths)).GetAwaiter().GetResult();
 
     public static int ShowRunningInstance()
     {
@@ -38,7 +38,7 @@ internal static class CommandLineClient
         }).GetAwaiter().GetResult();
     }
 
-    private static async Task<int> RunAsync(IReadOnlyList<string> args, CliRequest request)
+    private static async Task<int> RunAsync(IReadOnlyList<string> args, CliRequest request, AppPaths paths)
     {
         try
         {
@@ -47,12 +47,12 @@ internal static class CommandLineClient
             {
                 if (request.Command is CliCommand.List or CliCommand.Status or CliCommand.Surround or CliCommand.Games)
                 {
-                    return Print(await RunHeadlessAsync(request));
+                    return Print(await RunHeadlessAsync(request, paths));
                 }
 
                 if (!StartTrayApp())
                 {
-                    return Print(new CliResponse(CliExitCodes.Failed, "RigShift could not be started. See the log for details."));
+                    return Print(new CliResponse(CliExitCodes.Failed, $"RigShift could not be started. The log is in {paths.Logs}"));
                 }
 
                 pipe = PipeProtocol.PipeName;
@@ -61,7 +61,7 @@ internal static class CommandLineClient
             Foreground.AllowAnyProcess(); // The confirmation window must be able to take the focus.
             PipeResponse? response = await SendAsync(pipe, args, ConnectTimeout);
             return response is null
-                ? Print(new CliResponse(CliExitCodes.Failed, "RigShift did not respond. See the log for details."))
+                ? Print(new CliResponse(CliExitCodes.Failed, $"RigShift did not respond. The log is in {paths.Logs}"))
                 : Print(new CliResponse(response.ExitCode, response.Output));
         }
         finally
@@ -77,6 +77,19 @@ internal static class CommandLineClient
     }
 
     /// <summary>
+    /// A rigshift:// link that cannot be read: a Stream Deck key or a web page has no console, so the running instance
+    /// says it in the tray (v4 finding A-09). Nothing is started for it.
+    /// </summary>
+    public static void ReportInvalidLink(string link) =>
+        Task.Run(async () =>
+        {
+            if (FindRunningInstance() is { } pipe)
+            {
+                await SendAsync(pipe, [link], TimeSpan.FromSeconds(5));
+            }
+        }).GetAwaiter().GetResult();
+
+    /// <summary>
     /// The pipe of a running RigShift, our own Windows session first. Looking for the pipe rather than for the
     /// single-instance mutex matters because the mutex is session-local: a command sent over SSH, from a scheduled
     /// task or from a service runs in a session without a desktop, where the display API refuses everything. Handing
@@ -89,11 +102,7 @@ internal static class CommandLineClient
         List<string> found;
         try
         {
-            found = [.. Directory.GetFiles(PipeDirectory)
-                .Select(Path.GetFileName)
-                .Where(name => name is not null && IsInstancePipe(name))
-                .Select(name => name!)
-                .Order(StringComparer.Ordinal)];
+            found = [.. Directory.GetFiles(PipeDirectory).Select(Path.GetFileName).OfType<string>()];
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -101,19 +110,21 @@ internal static class CommandLineClient
             return Mutex.TryOpenExisting(Program.SingleInstanceMutex, out Mutex? mutex) ? Keep(mutex, own) : null;
         }
 
-        if (found.Contains(own, StringComparer.Ordinal))
+        string? chosen = Choose(found, own);
+        if (chosen is not null && chosen != own)
         {
-            return own;
+            // Another session holds the only instance - the usual case for a command that arrives without a desktop.
+            Logger.Information("No RigShift in this session; forwarding to {Pipe}", chosen);
         }
 
-        if (found.Count == 0)
-        {
-            return null;
-        }
+        return chosen;
+    }
 
-        // Another session holds the only instance - the usual case for a command that arrives without a desktop.
-        Logger.Information("No RigShift in this session; forwarding to {Pipe}", found[0]);
-        return found[0];
+    /// <summary>Our own session's instance when there is one, else the first other one, else none.</summary>
+    internal static string? Choose(IEnumerable<string> pipeNames, string own)
+    {
+        List<string> instances = [.. pipeNames.Where(IsInstancePipe).Order(StringComparer.Ordinal)];
+        return instances.Contains(own, StringComparer.Ordinal) ? own : instances.FirstOrDefault();
     }
 
     private static string Keep(Mutex mutex, string pipe)
@@ -134,18 +145,18 @@ internal static class CommandLineClient
             && name.AsSpan(PipePrefix.Length).IndexOfAnyExceptInRange('0', '9') < 0;
     }
 
-    private static async Task<CliResponse> RunHeadlessAsync(CliRequest request)
+    private static async Task<CliResponse> RunHeadlessAsync(CliRequest request, AppPaths paths)
     {
         ILogger log = Log.Logger;
         var runner = new CommandRunner(
-            new JsonProfileStore(App.Paths.Profiles, log),
+            new JsonProfileStore(paths.Profiles, log),
             new CcdDisplayConfigurator(log, TimeProvider.System),
             new PolicyConfigAudioController(log),
             new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())),
             log,
             switcher: null,
             new NvSurroundController(new CcdDisplayConfigurator(log, TimeProvider.System), log),
-            new JsonGameStore(App.Paths.DataDirectory, log, TimeProvider.System),
+            new JsonGameStore(paths.DataDirectory, log, TimeProvider.System),
             player: null);
         return await runner.RunAsync(request, CancellationToken.None);
     }
@@ -174,7 +185,8 @@ internal static class CommandLineClient
         }
     }
 
-    private static async Task<PipeResponse?> SendAsync(string pipeName, IReadOnlyList<string> args, TimeSpan connectTimeout)
+    /// <returns>The app's answer; <c>null</c> when nobody answered in time or the connection broke.</returns>
+    internal static async Task<PipeResponse?> SendAsync(string pipeName, IReadOnlyList<string> args, TimeSpan connectTimeout)
     {
         try
         {
@@ -191,7 +203,7 @@ internal static class CommandLineClient
             if (!PipeTrust.BelongsToThisUser(pipe, out string reason))
             {
                 Logger.Error("Command pipe {Pipe} is not trusted: {Reason}. Nothing was sent", pipeName, reason);
-                return null;
+                return new PipeResponse(CliExitCodes.Failed, "The running RigShift belongs to another user or is not RigShift, so nothing was sent.");
             }
 
             await PipeProtocol.WriteRequestAsync(pipe, new PipeRequest(args), CancellationToken.None);

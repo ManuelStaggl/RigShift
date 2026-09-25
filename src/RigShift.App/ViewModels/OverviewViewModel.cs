@@ -31,7 +31,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     private IReadOnlyList<AttachedDisplay> _attached = [];
     private readonly TimeProvider _time;
     private readonly ILogger _log;
-    private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
+    private readonly UiThread _ui = new();
 
     public OverviewViewModel(
         IDisplayConfigurator display,
@@ -41,7 +41,6 @@ public sealed partial class OverviewViewModel : ObservableObject
         ProfilesViewModel profiles,
         GameCatalog games,
         GameSessionService sessions,
-        DisplayChangeWatcher watcher,
         IAppShell shell,
         IDisplaySizeReader sizes,
         TimeProvider time,
@@ -49,7 +48,6 @@ public sealed partial class OverviewViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
-        ArgumentNullException.ThrowIfNull(watcher);
         ArgumentNullException.ThrowIfNull(games);
         ArgumentNullException.ThrowIfNull(sessions);
         ArgumentNullException.ThrowIfNull(log);
@@ -67,7 +65,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         _time = time;
         _log = log.ForContext<OverviewViewModel>();
 
-        catalog.Changed += (_, _) => OnUi(() => { UpdateActive(); UpdateProfilesTexts(); });
+        catalog.ProfilesChanged += (_, _) => OnUi(() => { UpdateActive(); UpdateProfilesTexts(); });
         catalog.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(ProfileCatalog.ActiveProfile) or nameof(ProfileCatalog.IsEmpty))
@@ -76,8 +74,9 @@ public sealed partial class OverviewViewModel : ObservableObject
             }
         };
         coordinator.History.CollectionChanged += (_, _) => OnUi(RebuildHistory);
-        coordinator.AppsCompleted += (_, _) => OnUi(RebuildHistory);
-        watcher.DisplaysChanged += (_, _) => OnUi(() => RefreshCommand.Execute(null));
+        coordinator.FollowUpCompleted += (_, _) => OnUi(RebuildHistory);
+        // The catalog reads the displays after every change and every switch; showing that read saves one of our own (v4 finding A-03).
+        catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowDisplays(snapshot));
         Loc.Instance.PropertyChanged += (_, _) => OnUi(() =>
         {
             RebuildHistory();
@@ -133,7 +132,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Display {Display} could not be renamed", card.ModelName);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
     }
 
@@ -142,26 +141,30 @@ public sealed partial class OverviewViewModel : ObservableObject
     {
         try
         {
-            DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
-            IReadOnlyDictionary<string, string> names = _catalog.KnownDisplayNames;
-            Displays.Clear();
-            _attached = snapshot.Displays;
-            IReadOnlyList<(AttachedDisplay Display, int? Number)> numbered = DisplayNumbers.Assign(snapshot.Displays);
-            foreach ((AttachedDisplay attached, int? shown) in numbered)
-            {
-                Displays.Add(new DisplayCard(this, attached, shown, names.GetValueOrDefault(attached.Identity.TargetDevicePath), ProfilesWith(attached)));
-            }
-
-            IsEmpty = Displays.Count == 0;
-            ErrorMessage = null;
-            UpdateTopology();
-            _log.Information("Overview shows {Count} displays, {Active} active", Displays.Count, LiveTopology.Count);
+            ShowDisplays(await _display.QueryAsync(CancellationToken.None));
         }
         catch (Win32Exception ex)
         {
             _log.Error(ex, "Displays could not be read");
             ErrorMessage = Loc.Format("Overview_ReadFailed", ex.NativeErrorCode);
         }
+    }
+
+    private void ShowDisplays(DisplaySnapshot snapshot)
+    {
+        IReadOnlyDictionary<string, string> names = _catalog.KnownDisplayNames;
+        Displays.Clear();
+        _attached = snapshot.Displays;
+        IReadOnlyList<(AttachedDisplay Display, int? Number)> numbered = DisplayNumbers.Assign(snapshot.Displays);
+        foreach ((AttachedDisplay attached, int? shown) in numbered)
+        {
+            Displays.Add(new DisplayCard(this, attached, shown, names.GetValueOrDefault(attached.Identity.TargetDevicePath), ProfilesWith(attached)));
+        }
+
+        IsEmpty = Displays.Count == 0;
+        ErrorMessage = null;
+        UpdateTopology();
+        _log.Information("Overview shows {Count} displays, {Active} active", Displays.Count, LiveTopology.Count);
     }
 
     /// <summary>"Switch" on a profile tile; on the active one it reads "Apply again" and does the same.</summary>
@@ -268,17 +271,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         return names.Count == 0 ? Loc.Instance["Displays_NotInProfiles"] : string.Join(", ", names);
     }
 
-    private void OnUi(Action action)
-    {
-        if (_ui is null || SynchronizationContext.Current == _ui)
-        {
-            action();
-        }
-        else
-        {
-            _ui.Post(_ => action(), null);
-        }
-    }
+    private void OnUi(Action action) => _ui.Run(action);
 }
 
 /// <summary>One line of the switch history: when, which profile, how it went, how long it took.</summary>

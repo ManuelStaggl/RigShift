@@ -11,9 +11,10 @@ internal sealed class FakeHotkeyRegistrar : IHotkeyRegistrar
     /// <summary>Combinations another application holds: registering them fails with 1409.</summary>
     public HashSet<Hotkey> TakenElsewhere { get; } = [];
 
-#pragma warning disable CS0067 // Nothing presses a key in these tests.
     public event EventHandler<int>? Pressed;
-#pragma warning restore CS0067
+
+    /// <summary>Presses a combination that is held, as Windows would with WM_HOTKEY.</summary>
+    public void Press(Hotkey hotkey) => Pressed?.Invoke(this, Held.Single(h => h.Value == hotkey).Key);
 
     public bool Register(int id, Hotkey hotkey, out int error)
     {

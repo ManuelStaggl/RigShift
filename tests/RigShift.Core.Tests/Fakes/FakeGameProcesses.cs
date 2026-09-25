@@ -24,6 +24,9 @@ internal sealed class FakeGameProcesses : IGameProcesses
         return [.. _running];
     }
 
+    public IReadOnlySet<string> FindRunning(IReadOnlySet<string> names) =>
+        _running.Select(p => p.Name).Where(names.Contains).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Called with the number of <see cref="IsRunning"/> calls so far, before the answer is given.</summary>
     public Action<int>? OnIsRunning { get; set; }
 

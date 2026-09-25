@@ -9,11 +9,15 @@ namespace RigShift.App.Services;
 /// <summary>
 /// Registers the profile hotkeys, the game hotkeys and the "back to the previous profile" hotkey with Windows, and
 /// switches or starts a game when one is pressed – the same way as a tray click, including the confirmation countdown.
-/// Pressing a profile's hotkey again during that countdown confirms.
+/// Pressing a profile's hotkey again during that countdown confirms. The emergency hotkey (<see cref="AllDisplaysOnHotkey"/>)
+/// is fixed and registered alongside them.
 /// </summary>
 public sealed class HotkeyService : IDisposable
 {
     private const int ProbeId = 0xBFFF;
+
+    /// <summary>Registration id of <see cref="AllDisplaysOnHotkey"/>; <see cref="Sync"/> counts up from 1.</summary>
+    private const int AllDisplaysOnId = 0xBFFE;
     private const int ErrorHotkeyAlreadyRegistered = 1409;
 
     /// <summary>Key of the toggle hotkey in <see cref="_wanted"/>; no profile has this id.</summary>
@@ -35,6 +39,8 @@ public sealed class HotkeyService : IDisposable
     private HashSet<(HotkeyOwner Owner, Hotkey Hotkey)> _reported = [];
     private bool _suspended;
     private bool _started;
+    private bool _allDisplaysOnHeld;
+    private bool _allDisplaysOnReported;
 
     public HotkeyService(
         ProfileCatalog catalog,
@@ -73,6 +79,17 @@ public sealed class HotkeyService : IDisposable
     }
 
     /// <summary>
+    /// Ctrl+Alt+Shift+D, "displays": every display on, for a screen that stayed dark. Fixed, so it can be known before it
+    /// is needed – in the help, in the settings – and nobody has to find the settings first. Only a hotkey being recorded
+    /// releases it.
+    /// </summary>
+    public static Hotkey AllDisplaysOnHotkey { get; } = new()
+    {
+        Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt | HotkeyModifiers.Shift,
+        VirtualKey = 0x44,
+    };
+
+    /// <summary>
     /// Raised with the names of profiles and games whose hotkey does not work – another application holds it, or
     /// something else in RigShift does. At startup and whenever a new one turns up later; the toggle hotkey is listed
     /// under its settings label.
@@ -82,17 +99,22 @@ public sealed class HotkeyService : IDisposable
     public void Start()
     {
         _started = true;
-        _catalog.Changed += (_, _) => Sync();
+        _catalog.ProfilesChanged += (_, _) => Sync();
         _games.Changed += (_, _) => Sync();
         _settings.Changed += (_, _) => Sync();
+        RegisterAllDisplaysOn();
         Sync();
     }
 
-    /// <summary>Releases all hotkeys, e.g. while the profile editor records a new one.</summary>
+    /// <summary>
+    /// Releases all hotkeys, e.g. while the profile editor records a new one – the emergency hotkey too: pressed while
+    /// recording, it has to reach the field (and be refused there), not turn every display on.
+    /// </summary>
     public void Suspend()
     {
         _suspended = true;
         UnregisterAll();
+        UnregisterAllDisplaysOn();
         _log.Information("Hotkeys suspended");
     }
 
@@ -100,6 +122,7 @@ public sealed class HotkeyService : IDisposable
     {
         _suspended = false;
         _log.Information("Hotkeys resumed");
+        RegisterAllDisplaysOn();
         Sync(force: true);
     }
 
@@ -127,6 +150,11 @@ public sealed class HotkeyService : IDisposable
     public HotkeyUse? UsedBy(Hotkey hotkey, HotkeyUseKind kind, Guid id)
     {
         ArgumentNullException.ThrowIfNull(hotkey);
+        if (hotkey == AllDisplaysOnHotkey)
+        {
+            return new HotkeyUse(HotkeyUseKind.AllDisplaysOn, Guid.Empty, Loc.Instance["Settings_AllOnHotkey"]);
+        }
+
         return HotkeyConflicts.Find(hotkey, new HotkeyUse(kind, id, null), _catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey);
     }
 
@@ -140,6 +168,7 @@ public sealed class HotkeyService : IDisposable
     public void Dispose()
     {
         UnregisterAll();
+        UnregisterAllDisplaysOn();
         _registrar.Pressed -= OnRegistrarPressed;
         _registrar.Dispose();
     }
@@ -221,8 +250,48 @@ public sealed class HotkeyService : IDisposable
         _wanted = [];
     }
 
+    /// <summary>Takes the emergency hotkey; a failure is announced once, not after every recorded hotkey.</summary>
+    private void RegisterAllDisplaysOn()
+    {
+        if (_allDisplaysOnHeld)
+        {
+            return;
+        }
+
+        if (_registrar.Register(AllDisplaysOnId, AllDisplaysOnHotkey, out int error))
+        {
+            _allDisplaysOnHeld = true;
+            _log.Information("Emergency hotkey {Hotkey} registered", HotkeyFormat.Format(AllDisplaysOnHotkey));
+            return;
+        }
+
+        _log.Warning("Emergency hotkey {Hotkey} could not be registered, error {Error} ({Reason})", HotkeyFormat.Format(AllDisplaysOnHotkey), error,
+            error == ErrorHotkeyAlreadyRegistered ? "taken by another application" : "unexpected");
+        if (!_allDisplaysOnReported)
+        {
+            _allDisplaysOnReported = true;
+            RegistrationFailed?.Invoke(this, [Loc.Instance["Settings_AllOnHotkey"]]);
+        }
+    }
+
+    private void UnregisterAllDisplaysOn()
+    {
+        if (_allDisplaysOnHeld)
+        {
+            _registrar.Unregister(AllDisplaysOnId);
+            _allDisplaysOnHeld = false;
+        }
+    }
+
     private void OnRegistrarPressed(object? sender, int id)
     {
+        if (id == AllDisplaysOnId)
+        {
+            _log.Information("Emergency hotkey pressed, turning all displays on");
+            _ = _coordinator.TurnAllDisplaysOnAsync();
+            return;
+        }
+
         if (_registered.TryGetValue(id, out HotkeyOwner owner))
         {
             OnPressed(owner);

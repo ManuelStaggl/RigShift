@@ -1,4 +1,5 @@
 using NSubstitute;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
@@ -73,6 +74,47 @@ public sealed class SwitchCoordinatorTests : IDisposable
         result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
         asked.ShouldNotBeNull().ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
         _host.Coordinator.History[0].MissingDisplays.ShouldHaveSingleItem().ShouldContain("Ultrawide 49");
+    }
+
+    [Fact]
+    public async Task Switch_ThatStays_WritesAMonitorOnANewPortIntoEveryProfile()
+    {
+        // K-03: the ultrawide moved to another port and is found by its EDID. Afterwards every profile with it and its
+        // custom name know the new path, so the next switch finds it directly.
+        DisplayIdentity moved = Ultrawide with { TargetDevicePath = @"\\?\DISPLAY#SAM0001#OTHERPORT&9", EdidSerialHash = "0123456789ABCDEF" };
+        Profile rig = Rig();
+        Profile wide = Profile("Wide only", [UltrawideMode]);
+        await _host.Store.SaveAsync(rig, CancellationToken.None);
+        await _host.Store.SaveAsync(wide, CancellationToken.None);
+        await _host.Settings.UpdateAsync(
+            s => s with { DisplayNames = new Dictionary<string, string> { [Ultrawide.TargetDevicePath] = "Big one" } }, CancellationToken.None);
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+        _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(moved), Attached(Tablet)));
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Applied);
+        _host.Catalog.Profiles.Select(p => p.Displays[0].Identity).ShouldAllBe(identity => identity == moved);
+        _host.Settings.Current.DisplayNames.ShouldNotBeNull()[moved.TargetDevicePath].ShouldBe("Big one");
+    }
+
+    [Fact]
+    public async Task Blocked_ByIdenticalDisplaysOnNewPorts_SaysSoInsteadOfAskingToSwitchThemOn()
+    {
+        DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
+        DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
+        _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(leftMoved), Attached(rightMoved), Attached(Ultrawide)));
+        bool asked = false;
+        _host.Coordinator.WaitingForDisplays += (_, _) => asked = true;
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(SwitchOutcome.Blocked);
+        asked.ShouldBeFalse();
+        SwitchRecord record = _host.Coordinator.History[0];
+        record.Ambiguous.ShouldBeTrue();
+        record.MissingDisplays.ShouldBe(["Desk left", "Desk right"]);
+        SwitchMessages.ForNotification(record).Text.ShouldBe(Loc.Format("Result_AmbiguousText", "Desk left, Desk right"));
     }
 
     [Fact]
@@ -184,7 +226,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
             return new HashSet<string>();
         });
         var appsCompleted = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _host.Coordinator.AppsCompleted += (_, record) => appsCompleted.TrySetResult(record);
+        _host.Coordinator.FollowUpCompleted += (_, record) => appsCompleted.TrySetResult(record);
         bool busy = false;
         _host.Coordinator.BusyRejected += (_, _) => busy = true;
         Profile rig = Rig() with
@@ -210,6 +252,27 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
+    public async Task Switch_DesktopSymbolsFollowTheResult_TheirProblemComesInASecondNotification()
+    {
+        // K-04: the symbols no longer hold up the result; what went wrong with them comes once they are done.
+        _host.DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
+        var followUp = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _host.Coordinator.FollowUpCompleted += (_, record) => followUp.TrySetResult(record);
+        SwitchRecord? reported = null;
+        _host.Coordinator.SwitchCompleted += (_, record) => reported = record;
+        var layout = new DesktopIconLayout { Icons = [new DesktopIcon { Item = "::{645FF040-5081-101B-9F08-00AA002F954E}", X = 20, Y = 20 }] };
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(Rig() with { DesktopIcons = layout }, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().DesktopIcons.ShouldBe(DesktopIconOutcome.Pending);
+        SwitchMessages.ForNotification(reported.ShouldNotBeNull()).Text.ShouldNotContain(Loc.Instance["Result_IconsAutoArrange"]);
+        SwitchRecord done = await followUp.Task;
+        done.DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
+        SwitchMessages.ForFollowUpNotification(done).ShouldNotBeNull().Text.ShouldBe(Loc.Instance["Result_IconsAutoArrange"]);
+        _host.Coordinator.History.Single().DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
+    }
+
+    [Fact]
     public async Task Check_WhileSwitchRuns_IsNotBusy()
     {
         var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -228,5 +291,106 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Coordinator.History.Count.ShouldBe(1);
     }
 
+    /// <summary>
+    /// The triple with Surround and the desk without a setting: the way back to the desk switches the grid off, or the
+    /// desk's monitors stay hidden inside it (findings K-09, U-05).
+    /// </summary>
+    [Fact]
+    public async Task Switch_ProfileWithoutSurroundWhileAnotherUsesIt_SwitchesSurroundOff()
+    {
+        var grid = new SurroundGrid
+        {
+            Rows = 1,
+            Columns = 3,
+            Width = 2560,
+            Height = 1440,
+            Displays = [new SurroundDisplay { DisplayId = 1 }, new SurroundDisplay { DisplayId = 2 }, new SurroundDisplay { DisplayId = 3 }],
+        };
+        Profile triple = Rig() with { Id = Guid.NewGuid(), Name = "Triple", Surround = new SurroundSetting { Enabled = true, Grid = grid } };
+        Profile desk = Rig() with { Id = Guid.NewGuid(), Name = "Desk" };
+        await _host.Store.SaveAsync(triple, TestContext.Current.CancellationToken);
+        await _host.Store.SaveAsync(desk, TestContext.Current.CancellationToken);
+        await _host.Catalog.ReloadAsync(TestContext.Current.CancellationToken);
+        _host.Surround.ActiveGrid = grid;
+
+        SwitchResult? result = await _host.Coordinator.SwitchAsync(desk, SwitchRequest.Default);
+
+        result.ShouldNotBeNull().Surround.ShouldBe(SurroundOutcome.Changed);
+        _host.Surround.ActiveGrid.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_DuringACountdown_TakesTheSwitchBackFirst()
+    {
+        // The emergency hotkey while a countdown waits on a dark screen: the switch is cancelled and takes itself back,
+        // and only then is every display turned on – in a call of its own, never next to the switch's.
+        _host.Confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(call =>
+        {
+            var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            call.Arg<CancellationToken>().Register(() => answer.TrySetResult(ConfirmationResult.Cancelled));
+            return answer.Task;
+        });
+        Task<SwitchResult?> running = _host.Coordinator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default);
+        await UntilAsync(() => _host.Display.Applied.Count == 1);
+
+        AllDisplaysOnResult? result = await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        await running;
+        result.ShouldNotBeNull().Outcome.ShouldBe(AllDisplaysOnOutcome.TurnedOn);
+        _host.Display.Applied.Count.ShouldBe(3);
+        _host.Display.Applied[1].Plan.Profile.Name.ShouldNotBe("All displays on");
+        _host.Display.Applied[2].Options.ShouldBe(new ApplyOptions { UseDatabaseModes = true, SaveToDatabase = false });
+        _host.Coordinator.IsSwitching.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_WindowsRefuses_SwitchesToTheDefaultProfileWithoutAsking()
+    {
+        Profile desk = Profile("Desk", DeskModes, confirm: true);
+        await _host.Store.SaveAsync(desk, CancellationToken.None);
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+        await _host.Settings.UpdateAsync(s => s with { DefaultProfileId = desk.Id }, CancellationToken.None);
+        _host.Display.SetSnapshot(Snapshot([Attached(Ultrawide, activeMode: UltrawideMode), .. DeskModes.Select(m => Attached(m.Identity))]));
+        _host.Display.EnqueueApplyResults(31, 31);
+        AllDisplaysOnReport? report = null;
+        _host.Coordinator.AllDisplaysOnCompleted += (_, r) => report = r;
+
+        AllDisplaysOnResult? result = await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        result.ShouldNotBeNull().Outcome.ShouldBe(AllDisplaysOnOutcome.Failed);
+        report.ShouldNotBeNull().FallbackProfile.ShouldBe("Desk");
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Desk");
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_WindowsRefuses_WithoutADefaultProfile_OnlyReports()
+    {
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Desk4K)));
+        _host.Display.EnqueueApplyResults(31, 31);
+        AllDisplaysOnReport? report = null;
+        _host.Coordinator.AllDisplaysOnCompleted += (_, r) => report = r;
+
+        await _host.Coordinator.TurnAllDisplaysOnAsync();
+
+        report.ShouldNotBeNull().FallbackProfile.ShouldBeNull();
+        _host.Coordinator.History.ShouldBeEmpty();
+        _host.Display.Applied.Count.ShouldBe(2);
+    }
+
     public void Dispose() => _host.Dispose();
+
+    private static async Task UntilAsync(Func<bool> condition)
+    {
+        DateTime giveUp = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > giveUp)
+            {
+                throw new TimeoutException("condition not met");
+            }
+
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+    }
 }

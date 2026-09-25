@@ -77,6 +77,34 @@ public sealed class GameSessionRunnerTests
         _apps.Received().Start(@"C:\SimHub\SimHubWPF.exe", null);
     }
 
+    [Fact]
+    public async Task Run_WaitsForTheProfilesApps_BeforeTheGameAndItsTools()
+    {
+        // K-11: the wheelbase software is in the profile and waits for the wheelbase; the game must not start before it.
+        var profileApps = new TaskCompletionSource<AppsOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _switcher.SwitchAsync(Arg.Any<Profile>(), Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<SwitchResult?>(new SwitchResult
+            {
+                Outcome = SwitchOutcome.Applied,
+                Plan = new TopologyPlan { Profile = Rig(), Resolved = [], Missing = [], Warnings = [] },
+                Apps = AppsOutcome.Pending,
+                AppsCompletion = profileApps.Task,
+            }));
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\Tools\Before.exe" } },
+        };
+
+        Task<GameSessionResult> session = Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        session.IsCompleted.ShouldBeFalse();
+        _starter.DidNotReceiveWithAnyArgs().Start(default!);
+        _apps.DidNotReceiveWithAnyArgs().Start(default!, default);
+        profileApps.SetResult(AppsOutcome.Applied);
+        (await session).Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _starter.ReceivedWithAnyArgs(1).Start(default!);
+    }
+
     /// <summary>Starting a game into a layout that was not applied is worse than not starting it.</summary>
     [Fact]
     public async Task Run_DoesNotStartTheGameWhenTheProfileWasBlocked()
@@ -283,7 +311,9 @@ public sealed class GameSessionRunnerTests
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         _time.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.FromHours(1));
         _processes.WaitedFor.ShouldBeEmpty();
-        _processes.IsRunningCalls.ShouldBe(0);
+
+        // No polling while it ran; only the brief look for a game it might have started once it ended (K-16).
+        _processes.IsRunningCalls.ShouldBeLessThanOrEqualTo(3);
         started.Disposed.ShouldBeTrue();
     }
 
@@ -334,6 +364,39 @@ public sealed class GameSessionRunnerTests
 
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         _processes.WaitedFor.ShouldBe([9]);
+    }
+
+    [Fact]
+    public async Task Run_WhenALauncherStaysOpenForMinutesAndThenStartsTheGame_WaitsForTheGame()
+    {
+        // K-16: a launcher with a DX11/VR choice; the user clicks "Play" after a minute and the launcher closes.
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(new FakeRunningGame(_time, TimeSpan.FromMinutes(1)));
+        _processes.OnListed = call =>
+        {
+            // Call 1 is the snapshot before the start; the game shows up when the launcher closes.
+            if (call == 2)
+            {
+                _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX11", @"C:\Games\iRacing\bin\iRacingSim64DX11.exe", _time.GetUtcNow()));
+            }
+        };
+
+        GameSessionResult result = await Runner().RunAsync(Game(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _processes.WaitedFor.ShouldBe([9]);
+    }
+
+    [Fact]
+    public async Task Run_WhenTheGameItselfEndsAfterALongRun_EndsTheSessionSoon()
+    {
+        GameEntry game = Game() with { Exit = new GameExitAction { Kind = GameExitKind.Profile, ProfileId = _desk.Id } };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(new FakeRunningGame(_time, TimeSpan.FromHours(1)));
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _time.Elapsed.ShouldBeLessThanOrEqualTo(TimeSpan.FromHours(1) + GameSessionRunner.LongRunGrace + GameProcessLearner.PollInterval);
+        await _switcher.Received(1).SwitchAsync(_desk, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>());
     }
 
     /// <summary>A game that crashes on start has ended: after a short look for a successor the session goes on to its end.</summary>

@@ -10,6 +10,9 @@ public enum HotkeyUseKind
 
     /// <summary>The "back to the previous profile" hotkey from the settings.</summary>
     Toggle,
+
+    /// <summary>The fixed emergency hotkey that turns every display on.</summary>
+    AllDisplaysOn,
 }
 
 /// <param name="Id">Profile or game id; <see cref="Guid.Empty"/> for the toggle hotkey.</param>

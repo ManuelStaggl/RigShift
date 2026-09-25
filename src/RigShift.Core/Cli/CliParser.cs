@@ -97,25 +97,25 @@ public static class CliParser
         var previewGallery = new Option<string>("--preview-gallery") { Hidden = true };
 
         var applyName = new Argument<string>("name") { Description = "Profile name (not case-sensitive)." };
-        var noConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new arrangement without asking." };
+        var noConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new layout without asking." };
         var dryRun = new Option<bool>("--dry-run") { Description = "Check the profile against the connected displays without switching." };
         var fromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
         var apply = new Command("apply", "Switch to a profile.") { applyName, noConfirm, dryRun, fromLink };
 
-        var toggleNoConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new arrangement without asking." };
-        var toggleDryRun = new Option<bool>("--dry-run") { Description = "Check the previous profile against the connected displays without switching." };
+        var toggleNoConfirm = new Option<bool>("--no-confirm") { Description = "Keep the new layout without asking." };
+        var toggleDryRun = new Option<bool>("--dry-run") { Description = "Check the last profile against the connected displays without switching." };
         var toggleFromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
-        var toggle = new Command("toggle", "Switch back to the previous profile (or to the default profile if none was active before).")
+        var toggle = new Command("toggle", "Switch back to the last profile (or to the default profile if there is none).")
         {
             toggleNoConfirm, toggleDryRun, toggleFromLink,
         };
 
         var saveName = new Argument<string>("name") { Description = "Profile name. An existing profile with this name is updated." };
-        var save = new Command("save", "Save the current display arrangement and default audio device as a profile.") { saveName };
+        var save = new Command("save", "Save the current display layout and default audio device as a profile.") { saveName };
 
         var playName = new Argument<string>("name") { Description = "Game name (not case-sensitive)." };
         var playFromLink = new Option<bool>(RigShiftUri.FromLinkOption) { Hidden = true };
-        var play = new Command("play", "Start a game: switch to its profile, bring its programs up, then start the game.")
+        var play = new Command("play", "Start a game: switch to its profile, start its tools, then the game.")
         {
             playName, playFromLink,
         };

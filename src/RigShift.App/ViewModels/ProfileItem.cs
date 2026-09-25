@@ -12,11 +12,13 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>A profile as shown in the tray popup, the tray menu and the profile page.</summary>
 /// <param name="usbDeviceNames">Custom USB device names, for the device the apps wait for.</param>
-public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject
+public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<string, string>? usbDeviceNames = null) : ObservableObject, IMasterItem
 {
     private IReadOnlyList<ImageSource>? _appIcons;
 
     public Profile Profile { get; } = profile;
+
+    public Guid Id => Profile.Id;
 
     public string Name => Profile.Name;
 
@@ -38,11 +40,16 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         _ => null,
     };
 
+    /// <summary>What "Default" in the status means (finding U-13); <c>null</c> for any other profile, so there is no tooltip.</summary>
+    public string? DefaultTip => IsDefault ? Loc.Instance["Profile_DefaultTip"] : null;
+
     /// <summary>Whether <see cref="StatusText"/> says anything, for a caption that is hidden when it would be empty.</summary>
     public bool HasStatus => StatusText is not null;
 
     /// <summary>"Ctrl+Alt+F1" for the tray row; empty without a hotkey. Rebuilt with the item, so it follows the language.</summary>
     public string HotkeyText => Profile.Hotkey is { } hotkey ? HotkeyFormat.Format(hotkey) : string.Empty;
+
+    public bool HasHotkey => Profile.Hotkey is not null;
 
     /// <summary>Left to right, as the displays stand on the desk.</summary>
     public IReadOnlyList<string> DisplayLines { get; } = profile.Displays
@@ -63,11 +70,11 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         .ToList();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus))]
+    [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus), nameof(ShowsReadiness), nameof(ShowsHotkeyLine))]
     public partial bool IsActive { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus))]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus), nameof(DefaultTip))]
     public partial bool IsDefault { get; set; }
 
     [ObservableProperty]
@@ -94,6 +101,34 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     {
         ListKind = kind;
         ListStatus = text;
+    }
+
+    /// <summary>
+    /// The profile against the displays as the catalog read them last, for the overview and the tray (v4 finding U-10):
+    /// "XG32UCWG missing" with the next step as tooltip. The list keeps its own <see cref="ListStatus"/>.
+    /// </summary>
+    [ObservableProperty]
+    public partial StatusKind ReadyKind { get; private set; } = StatusKind.Ok;
+
+    [ObservableProperty]
+    public partial string? ReadyText { get; private set; }
+
+    [ObservableProperty]
+    public partial string? ReadyTip { get; private set; }
+
+    /// <summary>A required display is missing and the profile is not on screen: the tile shows why instead of the hotkey.</summary>
+    public bool ShowsReadiness => !IsActive && ReadyKind is StatusKind.Warn or StatusKind.Error;
+
+    /// <summary>The overview's line under the name: the hotkey while there is nothing more important to say.</summary>
+    public bool ShowsHotkeyLine => !IsActive && !ShowsReadiness;
+
+    public void SetReadiness(StatusKind kind, string text, string? tip)
+    {
+        ReadyKind = kind;
+        ReadyText = text;
+        ReadyTip = tip;
+        OnPropertyChanged(nameof(ShowsReadiness));
+        OnPropertyChanged(nameof(ShowsHotkeyLine));
     }
 
     private static string Describe(DisplayAssignment display)

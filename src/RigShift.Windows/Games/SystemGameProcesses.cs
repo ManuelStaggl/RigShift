@@ -46,6 +46,34 @@ public sealed class SystemGameProcesses : IGameProcesses
         return result;
     }
 
+    public IReadOnlySet<string> FindRunning(IReadOnlySet<string> names)
+    {
+        ArgumentNullException.ThrowIfNull(names);
+        var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Process process in Process.GetProcesses())
+        {
+            try
+            {
+                // The name comes with the process list; the main window costs a walk over every window on the desktop.
+                string name = process.ProcessName;
+                if (names.Contains(name) && !found.Contains(name) && process.MainWindowHandle != nint.Zero)
+                {
+                    found.Add(name);
+                }
+            }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or NotSupportedException)
+            {
+                _log.Verbose(ex, "Process {ProcessId} could not be read", SafeId(process));
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        return found;
+    }
+
     public async Task WaitForExitAsync(int processId, CancellationToken cancellationToken)
     {
         Process process;

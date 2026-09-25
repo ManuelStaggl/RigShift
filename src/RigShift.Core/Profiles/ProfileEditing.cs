@@ -18,9 +18,27 @@ public static class ProfileEditing
         {
             Id = Guid.NewGuid(),
             Name = name.Trim(),
-            Displays = CurrentArrangement(snapshot, [], knownNames),
+            Displays = CapturedArrangement(snapshot, [], knownNames),
             Audio = audio ?? new AudioAssignment(),
         };
+    }
+
+    /// <summary>
+    /// The active displays as a profile saves them: <see cref="CurrentArrangement"/>, but without taking over the HDR state
+    /// (v4 finding K-12). A profile that sets HDR turns every change the user makes in Windows back on the next switch, and
+    /// switching HDR is what froze a driver at HW-12. A display <paramref name="previous"/> already has keeps its HDR choice
+    /// – "don't change" included.
+    /// </summary>
+    public static IReadOnlyList<DisplayAssignment> CapturedArrangement(
+        DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous, IReadOnlyDictionary<string, string>? knownNames = null)
+    {
+        List<DisplayAssignment> before = [.. previous];
+        return CurrentArrangement(snapshot, before, knownNames)
+            .Select(live => live with
+            {
+                Hdr = before.FirstOrDefault(d => string.Equals(d.Identity.TargetDevicePath, live.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase))?.Hdr,
+            })
+            .ToList();
     }
 
     /// <summary>

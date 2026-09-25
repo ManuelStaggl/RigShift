@@ -32,13 +32,13 @@
 
     <StackPanel Grid.Row="1" Margin="24,0,24,12">
       <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="{loc:Tr App_Browse}" />
-      <ui:TextBox
+      <TextBox
         x:Name="SearchBox"
         Margin="0,14,0,0"
         AutomationProperties.Name="{loc:Tr AppPicker_Search}"
-        Icon="{ui:SymbolIcon Search16}"
-        PlaceholderText="{loc:Tr AppPicker_Search}"
         PreviewKeyDown="OnSearchKeyDown"
+        Style="{StaticResource RigShift.Field.Search}"
+        Tag="{loc:Tr AppPicker_Search}"
         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
     </StackPanel>
 

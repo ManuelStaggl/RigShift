@@ -18,7 +18,7 @@
       "rigshift.windows": {
         "type": "Project",
         "dependencies": {
-          "RigShift.Core": "[3.6.0, )",
+          "RigShift.Core": "[1.0.0, )",
           "Serilog": "[4.4.0, )"
         }
       },

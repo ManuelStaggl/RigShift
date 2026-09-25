@@ -46,6 +46,17 @@ public sealed class CcdSnapshotBuilderTests
     }
 
     [Fact]
+    public void Build_CarriesTheSerialFingerprint_RecordingsWithoutOneHaveNone()
+    {
+        CcdRawSnapshot raw = Load("ccd-synthetic.json");
+        CcdSnapshotBuilder.Build(raw, Logger.None)[0].Identity.EdidSerialHash.ShouldBeNull();
+
+        CcdRawSnapshot withSerial = raw with { Targets = [.. raw.Targets.Select(t => t with { EdidSerialHash = "0123456789ABCDEF" })] };
+
+        CcdSnapshotBuilder.Build(withSerial, Logger.None)[0].Identity.EdidSerialHash.ShouldBe("0123456789ABCDEF");
+    }
+
+    [Fact]
     public void Build_SleepingTarget_IsInactiveUnavailableWithoutEdid()
     {
         AttachedDisplay sleeper = CcdSnapshotBuilder.Build(Load("ccd-synthetic.json"), Logger.None)[1];

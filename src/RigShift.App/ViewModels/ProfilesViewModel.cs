@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -10,6 +8,7 @@ using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 
@@ -19,10 +18,8 @@ namespace RigShift.App.ViewModels;
 /// The profiles page: the master list on the left, the selected profile's detail (its editor) on the right (R-NAV-2).
 /// Leaving a profile with unsaved changes asks first (R-NAV-3); the head shows what a switch would do right now (F2 phase 0).
 /// </summary>
-public sealed partial class ProfilesViewModel : ObservableObject
+public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileItem, ProfileEditorViewModel>
 {
-    private static readonly TimeSpan StatusDuration = TimeSpan.FromSeconds(3);
-
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
     private readonly IProfilePageDialogs _dialogs;
@@ -30,14 +27,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
     private readonly IDisplayConfigurator _display;
     private readonly TopologyPlanner _planner;
     private readonly IDesktopIcons _desktopIcons;
-    private readonly ILogger _log;
-    private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly Dictionary<Guid, TopologyPlan> _plans = [];
-    private ProfileItem? _newItem;
-    private Guid? _selectAfterRebuild;
-    private bool _rebuildQueued;
-    private bool _reverting;
-    private CancellationTokenSource? _statusTimer;
 
     public ProfilesViewModel(
         ProfileCatalog catalog,
@@ -46,16 +36,14 @@ public sealed partial class ProfilesViewModel : ObservableObject
         SettingsService settings,
         IDisplayConfigurator display,
         TopologyPlanner planner,
-        DisplayChangeWatcher watcher,
         IDesktopIcons desktopIcons,
         ILogger log)
+        : base(log?.ForContext<ProfilesViewModel>() ?? throw new ArgumentNullException(nameof(log)))
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(settings);
-        ArgumentNullException.ThrowIfNull(watcher);
         ArgumentNullException.ThrowIfNull(desktopIcons);
-        ArgumentNullException.ThrowIfNull(log);
         _catalog = catalog;
         _coordinator = coordinator;
         _dialogs = dialogs;
@@ -63,13 +51,18 @@ public sealed partial class ProfilesViewModel : ObservableObject
         _display = display;
         _planner = planner;
         _desktopIcons = desktopIcons;
-        _log = log.ForContext<ProfilesViewModel>();
 
-        catalog.Changed += (_, _) => OnUi(() => _ = RebuildAsync());
-        catalog.Items.CollectionChanged += OnCatalogItemsChanged;
-        settings.Changed += (_, _) => OnUi(UpdateStatuses);
-        watcher.DisplaysChanged += (_, _) => OnUi(() => _ = RefreshPlansAsync());
-        coordinator.SwitchCompleted += (_, _) => OnUi(() => _ = RefreshPlansAsync());
+        // The list follows the profiles; the status lines and the plans follow every read of the displays – after a
+        // display change, a switch or a reload – without reading them once more (v4 finding A-03).
+        catalog.ProfilesChanged += (_, _) => OnUi(Rebuild);
+        catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowPlans(snapshot));
+
+        // A profile's USB rules live in the settings: the assistant or a restore can change them under the editor.
+        settings.Changed += (_, _) => OnUi(() =>
+        {
+            UpdateStatuses();
+            RecheckEditor();
+        });
         coordinator.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(SwitchCoordinator.IsSwitching))
@@ -82,31 +75,19 @@ public sealed partial class ProfilesViewModel : ObservableObject
             }
         };
         Loc.Instance.PropertyChanged += (_, _) => OnUi(UpdateStatuses);
+        coordinator.SwitchCompleted += (_, record) => OnUi(() => ShowSwitchResult(record));
         Rebuild();
-        _ = RefreshPlansAsync();
+        if (catalog.LastSnapshot is { } snapshot)
+        {
+            ShowPlans(snapshot);
+        }
+        else
+        {
+            _ = RefreshPlansAsync();
+        }
     }
 
-    /// <summary>The detail wants the keyboard focus in the name field: a new profile is named first (F3 step 1).</summary>
-    public event EventHandler? FocusNameRequested;
-
     public ProfileCatalog Catalog => _catalog;
-
-    /// <summary>The saved profiles, with the unsaved new one on top while there is one.</summary>
-    public ObservableCollection<ProfileItem> Items { get; } = [];
-
-    [ObservableProperty]
-    public partial ProfileItem? SelectedItem { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelection))]
-    [NotifyCanExecuteChangedFor(nameof(RestoreDesktopIconsCommand))]
-    public partial ProfileEditorViewModel? Editor { get; private set; }
-
-    public bool HasSelection => Editor is not null;
-
-    /// <summary>No profiles at all: the list says so and the detail stays empty (section 6).</summary>
-    [ObservableProperty]
-    public partial bool IsEmpty { get; private set; }
 
     /// <summary>What Windows shows right now; the empty page offers it as the first profile (X-01).</summary>
     [ObservableProperty]
@@ -148,52 +129,39 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
     public bool HasBlockedMessage => BlockedMessage is not null;
 
-    /// <summary>A test result, a switch result or a store error, as a bar above the tab content; closable.</summary>
+    /// <summary>Warning while displays are off (the switch waits for them), error for twins that cannot be told apart.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasDetailMessage))]
-    public partial string? DetailMessage { get; private set; }
+    public partial InfoKind BlockedKind { get; private set; } = InfoKind.Warn;
 
-    public bool HasDetailMessage => DetailMessage is not null;
-
+    /// <summary>"Help" beside the note while displays are off: the guide to monitors in standby.</summary>
     [ObservableProperty]
-    public partial InfoKind DetailKind { get; private set; }
+    public partial bool ShowMonitorHelp { get; private set; }
 
-    /// <summary>"'X' saved", for three seconds at the bottom of the detail (F3 step 4).</summary>
+    /// <summary>"Mark optional" beside the note: the profile then switches without those displays (v4 finding U-11).</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
-    public partial string? StatusMessage { get; private set; }
+    public partial bool CanMarkOptional { get; private set; }
 
-    public bool HasStatusMessage => StatusMessage is not null;
-
-    /// <summary>Before the page is left or the window navigates: saves, discards or stays. False: stay.</summary>
-    public Task<bool> ConfirmLeaveAsync() => ConfirmLeaveAsync(null);
-
-    /// <param name="target">The profile the user picked instead, when the question comes from the list.</param>
-    private async Task<bool> ConfirmLeaveAsync(ProfileItem? target)
+    [RelayCommand]
+    private void MarkMissingOptional()
     {
-        if (Editor is not { IsDirty: true } editor)
+        if (Editor is not { } editor || SelectedItem is not { } item || !_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
         {
-            return true;
+            return;
         }
 
-        switch (await _dialogs.ConfirmUnsavedAsync(
-            editor.Name.Trim().Length == 0 ? Loc.Instance["Editor_NewName"] : editor.Name, target?.Name))
-        {
-            case UnsavedChoice.Save:
-                return await SaveCoreAsync(target);
-            case UnsavedChoice.Discard:
-                DiscardCore(target);
-                return true;
-            default:
-                return false;
-        }
+        int marked = editor.MarkOptional(plan.Missing.Where(m => !m.Assignment.IsOptional).Select(m => m.Assignment.Identity.TargetDevicePath));
+        Log.Information("Marked {Count} missing display(s) of {Profile} as optional", marked, item.Name);
     }
+
+    protected override IEnumerable<ProfileItem> CatalogItems => _catalog.Items;
+
+    protected override string UnnamedText => Loc.Instance["Editor_NewName"];
 
     /// <summary>
     /// Every switch result also on the profile page: Windows suppresses tray balloons while a full-screen game runs,
     /// which is exactly when RigShift switches (analysis finding I-04).
     /// </summary>
-    public void ShowSwitchResult(SwitchRecord record)
+    private void ShowSwitchResult(SwitchRecord record)
     {
         ArgumentNullException.ThrowIfNull(record);
 
@@ -206,6 +174,35 @@ public sealed partial class ProfilesViewModel : ObservableObject
         });
     }
 
+    protected override Task<ProfileEditorViewModel> CreateEditorAsync(ProfileItem item) => _dialogs.CreateEditorAsync(item.Profile, item.IsNew);
+
+    protected override Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? target) => _dialogs.ConfirmUnsavedAsync(name, target);
+
+    protected override Task<bool> ConfirmDeleteAsync(ProfileItem item) => _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id));
+
+    protected override Task DeleteStoredAsync(ProfileItem item) => _catalog.DeleteAsync(item.Profile, CancellationToken.None);
+
+    protected override bool StoredChanged(ProfileEditorViewModel editor) =>
+        !StoredForm.Same(_catalog.Find(editor.Id), editor.Saved) || editor.Rules.ChangedOnDisk(_settings.Current.AutomationRules);
+
+    protected override void OnEditorLoaded(ProfileEditorViewModel editor, ProfileItem item)
+    {
+        if (_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
+        {
+            editor.ShowPlan(plan);
+        }
+    }
+
+    protected override void OnEditorReplaced() => RestoreDesktopIconsCommand.NotifyCanExecuteChanged();
+
+    protected override void OnEditorPropertyChanged(ProfileEditorViewModel editor, string? propertyName)
+    {
+        if (propertyName == nameof(ProfileEditorViewModel.HasDesktopIcons))
+        {
+            RestoreDesktopIconsCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     [RelayCommand]
     private async Task NewFromCurrentAsync()
     {
@@ -215,12 +212,8 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
 
         Profile profile = await _dialogs.NewFromCurrentAsync();
-        _newItem = new ProfileItem(profile, _settings.Current.UsbDeviceNames) { IsNew = true };
-        _newItem.SetStatus(StatusKind.Neutral, Loc.Instance["List_Unsaved"]);
-        Items.Insert(0, _newItem);
-        IsEmpty = false;
-        SelectedItem = _newItem;
-        _log.Information("New profile started from the current arrangement with {Count} displays", profile.Displays.Count);
+        BeginNew(new ProfileItem(profile, _settings.Current.UsbDeviceNames) { IsNew = true });
+        Log.Information("New profile started from the current arrangement with {Count} displays", profile.Displays.Count);
     }
 
     [RelayCommand]
@@ -253,25 +246,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
         UpdateStatuses();
     }
 
-    [RelayCommand]
-    private async Task SaveAsync()
-    {
-        if (await SaveCoreAsync())
-        {
-            ShowStatus(Loc.Format("Status_Saved", Editor?.Name ?? string.Empty));
-        }
-    }
-
-    [RelayCommand]
-    private void Discard() => DiscardCore();
-
-    [RelayCommand]
-    private void CloseDetailMessage() => DetailMessage = null;
-
+    /// <summary>A copy of the profile as saved; unsaved changes are settled first, so the copy has them or not on purpose.</summary>
     [RelayCommand]
     private async Task DuplicateAsync()
     {
-        if (SelectedItem is not { IsNew: false } item)
+        if (!await ConfirmLeaveAsync() || SelectedItem is not { IsNew: false } item)
         {
             return;
         }
@@ -281,7 +260,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
             Id = Guid.NewGuid(),
             Name = ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), _catalog.Profiles.Select(p => p.Name)),
         };
-        _selectAfterRebuild = copy.Id;
+        SelectAfterRebuild(copy.Id);
         await RunStoreActionAsync(() => _catalog.SaveAsync(copy, CancellationToken.None), Loc.Format("Status_Duplicated", copy.Name));
     }
 
@@ -295,27 +274,6 @@ public sealed partial class ProfilesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DeleteAsync()
-    {
-        if (SelectedItem is not { } item || !await _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id)))
-        {
-            return;
-        }
-
-        if (item.IsNew)
-        {
-            DiscardCore();
-            return;
-        }
-
-        int index = Items.IndexOf(item);
-        _selectAfterRebuild = Items.ElementAtOrDefault(index + 1)?.Profile.Id ?? Items.ElementAtOrDefault(index - 1)?.Profile.Id;
-        Editor?.Dispose();
-        Editor = null;
-        await RunStoreActionAsync(() => _catalog.DeleteAsync(item.Profile, CancellationToken.None), Loc.Format("Status_Deleted", item.Name));
-    }
-
-    [RelayCommand]
     private void CreateShortcut()
     {
         if (SelectedItem is not { IsNew: false } item || Environment.ProcessPath is not { } executable)
@@ -323,20 +281,33 @@ public sealed partial class ProfilesViewModel : ObservableObject
             return;
         }
 
-        string title = "RigShift – " + RigShift.Windows.Shell.ShortcutWriter.SafeFileName(item.Name);
-        string file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), title + ".lnk");
+        string title = DesktopShortcuts.ProfileTitle(item.Name);
+        string file = DesktopShortcuts.ProfileFile(item.Name);
         try
         {
             RigShift.Windows.Shell.ShortcutWriter.Create(
-                file, executable, "apply " + RigShift.Core.Cli.CommandLineArguments.Quote(item.Name), Loc.Format("Shortcut_Description", item.Name));
-            _log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
+                file, executable, DesktopShortcuts.ProfileArguments(item.Name), Loc.Format("Shortcut_Description", item.Name));
+            Log.Information("Shortcut {File} created for profile {Profile}", file, item.Name);
             ShowStatus(Loc.Format("Status_ShortcutCreated", title));
         }
         catch (Exception ex) when (ex is COMException or UnauthorizedAccessException or IOException)
         {
-            _log.Error(ex, "Shortcut {File} could not be created", file);
-            ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
+            Log.Error(ex, "Shortcut {File} could not be created", file);
+            ShowDetail(UserMessages.Describe(ex), InfoKind.Error);
         }
+    }
+
+    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot (v4 finding U-12).</summary>
+    protected override void OnSaved(ProfileEditorViewModel editor)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        if (editor.RenamedFrom is not { } oldName)
+        {
+            return;
+        }
+
+        bool moved = DesktopShortcuts.FollowProfileRename(oldName, editor.Name, Log);
+        ShowDetail(Loc.Format(moved ? "Detail_RenamedShortcut" : "Detail_Renamed", oldName), InfoKind.Info);
     }
 
     private bool CanRestoreDesktopIcons() => Editor is { HasDesktopIcons: true };
@@ -356,7 +327,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
         // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread.
         DesktopIconResult result = await Task.Run(() => _desktopIcons.Restore(layout));
-        _log.Information("Desktop icons of {Profile} put back on request: {Outcome}, {Placed} placed, {Missing} missing",
+        Log.Information("Desktop icons of {Profile} put back on request: {Outcome}, {Placed} placed, {Missing} missing",
             editor.Name, result.Outcome, result.Placed, result.Missing);
 
         switch (result.Outcome)
@@ -377,260 +348,24 @@ public sealed partial class ProfilesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CopyCommand()
-    {
-        if (Editor is null)
-        {
-            return;
-        }
+    private void OpenDisplaySettings() => ShellFolders.OpenDisplaySettings(Log);
 
-        try
-        {
-            System.Windows.Clipboard.SetText(Editor.CommandText);
-            ShowStatus(Loc.Instance["Trigger_Copied"]);
-        }
-        catch (COMException ex)
-        {
-            _log.Warning(ex, "Clipboard refused the command");
-        }
-    }
-
-    [RelayCommand]
-    private void OpenDisplaySettings() => ShellFolders.OpenUrl("ms-settings:display", _log);
-
-    partial void OnSelectedItemChanged(ProfileItem? oldValue, ProfileItem? newValue)
-    {
-        if (!_reverting)
-        {
-            _ = SelectAsync(oldValue, newValue);
-        }
-    }
-
-    private async Task SelectAsync(ProfileItem? previous, ProfileItem? next)
-    {
-        if (previous is not null && previous != next && Editor is { IsDirty: true } && !await ConfirmLeaveAsync(next))
-        {
-            _reverting = true;
-            SelectedItem = previous;
-            _reverting = false;
-            return;
-        }
-
-        // Confirming may have removed a new item or replaced the list; the selection then is whatever the list shows.
-        if (SelectedItem != next)
-        {
-            return;
-        }
-
-        await LoadEditorAsync(next);
-    }
-
-    private async Task LoadEditorAsync(ProfileItem? item)
-    {
-        Editor?.Dispose();
-        DetailMessage = null;
-        if (item is null)
-        {
-            Editor = null;
-            UpdateHead();
-            return;
-        }
-
-        ProfileEditorViewModel editor = await _dialogs.CreateEditorAsync(item.Profile, item.IsNew);
-        if (SelectedItem != item)
-        {
-            editor.Dispose();
-            return;
-        }
-
-        editor.PropertyChanged += OnEditorChanged;
-        Editor = editor;
-        if (_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
-        {
-            editor.ShowPlan(plan);
-        }
-
-        UpdateHead();
-        if (item.IsNew)
-        {
-            FocusNameRequested?.Invoke(this, EventArgs.Empty);
-        }
-    }
-
-    private void OnEditorChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ProfileEditorViewModel.HasDesktopIcons))
-        {
-            RestoreDesktopIconsCommand.NotifyCanExecuteChanged();
-        }
-
-        if (e.PropertyName is nameof(ProfileEditorViewModel.IsDirty) or nameof(ProfileEditorViewModel.IsNew) or nameof(ProfileEditorViewModel.Name)
-            or nameof(ProfileEditorViewModel.ErrorMessage))
-        {
-            if (e.PropertyName == nameof(ProfileEditorViewModel.ErrorMessage) && Editor?.ErrorMessage is { } error)
-            {
-                ShowDetail(error, InfoKind.Error);
-            }
-
-            UpdateHead();
-        }
-    }
-
-    /// <param name="target">The profile to show afterwards; saving rebuilds the list, which otherwise stays on the saved profile.</param>
-    private async Task<bool> SaveCoreAsync(ProfileItem? target = null)
-    {
-        if (Editor is not { } editor)
-        {
-            return true;
-        }
-
-        bool wasNew = editor.IsNew;
-        _selectAfterRebuild = target?.Profile.Id ?? editor.Id;
-        if (!await editor.SaveAsync())
-        {
-            _selectAfterRebuild = null;
-            return false;
-        }
-
-        if (wasNew)
-        {
-            _newItem = null;
-        }
-
-        // The catalog reloads and fires Changed, which rebuilds the list and keeps this profile selected.
-        return true;
-    }
-
-    /// <summary>Back to the profile as saved; a new profile disappears from the list.</summary>
-    /// <param name="target">The profile the user picked instead; its editor is loaded by whoever asked.</param>
-    private void DiscardCore(ProfileItem? target = null)
-    {
-        ProfileItem? item = _newItem is not null && Editor is { IsNew: true } ? _newItem : SelectedItem;
-        if (item is null)
-        {
-            return;
-        }
-
-        if (item.IsNew)
-        {
-            _newItem = null;
-            Items.Remove(item);
-            IsEmpty = Items.Count == 0;
-            _reverting = true;
-            SelectedItem = target is not null && Items.Contains(target) ? target : Items.FirstOrDefault();
-            _reverting = false;
-            if (target is null)
-            {
-                _ = LoadEditorAsync(SelectedItem);
-            }
-
-            return;
-        }
-
-        if (target is null)
-        {
-            _ = LoadEditorAsync(item);
-        }
-    }
-
-    private async Task RunStoreActionAsync(Func<Task> action, string? success)
-    {
-        try
-        {
-            await action();
-            if (success is not null)
-            {
-                ShowStatus(success);
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _log.Error(ex, "Profile store action failed");
-            ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
-        }
-    }
-
-    private void OnCatalogItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        // The catalog clears and refills its list item by item; one rebuild after the burst is enough.
-        if (_rebuildQueued)
-        {
-            return;
-        }
-
-        _rebuildQueued = true;
-        OnUi(() =>
-        {
-            _rebuildQueued = false;
-            Rebuild();
-        });
-    }
-
-    private async Task RebuildAsync()
-    {
-        Rebuild();
-        await RefreshPlansAsync();
-    }
-
-    /// <summary>The list from the catalog, the new profile on top; the selection survives by id.</summary>
-    private void Rebuild()
-    {
-        Guid? keep = _selectAfterRebuild ?? SelectedItem?.Profile.Id;
-        _selectAfterRebuild = null;
-        _reverting = true;
-        try
-        {
-            // The save of a new profile reloads the catalog before it returns here: by then the profile is an ordinary entry.
-            if (_newItem is not null && _catalog.Items.Any(i => i.Profile.Id == _newItem.Profile.Id))
-            {
-                _newItem = null;
-            }
-
-            Items.Clear();
-            if (_newItem is not null)
-            {
-                Items.Add(_newItem);
-            }
-
-            foreach (ProfileItem item in _catalog.Items)
-            {
-                Items.Add(item);
-            }
-
-            IsEmpty = Items.Count == 0;
-            UpdateStatuses();
-            ProfileItem? selected = Items.FirstOrDefault(i => i.Profile.Id == keep) ?? Items.FirstOrDefault();
-            bool sameProfile = selected is not null && Editor?.Id == selected.Profile.Id && !selected.IsNew && Editor is { IsDirty: false };
-            SelectedItem = selected;
-            if (!sameProfile || Editor is null)
-            {
-                _ = LoadEditorAsync(selected);
-            }
-            else
-            {
-                UpdateHead();
-            }
-        }
-        finally
-        {
-            _reverting = false;
-        }
-    }
-
-    /// <summary>Plans every profile against the live displays once, for the list's status lines and the head.</summary>
+    /// <summary>Reads the displays itself – only when the catalog has not read them yet.</summary>
     private async Task RefreshPlansAsync()
     {
-        DisplaySnapshot snapshot;
         try
         {
-            snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            ShowPlans(await _display.QueryAsync(CancellationToken.None));
         }
         catch (Win32Exception ex)
         {
-            _log.Warning(ex, "Displays could not be read for the profile list");
-            return;
+            Log.Warning(ex, "Displays could not be read for the profile list");
         }
+    }
 
+    /// <summary>Plans every profile against the displays as read, for the list's status lines and the head.</summary>
+    private void ShowPlans(DisplaySnapshot snapshot)
+    {
         CurrentTopology = TopologyDisplays.From(ProfileEditing.CurrentArrangement(snapshot, [], _catalog.KnownDisplayNames));
         _plans.Clear();
         foreach (Profile profile in _catalog.Profiles)
@@ -645,7 +380,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         }
     }
 
-    private void UpdateStatuses()
+    protected override void UpdateStatuses()
     {
         foreach (ProfileItem item in Items)
         {
@@ -667,7 +402,7 @@ public sealed partial class ProfilesViewModel : ObservableObject
         string suffix = item.IsDefault ? " · " + Loc.Instance["Profile_Default"] : string.Empty;
         if (item.IsActive)
         {
-            return (StatusKind.Ok, Loc.Instance["Profile_Active"] + suffix);
+            return (StatusKind.Active, Loc.Instance["Profile_Active"] + suffix);
         }
 
         if (!_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
@@ -675,24 +410,11 @@ public sealed partial class ProfilesViewModel : ObservableObject
             return (StatusKind.Neutral, Loc.Instance["List_Checking"] + suffix);
         }
 
-        if (plan.IsBlocked)
-        {
-            return (StatusKind.Error, Loc.Instance["List_BlockedShort"] + suffix);
-        }
-
-        if (plan.Missing.Count > 0)
-        {
-            return (StatusKind.Ok, Loc.Format("List_OptionalMissing", Names(plan.Missing)) + suffix);
-        }
-
-        return (StatusKind.Ok, Loc.Instance["List_Ready"] + suffix);
+        (StatusKind kind, string text, _) = ProfileReadiness.Of(plan);
+        return (kind, text + suffix);
     }
 
-    private static string Names(IEnumerable<MissingDisplay> missing) =>
-        string.Join(", ", missing.Select(m => SwitchMessages.NameOf(m.Assignment)));
-
-    /// <summary>The head's status line and what the primary action may do right now.</summary>
-    private void UpdateHead()
+    protected override void UpdateHead()
     {
         ProfileItem? item = SelectedItem;
         IsSelectedActive = item is { IsNew: false, IsActive: true };
@@ -709,10 +431,15 @@ public sealed partial class ProfilesViewModel : ObservableObject
             return;
         }
 
-        bool blocked = _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan) && plan.IsBlocked;
-        MissingDisplay[] missing = blocked ? plan!.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
-        BlockedMessage = missing.Length > 0 && !item.IsActive ? Loc.Format("Detail_BlockedNames", Names(missing)) : null;
-        CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && !blocked;
+        // A display that is off does not block: the switch asks for it and waits (K-06). Twin displays do (K-03).
+        _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan);
+        MissingDisplay[] missing = plan is { IsBlocked: true } ? plan.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
+        (StatusKind readyKind, _, string? tip) = plan is null ? (StatusKind.Neutral, string.Empty, null) : ProfileReadiness.Of(plan);
+        BlockedMessage = missing.Length == 0 || item.IsActive ? null : tip;
+        BlockedKind = readyKind == StatusKind.Error ? InfoKind.Error : InfoKind.Warn;
+        ShowMonitorHelp = BlockedMessage is not null && readyKind != StatusKind.Error;
+        CanMarkOptional = ShowMonitorHelp && missing.Any(m => !m.Assignment.IsPrimary);
+        CanSwitch = !IsBusy && !item.IsNew && !Editor.IsDirty && plan is not { IsAmbiguous: true };
         TestCommand.NotifyCanExecuteChanged();
 
         if (IsBusy)
@@ -747,54 +474,5 @@ public sealed partial class ProfilesViewModel : ObservableObject
 
         HeadStatusKind = kind;
         HeadStatusText = text;
-    }
-
-    private void ShowDetail(string text, InfoKind kind)
-    {
-        DetailKind = kind;
-        DetailMessage = text;
-    }
-
-    private void ShowStatus(string text)
-    {
-        _statusTimer?.Cancel();
-        var timer = new CancellationTokenSource();
-        _statusTimer = timer;
-        StatusMessage = text;
-        _ = HideStatusAsync(timer);
-    }
-
-    private async Task HideStatusAsync(CancellationTokenSource timer)
-    {
-        try
-        {
-            await Task.Delay(StatusDuration, timer.Token);
-            StatusMessage = null;
-        }
-        catch (OperationCanceledException)
-        {
-            // A newer message took over.
-        }
-        finally
-        {
-            if (_statusTimer == timer)
-            {
-                _statusTimer = null;
-            }
-
-            timer.Dispose();
-        }
-    }
-
-    private void OnUi(Action action)
-    {
-        if (_ui is null || SynchronizationContext.Current == _ui)
-        {
-            action();
-        }
-        else
-        {
-            _ui.Post(_ => action(), null);
-        }
     }
 }

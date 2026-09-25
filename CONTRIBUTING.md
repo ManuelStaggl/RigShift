@@ -29,9 +29,8 @@ dotnet test --solution RigShift.slnx
 
 ## Bug reports
 
-Please include the log from `%AppData%\RigShift\logs`, your GPU and driver version, and the display
-configuration (resolution/refresh per monitor). Device paths in the log are not personal data, but feel free to
-redact them.
+In RigShift, **Help → Save support package** saves a ZIP with the diagnostics (GPU, driver, displays, audio), the
+last three logs and your profiles, without your Windows user name, and opens the bug report form to attach it to.
 
 ## Code of conduct and security
 

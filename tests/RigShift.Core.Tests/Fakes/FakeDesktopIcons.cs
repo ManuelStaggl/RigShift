@@ -20,6 +20,9 @@ public sealed class FakeDesktopIcons : IDesktopIcons
     /// <summary>Set to false for a session without a desktop (a service, SSH).</summary>
     public bool Reachable { get; set; } = true;
 
+    /// <summary>Runs inside <see cref="Restore"/>, e.g. to hold it like a busy Explorer does.</summary>
+    public Action? DuringRestore { get; set; }
+
     public int Restores { get; private set; }
 
     public int Captures { get; private set; }
@@ -54,6 +57,7 @@ public sealed class FakeDesktopIcons : IDesktopIcons
         ArgumentNullException.ThrowIfNull(layout);
         Restores++;
         _capturesSinceRestore = 0;
+        DuringRestore?.Invoke();
         if (!Reachable)
         {
             return DesktopIconResult.Unavailable;

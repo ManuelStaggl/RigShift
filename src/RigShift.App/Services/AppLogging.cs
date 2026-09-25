@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO;
 using Serilog;
 using Serilog.Core;
@@ -14,6 +13,8 @@ public static class AppLogging
 
     /// <summary>Information until the settings say otherwise; the logger exists before the settings are read.</summary>
     private static readonly LoggingLevelSwitch Level = new(LogEventLevel.Information);
+
+    private const string OutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] ({ProcessId}) {SourceContext}: {Message:lj}{NewLine}{Exception}";
 
     /// <summary>The setting "detailed log": Debug lines on or off, effective at once.</summary>
     public static void SetDetailed(bool detailed)
@@ -34,20 +35,25 @@ public static class AppLogging
     {
         ArgumentNullException.ThrowIfNull(paths);
 
-        return new LoggerConfiguration()
+        var configuration = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(Level)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ProcessId", Environment.ProcessId)
-            .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
+            // Static Log.* calls have no context of their own; "App" rather than an empty column (v4 finding E-17).
+            .Enrich.WithProperty("SourceContext", "App");
+#if DEBUG
+        // An OutputDebugString per line helps nobody in a release build.
+        configuration = configuration.WriteTo.Debug(formatProvider: System.Globalization.CultureInfo.InvariantCulture);
+#endif
+        return configuration
             .WriteTo.File(
+                new LogLineFormatter(OutputTemplate),
                 Path.Combine(paths.Logs, "rigshift-.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 14,
                 fileSizeLimitBytes: FileSizeLimitBytes,
                 rollOnFileSizeLimit: true,
-                shared: true,
-                formatProvider: CultureInfo.InvariantCulture,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] ({ProcessId}) {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                shared: true)
             .CreateLogger();
     }
 }
@@ -68,6 +74,12 @@ public sealed class SerilogVelopackLogger(ILogger log) : IVelopackLogger
             VelopackLogLevel.Error => LogEventLevel.Error,
             _ => LogEventLevel.Fatal,
         };
+
+        // Every start that is not an installed copy (portable folder, development build) says so; not worth a warning.
+        if (level == LogEventLevel.Warning && message?.StartsWith("Failed to initialize WindowsVelopackLocator", StringComparison.Ordinal) == true)
+        {
+            level = LogEventLevel.Debug;
+        }
 
         // The message comes from Velopack, not a template: pass it as a property so braces in paths stay literal.
         _log.Write(level, exception, "{VelopackMessage}", message);

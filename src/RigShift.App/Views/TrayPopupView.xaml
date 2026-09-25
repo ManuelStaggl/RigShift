@@ -101,12 +101,15 @@
       </Setter>
     </Style>
 
-    <!-- Compact row for five profiles and more, and for games. -->
-    <Style x:Key="Row" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+    <!-- Compact row for games, and for five profiles and more. -->
+    <Style x:Key="GameRowStyle" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
       <Setter Property="Height" Value="40" />
       <Setter Property="Padding" Value="8,0" />
       <Setter Property="Margin" Value="4,0" />
       <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style x:Key="Row" TargetType="Button" BasedOn="{StaticResource GameRowStyle}">
       <Style.Triggers>
         <DataTrigger Binding="{Binding IsActive}" Value="True">
           <Setter Property="Background" Value="{StaticResource Tray.ActiveFill}" />
@@ -195,11 +198,11 @@
             </Button.ContextMenu>
           </Button>
           <ToggleButton
-            AutomationProperties.Name="{loc:Tr Automation_Pause}"
+            AutomationProperties.Name="{Binding PauseTip}"
             Command="{Binding TogglePauseCommand}"
             DockPanel.Dock="Right"
             IsChecked="{Binding IsPaused, Mode=OneWay}"
-            ToolTip="{loc:Tr Automation_Pause}"
+            ToolTip="{Binding PauseTip}"
             Visibility="{Binding HasRules, Converter={StaticResource BoolToVisibility}}">
             <ToggleButton.Style>
               <Style TargetType="ToggleButton">
@@ -229,7 +232,7 @@
                 </Setter>
               </Style>
             </ToggleButton.Style>
-            <ui:SymbolIcon FontSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Symbol="Pause16" />
+            <ui:SymbolIcon FontSize="16" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Symbol="PlugDisconnected20" />
           </ToggleButton>
           <Button
             AutomationProperties.Name="{loc:Tr Tray_Open}"
@@ -237,7 +240,7 @@
             DockPanel.Dock="Right"
             Style="{StaticResource HeaderButton}"
             ToolTip="{loc:Tr Tray_Open}">
-            <ui:SymbolIcon FontSize="16" Symbol="Open16" />
+            <ui:SymbolIcon FontSize="16" Symbol="Window16" />
           </Button>
           <TextBlock
             Margin="10,0,0,0"
@@ -284,10 +287,12 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileItem}">
               <Button
+                AutomationProperties.HelpText="{Binding ReadyTip, TargetNullValue=''}"
                 AutomationProperties.Name="{Binding AccessibleName}"
                 Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
-                Style="{StaticResource Tile}">
+                Style="{StaticResource Tile}"
+                ToolTip="{Binding ReadyTip}">
                 <Grid>
                   <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -299,27 +304,35 @@
                     IsHitTestVisible="False"
                     ShowLabels="False"
                     Size="M" />
-                  <!-- "Active" in the corner of the active tile. -->
+                  <!-- "Active" in the corner of the active tile: the check mark used everywhere (U-20). -->
                   <StackPanel
                     Margin="0,-4,-4,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Orientation="Horizontal"
                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                    <Ellipse Width="7" Height="7" Margin="0,0,5,0" VerticalAlignment="Center" Fill="{DynamicResource RigShift.Brush.Accent}" />
+                    <ui:SymbolIcon Margin="0,0,4,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource RigShift.Brush.Accent}" Symbol="Checkmark12" />
                     <TextBlock
                       FontSize="11"
                       FontWeight="SemiBold"
                       Foreground="{DynamicResource RigShift.Brush.Accent}"
                       Text="{loc:Tr Profile_Active}" />
                   </StackPanel>
+                  <!-- A required display is off: the words of the profile list, the next step on hover (U-10). -->
+                  <controls:StatusLine
+                    Margin="0,-4,-4,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Kind="{Binding ReadyKind}"
+                    Text="{Binding ReadyText}"
+                    Visibility="{Binding ShowsReadiness, Converter={StaticResource BoolToVisibility}}" />
                   <DockPanel Grid.Row="1">
                     <TextBlock
                       Margin="8,0,0,0"
                       VerticalAlignment="Center"
                       DockPanel.Dock="Right"
                       Style="{StaticResource RigShift.Text.Caption}"
-                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                       Text="{Binding HotkeyText}" />
                     <TextBlock
                       Style="{StaticResource RigShift.Text.BodyStrong}"
@@ -352,10 +365,12 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:ProfileItem}">
                 <Button
+                  AutomationProperties.HelpText="{Binding ReadyTip, TargetNullValue=''}"
                   AutomationProperties.Name="{Binding AccessibleName}"
                   Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   CommandParameter="{Binding}"
-                  Style="{StaticResource Row}">
+                  Style="{StaticResource Row}"
+                  ToolTip="{Binding ReadyTip}">
                   <Grid>
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="56" />
@@ -375,9 +390,17 @@
                       Grid.Column="2"
                       Margin="12,0,0,0"
                       VerticalAlignment="Center"
-                      Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                      Foreground="{DynamicResource RigShift.Brush.TextSecondary}"
                       Style="{StaticResource RigShift.Text.Caption}"
-                      Text="{Binding HotkeyText}" />
+                      Text="{Binding HotkeyText}"
+                      Visibility="{Binding ShowsReadiness, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <controls:StatusLine
+                      Grid.Column="2"
+                      Margin="12,0,0,0"
+                      VerticalAlignment="Center"
+                      Kind="{Binding ReadyKind}"
+                      Text="{Binding ReadyText}"
+                      Visibility="{Binding ShowsReadiness, Converter={StaticResource BoolToVisibility}}" />
                   </Grid>
                 </Button>
               </DataTemplate>
@@ -398,7 +421,7 @@
                   Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   CommandParameter="{Binding}"
                   IsEnabled="{Binding CanPlay}"
-                  Style="{StaticResource Row}"
+                  Style="{StaticResource GameRowStyle}"
                   ToolTip="{Binding HotkeyText}">
                   <Grid>
                     <Grid.ColumnDefinitions>

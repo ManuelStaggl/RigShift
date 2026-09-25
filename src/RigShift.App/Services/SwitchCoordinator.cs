@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
@@ -13,6 +14,9 @@ namespace RigShift.App.Services;
 public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, IProfileSwitcher
 {
     private const int HistoryLength = 10;
+
+    /// <summary>How long the emergency hotkey waits for a running switch to take itself back.</summary>
+    internal static readonly TimeSpan AllDisplaysOnWait = TimeSpan.FromSeconds(30);
 
     private readonly SwitchOrchestrator _orchestrator;
     private readonly ProfileCatalog _catalog;
@@ -34,6 +38,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>The switch or catch-up running now, if any. UI thread only.</summary>
     private Task? _current;
+
+    /// <summary>Cancels <see cref="_current"/> alone, for the emergency hotkey. UI thread only.</summary>
+    private CancellationTokenSource? _cancelCurrent;
 
     /// <summary>Last switch applied partially: the profile and how many displays it got. Cleared by any other switch.</summary>
     private (Profile Profile, int Displays)? _pendingCatchUp;
@@ -65,6 +72,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     public event EventHandler? BusyRejected;
 
+    /// <summary>The emergency hotkey ended (<see cref="TurnAllDisplaysOnAsync"/>). Raised on the UI thread.</summary>
+    public event EventHandler<AllDisplaysOnReport>? AllDisplaysOnCompleted;
+
     /// <summary>
     /// Windows restored a profile's displays by itself and the profile has more than displays (finding HW-15). The tray
     /// offers to apply the rest with <see cref="SwitchRequest.KeepDisplays"/>.
@@ -72,10 +82,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler<Profile>? RestoredByWindows;
 
     /// <summary>
-    /// The apps of a switch ended after its result: the history record, now with the final apps outcome (analysis
-    /// finding B-03). Raised on the context that started the switch.
+    /// What a switch left running after its result ended – its apps (analysis finding B-03) and its tidy-up with the
+    /// desktop symbols (v4 finding K-04): the history record, now with their final outcomes. Raised on the context that
+    /// started the switch.
     /// </summary>
-    public event EventHandler<SwitchRecord>? AppsCompleted;
+    public event EventHandler<SwitchRecord>? FollowUpCompleted;
 
     public ObservableCollection<SwitchRecord> History { get; } = [];
 
@@ -102,8 +113,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public async Task<bool> StopAsync(TimeSpan timeout)
     {
         await _stopping.CancelAsync();
-        Task apps = _orchestrator.CancelPendingAppsAsync();
-        Task current = _current is { IsCompleted: false } running ? Task.WhenAll(running, apps) : apps;
+        Task pending = _orchestrator.CancelPendingAsync();
+        Task current = _current is { IsCompleted: false } running ? Task.WhenAll(running, pending) : pending;
         if (current.IsCompleted)
         {
             return true;
@@ -133,8 +144,16 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public Task<SwitchResult?> CheckAsync(Profile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        return CheckCoreAsync(profile, rethrow: false, CancellationToken.None);
+        return CheckCoreAsync(AsSwitched(profile), rethrow: false, CancellationToken.None);
     }
+
+    /// <summary>
+    /// The emergency hotkey: a running switch is cancelled first – it takes itself back – then every display that is
+    /// ready is turned on. When not even that works, the default profile is applied without asking: an arrangement that
+    /// worked before is the next best way to a picture.
+    /// </summary>
+    /// <returns>The result, or <c>null</c> when RigShift is exiting or the running switch did not end in time.</returns>
+    public Task<AllDisplaysOnResult?> TurnAllDisplaysOnAsync() => OnUiThreadAsync(TurnAllDisplaysOnCoreAsync);
 
     /// <summary>Where "back to the previous profile" goes right now: the hotkey, <c>toggle</c> and <c>rigshift://toggle</c> share it.</summary>
     public Profile? ToggleTarget =>
@@ -216,8 +235,15 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
+    /// <summary>The profile as it switches: without a Surround setting it means "off" once another profile uses Surround.</summary>
+    private Profile AsSwitched(Profile profile) =>
+        SurroundDefaults.Effective(profile, _catalog.Profiles) is var surround && surround != profile.Surround
+            ? profile with { Surround = surround }
+            : profile;
+
     private async Task<SwitchResult?> RunCoreAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken)
     {
+        profile = AsSwitched(profile);
         if (request.DryRun)
         {
             return await CheckCoreAsync(profile, rethrow, cancellationToken);
@@ -238,6 +264,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
         DateTimeOffset started = _time.GetLocalNow();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Token, cancellationToken);
+        _cancelCurrent = linked;
         try
         {
             // Inside the try on purpose: the setter runs foreign handlers, and one that throws used to leave the gate
@@ -251,13 +278,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             SwitchResult result = await running;
 
             RememberCatchUp(profile, result);
+            RememberApplied(profile, result);
             SwitchRecord record = ToRecord(started, profile, result);
             await CompleteAsync(record);
-            if (result.Apps == AppsOutcome.Pending)
-            {
-                _ = FollowAppsAsync(record, result.AppsCompletion);
-            }
-
+            FollowUp(record, result);
+            await HealAsync(result);
             return result;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)
@@ -270,7 +295,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             // The orchestrator reports expected failures as results; anything thrown is a bug or an OS surprise.
             _log.Error(ex, "Switch to {Profile} threw", profile.Name);
             await CompleteAsync(new SwitchRecord(started, profile.Name, SwitchOutcome.Failed, AudioOutcome.NotConfigured, AppsOutcome.NotConfigured, 0,
-                _time.GetLocalNow() - started, null, ex.Message, []));
+                _time.GetLocalNow() - started, null, ex.Message, [], Note: ex is DisplayDriverHungException ? SwitchNote.DriverHung : SwitchNote.None));
 
             if (rethrow)
             {
@@ -281,10 +306,79 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
         finally
         {
+            _cancelCurrent = null;
             IsSwitching = false;
             SwitchingProfile = null;
             _gate.Release();
         }
+    }
+
+    private async Task<AllDisplaysOnResult?> TurnAllDisplaysOnCoreAsync()
+    {
+        if (_stopping.IsCancellationRequested)
+        {
+            return null;
+        }
+
+        if (_current is { IsCompleted: false } running)
+        {
+            _log.Information("All displays on: cancelling the running switch first");
+            if (_cancelCurrent is { } cancel)
+            {
+                await cancel.CancelAsync();
+            }
+
+            await Task.WhenAny(running, Task.Delay(AllDisplaysOnWait, _time));
+        }
+
+        // The switch hands the gate back a moment after its task ended.
+        if (!await _gate.WaitAsync(AllDisplaysOnWait, CancellationToken.None))
+        {
+            _log.Warning("All displays on: the running switch did not end within {Seconds} s", AllDisplaysOnWait.TotalSeconds);
+            BusyRejected?.Invoke(this, EventArgs.Empty);
+            return null;
+        }
+
+        AllDisplaysOnResult result;
+        try
+        {
+            IsSwitching = true;
+            Task<AllDisplaysOnResult> turning = Task.Run(() => _orchestrator.TurnAllDisplaysOnAsync(_stopping.Token), CancellationToken.None);
+            _current = turning;
+            result = await turning;
+        }
+        catch (OperationCanceledException) when (_stopping.IsCancellationRequested)
+        {
+            _log.Information("All displays on cancelled, RigShift is exiting");
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "All displays on threw");
+            result = new AllDisplaysOnResult(AllDisplaysOnOutcome.Failed, 0, 0);
+        }
+        finally
+        {
+            IsSwitching = false;
+            _gate.Release();
+        }
+
+        _log.Information("All displays on: {Outcome} with {Displays} displays", result.Outcome, result.Displays);
+        if (result.Outcome is AllDisplaysOnOutcome.TurnedOn or AllDisplaysOnOutcome.TurnedOnAt60Hz)
+        {
+            // The layout is no profile's any more: a display showing up later must not bring the last one back.
+            _pendingCatchUp = null;
+        }
+
+        Profile? fallback = result.Outcome == AllDisplaysOnOutcome.Failed && _settings.Current.DefaultProfileId is { } id ? _catalog.Find(id) : null;
+        AllDisplaysOnCompleted?.Invoke(this, new AllDisplaysOnReport(result, fallback?.Name));
+        if (fallback is not null)
+        {
+            _log.Information("All displays on failed, switching to the default profile {Profile} without asking", fallback.Name);
+            await RunCoreAsync(fallback, new SwitchRequest { SkipConfirmation = true }, rethrow: false, CancellationToken.None);
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -312,6 +406,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
 
         DateTimeOffset started = _time.GetLocalNow();
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_stopping.Token);
+        _cancelCurrent = linked;
         try
         {
             SwitchingProfile = pending.Profile;
@@ -319,13 +415,16 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
             // The active profile does not decide: when the missing display connects, Windows itself may restore whatever
             // layout its database holds for that set of monitors (M5 2026-09-13 20:17: spacedesk connected → Desk).
-            Task<SwitchResult?> running = Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, _stopping.Token), CancellationToken.None);
+            Task<SwitchResult?> running = Task.Run(() => _orchestrator.CatchUpAsync(pending.Profile, pending.Displays, linked.Token), CancellationToken.None);
             _current = running;
             SwitchResult? result = await running;
             if (result is not null)
             {
                 RememberCatchUp(pending.Profile, result);
-                await CompleteAsync(ToRecord(started, pending.Profile, result));
+                SwitchRecord record = ToRecord(started, pending.Profile, result);
+                await CompleteAsync(record);
+                FollowUp(record, result);
+                await HealAsync(result);
             }
             else if (_catalog.ActiveProfile is { } active && active.Id != pending.Profile.Id)
             {
@@ -334,7 +433,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
                 _pendingCatchUp = null;
             }
         }
-        catch (OperationCanceledException) when (_stopping.IsCancellationRequested)
+        catch (OperationCanceledException) when (linked.IsCancellationRequested)
         {
             _log.Information("Catch-up of {Profile} cancelled", pending.Profile.Name);
         }
@@ -345,6 +444,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
         finally
         {
+            _cancelCurrent = null;
             IsSwitching = false;
             SwitchingProfile = null;
             _gate.Release();
@@ -375,6 +475,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
             or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };
 
+    private void RememberApplied(Profile profile, SwitchResult result)
+    {
+        if (result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
+        {
+            _catalog.LastAppliedProfileId = profile.Id;
+        }
+    }
+
     private void RememberCatchUp(Profile profile, SwitchResult result) =>
         _pendingCatchUp = result.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially && result.Plan.ShouldRetryLater
             ? (profile, result.Plan.Resolved.Count)
@@ -387,20 +495,37 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             profile.AppsWaitForUsbDeviceId is null && profile.AppsWaitForUsbDeviceName is null
                 ? null
                 : Core.Automation.UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, _settings.Current.UsbDeviceNames),
-            Profile.AppsDeviceWaitSeconds, result.Note);
+            Profile.AppsDeviceWaitSeconds, result.Note, Ambiguous: IsAmbiguous(result), Hdr: result.Hdr, DesktopIcons: result.DesktopIcons);
 
-    /// <summary>A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14).</summary>
+    private static bool IsAmbiguous(SwitchResult result) => result.Outcome == SwitchOutcome.Blocked && result.Plan.IsAmbiguous;
+
+    /// <summary>
+    /// A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14) – and of those
+    /// only the identical ones that could not be told apart, when that is why (K-03): the switch did not wait for the others.
+    /// </summary>
     private static IEnumerable<MissingDisplay> MissingForRecord(SwitchResult result) =>
-        result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
+        IsAmbiguous(result) ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous)
+        : result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
             ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional)
             : result.Plan.Missing;
 
+    /// <summary>
+    /// Records the result and tells the listeners. Never throws: a listener that fails must not turn a switch that worked
+    /// into a second, failed history entry (v4 finding A-15).
+    /// </summary>
     private async Task CompleteAsync(SwitchRecord record)
     {
-        History.Insert(0, record);
-        while (History.Count > HistoryLength)
+        try
         {
-            History.RemoveAt(History.Count - 1);
+            History.Insert(0, record);
+            while (History.Count > HistoryLength)
+            {
+                History.RemoveAt(History.Count - 1);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "A listener of the switch history threw for {Profile}", record.ProfileName);
         }
 
         // Awaited: whoever gets the result next (automation, tray) must see the profile that is active now (C-06, A-07).
@@ -419,26 +544,70 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _ = _catalog.RememberActiveRefreshRatesAsync(CancellationToken.None);
         }
 
-        SwitchCompleted?.Invoke(this, record);
+        foreach (EventHandler<SwitchRecord> listener in SwitchCompleted?.GetInvocationList().Cast<EventHandler<SwitchRecord>>() ?? [])
+        {
+            try
+            {
+                listener(this, record);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _log.Error(ex, "A listener of the switch result threw for {Profile}; the result stands as {Outcome}", record.ProfileName, record.Outcome);
+            }
+        }
     }
 
-    private async Task FollowAppsAsync(SwitchRecord record, Task<AppsOutcome> apps)
+    /// <summary>
+    /// A switch that stayed tells where the monitors are now: monitors found on another port or graphics card, and serial
+    /// numbers older profiles lack, go into every profile (v4 finding K-03). After the result, so nothing waits for the disk.
+    /// </summary>
+    private async Task HealAsync(SwitchResult result)
+    {
+        if (result.Outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
+        {
+            return;
+        }
+
+        try
+        {
+            await _catalog.HealIdentitiesAsync(result.Plan, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Error(ex, "The displays of {Profile} could not be written back into the profiles", result.Plan.Profile.Name);
+        }
+    }
+
+    /// <summary>Follows what the switch left running after its result, when anything still runs.</summary>
+    private void FollowUp(SwitchRecord record, SwitchResult result)
+    {
+        if (result.Apps == AppsOutcome.Pending || result.DesktopIcons == DesktopIconOutcome.Pending)
+        {
+            _ = FollowUpAsync(record, result.AppsCompletion, result.TidyCompletion);
+        }
+    }
+
+    /// <summary>
+    /// One record update and one event once both ended, not one each: the record in the history is replaced by value, and
+    /// a second update would no longer find the first one's.
+    /// </summary>
+    private async Task FollowUpAsync(SwitchRecord record, Task<AppsOutcome> apps, Task<DesktopIconOutcome> tidy)
     {
         try
         {
-            AppsOutcome outcome = await apps;
-            SwitchRecord updated = record with { Apps = outcome };
+            await Task.WhenAll(apps, tidy);
+            SwitchRecord updated = record with { Apps = await apps, DesktopIcons = await tidy };
             int index = History.IndexOf(record);
             if (index >= 0)
             {
                 History[index] = updated;
             }
 
-            AppsCompleted?.Invoke(this, updated);
+            FollowUpCompleted?.Invoke(this, updated);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _log.Error(ex, "Reporting the apps of {Profile} failed", record.ProfileName);
+            _log.Error(ex, "Reporting what followed the switch to {Profile} failed", record.ProfileName);
         }
     }
 }

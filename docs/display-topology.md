@@ -93,3 +93,21 @@ display showed up.
 `legacy/DisplayProfile.ps1` contains the proven C# interop for save/apply (structs, mapping, fallback, retry)
 and the `IPolicyConfig` declaration. RigShift reimplements it with CsWin32-generated types, but the algorithm
 in `Apply()` is the contract.
+
+## 10. Telling identical monitors apart
+
+Read from the registry of the reference PC on 2026-09-24
+(`HKLM\SYSTEM\CurrentControlSet\Enum\DISPLAY\<model>\<instance>\Device Parameters\EDID`):
+
+- A monitor path is `\\?\DISPLAY#<model>#<card part>&0&UID<port>#{…}`. The card part is derived from the graphics
+  card's own device instance, so another card, another slot or a BIOS update changes **every** path at once. The
+  `UID` part numbers the card's ports (4352, 4353, … on the RTX 4080 SUPER) and stays when only the card's identity
+  changed.
+- Only the EDID serial number tells identical monitors apart. The two CM27X3 report different small numbers in bytes
+  12–15 and no serial text; the XG32UCWG reports the filler `0x01010101` there and its real serial number as text
+  (descriptor tag `0xFF`); the Odyssey G93SC reports the same serial number over HDMI and DisplayPort although its
+  model code differs. RigShift stores a hash of both fields and compares it only within the same model.
+- The registry keeps an instance for every port a monitor was ever seen on. Read the EDID of the live monitor path's
+  instance, nothing else.
+- Twins that neither serial number nor port tell apart are reported as such – never guessed, never waited for:
+  switching a display on does not help there.

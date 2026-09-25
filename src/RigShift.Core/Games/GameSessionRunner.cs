@@ -95,12 +95,20 @@ public sealed class GameSessionRunner
     {
         long started = _time.GetTimestamp();
 
-        SwitchOutcome? applied = await ApplyProfileAsync(game, fromLink, cancellationToken);
+        (SwitchOutcome? applied, Task<AppsOutcome> profileApps) = await ApplyProfileAsync(game, fromLink, cancellationToken);
         if (applied is { } outcome && outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
         {
             // Starting a game into a layout that was not applied is worse than not starting it.
             _log.Warning("Game {Game}: the profile ended as {Outcome}, so the game was not started", game.Name, outcome);
             return new GameSessionResult(GameSessionOutcome.ProfileFailed, outcome, null);
+        }
+
+        // The profile's apps first: wheelbase software often belongs to the rig rather than to one game, and may still wait
+        // for its USB device. The game used to start meanwhile and saw no wheel (v4 finding K-11).
+        if (!profileApps.IsCompleted)
+        {
+            _log.Information("Game {Game}: waiting for the apps of its profile before starting", game.Name);
+            await profileApps.WaitAsync(cancellationToken);
         }
 
         // Wheelbase software, Trading Paints and anything else the game must already see when it comes up.
@@ -196,17 +204,19 @@ public sealed class GameSessionRunner
         }
     }
 
-    private async Task<SwitchOutcome?> ApplyProfileAsync(GameEntry game, bool fromLink, CancellationToken cancellationToken)
+    /// <returns>How the switch ended (<c>null</c> without a profile) and the apps the profile started after it.</returns>
+    private async Task<(SwitchOutcome? Outcome, Task<AppsOutcome> Apps)> ApplyProfileAsync(GameEntry game, bool fromLink, CancellationToken cancellationToken)
     {
+        Task<AppsOutcome> noApps = Task.FromResult(AppsOutcome.NotConfigured);
         if (game.ProfileId is not { } id)
         {
-            return null;
+            return (null, noApps);
         }
 
         if (_profile(id) is not { } profile)
         {
             _log.Warning("Game {Game} names a profile that no longer exists, switching nothing", game.Name);
-            return null;
+            return (null, noApps);
         }
 
         SwitchRequest request = fromLink ? new SwitchRequest { FromLink = true } : SwitchRequest.Default;
@@ -214,10 +224,10 @@ public sealed class GameSessionRunner
         if (result is null)
         {
             _log.Warning("Game {Game}: another switch was running, so nothing was applied", game.Name);
-            return SwitchOutcome.Blocked;
+            return (SwitchOutcome.Blocked, noApps);
         }
 
-        return result.Outcome;
+        return (result.Outcome, result.AppsCompletion);
     }
 
     /// <summary>
@@ -245,13 +255,16 @@ public sealed class GameSessionRunner
         {
             TimeSpan? ranFor = await lifetime;
             cancellationToken.ThrowIfCancellationRequested();
-            if (ranFor is { } span && span < StubLifetime)
+            if (ranFor is { } span)
             {
                 // Launchers, "Play" stubs and executables that restart themselves end within seconds and leave the game
-                // running. Taking their end for the game's would switch the displays back under it.
-                _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking for the game it left behind",
-                    game.Name, span.TotalSeconds);
-                await WaitForSuccessorAsync(game, session.Before, cancellationToken);
+                // running. Taking their end for the game's would switch the displays back under it. A launcher with a
+                // choice to make (DX11 or VR) can stay open for minutes, so a long run gets a look too – a short one,
+                // because it is far more often the game itself ending (v4 finding K-16).
+                TimeSpan grace = span < StubLifetime ? StubGrace : LongRunGrace;
+                _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking {Grace} for a game it left behind",
+                    game.Name, span.TotalSeconds, grace);
+                await WaitForSuccessorAsync(game, session.Before, grace, cancellationToken);
             }
 
             return;
@@ -279,14 +292,20 @@ public sealed class GameSessionRunner
     public static readonly TimeSpan StubGrace = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
-    /// folder. Returns once that has ended, or when nothing showed up.
+    /// How long to look after a started process that ran longer than <see cref="StubLifetime"/>. A launcher starts the game
+    /// before it closes, so the game is there at once; a longer look would hold up the way back after every game.
     /// </summary>
-    private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, CancellationToken cancellationToken)
+    public static readonly TimeSpan LongRunGrace = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
+    /// folder. Returns once that has ended, or when nothing showed up within <paramref name="grace"/>.
+    /// </summary>
+    private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, TimeSpan grace, CancellationToken cancellationToken)
     {
         string? name = game.Launch.KnownProcessName();
         string? folder = GameFolder(game.Launch);
-        DateTimeOffset deadline = _time.GetUtcNow() + StubGrace;
+        DateTimeOffset deadline = _time.GetUtcNow() + grace;
         while (true)
         {
             if (name is not null && _processes.IsRunning(name))

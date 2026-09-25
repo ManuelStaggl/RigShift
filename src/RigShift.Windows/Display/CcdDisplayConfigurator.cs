@@ -26,23 +26,27 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
         _time = time;
     }
 
-    public Task<DisplaySnapshot> QueryAsync(CancellationToken cancellationToken)
+    /// <summary>On a pool thread: the query takes a noticeable moment, and the pages ask from the UI thread.</summary>
+    public Task<DisplaySnapshot> QueryAsync(CancellationToken cancellationToken) => Task.Run(Query, cancellationToken);
+
+    private DisplaySnapshot Query()
     {
-        CcdRawSnapshot raw = QueryRaw();
+        CcdRawSnapshot raw = QueryRaw(_log);
         List<AttachedDisplay> ordered = CcdSnapshotBuilder.Build(raw, _log);
         // Debug: the tray, the automation and every open page ask, so at Information this line was most of the log.
         _log.Debug("Snapshot: {Paths} paths, {Displays} displays ({Active} active, {Available} available)",
             raw.Paths.Count, ordered.Count, ordered.Count(d => d.IsActive), ordered.Count(d => d.IsAvailable));
 
-        return Task.FromResult(new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered });
+        return new DisplaySnapshot { TakenAt = _time.GetUtcNow(), Displays = ordered };
     }
 
     /// <summary>
     /// Read-only: queries the CCD paths and modes and asks for the names (and HDR state) that <see cref="CcdSnapshotBuilder"/>
-    /// needs. Contains device paths of this machine.
+    /// needs, plus the serial number fingerprint from each monitor's EDID. Contains device paths of this machine.
     /// </summary>
-    public static CcdRawSnapshot QueryRaw()
+    public static CcdRawSnapshot QueryRaw(ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(log);
         (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdNative.QueryAllPaths();
 
         var rawPaths = new List<CcdRawPath>(paths.Length);
@@ -109,7 +113,8 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
                 name.flags.edidIdsValid,
                 name.edidManufactureId,
                 name.edidProductCodeId,
-                hasMonitor && activeTargets.Contains((adapter, targetId)) ? CcdNative.TryGetHdr(adapter.ToLuid(), targetId) : null));
+                hasMonitor && activeTargets.Contains((adapter, targetId)) ? CcdNative.TryGetHdr(adapter.ToLuid(), targetId) : null,
+                hasMonitor && Edid.Read(monitorPath, log) is { } edid ? Edid.SerialHash(edid) : null));
         }
 
         var rawAdapters = monitorAdapters
@@ -220,7 +225,11 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
     public Task<IReadOnlyList<RefreshRate>> ListRefreshRatesAsync(DisplayIdentity identity, int width, int height, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identity);
+        return Task.Run(() => ListRefreshRates(identity, width, height), cancellationToken);
+    }
 
+    private IReadOnlyList<RefreshRate> ListRefreshRates(DisplayIdentity identity, int width, int height)
+    {
         (DISPLAYCONFIG_PATH_INFO[] paths, _) = CcdNative.QueryAllPaths();
         foreach (DISPLAYCONFIG_PATH_INFO path in paths)
         {
@@ -238,10 +247,9 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
 
             IReadOnlyList<RefreshRate> rates = DxgiModes.RefreshRates(gdiName, width, height);
             _log.Debug("{Display} offers {Count} refresh rates at {Width}x{Height}", DisplayNames.Of(identity), rates.Count, width, height);
-            return Task.FromResult(rates);
+            return rates;
         }
 
-        return Task.FromResult<IReadOnlyList<RefreshRate>>([]);
+        return [];
     }
-
 }

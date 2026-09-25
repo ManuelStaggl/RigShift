@@ -53,6 +53,12 @@ public sealed class UpdateService : IDisposable
     private VelopackAsset? _pending;
     private bool _busy;
     private int _failuresInARow;
+
+    /// <summary>
+    /// Kept apart from the checks: a good check before each failed download would reset a shared count, and a broken
+    /// download was tried every minute forever (v4 finding A-13).
+    /// </summary>
+    private int _downloadFailuresInARow;
     private DateTimeOffset? _lastSuccess;
 
     /// <summary>Completed to end the wait for the next check early – after waking from standby.</summary>
@@ -194,7 +200,9 @@ public sealed class UpdateService : IDisposable
             return;
         }
 
-        _shell.Quit();
+        // The user's exit, with its questions: an editor with unsaved changes in the hidden window, or a game session whose
+        // way back would be lost (v4 findings A-14, E-06). Staying is fine – the updater waits for the exit either way.
+        _shell.QuitByUser();
     }
 
     public void Dispose()
@@ -214,10 +222,10 @@ public sealed class UpdateService : IDisposable
 
                 // The check at login often runs before the network is up; waiting a day for the next one meant a PC
                 // that is switched off every night never saw an update.
-                TimeSpan wait = UpdateSchedule.NextCheckIn(_failuresInARow);
-                if (_failuresInARow > 0)
+                TimeSpan wait = UpdateSchedule.NextCheckIn(FailuresInARow);
+                if (FailuresInARow > 0)
                 {
-                    _log.Information("Update check failed {Failures} time(s) in a row, next try in {Wait}", _failuresInARow, wait);
+                    _log.Information("Update check or download failed {Failures} time(s) in a row, next try in {Wait}", FailuresInARow, wait);
                 }
 
                 await WaitAsync(wait);
@@ -242,7 +250,7 @@ public sealed class UpdateService : IDisposable
                 return;
             }
 
-            if (UpdateSchedule.IsDueAfterResume(_lastSuccess, _time.GetUtcNow(), _failuresInARow))
+            if (UpdateSchedule.IsDueAfterResume(_lastSuccess, _time.GetUtcNow(), FailuresInARow))
             {
                 _log.Information("Resumed from sleep, checking for updates now");
                 return;
@@ -255,12 +263,23 @@ public sealed class UpdateService : IDisposable
     {
         if (e.Mode == PowerModes.Resume)
         {
-            Resumed();
+            _ = Resumed();
         }
     }
 
-    /// <summary>The PC woke from standby; ends the wait for the next check when one is due.</summary>
-    internal void Resumed() => _wake.TrySetResult();
+    private int FailuresInARow => Math.Max(_failuresInARow, _downloadFailuresInARow);
+
+    /// <summary>The PC woke from standby; ends the wait for the next check when one is due. True when it did.</summary>
+    internal bool Resumed()
+    {
+        if (!UpdateSchedule.IsDueAfterResume(_lastSuccess, _time.GetUtcNow(), FailuresInARow))
+        {
+            return false;
+        }
+
+        _wake.TrySetResult();
+        return true;
+    }
 
     private async Task CheckAsync()
     {
@@ -341,6 +360,7 @@ public sealed class UpdateService : IDisposable
             await _feed.DownloadAsync(update, _stop.Token);
             _pending = update.TargetFullRelease;
             _available = null;
+            _downloadFailuresInARow = 0;
             _log.Information("Update {Version} downloaded, it is installed on the next start", version);
             _busy = false;
             SetState(UpdateState.Ready, version);
@@ -348,6 +368,7 @@ public sealed class UpdateService : IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _downloadFailuresInARow++;
             _log.Warning(ex, "Downloading update {Version} failed", version);
             _busy = false;
             SetState(UpdateState.Failed, null);

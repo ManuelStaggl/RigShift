@@ -14,6 +14,9 @@ public enum StatusKind
 
     /// <summary>Something is in progress (a switch, a running game).</summary>
     Accent,
+
+    /// <summary>The profile on screen now: a check mark in the accent, the same everywhere (v4 finding U-20).</summary>
+    Active,
 }
 
 /// <summary>An 8 px dot and one caption line: "Ready · Dash missing (optional)". The text is a result key, never rephrased.</summary>

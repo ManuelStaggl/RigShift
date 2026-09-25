@@ -118,7 +118,7 @@ public sealed class UsbDevicesViewModelTests : IDisposable
         await _host.Settings.UpdateAsync(s => s with { AutomationRules = rules }, Ct);
 
         var automation = new AutomationService(
-            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
+            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None);
         var devices = new UsbDevicesViewModel(_host.Settings, _host.Catalog, automation, _host.Usb, Logger.None);
         devices.Refresh();
         return devices;

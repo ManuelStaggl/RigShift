@@ -1,6 +1,9 @@
 using System.IO;
 using RigShift.App.Services;
+using RigShift.Core.Automation;
+using RigShift.Core.Settings;
 using RigShift.Core.Topology;
+using RigShift.Windows.Display;
 using Shouldly;
 using Xunit;
 using static RigShift.Core.Tests.TestDisplays;
@@ -43,6 +46,42 @@ public sealed class DiagnosticsReportTests
 
         report.ShouldNotContain(profile, Case.Insensitive);
         report.ShouldContain(@"%USERPROFILE%\SimHub\SimHubWPF.exe");
+    }
+
+    [Fact]
+    public void Build_ListsGraphicsDriversAndSettings()
+    {
+        var settings = new AppSettings
+        {
+            OnlyNotifyAboutUpdates = true,
+            ConfirmTimeoutSeconds = 20,
+            AutomationRules = [new AutomationRule()],
+            AutomationPaused = true,
+        };
+        var input = new DiagnosticsInput("4.0.0", IsInstalled: true, Snapshot: null, DisplayError: null,
+            Playback: [], Recording: [], AudioError: null, Profiles: [], ActiveProfileId: null,
+            DisplayNames: new Dictionary<string, string>(), History: [],
+            Graphics: [new GraphicsDriver("NVIDIA GeForce RTX 4080 SUPER", "NVIDIA", "32.0.15.9636")],
+            Settings: settings, GameCount: 3, TextScalePercent: 125);
+
+        string report = DiagnosticsReport.Build(input);
+
+        report.ShouldContain("- NVIDIA GeForce RTX 4080 SUPER, driver 32.0.15.9636 (596.36)");
+        report.ShouldContain("text size 125 %");
+        report.ShouldContain("Updates: notify only");
+        report.ShouldContain("Confirmation: 20 s");
+        report.ShouldContain("USB rules: 1 (paused)");
+        report.ShouldContain("Games: 3");
+    }
+
+    [Fact]
+    public void Build_NoGraphicsDriver_SaysSo()
+    {
+        var input = new DiagnosticsInput("4.0.0", IsInstalled: true, Snapshot: null, DisplayError: null,
+            Playback: [], Recording: [], AudioError: null, Profiles: [], ActiveProfileId: null,
+            DisplayNames: new Dictionary<string, string>(), History: []);
+
+        DiagnosticsReport.Build(input).ShouldContain("## Graphics" + Environment.NewLine + "Could not be read.");
     }
 
     [Fact]

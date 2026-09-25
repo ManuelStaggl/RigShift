@@ -175,16 +175,21 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_RequiredDisplayNeverWakes_IsBlockedAfterBudget_WithoutApplying()
+    public async Task Switch_RequiredDisplayNeverWakes_AsksForItAndBlocksAfterTheWait()
     {
+        // K-06: a monitor Windows lists but that does not answer used to mean 20 silent seconds and then a block.
         var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
+        SwitchOrchestrator orchestrator = Create(display);
+        IReadOnlyList<DisplayAssignment>? asked = null;
+        orchestrator.WaitingForDisplays += (_, displays) => asked = displays;
 
-        SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        SwitchResult result = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Blocked);
         result.Message.ShouldNotBeNull().ShouldContain("AttachedButUnavailable");
+        asked.ShouldNotBeNull().ShouldHaveSingleItem().Identity.ShouldBe(Ultrawide);
         display.Applied.ShouldBeEmpty();
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(20));
+        _time.Elapsed.ShouldBe(new SwitchOptions().MissingDisplayWaitBudget);
     }
 
     [Fact]
@@ -202,6 +207,27 @@ public sealed class SwitchOrchestratorTests
         asked.ShouldNotBeNull().ShouldHaveSingleItem().Identity.ShouldBe(Ultrawide);
         display.Applied.ShouldBeEmpty();
         _time.Elapsed.ShouldBe(new SwitchOptions().MissingDisplayWaitBudget);
+    }
+
+    [Fact]
+    public async Task Switch_IdenticalDisplaysOnNewPorts_BlockAtOnceWithoutAskingToSwitchThemOn()
+    {
+        // K-03: both desk monitors are on, only on other ports – "switch your display on" and 30 s of waiting helped nobody.
+        DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
+        DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
+        var display = new FakeDisplayConfigurator(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(leftMoved), Attached(rightMoved)));
+        SwitchOrchestrator orchestrator = Create(display);
+        bool asked = false;
+        orchestrator.WaitingForDisplays += (_, _) => asked = true;
+
+        SwitchResult result = await orchestrator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Blocked);
+        result.Plan.IsAmbiguous.ShouldBeTrue();
+        result.Message.ShouldNotBeNull().ShouldContain("Ambiguous");
+        asked.ShouldBeFalse();
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+        display.Applied.ShouldBeEmpty();
     }
 
     [Fact]
@@ -561,6 +587,120 @@ public sealed class SwitchOrchestratorTests
         await _confirmation.Received(1).ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), SwitchOptions.DefaultConfirmTimeout, Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData(15, 30)]
+    [InlineData(60, 60)]
+    public async Task Switch_MinimumConfirmTimeout_LengthensOnlyAShorterCountdown(int appSeconds, int expectedSeconds)
+    {
+        // v4 finding U-04: after a USB rule the user may still be on the way to the seat.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+
+        await Create(display).SwitchAsync(
+            Rig(confirm: true), new SwitchRequest { DefaultConfirmTimeoutSeconds = appSeconds, MinimumConfirmTimeoutSeconds = 30 }, Ct);
+
+        await _confirmation.Received(1).ConfirmAsync(
+            Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), TimeSpan.FromSeconds(expectedSeconds), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_MinimumConfirmTimeout_DoesNotMakeASwitchAsk()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            Rig(confirm: true), new SwitchRequest { SkipConfirmation = true, MinimumConfirmTimeoutSeconds = 30 }, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_EveryReadyDisplay_InOneCallWithWindowsModes()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.TurnedOn, 5, 0));
+        (TopologyPlan plan, ApplyOptions options) = display.Applied.ShouldHaveSingleItem();
+        plan.Resolved.Select(p => p.Target.Identity).ShouldBe([Desk4K, DeskLeft, DeskRight, Ultrawide, Tablet]);
+        options.UseDatabaseModes.ShouldBeTrue();
+        options.SaveToDatabase.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_ActiveDisplaysKeepTheirRefreshRate_TheOthersGetWhatWindowsPicks()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        TopologyPlan plan = display.Applied.ShouldHaveSingleItem().Plan;
+        plan.Resolved.Single(p => p.Target.Identity == Desk4K).Assignment.RefreshNumerator.ShouldBe(DeskModes[0].RefreshNumerator);
+        plan.Resolved.Single(p => p.Target.Identity == Ultrawide).Assignment.RefreshNumerator.ShouldBe(0u);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_DisplayNotReady_IsLeftOut()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.Displays.ShouldBe(4);
+        display.Applied.ShouldHaveSingleItem().Plan.Resolved.ShouldNotContain(p => p.Target.Identity == Ultrawide);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_TooManyForTheCard_TriesAgainAt60Hz()
+    {
+        // Rule 1 of docs/display-topology.md: 4K@165 and 5120x1440@240 take two heads each; at 60 Hz one is enough.
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [31]);
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.Outcome.ShouldBe(AllDisplaysOnOutcome.TurnedOnAt60Hz);
+        display.Applied.Count.ShouldBe(2);
+        display.Applied[1].Plan.Resolved.ShouldAllBe(p => p.Assignment.RefreshNumerator == 60 && p.Assignment.RefreshDenominator == 1);
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_60HzFailsToo_ReportsTheError()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(), applyResults: [31, 1610]);
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.Failed, 5, 1610));
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_AllOnAlready_AppliesNothing()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false, tabletAttached: false) with
+        {
+            Displays = [.. DeskModes.Select(m => Attached(m.Identity, activeMode: m)), Attached(Ultrawide, available: false)],
+        });
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.AlreadyOn, 3, 0));
+        display.Applied.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task TurnAllDisplaysOn_QueryRefused_Fails()
+    {
+        // A locked session: every display call answers "access denied".
+        var display = new FakeDisplayConfigurator(DeskActive());
+        display.QueryExceptions.Enqueue(new System.ComponentModel.Win32Exception(5));
+
+        AllDisplaysOnResult result = await Create(display).TurnAllDisplaysOnAsync(Ct);
+
+        result.ShouldBe(new AllDisplaysOnResult(AllDisplaysOnOutcome.Failed, 0, 5));
+    }
+
     [Fact]
     public async Task Switch_SetsPlaybackForAllRoles()
     {
@@ -570,6 +710,88 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
 
         result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// The sound device of a display the switch turned on (TV, AV receiver, monitor speakers) wakes a moment after the
+    /// picture. It is tried again instead of given up at once, which left the sound on the old device (finding K-02).
+    /// </summary>
+    [Fact]
+    public async Task Switch_SoundDeviceOfADisplayJustTurnedOn_IsWaitedFor()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: false, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>()).Returns(false, false, true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(3).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A device Windows does not know at all will not wake up: no wait, the switch reports it at once.</summary>
+    [Fact]
+    public async Task Switch_SoundDeviceNotThereAtAll_IsNotWaitedFor()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns([]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(false);
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Incomplete);
+        await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("Headphones")]
+    [InlineData("headphones ")]
+    public async Task Switch_SoundDeviceOnAnotherPort_IsFoundByItsName(string listedAs)
+    {
+        // K-08: a USB headset on another port has a new ID; the profile only knows the old one.
+        var moved = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000009}", listedAs);
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(moved, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+                      new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            Rig(audio: new AudioAssignment { Playback = Headphones, PlaybackVolumePercent = 40 }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Applied);
+        await _audio.Received(1).SetDefaultAsync(moved, AudioRoleMask.All, Arg.Any<CancellationToken>());
+        await _audio.Received(1).SetVolumeAsync(moved, 40, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_SoundDeviceOnAnotherPort_WindowsNumberedIt_IsStillFound()
+    {
+        // Windows calls a device it finds on a second port "2- …".
+        var saved = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000010}", "Speakers (USB Audio DAC)");
+        var numbered = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000011}", "Speakers (2- USB Audio DAC)");
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(numbered, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(audio: new AudioAssignment { Playback = saved }), SwitchRequest.Default, Ct);
+
+        await _audio.Received(1).SetDefaultAsync(numbered, AudioRoleMask.All, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Switch_TwoSoundDevicesWithTheName_AreNotGuessedBetween()
+    {
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Headphones with { EndpointId = "a" }, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
+                      new AudioDeviceInfo(Headphones with { EndpointId = "b" }, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(false);
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
+            Rig(audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        result.Audio.ShouldBe(AudioOutcome.Incomplete);
         await _audio.Received(1).SetDefaultAsync(Headphones, AudioRoleMask.All, Arg.Any<CancellationToken>());
     }
 
@@ -734,6 +956,67 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_AppWaitingForItsWindow_GoesOnAsSoonAsItShows()
+    {
+        _apps.HasWindow("C:\\Fanatec\\FanatecApp.exe").Returns(false, false, true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true },
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromMilliseconds(500));
+    }
+
+    [Theory]
+    [InlineData(10, 10)]
+    [InlineData(0, 60)]
+    public async Task Switch_AppWaitingForItsWindow_NeverShows_GoesOnAfterItsSecondsOrAMinute(int seconds, int expected)
+    {
+        // A program that starts into the tray: the next one still starts.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps =
+            [
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = seconds, WaitForWindow = true },
+                new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
+            ],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.Received(1).Start("C:\\SimHub\\SimHubWPF.exe", null);
+        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(expected));
+    }
+
+    [Fact]
+    public async Task Switch_AppWaitingForItsWindow_AlreadyRunning_IsNotWaitedFor()
+    {
+        _apps.IsRunning("C:\\Fanatec\\FanatecApp.exe").Returns(true);
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with
+        {
+            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true }],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _apps.DidNotReceiveWithAnyArgs().HasWindow(default!);
+        _time.Elapsed.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Fact]
     public async Task Switch_DoesNotStartRunningApp_OrStopMissingOne()
     {
         _apps.IsRunning("C:\\SimHub\\SimHubWPF.exe").Returns(true);
@@ -845,8 +1128,9 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
-        // The tablet reports no HDR support (null) and stays untouched.
+        // The tablet reports no HDR support (null) and stays untouched – which is as off as the profile wants it.
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
+        result.Hdr.ShouldBe(HdrOutcome.Applied);
     }
 
     [Fact]
@@ -880,7 +1164,7 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
-    public async Task Switch_HdrNotReportedRightAfterApply_AsksAgainAfterOneSecond()
+    public async Task Switch_HdrNotReportedRightAfterApply_AsksAgainOnTheNextLook()
     {
         var display = new FakeDisplayConfigurator([
             DeskActive(),
@@ -894,7 +1178,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+        _time.Elapsed.ShouldBe(options.HdrSettlePollInterval);
     }
 
     [Fact]
@@ -912,7 +1196,21 @@ public sealed class SwitchOrchestratorTests
             Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
         display.HdrSet.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Switch_HdrWantedOnADisplayWithoutHdr_IsReported()
+    {
+        // K-15: only the log knew that the monitor cannot do HDR; the notification said "switched".
+        var display = new FakeDisplayConfigurator([DeskActive(), Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = null }))]);
+
+        SwitchResult result = await Create(display).SwitchAsync(Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
+        display.HdrSet.ShouldBeEmpty();
     }
 
     [Fact]
@@ -949,6 +1247,7 @@ public sealed class SwitchOrchestratorTests
             Rig() with { Displays = [UltrawideMode with { Hdr = true }, left with { Hdr = true }] }, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Hdr.ShouldBe(HdrOutcome.Incomplete);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
     }
 
@@ -963,6 +1262,21 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.Message.ShouldNotBeNull().ShouldContain("did not return");
+        result.Note.ShouldBe(SwitchNote.DriverHung);
+        display.Applied.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Switch_WhileTheDriverStillHangs_FailsAtOnce()
+    {
+        // K-07: the next switch used to queue behind the stuck call for good; now it fails right away.
+        var display = new FakeDisplayConfigurator(DeskActive()) { ApplyNeverReturns = true };
+        SwitchOrchestrator orchestrator = Create(display);
+        await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+
+        await Should.ThrowAsync<DisplayDriverHungException>(
+            () => orchestrator.SwitchAsync(Profile("Desk", DeskModes), SwitchRequest.Default, Ct).WaitAsync(TimeSpan.FromSeconds(5), Ct));
+
         display.Applied.Count.ShouldBe(1);
     }
 
@@ -979,7 +1293,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         display.HdrSet.ShouldBe([(Ultrawide.TargetDevicePath, true)]);
-        _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(2));
+        _time.Elapsed.ShouldBe(options.HdrSettlePollInterval * 2);
     }
 
     [Fact]
@@ -987,7 +1301,7 @@ public sealed class SwitchOrchestratorTests
     {
         DisplaySnapshot a = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet));
         DisplaySnapshot b = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = false }), Attached(Tablet, activeMode: TabletMode));
-        var display = new FakeDisplayConfigurator([DeskActive(), .. Enumerable.Range(0, 40).Select(i => i % 2 == 0 ? a : b)]);
+        var display = new FakeDisplayConfigurator([DeskActive(), .. Enumerable.Range(0, 100).Select(i => i % 2 == 0 ? a : b)]);
 
         SwitchResult result = await Create(display).SwitchAsync(
             Rig() with { Displays = [UltrawideMode with { Hdr = true }, TabletMode] }, SwitchRequest.Default, Ct);
@@ -1002,10 +1316,60 @@ public sealed class SwitchOrchestratorTests
         var options = new SwitchOptions { WindowRescueDelay = TimeSpan.FromSeconds(1) };
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive()), options).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         _windows.Received(1).RescueOffscreenWindows();
         _time.Elapsed.ShouldBe(TimeSpan.FromSeconds(1));
+    }
+
+    /// <summary>
+    /// K-04, the budget: a plain switch with the shipped options – sound, apps and desktop symbols, no HDR, no countdown –
+    /// reports within two seconds. Moving windows and putting symbols back wait for Windows' own rearranging first; they
+    /// used to come before the result and cost every switch one to eleven seconds.
+    /// </summary>
+    [Fact]
+    public async Task Switch_WithTheShippedOptions_ReportsWithinTwoSeconds()
+    {
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+        _apps.IsRunning(default!).ReturnsForAnyArgs(false);
+        Profile rig = Rig(audio: new AudioAssignment { Playback = Headphones }) with
+        {
+            DesktopIcons = Layout,
+            Apps = [new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" }],
+        };
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive()), new SwitchOptions()).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Duration.ShouldBeLessThanOrEqualTo(TimeSpan.FromSeconds(2));
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
+        (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        _windows.Received(1).RescueOffscreenWindows();
+    }
+
+    [Fact]
+    public async Task Switch_NewSwitch_CancelsTheTidyUpOfThePreviousOne()
+    {
+        // The first switch's symbols are still going back when the next switch starts: its second pass must not follow.
+        var restoring = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        DesktopIcons.MovesAfterRestore = 1;
+        DesktopIcons.DuringRestore = () =>
+        {
+            restoring.TrySetResult();
+            _ = release.Wait(TimeSpan.FromSeconds(30), Ct);
+        };
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        SwitchResult first = await orchestrator.SwitchAsync(Rig() with { DesktopIcons = Layout }, SwitchRequest.Default, Ct);
+        await restoring.Task;
+        SwitchResult second = await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        release.Set();
+
+        second.Outcome.ShouldBe(SwitchOutcome.Applied);
+        (await first.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
+        DesktopIcons.Restores.ShouldBe(1);
     }
 
     [Fact]
@@ -1016,8 +1380,28 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.Pending);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
         DesktopIcons.Restores.ShouldBe(1);
         DesktopIcons.Capture().ShouldNotBeNull().Icons.ShouldBe(Layout.Icons);
+    }
+
+    /// <summary>
+    /// "Profile recognized – apply the rest" after Windows restored the displays itself: the rest includes the desktop
+    /// symbols, which came in 2.2.0 and were left out of this path.
+    /// </summary>
+    [Fact]
+    public async Task Switch_KeepDisplays_PutsTheDesktopSymbolsBackToo()
+    {
+        Profile rig = Rig() with { DesktopIcons = Layout };
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default with { KeepDisplays = true }, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        display.Applied.ShouldBeEmpty();
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
+        DesktopIcons.Restores.ShouldBe(1);
     }
 
     [Fact]
@@ -1026,6 +1410,8 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.DesktopIcons.ShouldBe(DesktopIconOutcome.NotConfigured);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
         DesktopIcons.Restores.ShouldBe(0);
     }
 
@@ -1036,7 +1422,8 @@ public sealed class SwitchOrchestratorTests
         DesktopIcons.MovesAfterRestore = 1;
         Profile rig = Rig() with { DesktopIcons = Layout };
 
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         DesktopIcons.Restores.ShouldBe(2);
     }
@@ -1048,8 +1435,9 @@ public sealed class SwitchOrchestratorTests
         DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
         Profile rig = Rig() with { DesktopIcons = Layout };
 
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.AutoArrange);
         DesktopIcons.Restores.ShouldBe(1);
     }
 
@@ -1084,6 +1472,7 @@ public sealed class SwitchOrchestratorTests
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         Received.InOrder(() =>
@@ -1100,17 +1489,21 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator([DeskActive(), allDark], applyResults: [87, 87, 0]);
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         _windows.Received(1).RescueOffscreenWindows();
     }
 
     [Fact]
-    public async Task CatchUp_RescuesWindows()
+    public async Task CatchUp_RescuesWindowsAndPutsTheSymbolsBack()
     {
-        await Create(new FakeDisplayConfigurator(DeskActive())).CatchUpAsync(Rig(), appliedDisplays: 1, Ct);
+        // The catch-up changes the arrangement, and Explorer lays the symbols out anew with it.
+        SwitchResult? result = await Create(new FakeDisplayConfigurator(DeskActive())).CatchUpAsync(Rig() with { DesktopIcons = Layout }, appliedDisplays: 1, Ct);
 
+        (await result.ShouldNotBeNull().TidyCompletion).ShouldBe(DesktopIconOutcome.Restored);
         _windows.Received(1).RescueOffscreenWindows();
+        DesktopIcons.Restores.ShouldBe(1);
     }
 
     [Fact]
@@ -1123,6 +1516,7 @@ public sealed class SwitchOrchestratorTests
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        (await result.TidyCompletion).ShouldBe(DesktopIconOutcome.NotConfigured);
         (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
     }
 
@@ -1413,6 +1807,64 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
         _journal.Written.ShouldHaveSingleItem();
+        _journal.Entry.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Switch_RecordsTheSoundToGoBackTo()
+    {
+        // K-14: after a crash the way back restored the displays, but the sound stayed on the rig's headset.
+        var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
+        _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns([
+            new AudioDeviceInfo(Speakers, AudioDirection.Render, IsActive: true, AudioRoleMask.All),
+            new AudioDeviceInfo(Headphones, AudioDirection.Render, IsActive: true, AudioRoleMask.None)]);
+        _audio.SetDefaultAsync(default!, default, default).ReturnsForAnyArgs(true);
+
+        Task<SwitchResult> switching = Create(new FakeDisplayConfigurator(DeskActive()))
+            .SwitchAsync(Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones }), SwitchRequest.Default, Ct);
+
+        AudioAssignment recorded = _journal.Entry.ShouldNotBeNull().Previous.Audio;
+        recorded.Playback.ShouldBe(Speakers);
+        recorded.PlaybackCommunications.ShouldBeNull();
+        answer.SetResult(ConfirmationResult.Confirmed);
+        (await switching).Outcome.ShouldBe(SwitchOutcome.Applied);
+    }
+
+    [Fact]
+    public async Task Switch_Confirmed_DropsTheRecordBeforeTheTidyUp()
+    {
+        // K-14: an exit while windows are moved into place must not ask to undo a switch the user kept.
+        InterruptedSwitch? duringTidy = null;
+        bool tidied = false;
+        _windows.When(w => w.RescueOffscreenWindows()).Do(_ =>
+        {
+            duringTidy = _journal.Entry;
+            tidied = true;
+        });
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
+        await result.TidyCompletion;
+
+        tidied.ShouldBeTrue();
+        duringTidy.ShouldBeNull();
+        _journal.Written.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task DryRunDuringASwitch_KeepsItsRecord()
+    {
+        // K-05: "Check" on the profile page or `apply --dry-run` while a switch waits for "keep" took its way back away.
+        var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        Task<SwitchResult> switching = orchestrator.SwitchAsync(Rig(confirm: true), SwitchRequest.Default, Ct);
+        await orchestrator.CheckAsync(Profile("Desk", DeskModes), Ct);
+
+        _journal.Entry.ShouldNotBeNull().TargetProfileName.ShouldBe("Rig");
+        answer.SetResult(ConfirmationResult.Confirmed);
+        (await switching).Outcome.ShouldBe(SwitchOutcome.Applied);
         _journal.Entry.ShouldBeNull();
     }
 

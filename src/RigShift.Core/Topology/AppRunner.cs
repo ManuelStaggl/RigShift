@@ -151,13 +151,52 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
                 continue;
             }
 
-            if (app.WaitSeconds > 0)
+            if (app.Kind == AppActionKind.Start && app.WaitForWindow)
+            {
+                await WaitForWindowAsync(app, cancellationToken);
+            }
+            else if (app.WaitSeconds > 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(app.WaitSeconds), _time, cancellationToken);
             }
         }
 
         return complete ? AppsOutcome.Applied : AppsOutcome.Incomplete;
+    }
+
+    /// <summary>
+    /// After starting <paramref name="app"/>: on as soon as it shows a window, at the latest after its wait time. A
+    /// program that starts into the tray never shows one; the next app still starts, only later.
+    /// </summary>
+    private async Task WaitForWindowAsync(AppAction app, CancellationToken cancellationToken)
+    {
+        TimeSpan limit = app.WaitSeconds > 0 ? TimeSpan.FromSeconds(app.WaitSeconds) : _options.AppWindowWaitLimit;
+        long started = _time.GetTimestamp();
+        while (!HasWindow(app.Path))
+        {
+            if (_time.GetElapsedTime(started) >= limit)
+            {
+                _log.Warning("App {App} showed no window within {Seconds} s, going on", app.Path, limit.TotalSeconds);
+                return;
+            }
+
+            await Task.Delay(_options.AppWindowPollInterval, _time, cancellationToken);
+        }
+
+        _log.Information("App {App} showed a window after {Seconds:0.0} s", app.Path, _time.GetElapsedTime(started).TotalSeconds);
+    }
+
+    private bool HasWindow(string path)
+    {
+        try
+        {
+            return _apps.HasWindow(path);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "The windows of {App} could not be looked for", path);
+            return false;
+        }
     }
 
     /// <summary>

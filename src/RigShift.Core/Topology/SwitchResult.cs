@@ -1,4 +1,5 @@
 using RigShift.Core.Abstractions;
+using RigShift.Core.Profiles;
 
 namespace RigShift.Core.Topology;
 
@@ -39,7 +40,35 @@ public sealed record SwitchResult
     /// <summary>Completes with the final apps outcome; never faults. Already complete when no apps run.</summary>
     public Task<AppsOutcome> AppsCompletion { get; init; } = NoApps;
 
+    /// <summary>Whether every display got the HDR state the profile sets; only in the log before 4.0 (v4 finding K-15).</summary>
+    public HdrOutcome Hdr { get; init; } = HdrOutcome.NotConfigured;
+
+    /// <summary>
+    /// What became of the profile's desktop symbols (K-15). <see cref="DesktopIconOutcome.Pending"/> when they go back
+    /// after the result – the outcome then comes with <see cref="TidyCompletion"/> (v4 finding K-04).
+    /// </summary>
+    public DesktopIconOutcome DesktopIcons { get; init; } = DesktopIconOutcome.NotConfigured;
+
+    /// <summary>
+    /// Completes once the tidy-up after the result ended – windows moved off displays that are off, the profile's desktop
+    /// symbols put back – with what became of the symbols. Never faults. Already complete when there is nothing to tidy.
+    /// </summary>
+    public Task<DesktopIconOutcome> TidyCompletion { get; init; } = NothingToTidy;
+
     internal static Task<AppsOutcome> NoApps { get; } = Task.FromResult(AppsOutcome.NotConfigured);
+
+    internal static Task<DesktopIconOutcome> NothingToTidy { get; } = Task.FromResult(DesktopIconOutcome.NotConfigured);
+}
+
+public enum HdrOutcome
+{
+    /// <summary>The profile sets no HDR state, or the switch did not get that far.</summary>
+    NotConfigured,
+
+    Applied,
+
+    /// <summary>At least one display kept its HDR state: it cannot do HDR, did not settle, or the call failed; see the log.</summary>
+    Incomplete,
 }
 
 /// <summary>
@@ -58,6 +87,9 @@ public enum SwitchNote
 
     /// <summary>The stored modes did not work; Windows picked the modes from its own database.</summary>
     ModesFromDatabase,
+
+    /// <summary>A call into the graphics driver did not return; nothing could be restored (v4 finding K-07).</summary>
+    DriverHung,
 }
 
 public enum AppsOutcome

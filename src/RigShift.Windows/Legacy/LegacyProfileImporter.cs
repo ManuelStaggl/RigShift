@@ -130,6 +130,7 @@ public static class LegacyProfileImporter
             TargetDevicePath = entry.TargetDevicePath,
             EdidManufacturerId = known?.Identity.EdidManufacturerId ?? 0,
             EdidProductCodeId = known?.Identity.EdidProductCodeId ?? 0,
+            EdidSerialHash = known?.Identity.EdidSerialHash,
             FriendlyName = entry.FriendlyName.Length > 0 ? entry.FriendlyName : known?.Identity.FriendlyName ?? string.Empty,
         };
 

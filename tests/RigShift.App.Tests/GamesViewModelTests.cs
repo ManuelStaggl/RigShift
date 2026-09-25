@@ -3,9 +3,11 @@ using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
+using RigShift.App.Views;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
 using Serilog.Core;
@@ -42,7 +44,12 @@ public sealed class GamesViewModelTests : IDisposable
         _hotkeys = _ui.Invoke(() => new HotkeyService(
             _host.Catalog, _catalog, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar()));
         _dialogs = new Dialogs(new GameDialogs(
-            _catalog, _host.Catalog, Substitute.For<IGameLibrary>(), Substitute.For<IWindowLayout>(), _host.Usb, _host.Settings, _hotkeys, Logger.None));
+            new GameEditorServices(_catalog, _hotkeys, new FakeAppPicker(), Logger.None),
+            _host.Catalog,
+            Substitute.For<IGameLibrary>(),
+            Substitute.For<IWindowLayout>(),
+            _host.Usb,
+            _host.Settings));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -114,6 +121,47 @@ public sealed class GamesViewModelTests : IDisposable
         _store.Games.Select(g => g.Name).ShouldBe(["iRacing 2", "Assetto Corsa"]);
         page.SelectedItem.ShouldNotBeNull().Game.Id.ShouldBe(game.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Saved", "iRacing 2"));
+    });
+
+    [Fact]
+    public Task PickGame_AProgram_GoesIntoTheEditor_AndCancellingChangesNothing() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing", process: "iRacingSim64DX11");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await page.PickGameCommand.ExecuteAsync(null);
+        editor.IsDirty.ShouldBeFalse();
+
+        _dialogs.PickedGame = new PickedGame(null, @"D:GamesAMS2AMS2AVX.exe");
+        await page.PickGameCommand.ExecuteAsync(null);
+
+        editor.LaunchText.ShouldBe(@"D:GamesAMS2AMS2AVX.exe");
+        editor.ProcessName.ShouldBeEmpty("the learned process belongs to the old game");
+        editor.IsDirty.ShouldBeTrue();
+    });
+
+    [Fact]
+    public Task CaptureWindows_StartsFromTheEntrysWindows_AndTakesWhatWasCaptured() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        var layout = new WindowLayout
+        {
+            CapturedAt = DateTimeOffset.UtcNow,
+            Windows = [new WindowPlacement { ProcessName = "SimHub", Title = "SimHub", Bounds = new PixelRect(0, 0, 800, 600) }],
+        };
+
+        page.CaptureWindowsCommand.Execute(null);
+        editor.HasWindows.ShouldBeFalse();
+
+        _dialogs.Captured = layout;
+        page.CaptureWindowsCommand.Execute(null);
+
+        _dialogs.CaptureOpenedWith.ShouldBe([null, null]);
+        editor.WindowLayout.ShouldBe(layout);
+        editor.IsDirty.ShouldBeTrue();
     });
 
     [Fact]
@@ -385,6 +433,71 @@ public sealed class GamesViewModelTests : IDisposable
         page.HasDetailMessage.ShouldBeFalse();
     });
 
+    /// <summary>The first start learned the process name while the game was being edited (v4 finding A-01).</summary>
+    [Fact]
+    public Task DirtyEditor_ProcessNameLearned_KeepsTheChanges_AndOffersAReload() => _ui.RunAsync(async () =>
+    {
+        GameEntry game = await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "iRacing 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _catalog.RememberProcessNameAsync(game.Id, "iRacingSim64DX11", Ct);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        editor.Name.ShouldBe("iRacing 2");
+        page.IsStale.ShouldBeTrue();
+    });
+
+    [Fact]
+    public Task CleanEditor_ProcessNameLearned_ShowsIt() => _ui.RunAsync(async () =>
+    {
+        GameEntry game = await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await _catalog.RememberProcessNameAsync(game.Id, "iRacingSim64DX11", Ct);
+        await UntilAsync(() => page.Editor is { } fresh && fresh != editor, "the editor was not reloaded");
+
+        page.Editor.ShouldNotBeNull().ProcessName.ShouldBe("iRacingSim64DX11");
+        page.IsStale.ShouldBeFalse();
+    });
+
+    /// <summary>A renamed profile rebuilds every game card; a game being edited keeps its changes.</summary>
+    [Fact]
+    public Task DirtyEditor_SurvivesAProfileBeingSaved() => _ui.RunAsync(async () =>
+    {
+        await SavedAsync("iRacing");
+        GamesViewModel page = await PageAsync();
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+        editor.Name = "iRacing 2";
+        int created = _dialogs.EditorsCreated;
+
+        await _host.Catalog.SaveAsync(Profile("Desk", DeskModes), Ct);
+
+        _dialogs.EditorsCreated.ShouldBe(created);
+        page.Editor.ShouldBeSameAs(editor);
+        page.IsStale.ShouldBeFalse();
+    });
+
+    [Fact]
+    public Task NewUnsavedGame_SurvivesAnotherGameBeingSaved() => _ui.RunAsync(async () =>
+    {
+        GamesViewModel page = await PageAsync();
+        _dialogs.Executable = @"C:\Games\rFactor2.exe";
+        await page.AddProgramCommand.ExecuteAsync(null);
+        await UntilAsync(() => page.Editor is { IsNew: true }, "the new game's editor did not open");
+        GameEditorViewModel editor = page.Editor.ShouldNotBeNull();
+
+        await SavedAsync("iRacing");
+
+        page.Items.Count.ShouldBe(2);
+        page.Items[0].IsNew.ShouldBeTrue();
+        page.Editor.ShouldBeSameAs(editor);
+    });
+
     public void Dispose()
     {
         _ui.Invoke(() =>
@@ -417,7 +530,8 @@ public sealed class GamesViewModelTests : IDisposable
     /// <summary>The page with its first editor loaded; that happens in the background after the constructor.</summary>
     private async Task<GamesViewModel> PageAsync()
     {
-        var page = new GamesViewModel(_catalog, _sessions, _dialogs, Logger.None);
+        var page = new GamesViewModel(_catalog, _sessions, _dialogs, _host.Paths, Logger.None);
+        page.PageShown();
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
     }
@@ -451,11 +565,32 @@ public sealed class GamesViewModelTests : IDisposable
 
         public List<string> DeleteAsked { get; } = [];
 
-        public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew) => real.CreateEditorAsync(game, isNew);
+        /// <summary>How many editors the page asked for; counted when asked, before the editor is ready.</summary>
+        public int EditorsCreated { get; private set; }
+
+        public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew)
+        {
+            EditorsCreated++;
+            return real.CreateEditorAsync(game, isNew);
+        }
 
         public Task<AddedGames> AddInstalledAsync() => Installed();
 
         public string? PickExecutable() => Executable;
+
+        public PickedGame? PickedGame { get; set; }
+
+        public WindowLayout? Captured { get; set; }
+
+        public List<WindowLayout?> CaptureOpenedWith { get; } = [];
+
+        public Task<PickedGame?> PickGameAsync() => Task.FromResult(PickedGame);
+
+        public WindowLayout? CaptureWindows(WindowLayout? current)
+        {
+            CaptureOpenedWith.Add(current);
+            return Captured;
+        }
 
         public Task<bool> ConfirmDeleteAsync(string name)
         {

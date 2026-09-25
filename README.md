@@ -9,48 +9,48 @@
 [![Release](https://img.shields.io/github/v/release/ManuelStaggl/RigShift?label=release)](https://github.com/ManuelStaggl/RigShift/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-RigShift switches a Windows PC between your desk and your sim rig: display layout, sound and apps in one step, by
-hotkey, from the tray, or automatically when the wheelbase turns on. Or it does the whole evening for you – one click
-starts the sim with the right screens, its tools and their windows, and puts everything back when you quit.
+RigShift switches one Windows PC between your desk and your sim rig: displays, audio and apps in one step.
+Turn the wheelbase on and the PC goes to rig mode, turn it off and your desk is back. If a switch leaves you
+without a picture, RigShift reverts it on its own.
 
-**[Download](https://github.com/ManuelStaggl/RigShift/releases/latest)** · Windows 10/11 · free, no admin rights ·
-[Changelog](CHANGELOG.md)
+**[Download for Windows 10/11](https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe)**
+· free and open source (MIT) · no account, no telemetry, no admin rights · [Is it safe?](#is-it-safe)
 
 <p align="center">
-  <img alt="RigShift with a Desk and a Sim Rig profile" src="docs/screenshots/profiles-dark.png" width="860">
+  <img alt="RigShift overview with a Desk and a Sim Rig profile" src="docs/screenshots/overview-dark.png" width="860">
 </p>
+
+## Already using DisplayMagician, DisplayFusion or a batch file?
+
+Keep it if it works for you. RigShift is for you if you want
+
+- the switch to happen when the wheelbase powers on, and back when it is off,
+- a layout that reverts by itself when a screen stays black,
+- audio and microphone, SimHub and Crew Chief, and your desktop icons in the same profile – and with a game entry,
+  the tools' window positions too.
+
+DisplayMagician is the better pick for AMD Eyefinity and many game launchers, DisplayFusion for full window
+management. [Detailed comparison](docs/compare.md) · [FAQ](docs/faq.md)
 
 ## Features
 
-- **Profiles.** Each profile stores which monitors are on, their layout, main display, resolution, refresh rate and
-  HDR, plus playback and microphone device with volume.
-- **Triggers.** Every profile carries its own way in: a hotkey, a desktop shortcut, and a USB rule that switches to the
-  rig when your wheelbase connects and back when it is gone, after a delay you choose.
-- **Games.** A game entry brackets a whole session: switch to its profile, start SimHub and Crew Chief, put their
-  windows back where they belong, launch the sim from Steam or Epic, and clean up when it ends. Start it from the tray,
-  a hotkey or its own desktop shortcut – or let RigShift notice when you start the game from Steam yourself.
-  **Find installed games** picks your sims off the list of what Steam and Epic have on this PC, on any drive, with no
-  sign-in and nothing to type.
-- **Apps.** Start SimHub, Crew Chief or anything else with a profile and close what you do not need.
-- **Desktop icons.** Windows keeps one icon layout for all arrangements and reshuffles it whenever your screens change.
-  A profile can carry its own, and puts it back after the switch.
-- **One atomic switch.** Windows gets the whole layout at once, so the switch either works or nothing changes. No
-  picture afterwards? It reverts on its own.
-- **Made for real hardware.** Wakes sleeping monitors, waits for one that is off, tolerates optional screens such as a
-  spacedesk tablet, and moves windows off screens that are now dark.
-- **Field of view.** Your monitors report their size, so the page only asks for the curve, how far away you sit and
-  how the rig stands. Eighteen sims get the number they really want – degrees, a multiplier, a slider or radians –
-  with the triple-screen fields each one asks for, and a top view that follows every change.
-- **Control it your way.** Tray, hotkeys, Stream Deck, `rigshift://` links, command line. Backup and restore as a ZIP.
+- **Profiles** – which monitors are on, layout, main display, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume.
+- **Triggers** – wheelbase on/off, hotkey, desktop shortcut, Stream Deck, `rigshift://` link, command line.
+- **Games** – one click: switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam, Epic, EA, Xbox or iRacing, clean up after.
+- **Safety net** – the whole layout is applied in one step; no picture means it reverts after a countdown, even after a crash.
+- **Real hardware** – wakes sleeping monitors, waits for a slow G9, skips optional screens like a spacedesk tablet.
+- **Desktop icons** – each profile keeps its own icon layout and puts it back after the switch.
+- **Field of view** – the right FOV value for 18 sims, from your monitor's real size.
+- **Backup** – profiles, games and settings as one ZIP. English and German.
 
 | | |
 |---|---|
+| <img alt="Displays of a profile" src="docs/screenshots/profiles-dark.png" width="400"> | <img alt="Triggers of a profile" src="docs/screenshots/triggers-dark.png" width="400"> |
+| **Profiles** – displays, audio, apps and behavior per profile. | **Triggers** – to the rig when wheelbase and pedals are on, back when they are off. |
 | <img alt="Games page" src="docs/screenshots/games-dark.png" width="400"> | <img alt="The tools of a game session" src="docs/screenshots/game-editor-dark.png" width="400"> |
-| **Games** – one click for the sim, its profile, its tools and the way back. | **Five steps** – launcher, profile, tools with their order, window positions and what happens when you quit. |
-| <img alt="Triggers of a profile" src="docs/screenshots/triggers-dark.png" width="400"> | <img alt="Settings page" src="docs/screenshots/settings-dark.png" width="400"> |
-| **Triggers** – to the rig when wheelbase and pedals are on, back when they are off. | **Settings** – default profile, countdown, language, updates, and a name for every device. |
+| **Games** – one click for the sim, its profile, its tools and the way back. | **Tools** – start order, waiting for the wheelbase, before or after the game. |
 | <img alt="Tray popup" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog" src="docs/screenshots/confirmation-dark.png" width="400"> |
-| **Tray** – switch or start a sim from the notification area. | **Safety net** – keep the new layout or it reverts after a countdown. |
+| **Tray** – switch or start a sim from the notification area. | **Safety net** – keep the new layout with any wheel button, or it reverts. |
 
 <p align="center">
   <img alt="Field of view page for a triple screen rig" src="docs/screenshots/fov-dark.png" width="820"><br>
@@ -59,18 +59,54 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 
 ## Getting started
 
-1. Download `RigShift-win-Setup.exe` from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
-   and run it (a portable ZIP is attached too). RigShift installs per user and starts in the tray.
+1. [Download the setup](https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe) and
+   run it. RigShift installs for your Windows user and starts in the tray. A portable ZIP is in the
+   [release](https://github.com/ManuelStaggl/RigShift/releases/latest) too.
 2. The setup assistant saves your desk, then your rig after you rearrange the displays, and can add a wheelbase rule.
-3. Later, arrange displays in the Windows settings and pick **New → From the current arrangement**, or edit any profile.
+3. Later, arrange displays in the Windows settings and pick **New → From the current layout**, or edit any profile.
 
-RigShift is not code-signed, so SmartScreen may warn on first start: **More info → Run anyway**. Updates install on
-the next start (Settings). Data lives in `%AppData%\RigShift`.
+Updates install on the next start (Settings). Data lives in `%AppData%\RigShift`.
+
+## Tested on
+
+| Setup | Result |
+|---|---|
+| Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 (G93SC) + spacedesk display | my own PC, daily use since September 2026 |
+| Windows 10 code base (Server 2022, build 20348) | every change in CI: tests and a live read of the display configuration |
+| NVIDIA Surround on/off | not tested on a Surround rig yet – reports welcome |
+| AMD / Intel graphics | not tested yet – [report your setup](https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml) |
+
+Every hardware report ends up in this table.
+
+## Is it safe?
+
+RigShift is a free hobby project and not code-signed, so Windows shows **"Windows protected your PC"** the first
+time. Click **More info → Run anyway**.
+
+You don't have to take my word for it:
+
+- **Source:** everything is in this repository, MIT licensed. No telemetry, see [privacy](PRIVACY.md).
+- **VirusTotal:** each release links its scan.
+- **Built from this source:** every release carries a GitHub build attestation –
+  `gh attestation verify RigShift-win-Setup.exe -R ManuelStaggl/RigShift`
+- **Checksums and SBOM:** `SHA256SUMS` and a CycloneDX SBOM in every release.
+
+**Smart App Control** (Windows 11) blocks unsigned apps without a "run anyway" option; RigShift can't run while it is
+on. Why 80 MB? RigShift brings its own .NET runtime, so there is nothing to install first. Updates after that are
+usually a few MB. More in the [FAQ](docs/faq.md) and [SECURITY.md](SECURITY.md).
+
+## How RigShift is built
+
+I write RigShift with Claude Code (Anthropic) as a pair programmer, and I use it on my own rig every day. What keeps it
+honest is not the tool but the checks: 1,200+ automated tests, analyzers with warnings as errors and CodeQL run on
+every change; each release is installed over the previous version, started and checked in CI before it is published,
+and carries checksums, an SBOM and a build attestation. Hardware I don't own is listed as untested above, not
+claimed.
 
 ## Stream Deck and button boxes
 
-- **Hotkey action:** give the profile or the game a keyboard shortcut under **Triggers**. **Settings → Previous
-  profile** gives you one key for both directions.
+- **Hotkey action:** give the profile or the game a keyboard shortcut under **Triggers**. **Settings → Switch back**
+  gives you one key for both directions.
 - **Website action:** `rigshift://apply/Rig`, `rigshift://toggle` or `rigshift://play/iRacing`. Links always ask for
   confirmation.
 - **Open action:** **Triggers → Create on the desktop**, or **⋯ → Create shortcut** on a profile or a game. A game's
@@ -95,16 +131,12 @@ Exit codes: 0 applied, 1 failed, 2 blocked (required display missing), 3 not con
 not found, 5 invalid arguments. RigShift.exe is a GUI program; use `start /wait` (cmd) or `Start-Process -Wait -NoNewWindow`
 (PowerShell) to see its output.
 
-## Requirements
-
-Windows 10 (2004+) or Windows 11, x64. Any graphics card; tested on NVIDIA, reports from AMD and Intel users are
-welcome.
-
 ## Help
 
-- A monitor counts as missing while it sleeps: [Monitors in standby](docs/monitor-standby.md).
+- Questions and "does it work with my setup?": [Discussions](https://github.com/ManuelStaggl/RigShift/discussions).
+- A monitor counts as missing while it sleeps: [monitors in standby](docs/monitor-standby.md).
 - Wheelbase or pedals drop off USB: [USB power saving](docs/usb-power-saving.md).
-- Something else: **Help → Diagnostic info → Copy** and [open an issue](https://github.com/ManuelStaggl/RigShift/issues/new).
+- Something else: **Help → Save support package** and attach the ZIP to the [issue](https://github.com/ManuelStaggl/RigShift/issues/new?template=bug_report.yml) that opens.
 
 Ideas and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/ROADMAP.md).
 If RigShift saves you time, you can [buy me a coffee](https://ko-fi.com/filthyjoker).
@@ -125,4 +157,4 @@ and the [display topology rules](docs/display-topology.md).
 [MIT](LICENSE) © 2026 Manuel Staggl. The RigShift logo and icons are not covered by the MIT license, see
 [brand assets](docs/brand/README.md). Bundled components: [third-party notices](THIRD-PARTY-NOTICES.md).
 
-No telemetry – see [privacy](PRIVACY.md). Silent install, uninstall and offline use: [deployment](docs/deployment.md).
+Silent install, uninstall and offline use: [deployment](docs/deployment.md).

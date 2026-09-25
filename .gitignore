@@ -22,7 +22,7 @@ TestResults/
 *.nupkg
 *.snupkg
 
-# Internal working notes (German plan, analysis rounds, assistant instructions) stay local
+# Local working notes
 CLAUDE.md
 docs/PLAN.md
 docs/analysis/

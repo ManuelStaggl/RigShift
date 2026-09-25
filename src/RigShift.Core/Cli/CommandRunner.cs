@@ -83,7 +83,14 @@ public sealed class CommandRunner
     public async Task<CliResponse> RunAsync(CliRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        _log.Information("CLI command {Command} {Name}", request.Command, request.ProfileName ?? request.GameName);
+        if ((request.ProfileName ?? request.GameName) is { } name)
+        {
+            _log.Information("CLI command {Command} {Name}", request.Command, name);
+        }
+        else
+        {
+            _log.Information("CLI command {Command}", request.Command);
+        }
 
         try
         {
@@ -182,6 +189,25 @@ public sealed class CommandRunner
             }
 
             text.Append(CultureInfo.InvariantCulture, $" as {grid.TotalWidth}x{grid.TotalHeight}");
+            if (grid.BezelCorrected == true)
+            {
+                text.Append(", bezel-corrected");
+            }
+
+            if (grid.Displays.FirstOrDefault(d => d.Rotation != DisplayRotation.Identity) is { } rotated)
+            {
+                text.Append(", rotated ").Append(rotated.Rotation switch
+                {
+                    DisplayRotation.Rotate90 => "90",
+                    DisplayRotation.Rotate180 => "180",
+                    _ => "270",
+                });
+            }
+
+            foreach (SurroundDisplay display in grid.Displays.Where(d => d.OverlapX != 0 || d.OverlapY != 0))
+            {
+                text.AppendLine().Append(CultureInfo.InvariantCulture, $"    {display.DisplayId:X8} overlap {display.OverlapX},{display.OverlapY}");
+            }
         }
 
         IReadOnlyList<SurroundDisplay> displays = await _surround.ListDisplaysAsync(cancellationToken);
@@ -263,7 +289,7 @@ public sealed class CommandRunner
             ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
             : existing with
             {
-                Displays = ProfileEditing.CurrentArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
+                Displays = ProfileEditing.CapturedArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
                 Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
             };
 
@@ -393,6 +419,20 @@ public sealed class CommandRunner
                 text.Append(CultureInfo.InvariantCulture, $", audio {result.Audio}");
             }
 
+            if (result.Hdr != HdrOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", HDR {result.Hdr}");
+            }
+
+            if (result.DesktopIcons == DesktopIconOutcome.Pending)
+            {
+                text.Append(", desktop symbols go back in the background");
+            }
+            else if (result.DesktopIcons != DesktopIconOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", desktop symbols {result.DesktopIcons}");
+            }
+
             if (result.Apps == AppsOutcome.Pending)
             {
                 text.Append(", apps start in the background");
@@ -430,6 +470,7 @@ public sealed class CommandRunner
             SwitchNote.RestoredPrevious when result.Outcome != SwitchOutcome.RolledBack => "previous displays restored",
             SwitchNote.RestoreFailed => "the previous displays could not be restored",
             SwitchNote.ModesFromDatabase => "Windows used its own display modes, the stored ones did not work",
+            SwitchNote.DriverHung => "the graphics driver does not answer; restart the PC if the displays stay wrong",
             _ => null,
         };
         if (note is not null)

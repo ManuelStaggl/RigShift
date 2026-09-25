@@ -9,8 +9,6 @@ namespace RigShift.App.Views.Pages;
 
 public partial class ProfilesPage : Page
 {
-    private const ModifierKeys RequiredModifiers = ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows;
-
     private readonly ProfilesViewModel _viewModel;
 
     public ProfilesPage(ProfilesViewModel viewModel)
@@ -21,6 +19,11 @@ public partial class ProfilesPage : Page
         InitializeComponent();
         viewModel.FocusNameRequested += (_, _) => FocusName();
         PreviewKeyDown += OnPagePreviewKeyDown;
+        Loaded += (_, _) =>
+        {
+            viewModel.PageShown();
+            viewModel.Editor?.RefreshAutostartNote();
+        };
     }
 
     /// <summary>F2 edits the name (R-NAV-5).</summary>
@@ -50,78 +53,13 @@ public partial class ProfilesPage : Page
         var button = (FrameworkElement)sender;
         Controls.MenuButton.Open(button, button.DataContext);
     }
-
-    /// <summary>A new app entry starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
-    private void OnAddApp(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Editor is { } editor && AppPickerWindow.Pick(Window.GetWindow(this), null) is { } picked)
-        {
-            editor.AddApp(picked.Path, picked.Name);
-        }
-    }
-
-    private void OnBrowseApp(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: AppEditItem item } && AppPickerWindow.Pick(Window.GetWindow(this), item.Path) is { } picked)
-        {
-            item.SetPicked(picked.Path, picked.Name);
-        }
-    }
-
-    private void OnHotkeyGotFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.BeginHotkeyRecording();
-
-    private void OnHotkeyLostFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.EndHotkeyRecording();
-
-    /// <summary>
-    /// Records the pressed combination. Without Ctrl, Alt or Win, Tab, Esc and Enter keep their usual meaning and
-    /// Backspace/Delete clear the field.
-    /// </summary>
-    private void OnHotkeyKeyDown(object sender, KeyEventArgs e)
-    {
-        if (_viewModel.Editor is not { } editor)
-        {
-            return;
-        }
-
-        Key key = e.Key switch
-        {
-            Key.System => e.SystemKey,
-            Key.ImeProcessed => e.ImeProcessedKey,
-            _ => e.Key,
-        };
-        ModifierKeys modifiers = Keyboard.Modifiers;
-        bool plain = (modifiers & RequiredModifiers) == ModifierKeys.None;
-
-        if (plain && key is Key.Tab or Key.Escape or Key.Enter)
-        {
-            return;
-        }
-
-        e.Handled = true;
-        if (plain && key is Key.Back or Key.Delete)
-        {
-            editor.ClearHotkeyCommand.Execute(null);
-            return;
-        }
-
-        int virtualKey = KeyInterop.VirtualKeyFromKey(key);
-        if (virtualKey != 0 && !Core.Profiles.Hotkey.IsModifierKey(virtualKey))
-        {
-            editor.RecordHotkey(HotkeyFormat.FromWpf(modifiers), virtualKey);
-        }
-    }
 }
 
 public partial class SettingsPage : Page
 {
-    private const ModifierKeys RequiredModifiers = ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows;
-
-    private readonly SettingsViewModel _viewModel;
-
     public SettingsPage(SettingsViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
-        _viewModel = viewModel;
         DataContext = viewModel;
         InitializeComponent();
         Loaded += (_, _) => viewModel.Load();
@@ -152,41 +90,6 @@ public partial class SettingsPage : Page
         {
             e.Handled = true;
             card.CustomName = card.SavedName ?? string.Empty;
-        }
-    }
-
-    private void OnToggleHotkeyGotFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.BeginHotkeyRecording();
-
-    private void OnToggleHotkeyLostFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.EndHotkeyRecording();
-
-    /// <summary>Same rules as the profile editor: Tab and Esc keep their meaning, Backspace/Delete clear the field.</summary>
-    private void OnToggleHotkeyKeyDown(object sender, KeyEventArgs e)
-    {
-        Key key = e.Key switch
-        {
-            Key.System => e.SystemKey,
-            Key.ImeProcessed => e.ImeProcessedKey,
-            _ => e.Key,
-        };
-        ModifierKeys modifiers = Keyboard.Modifiers;
-        bool plain = (modifiers & RequiredModifiers) == ModifierKeys.None;
-
-        if (plain && key is Key.Tab or Key.Escape or Key.Enter)
-        {
-            return;
-        }
-
-        e.Handled = true;
-        if (plain && key is Key.Back or Key.Delete)
-        {
-            _viewModel.ClearToggleHotkeyCommand.Execute(null);
-            return;
-        }
-
-        int virtualKey = KeyInterop.VirtualKeyFromKey(key);
-        if (virtualKey != 0 && !Core.Profiles.Hotkey.IsModifierKey(virtualKey))
-        {
-            _viewModel.RecordToggleHotkey(HotkeyFormat.FromWpf(modifiers), virtualKey);
         }
     }
 }
@@ -253,21 +156,17 @@ public partial class AboutPage : Page
 
 public partial class GamesPage : Page
 {
-    private const ModifierKeys RequiredModifiers = ModifierKeys.Control | ModifierKeys.Alt | ModifierKeys.Windows;
-
     private readonly GamesViewModel _viewModel;
-    private readonly GameDialogs _dialogs;
 
-    public GamesPage(GamesViewModel viewModel, GameDialogs dialogs)
+    public GamesPage(GamesViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
-        ArgumentNullException.ThrowIfNull(dialogs);
         _viewModel = viewModel;
-        _dialogs = dialogs;
         DataContext = viewModel;
         InitializeComponent();
         viewModel.FocusNameRequested += (_, _) => FocusName();
         PreviewKeyDown += OnPagePreviewKeyDown;
+        Loaded += (_, _) => viewModel.PageShown();
     }
 
     /// <summary>F2 edits the name (R-NAV-5).</summary>
@@ -291,87 +190,4 @@ public partial class GamesPage : Page
     private void OnMoreClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel, alignRight: true);
 
     private void OnIconClick(object sender, RoutedEventArgs e) => Controls.MenuButton.Open((FrameworkElement)sender, _viewModel.Editor);
-
-    /// <summary>"Choose…" on the Game tab: an installed game or a program.</summary>
-    private async void OnPickGame(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Editor is not { } editor || await _dialogs.PickGameAsync() is not { } picked)
-        {
-            return;
-        }
-
-        if (picked.Installed is { } installed)
-        {
-            editor.SetLaunch(installed);
-        }
-        else if (picked.ExecutablePath is { } path)
-        {
-            editor.SetExecutable(path);
-        }
-    }
-
-    private void OnCaptureWindows(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Editor is { } editor && WindowCaptureWindow.Capture(Window.GetWindow(this), _dialogs, editor.WindowLayout) is { } captured)
-        {
-            editor.WindowLayout = captured;
-        }
-    }
-
-    /// <summary>A new tool starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
-    private void OnAddApp(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel.Editor is { } editor && AppPickerWindow.Pick(Window.GetWindow(this), null) is { } picked)
-        {
-            editor.AddApp(picked.Path, picked.Name);
-        }
-    }
-
-    private void OnBrowseApp(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: AppEditItem item } && AppPickerWindow.Pick(Window.GetWindow(this), item.Path) is { } picked)
-        {
-            item.SetPicked(picked.Path, picked.Name);
-        }
-    }
-
-    private void OnHotkeyGotFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.BeginHotkeyRecording();
-
-    private void OnHotkeyLostFocus(object sender, KeyboardFocusChangedEventArgs e) => _viewModel.Editor?.EndHotkeyRecording();
-
-    /// <summary>Same rules as the profile editor: Tab, Esc and Enter keep their meaning, Backspace/Delete clear the field.</summary>
-    private void OnHotkeyKeyDown(object sender, KeyEventArgs e)
-    {
-        if (_viewModel.Editor is not { } editor)
-        {
-            return;
-        }
-
-        Key key = e.Key switch
-        {
-            Key.System => e.SystemKey,
-            Key.ImeProcessed => e.ImeProcessedKey,
-            _ => e.Key,
-        };
-        ModifierKeys modifiers = Keyboard.Modifiers;
-        bool plain = (modifiers & RequiredModifiers) == ModifierKeys.None;
-
-        if (plain && key is Key.Tab or Key.Escape or Key.Enter)
-        {
-            return;
-        }
-
-        e.Handled = true;
-        if (plain && key is Key.Back or Key.Delete)
-        {
-            editor.ClearHotkeyCommand.Execute(null);
-            return;
-        }
-
-        int virtualKey = KeyInterop.VirtualKeyFromKey(key);
-        if (virtualKey != 0 && !Core.Profiles.Hotkey.IsModifierKey(virtualKey))
-        {
-            editor.RecordHotkey(HotkeyFormat.FromWpf(modifiers), virtualKey);
-        }
-    }
 }

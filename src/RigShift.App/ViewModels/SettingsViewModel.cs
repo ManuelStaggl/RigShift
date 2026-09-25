@@ -10,16 +10,15 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-public sealed partial class SettingsViewModel : ObservableObject
+public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
 {
     private const int DefaultConfirmSeconds = 15;
 
     private readonly SettingsService _settings;
     private readonly ProfileCatalog _catalog;
-    private readonly HotkeyService _hotkeys;
+    private readonly HotkeyRecorder _toggleHotkeyRecorder;
     private readonly ILogger _log;
-    private string _toggleHotkeyHintKey = "Settings_ToggleHotkeyHint";
-    private HotkeyUse? _hotkeyConflict;
+    private readonly Hotkey _allDisplaysOnHotkey = HotkeyService.AllDisplaysOnHotkey;
     private bool _loading;
 
     public SettingsViewModel(
@@ -30,15 +29,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         ShowUpdateSetting = !updatePolicy.ChecksDisabled;
         _settings = settings;
         _catalog = catalog;
-        _hotkeys = hotkeys;
+        _toggleHotkeyRecorder = new HotkeyRecorder(hotkeys, HotkeyUseKind.Toggle, Guid.Empty, "Settings_ToggleHotkeyHint");
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
-        ToggleHotkeyHint = HotkeyHintText();
 
         // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
         Loc.Instance.PropertyChanged += (_, _) =>
         {
-            ToggleHotkeyHint = HotkeyHintText();
+            OnPropertyChanged(nameof(ToggleHotkeyHint));
+            OnPropertyChanged(nameof(AllDisplaysOnHotkeyText));
             Load();
         };
     }
@@ -78,62 +77,38 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public bool HasToggleHotkey => ToggleHotkey is not null;
 
-    [ObservableProperty]
-    public partial string ToggleHotkeyHint { get; set; }
+    /// <summary>The emergency hotkey, fixed (<see cref="HotkeyService.AllDisplaysOnHotkey"/>); in the language shown.</summary>
+    public string AllDisplaysOnHotkeyText => HotkeyFormat.Format(_allDisplaysOnHotkey);
+
+    /// <summary>The line under the hotkey field: what it does, or why the last combination was refused.</summary>
+    public string ToggleHotkeyHint => _toggleHotkeyRecorder.Hint;
 
     /// <summary>The hotkey field took the focus: RigShift's own hotkeys must not fire while a combination is pressed.</summary>
-    public void BeginHotkeyRecording() => _hotkeys.Suspend();
+    public void BeginHotkeyRecording() => _toggleHotkeyRecorder.Begin();
 
-    public void EndHotkeyRecording() => _hotkeys.Resume();
+    public void EndHotkeyRecording() => _toggleHotkeyRecorder.End();
 
-    /// <summary>A key combination pressed in the hotkey field; only Ctrl, Alt or Win with another key is accepted.</summary>
-    internal void RecordToggleHotkey(HotkeyModifiers modifiers, int virtualKey)
+    /// <summary>A key combination pressed in the hotkey field; saved at once, like every setting on this page.</summary>
+    public void RecordHotkey(HotkeyModifiers modifiers, int virtualKey)
     {
-        var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
-        if (!hotkey.IsValid)
+        if (_toggleHotkeyRecorder.Record(modifiers, virtualKey) is { } hotkey)
         {
-            SetToggleHotkeyHint("Editor_HotkeyNeedsModifier");
-            return;
+            ToggleHotkey = hotkey;
+            _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
+            Persist(s => s with { ToggleHotkey = hotkey });
         }
 
-        // Hotkeys are suspended while the field has the focus, so this only sees other applications.
-        if (!_hotkeys.IsAvailable(hotkey))
-        {
-            SetToggleHotkeyHint("Problem_HotkeyInUse");
-            return;
-        }
-
-        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
-        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Toggle, Guid.Empty) is { } use)
-        {
-            _hotkeyConflict = use;
-            ToggleHotkeyHint = HotkeyHintText();
-            return;
-        }
-
-        ToggleHotkey = hotkey;
-        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
-        _log.Information("Toggle hotkey set to {Hotkey}", ToggleHotkeyText);
-        Persist(s => s with { ToggleHotkey = hotkey });
+        OnPropertyChanged(nameof(ToggleHotkeyHint));
     }
 
     [RelayCommand]
-    private void ClearToggleHotkey()
+    public void ClearHotkey()
     {
         ToggleHotkey = null;
-        SetToggleHotkeyHint("Settings_ToggleHotkeyHint");
+        _toggleHotkeyRecorder.Reset();
+        OnPropertyChanged(nameof(ToggleHotkeyHint));
         _log.Information("Toggle hotkey removed");
         Persist(s => s with { ToggleHotkey = null });
-    }
-
-    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
-    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_toggleHotkeyHintKey];
-
-    private void SetToggleHotkeyHint(string key)
-    {
-        _hotkeyConflict = null;
-        _toggleHotkeyHintKey = key;
-        ToggleHotkeyHint = Loc.Instance[key];
     }
 
     public void Load()
@@ -244,10 +219,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         try
         {
             _settings.Autostart.SetEnabled(value);
+            ErrorMessage = null;
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
         {
             _log.Warning(ex, "Autostart could not be changed");
+            ErrorMessage = Loc.Instance["Settings_AutostartFailed"];
+            _loading = true;
+            StartWithWindows = _settings.Autostart.IsEnabled;
+            _loading = false;
         }
     }
 
@@ -258,10 +238,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         try
         {
             await _settings.UpdateAsync(change, CancellationToken.None);
+            ErrorMessage = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Settings could not be saved");
+            ErrorMessage = Loc.Instance["Settings_SaveFailed"];
+            Load();
         }
     }
+
+    /// <summary>A setting that could not be stored (v4 finding A-16); the fields show the stored values again.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    public partial string? ErrorMessage { get; private set; }
+
+    public bool HasError => ErrorMessage is not null;
 }

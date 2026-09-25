@@ -108,7 +108,7 @@ public sealed partial class UsbDevicesViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "USB device {Device} could not be renamed", card.Id);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
     }
 

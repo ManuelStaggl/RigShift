@@ -28,9 +28,15 @@ public sealed class TopologyPlanner
 
         IReadOnlyList<DisplayAssignment> assignments = profile.Displays;
         var matches = new AttachedDisplay?[assignments.Count];
-        var matchedByEdid = new bool[assignments.Count];
-        var matchedByName = new bool[assignments.Count];
+        var matchedBy = new MatchedBy[assignments.Count];
         var claimed = new HashSet<AttachedDisplay>(ReferenceEqualityComparer.Instance);
+
+        void Match(int index, AttachedDisplay display, MatchedBy how)
+        {
+            matches[index] = display;
+            matchedBy[index] = how;
+            Claim(display, snapshot, claimed);
+        }
 
         // Pass 1: device paths. Runs for all assignments first so that an EDID match can never steal
         // a display that another assignment identifies exactly (two identical desk monitors).
@@ -41,54 +47,88 @@ public sealed class TopologyPlanner
             AttachedDisplay? hit = snapshot.Displays
                 .Where(d => !claimed.Contains(d)
                     && string.Equals(d.Identity.TargetDevicePath, wanted.TargetDevicePath, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(d.Identity.AdapterDevicePath, wanted.AdapterDevicePath, StringComparison.OrdinalIgnoreCase))
+                    && SameAdapter(d.Identity, wanted))
                 .OrderByDescending(d => d.IsAvailable)
                 .FirstOrDefault();
             if (hit is not null)
             {
-                matches[i] = hit;
-                Claim(hit, snapshot, claimed);
+                Match(i, hit, MatchedBy.Path);
             }
         }
 
         var warnings = new List<PlanWarning>();
 
-        // Pass 2: EDID fallback (port or cable changed). Only unambiguous candidates are accepted.
+        // Pass 2: the serial number in the EDID. Exact like the path, so it too runs for every assignment before the passes
+        // that go by the model: after a new graphics card or slot every path is new, and only the serial number still tells
+        // identical monitors apart (v4 finding K-03). A serial number two displays of the profile share tells nothing.
         for (int i = 0; i < assignments.Count; i++)
         {
-            if (matches[i] is not null)
+            DisplayIdentity wanted = assignments[i].Identity;
+            if (matches[i] is not null || !HasSerial(wanted)
+                || Enumerable.Range(0, assignments.Count).Any(j => j != i && SameSerial(assignments[j].Identity, wanted)))
             {
                 continue;
             }
 
-            DisplayIdentity wanted = assignments[i].Identity;
-            List<AttachedDisplay> candidates = EdidCandidates(wanted, snapshot, claimed);
-
-            // Identical monitors in the profile without their ports: one candidate could be either of them (B-10).
-            int unmatchedTwins = Enumerable.Range(0, assignments.Count).Count(j => matches[j] is null && SameEdid(assignments[j].Identity, wanted));
-            if (unmatchedTwins > 1)
+            if (Only(PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameSerial(d.Identity, wanted)))) is { } hit)
             {
-                if (candidates.Count > 0)
+                Match(i, hit, MatchedBy.Serial);
+            }
+        }
+
+        // Pass 3: EDID model (port or cable changed). Only unambiguous candidates are accepted.
+        for (int i = 0; i < assignments.Count; i++)
+        {
+            DisplayIdentity wanted = assignments[i].Identity;
+            if (matches[i] is not null || !HasEdid(wanted))
+            {
+                continue;
+            }
+
+            List<AttachedDisplay> candidates = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameEdid(d.Identity, wanted)));
+
+            // The connector is only worth something when the graphics card itself got a new identity (another card, slot or
+            // BIOS update): then every path changed, but the card numbers its ports as before.
+            bool adapterGone = !snapshot.Displays.Any(d => SameAdapter(d.Identity, wanted));
+
+            // Identical monitors in the profile without their ports: one candidate could be either of them (B-10). They are
+            // only matched as a group, by their connectors, and only if every one of them is found that way.
+            List<int> twins = [.. Enumerable.Range(0, assignments.Count).Where(j => matches[j] is null && SameEdid(assignments[j].Identity, wanted))];
+            if (twins.Count > 1)
+            {
+                if (adapterGone && ByConnector(twins, assignments, candidates) is { } found)
+                {
+                    foreach ((int twin, AttachedDisplay display) in found)
+                    {
+                        Match(twin, display, MatchedBy.Connector);
+                    }
+                }
+                else if (candidates.Count > 0)
                 {
                     warnings.Add(new PlanWarning(
                         PlanWarningKind.AmbiguousTwin,
                         string.Create(CultureInfo.InvariantCulture,
-                            $"{DisplayNames.Of(assignments[i])} was not matched by EDID: {unmatchedTwins} identical displays of the profile are not on their ports, {candidates.Count} candidate(s).")));
+                            $"{DisplayNames.Of(assignments[i])} was not matched by EDID: {twins.Count} identical displays of the profile are not on their ports, {candidates.Count} candidate(s).")));
                 }
 
                 continue;
             }
 
-            AttachedDisplay? hit = candidates.Count == 1 ? candidates[0] : null;
-            if (hit is not null)
+            if (candidates.Count == 1)
             {
-                matches[i] = hit;
-                matchedByEdid[i] = true;
-                Claim(hit, snapshot, claimed);
+                Match(i, candidates[0], MatchedBy.Edid);
+            }
+            else if (Only(candidates.Where(d => SameAdapter(d.Identity, wanted))) is { } onAdapter)
+            {
+                Match(i, onAdapter, MatchedBy.Edid);
+            }
+            else if (adapterGone && Only(candidates.Where(d => SameConnector(d.Identity, wanted))) is { } onConnector)
+            {
+                Match(i, onConnector, MatchedBy.Connector);
             }
         }
 
-        // Pass 3: the monitor's name. A display can answer its inputs with different hardware IDs – the Odyssey G93SC
+        // Pass 4: the monitor's name. A display can answer its inputs with different hardware IDs – the Odyssey G93SC
         // reports one EDID over HDMI and another over DisplayPort – so after a cable swap neither the path nor the EDID
         // finds it again, and profiles written before this even stored an empty EDID. Only accepted when the name is
         // unique on both sides, so two identical monitors stay as ambiguous as they are for the EDID pass.
@@ -129,9 +169,7 @@ public sealed class TopologyPlanner
                 continue;
             }
 
-            matches[i] = candidates[0];
-            matchedByName[i] = true;
-            Claim(candidates[0], snapshot, claimed);
+            Match(i, candidates[0], MatchedBy.Name);
         }
 
         var resolved = new List<PlannedDisplay>();
@@ -144,7 +182,8 @@ public sealed class TopologyPlanner
 
             if (match is null)
             {
-                missing.Add(new MissingDisplay(assignment, MissingReason.NotAttached));
+                missing.Add(new MissingDisplay(
+                    assignment, IsAmbiguous(assignments, matches, i, snapshot, claimed) ? MissingReason.Ambiguous : MissingReason.NotAttached));
             }
             else if (!match.IsAvailable)
             {
@@ -153,19 +192,9 @@ public sealed class TopologyPlanner
             else
             {
                 resolved.Add(new PlannedDisplay(assignment, match));
-                if (matchedByEdid[i])
+                if (FallbackWarning(assignment, match, matchedBy[i]) is { } warning)
                 {
-                    warnings.Add(new PlanWarning(
-                        PlanWarningKind.MatchedByEdidFallback,
-                        string.Create(CultureInfo.InvariantCulture,
-                            $"{DisplayNames.Of(assignment)} was matched by EDID at {match.Identity.TargetDevicePath} (port or cable changed).")));
-                }
-                else if (matchedByName[i])
-                {
-                    warnings.Add(new PlanWarning(
-                        PlanWarningKind.MatchedByNameFallback,
-                        string.Create(CultureInfo.InvariantCulture,
-                            $"{DisplayNames.Of(assignment)} was matched by name at {match.Identity.TargetDevicePath} (input, port or cable changed).")));
+                    warnings.Add(warning);
                 }
             }
         }
@@ -195,28 +224,82 @@ public sealed class TopologyPlanner
         return pixelRate > _options.DualHeadPixelRateThreshold ? 2 : 1;
     }
 
-    /// <summary>Unclaimed displays with the wanted EDID, one per target path (the available entry of a duplicate).</summary>
-    private static List<AttachedDisplay> EdidCandidates(DisplayIdentity wanted, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+    /// <summary>
+    /// <c>\\?\DISPLAY#XEC2389#5&amp;101428be&amp;0&amp;UID4352#{…}</c> → <c>UID4352</c>: the port the graphics card reports the
+    /// monitor on. The part before it is derived from the card's own identity and changes with it. <c>null</c> without one.
+    /// </summary>
+    private static string? Connector(string? targetDevicePath)
     {
-        if (wanted.EdidManufacturerId == 0 && wanted.EdidProductCodeId == 0)
+        string[] parts = (targetDevicePath ?? string.Empty).Split('#');
+        if (parts.Length < 3)
         {
-            return [];
+            return null;
         }
 
-        List<AttachedDisplay> candidates = snapshot.Displays
-            .Where(d => !claimed.Contains(d) && SameEdid(d.Identity, wanted))
-            .GroupBy(d => d.Identity.TargetDevicePath, StringComparer.OrdinalIgnoreCase)
-            .Select(g => g.OrderByDescending(d => d.IsAvailable).First())
-            .ToList();
+        string last = parts[2][(parts[2].LastIndexOf('&') + 1)..];
+        return last.Length > 3 && last.StartsWith("UID", StringComparison.OrdinalIgnoreCase) ? last : null;
+    }
 
-        if (candidates.Count > 1)
+    /// <summary>
+    /// Pairs every twin with the one candidate on its saved connector. <c>null</c> unless each finds exactly one and a
+    /// different one – half a match would be a guess for the rest.
+    /// </summary>
+    private static List<(int Index, AttachedDisplay Display)>? ByConnector(
+        List<int> twins, IReadOnlyList<DisplayAssignment> assignments, List<AttachedDisplay> candidates)
+    {
+        var found = new List<(int Index, AttachedDisplay Display)>();
+        foreach (int twin in twins)
         {
-            candidates = candidates
-                .Where(d => string.Equals(d.Identity.AdapterDevicePath, wanted.AdapterDevicePath, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            if (Only(candidates.Where(d => SameConnector(d.Identity, assignments[twin].Identity))) is not { } display
+                || found.Exists(f => ReferenceEquals(f.Display, display)))
+            {
+                return null;
+            }
+
+            found.Add((twin, display));
         }
 
-        return candidates;
+        return found;
+    }
+
+    /// <summary>
+    /// Whether identical displays are attached and free – at least as many as the profile still misses of that model – so
+    /// the display is most likely there and only could not be told apart from its twins (K-03). Identical means the same
+    /// EDID model, or the same name where the EDID is unknown.
+    /// </summary>
+    private static bool IsAmbiguous(
+        IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, int index, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+    {
+        DisplayIdentity wanted = assignments[index].Identity;
+        Func<DisplayIdentity, bool>? identical = HasEdid(wanted) ? d => SameEdid(d, wanted)
+            : !string.IsNullOrWhiteSpace(wanted.FriendlyName) ? d => SameName(d.FriendlyName, wanted.FriendlyName)
+            : null;
+        if (identical is null)
+        {
+            return false;
+        }
+
+        int missing = Enumerable.Range(0, assignments.Count).Count(j => matches[j] is null && identical(assignments[j].Identity));
+        int attached = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && identical(d.Identity))).Count;
+        return attached > 0 && attached >= missing;
+    }
+
+    private static PlanWarning? FallbackWarning(DisplayAssignment assignment, AttachedDisplay match, MatchedBy how)
+    {
+        string? why = how switch
+        {
+            MatchedBy.Serial => "by its EDID serial number at {0} (port, cable or graphics card changed)",
+            MatchedBy.Edid => "by EDID at {0} (port or cable changed)",
+            MatchedBy.Connector => "by EDID and connector at {0} (graphics card or its slot changed)",
+            MatchedBy.Name => "by name at {0} (input, port or cable changed)",
+            _ => null,
+        };
+
+        return why is null
+            ? null
+            : new PlanWarning(
+                how == MatchedBy.Name ? PlanWarningKind.MatchedByNameFallback : PlanWarningKind.MatchedByEdidFallback,
+                $"{DisplayNames.Of(assignment)} was matched {string.Format(CultureInfo.InvariantCulture, why, match.Identity.TargetDevicePath)}.");
     }
 
     /// <summary>
@@ -225,12 +308,7 @@ public sealed class TopologyPlanner
     /// </summary>
     private static List<AttachedDisplay> NameCandidates(string wantedName, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
     {
-        List<AttachedDisplay> candidates = snapshot.Displays
-            .Where(d => !claimed.Contains(d) && SameName(d.Identity.FriendlyName, wantedName))
-            .GroupBy(d => d.Identity.TargetDevicePath, StringComparer.OrdinalIgnoreCase)
-            .Select(g => g.OrderByDescending(d => d.IsAvailable).First())
-            .ToList();
-
+        List<AttachedDisplay> candidates = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameName(d.Identity.FriendlyName, wantedName)));
         if (candidates.Count > 1)
         {
             candidates = [.. candidates.Where(d => d.IsAvailable)];
@@ -238,6 +316,17 @@ public sealed class TopologyPlanner
 
         return candidates;
     }
+
+    /// <summary>One entry per target, the available one first: a stale target never wins over a live one.</summary>
+    private static List<AttachedDisplay> PerTarget(IEnumerable<AttachedDisplay> displays) =>
+    [
+        .. displays
+            .GroupBy(d => d.Identity.TargetDevicePath, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.OrderByDescending(d => d.IsAvailable).First()),
+    ];
+
+    private static AttachedDisplay? Only(IEnumerable<AttachedDisplay> displays) =>
+        displays.Take(2).ToList() is [var only] ? only : null;
 
     /// <summary>
     /// Whether another display of the profile that is still unmatched carries the same known EDID – then the two are
@@ -247,7 +336,7 @@ public sealed class TopologyPlanner
     private static bool HasEdidTwin(IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, int index)
     {
         DisplayIdentity wanted = assignments[index].Identity;
-        if (wanted.EdidManufacturerId == 0 && wanted.EdidProductCodeId == 0)
+        if (!HasEdid(wanted))
         {
             return false;
         }
@@ -259,10 +348,24 @@ public sealed class TopologyPlanner
     private static bool SameName(string a, string b) =>
         !string.IsNullOrWhiteSpace(a) && string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
 
+    private static bool HasEdid(DisplayIdentity identity) => identity.EdidManufacturerId != 0 || identity.EdidProductCodeId != 0;
+
     private static bool SameEdid(DisplayIdentity a, DisplayIdentity b) =>
-        (a.EdidManufacturerId != 0 || a.EdidProductCodeId != 0)
+        HasEdid(a)
         && a.EdidManufacturerId == b.EdidManufacturerId
         && a.EdidProductCodeId == b.EdidProductCodeId;
+
+    private static bool HasSerial(DisplayIdentity identity) => !string.IsNullOrEmpty(identity.EdidSerialHash);
+
+    /// <summary>Same model and same serial number: the same monitor, whatever port it is on.</summary>
+    private static bool SameSerial(DisplayIdentity a, DisplayIdentity b) =>
+        HasSerial(a) && SameEdid(a, b) && string.Equals(a.EdidSerialHash, b.EdidSerialHash, StringComparison.Ordinal);
+
+    private static bool SameAdapter(DisplayIdentity a, DisplayIdentity b) =>
+        string.Equals(a.AdapterDevicePath, b.AdapterDevicePath, StringComparison.OrdinalIgnoreCase);
+
+    private static bool SameConnector(DisplayIdentity a, DisplayIdentity b) =>
+        Connector(a.TargetDevicePath) is { } connector && string.Equals(connector, Connector(b.TargetDevicePath), StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Claims the display and every other entry of the same target, so no other assignment gets a duplicate of it.</summary>
     private static void Claim(AttachedDisplay display, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
@@ -301,5 +404,15 @@ public sealed class TopologyPlanner
         }
 
         return warnings;
+    }
+
+    private enum MatchedBy
+    {
+        None,
+        Path,
+        Serial,
+        Edid,
+        Connector,
+        Name,
     }
 }

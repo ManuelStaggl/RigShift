@@ -20,6 +20,11 @@
         Kind="Error"
         Text="{Binding Devices.ErrorMessage}"
         Visibility="{Binding Devices.HasError, Converter={StaticResource BoolToVisibility}}" />
+      <controls:InfoBar
+        Margin="0,12,0,0"
+        Kind="Error"
+        Text="{Binding ErrorMessage}"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
 
       <controls:AdaptiveColumns Margin="0,20,0,0" Gap="32">
 
@@ -49,24 +54,33 @@
                 Width="180"
                 AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
                 AutomationProperties.Name="{loc:Tr Settings_ToggleHotkey}"
-                GotKeyboardFocus="OnToggleHotkeyGotFocus"
+                controls:HotkeyBox.Field="{Binding}"
                 IsReadOnly="True"
                 IsReadOnlyCaretVisible="False"
-                LostKeyboardFocus="OnToggleHotkeyLostFocus"
-                PreviewKeyDown="OnToggleHotkeyKeyDown"
                 Style="{StaticResource RigShift.Field.Value}"
+                Tag="{loc:Tr Editor_HotkeyPlaceholder}"
                 Text="{Binding ToggleHotkeyText, Mode=OneWay}"
                 ToolTip="{loc:Tr Hotkey_RecordTip}" />
               <Button
                 Margin="8,0,0,0"
                 AutomationProperties.Name="{loc:Tr Editor_HotkeyClear}"
-                Command="{Binding ClearToggleHotkeyCommand}"
+                Command="{Binding ClearHotkeyCommand}"
                 IsEnabled="{Binding HasToggleHotkey}"
                 Style="{StaticResource RigShift.Button.Icon}"
                 ToolTip="{loc:Tr Editor_HotkeyClear}">
                 <ui:SymbolIcon FontSize="16" Symbol="Dismiss16" />
               </Button>
             </StackPanel>
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_AllOnHotkeyHint}"
+            Title="{loc:Tr Settings_AllOnHotkey}">
+            <ContentControl
+              AutomationProperties.Name="{Binding AllDisplaysOnHotkeyText}"
+              Content="{Binding AllDisplaysOnHotkeyText}"
+              Style="{StaticResource RigShift.Keycap}" />
           </controls:SettingRow>
 
           <controls:SettingRow
@@ -79,7 +93,10 @@
               Style="{StaticResource RigShift.Toggle}" />
           </controls:SettingRow>
 
-          <controls:SettingRow Margin="0,8,0,0" Title="{loc:Tr Settings_ConfirmSeconds}">
+          <controls:SettingRow
+            Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_ConfirmSecondsHint}"
+            Title="{loc:Tr Settings_ConfirmSeconds}">
             <ui:NumberBox
               Width="100"
               AutomationProperties.Name="{loc:Tr Settings_ConfirmSeconds}"
@@ -177,7 +194,7 @@
                       <TextBlock
                         Margin="11,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource RigShift.Brush.TextDisabled}"
+                        Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
                         IsHitTestVisible="False"
                         Style="{StaticResource RigShift.Text.Body}"
                         Text="{loc:Tr Editor_CustomName}">

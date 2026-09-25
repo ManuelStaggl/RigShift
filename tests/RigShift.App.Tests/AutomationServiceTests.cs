@@ -1,9 +1,11 @@
 using System.IO;
 using NSubstitute;
 using RigShift.App.Services;
+using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
+using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -20,6 +22,34 @@ public sealed class AutomationServiceTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    /// <summary>E-08: without a rule that can act, the timer only woke the UI thread every two seconds for nothing.</summary>
+    [Fact]
+    public async Task Timer_RunsOnlyWhileARuleCanAct()
+    {
+        using var ui = new DispatcherThread();
+        await _host.Settings.UpdateAsync(s => s with { AutomationRules = [] }, Ct);
+        AutomationService automation = ui.Invoke(() => new AutomationService(
+            _host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None));
+        try
+        {
+            ui.Invoke(automation.Start);
+            ui.Invoke(() => automation.IsPolling).ShouldBeFalse();
+
+            await _host.Settings.UpdateAsync(
+                s => s with { AutomationRules = [new AutomationRule { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id }] }, Ct);
+            ui.Drain();
+            ui.Invoke(() => automation.IsPolling).ShouldBeTrue();
+
+            (await automation.SetPausedAsync(true)).ShouldBeTrue();
+            ui.Drain();
+            ui.Invoke(() => automation.IsPolling).ShouldBeFalse();
+        }
+        finally
+        {
+            ui.Invoke(automation.Dispose);
+        }
+    }
+
     [Fact]
     public async Task Tick_WhileSwitching_EvaluatesNothing()
     {
@@ -34,6 +64,46 @@ public sealed class AutomationServiceTests : IDisposable
         // Had the skipped poll been evaluated, the device would count as known and this poll would not start the rig.
         await automation.PollAsync();
         _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Rig");
+    }
+
+    [Fact]
+    public async Task Tick_WhileLocked_DoesNothing_AndTheUnlockStartsTheRule()
+    {
+        // A-04: the driver sits down in the rig, switches the wheelbase on, then unlocks. While locked every display call
+        // fails with "access denied", and the failed start used to disarm the rule until the wheelbase was switched again.
+        using AutomationService automation = await CreateAsync();
+        await automation.PollAsync();
+
+        _host.Session.IsInteractive = false;
+        Connected(true);
+        await automation.PollAsync();
+        _host.Coordinator.History.ShouldBeEmpty();
+
+        _host.Session.IsInteractive = true;
+        await automation.PollAsync();
+
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Rig");
+    }
+
+    [Fact]
+    public async Task Tick_RuleSwitch_CountsDownAtLeastTheRuleMinimum()
+    {
+        // U-04: the wheelbase is on, its owner may still be on the way to the seat; the app setting says 15 s.
+        _host.Confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(ConfirmationResult.Confirmed);
+        using AutomationService automation = await CreateAsync();
+        _host.Store.Profiles[0] = _rig with { SwitchWithoutAsking = false };
+        await _host.Catalog.ReloadAsync(Ct);
+        await automation.PollAsync();
+
+        Connected(true);
+        await automation.PollAsync();
+
+        await _host.Confirmation.Received(1).ConfirmAsync(
+            Arg.Any<Profile>(),
+            Arg.Any<DisplaySnapshot>(),
+            TimeSpan.FromSeconds(AutomationService.RuleConfirmSeconds),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -109,6 +179,6 @@ public sealed class AutomationServiceTests : IDisposable
         await _host.Catalog.ReloadAsync(Ct);
         await _host.Settings.UpdateAsync(
             s => s with { AutomationRules = [new AutomationRule { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id }] }, Ct);
-        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, TimeProvider.System, Logger.None);
+        return new AutomationService(_host.Settings, _host.Catalog, _host.Coordinator, _host.Usb, _host.Fullscreen, _host.Session, TimeProvider.System, Logger.None);
     }
 }

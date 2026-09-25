@@ -229,6 +229,7 @@ public sealed class GameSessionServiceTests : IDisposable
         await _games.SaveAsync(game, Ct);
         GameSessionService service = Service();
         _ui.Invoke(service.StartWatching);
+        Tick();
 
         _processes.Set("iracing");
         Tick();
@@ -269,6 +270,7 @@ public sealed class GameSessionServiceTests : IDisposable
         await _games.SaveAsync(game, Ct);
         GameSessionService service = Service();
         _ui.Invoke(service.StartWatching);
+        Tick();
 
         _processes.Fail = true;
         Tick();
@@ -280,14 +282,67 @@ public sealed class GameSessionServiceTests : IDisposable
     }
 
     [Fact]
-    public void StartWatching_Twice_KeepsOneTimer()
+    public async Task StartWatching_Twice_KeepsOneTimer()
     {
+        await _games.SaveAsync(Game(startWithGame: true), Ct);
         GameSessionService service = Service();
 
         _ui.Invoke(service.StartWatching);
         _ui.Invoke(service.StartWatching);
 
         _clock.TimersCreated.ShouldBe(1);
+    }
+
+    /// <summary>A-05, E-08: looking at every process every five seconds was the only noticeable load of an idle RigShift.</summary>
+    [Fact]
+    public async Task StartWatching_NoGameAsksForIt_NeverLooksAtTheProcesses()
+    {
+        await _games.SaveAsync(Game(startWithGame: false), Ct);
+        GameSessionService service = Service();
+
+        _ui.Invoke(service.StartWatching);
+        Tick();
+
+        _clock.TimersCreated.ShouldBe(0);
+        _processes.Looks.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Watch_GameAsksForItLater_StartsWatching_AndLeavesItAloneWhileItRuns()
+    {
+        // Ticking "start with the game" for a game that runs right now must not switch the machine under it.
+        GameEntry game = Game(startWithGame: false);
+        await _games.SaveAsync(game, Ct);
+        GameSessionService service = Service();
+        _ui.Invoke(service.StartWatching);
+        _processes.Set("iRacing");
+
+        await _games.SaveAsync(game with { StartWithGame = true }, Ct);
+        Tick();
+        Tick();
+
+        _clock.TimersCreated.ShouldBe(1);
+        service.IsRunning(game.Id).ShouldBeFalse();
+
+        _processes.Set();
+        Tick();
+        _processes.Set("iRacing");
+        Tick();
+
+        service.IsRunning(game.Id).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Watch_LastGameStopsAsking_StopsTheTimer()
+    {
+        GameEntry game = Game(startWithGame: true);
+        await _games.SaveAsync(game, Ct);
+        GameSessionService service = Service();
+        _ui.Invoke(service.StartWatching);
+
+        await _games.SaveAsync(game with { StartWithGame = false }, Ct);
+
+        _clock.TimersDisposed.ShouldBe(1);
     }
 
     /// <summary>A started game that runs until the test lets it go or the session is cancelled.</summary>
@@ -331,6 +386,14 @@ public sealed class GameSessionServiceTests : IDisposable
             }
         }
 
+        public int Looks { get; private set; }
+
+        public IReadOnlySet<string> FindRunning(IReadOnlySet<string> names)
+        {
+            Looks++;
+            return List().Select(p => p.Name).Where(names.Contains).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
         public bool IsRunning(string processName) =>
             List().Any(p => string.Equals(p.Name, processName, StringComparison.OrdinalIgnoreCase));
 
@@ -344,24 +407,32 @@ public sealed class GameSessionServiceTests : IDisposable
 
         public int TimersCreated { get; private set; }
 
+        public int TimersDisposed { get; private set; }
+
         public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
         {
             TimersCreated++;
             _tick = callback;
-            return new Inert();
+            return new Inert(this);
         }
 
         public void Tick() => _tick?.Invoke(null);
 
-        private sealed class Inert : ITimer
+        private sealed class Inert(WatchClock clock) : ITimer
         {
             public bool Change(TimeSpan dueTime, TimeSpan period) => true;
 
             public void Dispose()
             {
+                clock.TimersDisposed++;
+                clock._tick = null;
             }
 
-            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
         }
     }
 }

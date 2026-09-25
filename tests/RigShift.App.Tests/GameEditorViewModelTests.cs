@@ -5,9 +5,11 @@ using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
+using RigShift.Core.Topology;
 using Serilog.Core;
 using Shouldly;
 using Xunit;
@@ -95,6 +97,57 @@ public sealed class GameEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
     }
 
+    /// <summary>Every field counts for the save bar: a hand-kept list of names used to decide, and a field missing from it lost changes.</summary>
+    [Fact]
+    public void EveryField_MakesDirty()
+    {
+        Profile rig = Rig();
+        GameEntry game = Game("iRacing");
+        var windows = new WindowLayout
+        {
+            CapturedAt = DateTimeOffset.UtcNow,
+            Windows = [new WindowPlacement { ProcessName = "SimHub", Title = "SimHub", Bounds = new PixelRect(0, 0, 800, 600) }],
+        };
+        Action<GameEditorViewModel>[] changes =
+        [
+            e => e.Name = "iRacing 2",
+            e => e.LaunchTarget = "44690",
+            e => e.ProcessName = "iRacingSim64DX11",
+            e => e.LauncherProcessName = "iRacingUI",
+            e => e.StartWithGame = true,
+            e => e.StopApps = !e.StopApps,
+            e => e.WindowLayout = windows,
+            e => e.Hotkey = CtrlAltR,
+            e => e.SelectedProfile = e.ProfileOptions.First(o => o.Key == rig.Id.ToString()),
+            e => e.SelectedEnd = e.EndChoices.First(c => c.Key == nameof(SessionEnd.LauncherProcess)),
+            e => e.SelectedExit = e.ExitChoices.First(c => c.Key == nameof(GameExitKind.PreviousProfile)),
+            e => e.SelectedIcon = e.IconChoices.First(c => c.Key is not null),
+        ];
+
+        for (int i = 0; i < changes.Length; i++)
+        {
+            GameEditorViewModel editor = Editor(game, profiles: [rig], games: [game]);
+            changes[i](editor);
+            editor.IsDirty.ShouldBeTrue($"change {i}");
+        }
+    }
+
+    /// <summary>The tab carries one dot for launch and hotkey; picking what starts has to clear it.</summary>
+    [Fact]
+    public void PickingWhatStarts_ClearsTheDotOnTheGameTab()
+    {
+        GameEntry blank = Game("iRacing") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = string.Empty } };
+        GameEditorViewModel editor = Editor(blank, isNew: true);
+        editor.HasGameTabProblem.ShouldBeTrue();
+        var changed = new List<string?>();
+        editor.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        editor.SetExecutable(@"D:\Games\AMS2\AMS2AVX.exe");
+
+        editor.HasGameTabProblem.ShouldBeFalse();
+        changed.ShouldContain(nameof(GameEditorViewModel.HasGameTabProblem));
+    }
+
     [Fact]
     public void Name_MissingTooLongOrTaken_IsAProblem()
     {
@@ -123,14 +176,14 @@ public sealed class GameEditorViewModelTests : IDisposable
         GameEditorViewModel editor = Editor(Game("iRacing"));
 
         editor.LaunchTarget = " ";
-        editor.AddApp(string.Empty);
+        editor.AppList.Add(string.Empty);
 
         editor.HasLaunchProblem.ShouldBeTrue();
         editor.HasGameTabProblem.ShouldBeTrue();
         editor.HasAppsProblem.ShouldBeTrue();
         editor.ProblemCount.ShouldBe(2);
 
-        editor.Apps[0].Path = @"C:\Tools\CrewChief.exe";
+        editor.AppList.Items[0].Path = @"C:\Tools\CrewChief.exe";
         editor.HasAppsProblem.ShouldBeFalse();
         editor.ProblemCount.ShouldBe(1);
     }
@@ -199,7 +252,7 @@ public sealed class GameEditorViewModelTests : IDisposable
 
         editor.Hotkey.ShouldBe(CtrlAltD);
         editor.HasHotkey.ShouldBeTrue();
-        editor.HotkeyHint.ShouldBe(Loc.Instance["Editor_HotkeyHint"]);
+        editor.HotkeyHint.ShouldBe(Loc.Instance["Game_HotkeyHint"]);
         _registrar.Held.ShouldBeEmpty("the probe must not keep the combination");
 
         editor.ClearHotkeyCommand.Execute(null);
@@ -275,11 +328,11 @@ public sealed class GameEditorViewModelTests : IDisposable
         };
         GameEditorViewModel editor = Editor(game);
 
-        editor.MoveAppUpCommand.Execute(editor.Apps[0]);
+        editor.AppList.MoveUpCommand.Execute(editor.AppList.Items[0]);
         editor.IsDirty.ShouldBeFalse("the first app cannot move up");
 
-        editor.MoveAppDownCommand.Execute(editor.Apps[0]);
-        editor.RemoveAppCommand.Execute(editor.Apps[2]);
+        editor.AppList.MoveDownCommand.Execute(editor.AppList.Items[0]);
+        editor.AppList.RemoveCommand.Execute(editor.AppList.Items[2]);
 
         editor.ToGame().Apps.Select(a => a.Path).ShouldBe([@"C:\b.exe", @"C:\a.exe"]);
         editor.IsDirty.ShouldBeTrue();
@@ -301,7 +354,7 @@ public sealed class GameEditorViewModelTests : IDisposable
     {
         GameEditorViewModel editor = Editor(Game("iRacing"));
 
-        editor.SelectedUsbDevice = editor.UsbDevices.First(c => c.Key == Wheelbase);
+        editor.AppList.WaitDevice.Selected = editor.AppList.WaitDevice.Choices.First(c => c.Key == Wheelbase);
 
         GameEntry built = editor.ToGame();
         built.AppsWaitForUsbDeviceId.ShouldBe(Wheelbase);
@@ -374,13 +427,13 @@ public sealed class GameEditorViewModelTests : IDisposable
     {
         IGameStore store = Substitute.For<IGameStore>();
         store.LoadAllAsync(Arg.Any<CancellationToken>()).Returns(new GameLoadResult([], null));
-        store.SaveAsync(Arg.Any<GameEntry>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full"));
+        store.SaveAsync(Arg.Any<GameEntry>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full", unchecked((int)0x80070070)));
         var catalog = new GameCatalog(store, _host.Catalog, Logger.None);
         GameEditorViewModel editor = Editor(Game("iRacing"), isNew: true, catalog: catalog);
 
         (await editor.SaveAsync()).ShouldBeFalse();
 
-        editor.ErrorMessage.ShouldNotBeNull().ShouldContain("disk full");
+        editor.ErrorMessage.ShouldBe(Loc.Instance["Error_DiskFull"]);
         editor.IsNew.ShouldBeTrue();
         editor.IsDirty.ShouldBeTrue();
 
@@ -415,16 +468,12 @@ public sealed class GameEditorViewModelTests : IDisposable
         IReadOnlyList<GameEntry>? games = null,
         GameCatalog? catalog = null)
     {
-        var editor = new GameEditorViewModel(
-            game,
-            isNew,
+        var context = new GameEditorContext(
             profiles ?? [],
             games ?? [game],
-            [new Choice(null, "Start right away"), new Choice(Wheelbase, "Wheelbase")],
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [Wheelbase] = "Fanatec Wheelbase" },
-            catalog ?? _catalog,
-            _hotkeys,
-            Logger.None);
+            new AppsWaitDeviceChoice(game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, [new UsbDevice(Wheelbase, "Fanatec Wheelbase")], [], null));
+        var editor = new GameEditorViewModel(
+            game, isNew, context, new GameEditorServices(catalog ?? _catalog, _hotkeys, new FakeAppPicker(), Logger.None));
         _editors.Add(editor);
         return editor;
     }

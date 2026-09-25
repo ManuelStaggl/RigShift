@@ -12,8 +12,6 @@ using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
 using RigShift.App.Views.Pages;
-using RigShift.Core.Abstractions;
-using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Topology;
 using RigShift.Windows.Ui;
@@ -21,69 +19,6 @@ using Serilog;
 using Wpf.Ui.Appearance;
 
 namespace RigShift.App.Services;
-
-/// <summary><see cref="ISwitchConfirmation"/> as a countdown window on the new primary display.</summary>
-public sealed class WpfSwitchConfirmation(ProfileCatalog catalog, ActiveProfileMatcher matcher) : ISwitchConfirmation
-{
-    public Task<ConfirmationResult> ConfirmAsync(Profile profile, DisplaySnapshot before, TimeSpan timeout, CancellationToken cancellationToken) =>
-        Application.Current.Dispatcher
-            .InvokeAsync(() => ConfirmationWindow.ShowAsync(ViewFor(profile, before), timeout, cancellationToken))
-            .Task
-            .Unwrap();
-
-    /// <summary>The two pictures and their names; the profile the switch came from is looked up in the old snapshot.</summary>
-    private ConfirmationView ViewFor(Profile profile, DisplaySnapshot before)
-    {
-        ArgumentNullException.ThrowIfNull(profile);
-        IReadOnlyList<TopologyDisplay> beforeTopology = before is null
-            ? []
-            : TopologyDisplays.From(ProfileEditing.CurrentArrangement(before, [], catalog.KnownDisplayNames));
-        string beforeName = (before is not null ? matcher.FindActive(catalog.Profiles, before)?.Name : null)
-            ?? Loc.Instance["Confirm_Before"];
-        return new ConfirmationView(profile.Id, beforeTopology, beforeName, TopologyDisplays.From(profile.Displays), profile.Name);
-    }
-}
-
-/// <summary>Hidden top-level window that receives <c>WM_DISPLAYCHANGE</c> (message-only windows do not get broadcasts).</summary>
-public sealed class DisplayChangeWatcher : IDisposable
-{
-    private readonly HwndSource _source;
-    private readonly DispatcherTimer _debounce;
-
-    public DisplayChangeWatcher()
-    {
-        _source = new HwndSource(new HwndSourceParameters("RigShift.DisplayChangeWatcher") { Width = 0, Height = 0, WindowStyle = 0 });
-        _source.AddHook(WndProc);
-
-        // A topology change sends a burst of messages; react once when it has settled.
-        _debounce = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
-        _debounce.Tick += (_, _) =>
-        {
-            _debounce.Stop();
-            DisplaysChanged?.Invoke(this, EventArgs.Empty);
-        };
-    }
-
-    public event EventHandler? DisplaysChanged;
-
-    public void Dispose()
-    {
-        _debounce.Stop();
-        _source.RemoveHook(WndProc);
-        _source.Dispose();
-    }
-
-    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
-    {
-        if (msg == NativeWindow.WmDisplayChange)
-        {
-            _debounce.Stop();
-            _debounce.Start();
-        }
-
-        return 0;
-    }
-}
 
 /// <summary>Tray icon: left click opens the profile popup, right click (or the keyboard menu key) the context menu.</summary>
 public sealed class TrayIconService : IDisposable
@@ -97,7 +32,8 @@ public sealed class TrayIconService : IDisposable
     private ApplicationTheme? _popupTheme;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    private readonly ProfilesViewModel _profiles;
+    /// <summary>Resolved on use: the profiles page must not be built before the tray icon appears (v4 finding A-06).</summary>
+    private readonly Func<ProfilesViewModel> _profiles;
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
     private readonly AutomationService _automation;
@@ -115,7 +51,7 @@ public sealed class TrayIconService : IDisposable
         SwitchCoordinator coordinator,
         TrayPopupView popup,
         TrayPopupViewModel popupViewModel,
-        ProfilesViewModel profiles,
+        Func<ProfilesViewModel> profiles,
         IAppShell shell,
         UpdateService updates,
         HotkeyService hotkeys,
@@ -177,20 +113,23 @@ public sealed class TrayIconService : IDisposable
             popup.Resources.MergedDictionaries.Remove(nudge);
             _log.Debug("Tray popup resources refreshed for theme {Theme}", theme);
         });
-        catalog.Changed += (_, _) => OnUi(Refresh);
-        Loc.Instance.PropertyChanged += (_, _) => OnUi(Refresh);
-        coordinator.SwitchCompleted += (_, record) => OnUi(() =>
+        catalog.ProfilesChanged += (_, _) => OnUi(Refresh);
+        catalog.PropertyChanged += (_, e) =>
         {
-            profiles.ShowSwitchResult(record);
-
-            // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
-            Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked);
-        });
-        coordinator.AppsCompleted += (_, record) => OnUi(() =>
-        {
-            if (SwitchMessages.ForAppsNotification(record) is { } apps)
+            if (e.PropertyName == nameof(ProfileCatalog.ActiveProfile))
             {
-                Notify(apps);
+                OnUi(Refresh);
+            }
+        };
+        Loc.Instance.PropertyChanged += (_, _) => OnUi(Refresh);
+        // A failed or blocked switch leads to About & help: recent switches, the log folder and the diagnostic report.
+        coordinator.SwitchCompleted += (_, record) => OnUi(() =>
+            Notify(SwitchMessages.ForNotification(record), opensAbout: record.Outcome is SwitchOutcome.Failed or SwitchOutcome.Blocked));
+        coordinator.FollowUpCompleted += (_, record) => OnUi(() =>
+        {
+            if (SwitchMessages.ForFollowUpNotification(record) is { } followUp)
+            {
+                Notify(followUp);
             }
         });
         coordinator.WaitingForDisplays += (_, names) => OnUi(() => Notify((
@@ -198,6 +137,7 @@ public sealed class TrayIconService : IDisposable
             Loc.Format("Result_WaitingText", string.Join(", ", names), (int)switchOptions.MissingDisplayWaitBudget.TotalSeconds),
             NotificationIcon.Info)));
         coordinator.BusyRejected += (_, _) => OnUi(() => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info)));
+        coordinator.AllDisplaysOnCompleted += (_, report) => OnUi(() => Notify(SwitchMessages.ForAllDisplaysOn(report)));
         _updates = updates;
         updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true));
         updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true));
@@ -350,6 +290,14 @@ public sealed class TrayIconService : IDisposable
         Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
     }
 
+    /// <summary>A link, Stream Deck key or shortcut that could not run: its caller has no console to say why.</summary>
+    public void ShowRefusedCommand(string text) =>
+        OnUi(() => Notify(("RigShift", text, NotificationIcon.Warning), click: null));
+
+    /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
+    public void ShowKeepsRunningHint() =>
+        OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NotificationIcon.Info), click: null));
+
     private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false) =>
         Notify(message, opensAbout ? () => _shell.ShowMainWindow(typeof(AboutPage)) : null);
 
@@ -389,75 +337,70 @@ public sealed class TrayIconService : IDisposable
     {
         ContextMenu menu = _icon.ContextMenu ?? new ContextMenu();
         menu.Items.Clear();
-
-        foreach (ProfileItem item in _catalog.Items)
+        foreach (TrayMenuEntry entry in TrayMenuModel.Build(MenuState()))
         {
-            var entry = new MenuItem
-            {
-                Header = item.Name,
-                IsChecked = item.IsActive,
-                InputGestureText = item.Profile.Hotkey is { } hotkey ? HotkeyFormat.Format(hotkey) : string.Empty,
-            };
-            Profile profile = item.Profile;
-            entry.Click += async (_, _) => await _coordinator.SwitchAsync(profile);
-            menu.Items.Add(entry);
+            menu.Items.Add(entry.IsSeparator ? new Separator() : MenuItemFor(entry));
         }
 
-        if (_catalog.Items.Count == 0)
-        {
-            menu.Items.Add(new MenuItem { Header = Loc.Instance["Tray_NoProfiles"], IsEnabled = false });
-        }
-
-        // Games below the profiles, each starting its session. Flat rather than in a submenu: starting a race is the
-        // one thing the tray is there for, and nobody has dozens of games configured.
-        if (_games.Items.Count > 0)
-        {
-            menu.Items.Add(new Separator());
-            foreach (GameItem item in _games.Items)
-            {
-                GameEntry game = item.Game;
-                var entry = new MenuItem
-                {
-                    Header = Loc.Format("Tray_PlayGame", item.Name),
-                    IsEnabled = !_sessions.IsRunning(game.Id),
-                    InputGestureText = game.Hotkey is { } gameHotkey ? HotkeyFormat.Format(gameHotkey) : string.Empty,
-                };
-                entry.Click += (_, _) => _sessions.Start(game);
-                menu.Items.Add(entry);
-            }
-        }
-
-        menu.Items.Add(new Separator());
-        menu.Items.Add(Command(Loc.Instance["Tray_SaveCurrent"], () =>
-        {
-            _shell.ShowMainWindow(typeof(ProfilesPage));
-            _profiles.NewFromCurrentCommand.Execute(null);
-        }));
-        menu.Items.Add(Command(Loc.Instance["Tray_Open"], () => _shell.ShowMainWindow()));
-        menu.Items.Add(Command(Loc.Instance["Tray_Settings"], () => _shell.ShowMainWindow(typeof(SettingsPage))));
-        if (_automation.Rules.Count > 0)
-        {
-            var pause = new MenuItem { Header = Loc.Instance["Automation_Pause"], IsCheckable = true, IsChecked = _automation.IsPaused };
-            pause.Click += async (_, _) => await _automation.SetPausedAsync(pause.IsChecked);
-            menu.Items.Add(pause);
-        }
-
-        menu.Items.Add(new Separator());
-        if (_updates.State is UpdateState.Ready or UpdateState.Available && _updates.TargetVersion is { } version)
-        {
-            MenuItem restart = Command(Loc.Format("Tray_RestartToUpdate", version), async () => await _updates.InstallNowAsync());
-            restart.IsEnabled = _updates.CanInstallNow;
-            menu.Items.Add(restart);
-        }
-
-        menu.Items.Add(Command(Loc.Instance["Tray_Exit"], _shell.QuitByUser));
         _icon.ContextMenu = menu;
     }
 
-    private static MenuItem Command(string header, Action action)
+    private TrayMenuState MenuState() => new()
     {
-        var item = new MenuItem { Header = header };
-        item.Click += (_, _) => action();
+        Profiles = _catalog.Items,
+        Games = _games.Items,
+        RunningGames = _games.Items.Select(i => i.Game.Id).Where(_sessions.IsRunning).ToHashSet(),
+        HasAutomation = _automation.Rules.Count > 0,
+        AutomationPaused = _automation.IsPaused,
+        UpdateVersion = _updates.State is UpdateState.Ready or UpdateState.Available ? _updates.TargetVersion : null,
+        CanInstallUpdate = _updates.CanInstallNow,
+    };
+
+    private MenuItem MenuItemFor(TrayMenuEntry entry)
+    {
+        var item = new MenuItem
+        {
+            Header = entry.Header,
+            InputGestureText = entry.Gesture,
+            IsEnabled = entry.IsEnabled,
+            IsCheckable = entry.IsCheckable,
+            IsChecked = entry.IsChecked,
+        };
+
+        // A check box line has toggled itself by the time Click arrives.
+        item.Click += async (_, _) => await RunAsync(entry, item.IsChecked);
         return item;
+    }
+
+    private async Task RunAsync(TrayMenuEntry entry, bool isChecked)
+    {
+        switch (entry.Command)
+        {
+            case TrayMenuCommand.SwitchProfile when entry.Profile is { } profile:
+                await _coordinator.SwitchAsync(profile);
+                break;
+            case TrayMenuCommand.PlayGame when entry.Game is { } game:
+                _sessions.Start(game);
+                break;
+            case TrayMenuCommand.SaveCurrent:
+                _shell.ShowMainWindow(typeof(ProfilesPage));
+                _profiles().NewFromCurrentCommand.Execute(null);
+                break;
+            case TrayMenuCommand.Open:
+                _shell.ShowMainWindow();
+                break;
+            case TrayMenuCommand.Settings:
+                _shell.ShowMainWindow(typeof(SettingsPage));
+                break;
+            case TrayMenuCommand.PauseAutomation:
+                await _automation.SetPausedAsync(isChecked);
+                break;
+            case TrayMenuCommand.InstallUpdate:
+                await _updates.InstallNowAsync();
+                break;
+            case TrayMenuCommand.Exit:
+                _shell.QuitByUser();
+                break;
+        }
     }
 }

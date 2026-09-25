@@ -6,6 +6,7 @@
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
   xmlns:vm="clr-namespace:RigShift.App.ViewModels"
+  xmlns:services="clr-namespace:RigShift.App.Services"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
@@ -106,7 +107,8 @@
             AutomationProperties.Name="{loc:Tr List_New}"
             Click="OnNewClick"
             DockPanel.Dock="Right"
-            Style="{StaticResource RigShift.Button}">
+            Style="{StaticResource RigShift.Button}"
+            ToolTip="{loc:Tr List_NewProfileTip}">
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,6,0" VerticalAlignment="Center" FontSize="16" Symbol="Add16" />
               <TextBlock VerticalAlignment="Center" Text="{loc:Tr List_New}" />
@@ -164,7 +166,8 @@
                   <controls:StatusLine
                     Margin="0,2,0,0"
                     Kind="{Binding ListKind}"
-                    Text="{Binding ListStatus}" />
+                    Text="{Binding ListStatus}"
+                    ToolTip="{Binding DefaultTip}" />
                 </StackPanel>
               </DockPanel>
             </DataTemplate>
@@ -279,7 +282,7 @@
                   MaxLength="60"
                   Style="{StaticResource RigShift.Field.Title}"
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
-                  ToolTip="{loc:Tr Editor_Name}"
+                  ToolTip="{loc:Tr Editor_NameTip}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
                 <!-- The name is a field: a pencil shows it on hover (P-02), the frame comes from the field style. -->
                 <ui:SymbolIcon
@@ -398,9 +401,44 @@
         <StackPanel Grid.Row="3">
           <controls:InfoBar
             Margin="24,12,24,0"
-            Kind="Error"
+            Kind="{Binding BlockedKind}"
             Text="{Binding BlockedMessage}"
-            Visibility="{Binding HasBlockedMessage, Converter={StaticResource BoolToVisibility}}" />
+            Visibility="{Binding HasBlockedMessage, Converter={StaticResource BoolToVisibility}}">
+            <!-- The two ways out (U-11): switch without those displays, or read how to wake them. -->
+            <controls:InfoBar.Action>
+              <StackPanel Orientation="Horizontal">
+                <Button
+                  Height="28"
+                  Margin="0,0,4,0"
+                  Command="{Binding MarkMissingOptionalCommand}"
+                  Content="{loc:Tr Detail_MarkOptional}"
+                  Style="{StaticResource RigShift.Button.Ghost}"
+                  Visibility="{Binding CanMarkOptional, Converter={StaticResource BoolToVisibility}}" />
+                <Button
+                  Height="28"
+                  Command="{x:Static services:HelpLinks.MonitorStandby}"
+                  Content="{loc:Tr Detail_Help}"
+                  Style="{StaticResource RigShift.Button.Ghost}"
+                  Visibility="{Binding ShowMonitorHelp, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+            </controls:InfoBar.Action>
+          </controls:InfoBar>
+          <!-- The profile changed on disk under unsaved changes: they stay, the saved version is one click away. -->
+          <controls:InfoBar
+            Margin="24,12,24,0"
+            Kind="Warn"
+            Text="{loc:Tr Detail_ChangedElsewhere}"
+            Visibility="{Binding IsStale, Converter={StaticResource BoolToVisibility}}"
+            controls:LiveRegion.IsLive="True">
+            <controls:InfoBar.Action>
+              <Button
+                Height="28"
+                Command="{Binding ReloadCommand}"
+                Content="{loc:Tr Detail_Reload}"
+                Style="{StaticResource RigShift.Button.Ghost}"
+                ToolTip="{loc:Tr Detail_ReloadTip}" />
+            </controls:InfoBar.Action>
+          </controls:InfoBar>
           <controls:InfoBar
             Margin="24,12,24,0"
             Kind="{Binding DetailKind}"
@@ -544,8 +582,8 @@
                             AutomationProperties.Name="{loc:Tr Editor_CustomName}"
                             MaxLength="40"
                             Style="{StaticResource RigShift.Field}"
-                            Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
+                            Tag="{loc:Tr Editor_CustomNamePlaceholder}"
+                            Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                           <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
@@ -621,16 +659,16 @@
                 <!-- Hidden without an NVIDIA card: nothing here would mean anything then. -->
                 <controls:SettingRow
                   Margin="0,8,0,0"
-                  Caption="{Binding SurroundHint}"
-                  IsCaptionError="{Binding SurroundHintIsError}"
+                  Caption="{Binding Surround.Hint}"
+                  IsCaptionError="{Binding Surround.HintIsError}"
                   Title="{loc:Tr Editor_Surround}"
-                  Visibility="{Binding ShowSurround, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
+                  Visibility="{Binding Surround.IsVisible, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
                   <ListBox
-                    Width="240"
+                    Width="330"
                     AutomationProperties.Name="{loc:Tr Editor_Surround}"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding SurroundChoices}"
-                    SelectedItem="{Binding SelectedSurround}"
+                    ItemsSource="{Binding Surround.Choices}"
+                    SelectedItem="{Binding Surround.Selected}"
                     Style="{StaticResource RigShift.Segment}" />
                 </controls:SettingRow>
                 <!-- Desktop symbols: captured on demand, because they are only right while this profile's screens are
@@ -730,190 +768,7 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Apps_ProfileIntro}" />
-                <controls:SettingRow Caption="{loc:Tr Editor_AppsWaitHint}" Title="{loc:Tr Editor_AppsWaitDevice}">
-                  <ComboBox
-                    Width="260"
-                    AutomationProperties.HelpText="{loc:Tr Editor_AppsWaitHint}"
-                    AutomationProperties.Name="{loc:Tr Editor_AppsWaitDevice}"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding AppsWaitDeviceChoices}"
-                    SelectedItem="{Binding SelectedAppsWaitDevice}"
-                    Style="{StaticResource RigShift.Select}" />
-                </controls:SettingRow>
-                <controls:InfoBar
-                  Margin="0,16,0,0"
-                  Kind="Error"
-                  Text="{Binding AppsProblem}"
-                  Visibility="{Binding HasAppsProblem, Converter={StaticResource BoolToVisibility}}" />
-                <ItemsControl
-                  Margin="0,16,0,0"
-                  Focusable="False"
-                  ItemsSource="{Binding Apps}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:AppEditItem}">
-                      <!-- Two rows so the name and path keep their room at the smallest window width: program and
-                           card actions on top, the settings of the action below. -->
-                      <Border
-                        Margin="0,0,0,8"
-                        Padding="16,12"
-                        Style="{StaticResource RigShift.Card}">
-                        <Grid>
-                          <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" MinWidth="160" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                          </Grid.ColumnDefinitions>
-                          <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                          </Grid.RowDefinitions>
-                          <!-- The program's own icon; a generic symbol while the path points to nothing with one. -->
-                          <Grid Width="20" Height="20" Margin="0,0,12,0" VerticalAlignment="Center">
-                            <ui:SymbolIcon FontSize="16" Foreground="{DynamicResource RigShift.Brush.TextSecondary}" Symbol="Apps16">
-                              <ui:SymbolIcon.Style>
-                                <Style TargetType="ui:SymbolIcon">
-                                  <Setter Property="Visibility" Value="Collapsed" />
-                                  <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
-                                      <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                  </Style.Triggers>
-                                </Style>
-                              </ui:SymbolIcon.Style>
-                            </ui:SymbolIcon>
-                            <Image Source="{Binding Icon}" />
-                          </Grid>
-                          <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
-                            <TextBlock
-                              Style="{StaticResource RigShift.Text.BodyStrong}"
-                              Text="{Binding DisplayName}"
-                              TextTrimming="CharacterEllipsis"
-                              TextWrapping="NoWrap" />
-                            <!-- What is wrong with the path stands in words before it; colour alone does not carry it. -->
-                            <DockPanel>
-                              <TextBlock
-                                Margin="0,0,8,0"
-                                DockPanel.Dock="Left"
-                                Foreground="{DynamicResource RigShift.Brush.Error}"
-                                Style="{StaticResource RigShift.Text.ValueSecondary}"
-                                Text="{Binding PathNote}"
-                                Visibility="{Binding HasPathNote, Converter={StaticResource BoolToVisibility}}" />
-                              <TextBlock
-                                Style="{StaticResource RigShift.Text.ValueSecondary}"
-                                Text="{Binding Path}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap"
-                                ToolTip="{Binding Path}" />
-                            </DockPanel>
-                          </StackPanel>
-                          <Button
-                            Grid.Column="2"
-                            Height="28"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            AutomationProperties.HelpText="{Binding DisplayName}"
-                            Click="OnBrowseApp"
-                            Content="{loc:Tr App_Change}"
-                            Style="{StaticResource RigShift.Button}"
-                            ToolTip="{loc:Tr App_Browse}" />
-                          <Button
-                            Grid.Column="3"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_MoveUp}"
-                            Command="{Binding DataContext.Editor.MoveAppUpCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.Icon}"
-                            ToolTip="{loc:Tr App_MoveUp}">
-                            <ui:SymbolIcon FontSize="16" Symbol="ArrowUp16" />
-                          </Button>
-                          <Button
-                            Grid.Column="4"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_MoveDown}"
-                            Command="{Binding DataContext.Editor.MoveAppDownCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.Icon}"
-                            ToolTip="{loc:Tr App_MoveDown}">
-                            <ui:SymbolIcon FontSize="16" Symbol="ArrowDown16" />
-                          </Button>
-                          <Button
-                            Grid.Column="5"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Tr App_Remove}"
-                            Command="{Binding DataContext.Editor.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"
-                            CommandParameter="{Binding}"
-                            Style="{StaticResource RigShift.Button.IconDanger}"
-                            ToolTip="{loc:Tr App_Remove}">
-                            <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
-                          </Button>
-
-                          <Grid
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="5"
-                            Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="Auto" />
-                              <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,8,0">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Action}" />
-                              <ComboBox
-                                Width="120"
-                                AutomationProperties.Name="{loc:Tr App_Action}"
-                                DisplayMemberPath="Name"
-                                ItemsSource="{Binding KindChoices}"
-                                SelectedItem="{Binding SelectedKind}"
-                                Style="{StaticResource RigShift.Select}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_WaitShort}" />
-                              <StackPanel Orientation="Horizontal">
-                                <ui:NumberBox
-                                  Width="64"
-                                  AutomationProperties.Name="{loc:Tr App_Wait}"
-                                  ClearButtonEnabled="False"
-                                  MaxDecimalPlaces="0"
-                                  Maximum="300"
-                                  Minimum="0"
-                                  PlaceholderText="0"
-                                  SmallChange="1"
-                                  SpinButtonPlacementMode="Hidden"
-                                  Style="{StaticResource RigShift.Number}"
-                                  ToolTip="{loc:Tr App_Wait}"
-                                  Value="{Binding WaitSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                              </StackPanel>
-                            </StackPanel>
-                            <StackPanel
-                              Grid.Column="3"
-                              Margin="8,0,0,0"
-                              Visibility="{Binding IsStart, Converter={StaticResource BoolToVisibility}}">
-                              <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr App_Arguments}" />
-                              <TextBox
-                                AutomationProperties.Name="{loc:Tr App_Arguments}"
-                                Style="{StaticResource RigShift.Field.Value}"
-                                Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-                          </Grid>
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <Button
-                  HorizontalAlignment="Left"
-                  Click="OnAddApp"
-                  Style="{StaticResource RigShift.Button}">
-                  <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Add16" />
-                    <TextBlock Text="{loc:Tr App_Path}" />
-                  </StackPanel>
-                </Button>
+                <ContentPresenter Content="{Binding AppList}" />
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>
@@ -931,6 +786,20 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Trigger_Intro}" />
+                <!-- Hotkeys and USB rules need RigShift running after a restart (U-01). -->
+                <controls:InfoBar
+                  Margin="0,0,0,12"
+                  Kind="Warn"
+                  Text="{loc:Tr Trigger_AutostartOff}"
+                  Visibility="{Binding ShowAutostartOff, Converter={StaticResource BoolToVisibility}}">
+                  <controls:InfoBar.Action>
+                    <Button
+                      Height="28"
+                      Command="{Binding TurnOnAutostartCommand}"
+                      Content="{loc:Tr Trigger_AutostartTurnOn}"
+                      Style="{StaticResource RigShift.Button.Ghost}" />
+                  </controls:InfoBar.Action>
+                </controls:InfoBar>
                 <!-- Three cards of one kind (L-06): USB devices, hotkey, shortcut and command. -->
                 <Border DataContext="{Binding Rules}" Style="{StaticResource RigShift.Card.Group}">
                   <StackPanel>
@@ -1029,10 +898,22 @@
                                               </Ellipse.Style>
                                             </Ellipse>
                                           </Grid>
+                                          <!-- The state for screen readers too; a device that is not there is dimmed (U-25). -->
                                           <TextBlock
                                             VerticalAlignment="Center"
-                                            Style="{StaticResource RigShift.Text.Body}"
-                                            Text="{Binding Name}" />
+                                            AutomationProperties.Name="{Binding AccessibleName}"
+                                            Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                              <Style TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
+                                                <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
+                                                <Style.Triggers>
+                                                  <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
+                                                  </DataTrigger>
+                                                </Style.Triggers>
+                                              </Style>
+                                            </TextBlock.Style>
+                                          </TextBlock>
                                           <Button
                                             Width="24"
                                             Height="24"
@@ -1127,14 +1008,22 @@
                                 Text="{loc:Tr Automation_DuplicateDevice}"
                                 TextWrapping="Wrap"
                                 Visibility="{Binding HasDuplicateDevice, Converter={StaticResource BoolToVisibility}}" />
-                              <TextBlock
-                                Margin="0,4,0,0"
-                                Foreground="{DynamicResource RigShift.Brush.Warn}"
-                                Style="{StaticResource RigShift.Text.Caption}"
-                                Text="{loc:Tr Automation_PowerSavingText}"
-                                TextWrapping="Wrap"
-                                ToolTip="{loc:Tr Automation_PowerSavingTitle}"
-                                Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}" />
+                              <StackPanel Visibility="{Binding HasPowerWarning, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock
+                                  Margin="0,4,0,0"
+                                  Foreground="{DynamicResource RigShift.Brush.Warn}"
+                                  Style="{StaticResource RigShift.Text.Caption}"
+                                  Text="{loc:Tr Automation_PowerSavingText}"
+                                  TextWrapping="Wrap"
+                                  ToolTip="{loc:Tr Automation_PowerSavingTitle}" />
+                                <!-- What to do about it (U-11): the guide on the project page. -->
+                                <Button
+                                  Margin="0,4,0,0"
+                                  HorizontalAlignment="Left"
+                                  Command="{x:Static services:HelpLinks.UsbPowerSaving}"
+                                  Content="{loc:Tr Automation_PowerSavingFix}"
+                                  Style="{StaticResource RigShift.Link}" />
+                              </StackPanel>
                             </StackPanel>
                           </StackPanel>
                         </DataTemplate>
@@ -1158,16 +1047,14 @@
                   </controls:SettingRow.Style>
                   <StackPanel Orientation="Horizontal">
                     <TextBox
-                      x:Name="HotkeyBox"
                       Width="200"
                       AutomationProperties.HelpText="{loc:Tr Hotkey_RecordTip}"
                       AutomationProperties.Name="{loc:Tr Editor_Hotkey}"
-                      GotKeyboardFocus="OnHotkeyGotFocus"
+                      controls:HotkeyBox.Field="{Binding}"
                       IsReadOnly="True"
                       IsReadOnlyCaretVisible="False"
-                      LostKeyboardFocus="OnHotkeyLostFocus"
-                      PreviewKeyDown="OnHotkeyKeyDown"
                       Style="{StaticResource RigShift.Field.Value}"
+                      Tag="{loc:Tr Editor_HotkeyPlaceholder}"
                       Text="{Binding HotkeyText, Mode=OneWay}"
                       ToolTip="{loc:Tr Hotkey_RecordTip}"
                       controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />

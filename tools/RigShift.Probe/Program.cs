@@ -34,7 +34,7 @@ switch (command)
 {
     case "snapshot" when args.Length >= 2 && args[1] == "--raw":
         // The CCD input the snapshot is built from, for test fixtures (analysis finding L-04). Anonymise before committing.
-        Print(CcdDisplayConfigurator.QueryRaw());
+        Print(CcdDisplayConfigurator.QueryRaw(log));
         break;
 
     case "snapshot":

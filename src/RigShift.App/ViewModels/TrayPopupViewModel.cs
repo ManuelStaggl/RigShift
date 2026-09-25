@@ -45,7 +45,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
             automation.Changed += (_, _) => OnAutomationChanged();
         }
 
-        catalog.Changed += (_, _) => OnStatusChanged();
+        catalog.ProfilesChanged += (_, _) => OnStatusChanged();
         Loc.Instance.PropertyChanged += (_, _) => OnStatusChanged();
 
         // The games list is the catalog's own; nobody else marks its items as running, so the popup does it.
@@ -77,6 +77,9 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     public bool HasRules => _automation?.Rules.Count > 0;
 
     public bool IsPaused => _automation?.IsPaused == true;
+
+    /// <summary>What the pause button does next, and that rules are paused (v4 finding U-22).</summary>
+    public string PauseTip => Loc.Instance[IsPaused ? "Tray_RulesPausedTip" : "Automation_Pause"];
 
     /// <summary>"Switching to Sim Rig …" above the progress line; the plain sentence when the target is unknown.</summary>
     public string SwitchingText => Coordinator.SwitchingProfile is { } profile
@@ -152,6 +155,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasRules));
         OnPropertyChanged(nameof(IsPaused));
+        OnPropertyChanged(nameof(PauseTip));
     }
 
     private void OnCoordinatorChanged(object? sender, PropertyChangedEventArgs e)

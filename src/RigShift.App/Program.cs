@@ -19,12 +19,14 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        AppPaths paths = AppPaths.ForCurrentUser();
+
         // The log comes first, so Velopack's hooks and update steps are recorded too (analysis finding F-03).
-        Log.Logger = AppLogging.Create(App.Paths);
+        Log.Logger = AppLogging.Create(paths);
         CrashLogging.Install(Log.Logger);
         try
         {
-            return Run(args);
+            return Run(args, paths);
         }
         catch (Exception ex)
         {
@@ -38,7 +40,7 @@ public static class Program
         }
     }
 
-    private static int Run(string[] args)
+    private static int Run(string[] args, AppPaths paths)
     {
         // Velopack must run first: it handles install/update/uninstall hooks and may exit the process.
         // A pending update restarts the process to install itself. Only the tray app may do that: a CLI call would lose
@@ -48,7 +50,7 @@ public static class Program
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
         VelopackApp.Build()
             .SetLogger(new SerilogVelopackLogger(Log.Logger))
-            .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically())
+            .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically(paths))
             .OnAfterInstallFastCallback(_ => RegisterUriScheme())
             .OnAfterUpdateFastCallback(_ => RegisterUriScheme())
             .OnBeforeUninstallFastCallback(_ => BeforeUninstall())
@@ -61,6 +63,7 @@ public static class Program
                 Log.Warning(
                     "Ignored invalid link {Link}; only rigshift://apply/<profile name>, rigshift://toggle and rigshift://play/<game name> are supported",
                     args[0]);
+                CommandLineClient.ReportInvalidLink(args[0]);
                 return CliExitCodes.InvalidArguments;
             }
 
@@ -76,7 +79,7 @@ public static class Program
 
         if (request.Command != CliCommand.None)
         {
-            return CommandLineClient.Run(args, request);
+            return CommandLineClient.Run(args, request, paths);
         }
 
         int exitCode;
@@ -88,7 +91,7 @@ public static class Program
                 return CommandLineClient.ShowRunningInstance();
             }
 
-            var app = new App(request);
+            var app = new App(request, paths);
             app.InitializeComponent();
             exitCode = app.Run();
             instance.ReleaseMutex();
@@ -150,11 +153,18 @@ public static class Program
         {
             Log.Warning(ex, "Autostart entry could not be removed before uninstall");
         }
+
+        // The profile and game shortcuts would point at a deleted RigShift.exe.
+        if (Environment.ProcessPath is { } executable)
+        {
+            IReadOnlyList<string> deleted = ShortcutWriter.DeleteOwn(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), executable);
+            Log.Information("Removed {Count} desktop shortcut(s) before uninstall", deleted.Count);
+        }
     }
 
     /// <summary>Runs before logging is set up; an unreadable file means defaults, and the app logs that later.</summary>
-    private static bool InstallUpdatesAutomatically() =>
-        new JsonSettingsStore(App.Paths.SettingsFile, Logger.None)
+    private static bool InstallUpdatesAutomatically(AppPaths paths) =>
+        new JsonSettingsStore(paths.SettingsFile, Logger.None)
             .LoadAsync(CancellationToken.None)
             .GetAwaiter()
             .GetResult()

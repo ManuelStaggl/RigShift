@@ -17,6 +17,9 @@ public static class NativeWindow
 
     private const uint VkEscape = 0x1B;
 
+    /// <summary>What Windows shows next to RigShift while it holds up logging off or shutting down.</summary>
+    public static void ExplainShutdownBlock(nint hwnd, string reason) => PInvoke.ShutdownBlockReasonCreate(new HWND(hwnd), reason);
+
     /// <summary>Global Esc for the confirmation window: reverts from any screen, even if the window has no picture.</summary>
     public static bool RegisterEscapeHotkey(nint hwnd, int id) =>
         PInvoke.RegisterHotKey(new HWND(hwnd), id, HOT_KEY_MODIFIERS.MOD_NOREPEAT, VkEscape);

@@ -93,6 +93,27 @@ public sealed class SwitchOrchestratorSurroundTests
         _surround.ActiveGrid.ShouldBeNull();
     }
 
+    /// <summary>
+    /// Windows lists the displays of a grid that was just taken apart seconds later. The switch waits for them quietly
+    /// instead of asking the user to switch on monitors that are on (finding K-09).
+    /// </summary>
+    [Fact]
+    public async Task Switch_DisplaysAppearLateAfterSurroundOff_WaitsWithoutAskingForThem()
+    {
+        _surround.ActiveGrid = TripleScreen;
+        DisplaySnapshot inGrid = Snapshot(Attached(Desk4K));
+        var display = new FakeDisplayConfigurator([inGrid, inGrid, inGrid, DeskActive()]);
+        SwitchOrchestrator orchestrator = Create(display);
+        bool asked = false;
+        orchestrator.WaitingForDisplays += (_, _) => asked = true;
+
+        SwitchResult result = await orchestrator.SwitchAsync(WithSurround(on: false), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        asked.ShouldBeFalse();
+        display.QueryCount.ShouldBeGreaterThanOrEqualTo(4);
+    }
+
     /// <summary>A grid the driver refuses is the end of the switch: the arrangement the profile describes cannot exist.</summary>
     [Fact]
     public async Task Switch_DriverRefusesTheGrid_BlocksAndSaysWhatTheDriverAnswered()

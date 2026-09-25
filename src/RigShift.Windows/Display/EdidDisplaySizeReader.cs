@@ -1,3 +1,7 @@
+using System.Buffers.Binary;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Win32;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Fov;
@@ -24,38 +28,86 @@ public sealed class EdidDisplaySizeReader : IDisplaySizeReader
     public ScreenSize? Read(DisplayIdentity display)
     {
         ArgumentNullException.ThrowIfNull(display);
-        string? keyPath = Edid.RegistryKeyFor(display.TargetDevicePath);
-        if (keyPath is null)
+        if (Edid.Read(display.TargetDevicePath, _log) is not { } edid)
         {
-            _log.Debug("The device path of {Display} names no registry instance", DisplayNames.Of(display));
+            _log.Debug("No EDID for {Display}", DisplayNames.Of(display));
+            return null;
+        }
+
+        ScreenSize? size = Edid.PictureSize(edid);
+        _log.Debug("EDID of {Display}: {Width} x {Height} mm", display.FriendlyName, size?.WidthMm, size?.HeightMm);
+        return size;
+    }
+}
+
+/// <summary>The few EDID bytes the app needs; the parsing is pure so it is testable.</summary>
+public static class Edid
+{
+    private const string EnumDisplay = @"SYSTEM\CurrentControlSet\Enum\DISPLAY\";
+
+    /// <summary>
+    /// The EDID Windows keeps for the monitor behind <paramref name="targetDevicePath"/>; <c>null</c> when the path names no
+    /// monitor instance, there is no EDID or it cannot be read.
+    /// </summary>
+    public static byte[]? Read(string targetDevicePath, ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        if (RegistryKeyFor(targetDevicePath) is not { } keyPath)
+        {
             return null;
         }
 
         try
         {
             using RegistryKey? key = Registry.LocalMachine.OpenSubKey(keyPath);
-            if (key?.GetValue("EDID") is not byte[] edid)
-            {
-                _log.Debug("No EDID under {Key}", keyPath);
-                return null;
-            }
-
-            ScreenSize? size = Edid.PictureSize(edid);
-            _log.Debug("EDID of {Display}: {Width} x {Height} mm", display.FriendlyName, size?.WidthMm, size?.HeightMm);
-            return size;
+            return key?.GetValue("EDID") as byte[];
         }
         catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
         {
-            _log.Warning(ex, "EDID of {Display} could not be read", display.FriendlyName);
+            log.Warning(ex, "EDID under {Key} could not be read", keyPath);
             return null;
         }
     }
-}
 
-/// <summary>The few EDID bytes the app needs; pure so the parsing is testable.</summary>
-public static class Edid
-{
-    private const string EnumDisplay = @"SYSTEM\CurrentControlSet\Enum\DISPLAY\";
+    /// <summary>
+    /// Fingerprint of the serial number: the 32-bit number (bytes 12–15) and the text of the serial number descriptor (tag
+    /// 0xFF), hashed and cut to 16 hex digits. <c>null</c> when the monitor reports neither. Only ever compared: a filler
+    /// value that several monitors share simply tells them no more apart than their model does.
+    /// </summary>
+    public static string? SerialHash(byte[] edid)
+    {
+        ArgumentNullException.ThrowIfNull(edid);
+        if (edid.Length < 128)
+        {
+            return null;
+        }
+
+        uint number = BinaryPrimitives.ReadUInt32LittleEndian(edid.AsSpan(12, 4));
+        string text = DescriptorText(edid, 0xFF);
+        if (number == 0 && text.Length == 0)
+        {
+            return null;
+        }
+
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(string.Create(CultureInfo.InvariantCulture, $"{number:X8}|{text}")));
+        return Convert.ToHexString(hash, 0, 8);
+    }
+
+    /// <summary>The text of the first display descriptor with <paramref name="tag"/>, up to its line feed; empty without one.</summary>
+    private static string DescriptorText(byte[] edid, byte tag)
+    {
+        for (int offset = 54; offset <= 108; offset += 18)
+        {
+            if (edid[offset] == 0 && edid[offset + 1] == 0 && edid[offset + 2] == 0 && edid[offset + 3] == tag)
+            {
+                ReadOnlySpan<byte> text = edid.AsSpan(offset + 5, 13);
+                int end = text.IndexOf((byte)0x0A);
+                return Encoding.ASCII.GetString(end >= 0 ? text[..end] : text).Trim();
+            }
+        }
+
+        return string.Empty;
+    }
 
     /// <summary>
     /// <c>\\?\DISPLAY#XEC2389#4&amp;2f6eb3e3&amp;0&amp;UID20531#{guid}</c> → <c>SYSTEM\...\DISPLAY\XEC2389\4&amp;2f6eb3e3&amp;0&amp;UID20531\Device Parameters</c>.

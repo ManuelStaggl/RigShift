@@ -31,8 +31,9 @@ public sealed partial class GameCatalog : ObservableObject
         _log = log.ForContext<GameCatalog>();
         IsEmpty = true;
 
-        // The cards name the profile a game switches to, so a renamed profile has to reach them.
-        _profiles.Changed += (_, _) => Rebuild();
+        // The cards name the profile a game switches to, so a renamed profile has to reach them. Only the profiles
+        // themselves: a display change is no reason to rebuild every game (v4 finding A-03).
+        _profiles.ProfilesChanged += (_, _) => Rebuild();
         Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
@@ -72,14 +73,14 @@ public sealed partial class GameCatalog : ObservableObject
             GameLoadResult result = await _store.LoadAllAsync(cancellationToken);
             _games = result.Games;
             IsUnreadable = !result.IsComplete;
-            UnreadableMessage = result.Unreadable;
+            UnreadableMessage = result.Unreadable is { } reason ? Loc.Format("Games_Unreadable", reason) : null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Games could not be loaded");
             _games = [];
             IsUnreadable = true;
-            UnreadableMessage = ex.Message;
+            UnreadableMessage = Loc.Format("Games_Unreadable", UserMessages.Describe(ex));
         }
 
         Rebuild();

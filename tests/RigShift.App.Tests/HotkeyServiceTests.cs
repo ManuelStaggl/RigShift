@@ -1,4 +1,5 @@
 using NSubstitute;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
@@ -39,6 +40,8 @@ public sealed class HotkeyServiceTests : IDisposable
         _service.RegistrationFailed += (_, names) => _failures.Add(names);
     }
 
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
@@ -49,8 +52,55 @@ public sealed class HotkeyServiceTests : IDisposable
 
         _service.Start();
 
-        _registrar.Held.Values.ShouldBe([CtrlAltR, CtrlAltD], ignoreOrder: true);
+        _registrar.Held.Values.ShouldBe([CtrlAltR, CtrlAltD, HotkeyService.AllDisplaysOnHotkey], ignoreOrder: true);
         _failures.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task EmergencyHotkeyPressed_TurnsEveryDisplayOn()
+    {
+        _service.Start();
+
+        _registrar.Press(HotkeyService.AllDisplaysOnHotkey);
+
+        await UntilAsync(() => _host.Display.Applied.Count == 1, "the displays were not turned on");
+        (Core.Topology.TopologyPlan plan, ApplyOptions options) = _host.Display.Applied[0];
+        plan.Resolved.Count.ShouldBe(5);
+        options.UseDatabaseModes.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void EmergencyHotkeyTakenByAnotherApp_IsReportedOnce()
+    {
+        _registrar.TakenElsewhere.Add(HotkeyService.AllDisplaysOnHotkey);
+
+        _service.Start();
+        _service.Suspend();
+        _service.Resume();
+
+        _failures.ShouldHaveSingleItem().ShouldBe([Loc.Instance["Settings_AllOnHotkey"]]);
+    }
+
+    [Fact]
+    public void Suspend_ReleasesTheEmergencyHotkeyToo_AndResumeTakesItBack()
+    {
+        // Pressed while a hotkey is recorded, it must reach the field instead of turning every display on.
+        _service.Start();
+
+        _service.Suspend();
+        _registrar.Held.ShouldBeEmpty();
+
+        _service.Resume();
+        _registrar.Held.Values.ShouldBe([HotkeyService.AllDisplaysOnHotkey]);
+    }
+
+    [Fact]
+    public void UsedBy_EmergencyCombination_NamesTheEmergencyHotkey()
+    {
+        HotkeyUse? use = _service.UsedBy(HotkeyService.AllDisplaysOnHotkey, HotkeyUseKind.Profile, Guid.NewGuid());
+
+        use.ShouldNotBeNull().Kind.ShouldBe(HotkeyUseKind.AllDisplaysOn);
+        HotkeyService.UsedByText(use).ShouldContain(Loc.Instance["Settings_AllOnHotkey"]);
     }
 
     /// <summary>A game with a profile's combination used to fail as "taken by another application" – and only at startup was anyone told.</summary>
@@ -62,7 +112,7 @@ public sealed class HotkeyServiceTests : IDisposable
 
         await SaveGameAsync("iRacing", CtrlAltR);
 
-        _registrar.Held.Values.ShouldBe([CtrlAltR]);
+        _registrar.Held.Values.ShouldBe([CtrlAltR, HotkeyService.AllDisplaysOnHotkey], ignoreOrder: true);
         _failures.ShouldHaveSingleItem().ShouldBe(["iRacing"]);
     }
 
@@ -78,7 +128,7 @@ public sealed class HotkeyServiceTests : IDisposable
         _service.Resume();
 
         _failures.ShouldHaveSingleItem().ShouldBe(["Desk"]);
-        _registrar.Held.Values.ShouldBe([CtrlAltR]);
+        _registrar.Held.Values.ShouldBe([CtrlAltR, HotkeyService.AllDisplaysOnHotkey], ignoreOrder: true);
     }
 
     [Fact]
@@ -104,6 +154,20 @@ public sealed class HotkeyServiceTests : IDisposable
         var profile = new Profile { Id = Guid.NewGuid(), Name = name, Displays = [], Hotkey = hotkey };
         await _host.Catalog.SaveAsync(profile, Ct);
         return profile;
+    }
+
+    private static async Task UntilAsync(Func<bool> condition, string what)
+    {
+        DateTime giveUp = DateTime.UtcNow + Patience;
+        while (!condition())
+        {
+            if (DateTime.UtcNow > giveUp)
+            {
+                throw new TimeoutException(what);
+            }
+
+            await Task.Delay(20, Ct);
+        }
     }
 
     private async Task<GameEntry> SaveGameAsync(string name, Hotkey hotkey)

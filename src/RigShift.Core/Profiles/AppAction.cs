@@ -18,6 +18,12 @@ public sealed record AppAction
     public int WaitSeconds { get; init; }
 
     /// <summary>
+    /// For <see cref="AppActionKind.Start"/>: the wait ends as soon as the program shows a window – "SimHub is up",
+    /// instead of a guess at how long it takes. <see cref="WaitSeconds"/> is then the longest wait; without any, a minute.
+    /// </summary>
+    public bool WaitForWindow { get; init; }
+
+    /// <summary>
     /// For a game entry: whether this program runs before or after the game itself. Ignored in a profile, which has
     /// no game to be before or after. <see cref="AppTiming.BeforeGame"/> is 0 so that every app written before 1.10
     /// keeps its meaning.

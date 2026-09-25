@@ -3,6 +3,7 @@ using System.IO.Pipes;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using NSubstitute;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
@@ -44,6 +45,36 @@ public sealed class CommandPipeServerTests
         response.Output.ShouldContain("Rig");
     }
 
+    /// <summary>A shortcut or Stream Deck key with an old name has no console: the tray says it (v4 finding A-09).</summary>
+    [Theory]
+    [InlineData("apply", "Nope")]
+    [InlineData("rigshift://apply", null)]
+    public async Task NameNotFoundOrInvalidLink_IsReportedForTheTray(string first, string? second)
+    {
+        string pipeName = "RigShift.Tests." + Guid.NewGuid().ToString("N");
+        var store = new InMemoryProfileStore();
+        store.Profiles.Add(Rig());
+        var runner = new CommandRunner(store, new FakeDisplayConfigurator(DeskActive()), Substitute.For<IAudioController>(),
+            new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), Logger.None);
+        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), Logger.None, pipeName, work => work());
+        var refused = new ConcurrentQueue<string>();
+        server.Refused += (_, text) => refused.Enqueue(text);
+        server.Start();
+
+        await using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        await client.ConnectAsync(timeout.Token);
+        string[] args = second is null ? [first] : [first, second];
+        await PipeProtocol.WriteRequestAsync(client, new PipeRequest(args), timeout.Token);
+        PipeResponse response = await PipeProtocol.ReadResponseAsync(client, timeout.Token);
+
+        response.ExitCode.ShouldBe(second is null ? CliExitCodes.InvalidArguments : CliExitCodes.ProfileNotFound);
+        refused.ShouldHaveSingleItem().ShouldBe(second is null
+            ? Loc.Format("Tray_LinkInvalid", first)
+            : Loc.Format("Tray_ProfileNotFound", second));
+    }
+
     [Fact]
     public async Task NameTaken_LogsWarningAndServesOnceFree()
     {
@@ -57,7 +88,7 @@ public sealed class CommandPipeServerTests
 
         // Someone else owns the name with a single instance: the server cannot create its own.
         var blocker = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work());
+        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work(), retryDelay: TimeSpan.FromMilliseconds(50));
         server.Start();
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
@@ -93,7 +124,7 @@ public sealed class CommandPipeServerTests
 
         var squatter = new NamedPipeServerStream(pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
             PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work());
+        using var server = new CommandPipeServer(runner, Substitute.For<IAppShell>(), log, pipeName, work => work(), retryDelay: TimeSpan.FromMilliseconds(50));
         server.Start();
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);

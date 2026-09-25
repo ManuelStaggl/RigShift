@@ -44,7 +44,22 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private readonly IUsbPowerCheck _powerCheck;
     private readonly ActiveProfileMatcher _matcher;
     private readonly SettingsService _settings;
+    private readonly ISurroundController _surround;
+    private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
+
+    /// <summary>
+    /// The hotkeys the first and the second profile get when they are free (finding U-02). Function keys, because
+    /// Ctrl+Alt+digit is AltGr+digit on many layouts and would swallow ², ³, { and [ (German) or # (French).
+    /// </summary>
+    private static readonly Hotkey[] SuggestedHotkeys =
+    [
+        new() { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 },
+        new() { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x71 },
+    ];
+
+    /// <summary>Resource key of <see cref="SurroundHint"/>; <c>null</c> says nothing.</summary>
+    private string? _surroundHintKey;
 
     /// <summary>Devices seen so far on the trigger step; a device outside this set has just been turned on.</summary>
     private readonly HashSet<string> _seenDevices = new(StringComparer.OrdinalIgnoreCase);
@@ -64,6 +79,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         IUsbPowerCheck powerCheck,
         ActiveProfileMatcher matcher,
         SettingsService settings,
+        ISurroundController surround,
+        HotkeyService hotkeys,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(log);
@@ -74,6 +91,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _powerCheck = powerCheck;
         _matcher = matcher;
         _settings = settings;
+        _surround = surround;
+        _hotkeys = hotkeys;
         _log = log.ForContext<SetupWizardViewModel>();
         ProfileName = string.Empty;
         RebuildLists();
@@ -82,7 +101,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         PropertyChangedEventManager.AddHandler(Loc.Instance, OnLanguageChanged, string.Empty);
     }
 
-    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) => RebuildLists();
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RebuildLists();
+        OnPropertyChanged(nameof(SurroundHint));
+    }
 
     /// <summary>The two numbered lists; both carry translated text, so they are built, not bound to resources.</summary>
     private void RebuildLists()
@@ -105,7 +128,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public event EventHandler? CloseRequested;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary), nameof(HasRuleSummary), nameof(CanGoBack), nameof(DifferentText))]
+    [NotifyPropertyChangedFor(nameof(IsWelcome), nameof(IsProfileStep), nameof(IsSecond), nameof(IsTrigger), nameof(IsDone), nameof(ShowTry), nameof(StepTitle), nameof(StepText), nameof(StepCounter), nameof(RuleSummary), nameof(HasRuleSummary), nameof(CanGoBack), nameof(DifferentText), nameof(SurroundHint), nameof(HasSurroundHint))]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(BackCommand))]
     public partial SetupStep Step { get; private set; }
 
@@ -130,7 +153,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public string StepText => Step switch
     {
         SetupStep.Second => Loc.Format("Setup_SecondText", FirstProfile?.Name),
-        SetupStep.Done => Loc.Instance[CreatedRule is null ? "Setup_DoneNoRule" : "Setup_DoneWithRule"],
+        // Names only the ways that really exist: the hotkeys are on the cards below, when they were free (U-02).
+        SetupStep.Done => Loc.Instance[(CreatedRule is null ? "Setup_DoneNoRule" : "Setup_DoneWithRule") + (HasHotkeys ? string.Empty : "NoHotkey")],
         _ => Loc.Instance[$"Setup_{Step}Text"],
     };
 
@@ -144,16 +168,9 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(NameProblem), nameof(HasNameProblem))]
     public partial string ProfileName { get; set; }
 
-    // Cast to nullable: FirstOrDefault on the enum itself would turn "no name problem" into NameMissing (value 0).
-    public string? NameProblem => ProfileEditing.Validate(new Profile { Id = _editingId ?? Guid.Empty, Name = ProfileName, Displays = _currentDisplays }, _catalog.Profiles)
-        .Select(p => (ProfileProblem?)p)
-        .FirstOrDefault(p => p is ProfileProblem.NameMissing or ProfileProblem.NameTaken or ProfileProblem.NameTooLong) switch
-    {
-        ProfileProblem.NameMissing => Loc.Instance["Problem_NameMissing"],
-        ProfileProblem.NameTaken => Loc.Instance["Problem_NameTaken"],
-        ProfileProblem.NameTooLong => Loc.Instance["Problem_NameTooLong"],
-        _ => null,
-    };
+    public string? NameProblem => ProblemTexts.Of(
+        ProfileEditing.Validate(new Profile { Id = _editingId ?? Guid.Empty, Name = ProfileName, Displays = _currentDisplays }, _catalog.Profiles),
+        ProfileProblem.NameMissing, ProfileProblem.NameTooLong, ProfileProblem.NameTaken);
 
     public bool HasNameProblem => NameProblem is not null;
 
@@ -182,8 +199,27 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     public string DifferentText => Loc.Format("Setup_DifferentText", FirstProfile?.Name);
 
+    /// <summary>
+    /// One line on NVIDIA Surround for the profile steps: that the running grid comes along, or on the second step how
+    /// to get one in (finding U-05). Empty without an NVIDIA driver.
+    /// </summary>
+    public string SurroundHint => HasSurroundHint ? Loc.Instance[_surroundHintKey!] : string.Empty;
+
+    public bool HasSurroundHint => IsProfileStep && _surroundHintKey is not null;
+
     [ObservableProperty]
     public partial AudioSlot? Playback { get; private set; }
+
+    /// <summary>The microphone, preset with the current default: the headset's at the rig (finding U-09).</summary>
+    [ObservableProperty]
+    public partial AudioSlot? Recording { get; private set; }
+
+    /// <summary>The three lines under "How?" on the rig step: how Windows turns a display off (finding U-09).</summary>
+    [ObservableProperty]
+    public partial bool ShowHow { get; set; }
+
+    [RelayCommand]
+    private void ToggleHow() => ShowHow = !ShowHow;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProfileCommand), nameof(CreateRuleCommand), nameof(BackCommand))]
@@ -288,17 +324,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenDisplaySettings()
-    {
-        try
-        {
-            using Process? process = Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true });
-        }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
-        {
-            _log.Warning(ex, "Windows display settings could not be opened");
-        }
-    }
+    private void OpenDisplaySettings() => ShellFolders.OpenDisplaySettings(_log);
 
     /// <summary>Reads the active displays again; the window calls it after every display change.</summary>
     public async Task RefreshDisplaysAsync()
@@ -324,8 +350,17 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(HasNameProblem));
         SaveProfileCommand.NotifyCanExecuteChanged();
 
+        // Switching Surround on or off changes the displays, so this runs again after it.
+        SurroundState surround = await ReadSurroundAsync();
+        _surroundHintKey = surround.Availability != SurroundAvailability.Available ? null
+            : surround.IsActive ? "Setup_SurroundOn"
+            : Step == SetupStep.Second ? "Setup_SurroundHint"
+            : null;
+        OnPropertyChanged(nameof(SurroundHint));
+        OnPropertyChanged(nameof(HasSurroundHint));
+
         // A monitor's own speakers appear with the monitor; the choice made so far stays if the device is still there.
-        await FillPlaybackAsync(Playback?.Endpoint);
+        await FillAudioAsync(Playback?.Endpoint, Recording?.Endpoint);
         _log.Information("Setup assistant sees {Count} active display(s) at step {Step}, same as first profile: {Same}", _currentDisplays.Count, Step, MatchesFirst);
     }
 
@@ -336,12 +371,22 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         try
         {
             DisplaySnapshot snapshot = await QueryAsync();
-            Profile profile = ProfileEditing.Capture(ProfileName, snapshot, new AudioAssignment { Playback = Playback?.Endpoint }, _catalog.KnownDisplayNames) with
+            Profile profile = ProfileEditing.Capture(ProfileName, snapshot, new AudioAssignment { Playback = Playback?.Endpoint, Recording = Recording?.Endpoint }, _catalog.KnownDisplayNames) with
             {
                 // Coming back to a step overwrites what it saved before instead of leaving a second profile behind.
                 Id = _editingId ?? Guid.NewGuid(),
                 Icon = Step == SetupStep.First ? ProfileIcons.Desk : ProfileIcons.Rig,
             };
+
+            // A running grid is part of the arrangement, as in "From the current arrangement": without it the profile could
+            // never bring the wide display back (finding U-05). The other profile needs nothing - without a setting of
+            // its own it switches Surround off once this one uses it.
+            if (await ReadSurroundAsync() is { IsActive: true } surround)
+            {
+                profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
+            }
+
+            profile = profile with { Hotkey = HotkeyFor(profile.Id, Step == SetupStep.First ? 0 : 1) };
 
             if (ProfileEditing.Validate(profile, _catalog.Profiles).Count > 0
                 || (Step == SetupStep.Second && FirstProfile is { } first && _matcher.FindActive([first], snapshot) is not null))
@@ -377,7 +422,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Setup assistant could not save a profile");
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
         finally
         {
@@ -386,6 +431,27 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     }
 
     private bool CanSaveProfile() => IsProfileStep && !IsBusy && HasDisplays && !MatchesFirst && NameProblem is null;
+
+    /// <summary>
+    /// The hotkey of a step's profile: the one it had when the user came back to the step, else the suggestion when
+    /// nothing in RigShift and no other application holds it. <c>null</c> leaves the profile without one.
+    /// </summary>
+    private Hotkey? HotkeyFor(Guid id, int index)
+    {
+        if (_catalog.Profiles.FirstOrDefault(p => p.Id == id)?.Hotkey is { } kept)
+        {
+            return kept;
+        }
+
+        Hotkey suggested = SuggestedHotkeys[index];
+        if (_hotkeys.UsedBy(suggested, HotkeyUseKind.Profile, id) is not null || !_hotkeys.IsAvailable(suggested))
+        {
+            _log.Information("Setup assistant leaves the hotkey out: {Hotkey} is taken", HotkeyFormat.Format(suggested));
+            return null;
+        }
+
+        return suggested;
+    }
 
     /// <summary>One look at the USB devices; the window calls it every 2 seconds while the trigger step is open.</summary>
     public void PollUsb()
@@ -478,7 +544,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Setup assistant could not save the automation rule");
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
         finally
         {
@@ -502,6 +568,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _editingId = existing?.Id;
         ProfileName = existing?.Name ?? ProfileEditing.UniqueName(baseName, _catalog.Profiles.Select(p => p.Name));
         Playback = null;
+        Recording = null;
+        ShowHow = false;
         await RefreshDisplaysAsync();
     }
 
@@ -529,11 +597,76 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             });
         }
 
+        // Preset on (finding U-01): after the next restart hotkeys and the USB trigger only work while RigShift runs.
+        StartWithWindows = true;
+        OnPropertyChanged(nameof(HasHotkeys));
+        OnPropertyChanged(nameof(TryText));
+        OnPropertyChanged(nameof(CanTry));
         Step = SetupStep.Done;
     }
 
     /// <summary>The saved profiles, shown on the last step.</summary>
     public ObservableCollection<ProfileItem> Summary { get; } = [];
+
+    /// <summary>Whether a saved profile got a hotkey; the last step's text only promises hotkeys then.</summary>
+    public bool HasHotkeys => Summary.Any(item => item.Profile.Hotkey is not null);
+
+    /// <summary>"Start with Windows" on the last step; applied by <see cref="FinishCommand"/> and <see cref="TryItCommand"/>.</summary>
+    [ObservableProperty]
+    public partial bool StartWithWindows { get; set; }
+
+    /// <summary>
+    /// Where "Try it" switches: the profile that is not showing now, i.e. back to the first after the rig was set up
+    /// (finding U-02 – the one click that shows what RigShift does, with the countdown that takes it back).
+    /// </summary>
+    private Profile? TryTarget => _catalog.ActiveProfile?.Id == FirstProfile?.Id ? SecondProfile : FirstProfile;
+
+    public string TryText => Loc.Format("Setup_TryIt", TryTarget?.Name);
+
+    public bool CanTry => TryTarget is not null;
+
+    public bool ShowTry => IsDone && CanTry;
+
+    /// <summary>Set by "Try it": the profile to switch to once the assistant has closed.</summary>
+    public Profile? SwitchAfterClose { get; private set; }
+
+    [RelayCommand]
+    private void TryIt()
+    {
+        if (TryTarget is not { } target)
+        {
+            return;
+        }
+
+        ApplyAutostart();
+        SwitchAfterClose = target;
+        _log.Information("Setup assistant finished with a try: switching to {Profile}", target.Name);
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void Finish()
+    {
+        ApplyAutostart();
+        _log.Information("Setup assistant finished");
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ApplyAutostart()
+    {
+        try
+        {
+            if (_settings.Autostart.IsEnabled != StartWithWindows)
+            {
+                _settings.Autostart.SetEnabled(StartWithWindows);
+                _log.Information("Setup assistant turned start with Windows {State}", StartWithWindows ? "on" : "off");
+            }
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            _log.Warning(ex, "Setup assistant could not change start with Windows");
+        }
+    }
 
     /// <summary>What the created rule does, on the last step; <c>null</c> without a rule.</summary>
     public string? RuleSummary => CreatedRule is not null ? RuleText : null;
@@ -547,8 +680,8 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     internal async Task PreviewAsync(SetupStep step)
     {
         DisplaySnapshot snapshot = await QueryAsync();
-        FirstProfile = ProfileEditing.Capture(Loc.Instance["Setup_FirstName"], snapshot);
-        SecondProfile = ProfileEditing.Capture(Loc.Instance["Setup_SecondName"], snapshot);
+        FirstProfile = ProfileEditing.Capture(Loc.Instance["Setup_FirstName"], snapshot) with { Hotkey = SuggestedHotkeys[0] };
+        SecondProfile = ProfileEditing.Capture(Loc.Instance["Setup_SecondName"], snapshot) with { Hotkey = SuggestedHotkeys[1] };
         switch (step)
         {
             case SetupStep.Second:
@@ -574,35 +707,58 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     }
 #endif
 
-    private async Task FillPlaybackAsync(AudioEndpoint? keep)
+    private async Task FillAudioAsync(AudioEndpoint? keepPlayback, AudioEndpoint? keepRecording)
+    {
+        (IReadOnlyList<AudioDeviceInfo> render, AudioEndpoint? playback) = await ListAudioAsync(AudioDirection.Render, keepPlayback);
+        (IReadOnlyList<AudioDeviceInfo> capture, AudioEndpoint? recording) = await ListAudioAsync(AudioDirection.Capture, keepRecording);
+        Playback = new AudioSlot("Audio_Playback", "Audio_Unchanged", render, playback);
+        Recording = new AudioSlot("Audio_Recording", "Audio_Unchanged", capture, recording);
+    }
+
+    /// <summary>The devices of one direction and the one to preselect: the choice so far while it exists, else the default.</summary>
+    private async Task<(IReadOnlyList<AudioDeviceInfo> Devices, AudioEndpoint? Selected)> ListAudioAsync(AudioDirection direction, AudioEndpoint? keep)
     {
         IReadOnlyList<AudioDeviceInfo> devices;
         try
         {
-            devices = await Task.Run(() => _audio.ListAsync(AudioDirection.Render, CancellationToken.None));
+            devices = await _audio.ListAsync(direction, CancellationToken.None);
         }
         catch (COMException ex)
         {
-            _log.Warning(ex, "Playback devices could not be listed for the setup assistant");
+            _log.Warning(ex, "{Direction} devices could not be listed for the setup assistant", direction);
             devices = [];
         }
 
         AudioEndpoint? selected = keep is not null && devices.Any(d => string.Equals(d.Endpoint.EndpointId, keep.EndpointId, StringComparison.OrdinalIgnoreCase))
             ? keep
             : devices.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
-        Playback = new AudioSlot("Audio_Playback", "Audio_Unchanged", devices, selected);
+        return (devices, selected);
     }
 
     private async Task<DisplaySnapshot> QueryAsync()
     {
         try
         {
-            return await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            return await _display.QueryAsync(CancellationToken.None);
         }
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "Setup assistant could not read the current arrangement");
             return new DisplaySnapshot { TakenAt = DateTimeOffset.Now, Displays = [] };
+        }
+    }
+
+    /// <summary>The Surround state; when it cannot be read, the assistant says nothing about Surround and saves none.</summary>
+    private async Task<SurroundState> ReadSurroundAsync()
+    {
+        try
+        {
+            return await _surround.QueryAsync(CancellationToken.None);
+        }
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
+        {
+            _log.Warning(ex, "Setup assistant could not read the Surround state");
+            return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
         }
     }
 

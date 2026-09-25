@@ -20,13 +20,26 @@ namespace RigShift.App.Views;
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
-    private readonly IServiceProvider _services;
+    /// <summary>The rail's entries in order; each page is resolved from the container the first time it is shown.</summary>
+    internal static readonly IReadOnlyList<NavEntry> Pages =
+    [
+        new(typeof(OverviewPage), SymbolRegular.Home16, "Nav_Overview", Key.D1, Bottom: false),
+        new(typeof(ProfilesPage), SymbolRegular.Desktop16, "Nav_Profiles", Key.D2, Bottom: false),
+        new(typeof(GamesPage), SymbolRegular.Games16, "Nav_Games", Key.D3, Bottom: false),
+        new(typeof(FovPage), SymbolRegular.Eye16, "Nav_Fov", Key.D4, Bottom: false),
+        new(typeof(SettingsPage), SymbolRegular.Settings16, "Nav_Settings", Key.D5, Bottom: true),
+        new(typeof(AboutPage), SymbolRegular.QuestionCircle16, "Nav_About", Key.D6, Bottom: true),
+    ];
+
+    private readonly IServiceProvider _pages;
     private readonly IAppShell _shell;
     private readonly Dictionary<Type, ListBoxItem> _navItems = [];
     private readonly List<System.Windows.Controls.TextBlock> _navTexts = [];
     private readonly ProfileCatalog _catalog;
-    private readonly AutomationService? _automation;
+    private readonly AutomationService _automation;
     private readonly UpdateService _updates;
+    private readonly ViewModels.ProfilesViewModel _profiles;
+    private readonly ViewModels.GamesViewModel _games;
     private System.Windows.Shapes.Ellipse? _updateDot;
     private Type _page = typeof(OverviewPage);
     private bool _syncingNav;
@@ -34,14 +47,25 @@ public partial class MainWindow : FluentWindow
     /// <summary>The user's own choice with the toggle; <c>null</c> follows the window width.</summary>
     private bool? _compactChoice;
 
-    public MainWindow(IServiceProvider services, IAppShell shell, SwitchCoordinator coordinator)
+    /// <param name="pages">Only for the pages of <see cref="Pages"/>, built when first shown; a test checks that each is registered.</param>
+    public MainWindow(
+        IServiceProvider pages,
+        IAppShell shell,
+        SwitchCoordinator coordinator,
+        ProfileCatalog catalog,
+        AutomationService automation,
+        UpdateService updates,
+        ViewModels.ProfilesViewModel profiles,
+        ViewModels.GamesViewModel games)
     {
         ArgumentNullException.ThrowIfNull(coordinator);
-        _services = services;
+        _pages = pages;
         _shell = shell;
-        _catalog = services.GetRequiredService<ProfileCatalog>();
-        _automation = services.GetService<AutomationService>();
-        _updates = services.GetRequiredService<UpdateService>();
+        _catalog = catalog;
+        _automation = automation;
+        _updates = updates;
+        _profiles = profiles;
+        _games = games;
         InitializeComponent();
         _textScale = TextScale.Apply(this);
 
@@ -55,12 +79,10 @@ public partial class MainWindow : FluentWindow
             }
         };
 
-        AddNav(NavTop, typeof(OverviewPage), SymbolRegular.Home16, "Nav_Overview", Key.D1);
-        AddNav(NavTop, typeof(ProfilesPage), SymbolRegular.Desktop16, "Nav_Profiles", Key.D2);
-        AddNav(NavTop, typeof(GamesPage), SymbolRegular.Games16, "Nav_Games", Key.D3);
-        AddNav(NavTop, typeof(FovPage), SymbolRegular.Eye16, "Nav_Fov", Key.D4);
-        AddNav(NavBottom, typeof(SettingsPage), SymbolRegular.Settings16, "Nav_Settings", Key.D5);
-        AddNav(NavBottom, typeof(AboutPage), SymbolRegular.QuestionCircle16, "Nav_About", Key.D6);
+        foreach (NavEntry entry in Pages)
+        {
+            AddNav(entry.Bottom ? NavBottom : NavTop, entry);
+        }
 
         Progress.SetBinding(VisibilityProperty, new Binding(nameof(SwitchCoordinator.IsSwitching))
         {
@@ -75,11 +97,7 @@ public partial class MainWindow : FluentWindow
                 Dispatcher.InvokeAsync(ShowAppState);
             }
         };
-        if (_automation is not null)
-        {
-            _automation.Changed += (_, _) => Dispatcher.InvokeAsync(ShowAppState);
-        }
-
+        _automation.Changed += (_, _) => Dispatcher.InvokeAsync(ShowAppState);
         _updates.StateChanged += (_, _) => Dispatcher.InvokeAsync(ShowAppState);
         Loc.Instance.PropertyChanged += (_, _) => Dispatcher.InvokeAsync(() => { ShowAppState(); UpdateNavWidth(); });
         SizeChanged += (_, _) => UpdateNavWidth();
@@ -140,7 +158,7 @@ public partial class MainWindow : FluentWindow
         NavFooter.ToolTip = state;
         AutomationProperties.SetName(NavFooter, state);
         ActiveDot.Fill = (System.Windows.Media.Brush)FindResource(_catalog.ActiveProfile is null ? "RigShift.Brush.TextDisabled" : "RigShift.Brush.Ok");
-        bool paused = _automation?.IsPaused == true;
+        bool paused = _automation.IsPaused;
         PausedIcon.Visibility = paused ? Visibility.Visible : Visibility.Collapsed;
 
         // The narrow rail has room for one sign: paused rules outrank the profile dot.
@@ -164,14 +182,14 @@ public partial class MainWindow : FluentWindow
     {
         Type target = page ?? _page;
         if (IsLoaded && PageHost.Content is ProfilesPage && target != typeof(ProfilesPage)
-            && !await _services.GetRequiredService<ViewModels.ProfilesViewModel>().ConfirmLeaveAsync())
+            && !await _profiles.ConfirmLeaveAsync())
         {
             SyncNav(typeof(ProfilesPage));
             return;
         }
 
         if (IsLoaded && PageHost.Content is GamesPage && target != typeof(GamesPage)
-            && !await _services.GetRequiredService<ViewModels.GamesViewModel>().ConfirmLeaveAsync())
+            && !await _games.ConfirmLeaveAsync())
         {
             SyncNav(typeof(GamesPage));
             return;
@@ -186,7 +204,7 @@ public partial class MainWindow : FluentWindow
         SyncNav(_page);
         if (PageHost.Content?.GetType() != _page)
         {
-            PageHost.Navigate(_services.GetRequiredService(_page));
+            PageHost.Navigate(_pages.GetRequiredService(_page));
             while (PageHost.CanGoBack)
             {
                 PageHost.RemoveBackEntry();
@@ -211,12 +229,16 @@ public partial class MainWindow : FluentWindow
         BrandWindow.ApplyChrome(this);
     }
 
+    /// <summary>The window was closed by the user and went to the tray; RigShift keeps running.</summary>
+    public event EventHandler? HiddenToTray;
+
     protected override void OnClosing(CancelEventArgs e)
     {
         if (!_shell.IsExiting)
         {
             e.Cancel = true;
             Hide();
+            HiddenToTray?.Invoke(this, EventArgs.Empty);
         }
 
         base.OnClosing(e);
@@ -239,8 +261,9 @@ public partial class MainWindow : FluentWindow
         return geometry;
     }
 
-    private void AddNav(ListBox list, Type page, SymbolRegular symbol, string textKey, Key shortcut)
+    private void AddNav(ListBox list, NavEntry entry)
     {
+        (Type page, SymbolRegular symbol, string textKey, Key shortcut, _) = entry;
         var text = new System.Windows.Controls.TextBlock { VerticalAlignment = VerticalAlignment.Center };
         text.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
         var content = new StackPanel { Orientation = Orientation.Horizontal };
@@ -251,7 +274,18 @@ public partial class MainWindow : FluentWindow
 
         // The chosen page shows its symbol filled (N-03); the name is the tooltip while the rail is narrow.
         icon.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(ListBoxItem.IsSelected)) { Source = item });
-        item.SetBinding(ToolTipProperty, new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay });
+        // "Profiles (Ctrl+2)": the page keys are otherwise nowhere to be seen (v4 finding U-24).
+        var tip = new System.Windows.Controls.TextBlock();
+        tip.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new MultiBinding
+        {
+            StringFormat = "{0} ({1}+" + (shortcut - Key.D0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ")",
+            Bindings =
+            {
+                new Binding("[" + textKey + "]") { Source = Loc.Instance, Mode = BindingMode.OneWay },
+                new Binding("[Key_Ctrl]") { Source = Loc.Instance, Mode = BindingMode.OneWay },
+            },
+        });
+        item.ToolTip = new ToolTip { Content = tip };
         ToolTipService.SetPlacement(item, System.Windows.Controls.Primitives.PlacementMode.Right);
         _navTexts.Add(text);
         if (page == typeof(AboutPage))
@@ -288,6 +322,10 @@ public partial class MainWindow : FluentWindow
         _syncingNav = false;
         ShowPage(page);
     }
+
+    /// <summary>One entry of the navigation rail: the page, its symbol and name, and its Ctrl shortcut.</summary>
+    /// <param name="Bottom">In the lower group of the rail (settings, help).</param>
+    internal sealed record NavEntry(Type Page, SymbolRegular Symbol, string TextKey, Key Shortcut, bool Bottom);
 
     private sealed class NavigateCommand(MainWindow window, Type page) : ICommand
     {

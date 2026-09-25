@@ -59,7 +59,7 @@ public sealed class AutomationTriggerTests
     }
 
     [Fact]
-    public void StartRejected_Disarm_NoLoopButReconnectWithinDelayStartsAgain()
+    public void StartRejected_Disarm_NoLoopButAReconnectAfterARealGapStartsAgain()
     {
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
@@ -69,7 +69,51 @@ public sealed class AutomationTriggerTests
 
         _now += TimeSpan.FromMinutes(1);
         Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+        for (int poll = 0; poll < 6; poll++)
+        {
+            Poll(rule, Desk).ShouldBeEmpty();
+        }
+
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
+    }
+
+    [Fact]
+    public void StartRejected_Disarm_ShortGapDoesNotStart()
+    {
+        // K-10: the user turned the rig down and works at the desk; the wheelbase re-enumerating is no reconnect.
+        AutomationRule rule = WheelbaseRule();
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        _trigger.Disarm(rule, RetryMode.AfterReconnect, _now);
+
         Poll(rule, Desk).ShouldBeEmpty();
+        Poll(rule, Desk).ShouldBeEmpty();
+
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void BaselinePresent_OnePollGap_DoesNotStart()
+    {
+        // K-10: the wheelbase was on when RigShift started and drops out for a moment (hub reset, interference).
+        AutomationRule rule = WheelbaseRule(skip: true);
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+
+        Poll(rule, Desk).ShouldBeEmpty();
+
+        Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void RuleEndedTheSession_QuickReconnect_StartsAgain()
+    {
+        // After the end action switched back, the device coming back is a start, however soon.
+        AutomationRule rule = WheelbaseRule() with { ExitDelaySeconds = 0 };
+        Poll(rule, Desk);
+        Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
+        Poll(rule, Rig).ShouldBeEmpty();
+        Poll(rule, Rig).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Ended);
+
         Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem().Reason.ShouldBe(TriggerReason.Started);
     }
 

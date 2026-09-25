@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
@@ -13,7 +12,6 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Services;
 
-/// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
 /// <summary>The answer to "the same error keeps coming back".</summary>
 public enum RepeatedErrorChoice
 {
@@ -22,6 +20,7 @@ public enum RepeatedErrorChoice
     OpenLog,
 }
 
+/// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
 public enum UnsavedChoice
 {
     Save,
@@ -53,40 +52,43 @@ public interface IProfilePageDialogs
 /// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
 public sealed class ProfileDialogs : IProfilePageDialogs
 {
+    private readonly ProfileEditorServices _editorServices;
     private readonly ProfileCatalog _catalog;
     private readonly IDisplayConfigurator _display;
-    private readonly IDesktopIcons _desktopIcons;
     private readonly IAudioController _audio;
     private readonly SettingsService _settings;
-    private readonly HotkeyService _hotkeys;
     private readonly IUsbDeviceList _usbDevices;
     private readonly ISurroundController _surround;
-    private readonly IServiceProvider _services;
+    private readonly IUsbPowerCheck _powerCheck;
+    private readonly ActiveProfileMatcher _matcher;
+    private readonly DisplayChangeWatcher _displayChanges;
+    private readonly SwitchCoordinator _coordinator;
     private readonly ILogger _log;
 
+    /// <param name="editorServices">Handed to every editor; its catalog, displays, settings and log serve the dialogs too.</param>
     public ProfileDialogs(
-        ProfileCatalog catalog,
-        IDisplayConfigurator display,
+        ProfileEditorServices editorServices,
         IAudioController audio,
-        SettingsService settings,
-        HotkeyService hotkeys,
         IUsbDeviceList usbDevices,
-        IDesktopIcons desktopIcons,
         ISurroundController surround,
-        IServiceProvider services,
-        ILogger log)
+        IUsbPowerCheck powerCheck,
+        ActiveProfileMatcher matcher,
+        DisplayChangeWatcher displayChanges,
+        SwitchCoordinator coordinator)
     {
-        ArgumentNullException.ThrowIfNull(log);
-        _catalog = catalog;
-        _display = display;
+        ArgumentNullException.ThrowIfNull(editorServices);
+        _editorServices = editorServices;
+        _catalog = editorServices.Catalog;
+        _display = editorServices.Display;
+        _settings = editorServices.Settings;
         _audio = audio;
-        _settings = settings;
-        _hotkeys = hotkeys;
         _usbDevices = usbDevices;
-        _desktopIcons = desktopIcons;
         _surround = surround;
-        _services = services;
-        _log = log.ForContext<ProfileDialogs>();
+        _powerCheck = powerCheck;
+        _matcher = matcher;
+        _displayChanges = displayChanges;
+        _coordinator = coordinator;
+        _log = editorServices.Log.ForContext<ProfileDialogs>();
     }
 
     Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
@@ -101,7 +103,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         DisplaySnapshot snapshot;
         try
         {
-            snapshot = await Task.Run(() => _display.QueryAsync(CancellationToken.None));
+            snapshot = await _display.QueryAsync(CancellationToken.None);
         }
         catch (Win32Exception ex)
         {
@@ -136,20 +138,21 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         Core.Settings.AppSettings settings = _settings.Current;
         var rules = new ProfileRulesEditor(
             profile.Id, settings.AutomationRules ?? [], _catalog.Profiles, settings.DefaultProfileId, usbDevices, settings.UsbDeviceNames,
-            _services.GetRequiredService<IUsbPowerCheck>(), _log);
-        return new ProfileEditorViewModel(
-            profile, isNew, playback, recording, usbDevices, settings.UsbDeviceNames,
-            [.. ViewModels.UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames)],
-            confirmationEnabled: settings.ConfirmTimeoutSeconds > 0, surround, rules, _catalog, _display, _desktopIcons, _hotkeys, _settings, _log);
+            _powerCheck, _log);
+        var appsWaitDevice = new AppsWaitDeviceChoice(
+            profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDevices,
+            UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
+        var context = new ProfileEditorContext(
+            playback, recording, appsWaitDevice, surround, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
+            SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, _catalog.Profiles)?.Name);
+        return new ProfileEditorViewModel(profile, isNew, context, _editorServices);
     }
 
     /// <summary>The setup assistant; remembers that it was shown.</summary>
     /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
     public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
     {
-        var viewModel = new SetupWizardViewModel(
-            _catalog, _display, _audio, _usbDevices, _services.GetRequiredService<IUsbPowerCheck>(),
-            _services.GetRequiredService<ActiveProfileMatcher>(), _settings, _log);
+        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _surround, _editorServices.Hotkeys, _log);
 #if DEBUG
         if (previewStep is { } step)
         {
@@ -158,9 +161,10 @@ public sealed class ProfileDialogs : IProfilePageDialogs
 #else
         _ = previewStep;
 #endif
-        var window = new SetupWizardWindow(viewModel, _services.GetRequiredService<DisplayChangeWatcher>());
-        MainWindow main = _services.GetRequiredService<MainWindow>();
-        if (main.IsVisible)
+        var window = new SetupWizardWindow(viewModel, _displayChanges);
+
+        // Looked up rather than injected: asking the container for it would build the main window just to find it hidden.
+        if (System.Windows.Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault(w => w.IsVisible) is { } main)
         {
             window.Owner = main;
         }
@@ -181,6 +185,12 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         _log.Information("Setup assistant opening at step {Step}", viewModel.Step);
         window.ShowDialog();
         _log.Information("Setup assistant closed");
+
+        // "Try it" on the last step: the first real switch, with the countdown that takes it back (finding U-02).
+        if (viewModel.SwitchAfterClose is { } target)
+        {
+            await _coordinator.SwitchAsync(target);
+        }
     }
 
     /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
@@ -200,6 +210,15 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         await Ask(
             Loc.Instance["Interrupted_Title"], Loc.Format("Interrupted_Text", targetProfileName),
             Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
+
+    /// <summary>
+    /// Asks before quitting while a game session runs: without RigShift nothing switches back or closes the tools when the
+    /// game ends (v4 findings A-14, E-06). An update waits for the exit, so it simply comes later.
+    /// </summary>
+    public static async Task<bool> ConfirmQuitDuringGameAsync(string games) =>
+        await Ask(
+            Loc.Instance["QuitGame_Title"], Loc.Format("QuitGame_Text", games),
+            Loc.Instance["QuitGame_Quit"], DialogButtonKind.Danger, Loc.Instance["QuitGame_Stay"]);
 
     /// <summary>
     /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
@@ -325,7 +344,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
         {
             return await _surround.QueryAsync(CancellationToken.None);
         }
-        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
         {
             _log.Warning(ex, "Surround state could not be read for the editor");
             return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
@@ -349,7 +368,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     {
         try
         {
-            return await Task.Run(() => _audio.ListAsync(direction, CancellationToken.None));
+            return await _audio.ListAsync(direction, CancellationToken.None);
         }
         catch (COMException ex)
         {

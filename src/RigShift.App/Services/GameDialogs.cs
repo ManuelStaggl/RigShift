@@ -33,6 +33,13 @@ public interface IGamePageDialogs
     /// <summary>A program from the file dialog; <c>null</c> when cancelled.</summary>
     string? PickExecutable();
 
+    /// <summary>The game an entry starts: an installed one or a program; <c>null</c> when cancelled.</summary>
+    Task<PickedGame?> PickGameAsync();
+
+    /// <summary>The windows to put back, chosen from the open ones; <c>null</c> when cancelled.</summary>
+    /// <param name="current">What the entry has now, pre-selected.</param>
+    WindowLayout? CaptureWindows(WindowLayout? current);
+
     Task<bool> ConfirmDeleteAsync(string name);
 
     /// <param name="targetName">The game the user picked instead, when the question comes from the list.</param>
@@ -42,34 +49,33 @@ public interface IGamePageDialogs
 /// <summary>Builds the game detail's editor and opens the pickers, the window capture and the delete confirmation.</summary>
 public sealed class GameDialogs : IGamePageDialogs
 {
+    private readonly GameEditorServices _editorServices;
     private readonly GameCatalog _catalog;
     private readonly ProfileCatalog _profiles;
     private readonly IGameLibrary _library;
     private readonly IWindowLayout _windows;
     private readonly IUsbDeviceList _usbDevices;
     private readonly SettingsService _settings;
-    private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
 
+    /// <param name="editorServices">Handed to every editor; its catalog and log serve the dialogs too.</param>
     public GameDialogs(
-        GameCatalog catalog,
+        GameEditorServices editorServices,
         ProfileCatalog profiles,
         IGameLibrary library,
         IWindowLayout windows,
         IUsbDeviceList usbDevices,
-        SettingsService settings,
-        HotkeyService hotkeys,
-        ILogger log)
+        SettingsService settings)
     {
-        ArgumentNullException.ThrowIfNull(log);
-        _catalog = catalog;
+        ArgumentNullException.ThrowIfNull(editorServices);
+        _editorServices = editorServices;
+        _catalog = editorServices.Catalog;
         _profiles = profiles;
         _library = library;
         _windows = windows;
         _usbDevices = usbDevices;
         _settings = settings;
-        _hotkeys = hotkeys;
-        _log = log.ForContext<GameDialogs>();
+        _log = editorServices.Log.ForContext<GameDialogs>();
     }
 
     /// <summary>The detail's editor for a game: profiles for the choice, the USB devices the tools can wait for.</summary>
@@ -87,16 +93,14 @@ public sealed class GameDialogs : IGamePageDialogs
             connected = [];
         }
 
-        IEnumerable<RuleDevice> saved = _catalog.Games
+        // Devices other games and profiles wait for stay selectable while they are off.
+        IEnumerable<RuleDevice> known = _catalog.Games
             .Select(g => new RuleDevice { Id = g.AppsWaitForUsbDeviceId, Name = g.AppsWaitForUsbDeviceName })
             .Concat(_profiles.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }));
+        var appsWaitDevice = new AppsWaitDeviceChoice(
+            game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, connected, known, _settings.Current.UsbDeviceNames);
 
-        var windowsNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var devices = new System.Collections.ObjectModel.ObservableCollection<Choice>();
-        UsbDeviceChoices.Fill(devices, windowsNames, connected, saved, _settings.Current.UsbDeviceNames);
-        IReadOnlyList<Choice> choices = [new Choice(null, Loc.Instance["Editor_AppsWaitNone"]), .. devices];
-
-        return new GameEditorViewModel(game, isNew, _profiles.Profiles, _catalog.Games, choices, windowsNames, _catalog, _hotkeys, _log);
+        return new GameEditorViewModel(game, isNew, new GameEditorContext(_profiles.Profiles, _catalog.Games, appsWaitDevice), _editorServices);
     }
 
     /// <summary>
@@ -138,6 +142,9 @@ public sealed class GameDialogs : IGamePageDialogs
 
     /// <summary>The single-choice picker for the "Starts" field of the "Game" tab; <c>null</c> when cancelled.</summary>
     public Task<PickedGame?> PickGameAsync() => GamePickerWindow.PickAsync(System.Windows.Application.Current.MainWindow, this);
+
+    public WindowLayout? CaptureWindows(WindowLayout? current) =>
+        WindowCaptureWindow.Capture(System.Windows.Application.Current.MainWindow, this, current);
 
     /// <summary>A program from the file dialog, for "+ New → Choose a program"; <c>null</c> when cancelled.</summary>
     public string? PickExecutable()

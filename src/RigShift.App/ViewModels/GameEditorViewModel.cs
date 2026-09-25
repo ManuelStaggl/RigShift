@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +9,7 @@ using RigShift.App.Services;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 
@@ -19,55 +19,34 @@ namespace RigShift.App.ViewModels;
 /// The game detail's editor: the tabs in the order a session runs them (game, profile, tools, windows, end), live
 /// validation with a problem count, and the dirty flag for the save bar. Nothing is written until <see cref="SaveAsync"/>.
 /// </summary>
-public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
+public sealed partial class GameEditorViewModel : ObservableObject, IDetailEditor, IHotkeyField
 {
-    private static readonly IReadOnlyList<AppAction> NoApps = [];
-
     private readonly GameEntry _original;
     private readonly IReadOnlyList<Profile> _profiles;
     private readonly IReadOnlyList<GameEntry> _games;
     private readonly GameCatalog _catalog;
-    private readonly HotkeyService _hotkeys;
+    private readonly HotkeyRecorder _hotkeyRecorder;
     private readonly ILogger _log;
     private GameEntry _initial;
     private GameLaunch _launch;
-    private string _hotkeyHintKey = "Editor_HotkeyHint";
-    private HotkeyUse? _hotkeyConflict;
     private bool _loading = true;
 
-    /// <param name="games">Every configured game, this one included; names and hotkeys are checked against the others.</param>
-    /// <param name="usbChoices">"Start right away" first, then the devices the tools can wait for.</param>
-    /// <param name="usbWindowsNames">Windows' own name per device id, saved with the id.</param>
-    public GameEditorViewModel(
-        GameEntry game,
-        bool isNew,
-        IReadOnlyList<Profile> profiles,
-        IReadOnlyList<GameEntry> games,
-        IReadOnlyList<Choice> usbChoices,
-        IReadOnlyDictionary<string, string> usbWindowsNames,
-        GameCatalog catalog,
-        HotkeyService hotkeys,
-        ILogger log)
+    public GameEditorViewModel(GameEntry game, bool isNew, GameEditorContext context, GameEditorServices services)
     {
         ArgumentNullException.ThrowIfNull(game);
-        ArgumentNullException.ThrowIfNull(profiles);
-        ArgumentNullException.ThrowIfNull(games);
-        ArgumentNullException.ThrowIfNull(usbChoices);
-        ArgumentNullException.ThrowIfNull(usbWindowsNames);
-        ArgumentNullException.ThrowIfNull(catalog);
-        ArgumentNullException.ThrowIfNull(hotkeys);
-        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(services);
 
         _original = game;
         _initial = game;
-        _profiles = profiles;
-        _games = games;
-        _catalog = catalog;
-        _hotkeys = hotkeys;
-        _log = log.ForContext<GameEditorViewModel>();
+        Saved = game;
+        _profiles = context.Profiles;
+        _games = context.Games;
+        _catalog = services.Catalog;
+        _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id, "Game_HotkeyHint");
+        _log = services.Log.ForContext<GameEditorViewModel>();
         _launch = game.Launch;
         IsNew = isNew;
-        UsbWindowsNames = usbWindowsNames;
 
         Name = game.Name;
         LaunchTarget = game.Launch.Target;
@@ -77,15 +56,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         StopApps = game.Exit.StopApps;
         WindowLayout = game.WindowLayout;
         Hotkey = game.Hotkey;
-        HotkeyHint = HotkeyHintText();
-
-        foreach (Choice choice in usbChoices)
-        {
-            UsbDevices.Add(choice);
-        }
-
-        string? waitFor = Core.Automation.UsbDeviceIds.Normalize(game.AppsWaitForUsbDeviceId);
-        SelectedUsbDevice = UsbDevices.FirstOrDefault(c => c.Key == waitFor) ?? UsbDevices.FirstOrDefault();
 
         FillChoices();
         SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == game.ProfileId?.ToString()) ?? NoProfileOption;
@@ -93,20 +63,20 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == ExitKeyOf(game.Exit)) ?? ExitChoices[0];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(game.Icon)) ?? IconChoices[0];
 
-        foreach (AppAction app in game.Apps)
-        {
-            var item = new AppEditItem(app, showWhen: true);
-            item.PropertyChanged += OnPartChanged;
-            Apps.Add(item);
-        }
-
-        Apps.CollectionChanged += OnAppsChanged;
+        AppList = new AppListEditor(game.Apps, showWhen: true, context.AppsWaitDevice, services.AppPicker, "Game_AddTool");
+        AppList.Changed += OnPartChanged;
         Loc.Instance.PropertyChanged += OnLanguageChanged;
         _loading = false;
         Recalculate();
     }
 
     public Guid Id => _original.Id;
+
+    /// <summary>The game as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
+    public GameEntry Saved { get; private set; }
+
+    /// <summary>The name before the last save, when that save renamed the game.</summary>
+    public string? RenamedFrom { get; private set; }
 
     /// <summary>Not saved yet: the save bar stays until the first save, and playing is not possible.</summary>
     [ObservableProperty]
@@ -128,7 +98,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
 
     /// <summary>Nothing chosen to start – the tab "Game" carries the dot.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasLaunchProblem))]
+    [NotifyPropertyChangedFor(nameof(HasLaunchProblem), nameof(HasGameTabProblem))]
     public partial string? LaunchProblem { get; private set; }
 
     public bool HasLaunchProblem => LaunchProblem is not null;
@@ -168,6 +138,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     public bool ProcessHintIsError => ProcessNotRecognised;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CommandText))]
     public partial string Name { get; set; }
 
     /// <summary>What the game is started with: a program path, or the store's id.</summary>
@@ -175,11 +146,12 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(LaunchText), nameof(HasLaunch))]
     public partial string LaunchTarget { get; set; }
 
-    /// <summary>"Steam", "Epic" or "EXE": the chip in front of the launch text.</summary>
+    /// <summary>"Steam", "Epic", "Xbox" or "EXE": the chip in front of the launch text.</summary>
     public string LaunchKindText => _launch.Kind switch
     {
         GameLaunchKind.Steam => "Steam",
         GameLaunchKind.Epic => "Epic",
+        GameLaunchKind.Xbox => "Xbox",
         _ => "EXE",
     };
 
@@ -224,16 +196,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
 
     public bool HasHotkey => Hotkey is not null;
 
-    [ObservableProperty]
-    public partial string HotkeyHint { get; set; }
-
-    [ObservableProperty]
-    public partial Choice? SelectedUsbDevice { get; set; }
-
-    public ObservableCollection<Choice> UsbDevices { get; } = [];
-
-    /// <summary>Windows' own name per device id, saved with the id so a disconnected device still reads as a name.</summary>
-    public IReadOnlyDictionary<string, string> UsbWindowsNames { get; }
+    /// <summary>The line under the hotkey field: how to record one, or why the last combination was refused.</summary>
+    public string HotkeyHint => _hotkeyRecorder.Hint;
 
     /// <summary>Every profile with its picture, then "Don't switch anything" last (tab "Profile").</summary>
     public ObservableCollection<ProfileOption> ProfileOptions { get; } = [];
@@ -262,7 +226,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial Choice? SelectedIcon { get; set; }
 
-    public ObservableCollection<AppEditItem> Apps { get; } = [];
+    /// <summary>The tools the session starts and ends, and the USB device they wait for.</summary>
+    public AppListEditor AppList { get; }
 
     public string WindowsText => WindowLayout is { IsEmpty: false } layout
         ? Loc.Format(
@@ -277,9 +242,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     public string CommandText => "rigshift://play/" + Uri.EscapeDataString(Name.Trim());
 
     /// <summary>Recording a hotkey RigShift holds would fire it, so they rest while the field has the focus.</summary>
-    public void BeginHotkeyRecording() => _hotkeys.Suspend();
+    public void BeginHotkeyRecording() => _hotkeyRecorder.Begin();
 
-    public void EndHotkeyRecording() => _hotkeys.Resume();
+    public void EndHotkeyRecording() => _hotkeyRecorder.End();
 
     /// <summary>Takes a game the user picked from the installed ones, with everything the template knows.</summary>
     public void SetLaunch(InstalledGame installed)
@@ -316,44 +281,24 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(LaunchText));
     }
 
-    internal void AddApp(string path, string? name = null) =>
-        Apps.Add(new AppEditItem(new AppAction { Path = path, Name = name }, showWhen: true));
-
     /// <summary>A key combination pressed in the hotkey field; without Ctrl, Alt or Win it only shows a hint.</summary>
-    internal void RecordHotkey(HotkeyModifiers modifiers, int virtualKey)
+    public void RecordHotkey(HotkeyModifiers modifiers, int virtualKey)
     {
-        var hotkey = new Hotkey { Modifiers = modifiers, VirtualKey = virtualKey };
-        if (!hotkey.IsValid)
+        if (_hotkeyRecorder.Record(modifiers, virtualKey) is { } hotkey)
         {
-            SetHotkeyHint("Editor_HotkeyNeedsModifier");
-            return;
+            Hotkey = hotkey;
+            _log.Information("Game editor recorded hotkey {Hotkey}", HotkeyText);
         }
 
-        // Hotkeys are suspended while the field has the focus, so this sees only other applications.
-        if (!_hotkeys.IsAvailable(hotkey))
-        {
-            SetHotkeyHint("Problem_HotkeyInUse");
-            return;
-        }
-
-        // The own hotkeys are released right now, so Windows cannot tell that a profile, a game or "back" holds this one.
-        if (_hotkeys.UsedBy(hotkey, HotkeyUseKind.Game, _original.Id) is { } use)
-        {
-            _hotkeyConflict = use;
-            HotkeyHint = HotkeyHintText();
-            return;
-        }
-
-        Hotkey = hotkey;
-        SetHotkeyHint("Editor_HotkeyHint");
-        _log.Information("Game editor recorded hotkey {Hotkey}", HotkeyText);
+        OnPropertyChanged(nameof(HotkeyHint));
     }
 
     [RelayCommand]
-    private void ClearHotkey()
+    public void ClearHotkey()
     {
         Hotkey = null;
-        SetHotkeyHint("Editor_HotkeyHint");
+        _hotkeyRecorder.Reset();
+        OnPropertyChanged(nameof(HotkeyHint));
     }
 
     [RelayCommand]
@@ -364,21 +309,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
             SelectedIcon = choice;
         }
     }
-
-    [RelayCommand]
-    private void RemoveApp(AppEditItem? item)
-    {
-        if (item is not null)
-        {
-            Apps.Remove(item);
-        }
-    }
-
-    [RelayCommand]
-    private void MoveAppUp(AppEditItem? item) => MoveApp(item, -1);
-
-    [RelayCommand]
-    private void MoveAppDown(AppEditItem? item) => MoveApp(item, 1);
 
     [RelayCommand]
     private void ClearWindows() => WindowLayout = null;
@@ -394,9 +324,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
             ProcessName = string.IsNullOrWhiteSpace(ProcessName) ? null : ProcessName.Trim(),
         },
         ProfileId = Guid.TryParse(SelectedProfile?.Key, out Guid profileId) ? profileId : null,
-        Apps = [.. Apps.Select(a => a.ToAction())],
-        AppsWaitForUsbDeviceId = SelectedUsbDevice?.Key,
-        AppsWaitForUsbDeviceName = SelectedUsbDevice?.Key is null ? null : UsbWindowsNames.GetValueOrDefault(SelectedUsbDevice.Key),
+        Apps = AppList.Build(),
+        AppsWaitForUsbDeviceId = AppList.WaitDevice.DeviceId,
+        AppsWaitForUsbDeviceName = AppList.WaitDevice.DeviceName,
         WindowLayout = WindowLayout is { IsEmpty: false } ? WindowLayout : null,
         EndsWith = SelectedEnd?.Key == nameof(SessionEnd.LauncherProcess) ? SessionEnd.LauncherProcess : SessionEnd.GameProcess,
         LauncherProcessName = string.IsNullOrWhiteSpace(LauncherProcessName) ? null : LauncherProcessName.Trim(),
@@ -422,11 +352,13 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             _log.Error(ex, "Game {Game} could not be saved", game.Name);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
             return false;
         }
 
         _initial = game;
+        RenamedFrom = !IsNew && !string.Equals(Saved.Name, game.Name, StringComparison.Ordinal) ? Saved.Name : null;
+        Saved = game;
         ErrorMessage = null;
         IsNew = false;
         Recalculate();
@@ -437,54 +369,21 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         Loc.Instance.PropertyChanged -= OnLanguageChanged;
-        Apps.CollectionChanged -= OnAppsChanged;
-        foreach (AppEditItem app in Apps)
-        {
-            app.PropertyChanged -= OnPartChanged;
-        }
+        AppList.Changed -= OnPartChanged;
+        AppList.Dispose();
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is nameof(Name) or nameof(LaunchTarget) or nameof(ProcessName) or nameof(LauncherProcessName)
-            or nameof(StartWithGame) or nameof(StopApps) or nameof(WindowLayout) or nameof(Hotkey) or nameof(SelectedUsbDevice)
-            or nameof(SelectedProfile) or nameof(SelectedEnd) or nameof(SelectedExit) or nameof(SelectedIcon))
+        if (!EditorFields<GameEditorViewModel>.Contains(e.PropertyName))
         {
-            if (e.PropertyName == nameof(ProcessName))
-            {
-                ProcessNotRecognised = false;
-            }
-
-            if (e.PropertyName == nameof(Name))
-            {
-                OnPropertyChanged(nameof(CommandText));
-            }
-
-            Recalculate();
-        }
-    }
-
-    private void MoveApp(AppEditItem? item, int offset)
-    {
-        int index = item is null ? -1 : Apps.IndexOf(item);
-        int target = index + offset;
-        if (index >= 0 && target >= 0 && target < Apps.Count)
-        {
-            Apps.Move(index, target);
-        }
-    }
-
-    private void OnAppsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        foreach (AppEditItem item in e.OldItems?.OfType<AppEditItem>() ?? [])
-        {
-            item.PropertyChanged -= OnPartChanged;
+            return;
         }
 
-        foreach (AppEditItem item in e.NewItems?.OfType<AppEditItem>() ?? [])
+        if (e.PropertyName == nameof(ProcessName))
         {
-            item.PropertyChanged += OnPartChanged;
+            ProcessNotRecognised = false;
         }
 
         Recalculate();
@@ -501,44 +400,15 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         }
 
         GameEntry built = ToGame();
-        var problems = new List<string>();
-
-        string name = built.Name;
-        NameProblem = name.Length == 0
-            ? Loc.Instance["Problem_NameMissing"]
-            : name.Length > GameEntry.MaxNameLength
-                ? Loc.Instance["Problem_NameTooLong"]
-                : _games.Any(g => g.Id != Id && string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase))
-                    ? Loc.Instance["Problem_NameTaken"]
-                    : null;
-        Add(problems, NameProblem);
-
-        LaunchProblem = built.Launch.Target.Length == 0 ? Loc.Instance["Problem_LaunchMissing"] : null;
-        Add(problems, LaunchProblem);
-
-        HotkeyProblem = built.Hotkey is { } hotkey
-            && (_games.Any(g => g.Id != Id && g.Hotkey == hotkey) || _profiles.Any(p => p.Hotkey == hotkey))
-            ? Loc.Instance["Problem_HotkeyTaken"]
-            : null;
-        Add(problems, HotkeyProblem);
-
-        AppsProblem = built.Apps.Any(a => a.Path.Length == 0) ? Loc.Instance["Problem_AppPathMissing"] : null;
-        Add(problems, AppsProblem);
-
+        IReadOnlyList<GameProblem> problems = GameEditing.Validate(built, _games, _profiles);
         ProblemCount = problems.Count;
-        IsDirty = IsNew || !SameGame(built, _initial);
+        NameProblem = ProblemTexts.Of(problems, GameProblem.NameMissing, GameProblem.NameTooLong, GameProblem.NameTaken);
+        LaunchProblem = ProblemTexts.Of(problems, GameProblem.LaunchMissing);
+        HotkeyProblem = ProblemTexts.Of(problems, GameProblem.HotkeyInvalid, GameProblem.HotkeyTaken);
+        AppsProblem = ProblemTexts.Of(problems, GameProblem.AppPathMissing);
+        AppList.Problem = AppsProblem;
+        IsDirty = IsNew || !StoredForm.Same(built, _initial);
     }
-
-    private static void Add(List<string> problems, string? problem)
-    {
-        if (problem is not null)
-        {
-            problems.Add(problem);
-        }
-    }
-
-    private static bool SameGame(GameEntry a, GameEntry b) =>
-        a with { Apps = NoApps } == b with { Apps = NoApps } && a.Apps.SequenceEqual(b.Apps);
 
     private GameExitAction ExitFromChoice() => SelectedExit?.Key switch
     {
@@ -553,16 +423,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
         GameExitKind.Profile => exit.ProfileId?.ToString() ?? nameof(GameExitKind.Stay),
         _ => nameof(GameExitKind.Stay),
     };
-
-    /// <summary>The hint in the current language; a combination taken inside RigShift names who holds it.</summary>
-    private string HotkeyHintText() => _hotkeyConflict is { } use ? HotkeyService.UsedByText(use) : Loc.Instance[_hotkeyHintKey];
-
-    private void SetHotkeyHint(string key)
-    {
-        _hotkeyConflict = null;
-        _hotkeyHintKey = key;
-        HotkeyHint = Loc.Instance[key];
-    }
 
     /// <summary>Rebuilds the texts made in code and keeps every selection by key.</summary>
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
@@ -580,17 +440,14 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDisposable
             SelectedEnd = EndChoices.FirstOrDefault(c => c.Key == end) ?? EndChoices[0];
             SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == exit) ?? ExitChoices[0];
             SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == icon) ?? IconChoices[0];
-            foreach (AppEditItem app in Apps)
-            {
-                app.Relabel();
-            }
+            AppList.Relabel();
         }
         finally
         {
             _loading = false;
         }
 
-        HotkeyHint = HotkeyHintText();
+        OnPropertyChanged(nameof(HotkeyHint));
         ErrorMessage = null;
         OnPropertyChanged(nameof(WindowsText));
         OnPropertyChanged(nameof(ProcessHint));

@@ -2,7 +2,10 @@ using RigShift.Core.Profiles;
 
 namespace RigShift.Core.Abstractions;
 
-/// <summary>OS boundary for audio endpoints (Core Audio + undocumented IPolicyConfig on Windows).</summary>
+/// <summary>
+/// OS boundary for audio endpoints (Core Audio + undocumented IPolicyConfig on Windows). The native work runs off the
+/// calling thread, so every call can be awaited from the UI thread.
+/// </summary>
 public interface IAudioController
 {
     Task<IReadOnlyList<AudioDeviceInfo>> ListAsync(AudioDirection direction, CancellationToken cancellationToken);

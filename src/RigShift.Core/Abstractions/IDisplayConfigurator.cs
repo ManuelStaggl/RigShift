@@ -5,7 +5,8 @@ namespace RigShift.Core.Abstractions;
 
 /// <summary>
 /// OS boundary for display topology. The Windows implementation wraps the CCD API
-/// (QueryDisplayConfig / SetDisplayConfig); tests use an in-memory fake.
+/// (QueryDisplayConfig / SetDisplayConfig); tests use an in-memory fake. The native work runs off the calling thread,
+/// so every call can be awaited from the UI thread.
 /// </summary>
 public interface IDisplayConfigurator
 {

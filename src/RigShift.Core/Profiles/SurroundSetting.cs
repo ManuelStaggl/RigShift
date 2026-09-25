@@ -4,8 +4,8 @@ namespace RigShift.Core.Profiles;
 
 /// <summary>
 /// What a profile wants from NVIDIA Surround (Mosaic): several physical displays driven as one wide display, or none.
-/// A profile without this setting leaves Surround exactly as it is – that is the default, because turning Surround on
-/// or off is a rebuild of the whole desktop and must never happen as a side effect.
+/// A profile without this setting leaves Surround exactly as it is while no other profile uses it (see
+/// <see cref="SurroundDefaults"/>), because turning Surround on or off rebuilds the whole desktop.
 /// </summary>
 public sealed record SurroundSetting
 {
@@ -14,6 +14,37 @@ public sealed record SurroundSetting
 
     /// <summary>The grid to build. Required while <see cref="Enabled"/> is true, ignored otherwise.</summary>
     public SurroundGrid? Grid { get; init; }
+}
+
+/// <summary>
+/// What a profile without a Surround setting means. On its own: leave Surround as it is. Once another profile switches
+/// Surround on: off – otherwise the profile's own displays stay hidden inside that grid, the switch waits for monitors
+/// that are on and then blocks (findings K-09, U-05). A profile that should keep the grid says "on" itself.
+/// </summary>
+public static class SurroundDefaults
+{
+    public static SurroundSetting Off { get; } = new() { Enabled = false };
+
+    /// <summary>
+    /// The setting a switch to <paramref name="profile"/> uses. A profile that is not one of <paramref name="profiles"/> –
+    /// the way back of an interrupted switch – keeps its own: it records what it found, and nothing means nothing there.
+    /// </summary>
+    public static SurroundSetting? Effective(Profile profile, IReadOnlyCollection<Profile> profiles)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(profiles);
+
+        if (profile.Surround is not null || !profiles.Any(p => p.Id == profile.Id))
+        {
+            return profile.Surround;
+        }
+
+        return UsedByAnother(profile.Id, profiles) is null ? null : Off;
+    }
+
+    /// <summary>The first profile other than <paramref name="id"/> that switches Surround on, or <c>null</c>.</summary>
+    public static Profile? UsedByAnother(Guid id, IEnumerable<Profile> profiles) =>
+        profiles.FirstOrDefault(p => p.Id != id && p.Surround is { Enabled: true });
 }
 
 /// <summary>
@@ -36,6 +67,17 @@ public sealed record SurroundGrid
 
     /// <summary>Displays in grid order, cell <c>row * <see cref="Columns"/> + column</c>.</summary>
     public required IReadOnlyList<SurroundDisplay> Displays { get; init; }
+
+    /// <summary>
+    /// Whether the grid runs at the bezel-corrected resolution, so the picture continues behind the frames between the
+    /// displays (their overlaps say by how much). <c>null</c> in profiles saved before 4.0, which recorded neither the
+    /// correction nor the rotation: a running grid is then taken as it is instead of rebuilt without them.
+    /// </summary>
+    public bool? BezelCorrected { get; init; }
+
+    /// <summary>Whether the grid knows its bezel correction and rotation, i.e. was saved by 4.0 or later.</summary>
+    [JsonIgnore]
+    public bool HasLayout => BezelCorrected is not null;
 
     /// <summary>Grid width in pixels, ignoring bezel correction.</summary>
     [JsonIgnore]
@@ -62,4 +104,19 @@ public sealed record SurroundDisplay
 
     /// <summary>Monitor name when the profile was saved, for messages only – never used to find the display.</summary>
     public string? Name { get; init; }
+
+    /// <summary>
+    /// Bezel correction towards the neighbouring display as the driver reports it, in pixels: negative leaves a gap the
+    /// picture continues behind (the frames), positive overlaps. Zero without correction.
+    /// </summary>
+    public int OverlapX { get; init; }
+
+    /// <inheritdoc cref="OverlapX"/>
+    public int OverlapY { get; init; }
+
+    /// <summary>
+    /// Rotation of this display inside the grid, e.g. a portrait triple. <c>set</c>: an <c>init</c> initializer is skipped
+    /// when the key is missing.
+    /// </summary>
+    public DisplayRotation Rotation { get; set; } = DisplayRotation.Identity;
 }

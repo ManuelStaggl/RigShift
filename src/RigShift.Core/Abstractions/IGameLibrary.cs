@@ -16,13 +16,15 @@ public interface IGameLibrary
 /// <summary>A game found on disk, ready to become a <see cref="GameEntry"/>.</summary>
 /// <param name="Name">Title as the store names it.</param>
 /// <param name="Launch">How it would be started, including the install folder used while learning the process name.</param>
-public sealed record InstalledGame(string Name, GameLaunch Launch)
+/// <param name="Origin">Where a game started by its executable came from ("iRacing", "EA"); the launch kind says it otherwise.</param>
+public sealed record InstalledGame(string Name, GameLaunch Launch, string? Origin = null)
 {
-    /// <summary>Short source label for the picker ("Steam", "Epic").</summary>
-    public string Source => Launch.Kind switch
+    /// <summary>Short source label for the picker ("Steam", "Epic", "Xbox", "iRacing", "EA").</summary>
+    public string Source => Origin ?? Launch.Kind switch
     {
         GameLaunchKind.Steam => "Steam",
         GameLaunchKind.Epic => "Epic",
+        GameLaunchKind.Xbox => "Xbox",
         _ => string.Empty,
     };
 }

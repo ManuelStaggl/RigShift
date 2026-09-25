@@ -12,6 +12,7 @@ for a given release is its SBOM (`RigShift-<version>.cdx.json` on the release pa
 | [Serilog, Serilog.Sinks.File, Serilog.Sinks.Debug](https://github.com/serilog) | Apache-2.0 | © Serilog Contributors |
 | [System.CommandLine](https://github.com/dotnet/command-line-api) | MIT | © Microsoft Corporation |
 | [Velopack](https://github.com/velopack/velopack) | MIT | © Velopack Ltd. |
+| [WinRT.Runtime (C#/WinRT)](https://github.com/microsoft/CsWinRT) | MIT | © Microsoft Corporation |
 | [WPF-UI, WPF-UI.Abstractions](https://github.com/lepoco/wpfui) | MIT | © 2021–2026 Leszek Pomianowski and WPF UI Contributors |
 
 RigShift talks to the NVIDIA driver through its public NVAPI entry points with its own declarations; no NVIDIA SDK

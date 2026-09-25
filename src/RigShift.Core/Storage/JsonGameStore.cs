@@ -17,8 +17,6 @@ public sealed class JsonGameStore : IGameStore
 
     public const string FileName = "games.json";
 
-    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(100);
-
     private readonly string _file;
     private readonly ILogger _log;
     private readonly TimeProvider _time;
@@ -50,7 +48,7 @@ public sealed class JsonGameStore : IGameStore
 
         try
         {
-            GameDocument? document = await ReadWithRetryAsync(cancellationToken);
+            GameDocument? document = await JsonFile.ReadWithRetryAsync(_file, GameJsonContext.Default.GameDocument, _time, _log, cancellationToken);
             if (document is null)
             {
                 _log.Warning("Game file {File} is empty", _file);
@@ -149,31 +147,6 @@ public sealed class JsonGameStore : IGameStore
             stream => JsonSerializer.SerializeAsync(
                 stream, new GameDocument(CurrentSchemaVersion, games), GameJsonContext.Default.GameDocument, cancellationToken),
             cancellationToken);
-    }
-
-    /// <summary>
-    /// Opens without blocking writers or deleters (an editor or antivirus holding the file must not hide the games)
-    /// and tries a second time after <see cref="RetryDelay"/>, because such locks are usually brief.
-    /// </summary>
-    private async Task<GameDocument?> ReadWithRetryAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await ReadAsync(cancellationToken);
-        }
-        catch (IOException ex)
-        {
-            _log.Information(ex, "Game file {File} is not readable right now, retrying in {Delay} ms", _file, RetryDelay.TotalMilliseconds);
-            await Task.Delay(RetryDelay, _time, cancellationToken);
-            return await ReadAsync(cancellationToken);
-        }
-    }
-
-    private async Task<GameDocument?> ReadAsync(CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            _file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, bufferSize: 4096, useAsync: true);
-        return await JsonSerializer.DeserializeAsync(stream, GameJsonContext.Default.GameDocument, cancellationToken);
     }
 }
 

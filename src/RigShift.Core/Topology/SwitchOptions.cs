@@ -33,8 +33,38 @@ public sealed record SwitchOptions
     /// </summary>
     public TimeSpan ApplyCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
 
+    /// <summary>
+    /// Longest time one native query may take (v4 finding K-07). As long as an apply: a query waits behind a running apply
+    /// in the kernel, and a shorter limit would take a slow but working apply for a hung driver.
+    /// </summary>
+    public TimeSpan QueryCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
+
     /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Interval between the snapshots that must agree before HDR is switched. Short: the arrangement usually stands long
+    /// before, and a full <see cref="PollInterval"/> cost every HDR switch a second (v4 finding K-04).
+    /// </summary>
+    public TimeSpan HdrSettlePollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
+    /// How long Windows may take to list the displays of a Surround grid that was just built or taken apart, before the
+    /// switch treats a missing one as switched off (finding K-09).
+    /// </summary>
+    public TimeSpan SurroundSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>Interval for looking for those displays: short, the switch waits for nothing else meanwhile.</summary>
+    public TimeSpan SurroundPollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
+    /// How long the sound device of a display the switch turned on may take to become active: a TV, an AV receiver or
+    /// a monitor's own speakers appear with the picture, half a second to three seconds after it (finding K-02).
+    /// </summary>
+    public TimeSpan AudioWakeBudget { get; init; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>Interval for trying such a device again.</summary>
+    public TimeSpan AudioWakePollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
 
     /// <summary>Interval for re-querying the topology while waiting.</summary>
     public TimeSpan PollInterval { get; init; } = TimeSpan.FromSeconds(1);
@@ -44,6 +74,12 @@ public sealed record SwitchOptions
 
     /// <summary>How long an app may take to close after its windows were asked to, before it is ended.</summary>
     public TimeSpan AppStopGrace { get; init; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>Longest wait for an app's window when the app sets no wait time of its own.</summary>
+    public TimeSpan AppWindowWaitLimit { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>Interval for looking for that window: short, the next app waits for nothing else.</summary>
+    public TimeSpan AppWindowPollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
 
     /// <summary>
     /// Pause between a successful apply and moving lost windows: Windows and the apps rearrange windows themselves
@@ -89,4 +125,10 @@ public sealed record SwitchRequest
 
     /// <summary>Confirmation timeout for profiles that do not set their own (application setting).</summary>
     public int DefaultConfirmTimeoutSeconds { get; init; } = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
+
+    /// <summary>
+    /// The shortest countdown when the switch asks at all. A USB rule sets it: the user who switched on the wheelbase may
+    /// still be on the way to the seat (v4 finding U-04).
+    /// </summary>
+    public int MinimumConfirmTimeoutSeconds { get; init; }
 }

@@ -10,11 +10,13 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>A game as shown in the games list, the tray popup and the tray menu.</summary>
 /// <param name="profileName">Name of the profile the game switches to, or <c>null</c> when it switches nothing.</param>
-public sealed partial class GameItem(GameEntry game, string? profileName = null) : ObservableObject
+public sealed partial class GameItem(GameEntry game, string? profileName = null) : ObservableObject, IMasterItem
 {
     private IReadOnlyList<ImageSource>? _appIcons;
 
     public GameEntry Game { get; } = game;
+
+    public Guid Id => Game.Id;
 
     public string Name => Game.Name;
 
@@ -55,6 +57,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
             {
                 GameLaunchKind.Steam => "Steam",
                 GameLaunchKind.Epic => "Epic",
+                GameLaunchKind.Xbox => "Xbox",
                 _ => Path.GetFileName(Game.Launch.Target),
             };
 

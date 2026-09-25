@@ -13,6 +13,17 @@ namespace RigShift.App.Services;
 /// <summary>Where RigShift keeps its files: <c>%AppData%\RigShift</c>.</summary>
 public sealed record AppPaths(string DataDirectory)
 {
+    /// <summary>
+    /// <c>%AppData%\RigShift</c>: Velopack installs into <c>%LocalAppData%\RigShift</c> and deletes that folder on
+    /// uninstall, so profiles and settings must live elsewhere.
+    /// </summary>
+    public static AppPaths ForCurrentUser() => new(Path.GetFullPath(
+#if DEBUG
+        // Developer aid: screenshots of steps that save profiles, without touching the real data.
+        Environment.GetEnvironmentVariable("RIGSHIFT_DATA_DIR") is { Length: > 0 } previewData ? previewData :
+#endif
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RigShift")));
+
     public string Profiles => Path.GetFullPath(Path.Combine(DataDirectory, "profiles"));
 
     public string Logs => Path.GetFullPath(Path.Combine(DataDirectory, "logs"));
@@ -33,8 +44,9 @@ public interface IAppShell
     void Quit();
 
     /// <summary>
-    /// "Exit" chosen by the user: unsaved changes in the profile or game editor are asked about first, and "cancel"
-    /// keeps RigShift running. <see cref="Quit"/> is for exits that must happen – an update, a restart.
+    /// "Exit" chosen by the user – also "restart to install the update": unsaved changes in the profile or game editor and
+    /// a running game session are asked about first, and "cancel" keeps RigShift running. <see cref="Quit"/> is for exits
+    /// that must happen – a restart, a second instance.
     /// </summary>
     void QuitByUser();
 }
@@ -157,7 +169,10 @@ public sealed record SwitchRecord(
     IReadOnlyList<string> MissingDisplays,
     string? AppsWaitDevice = null,
     int AppsWaitSeconds = 0,
-    SwitchNote Note = SwitchNote.None)
+    SwitchNote Note = SwitchNote.None,
+    bool Ambiguous = false,
+    HdrOutcome Hdr = HdrOutcome.NotConfigured,
+    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -180,9 +195,36 @@ public sealed record SwitchRecord(
 }
 
 /// <summary>User-facing texts for switch results and plans.</summary>
+/// <summary>What the emergency hotkey did, and the profile it switches to because that failed.</summary>
+public sealed record AllDisplaysOnReport(AllDisplaysOnResult Result, string? FallbackProfile);
+
 public static class SwitchMessages
 {
     public static string Outcome(SwitchOutcome outcome) => Loc.Instance["Outcome_" + outcome];
+
+    /// <summary>The tray message after the emergency hotkey.</summary>
+    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon) ForAllDisplaysOn(AllDisplaysOnReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        AllDisplaysOnResult result = report.Result;
+        string text = result.Outcome switch
+        {
+            AllDisplaysOnOutcome.Failed when report.FallbackProfile is { } fallback => Loc.Format("AllOn_FailedFallback", FailureText(result.Error), fallback),
+            AllDisplaysOnOutcome.Failed => Loc.Format("AllOn_Failed", FailureText(result.Error)),
+            _ => Loc.Instance["AllOn_" + result.Outcome],
+        };
+        H.NotifyIcon.Core.NotificationIcon icon = result.Outcome switch
+        {
+            AllDisplaysOnOutcome.Failed => H.NotifyIcon.Core.NotificationIcon.Error,
+            AllDisplaysOnOutcome.NoDisplays => H.NotifyIcon.Core.NotificationIcon.Warning,
+            _ => H.NotifyIcon.Core.NotificationIcon.Info,
+        };
+        return (Loc.Instance["AllOn_Title"], text, icon);
+    }
+
+    /// <summary>What to do about a failed display change; 0 = no code from Windows (the call threw).</summary>
+    private static string FailureText(int code) =>
+        code == 0 ? Loc.Instance["Result_FailedUnexpected"] : UserMessages.DescribeSwitchError(code);
 
     /// <summary>"Left · CM27X3", or the model alone without a custom name.</summary>
     public static string NameOf(string? customName, DisplayIdentity identity) =>
@@ -199,7 +241,11 @@ public static class SwitchMessages
         ArgumentNullException.ThrowIfNull(plan);
 
         var lines = new List<string>();
-        if (plan.IsBlocked)
+        if (plan.IsAmbiguous)
+        {
+            lines.Add(Loc.Format("Check_Ambiguous", Names(plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous))));
+        }
+        else if (plan.IsBlocked)
         {
             lines.Add(Loc.Format("Check_Blocked", Names(plan.Missing.Where(m => !m.Assignment.IsOptional))));
         }
@@ -229,9 +275,10 @@ public static class SwitchMessages
             SwitchOutcome.Applied => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Instance["Result_AppliedText"], H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.AppliedPartially => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_PartialText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.RolledBack => (Loc.Format("Result_RolledBackTitle", record.ProfileName), Loc.Instance["Result_RolledBackText"], H.NotifyIcon.Core.NotificationIcon.Warning),
-            SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName), Loc.Format("Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),
+            SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName),
+                Loc.Format(record.Ambiguous ? "Result_AmbiguousText" : "Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),
             _ => (Loc.Format("Result_FailedTitle", record.ProfileName),
-                record.NativeError is { } code ? Loc.Format("Result_FailedText", code) : Loc.Instance["Result_FailedUnexpected"],
+                FailureText(record.NativeError ?? 0),
                 H.NotifyIcon.Core.NotificationIcon.Error),
         };
 
@@ -241,6 +288,7 @@ public static class SwitchMessages
             SwitchNote.RestoredPrevious when record.Outcome != SwitchOutcome.RolledBack => Loc.Instance["Note_RestoredPrevious"],
             SwitchNote.RestoreFailed => Loc.Instance["Note_RestoreFailed"],
             SwitchNote.ModesFromDatabase => Loc.Instance["Note_ModesFromDatabase"],
+            SwitchNote.DriverHung => Loc.Instance["Note_DriverHung"],
             _ => null,
         };
         if (note is not null)
@@ -253,29 +301,58 @@ public static class SwitchMessages
             text += Environment.NewLine + Loc.Instance["Result_AudioIncomplete"];
         }
 
-        if (AppsProblem(record) is { } apps)
+        // Only in the log before 4.0 (K-15).
+        if (record.Hdr == HdrOutcome.Incomplete)
         {
-            text += Environment.NewLine + apps;
+            text += Environment.NewLine + Loc.Instance["Result_HdrIncomplete"];
+        }
+
+        foreach (string problem in FollowUpProblems(record))
+        {
+            text += Environment.NewLine + problem;
         }
 
         return (title, text, icon);
     }
 
-    /// <summary>Apps run after the switch result (B-03): a second notification only when something went wrong with them.</summary>
-    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForAppsNotification(SwitchRecord record)
+    /// <summary>
+    /// Apps and desktop symbols follow the switch result (B-03, K-04): a second notification only when something went wrong
+    /// with them.
+    /// </summary>
+    public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForFollowUpNotification(SwitchRecord record)
     {
         ArgumentNullException.ThrowIfNull(record);
-        return AppsProblem(record) is { } text
-            ? (Loc.Format("Result_AppliedTitle", record.ProfileName), text, H.NotifyIcon.Core.NotificationIcon.Warning)
+        List<string> problems = [.. FollowUpProblems(record)];
+        return problems.Count > 0
+            ? (Loc.Format("Result_AppliedTitle", record.ProfileName), string.Join(Environment.NewLine, problems), H.NotifyIcon.Core.NotificationIcon.Warning)
             : null;
     }
 
-    private static string? AppsProblem(SwitchRecord record) => record.Apps switch
+    /// <summary>What went wrong with the desktop symbols and the apps; nothing while they still run.</summary>
+    private static IEnumerable<string> FollowUpProblems(SwitchRecord record)
     {
-        AppsOutcome.Incomplete => Loc.Instance["Result_AppsIncomplete"],
-        AppsOutcome.DeviceMissing => Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds),
-        _ => null,
-    };
+        string? icons = record.DesktopIcons switch
+        {
+            DesktopIconOutcome.AutoArrange => Loc.Instance["Result_IconsAutoArrange"],
+            DesktopIconOutcome.Unavailable => Loc.Instance["Result_IconsUnavailable"],
+            _ => null,
+        };
+        if (icons is not null)
+        {
+            yield return icons;
+        }
+
+        string? apps = record.Apps switch
+        {
+            AppsOutcome.Incomplete => Loc.Instance["Result_AppsIncomplete"],
+            AppsOutcome.DeviceMissing => Loc.Format("Result_AppsDeviceMissing", record.AppsWaitDevice ?? string.Empty, record.AppsWaitSeconds),
+            _ => null,
+        };
+        if (apps is not null)
+        {
+            yield return apps;
+        }
+    }
 
     private static string Names(IEnumerable<MissingDisplay> missing) =>
         string.Join(", ", missing.Select(m => NameOf(m.Assignment)));
@@ -300,6 +377,23 @@ public static class ShellFolders
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
             log.Warning(ex, "Could not open {Url}", uri);
+        }
+    }
+
+    /// <summary>
+    /// The Windows display settings. Not through <see cref="OpenUrl"/>: that opens https pages only, and refused
+    /// "ms-settings:" – the profile page's button did nothing.
+    /// </summary>
+    public static void OpenDisplaySettings(ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        {
+            log.Warning(ex, "Could not open the display settings");
         }
     }
 

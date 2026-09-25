@@ -113,19 +113,45 @@
       </StackPanel>
     </Grid>
 
-    <!-- The countdown sentence, then the keys as keycaps (D-04). -->
+    <!-- The countdown sentence, then the keys as keycaps (D-04), one per row so a key never wraps away from its meaning. -->
     <StackPanel Grid.Row="2" Margin="0,20,0,0">
       <TextBlock
         x:Name="HintText"
         AutomationProperties.LiveSetting="Assertive"
         Style="{StaticResource RigShift.Text.Caption}"
         TextWrapping="Wrap" />
-      <WrapPanel Margin="0,8,0,0">
-        <ContentControl Margin="0,0,6,0" Content="Enter" Style="{StaticResource RigShift.Keycap}" />
-        <TextBlock Margin="0,0,14,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Confirm_KeyKeep}" />
-        <ContentControl Margin="0,0,6,0" Content="Esc" Style="{StaticResource RigShift.Keycap}" />
-        <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Confirm_KeyRevert}" />
-      </WrapPanel>
+      <Grid Margin="0,8,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ContentControl HorizontalAlignment="Left" Content="Enter" Style="{StaticResource RigShift.Keycap}" />
+        <TextBlock
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{loc:Tr Confirm_KeyKeep}"
+          TextWrapping="Wrap" />
+        <ContentControl
+          Grid.Row="1"
+          Margin="0,6,0,0"
+          HorizontalAlignment="Left"
+          Content="Esc"
+          Style="{StaticResource RigShift.Keycap}" />
+        <TextBlock
+          Grid.Row="1"
+          Grid.Column="1"
+          Margin="8,6,0,0"
+          VerticalAlignment="Center"
+          Style="{StaticResource RigShift.Text.Caption}"
+          Text="{loc:Tr Confirm_KeyRevert}"
+          TextWrapping="Wrap" />
+      </Grid>
     </StackPanel>
 
     <!-- Windows order, as in its own "Keep these display settings?" dialog: the action first, the way back second. -->

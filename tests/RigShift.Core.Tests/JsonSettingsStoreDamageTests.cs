@@ -91,6 +91,20 @@ public sealed class JsonSettingsStoreDamageTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_FileLockedForAMoment_IsReadOnTheSecondTry()
+    {
+        // K-17: a virus scanner holding settings.json at startup meant defaults – rules, names and hotkeys gone.
+        await WriteAsync("""{ "schemaVersion": 1, "language": "de" }""");
+        await using var holder = new FileStream(File, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var store = new JsonSettingsStore(File, Logger.None, new UnlockingTime(holder.Dispose));
+
+        AppSettings settings = await store.LoadAsync(Ct);
+
+        settings.Language.ShouldBe("de");
+        store.LastLoad.Problem.ShouldBe(SettingsLoadProblem.None);
+    }
+
+    [Fact]
     public async Task Load_ValuesOutOfRange_AreClamped()
     {
         await WriteAsync("""
@@ -145,5 +159,15 @@ public sealed class JsonSettingsStoreDamageTests : IDisposable
         public override DateTimeOffset GetUtcNow() => new(2026, 9, 20, 10, 15, 0, TimeSpan.Zero);
 
         public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+    }
+
+    /// <summary>Lets go of the file when the store starts waiting to try again, and ends the wait at once.</summary>
+    private sealed class UnlockingTime(Action unlock) : TimeProvider
+    {
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            unlock();
+            return base.CreateTimer(callback, state, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        }
     }
 }

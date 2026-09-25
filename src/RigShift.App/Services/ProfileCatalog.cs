@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
@@ -44,8 +45,19 @@ public sealed partial class ProfileCatalog : ObservableObject
         Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
-    /// <summary>Raised after profiles or the active profile changed.</summary>
-    public event EventHandler? Changed;
+    /// <summary>Raised after the profiles themselves changed: loaded, saved, deleted, or rebuilt for another language.</summary>
+    public event EventHandler? ProfilesChanged;
+
+    /// <summary>
+    /// Raised after the displays were read again and the active profile worked out – on a display change, after a switch
+    /// or a reload – whether the active profile changed or not. Carries what was read, so a page that shows the displays
+    /// does not read them once more (v4 finding A-03). A new active profile alone is <see cref="ActiveProfile"/>'s
+    /// property change; the items' flags are already up to date when it is raised.
+    /// </summary>
+    public event EventHandler<DisplaySnapshot>? DisplaysRefreshed;
+
+    /// <summary>The displays as last read; <c>null</c> before the first read.</summary>
+    public DisplaySnapshot? LastSnapshot { get; private set; }
 
     public string ProfileDirectory { get; }
 
@@ -59,6 +71,9 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// profile" (1.7.0). Kept while no profile is active, not persisted across restarts.
     /// </summary>
     public Guid? PreviousProfileId { get; private set; }
+
+    /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout (K-13).</summary>
+    public Guid? LastAppliedProfileId { get; set; }
 
     [ObservableProperty]
     public partial bool IsEmpty { get; set; }
@@ -90,24 +105,20 @@ public sealed partial class ProfileCatalog : ObservableObject
     {
         try
         {
-            List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)> found = await Task.Run(async () =>
+            DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
+            var found = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
+            foreach (AttachedDisplay display in snapshot.Displays)
             {
-                DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
-                var rates = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
-                foreach (AttachedDisplay display in snapshot.Displays)
+                if (display.ActiveMode is { } mode)
                 {
-                    if (display.ActiveMode is { } mode)
-                    {
-                        rates.Add((display.Identity, mode.Width, mode.Height,
-                            await _display.ListRefreshRatesAsync(display.Identity, mode.Width, mode.Height, cancellationToken)));
-                    }
+                    found.Add((display.Identity, mode.Width, mode.Height,
+                        await _display.ListRefreshRatesAsync(display.Identity, mode.Width, mode.Height, cancellationToken)));
                 }
+            }
 
-                return rates;
-            }, cancellationToken);
             await RememberRefreshRatesAsync(found, cancellationToken);
         }
-        catch (Exception ex) when (ex is Win32Exception or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
         {
             _log.Warning(ex, "Refresh rates of the active displays could not be read");
         }
@@ -152,6 +163,61 @@ public sealed partial class ProfileCatalog : ObservableObject
         if (changed.Count > 0)
         {
             await ReloadAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Writes what a switch found out about the monitors into every profile (v4 finding K-03): a monitor now on another port
+    /// or graphics card, and the EDID serial number that profiles from before 4.0 lack. Custom names and curvature move
+    /// with a monitor. Call only for a switch that stayed; failures are logged, the switch result stands.
+    /// </summary>
+    public async Task HealIdentitiesAsync(TopologyPlan plan, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        IReadOnlyList<IdentityUpdate> updates = DisplayIdentityHealing.Find(plan, _profiles);
+        if (updates.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<Profile> changed = DisplayIdentityHealing.Apply(_profiles, updates);
+            foreach (Profile profile in changed)
+            {
+                await _store.SaveAsync(profile, cancellationToken);
+            }
+
+            await _settings.UpdateAsync(
+                s => s with
+                {
+                    DisplayNames = DisplayIdentityHealing.Rekey(s.DisplayNames, updates),
+                    FovCurvatureMm = DisplayIdentityHealing.Rekey(s.FovCurvatureMm, updates),
+                },
+                cancellationToken,
+                notify: false);
+
+            foreach (IdentityUpdate update in updates)
+            {
+                if (update.Moved)
+                {
+                    _log.Information("Display {Display} moved from {Saved} to {Target}; updated in {Count} profile(s)",
+                        DisplayNames.Of(update.Identity), DiagnosticsReport.ShortTargetPath(update.SavedPath),
+                        DiagnosticsReport.ShortTargetPath(update.Identity.TargetDevicePath), changed.Count);
+                }
+                else
+                {
+                    _log.Information("Display {Display} at {Target} saved with its EDID serial number; updated in {Count} profile(s)",
+                        DisplayNames.Of(update.Identity), DiagnosticsReport.ShortTargetPath(update.Identity.TargetDevicePath), changed.Count);
+                }
+            }
+
+            await ReloadAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The identities of {Count} display(s) could not be updated in the profiles", updates.Count);
         }
     }
 
@@ -239,26 +305,33 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     public async Task RefreshActiveAsync(CancellationToken cancellationToken)
     {
+        DisplaySnapshot snapshot;
         try
         {
-            DisplaySnapshot snapshot = await Task.Run(() => _display.QueryAsync(cancellationToken), cancellationToken);
-            Profile? active = _matcher.FindActive(_profiles, snapshot);
-            if (ActiveProfile is { } before && before.Id != active?.Id)
-            {
-                PreviousProfileId = before.Id;
-            }
-
-            ActiveProfile = active;
-            _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
+            snapshot = await _display.QueryAsync(cancellationToken);
         }
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "Could not determine the active profile");
+            return;
         }
 
-        UpdateFlags();
-        Changed?.Invoke(this, EventArgs.Empty);
+        // Between profiles with the same layout, the one RigShift applied – or showed – last stays (K-13).
+        Profile? active = _matcher.FindActive(_profiles, snapshot, LastAppliedProfileId ?? ActiveProfile?.Id);
+        if (ActiveProfile is { } before && before.Id != active?.Id)
+        {
+            PreviousProfileId = before.Id;
+        }
+
+        ActiveProfile = active;
+        _log.Information("Active profile: {Profile}", ActiveProfile?.Name ?? "(none)");
+        LastSnapshot = snapshot;
+        UpdateReadiness();
+        DisplaysRefreshed?.Invoke(this, snapshot);
     }
+
+    /// <summary>Before the property change goes out, so its listeners see the items' flags right.</summary>
+    partial void OnActiveProfileChanged(Profile? value) => UpdateFlags();
 
     private static bool SameNames(IReadOnlyDictionary<string, string>? a, IReadOnlyDictionary<string, string>? b) =>
         (a?.Count ?? 0) == (b?.Count ?? 0)
@@ -279,7 +352,23 @@ public sealed partial class ProfileCatalog : ObservableObject
             ? Loc.Format("Profiles_UnreadableFiles", _unreadable.Count, string.Join(", ", _unreadable.Select(f => f.FileName)))
             : null;
         UpdateFlags();
-        Changed?.Invoke(this, EventArgs.Empty);
+        UpdateReadiness();
+        ProfilesChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Each profile against the displays as read last, so the overview and the tray say what the list says (U-10).</summary>
+    private void UpdateReadiness()
+    {
+        if (LastSnapshot is not { } snapshot)
+        {
+            return;
+        }
+
+        foreach (ProfileItem item in Items)
+        {
+            (StatusKind kind, string text, string? tip) = ProfileReadiness.Of(_matcher.Plan(item.Profile, snapshot));
+            item.SetReadiness(kind, text, tip);
+        }
     }
 
     private void UpdateFlags()

@@ -47,6 +47,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     private readonly FakeHotkeyRegistrar _registrar = new();
     private readonly HotkeyService _hotkeys;
     private readonly IDesktopIcons _desktopIcons = Substitute.For<IDesktopIcons>();
+    private readonly FakeAppPicker _picker = new();
     private readonly List<ProfileEditorViewModel> _editors = [];
 
     public ProfileEditorViewModelTests()
@@ -92,7 +93,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
         editor.ProblemCount.ShouldBe(0);
         editor.ShowCommunicationsAudio.ShouldBeTrue();
-        editor.ShowSurround.ShouldBeTrue("a setting from another machine must stay visible");
+        editor.Surround.IsVisible.ShouldBeTrue("a setting from another machine must stay visible");
         await SaveAsync(editor, expected: true);
         Profile saved = _host.Store.Profiles.ShouldHaveSingleItem();
         saved.Displays.ShouldBe(rig.Displays);
@@ -124,6 +125,46 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.KeepAwake = false;
         editor.Name = " Rig ";
         editor.IsDirty.ShouldBeFalse();
+    }
+
+    /// <summary>Every field counts for the save bar: a hand-kept list of names used to decide, and a field missing from it lost changes.</summary>
+    [Fact]
+    public async Task EveryField_MakesDirty()
+    {
+        var surround = new SurroundState { Availability = SurroundAvailability.Available, Grids = [Triple] };
+        var icons = new DesktopIconLayout { CapturedAt = DateTimeOffset.UtcNow, Icons = [new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 }] };
+        Action<ProfileEditorViewModel>[] changes =
+        [
+            e => e.Name = "Rig 2",
+            e => e.SelectedIcon = e.IconChoices.First(c => c.Key != e.SelectedIcon?.Key),
+            e => e.SwitchWithoutAsking = !e.SwitchWithoutAsking,
+            e => e.Hotkey = CtrlAltR,
+            e => e.KeepAwake = true,
+            e => e.DisableCommunicationsDucking = true,
+            e => e.DesktopIcons = icons,
+            e => e.Surround.Selected = e.Surround.Choices.First(c => c.Key == "off"),
+        ];
+
+        for (int i = 0; i < changes.Length; i++)
+        {
+            ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: surround);
+            changes[i](editor);
+            editor.IsDirty.ShouldBeTrue($"change {i}");
+        }
+    }
+
+    [Fact]
+    public async Task NoDisplayLeft_IsAProblemWithItsOwnText()
+    {
+        ProfileEditorViewModel editor = await EditorAsync(Rig());
+
+        foreach (DisplayEditItem display in editor.Displays.ToList())
+        {
+            editor.RemoveDisplayCommand.Execute(display);
+        }
+
+        editor.DisplaysProblem.ShouldBe(Loc.Instance["Problem_NoDisplays"]);
+        editor.ProblemCount.ShouldBe(1);
     }
 
     [Fact]
@@ -166,7 +207,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.HotkeyHint.ShouldBe(Loc.Instance["Problem_HotkeyInUse"]);
 
         editor.Hotkey.ShouldBeNull();
-        editor.HotkeyText.ShouldBe(Loc.Instance["Editor_HotkeyPlaceholder"]);
+        editor.HotkeyText.ShouldBeEmpty();
     }
 
     [Fact]
@@ -203,6 +244,23 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.ClearHotkeyCommand.Execute(null);
         editor.Hotkey.ShouldBeNull();
         editor.IsDirty.ShouldBeFalse();
+    }
+
+    /// <summary>A hotkey on a PC where RigShift does not start with Windows stops working after a restart (U-01).</summary>
+    [Fact]
+    public async Task Hotkey_WhileNotStartingWithWindows_ShowsTheNote_AndTurnOnFixesIt()
+    {
+        ProfileEditorViewModel editor = await EditorAsync(Rig());
+        editor.ShowAutostartOff.ShouldBeFalse("nothing needs RigShift running yet");
+
+        editor.RecordHotkey(CtrlAltR.Modifiers, CtrlAltR.VirtualKey);
+        editor.ShowAutostartOff.ShouldBeTrue();
+
+        _host.Settings.Autostart.IsEnabled.Returns(true);
+        editor.TurnOnAutostartCommand.Execute(null);
+
+        _host.Settings.Autostart.Received(1).SetEnabled(true);
+        editor.ShowAutostartOff.ShouldBeFalse();
     }
 
     [Fact]
@@ -322,11 +380,12 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         Profile rig = Rig() with { Apps = [new AppAction { Path = @"C:\a.exe" }, new AppAction { Path = @"C:\b.exe" }] };
         ProfileEditorViewModel editor = await EditorAsync(rig);
 
-        editor.AddApp(string.Empty);
+        editor.AppList.Add(string.Empty);
         editor.AppsProblem.ShouldBe(Loc.Instance["Problem_AppPathMissing"]);
+        editor.AppList.Problem.ShouldBe(editor.AppsProblem, "the list shows it above the cards");
 
-        editor.RemoveAppCommand.Execute(editor.Apps[2]);
-        editor.MoveAppDownCommand.Execute(editor.Apps[0]);
+        editor.AppList.RemoveCommand.Execute(editor.AppList.Items[2]);
+        editor.AppList.MoveDownCommand.Execute(editor.AppList.Items[0]);
         editor.HasAppsProblem.ShouldBeFalse();
 
         await SaveAsync(editor, expected: true);
@@ -340,11 +399,11 @@ public sealed class ProfileEditorViewModelTests : IDisposable
 
         ProfileEditorViewModel editor = await EditorAsync(rig);
 
-        editor.SelectedAppsWaitDevice.ShouldNotBeNull().Key.ShouldBe("VID_1111&PID_2222");
-        editor.SelectedAppsWaitDevice.Name.ShouldContain("Pedals");
+        editor.AppList.WaitDevice.Selected.ShouldNotBeNull().Key.ShouldBe("VID_1111&PID_2222");
+        editor.AppList.WaitDevice.Selected.Name.ShouldContain("Pedals");
         editor.IsDirty.ShouldBeFalse();
 
-        editor.SelectedAppsWaitDevice = editor.AppsWaitDeviceChoices.First(c => c.Key == Wheelbase);
+        editor.AppList.WaitDevice.Selected = editor.AppList.WaitDevice.Choices.First(c => c.Key == Wheelbase);
         await SaveAsync(editor, expected: true);
         Profile saved = _host.Store.Profiles.ShouldHaveSingleItem();
         saved.AppsWaitForUsbDeviceId.ShouldBe(Wheelbase);
@@ -357,15 +416,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         ProfileEditorViewModel editor = await EditorAsync(Rig());
         _desktopIcons.Capture().Returns((DesktopIconLayout?)null);
 
-        editor.CaptureDesktopIconsCommand.Execute(null);
+        await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
         editor.HasDesktopIcons.ShouldBeFalse();
-        editor.DesktopIconsText.ShouldBe(Loc.Instance["Editor_DesktopIconsNone"]);
+        editor.DesktopIconsText.ShouldBe(Loc.Instance["Status_IconsUnavailable"]);
 
         var layout = new DesktopIconLayout { CapturedAt = DateTimeOffset.UtcNow, Icons = [new DesktopIcon { Item = @"C:\Users\x\Desktop\a.lnk", X = 10, Y = 20 }] };
         _desktopIcons.Capture().Returns(layout);
-        editor.CaptureDesktopIconsCommand.Execute(null);
+        await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
 
         editor.HasDesktopIcons.ShouldBeTrue();
+        editor.DesktopIconsText.ShouldNotBe(Loc.Instance["Status_IconsUnavailable"]);
         editor.IsDirty.ShouldBeTrue();
 
         editor.ClearDesktopIconsCommand.Execute(null);
@@ -377,8 +437,8 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     {
         ProfileEditorViewModel editor = await EditorAsync(Rig());
 
-        editor.ShowSurround.ShouldBeFalse();
-        editor.SurroundChoices.ShouldBeEmpty();
+        editor.Surround.IsVisible.ShouldBeFalse();
+        editor.Surround.Choices.ShouldBeEmpty();
     }
 
     [Fact]
@@ -386,14 +446,14 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     {
         var state = new SurroundState { Availability = SurroundAvailability.Available, Grids = [Triple] };
         ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: state);
-        editor.SelectedSurround.ShouldNotBeNull().Key.ShouldBe("unchanged");
+        editor.Surround.Selected.ShouldNotBeNull().Key.ShouldBe("unchanged");
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "on");
-        editor.SurroundHintIsError.ShouldBeFalse();
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "on");
+        editor.Surround.HintIsError.ShouldBeFalse();
         await SaveAsync(editor, expected: true);
         _host.Store.Profiles.ShouldHaveSingleItem().Surround.ShouldBe(new SurroundSetting { Enabled = true, Grid = Triple });
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "off");
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "off");
         await SaveAsync(editor, expected: true);
         _host.Store.Profiles.ShouldHaveSingleItem().Surround.ShouldBe(new SurroundSetting { Enabled = false });
     }
@@ -404,10 +464,10 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         var state = new SurroundState { Availability = SurroundAvailability.Available };
         ProfileEditorViewModel editor = await EditorAsync(Rig(), surround: state);
 
-        editor.SelectedSurround = editor.SurroundChoices.First(c => c.Key == "on");
+        editor.Surround.Selected = editor.Surround.Choices.First(c => c.Key == "on");
 
-        editor.SurroundHintIsError.ShouldBeTrue();
-        editor.SurroundHint.ShouldBe(Loc.Instance["Editor_SurroundNoGrid"]);
+        editor.Surround.HintIsError.ShouldBeTrue();
+        editor.Surround.Hint.ShouldBe(Loc.Instance["Editor_SurroundNoGrid"]);
         editor.IsDirty.ShouldBeFalse("there is nothing to switch on, so nothing changed");
     }
 
@@ -427,17 +487,32 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Rules_Save_KeepsARuleAnotherProfileGotWhileTheEditorWasOpen()
+    {
+        Profile rig = Rig();
+        Guid desk = Guid.NewGuid();
+        ProfileEditorViewModel editor = await EditorAsync(rig);
+        var added = new AutomationRule { ProfileId = desk, Devices = [new RuleDevice { Id = "VID_046D&PID_C547" }] };
+        await _host.Settings.UpdateAsync(s => s with { AutomationRules = [added] }, TestContext.Current.CancellationToken);
+
+        editor.Rules.AddRuleCommand.Execute(null);
+        await SaveAsync(editor, expected: true);
+
+        _host.Settings.Current.AutomationRules.ShouldNotBeNull().Select(r => r.ProfileId).ShouldBe([desk, rig.Id]);
+    }
+
+    [Fact]
     public async Task Save_DiskSaysNo_ShowsTheError_AndTheProfileStaysNewAndDirty()
     {
         IProfileStore store = Substitute.For<IProfileStore>();
-        store.SaveAsync(Arg.Any<Profile>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full"));
+        store.SaveAsync(Arg.Any<Profile>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full", unchecked((int)0x80070070)));
         var catalog = new ProfileCatalog(
             store, _display, new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _host.Settings, _host.Paths, Logger.None);
         ProfileEditorViewModel editor = await EditorAsync(Rig(), isNew: true, catalog: catalog);
 
         await SaveAsync(editor, expected: false);
 
-        editor.ErrorMessage.ShouldNotBeNull().ShouldContain("disk full");
+        editor.ErrorMessage.ShouldBe(Loc.Instance["Error_DiskFull"]);
         editor.IsNew.ShouldBeTrue();
         editor.IsDirty.ShouldBeTrue();
     }
@@ -472,23 +547,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
         powerCheck.Check(Arg.Any<string>()).Returns(new UsbPowerFindings());
         var rules = new ProfileRulesEditor(profile.Id, [], [profile], null, connected, null, powerCheck, Logger.None);
-        var editor = new ProfileEditorViewModel(
-            profile,
-            isNew,
+        var context = new ProfileEditorContext(
             [new AudioDeviceInfo(Speakers, AudioDirection.Render, true, AudioRoleMask.Console), new AudioDeviceInfo(Headset, AudioDirection.Render, true, 0)],
             [new AudioDeviceInfo(Microphone, AudioDirection.Capture, true, AudioRoleMask.Console)],
-            connected,
-            null,
-            [],
-            confirmationEnabled: true,
+            new AppsWaitDeviceChoice(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, connected, [], null),
             surround ?? SurroundState.Unavailable(SurroundAvailability.Unknown),
             rules,
-            catalog ?? _host.Catalog,
-            _display,
-            _desktopIcons,
-            _hotkeys,
-            _host.Settings,
-            Logger.None);
+            ConfirmationEnabled: true);
+        var services = new ProfileEditorServices(
+            catalog ?? _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, _picker, Logger.None);
+        var editor = new ProfileEditorViewModel(profile, isNew, context, services);
         _editors.Add(editor);
         await RatesLoadedAsync(editor);
         return editor;

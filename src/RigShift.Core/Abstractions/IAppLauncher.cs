@@ -8,6 +8,9 @@ public interface IAppLauncher
 
     void Start(string path, string? arguments);
 
+    /// <summary>True when a process of the program shows a window: a visible top-level window of its own.</summary>
+    bool HasWindow(string path);
+
     /// <summary>Closes the program's windows and ends what is still running after <paramref name="grace"/>.</summary>
     /// <returns>False when a process could not be ended (e.g. it runs elevated).</returns>
     Task<bool> StopAsync(string path, TimeSpan grace, CancellationToken cancellationToken);

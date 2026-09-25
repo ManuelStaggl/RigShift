@@ -172,7 +172,7 @@ public sealed class FovViewModelTests : IDisposable
     private FovViewModel Create() => Create(_host);
 
     private FovViewModel Create(AppTestHost host) =>
-        new(host.Display, host.Catalog, _sizes, host.Settings, watcher: null, Logger.None);
+        new(host.Display, host.Catalog, _sizes, host.Settings, Logger.None);
 
     private Task WaitForSettingsAsync(Func<RigShift.Core.Settings.AppSettings, bool> until) => WaitForSettingsAsync(_host, until);
 

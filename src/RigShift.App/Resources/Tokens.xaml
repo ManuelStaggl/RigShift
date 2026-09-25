@@ -16,11 +16,14 @@
   <Color x:Key="RigShift.Color.LayerHover">#253449</Color>
   <Color x:Key="RigShift.Color.Selected">#273E5A</Color>
   <Color x:Key="RigShift.Color.Line">#2C3A52</Color>
-  <Color x:Key="RigShift.Color.LineStrong">#5B6B85</Color>
+  <!-- Derived, raised from #5B6B85 for 3:1 against cards (v4 U-23, WCAG 1.4.11). -->
+  <Color x:Key="RigShift.Color.LineStrong">#708099</Color>
   <!-- Text -->
   <Color x:Key="RigShift.Color.TextPrimary">#F8FAFC</Color>
   <Color x:Key="RigShift.Color.TextSecondary">#B8C6D9</Color>
   <Color x:Key="RigShift.Color.TextDisabled">#6B7A93</Color>
+  <!-- Derived: the hint in an empty field is read, so it needs 4.5:1 on a card (v4 U-23). -->
+  <Color x:Key="RigShift.Color.TextPlaceholder">#8391A8</Color>
   <!-- Accent (primary / onPrimary); hover and pressed are derived. -->
   <Color x:Key="RigShift.Color.Accent">#79B8FF</Color>
   <Color x:Key="RigShift.Color.AccentHover">#8FC4FF</Color>
@@ -50,6 +53,7 @@
   <SolidColorBrush x:Key="RigShift.Brush.TextPrimary" Color="{StaticResource RigShift.Color.TextPrimary}" />
   <SolidColorBrush x:Key="RigShift.Brush.TextSecondary" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="RigShift.Brush.TextDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="RigShift.Brush.TextPlaceholder" Color="{StaticResource RigShift.Color.TextPlaceholder}" />
   <SolidColorBrush x:Key="RigShift.Brush.Accent" Color="{StaticResource RigShift.Color.Accent}" />
   <SolidColorBrush x:Key="RigShift.Brush.AccentHover" Color="{StaticResource RigShift.Color.AccentHover}" />
   <SolidColorBrush x:Key="RigShift.Brush.AccentPressed" Color="{StaticResource RigShift.Color.AccentPressed}" />
@@ -113,6 +117,9 @@
 
   <!-- Geometry: radii and the 4 px spacing scale. -->
   <CornerRadius x:Key="RigShift.Radius.Control">6</CornerRadius>
+  <!-- Focus ring around a control: the radius counts to the middle of its 2 px stroke, so 6 + 0.5 + 1 keeps it
+       concentric with the control's outer edge (6 + 0.5). -->
+  <CornerRadius x:Key="RigShift.Radius.FocusRing">7.5</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Chip">11</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Row">6</CornerRadius>
   <CornerRadius x:Key="RigShift.Radius.Card">12</CornerRadius>
@@ -194,7 +201,7 @@
   <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource RigShift.Color.TextDisabled}" />
-  <SolidColorBrush x:Key="TextPlaceholderColorBrush" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="TextPlaceholderColorBrush" Color="{StaticResource RigShift.Color.TextPlaceholder}" />
   <SolidColorBrush x:Key="LabelForeground" Color="{StaticResource RigShift.Color.TextPrimary}" />
 
   <!-- State (system fill) -->
@@ -243,7 +250,7 @@
   <SolidColorBrush x:Key="TextControlFocusedBorderBrush" Color="{StaticResource RigShift.Color.Accent}" />
   <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource RigShift.Color.TextPrimary}" />
   <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource RigShift.Color.TextDisabled}" />
-  <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource RigShift.Color.TextDisabled}" />
+  <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource RigShift.Color.TextPlaceholder}" />
   <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource RigShift.Color.TextSecondary}" />
   <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource RigShift.Color.Page}" />
   <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource RigShift.Color.Page}" />

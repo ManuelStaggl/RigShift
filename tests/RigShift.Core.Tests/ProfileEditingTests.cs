@@ -33,6 +33,31 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void Capture_LeavesHdrAsWindowsHasIt()
+    {
+        // K-12: a captured profile that sets HDR turned every change in Windows back on the next switch.
+        DisplaySnapshot hdrOn = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = true }));
+
+        ProfileEditing.Capture("Rig", hdrOn).Displays.Single().Hdr.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CapturedArrangement_KeepsTheProfilesHdrChoice()
+    {
+        DisplaySnapshot live = Snapshot(
+            Attached(Desk4K, activeMode: DeskModes[0] with { Hdr = true }),
+            Attached(DeskLeft, activeMode: DeskModes[1] with { Hdr = true }),
+            Attached(DeskRight, activeMode: DeskModes[2] with { Hdr = true }));
+
+        IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CapturedArrangement(
+            live, [DeskModes[0] with { Hdr = false }, DeskModes[1] with { Hdr = null }]);
+
+        arrangement.Single(d => d.Identity == Desk4K).Hdr.ShouldBe(false);
+        arrangement.Single(d => d.Identity == DeskLeft).Hdr.ShouldBeNull();
+        arrangement.Single(d => d.Identity == DeskRight).Hdr.ShouldBeNull();
+    }
+
+    [Fact]
     public void SetPrimary_ShiftsAllPositionsSoThePrimaryIsAtOrigin()
     {
         IReadOnlyList<DisplayAssignment> displays = [DeskModes[1], DeskModes[0], DeskModes[2]];

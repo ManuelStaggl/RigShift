@@ -3,11 +3,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Settings;
 using RigShift.Core.Topology;
+using RigShift.Windows.Display;
 
 namespace RigShift.App.Services;
 
 /// <summary>Everything the diagnostic report is built from. An error text replaces a part that could not be read.</summary>
+/// <param name="TextScalePercent">The Windows "Text size", <c>null</c> when it was never changed.</param>
 public sealed record DiagnosticsInput(
     string Version,
     bool IsInstalled,
@@ -19,7 +22,11 @@ public sealed record DiagnosticsInput(
     IReadOnlyList<Profile> Profiles,
     Guid? ActiveProfileId,
     IReadOnlyDictionary<string, string> DisplayNames,
-    IReadOnlyList<SwitchRecord> History);
+    IReadOnlyList<SwitchRecord> History,
+    IReadOnlyList<GraphicsDriver>? Graphics = null,
+    AppSettings? Settings = null,
+    int GameCount = 0,
+    int? TextScalePercent = null);
 
 /// <summary>
 /// Plain-text report to paste into a GitHub issue ("Copy diagnostic info"). English and invariant culture on purpose:
@@ -36,6 +43,23 @@ public static partial class DiagnosticsReport
         text.AppendLine(FormattableString.Invariant($"RigShift {input.Version}{(input.IsInstalled ? string.Empty : " (development build)")}"));
         text.AppendLine(FormattableString.Invariant($"Windows {Environment.OSVersion.Version} ({RuntimeInformation.OSArchitecture}), .NET {Environment.Version}"));
         text.AppendLine(FormattableString.Invariant($"Created {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}"));
+
+        // The first question in every display issue: which card, which driver (v4 finding E-07).
+        text.AppendLine().AppendLine("## Graphics");
+        if (input.Graphics is not { Count: > 0 })
+        {
+            text.AppendLine("Could not be read.");
+        }
+
+        foreach (GraphicsDriver driver in input.Graphics ?? [])
+        {
+            text.AppendLine(FormattableString.Invariant($"- {driver}"));
+        }
+
+        if (input.Settings is { } settings)
+        {
+            AppendSettings(text, settings, input.GameCount, input.TextScalePercent);
+        }
 
         text.AppendLine().AppendLine("## Displays");
         if (input.Snapshot is null)
@@ -74,7 +98,7 @@ public static partial class DiagnosticsReport
             string displays = string.Join(", ", profile.Displays.Select(d =>
                 DisplayNames.Of(d) + (d.IsPrimary ? " (primary)" : string.Empty) + (d.IsOptional ? " (optional)" : string.Empty)));
             text.AppendLine(FormattableString.Invariant(
-                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s)"));
+                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s){(profile.KeepAwake ? ", keeps awake" : string.Empty)}"));
         }
 
         text.AppendLine().AppendLine("## Recent switches");
@@ -94,20 +118,39 @@ public static partial class DiagnosticsReport
 
     /// <summary>
     /// Replaces the user's profile folder with <c>%USERPROFILE%</c> and any other <c>\Users\&lt;name&gt;</c> segment
-    /// with <c>\Users\&lt;user&gt;</c> – messages can carry app paths, and the report is meant for a public issue.
+    /// with <c>\Users\&lt;user&gt;</c> – messages can carry app paths, and the report is meant for a public issue. Also in
+    /// JSON, where every backslash is doubled: the support package carries the profile files.
     /// </summary>
     internal static string Anonymize(string report, string? userProfile)
     {
         ArgumentNullException.ThrowIfNull(report);
         if (!string.IsNullOrEmpty(userProfile))
         {
-            report = report.Replace(userProfile.TrimEnd('\\'), "%USERPROFILE%", StringComparison.OrdinalIgnoreCase);
+            string folder = userProfile.TrimEnd('\\');
+            report = report
+                .Replace(folder.Replace(@"\", @"\\", StringComparison.Ordinal), "%USERPROFILE%", StringComparison.OrdinalIgnoreCase)
+                .Replace(folder, "%USERPROFILE%", StringComparison.OrdinalIgnoreCase);
         }
 
         return UsersSegment().Replace(report, "<user>");
     }
 
-    [GeneratedRegex(@"(?<=\\Users\\)[^\\/\s""<>]+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static void AppendSettings(StringBuilder text, AppSettings settings, int gameCount, int? textScalePercent)
+    {
+        int rules = settings.AutomationRules?.Count ?? 0;
+        text.AppendLine().AppendLine("## Settings");
+        text.AppendLine(FormattableString.Invariant($"Language {settings.Language ?? "Windows"}, text size {textScalePercent ?? 100} %"));
+        text.AppendLine(FormattableString.Invariant($"Updates: {(settings.OnlyNotifyAboutUpdates ? "notify only" : "install automatically")}"));
+        text.AppendLine(FormattableString.Invariant($"Confirmation: {(settings.ConfirmTimeoutSeconds > 0 ? $"{settings.ConfirmTimeoutSeconds} s" : "off")}"));
+        text.AppendLine(FormattableString.Invariant(
+            $"Default profile: {(settings.DefaultProfileId is null ? "none" : "set")}, switch-back hotkey: {(settings.ToggleHotkey is null ? "none" : "set")}"));
+        text.AppendLine(FormattableString.Invariant($"USB rules: {rules}{(rules > 0 && settings.AutomationPaused ? " (paused)" : string.Empty)}"));
+        text.AppendLine(FormattableString.Invariant($"Games: {gameCount}"));
+        text.AppendLine(FormattableString.Invariant($"Detailed log: {(settings.DetailedLogging ? "on" : "off")}"));
+    }
+
+    // In JSON the backslash after "Users" is doubled.
+    [GeneratedRegex(@"(?<=\\Users\\\\?)[^\\/\s""<>]+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex UsersSegment();
 
     private static void AppendDisplay(StringBuilder text, AttachedDisplay display, string? customName)
@@ -122,7 +165,9 @@ public static partial class DiagnosticsReport
         }
 
         text.AppendLine();
-        text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}"));
+        // Four digits of the fingerprint are enough to see whether identical monitors report different serial numbers (K-03).
+        string serial = display.Identity.EdidSerialHash is { Length: >= 4 } hash ? "serial " + hash[..4] : "no serial number";
+        text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}, {serial}"));
         text.AppendLine(FormattableString.Invariant($"  target {ShortTargetPath(display.Identity.TargetDevicePath)}"));
         text.AppendLine(FormattableString.Invariant($"  adapter {ShortAdapterPath(display.Identity.AdapterDevicePath)}"));
     }

@@ -7,6 +7,9 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>RigShift.Core.Tests</RootNamespace>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <!-- Without it the coverage package copies every runtimes/<rid> folder into the output, and a deep clone path
+         breaks the build on MAX_PATH. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

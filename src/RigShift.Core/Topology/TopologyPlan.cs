@@ -22,6 +22,12 @@ public sealed record TopologyPlan
     /// <summary>True if at least one non-optional display is missing.</summary>
     public bool IsBlocked => Missing.Any(m => !m.Assignment.IsOptional);
 
+    /// <summary>
+    /// True if a required display is attached but cannot be told apart from an identical one (v4 finding K-03): waiting or
+    /// switching a display on does not help, only saving the arrangement again.
+    /// </summary>
+    public bool IsAmbiguous => Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous);
+
     /// <summary>True if every missing display is optional and may show up later (spacedesk, sleeping HDMI monitor).</summary>
     public bool ShouldRetryLater => Missing.Count > 0 && !IsBlocked;
 }
@@ -34,6 +40,12 @@ public enum MissingReason
 {
     NotAttached,
     AttachedButUnavailable,
+
+    /// <summary>
+    /// Identical monitors are attached – at least as many as the profile misses of that model – but none is on a saved
+    /// port and nothing else tells them apart (v4 finding K-03). Switching a display on would not help.
+    /// </summary>
+    Ambiguous,
 }
 
 public sealed record PlanWarning(PlanWarningKind Kind, string Message);

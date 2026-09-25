@@ -129,3 +129,21 @@ SHGetDesktopFolder
 SHGDNF
 ILFree
 StrRetToStrW
+// Countdown: any button on a wheel, button box or game controller keeps the switch (v4 finding U-04). Raw Input for the
+// reports, the HID parser for which buttons they hold; axes and hat switches are never read.
+RegisterRawInputDevices
+GetRawInputData
+GetRawInputDeviceInfo
+RAWINPUT
+RAWINPUTDEVICE
+RAWINPUTDEVICE_FLAGS
+RAW_INPUT_DATA_COMMAND_FLAGS
+RAW_INPUT_DEVICE_INFO_COMMAND
+HidP_GetUsagesEx
+HidP_MaxUsageListLength
+USAGE_AND_PAGE
+HIDP_REPORT_TYPE
+RID_DEVICE_INFO_TYPE
+HIDP_STATUS_SUCCESS
+
+ShutdownBlockReasonCreate

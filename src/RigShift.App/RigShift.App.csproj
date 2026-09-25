@@ -55,4 +55,19 @@
     <Resource Include="Assets\Brand\*.ico;Assets\Brand\*.png" />
   </ItemGroup>
 
+  <!-- The versioned Windows TFM brings the C#/WinRT projection along: 56 MiB, a quarter of the installed app, and no
+       assembly in the package references it (v4 finding E-02). WinRT.Runtime.dll stays - the CsWin32 marshalling and
+       CommunityToolkit.Mvvm use it. IncludeWindowsSDKRefFrameworkReferences=false would drop that one too. -->
+  <Target Name="DropWindowsSdkProjection" AfterTargets="ResolveRuntimePackAssets">
+    <ItemGroup>
+      <RuntimePackAsset Remove="@(RuntimePackAsset)" Condition="'%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DropWindowsSdkProjectionFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup>
+  </Target>
+
 </Project>
