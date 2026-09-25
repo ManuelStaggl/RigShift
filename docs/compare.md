@@ -29,6 +29,7 @@ welcome as an [issue](https://github.com/ManuelStaggl/RigShift/issues).
 | HDR, refresh rate per monitor | ✓ | ✓ | ~ | refresh rate | – | ~ |
 | Audio output and microphone | ✓ with volume | ✓ per shortcut | ~ output | ✓ | – | ~ |
 | Start and close apps | ✓ | ✓ | ~ scripts | ✓ | – | ~ |
+| Finds installed games | Steam, Epic, EA, Xbox, iRacing | Steam, Epic, GOG, EA, Ubisoft | – | ✓ | – | – |
 | Game session, back when it ends | ✓ also when started from Steam | ✓ | ~ | ✓ | – | ~ |
 | Window positions of your tools | ✓ per game | – | ✓ | ✓ | – | ~ |
 | Desktop icons per profile | ✓ | – | ✓ | ? | – | – |
@@ -46,7 +47,7 @@ welcome as an [issue](https://github.com/ManuelStaggl/RigShift/issues).
 
 ## Stay with …
 
-**DisplayMagician** if you run AMD Eyefinity, launch games from GOG, EA or Ubisoft, or your setup has worked for years.
+**DisplayMagician** if you run AMD Eyefinity, launch games from GOG or Ubisoft, or your setup has worked for years.
 It ties a display profile to a game shortcut. RigShift keeps the PC in rig mode as long as the rig is on and adds the
 countdown, desktop icons and window positions. DisplayMagician 3.0 is in development and will add audio profiles and
 a signed installer.

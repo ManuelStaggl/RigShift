@@ -36,7 +36,7 @@ management. [Detailed comparison](docs/compare.md) · [FAQ](docs/faq.md)
 
 - **Profiles** – which monitors are on, layout, main display, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume.
 - **Triggers** – wheelbase on/off, hotkey, desktop shortcut, Stream Deck, `rigshift://` link, command line.
-- **Games** – one click: switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam or Epic, clean up after.
+- **Games** – one click: switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam, Epic, EA, Xbox or iRacing, clean up after.
 - **Safety net** – the whole layout is applied in one step; no picture means it reverts after a countdown, even after a crash.
 - **Real hardware** – wakes sleeping monitors, waits for a slow G9, skips optional screens like a spacedesk tablet.
 - **Desktop icons** – each profile keeps its own icon layout and puts it back after the switch.
