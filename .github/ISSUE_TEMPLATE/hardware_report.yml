@@ -1,0 +1,60 @@
+name: Hardware report
+description: RigShift works – or doesn't – on my setup
+labels: [hardware]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for reporting. Every report ends up in the "Tested on" table of the README, so the next person with the
+        same hardware knows what to expect.
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Works
+        - Works with issues
+        - Doesn't work
+    validations:
+      required: true
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: Graphics
+      options:
+        - NVIDIA
+        - AMD
+        - Intel
+        - More than one GPU
+    validations:
+      required: true
+  - type: dropdown
+    id: spanning
+    attributes:
+      label: Surround / Eyefinity
+      options:
+        - Not used
+        - NVIDIA Surround
+        - AMD Eyefinity
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Displays and what you switch
+      description: Monitors, how they are connected (DisplayPort, HDMI, adapter, KVM), virtual displays (spacedesk, VR), and which profiles you use.
+      placeholder: "Desk: 2× 27\" 1440p (DP). Rig: Odyssey G9 (DP) + spacedesk tablet. USB rule on the wheelbase."
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: In RigShift, **Help → Copy diagnostics** and paste the text. It holds GPU, driver and display names, not your Windows user name.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What worked, what didn't
