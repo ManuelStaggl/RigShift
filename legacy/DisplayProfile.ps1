@@ -1,14 +1,13 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-    Speichert oder lädt komplette Monitor-Profile über die Windows CCD-API.
+    Saves or loads complete monitor profiles through the Windows CCD API.
 
 .DESCRIPTION
-    Nutzt QueryDisplayConfig/SetDisplayConfig, um die gesamte Anzeige-Topologie
-    (aktive Bildschirme, Auflösung, Bildrate, Position, Hauptanzeige) in einem
-    einzigen Schritt umzuschalten. Adapter-LUIDs und Target-IDs werden beim Laden
-    anhand der Geräte-Pfade neu zugeordnet, damit Profile auch nach Neustarts
-    oder erneutem Verbinden (z. B. spacedesk) gültig bleiben.
+    Uses QueryDisplayConfig/SetDisplayConfig to switch the whole display topology
+    (active displays, resolution, refresh rate, position, main display) in a
+    single step. Adapter LUIDs and target IDs are remapped by device path on load,
+    so profiles stay valid after a restart or a reconnect (e.g. spacedesk).
 
 .EXAMPLE
     .\DisplayProfile.ps1 -Action Save -Name Rig
@@ -102,11 +101,11 @@ public static class DisplayProfileNative
     {
         uint np, nm;
         int err = GetDisplayConfigBufferSizes(flags, out np, out nm);
-        if (err != 0) throw new InvalidOperationException("GetDisplayConfigBufferSizes Fehler " + err);
+        if (err != 0) throw new InvalidOperationException("GetDisplayConfigBufferSizes error " + err);
         paths = new PATH[np];
         modes = new MODE[nm];
         err = QueryDisplayConfig(flags, ref np, paths, ref nm, modes, IntPtr.Zero);
-        if (err != 0) throw new InvalidOperationException("QueryDisplayConfig Fehler " + err);
+        if (err != 0) throw new InvalidOperationException("QueryDisplayConfig error " + err);
         Array.Resize(ref paths, (int)np);
         Array.Resize(ref modes, (int)nm);
     }
@@ -142,7 +141,7 @@ public static class DisplayProfileNative
 
     static T FromBytes<T>(byte[] bytes) where T : struct
     {
-        if (bytes.Length != Marshal.SizeOf(typeof(T))) throw new InvalidOperationException("Profildatei beschädigt");
+        if (bytes.Length != Marshal.SizeOf(typeof(T))) throw new InvalidOperationException("Profile file is corrupt");
         var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
         try { return (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T)); }
         finally { handle.Free(); }
@@ -154,7 +153,7 @@ public static class DisplayProfileNative
     {
         PATH[] paths; MODE[] modes;
         Query(QDC_ONLY_ACTIVE_PATHS, out paths, out modes);
-        if (paths.Length == 0) throw new InvalidOperationException("Keine aktiven Bildschirme gefunden");
+        if (paths.Length == 0) throw new InvalidOperationException("No active displays found");
 
         var sb = new StringBuilder();
         foreach (var p in paths)
@@ -220,7 +219,7 @@ public static class DisplayProfileNative
             if (f[0] == "P" && f.Length >= 6) { savedPaths.Add(FromBytes<PATH>(Convert.FromBase64String(f[1]))); savedPathInfo.Add(f); }
             else if (f[0] == "M" && f.Length >= 4) { savedModes.Add(FromBytes<MODE>(Convert.FromBase64String(f[1]))); savedModeInfo.Add(f); }
         }
-        if (savedPaths.Count == 0) throw new InvalidOperationException("Profil enthält keine Bildschirme");
+        if (savedPaths.Count == 0) throw new InvalidOperationException("Profile contains no displays");
 
         var outPaths = new List<PATH>(); var outModes = new List<MODE>(); var indexMap = new Dictionary<uint, uint>();
         for (int i = 0; i < savedPaths.Count; i++)
@@ -229,7 +228,7 @@ public static class DisplayProfileNative
             LUID srcLuid, tgtLuid; uint targetId;
             if (!adapters.TryGetValue(info[2], out srcLuid) || !adapters.TryGetValue(info[3], out tgtLuid) || !targets.TryGetValue(info[3] + "|" + info[4], out targetId))
             {
-                log.AppendLine("Nicht verfügbar, übersprungen: " + info[5]);
+                log.AppendLine("Not available, skipped: " + info[5]);
                 continue;
             }
             p.sourceInfo.adapterId = srcLuid;
@@ -239,22 +238,22 @@ public static class DisplayProfileNative
             p.sourceInfo.modeInfoIdx = MapMode(p.sourceInfo.modeInfoIdx, savedModes, savedModeInfo, adapters, indexMap, outModes, false, 0);
             p.targetInfo.modeInfoIdx = MapMode(p.targetInfo.modeInfoIdx, savedModes, savedModeInfo, adapters, indexMap, outModes, true, targetId);
             outPaths.Add(p);
-            log.AppendLine("Aktivieren: " + info[5]);
+            log.AppendLine("Enabling: " + info[5]);
         }
-        if (outPaths.Count == 0) throw new InvalidOperationException("Keiner der Bildschirme des Profils ist verfügbar");
+        if (outPaths.Count == 0) throw new InvalidOperationException("None of the profile's displays is available");
 
         uint flags = SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_SAVE_TO_DATABASE | SDC_ALLOW_CHANGES;
         var pathArray = outPaths.ToArray();
         int result = SetDisplayConfig((uint)pathArray.Length, pathArray, (uint)outModes.Count, outModes.ToArray(), flags);
-        log.AppendLine("SetDisplayConfig mit Modi: " + result);
+        log.AppendLine("SetDisplayConfig with modes: " + result);
 
         if (result != 0)
         {
             for (int i = 0; i < pathArray.Length; i++) { pathArray[i].sourceInfo.modeInfoIdx = INVALID_IDX; pathArray[i].targetInfo.modeInfoIdx = INVALID_IDX; }
             result = SetDisplayConfig((uint)pathArray.Length, pathArray, 0, null, flags);
-            log.AppendLine("SetDisplayConfig ohne Modi: " + result);
+            log.AppendLine("SetDisplayConfig without modes: " + result);
         }
-        if (result != 0) throw new InvalidOperationException(log.ToString().Trim() + " | Fehlercode " + result);
+        if (result != 0) throw new InvalidOperationException(log.ToString().Trim() + " | error code " + result);
         return log.ToString();
     }
 }
@@ -286,7 +285,7 @@ public static class DisplayProfileAudio
     [ComImport, Guid("870af99c-171d-4f9e-af0d-e63df40c2bc9")]
     class PolicyConfigClient { }
 
-    // Rollen: 0 = Konsole, 1 = Multimedia, 2 = Kommunikation
+    // Roles: 0 = console, 1 = multimedia, 2 = communications
     public static void SetDefault(string deviceId)
     {
         var client = new PolicyConfigClient();
@@ -318,13 +317,13 @@ function Set-ProfileAudio {
     if (-not $audio -or -not $audio.DeviceId) { return }
 
     if ($audio.DeviceId -notmatch '^\{0\.0\.0\.00000000\}\.\{[0-9a-fA-F-]{36}\}$') {
-        throw "Ungültige Audio-Geräte-ID in $configFile"
+        throw "Invalid audio device ID in $configFile"
     }
 
     $endpointGuid = $audio.DeviceId.Substring($audio.DeviceId.IndexOf('}.') + 2)
     $state = (Get-ItemProperty -LiteralPath (Join-Path $renderKey $endpointGuid) -ErrorAction SilentlyContinue).DeviceState
     if ($null -eq $state -or ($state -band 0xF) -ne 1) {
-        Write-Log "Audio: $($audio.DeviceName) nicht verfügbar, Standardgerät unverändert"
+        Write-Log "Audio: $($audio.DeviceName) not available, default device unchanged"
         return
     }
 
@@ -332,7 +331,7 @@ function Set-ProfileAudio {
         Add-Type -TypeDefinition $audioSource -Language CSharp
     }
     [DisplayProfileAudio]::SetDefault($audio.DeviceId)
-    Write-Log "Audio: Standardgerät gesetzt auf $($audio.DeviceName)"
+    Write-Log "Audio: default device set to $($audio.DeviceName)"
 }
 
 $exitCode = 0
@@ -346,30 +345,30 @@ try {
         'Save' {
             $data = [DisplayProfileNative]::Save()
             Set-Content -Path $profileFile -Value $data -Encoding utf8
-            Write-Log "Profil gespeichert: $profileFile"
+            Write-Log "Profile saved: $profileFile"
         }
         'Apply' {
             if (-not (Test-Path -LiteralPath $profileFile)) {
-                throw "Profil nicht gefunden: $profileFile"
+                throw "Profile not found: $profileFile"
             }
             $profileText = Get-Content -LiteralPath $profileFile -Raw -Encoding utf8
             $maxAttempts = 5
             $retryDelaySeconds = 3
             for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
                 try {
-                    # Apply fragt Adapter und Bildschirme bei jedem Versuch neu ab (z. B. G9 erst nach Aufwachen verfügbar)
+                    # Apply queries adapters and displays again on every attempt (e.g. the G9 only shows up after waking)
                     $result = [DisplayProfileNative]::Apply($profileText)
                     foreach ($line in ($result -split "`r?`n" | Where-Object { $_ })) {
                         Write-Log $line
                     }
                     if ($attempt -gt 1) {
-                        Write-Log "Anzeige erfolgreich im Versuch $attempt von $maxAttempts"
+                        Write-Log "Display applied on attempt $attempt of $maxAttempts"
                     }
                     break
                 }
                 catch {
                     if ($attempt -ge $maxAttempts) { throw }
-                    Write-Log "Versuch $attempt von $maxAttempts fehlgeschlagen, neuer Versuch in $retryDelaySeconds s: $($_.Exception.Message -replace '\r?\n', ' / ')"
+                    Write-Log "Attempt $attempt of $maxAttempts failed, retrying in $retryDelaySeconds s: $($_.Exception.Message -replace '\r?\n', ' / ')"
                     Start-Sleep -Seconds $retryDelaySeconds
                 }
             }
@@ -377,7 +376,7 @@ try {
     }
 }
 catch {
-    Write-Log "FEHLER Anzeige: $($_.Exception.Message)"
+    Write-Log "ERROR display: $($_.Exception.Message)"
     $exitCode = 1
 }
 
@@ -386,7 +385,7 @@ if ($Action -eq 'Apply') {
         Set-ProfileAudio
     }
     catch {
-        Write-Log "FEHLER Audio: $($_.Exception.Message)"
+        Write-Log "ERROR audio: $($_.Exception.Message)"
         $exitCode = 1
     }
 }
