@@ -16,8 +16,7 @@ public sealed class TopologyPlannerTests
 
     /// <summary>An identical desk monitor as Windows names it: model, the card's instance part, then the port.</summary>
     private static DisplayIdentity Twin(string adapter, string cardInstance, int port, string? serial = null) =>
-        Identity(adapter, $@"\\?\DISPLAY#XEC2389#{cardInstance}&0&UID{port}#{{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}}", TwinMaker, 0x2389, "CM27X3")
-            with { EdidSerialHash = serial };
+        Identity(adapter, $@"\\?\DISPLAY#XEC2389#{cardInstance}&0&UID{port}#{{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}}", TwinMaker, 0x2389, "CM27X3") with { EdidSerialHash = serial };
 
     private static Profile TwinDesk(DisplayIdentity left, DisplayIdentity right) =>
         Profile("Desk", [Mode(left, 2560, 1440, 144, primary: true), Mode(right, 2560, 1440, 144, x: 2560)]);

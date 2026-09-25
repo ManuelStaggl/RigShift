@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO;
 using Serilog;
 using Serilog.Core;
@@ -36,13 +35,17 @@ public static class AppLogging
     {
         ArgumentNullException.ThrowIfNull(paths);
 
-        return new LoggerConfiguration()
+        var configuration = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(Level)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ProcessId", Environment.ProcessId)
             // Static Log.* calls have no context of their own; "App" rather than an empty column (v4 finding E-17).
-            .Enrich.WithProperty("SourceContext", "App")
-            .WriteTo.Debug(formatProvider: CultureInfo.InvariantCulture)
+            .Enrich.WithProperty("SourceContext", "App");
+#if DEBUG
+        // An OutputDebugString per line helps nobody in a release build.
+        configuration = configuration.WriteTo.Debug(formatProvider: System.Globalization.CultureInfo.InvariantCulture);
+#endif
+        return configuration
             .WriteTo.File(
                 new LogLineFormatter(OutputTemplate),
                 Path.Combine(paths.Logs, "rigshift-.log"),
