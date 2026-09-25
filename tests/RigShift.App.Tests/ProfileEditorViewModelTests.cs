@@ -207,7 +207,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.HotkeyHint.ShouldBe(Loc.Instance["Problem_HotkeyInUse"]);
 
         editor.Hotkey.ShouldBeNull();
-        editor.HotkeyText.ShouldBe(Loc.Instance["Editor_HotkeyPlaceholder"]);
+        editor.HotkeyText.ShouldBeEmpty();
     }
 
     [Fact]

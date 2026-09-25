@@ -278,7 +278,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public partial Hotkey? Hotkey { get; set; }
 
     /// <summary>The combination, or the placeholder while there is none (the field is read-only, so it has no placeholder of its own).</summary>
-    public string HotkeyText => Hotkey is null ? Loc.Instance["Editor_HotkeyPlaceholder"] : HotkeyFormat.Format(Hotkey);
+    public string HotkeyText => Hotkey is null ? string.Empty : HotkeyFormat.Format(Hotkey);
 
     public bool HasHotkey => Hotkey is not null;
 

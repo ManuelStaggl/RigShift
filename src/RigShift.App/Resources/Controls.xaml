@@ -297,19 +297,42 @@
               BorderThickness="{TemplateBinding BorderThickness}"
               CornerRadius="{DynamicResource RigShift.Radius.Control}"
               SnapsToDevicePixels="True">
-              <ScrollViewer
-                x:Name="PART_ContentHost"
-                Margin="0"
-                Padding="0"
-                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                Focusable="False" />
+              <Grid>
+                <!-- The hint from Tag while the field is empty (v4 U-15: an empty hotkey field said nothing). -->
+                <TextBlock
+                  x:Name="Placeholder"
+                  Margin="{TemplateBinding Padding}"
+                  VerticalAlignment="Center"
+                  Foreground="{DynamicResource RigShift.Brush.TextPlaceholder}"
+                  IsHitTestVisible="False"
+                  Text="{TemplateBinding Tag}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="Collapsed" />
+                <ScrollViewer
+                  x:Name="PART_ContentHost"
+                  Margin="0"
+                  Padding="0"
+                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                  Focusable="False" />
+              </Grid>
             </Border>
           </Grid>
           <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+            </Trigger>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
               <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
             </Trigger>
+            <!-- Typing replaces the hint; a read-only recorder field keeps it while it waits for the keys. -->
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsKeyboardFocusWithin" Value="True" />
+                <Condition Property="IsReadOnly" Value="False" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed" />
+            </MultiTrigger>
             <Trigger Property="controls:Interaction.IsInvalid" Value="True">
               <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
             </Trigger>

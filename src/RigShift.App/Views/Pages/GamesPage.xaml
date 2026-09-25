@@ -554,6 +554,7 @@
                       IsReadOnly="True"
                       IsReadOnlyCaretVisible="False"
                       Style="{StaticResource RigShift.Field.Value}"
+                      Tag="{loc:Tr Editor_HotkeyPlaceholder}"
                       Text="{Binding HotkeyText, Mode=OneWay}"
                       ToolTip="{loc:Tr Hotkey_RecordTip}"
                       controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Globalization;
 using System.Resources;
+using System.Text.RegularExpressions;
 using RigShift.App.Localization;
 using RigShift.Core.Games;
 using RigShift.Core.Profiles;
@@ -56,12 +57,48 @@ public sealed class LocalizationTests
         missing.ShouldBeEmpty($"missing in Strings.resx: {string.Join(", ", missing)}");
     }
 
-    private static IEnumerable<string> Keys(CultureInfo culture)
+    /// <summary>
+    /// One word per thing (v4 findings U-15…U-18): a layout is not also an arrangement or a setup – in sim racing a
+    /// setup is the car's –, a hotkey is not also a shortcut, and English is American like Windows. Pages that were
+    /// renamed must not live on in texts that point at them.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(WordsNotToUse))]
+    public void Texts_UseTheGlossary(string culture, string pattern, string instead)
+    {
+        var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+        string[] found = [.. Entries(culture == "en" ? CultureInfo.InvariantCulture : CultureInfo.GetCultureInfo(culture))
+            .Where(e => !GlossaryExceptions.Contains(e.Key) && regex.IsMatch(e.Value))
+            .Select(e => $"{e.Key}: {e.Value}")];
+
+        found.ShouldBeEmpty($"use {instead}");
+    }
+
+    public static TheoryData<string, string, string> WordsNotToUse() => new()
+    {
+        { "en", @"arrangement", "“layout”" },
+        { "en", @"\bsetups\b|\b(first|second|desk|rig|your) setup\b", "“layout” – a setup is the car's" },
+        { "en", @"keyboard shortcut|(?<!desktop )\bshortcuts?\b", "“hotkey”, or “desktop shortcut” for the file" },
+        { "en", @"previous profile", "“Switch back” / “last profile”" },
+        { "en", @"^(Unchanged|Leave|Apply again|Stay in the profile)$", "“Don't change” / “Re-apply”" },
+        { "en", @"About & help|profile editor|automation rule", "the current page names: Help, Profiles, USB rules" },
+        { "en", @"recognis|\bcentre|neighbour|colour|behaviour|\bgrey|favourite|metres?\b|customis|analys|cancelled|\btick", "American spelling" },
+        { "de", @"\bAufbau(ten)?\b", "„Anordnung“" },
+        { "de", @"Hotkey", "„Tastenkürzel“" },
+        { "de", @"Vorheriges Profil|Automatik-Regel|Über & Hilfe|Profileditor", "die aktuellen Namen: Zurückschalten, USB-Regel, Hilfe, Profile" },
+    };
+
+    /// <summary>Texts that quote a sim's own menu, which has its own spelling.</summary>
+    private static readonly HashSet<string> GlossaryExceptions = ["Fov_Where_F1"];
+
+    private static IEnumerable<string> Keys(CultureInfo culture) => Entries(culture).Select(e => e.Key);
+
+    private static IEnumerable<KeyValuePair<string, string>> Entries(CultureInfo culture)
     {
         var resources = new ResourceManager("RigShift.App.Resources.Strings", typeof(Loc).Assembly);
         ResourceSet set = resources.GetResourceSet(culture, createIfNotExists: true, tryParents: false)
             ?? throw new InvalidOperationException($"No resources for {culture.Name}");
 
-        return set.Cast<DictionaryEntry>().Select(e => (string)e.Key);
+        return set.Cast<DictionaryEntry>().Select(e => new KeyValuePair<string, string>((string)e.Key, e.Value as string ?? string.Empty));
     }
 }

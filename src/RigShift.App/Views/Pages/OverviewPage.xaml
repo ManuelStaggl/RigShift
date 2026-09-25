@@ -261,7 +261,6 @@
       <StackPanel Visibility="{Binding Games.HasGames, Converter={StaticResource BoolToVisibility}}">
         <StackPanel Margin="0,24,0,10" Orientation="Horizontal">
           <TextBlock VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Section}" Text="{loc:Tr Nav_Games}" />
-          <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Overview_GamesHint}" />
         </StackPanel>
         <Border Padding="0" ClipToBounds="True" Style="{StaticResource RigShift.Card}">
           <ItemsControl Focusable="False" IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Games.Items}">

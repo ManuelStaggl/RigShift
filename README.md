@@ -64,7 +64,7 @@ starts the sim with the right screens, its tools and their windows, and puts eve
 1. Download `RigShift-win-Setup.exe` from the [latest release](https://github.com/ManuelStaggl/RigShift/releases/latest)
    and run it (a portable ZIP is attached too). RigShift installs per user and starts in the tray.
 2. The setup assistant saves your desk, then your rig after you rearrange the displays, and can add a wheelbase rule.
-3. Later, arrange displays in the Windows settings and pick **New → From the current arrangement**, or edit any profile.
+3. Later, arrange displays in the Windows settings and pick **New → From the current layout**, or edit any profile.
 
 RigShift is not code-signed, so SmartScreen may warn on first start: **More info → Run anyway**. Updates install on
 the next start (Settings). Data lives in `%AppData%\RigShift`.

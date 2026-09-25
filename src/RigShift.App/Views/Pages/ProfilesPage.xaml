@@ -582,8 +582,8 @@
                             AutomationProperties.Name="{loc:Tr Editor_CustomName}"
                             MaxLength="40"
                             Style="{StaticResource RigShift.Field}"
-                            Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="{loc:Tr Editor_CustomNamePlaceholder}" />
+                            Tag="{loc:Tr Editor_CustomNamePlaceholder}"
+                            Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                           <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="{loc:Tr Editor_RefreshRate}" />
@@ -664,7 +664,7 @@
                   Title="{loc:Tr Editor_Surround}"
                   Visibility="{Binding Surround.IsVisible, Converter={StaticResource BoolToVisibility}, Mode=OneTime}">
                   <ListBox
-                    Width="240"
+                    Width="330"
                     AutomationProperties.Name="{loc:Tr Editor_Surround}"
                     DisplayMemberPath="Name"
                     ItemsSource="{Binding Surround.Choices}"
@@ -1054,6 +1054,7 @@
                       IsReadOnly="True"
                       IsReadOnlyCaretVisible="False"
                       Style="{StaticResource RigShift.Field.Value}"
+                      Tag="{loc:Tr Editor_HotkeyPlaceholder}"
                       Text="{Binding HotkeyText, Mode=OneWay}"
                       ToolTip="{loc:Tr Hotkey_RecordTip}"
                       controls:Interaction.IsInvalid="{Binding HasHotkeyProblem}" />

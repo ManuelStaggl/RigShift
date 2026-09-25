@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav_Profiles" xml:space="preserve"><value>Profiles</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
-  <data name="Profiles_EmptyText" xml:space="preserve"><value>No profiles yet. Save the current arrangement to create one.</value></data>
+  <data name="Profiles_EmptyText" xml:space="preserve"><value>No profiles yet. Save the current layout to create one.</value></data>
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} file(s) could not be read: {1}. Details are in the log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Switch</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Active</value></data>
@@ -17,7 +17,7 @@
   <data name="Check_Ready" xml:space="preserve"><value>Ready: all displays are available.</value></data>
   <data name="Check_OptionalMissing" xml:space="preserve"><value>Ready. Not available (optional, skipped): {0}</value></data>
   <data name="Check_Blocked" xml:space="preserve"><value>Not possible right now. Missing displays: {0}</value></data>
-  <data name="Check_Ambiguous" xml:space="preserve"><value>Not possible right now: identical displays on new ports ({0}). Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
+  <data name="Check_Ambiguous" xml:space="preserve"><value>Not possible right now: identical displays on new ports ({0}). Arrange them in Windows, then choose “Use current layout” in the profile.</value></data>
   <data name="Warning_HeadBudgetExceeded" xml:space="preserve"><value>The graphics card may not drive all displays at these resolutions and refresh rates.</value></data>
   <data name="Warning_MatchedByEdidFallback" xml:space="preserve"><value>A display was recognized on a different port or cable.</value></data>
   <data name="Warning_MatchedByNameFallback" xml:space="preserve"><value>A display was recognized only by its name; it reports a different ID on this input.</value></data>
@@ -31,32 +31,32 @@
   <data name="Tray_NoProfiles" xml:space="preserve"><value>No profiles</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>Play {0}</value></data>
   <data name="Tray_ActiveNone" xml:space="preserve"><value>No profile active</value></data>
-  <data name="Confirm_Title" xml:space="preserve"><value>Keep this arrangement?</value></data>
-  <data name="Confirm_Hint" xml:space="preserve"><value>Otherwise the previous arrangement comes back in {0} s.</value></data>
+  <data name="Confirm_Title" xml:space="preserve"><value>Keep this layout?</value></data>
+  <data name="Confirm_Hint" xml:space="preserve"><value>Reverting in {0} s.</value></data>
   <data name="Confirm_Keep" xml:space="preserve"><value>Keep</value></data>
   <data name="Confirm_Revert" xml:space="preserve"><value>Revert</value></data>
-  <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} active</value></data>
+  <data name="Result_AppliedTitle" xml:space="preserve"><value>{0} is active</value></data>
   <data name="Result_AppliedText" xml:space="preserve"><value>Displays switched.</value></data>
   <data name="Result_PartialText" xml:space="preserve"><value>Switched without: {0}</value></data>
   <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Displays switched. {0} follows once it is connected.</value></data>
   <data name="Restored_Title" xml:space="preserve"><value>{0} recognized</value></data>
-  <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to apply its audio, apps and other settings too.</value></data>
-  <data name="Result_WaitingTitle" xml:space="preserve"><value>Switch on your display</value></data>
+  <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to set its audio, apps and other settings too.</value></data>
+  <data name="Result_WaitingTitle" xml:space="preserve"><value>Turn on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not on or not ready: {0}. RigShift waits up to {1} seconds for it.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>Off in the settings: every profile switches without asking.</value></data>
-  <data name="Editor_HdrWarning" xml:space="preserve"><value>Switch HDR on this display once in the Windows settings first. On some monitors, especially over HDMI, switching HDR can freeze the graphics driver.</value></data>
-  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates show up once this display was switched on while RigShift was running.</value></data>
+  <data name="Editor_HdrWarning" xml:space="preserve"><value>Try HDR on this display once in Windows settings first. On some monitors, especially over HDMI, turning HDR on or off can freeze the graphics driver.</value></data>
+  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates appear once this display has been on while RigShift runs.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (close)</value></data>
   <data name="Profile_AppsWait" xml:space="preserve"><value>waits for {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio could not be switched completely.</value></data>
   <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR could not be set on every display.</value></data>
-  <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktop symbols not placed: Windows arranges them itself (“Auto arrange icons” in the desktop's context menu).</value></data>
-  <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop symbols could not be placed.</value></data>
+  <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktop icons not placed: Windows arranges them itself (“Auto arrange icons” in the desktop's context menu).</value></data>
+  <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop icons could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>Can't switch to {0}</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up, then switch again.</value></data>
-  <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
+  <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout” in the profile.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details: Help → Logs.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>The previous displays are back.</value></data>
@@ -68,13 +68,13 @@
   <data name="Outcome_Applied" xml:space="preserve"><value>Switched</value></data>
   <data name="Outcome_AppliedPartially" xml:space="preserve"><value>Partially switched</value></data>
   <data name="Outcome_RolledBack" xml:space="preserve"><value>Reverted</value></data>
-  <data name="Outcome_Blocked" xml:space="preserve"><value>Not possible</value></data>
+  <data name="Outcome_Blocked" xml:space="preserve"><value>Blocked</value></data>
   <data name="Outcome_Failed" xml:space="preserve"><value>Failed</value></data>
-  <data name="Outcome_DryRun" xml:space="preserve"><value>Tested</value></data>
+  <data name="Outcome_DryRun" xml:space="preserve"><value>Checked</value></data>
   <data name="Settings_DefaultProfile" xml:space="preserve"><value>Default profile</value></data>
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
-  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Previous profile</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Shortcut that switches to the profile active before.</value></data>
+  <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Switch back</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One hotkey that returns to the last profile.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
@@ -93,7 +93,7 @@
   <data name="Update_StatusUpToDate" xml:space="preserve"><value>Up to date. Last checked: {0}</value></data>
   <data name="Update_StatusReady" xml:space="preserve"><value>Version {0} is ready. Install it now or it is installed the next time RigShift starts.</value></data>
   <data name="Update_StatusAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
-  <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open “About &amp; help” to install it.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Version {0} is available. Open Help to install it.</value></data>
   <data name="Settings_AutoUpdate" xml:space="preserve"><value>Install updates automatically</value></data>
   <data name="Settings_AutoUpdateHint" xml:space="preserve"><value>Off: new versions are only reported.</value></data>
 
@@ -104,7 +104,7 @@
   <data name="About_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_StatusFailed" xml:space="preserve"><value>Could not check for updates. Details are in the log.</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save arrangement as profile…</value></data>
+  <data name="Tray_SaveCurrent" xml:space="preserve"><value>Save layout as profile…</value></data>
   <data name="Profile_More" xml:space="preserve"><value>More actions</value></data>
   <data name="Profile_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
   <data name="Profile_Shortcut" xml:space="preserve"><value>Create desktop shortcut</value></data>
@@ -137,7 +137,7 @@
   <data name="Status_Saved" xml:space="preserve"><value>“{0}” saved.</value></data>
   <data name="Status_Duplicated" xml:space="preserve"><value>“{0}” created.</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>“{0}” deleted.</value></data>
-  <data name="Status_ShortcutCreated" xml:space="preserve"><value>Shortcut “{0}” created on the desktop. It also works as a Stream Deck action.</value></data>
+  <data name="Status_ShortcutCreated" xml:space="preserve"><value>Desktop shortcut “{0}” created. It also works as a Stream Deck action.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Error: {0}</value></data>
 
   <data name="Overview_ReadFailed" xml:space="preserve"><value>Windows did not report the displays (error {0}). Try again in a moment.</value></data>
@@ -151,14 +151,14 @@
   <data name="Icon_Stream" xml:space="preserve"><value>Streaming</value></data>
   <data name="Editor_SwitchWithoutAsking" xml:space="preserve"><value>Switch without asking</value></data>
   <data name="Editor_Displays" xml:space="preserve"><value>Displays</value></data>
-  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Arrange them in Windows first, then use the current arrangement.</value></data>
-  <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Use current arrangement</value></data>
-  <data name="Editor_Taken" xml:space="preserve"><value>Current arrangement taken over: {0} display(s).</value></data>
+  <data name="Editor_DisplaysHint" xml:space="preserve"><value>Arrange them in Windows first, then use the current layout.</value></data>
+  <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Use current layout</value></data>
+  <data name="Editor_Taken" xml:space="preserve"><value>Took the current layout: {0} display(s).</value></data>
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · position {2}, {3}</value></data>
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
-  <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Refresh rate. The display lists its rates only while it is switched on.</value></data>
+  <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Refresh rate. The display lists its rates only while it is on.</value></data>
   <data name="Editor_HdrHint" xml:space="preserve"><value>HDR after switching. Displays without HDR stay as they are.</value></data>
-  <data name="Hdr_Unchanged" xml:space="preserve"><value>Unchanged</value></data>
+  <data name="Hdr_Unchanged" xml:space="preserve"><value>Don't change</value></data>
   <data name="Hdr_On" xml:space="preserve"><value>On</value></data>
   <data name="Hdr_Off" xml:space="preserve"><value>Off</value></data>
   <data name="Editor_Primary" xml:space="preserve"><value>Main display</value></data>
@@ -167,32 +167,32 @@
   <data name="Editor_CustomNamePlaceholder" xml:space="preserve"><value>e.g. Left</value></data>
   <data name="Editor_Remove" xml:space="preserve"><value>Remove display</value></data>
   <data name="Editor_Audio" xml:space="preserve"><value>Audio</value></data>
-  <data name="Audio_Playback" xml:space="preserve"><value>Playback</value></data>
-  <data name="Audio_PlaybackComms" xml:space="preserve"><value>Playback for calls</value></data>
-  <data name="Audio_Recording" xml:space="preserve"><value>Recording</value></data>
-  <data name="Audio_RecordingComms" xml:space="preserve"><value>Recording for calls</value></data>
+  <data name="Audio_Playback" xml:space="preserve"><value>Output</value></data>
+  <data name="Audio_PlaybackComms" xml:space="preserve"><value>Output for calls</value></data>
+  <data name="Audio_Recording" xml:space="preserve"><value>Input</value></data>
+  <data name="Audio_RecordingComms" xml:space="preserve"><value>Input for calls</value></data>
   <data name="Audio_Unchanged" xml:space="preserve"><value>Don't change</value></data>
-  <data name="Audio_SameAsPlayback" xml:space="preserve"><value>Same as playback</value></data>
-  <data name="Audio_SameAsRecording" xml:space="preserve"><value>Same as recording</value></data>
+  <data name="Audio_SameAsPlayback" xml:space="preserve"><value>Same as output</value></data>
+  <data name="Audio_SameAsRecording" xml:space="preserve"><value>Same as input</value></data>
   <data name="Audio_NotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Audio_Unknown" xml:space="preserve"><value>{0} (not found on this PC)</value></data>
   <data name="Problem_NameMissing" xml:space="preserve"><value>Enter a name.</value></data>
   <data name="Problem_NameTooLong" xml:space="preserve"><value>The name can be 60 characters at most.</value></data>
   <data name="Problem_NameTaken" xml:space="preserve"><value>This name is already taken.</value></data>
-  <data name="Problem_HotkeyTaken" xml:space="preserve"><value>This keyboard shortcut is already taken.</value></data>
-  <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>The keyboard shortcut needs Ctrl, Alt or Win.</value></data>
+  <data name="Problem_HotkeyTaken" xml:space="preserve"><value>This hotkey is already taken.</value></data>
+  <data name="Problem_HotkeyInvalid" xml:space="preserve"><value>The hotkey needs Ctrl, Alt or Win.</value></data>
   <data name="Problem_NoDisplays" xml:space="preserve"><value>The profile needs at least one display.</value></data>
   <data name="Problem_NoSinglePrimary" xml:space="preserve"><value>Choose a main display.</value></data>
   <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>The main display cannot be optional.</value></data>
-  <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this keyboard shortcut. Choose a different one.</value></data>
+  <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this hotkey. Choose a different one.</value></data>
 
-  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this keyboard shortcut. Choose a different one.</value></data>
-  <data name="Editor_Hotkey" xml:space="preserve"><value>Keyboard shortcut</value></data>
-  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>None</value></data>
-  <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove keyboard shortcut</value></data>
+  <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this hotkey. Choose a different one.</value></data>
+  <data name="Editor_Hotkey" xml:space="preserve"><value>Hotkey</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Click, then press keys</value></data>
+  <data name="Editor_HotkeyClear" xml:space="preserve"><value>Remove hotkey</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Switches from anywhere while RigShift is running.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Hold Ctrl, Alt or Win as well.</value></data>
-  <data name="Hotkey_Failed" xml:space="preserve"><value>These keyboard shortcuts do not work, because another app or something else in RigShift already uses them: {0}</value></data>
+  <data name="Hotkey_Failed" xml:space="preserve"><value>These hotkeys don't work because another app or another RigShift entry already uses them: {0}</value></data>
   <data name="Key_Ctrl" xml:space="preserve"><value>Ctrl</value></data>
   <data name="Key_Shift" xml:space="preserve"><value>Shift</value></data>
   <data name="Audio_SetVolume" xml:space="preserve"><value>Set volume</value></data>
@@ -204,8 +204,8 @@
   <data name="App_Action" xml:space="preserve"><value>Action</value></data>
   <data name="App_Path" xml:space="preserve"><value>App</value></data>
   <data name="App_Browse" xml:space="preserve"><value>Choose app</value></data>
-  <data name="App_Arguments" xml:space="preserve"><value>Arguments</value></data>
-  <data name="App_Wait" xml:space="preserve"><value>Wait afterwards (seconds)</value></data>
+  <data name="App_Arguments" xml:space="preserve"><value>Launch options</value></data>
+  <data name="App_Wait" xml:space="preserve"><value>Delay in seconds before the next one starts</value></data>
   <data name="App_Remove" xml:space="preserve"><value>Remove app</value></data>
   <data name="AppPicker_Search" xml:space="preserve"><value>Search installed and running apps</value></data>
   <data name="AppPicker_Running" xml:space="preserve"><value>Running</value></data>
@@ -225,7 +225,7 @@
   <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} · {2} Hz</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed; log files are not anonymized, so check them before attaching one.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed – in the log files too.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Couldn't copy. {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
@@ -237,21 +237,21 @@
   <data name="About_BackupFailed" xml:space="preserve"><value>Backup didn't work. {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Wait until the running switch has finished.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Restore backup?</value></data>
-  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. Your games stay as they are. This cannot be undone.</value></data>
+  <data name="About_RestoreText" xml:space="preserve"><value>All profiles, USB rules and settings are replaced by the {0} profile(s) and the settings from the backup. Your games stay as they are. This cannot be undone.</value></data>
   <data name="About_Restore" xml:space="preserve"><value>Restore</value></data>
   <data name="About_Repository" xml:space="preserve"><value>RigShift on GitHub</value></data>
   <data name="About_ReportProblem" xml:space="preserve"><value>Report a problem</value></data>
   <data name="About_License" xml:space="preserve"><value>License</value></data>
   <data name="About_ThirdParty" xml:space="preserve"><value>Third-party licenses</value></data>
   <data name="About_Privacy" xml:space="preserve"><value>Privacy</value></data>
-  <data name="About_PrivacyHint" xml:space="preserve"><value>No telemetry. The only connection is the update check at GitHub.</value></data>
+  <data name="About_PrivacyHint" xml:space="preserve"><value>No telemetry. The only connection is the update check on GitHub.</value></data>
   <data name="About_Kofi" xml:space="preserve"><value>Buy me a coffee</value></data>
   <data name="About_KofiHint" xml:space="preserve"><value>RigShift is free. If you like it, you can support it on Ko-fi.</value></data>
   <data name="About_Copyright" xml:space="preserve"><value>Free and open source under the MIT license. © 2026 Manuel Staggl</value></data>
   <data name="Automation_Add" xml:space="preserve"><value>_Add rule</value></data>
   <data name="Automation_Pause" xml:space="preserve"><value>Pause USB rules</value></data>
-  <data name="Automation_ExitStay" xml:space="preserve"><value>Stay in the profile</value></data>
-  <data name="Automation_ExitBack" xml:space="preserve"><value>Switch back to the previous profile</value></data>
+  <data name="Automation_ExitStay" xml:space="preserve"><value>Don't change</value></data>
+  <data name="Automation_ExitBack" xml:space="preserve"><value>Switch back to the last profile</value></data>
   <data name="Automation_ExitTo" xml:space="preserve"><value>Switch to {0}</value></data>
   <data name="Automation_ExitDelay" xml:space="preserve"><value>Wait (seconds)</value></data>
   <data name="Automation_ExitDelayHint" xml:space="preserve"><value>How long the device must stay gone before this happens. Turning it off and on again within this time changes nothing.</value></data>
@@ -265,7 +265,7 @@
   <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Another rule uses the same devices. When they connect, both rules switch, one after the other.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>The setting could not be saved. Details are in the log.</value></data>
   <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s – apps started anyway.</value></data>
-  <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for device before starting apps</value></data>
+  <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for a device before starting</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>If the device does not show up within 30 seconds, the apps start anyway.</value></data>
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls</value></data>
@@ -287,12 +287,12 @@
   <data name="Setup_StepCounter" xml:space="preserve"><value>Step {0} of {1}</value></data>
   <data name="Setup_WelcomeTitle" xml:space="preserve"><value>Welcome to RigShift</value></data>
   <data name="Setup_WelcomeText" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go. Three steps:</value></data>
-  <data name="Setup_FirstTitle" xml:space="preserve"><value>Your first setup</value></data>
+  <data name="Setup_FirstTitle" xml:space="preserve"><value>Save your desk layout</value></data>
   <data name="Setup_FirstText" xml:space="preserve"><value>Turn on the displays you use at your desk and arrange them in the Windows display settings. RigShift saves what is active right now.</value></data>
-  <data name="Setup_SecondTitle" xml:space="preserve"><value>Your second setup</value></data>
-  <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now set Windows up for your rig: turn its screens on, disconnect the desk screens and arrange them.</value></data>
+  <data name="Setup_SecondTitle" xml:space="preserve"><value>Now set up your rig</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now make Windows show your rig: turn its displays on, disconnect the desk displays (Display settings → Disconnect this display) and arrange them.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
-  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on again and RigShift picks it here, or choose it from the list.</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on – RigShift detects it. Or pick it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
   <data name="Setup_DoneNoRule" xml:space="preserve"><value>From now on you switch from the tray icon or with the hotkeys below. You can add a USB trigger later under Profiles.</value></data>
   <data name="Setup_DoneWithRule" xml:space="preserve"><value>From now on you switch from the tray icon, with the hotkeys below or with the device.</value></data>
@@ -300,12 +300,12 @@
   <data name="Setup_SecondName" xml:space="preserve"><value>Sim rig</value></data>
   <data name="Setup_OpenDisplaySettings" xml:space="preserve"><value>Windows display settings</value></data>
   <data name="Setup_NoDisplays" xml:space="preserve"><value>No active display found. Details are in the log.</value></data>
-  <data name="Setup_SameText" xml:space="preserve"><value>Windows still shows the same displays as the first setup. Change the displays first, then save.</value></data>
-  <data name="Setup_DetailsLater" xml:space="preserve"><value>Keyboard shortcut, apps, HDR and refresh rate can be set later in the profile editor.</value></data>
+  <data name="Setup_SameText" xml:space="preserve"><value>Windows still shows the same displays as your desk layout. Change the displays first, then save.</value></data>
+  <data name="Setup_DetailsLater" xml:space="preserve"><value>Hotkey, apps, HDR and refresh rate can be set later under Profiles.</value></data>
   <data name="Setup_Detected" xml:space="preserve"><value>Detected: {0}</value></data>
   <data name="Setup_RuleText" xml:space="preserve"><value>When {0} turns on, RigShift switches to “{1}”. When it turns off, back to “{2}”.</value></data>
   <data name="Setup_Start" xml:space="preserve"><value>Start</value></data>
-  <data name="Setup_SkipAll" xml:space="preserve"><value>Set up myself</value></data>
+  <data name="Setup_SkipAll" xml:space="preserve"><value>Set up manually</value></data>
   <data name="Setup_SaveContinue" xml:space="preserve"><value>Save and continue</value></data>
   <data name="Setup_NoTrigger" xml:space="preserve"><value>Skip</value></data>
   <data name="Setup_CreateRule" xml:space="preserve"><value>Create rule</value></data>
@@ -317,15 +317,15 @@
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profiles</value></data>
   <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>No sleep, screen saver or display timeout.</value></data>
-  <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Save your desk setup as it is now</value></data>
+  <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Save your desk layout as it is now</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Switch to your rig and save it too</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: a USB device that switches automatically</value></data>
   <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
-  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Leave</value></data>
+  <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Don't change</value></data>
   <data name="Editor_SurroundOff" xml:space="preserve"><value>Off</value></data>
   <data name="Editor_SurroundOn" xml:space="preserve"><value>On</value></data>
   <data name="Editor_SurroundGrid" xml:space="preserve"><value>{0} displays at {1}x{2} as one {3}x{4} display.</value></data>
-  <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround is off right now. Set the grid up once in the NVIDIA control panel, then save the profile again to take it over.</value></data>
+  <data name="Editor_SurroundNoGrid" xml:space="preserve"><value>Surround is off right now. Set up the grid once in the NVIDIA Control Panel, then save the profile again to include it.</value></data>
   <data name="Editor_SurroundNoDriver" xml:space="preserve"><value>No NVIDIA graphics driver was found on this PC.</value></data>
   <data name="Editor_SurroundOffBecause" xml:space="preserve"><value>Off, because “{0}” switches Surround on.</value></data>
   <data name="Nav_Games" xml:space="preserve"><value>Games</value></data>
@@ -341,7 +341,7 @@
   <data name="Games_DeleteText" xml:space="preserve"><value>“{0}” will be removed. The game itself stays installed.</value></data>
   <data name="Game_Play" xml:space="preserve"><value>Play</value></data>
   <data name="Game_Running" xml:space="preserve"><value>Running</value></data>
-  <data name="Game_Launch" xml:space="preserve"><value>Starts</value></data>
+  <data name="Game_Launch" xml:space="preserve"><value>Launch via</value></data>
   <data name="Game_LaunchPlaceholder" xml:space="preserve"><value>No game chosen yet</value></data>
   <data name="Game_Choose" xml:space="preserve"><value>C_hoose…</value></data>
   <data name="Game_ProcessName" xml:space="preserve"><value>Game process</value></data>
@@ -351,7 +351,7 @@
   <data name="Game_EndsWithGame" xml:space="preserve"><value>The game</value></data>
   <data name="Game_EndsWithLauncher" xml:space="preserve"><value>The launcher</value></data>
   <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher process</value></data>
-  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>For sims whose menu outlives the sim, such as iRacing: without this the session would end every time you go back to the menu.</value></data>
+  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>For sims with their own menu app, such as iRacing: without it, the session would end every time you go back to the menu.</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Don't switch anything</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Arrange your tools as you like them, then save the positions here. They are put back before the game starts.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Save positions now…</value></data>
@@ -361,26 +361,26 @@
   <data name="Game_WindowsSavedAtOne" xml:space="preserve"><value>1 window, saved {1}</value></data>
   <data name="Game_WindowsSavedAt" xml:space="preserve"><value>{0} windows, saved {1}</value></data>
   <data name="Game_WindowsIncomplete" xml:space="preserve"><value>{0} window(s) placed, {1} not</value></data>
-  <data name="Game_ExitStay" xml:space="preserve"><value>Leave the screens as they are</value></data>
-  <data name="Game_ExitPrevious" xml:space="preserve"><value>Back to the previous profile</value></data>
+  <data name="Game_ExitStay" xml:space="preserve"><value>Don't change</value></data>
+  <data name="Game_ExitPrevious" xml:space="preserve"><value>Back to the last profile</value></data>
   <data name="Game_ExitProfile" xml:space="preserve"><value>Switch to “{0}”</value></data>
-  <data name="Game_StopApps" xml:space="preserve"><value>Close the tools again</value></data>
-  <data name="Game_StartWithGame" xml:space="preserve"><value>Also react when the game is started elsewhere</value></data>
-  <data name="Game_StartWithGameHint" xml:space="preserve"><value>Start it straight from Steam and RigShift does the rest. Needs the game process, which the first start through RigShift learns.</value></data>
+  <data name="Game_StopApps" xml:space="preserve"><value>Close tools</value></data>
+  <data name="Game_StartWithGame" xml:space="preserve"><value>Also run when started from Steam or another launcher</value></data>
+  <data name="Game_StartWithGameHint" xml:space="preserve"><value>Works after one start through RigShift, which learns the game's process.</value></data>
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Game ended</value></data>
-  <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>The profile could not be applied, so the game was not started</value></data>
+  <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Switching to the profile failed, so the game was not started</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>The game could not be started</value></data>
-  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognised – set it in the entry</value></data>
+  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognized – set it in the entry</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installed games, read from this PC. No sign-in.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Add games</value></data>
-  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed games, read from this PC. Tick everything you want to add; profile and tools follow afterwards.</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed games, read from this PC. Check everything you want to add; profile and tools follow afterwards.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>No installed game found. Use “Browse for program” for everything else.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Search installed games</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Browse for program…</value></data>
   <data name="GamePicker_AddCount" xml:space="preserve"><value>Add ({0})</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Save window positions</value></data>
-  <data name="Capture_Intro" xml:space="preserve"><value>Tick the windows that belong to this game. Their position, size and state are saved.</value></data>
+  <data name="Capture_Intro" xml:space="preserve"><value>Check the windows that belong to this game. Their position, size and state are saved.</value></data>
   <data name="Capture_Save" xml:space="preserve"><value>_Save</value></data>
   <data name="Capture_Chosen" xml:space="preserve"><value>{0} chosen</value></data>
   <data name="App_When" xml:space="preserve"><value>When</value></data>
@@ -393,7 +393,7 @@
   <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Clear</value></data>
   <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktop icons</value></data>
-  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows reshuffles them when the screens change. Arrange them with this profile active, then save them here.</value></data>
+  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows reshuffles them when the displays change. Arrange them with this profile active, then save them here.</value></data>
   <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Save positions</value></data>
   <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Forget</value></data>
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Not saved</value></data>
@@ -413,13 +413,13 @@
   <data name="Topology_Empty" xml:space="preserve"><value>No displays</value></data>
   <data name="Topology_Missing" xml:space="preserve"><value>missing</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
-  <data name="Overview_Now" xml:space="preserve"><value>Showing now</value></data>
+  <data name="Overview_Now" xml:space="preserve"><value>Current layout</value></data>
   <data name="Overview_Empty" xml:space="preserve"><value>No active display. Details are in the log.</value></data>
-  <data name="Overview_SaveCurrent" xml:space="preserve"><value>Save current arrangement as profile</value></data>
+  <data name="Overview_SaveCurrent" xml:space="preserve"><value>Save current layout as profile</value></data>
   <data name="Overview_SetupTitle" xml:space="preserve"><value>Set up RigShift</value></data>
-  <data name="Overview_SetupText" xml:space="preserve"><value>Save two setups, optionally a USB device as trigger. Takes three minutes.</value></data>
-  <data name="Overview_SetupStart" xml:space="preserve"><value>Start assistant</value></data>
-  <data name="Overview_SetupManual" xml:space="preserve"><value>Set up by hand</value></data>
+  <data name="Overview_SetupText" xml:space="preserve"><value>Save two layouts, optionally a USB device as trigger. Takes three minutes.</value></data>
+  <data name="Overview_SetupStart" xml:space="preserve"><value>Start setup</value></data>
+  <data name="Overview_SetupManual" xml:space="preserve"><value>Set up manually</value></data>
   <data name="Overview_Displays" xml:space="preserve"><value>Displays</value></data>
   <data name="Overview_DisplaysHint" xml:space="preserve"><value>Names appear in profiles, rules and messages. Enter saves.</value></data>
   <data name="Overview_ColDisplay" xml:space="preserve"><value>Display</value></data>
@@ -433,8 +433,8 @@
   <data name="Time_Today" xml:space="preserve"><value>today {0}</value></data>
   <data name="Time_Yesterday" xml:space="preserve"><value>yesterday {0}</value></data>
   <data name="List_New" xml:space="preserve"><value>New</value></data>
-  <data name="List_NewFromCurrent" xml:space="preserve"><value>From the current arrangement</value></data>
-  <data name="List_Assistant" xml:space="preserve"><value>Setup assistant</value></data>
+  <data name="List_NewFromCurrent" xml:space="preserve"><value>From the current layout</value></data>
+  <data name="List_Assistant" xml:space="preserve"><value>Setup guide</value></data>
   <data name="List_Unsaved" xml:space="preserve"><value>Not saved yet</value></data>
   <data name="List_Checking" xml:space="preserve"><value>Checking…</value></data>
   <data name="List_Ready" xml:space="preserve"><value>Ready</value></data>
@@ -449,28 +449,28 @@
   <data name="Tab_Behavior" xml:space="preserve"><value>Behavior</value></data>
   <data name="Displays_ClickHint" xml:space="preserve"><value>Click a display to edit it</value></data>
   <data name="Displays_OpenSettings" xml:space="preserve"><value>Windows display settings</value></data>
-  <data name="Displays_NoneSelected" xml:space="preserve"><value>No display chosen. Click one in the arrangement to edit its name, refresh rate and HDR.</value></data>
-  <data name="Audio_Intro" xml:space="preserve"><value>Applies while the profile is active. Devices that are not connected right now stay selectable.</value></data>
-  <data name="Apps_ProfileIntro" xml:space="preserve"><value>Run while the profile is active, in this order from top to bottom.</value></data>
-  <data name="Trigger_Intro" xml:space="preserve"><value>Everything that brings the PC into this profile.</value></data>
+  <data name="Displays_NoneSelected" xml:space="preserve"><value>No display chosen. Click one in the layout to edit its name, refresh rate and HDR.</value></data>
+  <data name="Audio_Intro" xml:space="preserve"><value>Set when switching to this profile. Devices that are not connected right now stay selectable.</value></data>
+  <data name="Apps_ProfileIntro" xml:space="preserve"><value>Run when switching to this profile, from top to bottom.</value></data>
+  <data name="Trigger_Intro" xml:space="preserve"><value>Ways to switch to this profile.</value></data>
   <data name="Trigger_RuleTitle" xml:space="preserve"><value>When these devices are connected</value></data>
   <data name="Trigger_AddRule" xml:space="preserve"><value>USB rule</value></data>
   <data name="Trigger_AddDevice" xml:space="preserve"><value>Device</value></data>
-  <data name="Trigger_Shortcut" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="Trigger_Shortcut" xml:space="preserve"><value>Desktop shortcut</value></data>
   <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Create on the desktop</value></data>
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>
   <data name="Trigger_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Command copied.</value></data>
   <data name="Behavior_Intro" xml:space="preserve"><value>How the PC behaves while the profile is active.</value></data>
   <data name="Profile_SetDefault" xml:space="preserve"><value>Make default</value></data>
-  <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create shortcut</value></data>
+  <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create desktop shortcut</value></data>
   <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Restore desktop icons</value></data>
   <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 desktop icon put back.</value></data>
   <data name="Status_IconsRestored" xml:space="preserve"><value>{0} desktop icons put back.</value></data>
   <data name="Status_IconsRestoredMissing" xml:space="preserve"><value>Desktop icons put back: {0}. No longer on the desktop: {1}.</value></data>
   <data name="Status_IconsAutoArrange" xml:space="preserve"><value>Windows arranges the desktop icons itself. Turn off “Auto arrange icons” in the desktop’s context menu (View), then try again.</value></data>
   <data name="Status_IconsUnavailable" xml:space="preserve"><value>The desktop could not be reached. The log says why.</value></data>
-  <data name="Status_Tested" xml:space="preserve"><value>Tested: {0}</value></data>
+  <data name="Status_Tested" xml:space="preserve"><value>Checked: {0}</value></data>
   <data name="Unsaved_Title" xml:space="preserve"><value>Save changes to “{0}”?</value></data>
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
   <data name="Unsaved_TextSwitch" xml:space="preserve"><value>You are switching to “{0}”. Unsaved changes are lost otherwise.</value></data>
@@ -485,45 +485,45 @@
   <data name="GameTab_Windows" xml:space="preserve"><value>Windows</value></data>
   <data name="GameTab_End" xml:space="preserve"><value>End</value></data>
   <data name="Game_GameIntro" xml:space="preserve"><value>Where the game comes from and how RigShift knows it is running.</value></data>
-  <data name="Game_ProfileIntro" xml:space="preserve"><value>Applied before the game, so the tools land on the right screens.</value></data>
-  <data name="Game_ToolsIntro" xml:space="preserve"><value>Run with the session. In order from top to bottom.</value></data>
+  <data name="Game_ProfileIntro" xml:space="preserve"><value>Switched to before the game starts, so the tools land on the right displays.</value></data>
+  <data name="Game_ToolsIntro" xml:space="preserve"><value>Run with the session, from top to bottom.</value></data>
   <data name="Game_EndIntro" xml:space="preserve"><value>What happens once the session is over.</value></data>
-  <data name="Game_ExitLabel" xml:space="preserve"><value>Screens at the end</value></data>
-  <data name="Game_StopAppsHint" xml:space="preserve"><value>Tools that were started for this session are ended again.</value></data>
+  <data name="Game_ExitLabel" xml:space="preserve"><value>When the session ends</value></data>
+  <data name="Game_StopAppsHint" xml:space="preserve"><value>Closes the tools this session started.</value></data>
   <data name="Game_AddTool" xml:space="preserve"><value>Tool</value></data>
   <data name="Game_ShortcutHint" xml:space="preserve"><value>With the game’s icon; starts the whole session.</value></data>
-  <data name="Game_ProcessNotRecognised" xml:space="preserve"><value>No process was recognised on the last start. Without extension, as Task Manager shows it.</value></data>
-  <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools start, the screens stay as they are</value></data>
+  <data name="Game_ProcessNotRecognised" xml:space="preserve"><value>No process was recognized on the last start. Without extension, as Task Manager shows it.</value></data>
+  <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools start, the displays stay as they are</value></data>
   <data name="Game_RunningSince" xml:space="preserve"><value>Running since {0}</value></data>
-  <data name="Game_LastEnded" xml:space="preserve"><value>Ready · last {0} · ended</value></data>
-  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognised – enter it on the Game tab</value></data>
+  <data name="Game_LastEnded" xml:space="preserve"><value>Ready · last played {0}</value></data>
+  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognized – enter it on the Game tab</value></data>
   <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Process is learned on the first start</value></data>
   <data name="Problem_LaunchMissing" xml:space="preserve"><value>Choose what starts the game.</value></data>
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Switching</value></data>
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Devices</value></data>
-  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Where “Previous profile” goes when there is no previous one yet.</value></data>
-  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Without a confirmation the previous arrangement comes back.</value></data>
+  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Where “Switch back” goes when there is no last profile.</value></data>
+  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Reverts to the old layout unless you press Keep.</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>
   <data name="About_Tagline" xml:space="preserve"><value>Desk to rig. In one shift.</value></data>
-  <data name="Confirm_Before" xml:space="preserve"><value>Previous arrangement</value></data>
+  <data name="Confirm_Before" xml:space="preserve"><value>Previous layout</value></data>
   <data name="Setup_Subtitle" xml:space="preserve"><value>· Setup</value></data>
   <data name="Setup_StepWelcome" xml:space="preserve"><value>Welcome</value></data>
-  <data name="Setup_StepFirst" xml:space="preserve"><value>First setup</value></data>
-  <data name="Setup_StepSecond" xml:space="preserve"><value>Second setup</value></data>
+  <data name="Setup_StepFirst" xml:space="preserve"><value>Your desk</value></data>
+  <data name="Setup_StepSecond" xml:space="preserve"><value>Your rig</value></data>
   <data name="Setup_StepTrigger" xml:space="preserve"><value>Trigger</value></data>
   <data name="Setup_StepDone" xml:space="preserve"><value>Done</value></data>
-  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one shift. Three steps, three minutes.</value></data>
-  <data name="Setup_Now" xml:space="preserve"><value>On screen now</value></data>
+  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go. Three steps, three minutes. Every switch reverts on its own unless you confirm it.</value></data>
+  <data name="Setup_Now" xml:space="preserve"><value>Current layout</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
-  <data name="Setup_SurroundHint" xml:space="preserve"><value>Using NVIDIA Surround? Switch it on in the NVIDIA control panel now – this profile then switches it on by itself.</value></data>
-  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround is on – this profile switches it on by itself.</value></data>
+  <data name="Setup_SurroundHint" xml:space="preserve"><value>Using NVIDIA Surround? Turn it on in the NVIDIA Control Panel now – this profile then turns it on by itself.</value></data>
+  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround is on – this profile turns it on by itself.</value></data>
   <data name="Nav_Fov" xml:space="preserve"><value>Field of view</value></data>
-  <data name="Fov_Intro" xml:space="preserve"><value>The size comes from the display. Say how far your eyes are and how the rig stands – every sim then gets the number it wants.</value></data>
+  <data name="Fov_Intro" xml:space="preserve"><value>Enter your eye distance and screen angle – get the right FOV for every sim.</value></data>
   <data name="Fov_Rig" xml:space="preserve"><value>Your rig</value></data>
   <data name="Fov_Display" xml:space="preserve"><value>Display</value></data>
   <data name="Fov_SizeMeasured" xml:space="preserve"><value>{0}, reported by the display</value></data>
@@ -531,31 +531,31 @@
   <data name="Fov_Diagonal" xml:space="preserve"><value>Diagonal (inches)</value></data>
   <data name="Fov_DiagonalTip" xml:space="preserve"><value>Pre-filled from the display; change it if the display reports a wrong size.</value></data>
   <data name="Fov_Distance" xml:space="preserve"><value>Eye distance (cm)</value></data>
-  <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the centre screen, sitting as you drive. Set the seat first.</value></data>
+  <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the center screen, sitting as you drive. Set the seat first.</value></data>
   <data name="Fov_Curvature" xml:space="preserve"><value>Curvature</value></data>
   <data name="Fov_CurvatureTip" xml:space="preserve"><value>No display reports its curve, so pick it once – it is remembered for that display. Known models come pre-filled.</value></data>
   <data name="Fov_Flat" xml:space="preserve"><value>Flat</value></data>
   <data name="Fov_Radius" xml:space="preserve"><value>{0}R</value></data>
   <data name="Fov_RadiusOwn" xml:space="preserve"><value>Other radius</value></data>
   <data name="Fov_Layout" xml:space="preserve"><value>Screens</value></data>
-  <data name="Fov_Single" xml:space="preserve"><value>One</value></data>
-  <data name="Fov_Triple" xml:space="preserve"><value>Three</value></data>
+  <data name="Fov_Single" xml:space="preserve"><value>Single</value></data>
+  <data name="Fov_Triple" xml:space="preserve"><value>Triples</value></data>
   <data name="Fov_Bezel" xml:space="preserve"><value>Bezel (mm)</value></data>
-  <data name="Fov_BezelTip" xml:space="preserve"><value>Width of one frame, picture edge to case edge; two of them sit between neighbouring pictures.</value></data>
+  <data name="Fov_BezelTip" xml:space="preserve"><value>Width of one frame, picture edge to case edge; two of them sit between neighboring pictures.</value></data>
   <data name="Fov_AngleAuto" xml:space="preserve"><value>Calculate the side angle</value></data>
   <data name="Fov_Angle" xml:space="preserve"><value>Side angle</value></data>
-  <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in. Calculated, it is the angle that continues the centre picture seamlessly.</value></data>
-  <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rigs usually stand already: switch the calculation off and type the angle the side screens really have.</value></data>
-  <data name="Fov_Comfort" xml:space="preserve"><value>A little extra room</value></data>
+  <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in. Calculated, it is the angle that continues the center picture seamlessly.</value></data>
+  <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig already built? Switch the calculation off and enter the angle your side screens really have.</value></data>
+  <data name="Fov_Comfort" xml:space="preserve"><value>Comfort margin (+5°)</value></data>
   <data name="Fov_ComfortTip" xml:space="preserve"><value>Adds 5°, at most a tenth of the angle, to every sim value – the margin the guides call comfortable. The geometry stays as it is.</value></data>
-  <data name="Fov_Offset" xml:space="preserve"><value>Eyes above the middle (cm)</value></data>
+  <data name="Fov_Offset" xml:space="preserve"><value>Eye height above center (cm)</value></data>
   <data name="Fov_OffsetTip" xml:space="preserve"><value>Changes no angle; it only decides whether the hint below appears.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Sitting above the middle of the picture: shift the horizon in the sim (iRacing “Shift horizon”, ACC “Height”) instead of changing the angle.</value></data>
   <data name="Fov_TopView" xml:space="preserve"><value>From above</value></data>
   <data name="Fov_DiagramSummary" xml:space="preserve"><value>{0} cm · {1} · {2}</value></data>
   <data name="Fov_Vertical" xml:space="preserve"><value>Vertical</value></data>
   <data name="Fov_Horizontal" xml:space="preserve"><value>Horizontal</value></data>
-  <data name="Fov_HorizontalTrue" xml:space="preserve"><value>Really seen</value></data>
+  <data name="Fov_HorizontalTrue" xml:space="preserve"><value>Actual (curved)</value></data>
   <data name="Fov_HorizontalTrueTip" xml:space="preserve"><value>What the curved picture covers for your eye. Sims render a flat picture, so they get the other number.</value></data>
   <data name="Fov_Total" xml:space="preserve"><value>Edge to edge</value></data>
   <data name="Fov_TotalTip" xml:space="preserve"><value>From the left outer edge to the right one, frames included.</value></data>
@@ -579,15 +579,15 @@
   <data name="Fov_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Fov_Copied" xml:space="preserve"><value>Copied: {0}</value></data>
   <data name="Fov_Where" xml:space="preserve"><value>Where it goes</value></data>
-  <data name="Fov_Measure" xml:space="preserve"><value>Measuring: set the seat first, then the tape from the bridge of your nose to the middle of the centre screen. The bezel is one frame, picture edge to case edge.</value></data>
+  <data name="Fov_Measure" xml:space="preserve"><value>Measuring: set the seat first, then the tape from the bridge of your nose to the middle of the center screen. The bezel is one frame, picture edge to case edge.</value></data>
   <data name="Fov_Vr" xml:space="preserve"><value>In VR none of this is needed – the headset knows its own geometry.</value></data>
   <data name="Fov_Warn_Curve" xml:space="preserve"><value>Your eyes are inside the curve of the screen; move back.</value></data>
   <data name="Fov_Warn_Triple" xml:space="preserve"><value>At that angle the side screens would reach past your eyes.</value></data>
-  <data name="Fov_Warn_Angle" xml:space="preserve"><value>Over 65° the side screens are hard to build, and some sims stop taking the angle.</value></data>
+  <data name="Fov_Warn_Angle" xml:space="preserve"><value>Over 65° the side screens are hard to build, and some sims no longer accept the angle.</value></data>
   <data name="Fov_Warn_CurvedTriple" xml:space="preserve"><value>Strongly curved screens only meet without a kink when your eyes sit on the radius.</value></data>
   <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} pixels per degree – under 40 the picture gets soft.</value></data>
   <data name="Fov_Where_AssettoCorsa" xml:space="preserve"><value>Options › View › Field of View, or cfg\camera_onboard.ini [MODE] FOV. Whole degrees, 10–120, standard 56.</value></data>
-  <data name="Fov_Where_Acc" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 54; in triple mode the slider is greyed out.</value></data>
+  <data name="Fov_Where_Acc" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 54; in triple mode the slider is grayed out.</value></data>
   <data name="Fov_Where_AccEvo" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 55.</value></data>
   <data name="Fov_Where_Ams2" xml:space="preserve"><value>Options › Camera › Field of View, for every camera. Horizontal at the aspect ratio being rendered; 35–120 at 16:9.</value></data>
   <data name="Fov_Where_ProjectCars" xml:space="preserve"><value>Options › Camera › Field of View. Counts like Automobilista 2.</value></data>
@@ -602,20 +602,20 @@
   <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV, or hardware_settings_config.xml – the file wants twice the vertical angle.</value></data>
   <data name="Fov_Where_Forza" xml:space="preserve"><value>Settings › Gameplay &amp; HUD › Camera › Custom Camera FOV. 25–65.</value></data>
   <data name="Fov_Where_Rennsport" xml:space="preserve"><value>Options › Gameplay › Edit Gameplay Cameras, per car. 60–170.</value></data>
-  <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimetres itself.</value></data>
+  <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimeters itself.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radians, three decimals.</value></data>
   <data name="App_Change" xml:space="preserve"><value>Change…</value></data>
-  <data name="App_WaitShort" xml:space="preserve"><value>Wait (s)</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Delay (s)</value></data>
   <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>When disconnected</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Check</value></data>
-  <data name="Profile_Reapply" xml:space="preserve"><value>Apply again</value></data>
+  <data name="Profile_Reapply" xml:space="preserve"><value>Re-apply</value></data>
   <data name="List_BlockedShort" xml:space="preserve"><value>Blocked</value></data>
   <data name="Head_MissingOne" xml:space="preserve"><value>1 display missing</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} displays missing</value></data>
   <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up – RigShift waits for them when you switch. Or mark them optional.</value></data>
-  <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement”.</value></data>
+  <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout”.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
-  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches here as soon as every device of a rule is connected.</value></data>
+  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches to this profile once all devices in a rule are connected.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Command</value></data>
   <data name="Trigger_CommandHint" xml:space="preserve"><value>For Stream Deck, scripts or a terminal.</value></data>
   <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>No confirmation after switching to this profile.</value></data>
@@ -626,9 +626,6 @@
   <data name="Overview_NoHotkey" xml:space="preserve">
     <value>No hotkey</value>
   </data>
-  <data name="Overview_GamesHint" xml:space="preserve">
-    <value>start with their profile</value>
-  </data>
   <data name="Overview_NamePlaceholder" xml:space="preserve">
     <value>Add a name</value>
   </data>
@@ -636,7 +633,7 @@
     <value>First steps</value>
   </data>
   <data name="About_StartText" xml:space="preserve">
-    <value>1  Save your arrangement as a profile
+    <value>1  Save your layout as a profile
 2  Add audio and apps
 3  Pick a hotkey or a USB device as trigger</value>
   </data>
@@ -659,7 +656,7 @@
     <value>Copy diagnostics</value>
   </data>
   <data name="Profiles_EmptyTitle" xml:space="preserve">
-    <value>Your current arrangement</value>
+    <value>Your current layout</value>
   </data>
   <data name="Profiles_EmptySave" xml:space="preserve">
     <value>Save as profile</value>
@@ -698,13 +695,13 @@
     <value>keeps – so does any wheel or controller button</value>
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
-    <value>reverts – from any screen</value>
+    <value>reverts – works in any app</value>
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximized</value>
   </data>
   <data name="About_RestoreTextGames" xml:space="preserve">
-    <value>All profiles, games, automation rules and settings are replaced by the {0} profile(s), {1} game(s) and the settings from the backup. This cannot be undone.</value>
+    <value>All profiles, games, USB rules and settings are replaced by the {0} profile(s), {1} game(s) and the settings from the backup. This cannot be undone.</value>
   </data>
   <data name="About_RestoreReview" xml:space="preserve">
     <value>The backup brings the following along:</value>
@@ -725,7 +722,7 @@
     <value>USB rule</value>
   </data>
   <data name="Restore_Hotkey" xml:space="preserve">
-    <value>Shortcut</value>
+    <value>Hotkey</value>
   </data>
   <data name="Restore_WarnNetwork" xml:space="preserve">
     <value>Program on a network share</value>
@@ -740,7 +737,7 @@
     <value>All displays on</value>
   </data>
   <data name="AllOn_TurnedOn" xml:space="preserve">
-    <value>Every display that is ready is on. A profile arranges them again.</value>
+    <value>Every display that is ready is on. Switch to a profile to arrange them again.</value>
   </data>
   <data name="AllOn_TurnedOnAt60Hz" xml:space="preserve">
     <value>Every display that is ready is on, at 60 Hz: the graphics card cannot drive all of them faster.</value>
@@ -761,7 +758,7 @@
     <value>All displays on</value>
   </data>
   <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
-    <value>Emergency key for a screen that stays dark. Fixed, works without a RigShift window.</value>
+    <value>Emergency key for a display that stays dark. Fixed, works without a RigShift window.</value>
   </data>
   <data name="App_WaitForWindow" xml:space="preserve">
     <value>Until its window</value>
@@ -770,7 +767,7 @@
     <value>Goes on as soon as the program shows a window – at the latest after the seconds. Not for programs that start into the tray.</value>
   </data>
   <data name="Profile_DefaultTip" xml:space="preserve">
-    <value>Default profile: where “Previous profile” goes when there is no previous one yet. Change it under Settings.</value>
+    <value>Default profile: where “Switch back” goes when there is no last profile. Change it under Settings.</value>
   </data>
   <data name="Game_HotkeyHint" xml:space="preserve">
     <value>Starts the session from anywhere while RigShift is running.</value>
@@ -806,10 +803,10 @@
     <value>1. Open the display settings with the button below.</value>
   </data>
   <data name="Setup_HowStep2" xml:space="preserve">
-    <value>2. Select a desk screen and choose “Disconnect this display” under “Multiple displays”.</value>
+    <value>2. Select a desk display and choose “Disconnect this display” under “Multiple displays”.</value>
   </data>
   <data name="Setup_HowStep3" xml:space="preserve">
-    <value>3. Turn on the rig screens and drag them into place. RigShift sees every change right away.</value>
+    <value>3. Turn on the rig displays and drag them into place. RigShift sees every change right away.</value>
   </data>
   <data name="List_MissingOne" xml:space="preserve">
     <value>{0} missing</value>
@@ -824,19 +821,19 @@
     <value>How to fix</value>
   </data>
   <data name="Detail_Renamed" xml:space="preserve">
-    <value>Renamed. Links, Stream Deck keys and shortcuts that still use “{0}” need the new name.</value>
+    <value>Renamed. Links, Stream Deck keys and desktop shortcuts that still use “{0}” need the new name.</value>
   </data>
   <data name="Detail_RenamedShortcut" xml:space="preserve">
     <value>Renamed. The desktop shortcut came along; links and Stream Deck keys that still use “{0}” need the new name.</value>
   </data>
   <data name="Tray_ProfileNotFound" xml:space="preserve">
-    <value>There is no profile “{0}”. A shortcut or Stream Deck key may still use an old name.</value>
+    <value>There is no profile “{0}”. A desktop shortcut or Stream Deck key may still use an old name.</value>
   </data>
   <data name="Tray_GameNotFound" xml:space="preserve">
-    <value>There is no game “{0}”. A shortcut or Stream Deck key may still use an old name.</value>
+    <value>There is no game “{0}”. A desktop shortcut or Stream Deck key may still use an old name.</value>
   </data>
   <data name="Tray_NoPreviousProfile" xml:space="preserve">
-    <value>There is no previous profile to go back to yet. A default profile in the settings fills in.</value>
+    <value>There is no last profile to go back to yet. A default profile in Settings fills in.</value>
   </data>
   <data name="Tray_LinkInvalid" xml:space="preserve">
     <value>This link does not work: {0}. RigShift links look like rigshift://apply/&lt;profile&gt;.</value>
@@ -896,7 +893,7 @@
     <value>This program needs admin rights.</value>
   </data>
   <data name="Error_Cancelled" xml:space="preserve">
-    <value>Cancelled at the Windows prompt.</value>
+    <value>Canceled at the Windows prompt.</value>
   </data>
   <data name="Error_WindowsCode" xml:space="preserve">
     <value>Windows reported error {0}. Details: Help → Logs.</value>
