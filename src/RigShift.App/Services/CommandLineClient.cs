@@ -52,7 +52,7 @@ internal static class CommandLineClient
 
                 if (!StartTrayApp())
                 {
-                    return Print(new CliResponse(CliExitCodes.Failed, "RigShift could not be started. See the log for details."));
+                    return Print(new CliResponse(CliExitCodes.Failed, $"RigShift could not be started. The log is in {paths.Logs}"));
                 }
 
                 pipe = PipeProtocol.PipeName;
@@ -61,7 +61,7 @@ internal static class CommandLineClient
             Foreground.AllowAnyProcess(); // The confirmation window must be able to take the focus.
             PipeResponse? response = await SendAsync(pipe, args, ConnectTimeout);
             return response is null
-                ? Print(new CliResponse(CliExitCodes.Failed, "RigShift did not respond. See the log for details."))
+                ? Print(new CliResponse(CliExitCodes.Failed, $"RigShift did not respond. The log is in {paths.Logs}"))
                 : Print(new CliResponse(response.ExitCode, response.Output));
         }
         finally
@@ -204,7 +204,7 @@ internal static class CommandLineClient
             if (!PipeTrust.BelongsToThisUser(pipe, out string reason))
             {
                 Logger.Error("Command pipe {Pipe} is not trusted: {Reason}. Nothing was sent", pipeName, reason);
-                return null;
+                return new PipeResponse(CliExitCodes.Failed, "The running RigShift belongs to another user or is not RigShift, so nothing was sent.");
             }
 
             await PipeProtocol.WriteRequestAsync(pipe, new PipeRequest(args), CancellationToken.None);

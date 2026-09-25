@@ -185,6 +185,7 @@ public partial class App : Application, IAppShell
         // Log.Logger was created in Program.Main, before Velopack ran.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         Controls.WheelScrolling.Register();
+        LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
         Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, _paths.DataDirectory);
 
         try
@@ -207,6 +208,8 @@ public partial class App : Application, IAppShell
             await Services.GetRequiredService<SettingsService>().LoadAsync(CancellationToken.None);
             ProfileCatalog catalog = Services.GetRequiredService<ProfileCatalog>();
             await catalog.ReloadAsync(CancellationToken.None);
+            LogFileHeader.AppState = () => DescribeState(catalog);
+            Log.Information("{AppState}", DescribeState(catalog));
 
             // Games are loaded before the page is opened: the command line plays them, the watcher for games started
             // elsewhere needs them, and a game that already runs must only set the starting point, not trigger a switch.
@@ -272,6 +275,12 @@ public partial class App : Application, IAppShell
             Quit();
         }
     }
+
+    /// <summary>The part of each log file's head only the running app knows.</summary>
+    private static string DescribeState(ProfileCatalog catalog) =>
+        catalog.LastSnapshot is { } snapshot
+            ? FormattableString.Invariant($"{snapshot.Displays.Count(d => d.IsActive)} of {snapshot.Displays.Count} displays active · {catalog.Profiles.Count} profiles · active profile: {catalog.ActiveProfile?.Name ?? "none"}")
+            : FormattableString.Invariant($"Displays not read yet · {catalog.Profiles.Count} profiles");
 
     /// <summary>
     /// A switch that was recorded but never finished means RigShift died between changing the screens and the

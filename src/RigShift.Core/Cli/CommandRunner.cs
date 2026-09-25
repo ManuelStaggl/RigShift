@@ -83,7 +83,14 @@ public sealed class CommandRunner
     public async Task<CliResponse> RunAsync(CliRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        _log.Information("CLI command {Command} {Name}", request.Command, request.ProfileName ?? request.GameName);
+        if ((request.ProfileName ?? request.GameName) is { } name)
+        {
+            _log.Information("CLI command {Command} {Name}", request.Command, name);
+        }
+        else
+        {
+            _log.Information("CLI command {Command}", request.Command);
+        }
 
         try
         {
