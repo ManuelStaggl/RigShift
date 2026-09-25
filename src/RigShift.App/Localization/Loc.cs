@@ -19,12 +19,42 @@ public sealed class Loc : INotifyPropertyChanged
     private static readonly CultureInfo SystemUICulture = CultureInfo.CurrentUICulture;
 
     private readonly ResourceManager _resources = new("RigShift.App.Resources.Strings", typeof(Loc).Assembly);
+    private readonly Lock _gate = new();
+    private readonly List<Listener> _listeners = [];
 
     private Loc()
     {
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    /// <summary>
+    /// Raised on the thread each listener subscribed on. The language is app-wide, but a list, a control or a view
+    /// model belongs to the thread that made it; one reached from another thread throws.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged
+    {
+        add
+        {
+            if (value is not null)
+            {
+                lock (_gate)
+                {
+                    _listeners.Add(new Listener(value, SynchronizationContext.Current, Environment.CurrentManagedThreadId));
+                }
+            }
+        }
+
+        remove
+        {
+            lock (_gate)
+            {
+                int index = _listeners.FindLastIndex(l => l.Handler == value);
+                if (index >= 0)
+                {
+                    _listeners.RemoveAt(index);
+                }
+            }
+        }
+    }
 
     public static Loc Instance { get; } = new();
 
@@ -52,6 +82,25 @@ public sealed class Loc : INotifyPropertyChanged
         }
 
         UICulture = wanted;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
+        Listener[] listeners;
+        lock (_gate)
+        {
+            listeners = [.. _listeners];
+        }
+
+        var args = new PropertyChangedEventArgs("Item[]");
+        foreach (Listener listener in listeners)
+        {
+            if (listener.Context is null || listener.Thread == Environment.CurrentManagedThreadId)
+            {
+                listener.Handler(this, args);
+            }
+            else
+            {
+                listener.Context.Post(_ => listener.Handler(this, args), null);
+            }
+        }
     }
+
+    private sealed record Listener(PropertyChangedEventHandler Handler, SynchronizationContext? Context, int Thread);
 }

@@ -31,7 +31,6 @@ public sealed partial class AboutViewModel : ObservableObject
     private readonly GameCatalog _games;
     private readonly ProfileDialogs _dialogs;
     private readonly ILogger _log;
-    private readonly UiThread _ui = new();
 
     public AboutViewModel(
         UpdateService updates,
@@ -67,7 +66,7 @@ public sealed partial class AboutViewModel : ObservableObject
         RefreshUpdateStatus();
 
         // Version, update status and the history rows are built in code; re-read them on a language change (I-13).
-        Loc.Instance.PropertyChanged += (_, _) => _ui.Run(() =>
+        Loc.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(VersionText));
             RefreshUpdateStatus();
@@ -75,7 +74,7 @@ public sealed partial class AboutViewModel : ObservableObject
             BackupStatus = null;
             System.Windows.Data.CollectionViewSource.GetDefaultView(History).Refresh();
             RebuildShortcuts();
-        });
+        };
     }
 
     [ObservableProperty]

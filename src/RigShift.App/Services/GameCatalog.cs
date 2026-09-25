@@ -18,7 +18,6 @@ public sealed partial class GameCatalog : ObservableObject
     private readonly IGameStore _store;
     private readonly ProfileCatalog _profiles;
     private readonly ILogger _log;
-    private readonly UiThread _ui = new();
     private IReadOnlyList<GameEntry> _games = [];
 
     public GameCatalog(IGameStore store, ProfileCatalog profiles, ILogger log)
@@ -35,8 +34,7 @@ public sealed partial class GameCatalog : ObservableObject
         // The cards name the profile a game switches to, so a renamed profile has to reach them. Only the profiles
         // themselves: a display change is no reason to rebuild every game (v4 finding A-03).
         _profiles.ProfilesChanged += (_, _) => Rebuild();
-        // The language is app-wide; the lists belong to the thread that made them.
-        Loc.Instance.PropertyChanged += (_, _) => _ui.Run(Rebuild);
+        Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
     /// <summary>Raised after the games changed.</summary>

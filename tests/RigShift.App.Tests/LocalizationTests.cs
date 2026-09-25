@@ -1,4 +1,5 @@
 using System.Collections;
+using System.ComponentModel;
 using System.Globalization;
 using System.Resources;
 using System.Text.RegularExpressions;
@@ -17,6 +18,47 @@ namespace RigShift.App.Tests;
 /// </summary>
 public sealed class LocalizationTests
 {
+    /// <summary>A list or control belongs to the thread that made it; a language change must reach it there.</summary>
+    [Fact]
+    public void LanguageChange_ReachesEachListenerOnItsOwnThread()
+    {
+        string before = Loc.Instance.UICulture.Name;
+        using var ui = new DispatcherThread();
+        int calledOn = 0;
+        PropertyChangedEventHandler handler = (_, _) => calledOn = Environment.CurrentManagedThreadId;
+        ui.Invoke(() => Loc.Instance.PropertyChanged += handler);
+        try
+        {
+            Loc.Instance.SetLanguage(before == "de" ? "en" : "de");
+            ui.Drain();
+
+            calledOn.ShouldBe(ui.ThreadId);
+        }
+        finally
+        {
+            Loc.Instance.PropertyChanged -= handler;
+            Loc.Instance.SetLanguage(before);
+        }
+    }
+
+    [Fact]
+    public void SameLanguageAgain_ChangesNothing()
+    {
+        int changes = 0;
+        PropertyChangedEventHandler handler = (_, _) => changes++;
+        Loc.Instance.PropertyChanged += handler;
+        try
+        {
+            Loc.Instance.SetLanguage(Loc.Instance.UICulture.Name);
+
+            changes.ShouldBe(0);
+        }
+        finally
+        {
+            Loc.Instance.PropertyChanged -= handler;
+        }
+    }
+
     [Fact]
     public void German_HasEveryKeyOfEnglish()
     {

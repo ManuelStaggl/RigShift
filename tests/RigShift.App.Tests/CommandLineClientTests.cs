@@ -1,3 +1,4 @@
+using System.IO;
 using System.IO.Pipes;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -86,8 +87,15 @@ public sealed class CommandLineClientTests
         await using var squatter = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
         Task<int> received = Task.Run(async () =>
         {
-            await squatter.WaitForConnectionAsync(TestContext.Current.CancellationToken);
-            return await squatter.ReadAsync(new byte[16], TestContext.Current.CancellationToken);
+            try
+            {
+                await squatter.WaitForConnectionAsync(TestContext.Current.CancellationToken);
+                return await squatter.ReadAsync(new byte[16], TestContext.Current.CancellationToken);
+            }
+            catch (IOException)
+            {
+                return 0; // The client closed first: nothing arrived either.
+            }
         }, TestContext.Current.CancellationToken);
 
         PipeResponse? response = await CommandLineClient.SendAsync(pipeName, ["apply", "Rig"], Wait);

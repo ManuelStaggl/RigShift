@@ -23,7 +23,6 @@ public sealed partial class ProfileCatalog : ObservableObject
     private readonly ActiveProfileMatcher _matcher;
     private readonly SettingsService _settings;
     private readonly ILogger _log;
-    private readonly UiThread _ui = new();
     private IReadOnlyList<Profile> _profiles = [];
     private IReadOnlyList<UnreadableProfileFile> _unreadable = [];
 
@@ -43,8 +42,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         IsEmpty = true;
 
         settings.Changed += (_, _) => UpdateFlags();
-        // The language is app-wide; the lists belong to the thread that made them.
-        Loc.Instance.PropertyChanged += (_, _) => _ui.Run(Rebuild);
+        Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
     /// <summary>Raised after the profiles themselves changed: loaded, saved, deleted, or rebuilt for another language.</summary>
