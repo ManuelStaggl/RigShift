@@ -64,7 +64,7 @@ jobs:
         run: |
           dotnet tool run reportgenerator "-reports:TestResults/*.cobertura.xml" "-targetdir:coverage" "-reporttypes:MarkdownSummaryGithub;JsonSummary"
           Get-Content coverage/SummaryGithub.md >> $env:GITHUB_STEP_SUMMARY
-          $floors = @{ 'RigShift.Core' = 90; 'RigShift' = 48; 'RigShift.Windows' = 33 }
+          $floors = @{ 'RigShift.Core' = 90; 'RigShift' = 70; 'RigShift.Windows' = 40 }
           $assemblies = (Get-Content coverage/Summary.json -Raw | ConvertFrom-Json).coverage.assemblies
           $low = foreach ($name in $floors.Keys) {
             $line = ($assemblies | Where-Object name -eq $name).coverage
