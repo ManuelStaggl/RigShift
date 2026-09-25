@@ -101,12 +101,15 @@
       </Setter>
     </Style>
 
-    <!-- Compact row for five profiles and more, and for games. -->
-    <Style x:Key="Row" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
+    <!-- Compact row for games, and for five profiles and more. -->
+    <Style x:Key="GameRowStyle" TargetType="Button" BasedOn="{StaticResource RigShift.TrayRow}">
       <Setter Property="Height" Value="40" />
       <Setter Property="Padding" Value="8,0" />
       <Setter Property="Margin" Value="4,0" />
       <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style x:Key="Row" TargetType="Button" BasedOn="{StaticResource GameRowStyle}">
       <Style.Triggers>
         <DataTrigger Binding="{Binding IsActive}" Value="True">
           <Setter Property="Background" Value="{StaticResource Tray.ActiveFill}" />
@@ -284,7 +287,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileItem}">
               <Button
-                AutomationProperties.HelpText="{Binding ReadyTip}"
+                AutomationProperties.HelpText="{Binding ReadyTip, TargetNullValue=''}"
                 AutomationProperties.Name="{Binding AccessibleName}"
                 Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                 CommandParameter="{Binding}"
@@ -362,7 +365,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="{x:Type vm:ProfileItem}">
                 <Button
-                  AutomationProperties.HelpText="{Binding ReadyTip}"
+                  AutomationProperties.HelpText="{Binding ReadyTip, TargetNullValue=''}"
                   AutomationProperties.Name="{Binding AccessibleName}"
                   Command="{Binding DataContext.SwitchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   CommandParameter="{Binding}"
@@ -418,7 +421,7 @@
                   Command="{Binding DataContext.PlayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   CommandParameter="{Binding}"
                   IsEnabled="{Binding CanPlay}"
-                  Style="{StaticResource Row}"
+                  Style="{StaticResource GameRowStyle}"
                   ToolTip="{Binding HotkeyText}">
                   <Grid>
                     <Grid.ColumnDefinitions>
