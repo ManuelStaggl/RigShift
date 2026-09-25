@@ -42,7 +42,18 @@ public partial class App
         {
             services.Replace(ServiceDescriptor.Singleton<IDisplayConfigurator>(
                 sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), previewActive)));
+
+            // A dev build is never in the Run key; without this every trigger tab warns that nothing starts with Windows.
+            services.Replace(ServiceDescriptor.Singleton<IAutostart>(new PreviewAutostart()));
+            AppEditItem.PreviewPathsExist = true;
         }
+    }
+
+    private sealed class PreviewAutostart : IAutostart
+    {
+        public bool IsEnabled { get; private set; } = true;
+
+        public void SetEnabled(bool enabled) => IsEnabled = enabled;
     }
 
     /// <summary>Started once profiles and games are loaded, before the main window opens.</summary>

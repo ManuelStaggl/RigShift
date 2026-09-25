@@ -35,6 +35,11 @@ public sealed partial class AppEditItem : ObservableObject
         CheckPath(pause: false);
     }
 
+#if DEBUG
+    /// <summary>Screenshots with demo data: the demo tools are not installed on the machine taking them.</summary>
+    internal static bool PreviewPathsExist { get; set; }
+
+#endif
     /// <summary>What the seconds become when "until its window is open" is ticked with none: a limit that is visible.</summary>
     internal const int DefaultWindowWaitSeconds = 60;
 
@@ -177,7 +182,7 @@ public sealed partial class AppEditItem : ObservableObject
             }
 
             (bool exists, ImageSource? icon) = await Task.Run(
-                () => File.Exists(file) ? (true, AppIcons.Load(file)) : (false, null), cancellationToken);
+                () => File.Exists(file) ? (true, AppIcons.Load(file)) : (PreviewExists(), null), cancellationToken);
             if (!cancellationToken.IsCancellationRequested)
             {
                 Show(exists ? null : Loc.Instance["App_NotFound"], icon);
@@ -188,6 +193,12 @@ public sealed partial class AppEditItem : ObservableObject
             // A newer path is being looked at.
         }
     }
+
+#if DEBUG
+    private static bool PreviewExists() => PreviewPathsExist;
+#else
+    private static bool PreviewExists() => false;
+#endif
 
     private void Show(string? note, ImageSource? icon)
     {
