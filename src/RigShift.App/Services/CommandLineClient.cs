@@ -77,13 +77,6 @@ internal static class CommandLineClient
     }
 
     /// <summary>
-    /// The pipe of a running RigShift, our own Windows session first. Looking for the pipe rather than for the
-    /// single-instance mutex matters because the mutex is session-local: a command sent over SSH, from a scheduled
-    /// task or from a service runs in a session without a desktop, where the display API refuses everything. Handing
-    /// it to the instance that does sit on the desktop is the only way such a command can be answered at all.
-    /// Only this user's instance will accept us; the pipe's access list on the server side sees to that.
-    /// </summary>
-    /// <summary>
     /// A rigshift:// link that cannot be read: a Stream Deck key or a web page has no console, so the running instance
     /// says it in the tray (v4 finding A-09). Nothing is started for it.
     /// </summary>
@@ -96,17 +89,20 @@ internal static class CommandLineClient
             }
         }).GetAwaiter().GetResult();
 
+    /// <summary>
+    /// The pipe of a running RigShift, our own Windows session first. Looking for the pipe rather than for the
+    /// single-instance mutex matters because the mutex is session-local: a command sent over SSH, from a scheduled
+    /// task or from a service runs in a session without a desktop, where the display API refuses everything. Handing
+    /// it to the instance that does sit on the desktop is the only way such a command can be answered at all.
+    /// Only this user's instance will accept us; the pipe's access list on the server side sees to that.
+    /// </summary>
     private static string? FindRunningInstance()
     {
         string own = PipeProtocol.PipeName;
         List<string> found;
         try
         {
-            found = [.. Directory.GetFiles(PipeDirectory)
-                .Select(Path.GetFileName)
-                .Where(name => name is not null && IsInstancePipe(name))
-                .Select(name => name!)
-                .Order(StringComparer.Ordinal)];
+            found = [.. Directory.GetFiles(PipeDirectory).Select(Path.GetFileName).OfType<string>()];
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -114,19 +110,21 @@ internal static class CommandLineClient
             return Mutex.TryOpenExisting(Program.SingleInstanceMutex, out Mutex? mutex) ? Keep(mutex, own) : null;
         }
 
-        if (found.Contains(own, StringComparer.Ordinal))
+        string? chosen = Choose(found, own);
+        if (chosen is not null && chosen != own)
         {
-            return own;
+            // Another session holds the only instance - the usual case for a command that arrives without a desktop.
+            Logger.Information("No RigShift in this session; forwarding to {Pipe}", chosen);
         }
 
-        if (found.Count == 0)
-        {
-            return null;
-        }
+        return chosen;
+    }
 
-        // Another session holds the only instance - the usual case for a command that arrives without a desktop.
-        Logger.Information("No RigShift in this session; forwarding to {Pipe}", found[0]);
-        return found[0];
+    /// <summary>Our own session's instance when there is one, else the first other one, else none.</summary>
+    internal static string? Choose(IEnumerable<string> pipeNames, string own)
+    {
+        List<string> instances = [.. pipeNames.Where(IsInstancePipe).Order(StringComparer.Ordinal)];
+        return instances.Contains(own, StringComparer.Ordinal) ? own : instances.FirstOrDefault();
     }
 
     private static string Keep(Mutex mutex, string pipe)
@@ -187,7 +185,8 @@ internal static class CommandLineClient
         }
     }
 
-    private static async Task<PipeResponse?> SendAsync(string pipeName, IReadOnlyList<string> args, TimeSpan connectTimeout)
+    /// <returns>The app's answer; <c>null</c> when nobody answered in time or the connection broke.</returns>
+    internal static async Task<PipeResponse?> SendAsync(string pipeName, IReadOnlyList<string> args, TimeSpan connectTimeout)
     {
         try
         {
