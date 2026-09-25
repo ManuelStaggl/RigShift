@@ -427,13 +427,13 @@ public sealed class GameEditorViewModelTests : IDisposable
     {
         IGameStore store = Substitute.For<IGameStore>();
         store.LoadAllAsync(Arg.Any<CancellationToken>()).Returns(new GameLoadResult([], null));
-        store.SaveAsync(Arg.Any<GameEntry>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full"));
+        store.SaveAsync(Arg.Any<GameEntry>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full", unchecked((int)0x80070070)));
         var catalog = new GameCatalog(store, _host.Catalog, Logger.None);
         GameEditorViewModel editor = Editor(Game("iRacing"), isNew: true, catalog: catalog);
 
         (await editor.SaveAsync()).ShouldBeFalse();
 
-        editor.ErrorMessage.ShouldNotBeNull().ShouldContain("disk full");
+        editor.ErrorMessage.ShouldBe(Loc.Instance["Error_DiskFull"]);
         editor.IsNew.ShouldBeTrue();
         editor.IsDirty.ShouldBeTrue();
 

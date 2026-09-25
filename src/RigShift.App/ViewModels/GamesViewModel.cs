@@ -248,7 +248,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         catch (Exception ex) when (ex is COMException or UnauthorizedAccessException or IOException)
         {
             Log.Error(ex, "Shortcut {File} could not be created", file);
-            ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
+            ShowDetail(UserMessages.Describe(ex), InfoKind.Error);
         }
     }
 

@@ -58,8 +58,7 @@
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up, then switch again.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current arrangement” in the profile.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
-  <data name="Result_FailedText" xml:space="preserve"><value>Windows reported error {0}. Details are in the log.</value></data>
-  <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details are in the log.</value></data>
+  <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details: Help → Logs.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>The previous displays are back.</value></data>
   <data name="Note_RestoreFailed" xml:space="preserve"><value>The previous displays could not be restored – some may stay dark. Switch to a profile again or use Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>The saved resolution did not work; Windows chose the display modes.</value></data>
@@ -228,14 +227,14 @@
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed; log files are not anonymized, so check them before attaching one.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
-  <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: {0}</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Couldn't copy. {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
   <data name="About_BackupHint" xml:space="preserve"><value>Profiles, games, rules and settings as one ZIP file.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Save…</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Restore…</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Backup saved with {0} profile(s).</value></data>
   <data name="About_BackupRestored" xml:space="preserve"><value>Backup restored: {0} profile(s).</value></data>
-  <data name="About_BackupFailed" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="About_BackupFailed" xml:space="preserve"><value>Backup didn't work. {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Wait until the running switch has finished.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Restore backup?</value></data>
   <data name="About_RestoreText" xml:space="preserve"><value>All profiles, automation rules and settings are replaced by the {0} profile(s) and the settings from the backup. Your games stay as they are. This cannot be undone.</value></data>
@@ -753,10 +752,10 @@
     <value>Windows reports no display that is ready.</value>
   </data>
   <data name="AllOn_Failed" xml:space="preserve">
-    <value>Windows did not turn all displays on (error {0}).</value>
+    <value>Windows did not turn all displays on. {0}</value>
   </data>
   <data name="AllOn_FailedFallback" xml:space="preserve">
-    <value>Windows did not turn all displays on (error {0}). Switching to {1}.</value>
+    <value>Windows did not turn all displays on. Switching to {1}. {0}</value>
   </data>
   <data name="Settings_AllOnHotkey" xml:space="preserve">
     <value>All displays on</value>
@@ -874,5 +873,56 @@
   </data>
   <data name="Session_SwitchRunning" xml:space="preserve">
     <value>RigShift is putting the displays back. This takes a few seconds.</value>
+  </data>
+  <data name="Error_NoAccess" xml:space="preserve">
+    <value>Windows denied access. Check the folder's permissions, or allow RigShift under Controlled folder access in Windows Security.</value>
+  </data>
+  <data name="Error_NotFound" xml:space="preserve">
+    <value>A file or folder is missing – it may have been moved or deleted.</value>
+  </data>
+  <data name="Error_Damaged" xml:space="preserve">
+    <value>The file is damaged or not a RigShift file.</value>
+  </data>
+  <data name="Error_ClipboardBusy" xml:space="preserve">
+    <value>Another program is using the clipboard. Try again.</value>
+  </data>
+  <data name="Error_FileInUse" xml:space="preserve">
+    <value>Another program has the file open – often an antivirus scan or OneDrive. Try again in a moment.</value>
+  </data>
+  <data name="Error_DiskFull" xml:space="preserve">
+    <value>The drive is full.</value>
+  </data>
+  <data name="Error_NeedsAdmin" xml:space="preserve">
+    <value>This program needs admin rights.</value>
+  </data>
+  <data name="Error_Cancelled" xml:space="preserve">
+    <value>Cancelled at the Windows prompt.</value>
+  </data>
+  <data name="Error_WindowsCode" xml:space="preserve">
+    <value>Windows reported error {0}. Details: Help → Logs.</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>Unexpected error ({0}). Details: Help → Logs.</value>
+  </data>
+  <data name="Error_Switch5" xml:space="preserve">
+    <value>Windows refused the change: the PC is locked or used over Remote Desktop. Unlock it at the PC, then switch again.</value>
+  </data>
+  <data name="Error_Switch87" xml:space="preserve">
+    <value>Windows rejected this layout: the graphics driver can't run these displays this way. Check the profile's resolutions and refresh rates, or update the driver.</value>
+  </data>
+  <data name="Error_Switch50" xml:space="preserve">
+    <value>The graphics driver doesn't support this layout – often more displays than the graphics card can run at once.</value>
+  </data>
+  <data name="Error_Switch1610" xml:space="preserve">
+    <value>Windows found no working mode for these displays. Set the layout up once in Windows display settings, then save the profile again.</value>
+  </data>
+  <data name="Error_Startup" xml:space="preserve">
+    <value>RigShift could not start.
+{0}
+
+The log is in {1}</value>
+  </data>
+  <data name="Games_Unreadable" xml:space="preserve">
+    <value>The game list can't be read, so RigShift won't change it: {0}</value>
   </data>
 </root>

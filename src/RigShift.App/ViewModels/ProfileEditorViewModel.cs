@@ -411,7 +411,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         catch (Win32Exception ex)
         {
             _log.Warning(ex, "Current arrangement could not be read");
-            ErrorMessage = ex.Message;
+            ErrorMessage = UserMessages.DescribeSwitchError(ex.NativeErrorCode);
         }
     }
 
@@ -451,7 +451,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Profile {Profile} could not be saved", profile.Name);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
             return false;
         }
 

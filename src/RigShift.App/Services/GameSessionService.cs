@@ -204,7 +204,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         catch (Exception ex)
         {
             _log.Error(ex, "Game {Game} failed", game.Name);
-            await _dispatcher.InvokeAsync(() => Finish(game, ex.Message, GameSessionOutcome.StartFailed));
+            await _dispatcher.InvokeAsync(() => Finish(game, UserMessages.Describe(ex), GameSessionOutcome.StartFailed));
         }
         finally
         {

@@ -360,7 +360,7 @@ public sealed partial class FovViewModel : ObservableObject
         catch (COMException ex)
         {
             _log.Warning(ex, "Field of view value could not be copied");
-            CopyStatus = Loc.Format("About_CopyFailed", ex.Message);
+            CopyStatus = Loc.Format("About_CopyFailed", UserMessages.Describe(ex));
         }
     }
 

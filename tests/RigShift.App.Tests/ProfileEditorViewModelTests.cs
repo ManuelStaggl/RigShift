@@ -505,14 +505,14 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     public async Task Save_DiskSaysNo_ShowsTheError_AndTheProfileStaysNewAndDirty()
     {
         IProfileStore store = Substitute.For<IProfileStore>();
-        store.SaveAsync(Arg.Any<Profile>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full"));
+        store.SaveAsync(Arg.Any<Profile>(), Arg.Any<CancellationToken>()).ThrowsAsync(new IOException("disk full", unchecked((int)0x80070070)));
         var catalog = new ProfileCatalog(
             store, _display, new ActiveProfileMatcher(new TopologyPlanner(new TopologyPlannerOptions())), _host.Settings, _host.Paths, Logger.None);
         ProfileEditorViewModel editor = await EditorAsync(Rig(), isNew: true, catalog: catalog);
 
         await SaveAsync(editor, expected: false);
 
-        editor.ErrorMessage.ShouldNotBeNull().ShouldContain("disk full");
+        editor.ErrorMessage.ShouldBe(Loc.Instance["Error_DiskFull"]);
         editor.IsNew.ShouldBeTrue();
         editor.IsDirty.ShouldBeTrue();
     }

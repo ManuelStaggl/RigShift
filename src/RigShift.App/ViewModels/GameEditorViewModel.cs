@@ -352,7 +352,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             _log.Error(ex, "Game {Game} could not be saved", game.Name);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
             return false;
         }
 

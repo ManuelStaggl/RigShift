@@ -372,7 +372,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             Log.Error(ex, "Store action failed");
-            ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
+            ShowDetail(UserMessages.Describe(ex), InfoKind.Error);
         }
     }
 
@@ -473,7 +473,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
             // Not the old editor either: the list shows another entry now (v4 finding A-16).
             Log.Error(ex, "The editor of {Name} could not be opened", item.Name);
             CloseEditor();
-            ShowDetail(Loc.Format("Status_Error", ex.Message), InfoKind.Error);
+            ShowDetail(UserMessages.Describe(ex), InfoKind.Error);
             UpdateHead();
             return;
         }

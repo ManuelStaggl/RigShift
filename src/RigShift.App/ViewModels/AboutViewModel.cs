@@ -107,7 +107,7 @@ public sealed partial class AboutViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Warning(ex, "Backup could not be saved to {File}", dialog.FileName);
-            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+            BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
         }
     }
 
@@ -139,7 +139,7 @@ public sealed partial class AboutViewModel : ObservableObject
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
             _log.Warning(ex, "Backup {File} could not be read", dialog.FileName);
-            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+            BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
             return;
         }
 
@@ -162,7 +162,7 @@ public sealed partial class AboutViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Backup {File} could not be restored", dialog.FileName);
-            BackupStatus = Loc.Format("About_BackupFailed", ex.Message);
+            BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
             failed = true;
         }
 
@@ -211,7 +211,7 @@ public sealed partial class AboutViewModel : ObservableObject
         catch (COMException ex)
         {
             _log.Warning(ex, "Command could not be copied to the clipboard");
-            CopyStatus = Loc.Format("About_CopyFailed", ex.Message);
+            CopyStatus = Loc.Format("About_CopyFailed", UserMessages.Describe(ex));
         }
     }
 
@@ -350,7 +350,7 @@ public sealed partial class AboutViewModel : ObservableObject
         catch (COMException ex)
         {
             _log.Warning(ex, "Diagnostic report could not be copied to the clipboard");
-            CopyStatus = Loc.Format("About_CopyFailed", ex.Message);
+            CopyStatus = Loc.Format("About_CopyFailed", UserMessages.Describe(ex));
         }
     }
 

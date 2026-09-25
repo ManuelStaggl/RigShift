@@ -58,8 +58,7 @@
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, dann erneut umschalten.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Wechsel zu {0} fehlgeschlagen</value></data>
-  <data name="Result_FailedText" xml:space="preserve"><value>Windows meldet Fehler {0}. Details stehen im Log.</value></data>
-  <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details stehen im Log.</value></data>
+  <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details: Hilfe → Logs.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>Die vorherigen Bildschirme sind wiederhergestellt.</value></data>
   <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden – manche bleiben eventuell dunkel. Wähle erneut ein Profil oder drücke Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>Die gespeicherte Auflösung ging nicht; Windows hat die Anzeigemodi gewählt.</value></data>
@@ -228,14 +227,14 @@
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt; Protokolldateien sind nicht anonymisiert – sieh sie durch, bevor du eine anhängst.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
-  <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich: {0}</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich. {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
   <data name="About_BackupHint" xml:space="preserve"><value>Profile, Spiele, Regeln und Einstellungen als eine ZIP-Datei.</value></data>
   <data name="About_SaveBackup" xml:space="preserve"><value>Speichern …</value></data>
   <data name="About_RestoreBackup" xml:space="preserve"><value>Wiederherstellen …</value></data>
   <data name="About_BackupSaved" xml:space="preserve"><value>Sicherung mit {0} Profil(en) gespeichert.</value></data>
   <data name="About_BackupRestored" xml:space="preserve"><value>Sicherung wiederhergestellt: {0} Profil(e).</value></data>
-  <data name="About_BackupFailed" xml:space="preserve"><value>Fehler: {0}</value></data>
+  <data name="About_BackupFailed" xml:space="preserve"><value>Sicherung hat nicht geklappt. {0}</value></data>
   <data name="About_BackupBusy" xml:space="preserve"><value>Warte, bis der laufende Wechsel fertig ist.</value></data>
   <data name="About_RestoreTitle" xml:space="preserve"><value>Sicherung wiederherstellen?</value></data>
   <data name="About_RestoreText" xml:space="preserve"><value>Alle Profile, Automatik-Regeln und Einstellungen werden durch die {0} Profil(e) und die Einstellungen aus der Sicherung ersetzt. Deine Spiele bleiben, wie sie sind. Das lässt sich nicht rückgängig machen.</value></data>
@@ -753,10 +752,10 @@
     <value>Windows meldet keinen Bildschirm, der bereit ist.</value>
   </data>
   <data name="AllOn_Failed" xml:space="preserve">
-    <value>Windows hat nicht alle Bildschirme eingeschaltet (Fehler {0}).</value>
+    <value>Windows hat nicht alle Bildschirme eingeschaltet. {0}</value>
   </data>
   <data name="AllOn_FailedFallback" xml:space="preserve">
-    <value>Windows hat nicht alle Bildschirme eingeschaltet (Fehler {0}). Wechsel zu {1}.</value>
+    <value>Windows hat nicht alle Bildschirme eingeschaltet. Wechsel zu {1}. {0}</value>
   </data>
   <data name="Settings_AllOnHotkey" xml:space="preserve">
     <value>Alle Bildschirme an</value>
@@ -874,5 +873,56 @@
   </data>
   <data name="Session_SwitchRunning" xml:space="preserve">
     <value>RigShift stellt die Bildschirme zurück. Das dauert ein paar Sekunden.</value>
+  </data>
+  <data name="Error_NoAccess" xml:space="preserve">
+    <value>Windows verweigert den Zugriff. Ordnerrechte prüfen oder RigShift unter „Überwachter Ordnerzugriff“ in der Windows-Sicherheit zulassen.</value>
+  </data>
+  <data name="Error_NotFound" xml:space="preserve">
+    <value>Eine Datei oder ein Ordner fehlt – vielleicht verschoben oder gelöscht.</value>
+  </data>
+  <data name="Error_Damaged" xml:space="preserve">
+    <value>Die Datei ist beschädigt oder keine RigShift-Datei.</value>
+  </data>
+  <data name="Error_ClipboardBusy" xml:space="preserve">
+    <value>Ein anderes Programm belegt die Zwischenablage. Noch einmal versuchen.</value>
+  </data>
+  <data name="Error_FileInUse" xml:space="preserve">
+    <value>Ein anderes Programm hat die Datei geöffnet – oft Virenscanner oder OneDrive. Gleich noch einmal versuchen.</value>
+  </data>
+  <data name="Error_DiskFull" xml:space="preserve">
+    <value>Das Laufwerk ist voll.</value>
+  </data>
+  <data name="Error_NeedsAdmin" xml:space="preserve">
+    <value>Dieses Programm braucht Administratorrechte.</value>
+  </data>
+  <data name="Error_Cancelled" xml:space="preserve">
+    <value>An der Windows-Abfrage abgebrochen.</value>
+  </data>
+  <data name="Error_WindowsCode" xml:space="preserve">
+    <value>Windows meldet Fehler {0}. Details: Hilfe → Logs.</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>Unerwarteter Fehler ({0}). Details: Hilfe → Logs.</value>
+  </data>
+  <data name="Error_Switch5" xml:space="preserve">
+    <value>Windows lehnt die Änderung ab: Der PC ist gesperrt oder per Remotedesktop verbunden. Am PC entsperren, dann noch einmal umschalten.</value>
+  </data>
+  <data name="Error_Switch87" xml:space="preserve">
+    <value>Windows lehnt diese Anordnung ab: Der Grafiktreiber kann diese Bildschirme so nicht betreiben. Auflösungen und Bildwiederholraten im Profil prüfen oder den Treiber aktualisieren.</value>
+  </data>
+  <data name="Error_Switch50" xml:space="preserve">
+    <value>Der Grafiktreiber unterstützt diese Anordnung nicht – oft mehr Bildschirme, als die Grafikkarte gleichzeitig betreiben kann.</value>
+  </data>
+  <data name="Error_Switch1610" xml:space="preserve">
+    <value>Windows findet keinen passenden Modus für diese Bildschirme. Die Anordnung einmal in den Windows-Anzeigeeinstellungen einrichten, dann das Profil neu speichern.</value>
+  </data>
+  <data name="Error_Startup" xml:space="preserve">
+    <value>RigShift konnte nicht starten.
+{0}
+
+Das Log liegt in {1}</value>
+  </data>
+  <data name="Games_Unreadable" xml:space="preserve">
+    <value>Die Spieleliste ist nicht lesbar, deshalb ändert RigShift sie nicht: {0}</value>
   </data>
 </root>

@@ -268,7 +268,7 @@ public partial class App : Application, IAppShell
         catch (Exception ex)
         {
             Log.Fatal(ex, "RigShift failed to start");
-            MessageBox.Show(ex.Message, "RigShift", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(Localization.Loc.Format("Error_Startup", UserMessages.Describe(ex), _paths.Logs), "RigShift", MessageBoxButton.OK, MessageBoxImage.Error);
             Quit();
         }
     }

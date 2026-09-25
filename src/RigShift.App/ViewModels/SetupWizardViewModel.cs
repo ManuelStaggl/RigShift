@@ -422,7 +422,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Setup assistant could not save a profile");
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
         finally
         {
@@ -544,7 +544,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Setup assistant could not save the automation rule");
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
         finally
         {

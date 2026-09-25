@@ -73,14 +73,14 @@ public sealed partial class GameCatalog : ObservableObject
             GameLoadResult result = await _store.LoadAllAsync(cancellationToken);
             _games = result.Games;
             IsUnreadable = !result.IsComplete;
-            UnreadableMessage = result.Unreadable;
+            UnreadableMessage = result.Unreadable is { } reason ? Loc.Format("Games_Unreadable", reason) : null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Games could not be loaded");
             _games = [];
             IsUnreadable = true;
-            UnreadableMessage = ex.Message;
+            UnreadableMessage = Loc.Format("Games_Unreadable", UserMessages.Describe(ex));
         }
 
         Rebuild();

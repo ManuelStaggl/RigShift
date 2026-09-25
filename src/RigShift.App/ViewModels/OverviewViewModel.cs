@@ -132,7 +132,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error(ex, "Display {Display} could not be renamed", card.ModelName);
-            ErrorMessage = Loc.Format("Status_Error", ex.Message);
+            ErrorMessage = UserMessages.Describe(ex);
         }
     }
 

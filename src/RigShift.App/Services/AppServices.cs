@@ -209,8 +209,8 @@ public static class SwitchMessages
         AllDisplaysOnResult result = report.Result;
         string text = result.Outcome switch
         {
-            AllDisplaysOnOutcome.Failed when report.FallbackProfile is { } fallback => Loc.Format("AllOn_FailedFallback", result.Error, fallback),
-            AllDisplaysOnOutcome.Failed => Loc.Format("AllOn_Failed", result.Error),
+            AllDisplaysOnOutcome.Failed when report.FallbackProfile is { } fallback => Loc.Format("AllOn_FailedFallback", FailureText(result.Error), fallback),
+            AllDisplaysOnOutcome.Failed => Loc.Format("AllOn_Failed", FailureText(result.Error)),
             _ => Loc.Instance["AllOn_" + result.Outcome],
         };
         H.NotifyIcon.Core.NotificationIcon icon = result.Outcome switch
@@ -221,6 +221,10 @@ public static class SwitchMessages
         };
         return (Loc.Instance["AllOn_Title"], text, icon);
     }
+
+    /// <summary>What to do about a failed display change; 0 = no code from Windows (the call threw).</summary>
+    private static string FailureText(int code) =>
+        code == 0 ? Loc.Instance["Result_FailedUnexpected"] : UserMessages.DescribeSwitchError(code);
 
     /// <summary>"Left · CM27X3", or the model alone without a custom name.</summary>
     public static string NameOf(string? customName, DisplayIdentity identity) =>
@@ -274,7 +278,7 @@ public static class SwitchMessages
             SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName),
                 Loc.Format(record.Ambiguous ? "Result_AmbiguousText" : "Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),
             _ => (Loc.Format("Result_FailedTitle", record.ProfileName),
-                record.NativeError is { } code ? Loc.Format("Result_FailedText", code) : Loc.Instance["Result_FailedUnexpected"],
+                FailureText(record.NativeError ?? 0),
                 H.NotifyIcon.Core.NotificationIcon.Error),
         };
 
