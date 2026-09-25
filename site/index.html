@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RigShift – desk to rig in one shift</title>
+<meta name="description" content="Free Windows app for sim racers: switch displays, audio and apps between desk and rig in one step – automatically when the wheelbase powers on.">
+<meta property="og:title" content="RigShift – desk to rig in one shift">
+<meta property="og:description" content="Turn the wheelbase on and your PC is in rig mode. Turn it off and your desk is back. Free, open source, no account.">
+<meta property="og:image" content="https://manuelstaggl.github.io/RigShift/rigshift-social-preview.png">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="brand/rigshift-app-light-256.png">
+<style>
+  :root {
+    --chrome: #0B1220; --page: #111A2B; --layer: #1E293B; --line: #2C3A52;
+    --text: #F8FAFC; --text-2: #B8C6D9; --accent: #79B8FF; --accent-hover: #8FC4FF; --on-accent: #0B1220;
+    --ok: #74D99A; --warn: #F4C96B;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--page); color: var(--text);
+    font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  a { color: var(--accent); }
+  a:hover { color: var(--accent-hover); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header { background: var(--chrome); border-bottom: 1px solid var(--line); }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  header nav a { color: var(--text-2); text-decoration: none; margin-left: 20px; font-size: 15px; }
+  header nav a:hover { color: var(--text); }
+  .hero { padding: 64px 0 32px; text-align: center; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 0 0 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .hero p.lead { font-size: 19px; color: var(--text-2); max-width: 680px; margin: 0 auto 28px; }
+  .button {
+    display: inline-block; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 17px;
+    padding: 13px 26px; border-radius: 8px; text-decoration: none;
+  }
+  .button:hover { background: var(--accent-hover); color: var(--on-accent); }
+  .button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .meta { color: var(--text-2); font-size: 14px; margin-top: 14px; }
+  .shot { margin: 40px auto 0; max-width: 960px; }
+  .shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 20px 60px #0008; }
+  section { padding: 48px 0; border-top: 1px solid var(--line); }
+  section h2 { font-size: 26px; margin: 0 0 18px; font-weight: 600; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--layer); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+  .card p { margin: 0; color: var(--text-2); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+  ul { padding-left: 20px; margin: 0; }
+  li { margin: 4px 0; }
+  .muted { color: var(--text-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--text-2); font-weight: 600; }
+  .ok { color: var(--ok); } .open { color: var(--warn); }
+  code { background: var(--layer); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; font-size: 14px; word-break: break-all; }
+  footer { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--text-2); font-size: 14px; }
+  footer a { margin-right: 18px; }
+  @media (max-width: 760px) {
+    .cards, .two { grid-template-columns: 1fr; }
+    header nav a:not(:last-child) { display: none; }
+    .table-scroll { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a href="./" aria-label="RigShift home"><img src="brand/rigshift-horizontal-color-dark-tagline.svg" alt="RigShift" height="34"></a>
+    <nav>
+      <a href="#safe">Is it safe?</a>
+      <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Compare</a>
+      <a href="https://github.com/ManuelStaggl/RigShift">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <h1>Turn on the wheelbase.<br>Your PC is in rig mode.</h1>
+    <p class="lead">RigShift switches one Windows PC between your desk and your sim rig – displays, audio and apps in one
+      step. Turn the wheelbase off and your desk is back. No picture after a switch? It reverts on its own.</p>
+    <a class="button" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe">Download for Windows 10/11</a>
+    <p class="meta">Free and open source (MIT) · no account · no telemetry · no admin rights ·
+      <a href="https://github.com/ManuelStaggl/RigShift/blob/main/CHANGELOG.md">changelog</a></p>
+    <div class="shot"><img src="screenshots/overview-dark.png" width="1700" height="1020"
+      alt="RigShift overview: the current desk layout, a Desk and a Sim Rig profile, and three games"></div>
+  </div>
+
+  <section>
+    <div class="wrap cards">
+      <div class="card">
+        <h3>Switches by itself</h3>
+        <p>A USB rule on the rig profile: wheelbase and pedals on, rig mode. Off for as long as you choose, desk mode. Or a hotkey, the tray, a Stream Deck button.</p>
+      </div>
+      <div class="card">
+        <h3>Never stuck on a black screen</h3>
+        <p>The whole layout goes to Windows in one step. Sleeping monitors are woken and waited for. No picture? A countdown reverts it – any wheel button keeps it.</p>
+      </div>
+      <div class="card">
+        <h3>The whole evening, one click</h3>
+        <p>A game entry switches the profile, starts SimHub and Crew Chief, puts their windows back, launches the sim from Steam or Epic and cleans up when you quit.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap two">
+      <div>
+        <h2>Already using DisplayMagician, DisplayFusion or a batch file?</h2>
+        <p class="muted">Keep it if it works for you. DisplayMagician is the better pick for AMD Eyefinity and many game
+          launchers, DisplayFusion for full window management.</p>
+        <p><a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Side-by-side comparison</a></p>
+      </div>
+      <div>
+        <p>RigShift is for you if you want</p>
+        <ul>
+          <li>the switch to happen when the wheelbase powers on, and back when it is off,</li>
+          <li>a layout that reverts by itself when a screen stays black,</li>
+          <li>audio, microphone, your sim tools and desktop icons in the same profile,</li>
+          <li>the right field of view for 18 sims, from your monitor's real size.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="safe">
+    <div class="wrap two">
+      <div>
+        <h2>Is it safe?</h2>
+        <p>RigShift is a free hobby project and not code-signed, so Windows shows <b>"Windows protected your PC"</b> the
+          first time: <b>More info → Run anyway</b>. Smart App Control (Windows 11) blocks unsigned apps outright.</p>
+        <p class="muted">The download is about 80 MB because it brings its own .NET runtime. Updates after that are a few MB.</p>
+      </div>
+      <div>
+        <p>Check it instead of trusting it:</p>
+        <ul>
+          <li>All source on GitHub, MIT licensed. The only network request asks GitHub for updates – <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">privacy</a>.</li>
+          <li>Every release links its VirusTotal scan.</li>
+          <li>Every release carries a GitHub build attestation:<br><code>gh attestation verify RigShift-win-Setup.exe -R ManuelStaggl/RigShift</code></li>
+          <li><code>SHA256SUMS</code> and an SBOM in every release.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Tested on</h2>
+      <div class="table-scroll">
+        <table>
+          <tr><th>Setup</th><th>Result</th></tr>
+          <tr><td>Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 + spacedesk display</td><td class="ok">daily use since September 2026</td></tr>
+          <tr><td>Windows 10 code base (CI)</td><td class="ok">every change: tests and a live read of the display configuration</td></tr>
+          <tr><td>NVIDIA Surround on/off</td><td class="open">not tested on a Surround rig yet</td></tr>
+          <tr><td>AMD / Intel graphics</td><td class="open">not tested yet – <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">report your setup</a></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap two">
+      <div>
+        <h2>How it's built</h2>
+        <p class="muted">I write RigShift with Claude Code as a pair programmer and use it on my own rig every day. 1,200+
+          automated tests, analyzers and CodeQL run on every change, and every release is installed over the previous
+          one and checked before it is published.</p>
+      </div>
+      <div>
+        <h2>Questions</h2>
+        <p class="muted">SmartScreen, antivirus, AMD, VR, Surround, uninstalling: see the
+          <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/faq.md">FAQ</a>. Anything else:
+          <a href="https://github.com/ManuelStaggl/RigShift/discussions">Discussions</a>.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="https://github.com/ManuelStaggl/RigShift">GitHub</a>
+    <a href="https://github.com/ManuelStaggl/RigShift/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">Privacy</a>
+    <a href="https://github.com/ManuelStaggl/RigShift/blob/main/LICENSE">MIT license</a>
+    <p>© 2026 Manuel Staggl. This page sets no cookies and loads nothing from other sites.</p>
+  </div>
+</footer>
+</body>
+</html>
