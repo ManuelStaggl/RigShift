@@ -329,6 +329,33 @@ public sealed class UpdateServiceTests : IDisposable
         _clock.NextDueIn.ShouldBe(UpdateSchedule.Regular);
     }
 
+    /// <summary>The check works, the download breaks off: WLAN gone, CDN hiccup. Waiting a day for the next try was too long.</summary>
+    [Fact]
+    public async Task Start_FailedDownloads_AreTriedAgainAfter1_5And30Minutes_ThenDaily()
+    {
+        _feed.Next = Release("9.9.9");
+        _feed.DownloadFails = true;
+        UpdateService service = Service();
+
+        service.Start();
+
+        foreach (int minutes in new[] { 1, 5, 30 })
+        {
+            int downloads = _feed.Downloads;
+            await UntilAsync(() => _clock.Pending == 1, "The next try should be scheduled.");
+            _clock.NextDueIn.ShouldBe(TimeSpan.FromMinutes(minutes));
+            _clock.Advance(TimeSpan.FromMinutes(minutes));
+            await UntilAsync(() => _feed.Downloads == downloads + 1, "The download should have been tried again.");
+        }
+
+        await UntilAsync(() => _clock.Pending == 1, "The next try should be scheduled.");
+        _clock.NextDueIn.ShouldBe(UpdateSchedule.Regular);
+
+        _feed.DownloadFails = false;
+        _clock.Advance(UpdateSchedule.Regular);
+        await UntilAsync(() => service.State == UpdateState.Ready, "The daily try should have downloaded the update.");
+    }
+
     [Fact]
     public async Task Resume_AfterAFailedCheck_ChecksNow()
     {
@@ -352,9 +379,8 @@ public sealed class UpdateServiceTests : IDisposable
         await UntilAsync(() => _clock.Pending == 1, "The daily check should be scheduled.");
 
         _clock.Advance(TimeSpan.FromHours(2));
-        service.Resumed();
-        await Task.Delay(150, Ct);
 
+        service.Resumed().ShouldBeFalse();
         _feed.Checks.ShouldBe(1);
     }
 
