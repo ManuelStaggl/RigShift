@@ -548,8 +548,8 @@
   <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig already built? Switch the calculation off and enter the angle your side screens really have.</value></data>
   <data name="Fov_Comfort" xml:space="preserve"><value>Comfort margin (+5°)</value></data>
   <data name="Fov_ComfortTip" xml:space="preserve"><value>Adds 5°, at most a tenth of the angle, to every sim value – the margin the guides call comfortable. The geometry stays as it is.</value></data>
-  <data name="Fov_Offset" xml:space="preserve"><value>Eye height above center (cm)</value></data>
-  <data name="Fov_OffsetTip" xml:space="preserve"><value>Changes no angle; it only decides whether the hint below appears.</value></data>
+  <data name="Fov_Offset" xml:space="preserve"><value>Eye height (cm)</value></data>
+  <data name="Fov_OffsetTip" xml:space="preserve"><value>How far your eyes are above the middle of the screen. Changes no angle; it only decides whether the hint below appears.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Sitting above the middle of the picture: shift the horizon in the sim (iRacing “Shift horizon”, ACC “Height”) instead of changing the angle.</value></data>
   <data name="Fov_TopView" xml:space="preserve"><value>From above</value></data>
   <data name="Fov_DiagramSummary" xml:space="preserve"><value>{0} cm · {1} · {2}</value></data>

@@ -188,7 +188,7 @@
 
   <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>„{0}“ nutzt dieses Tastenkürzel schon. Wähle ein anderes.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
-  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Klicken, dann Tasten drücken</value></data>
+  <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Tastenkürzel drücken</value></data>
   <data name="Editor_HotkeyClear" xml:space="preserve"><value>Tastenkürzel entfernen</value></data>
   <data name="Editor_HotkeyHint" xml:space="preserve"><value>Schaltet von überall um, solange RigShift läuft.</value></data>
   <data name="Editor_HotkeyNeedsModifier" xml:space="preserve"><value>Halte zusätzlich Strg, Alt oder Win.</value></data>
@@ -530,7 +530,7 @@
   <data name="Fov_SizeTyped" xml:space="preserve"><value>{0}, aus der eingetippten Diagonale</value></data>
   <data name="Fov_Diagonal" xml:space="preserve"><value>Diagonale (Zoll)</value></data>
   <data name="Fov_DiagonalTip" xml:space="preserve"><value>Vorbelegt vom Bildschirm; ändern, wenn er eine falsche Größe meldet.</value></data>
-  <data name="Fov_Distance" xml:space="preserve"><value>Augabstand (cm)</value></data>
+  <data name="Fov_Distance" xml:space="preserve"><value>Augenabstand (cm)</value></data>
   <data name="Fov_DistanceTip" xml:space="preserve"><value>Von den Augen bis zur Mitte des mittleren Bildschirms, in Fahrposition. Zuerst den Sitz einstellen.</value></data>
   <data name="Fov_Curvature" xml:space="preserve"><value>Krümmung</value></data>
   <data name="Fov_CurvatureTip" xml:space="preserve"><value>Kein Bildschirm meldet seine Krümmung – einmal auswählen, sie wird je Bildschirm gemerkt. Bekannte Modelle sind vorbelegt.</value></data>
@@ -548,8 +548,8 @@
   <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig schon aufgebaut? Berechnung ausschalten und den Winkel eintragen, den die Seitenschirme wirklich haben.</value></data>
   <data name="Fov_Comfort" xml:space="preserve"><value>Komfortzuschlag (+5°)</value></data>
   <data name="Fov_ComfortTip" xml:space="preserve"><value>Schlägt auf jeden Sim-Wert 5° auf, höchstens ein Zehntel des Winkels – der Spielraum, den die Guides als bequem nennen. Die Geometrie bleibt, wie sie ist.</value></data>
-  <data name="Fov_Offset" xml:space="preserve"><value>Augenhöhe über der Mitte (cm)</value></data>
-  <data name="Fov_OffsetTip" xml:space="preserve"><value>Ändert keinen Winkel; davon hängt nur der Hinweis darunter ab.</value></data>
+  <data name="Fov_Offset" xml:space="preserve"><value>Augenhöhe (cm)</value></data>
+  <data name="Fov_OffsetTip" xml:space="preserve"><value>Wie weit die Augen über der Bildschirmmitte liegen. Ändert keinen Winkel; davon hängt nur der Hinweis darunter ab.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Du sitzt über der Bildmitte: den Horizont im Sim verschieben (iRacing „Shift horizon“, ACC „Height“), statt den Winkel zu ändern.</value></data>
   <data name="Fov_TopView" xml:space="preserve"><value>Von oben</value></data>
   <data name="Fov_DiagramSummary" xml:space="preserve"><value>{0} cm · {1} · {2}</value></data>
