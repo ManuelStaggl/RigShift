@@ -3,241 +3,187 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RigShift – desk to rig in one shift</title>
-<meta name="description" content="Free Windows app for sim racers: switch displays, audio and apps between desk and rig in one step – automatically when the wheelbase powers on.">
-<meta property="og:title" content="RigShift – desk to rig in one shift">
-<meta property="og:description" content="Turn the wheelbase on and your PC is in rig mode. Turn it off and your desk is back. Free, open source, no account.">
+<title>RigShift – switch a Windows PC between desk and sim rig</title>
+<meta name="description" content="Free Windows app that switches displays, sound, apps and desktop icons between desk and sim rig in one step.">
+<meta property="og:title" content="RigShift">
+<meta property="og:description" content="Switches a Windows PC between desk and sim rig: displays, sound, apps and desktop icons in one step. Free and open source.">
 <meta property="og:image" content="https://manuelstaggl.github.io/RigShift/rigshift-social-preview.png">
-<meta name="theme-color" content="#0B1220">
+<meta name="theme-color" content="#F8FAFC">
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="brand/rigshift-app-light-256.png">
 <style>
-/* Brand package, dark theme: 05-design-tokens/tokens.json */
+/* Mona Sans (SIL OFL 1.1, fonts/OFL.txt), served from this site. */
+@font-face { font-family: "Mona Sans"; src: url(fonts/mona-sans.woff2) format("woff2"); font-weight: 200 900; font-display: swap; }
+/* Brand package, light theme: 05-design-tokens/tokens.json. The app itself only exists in dark, so its windows stay dark. */
 :root {
-  --bg: #0B1220; --page: #0E1626; --surface: #1E293B; --surface-2: #253449; --selected: #273E5A;
-  --line: #2C3A52; --line-strong: #3A4A63;
-  --text: #F8FAFC; --muted: #B8C6D9; --faint: #8391A8;
-  --primary: #79B8FF; --primary-hover: #8FC4FF; --on-primary: #0B1220;
-  --ok: #74D99A; --warn: #F4C96B;
-  --r-control: 6px; --r-card: 12px;
-  --fast: 120ms; --normal: 200ms;
-  --display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --body: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --small: "Segoe UI Variable Small", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
+  --bg: #F8FAFC; --surface: #FFFFFF; --tint: #EFF4FA; --selected: #E2EEFF;
+  --text: #0F172A; --muted: #475569; --faint: #64748B; --line: #E2E8F0; --line-strong: #CBD5E1;
+  --primary: #0067B8; --primary-hover: #005A9E; --on-primary: #FFFFFF;
+  --ok: #0E743C; --warn: #805400;
+  --display: "Mona Sans", "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --body: "Mona Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --small: "Mona Sans", "Segoe UI Variable Small", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --window-shadow: 0 1px 2px rgb(15 23 42 / 0.10), 0 12px 24px -8px rgb(15 23 42 / 0.16), 0 36px 72px -24px rgb(15 23 42 / 0.26);
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0; background: var(--bg); color: var(--text);
-  font: 400 16px/1.6 var(--body); font-optical-sizing: auto; -webkit-font-smoothing: antialiased;
-}
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--primary); text-underline-offset: 3px; }
 a:hover { color: var(--primary-hover); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
-.wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+p { margin: 0; }
+code { font: 400 0.92em/1.4 var(--body); background: var(--tint); border-radius: 4px; padding: 1px 6px; overflow-wrap: anywhere; }
+kbd { font: 600 0.88em var(--body); background: var(--surface); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 720px) { .wrap { padding: 0 32px; } }
 
 /* Header */
-.top { position: sticky; top: 0; z-index: 10; background: rgb(11 18 32 / 0.86); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.top { position: sticky; top: 0; z-index: 10; background: rgb(248 250 252 / 0.86); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid transparent; transition: border-color 200ms; }
+.top.scrolled { border-bottom-color: var(--line); }
 .top .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
-.top .logo img { height: 28px; width: auto; }
-.top nav { margin-left: auto; display: flex; align-items: center; gap: 22px; }
+.top .logo img { height: 26px; width: auto; }.top nav { margin-left: auto; display: flex; align-items: center; gap: 24px; }
 .top nav a:not(.btn) { color: var(--muted); text-decoration: none; font-size: 15px; }
 .top nav a:not(.btn):hover { color: var(--text); }
-.lang { display: flex; border: 1px solid var(--line-strong); border-radius: var(--r-control); overflow: hidden; }
-.lang button { font: 600 12px/1 var(--small); letter-spacing: 0.06em; color: var(--faint); background: transparent; border: 0; padding: 8px 9px; cursor: pointer; }
-.lang button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
-.btn {
-  display: inline-flex; align-items: center; gap: 10px; border-radius: var(--r-control);
-  font: 600 15px/1 var(--body); text-decoration: none; padding: 11px 16px;
-  transition: background var(--fast), border-color var(--fast), color var(--fast);
-}
+.lang { display: flex; gap: 2px; }
+.lang button { font: 600 13px/1 var(--small); color: var(--faint); background: transparent; border: 0; border-radius: 4px; padding: 7px; cursor: pointer; }
+.lang button:hover { color: var(--text); }
+.lang button[aria-pressed="true"] { color: var(--text); background: var(--tint); }
+.btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 6px; font: 600 16px/1 var(--body); text-decoration: none; padding: 13px 20px; transition: background 120ms, border-color 120ms; }
 .btn-primary { background: var(--primary); color: var(--on-primary); }
 .btn-primary:hover { background: var(--primary-hover); color: var(--on-primary); }
-.btn-quiet { border: 1px solid var(--line-strong); color: var(--text); }
-.btn-quiet:hover { border-color: var(--faint); color: var(--text); background: var(--surface); }
+.btn-quiet { color: var(--text); border: 1px solid var(--line-strong); background: var(--surface); }
+.btn-quiet:hover { color: var(--text); border-color: var(--faint); }
 .btn svg { width: 18px; height: 18px; flex: none; }
-@media (max-width: 859px) { .top nav a.hide-s { display: none; } .top nav { gap: 12px; } .top .btn { padding: 9px 12px; } }
+.top .btn { font-size: 14px; padding: 9px 14px; }
+@media (max-width: 859px) { .top nav a.hide-s { display: none; } .top nav { gap: 10px; } }
 
-/* Hero */
-.hero { padding: 56px 0 0; background: radial-gradient(1200px 520px at 70% 0%, #14305A55, transparent 70%); }
-.hero-grid { display: grid; gap: 28px; }
-@media (min-width: 980px) { .hero-grid { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); align-items: end; gap: 48px; } }
-.hero h1 { font: 600 clamp(44px, 6.4vw, 80px)/0.98 var(--display); letter-spacing: -0.035em; margin: 0; }
-.hero h1 .lit { color: var(--primary); }
-.hero .lead { font-size: 19px; line-height: 1.55; color: var(--muted); margin: 0 0 24px; max-width: 34em; }
-.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.facts { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--faint); font: 400 14px/1.4 var(--small); }
-.facts li::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); margin-right: 8px; vertical-align: 2px; }
+/* Intro */
+.intro { padding: 96px 0 0; text-align: center; }
+@media (max-width: 719px) { .intro { padding-top: 56px; text-align: left; } }
+h1 { margin: 0; line-height: 0; }
+h1 img { width: clamp(280px, 42vw, 560px); height: auto; margin: 0 auto; }
+@media (max-width: 719px) { h1 img { margin: 0; } }
+.intro .lead { margin: 22px auto 0; max-width: 34em; font-size: clamp(18px, 1.5vw, 20px); color: var(--muted); text-wrap: pretty; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
+@media (max-width: 719px) { .cta { justify-content: flex-start; } }
+.facts { margin-top: 16px; color: var(--faint); font: 400 14px/1.5 var(--small); }
 
-/* Stage: the signature – desk and rig, switched by the wheelbase */
-.stage-card { margin-top: 44px; background: linear-gradient(180deg, #111C30, #0C1424); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-.stage-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); font: 400 13px/1.3 var(--small); color: var(--faint); }
-.stage-head .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px #74D99A22; }
-.stage-head b { color: var(--text); font-weight: 600; }
-.stage-head .note { margin-left: auto; }
-.stage { position: relative; }
-.stage svg { width: 100%; height: auto; display: block; }
-.scr { transition: fill 420ms ease; }
-.scr-on { fill: url(#screenOn); }
-.scr-off { fill: #0A111D; }
-.glow, .lbl, .lbl-sub { transition: opacity 420ms ease; }
-.lbl { font: 600 15px var(--small); fill: #F8FAFC; }
-.lbl-sub { font: 400 12px var(--small); fill: #B8C6D9; }
-.zone-lbl { font: 600 13px var(--small); fill: #8391A8; letter-spacing: 0.12em; }
-.frame { stroke: #3A4A63; stroke-width: 2; fill: none; }
-.led { transition: fill 200ms; }
-@media (max-width: 640px) { .lbl, .lbl-sub { display: none; } }
-
-.console { display: grid; gap: 16px; padding: 16px; border-top: 1px solid var(--line); background: #0B1220AA; }
-@media (min-width: 860px) { .console { grid-template-columns: 300px 1fr; align-items: center; padding: 18px 20px; } }
-.power { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; cursor: pointer; color: var(--text); font: inherit; text-align: left; width: 100%; }
-.power:hover { border-color: var(--line-strong); }
-.power .sw { flex: none; width: 46px; height: 26px; border-radius: 13px; background: #0A111D; border: 1px solid var(--line-strong); position: relative; transition: background var(--normal), border-color var(--normal); }
-.power .sw::after { content: ""; position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--faint); transition: transform var(--normal), background var(--normal); }
-.power[aria-checked="true"] .sw { background: var(--primary); border-color: var(--primary); }
-.power[aria-checked="true"] .sw::after { transform: translateX(20px); background: var(--on-primary); }
-.power .t { display: grid; gap: 2px; }
-.power .t b { font-weight: 600; }
-.power .t span { color: var(--muted); font-size: 13px; }
-.state { display: grid; gap: 10px; min-width: 0; }
-.log { font: 400 14px/1.4 var(--small); color: var(--muted); min-height: 1.4em; }
-.log b { color: var(--text); font-weight: 600; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: 400 13px/1.2 var(--small); color: var(--muted); transition: border-color var(--normal), color var(--normal), background var(--normal); }
-.chip i { font-style: normal; color: var(--faint); }
-.chip.hot { border-color: #79B8FF66; color: var(--text); background: var(--selected); }
-
-.confirm { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(0.96); opacity: 0; pointer-events: none; width: min(340px, 86%);
-  background: #172238F2; border: 1px solid var(--line-strong); border-radius: var(--r-card); padding: 16px 18px; display: flex; gap: 16px; align-items: center;
-  box-shadow: 0 24px 60px #0009; transition: opacity var(--normal), transform var(--normal); }
-.confirm.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.confirm .ring { flex: none; width: 54px; height: 54px; position: relative; }
-.confirm .ring svg { width: 54px; height: 54px; transform: rotate(-90deg); }
-.confirm .ring circle { fill: none; stroke-width: 4; }
-.confirm .ring .track { stroke: var(--line); }
-.confirm .ring .bar { stroke: var(--primary); stroke-linecap: round; stroke-dasharray: 150.8; transition: stroke-dashoffset 400ms linear; }
-.confirm .ring span { position: absolute; inset: 0; display: grid; place-items: center; font: 600 18px var(--display); }
-.confirm b { display: block; font: 600 16px/1.3 var(--display); margin-bottom: 2px; }
-.confirm small { color: var(--muted); font: 400 13px/1.35 var(--small); display: block; }
-.confirm.kept .ring .bar { stroke: var(--ok); }
-@media (max-width: 480px) { .confirm { padding: 10px 12px; gap: 10px; } .confirm small { display: none; } }
+/* Tour: one window, tabs above it */
+.tour { margin-top: 72px; }
+@media (max-width: 719px) { .tour { margin-top: 48px; } }
+.tabs-scroll { overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.tabs-scroll::-webkit-scrollbar { display: none; }
+.tabs { display: flex; width: max-content; margin: 0 auto; gap: 2px; padding: 4px; background: var(--tint); border-radius: 10px; }
+.tabs button { font: 500 15px/1 var(--body); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 10px 16px; cursor: pointer; white-space: nowrap; transition: color 120ms, background 120ms; }
+.tabs button:hover { color: var(--text); }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgb(15 23 42 / 0.10), 0 1px 1px rgb(15 23 42 / 0.04); }
+.stage { position: relative; margin-top: 28px; aspect-ratio: 1700 / 1020; border-radius: 12px; background: var(--tint); }
+.stage .view { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity 180ms, visibility 0s 180ms; }
+.stage .view.on { opacity: 1; visibility: visible; transition: opacity 180ms; }
+.stage .full { width: 100%; height: 100%; border-radius: 12px; box-shadow: var(--window-shadow); background: #0B1220; }
+.stage .small { border-radius: 10px; box-shadow: var(--window-shadow); background: #0B1220; }
+.stage .small.confirm { width: min(520px, 62%); }
+.stage .small.tray { width: min(361px, 46%); border-radius: 12px; }
+@media (max-width: 719px) { .stage, .stage .full { border-radius: 6px; } .stage .small { border-radius: 6px; } }
+.caption { margin: 22px auto 0; max-width: 40em; text-align: center; color: var(--muted); font-size: 16px; min-height: 3.2em; }
+/* Crop a region out of a screenshot, in source pixels: --iw image width, --x/--y/--w/--h the region. */
+.crop { overflow: hidden; aspect-ratio: var(--w) / var(--h); }
+.crop > img { max-width: none; width: calc(var(--iw) / var(--w) * 100%); margin-left: calc(var(--x) / var(--w) * -100%); margin-top: calc(var(--y) / var(--w) * -100%); }
 
 /* Sections */
-section.block { padding: 88px 0 0; }
-.kicker { font: 600 13px/1 var(--small); letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin: 0 0 14px; }
-h2 { font: 600 clamp(30px, 4vw, 44px)/1.08 var(--display); letter-spacing: -0.025em; margin: 0 0 14px; max-width: 20em; }
-.intro { color: var(--muted); font-size: 18px; max-width: 40em; margin: 0 0 36px; }
-.intro b { color: var(--text); }
+.section { padding-top: 136px; }
+@media (max-width: 719px) { .section { padding-top: 88px; } }
+.sec-head { text-align: center; max-width: 40em; margin: 0 auto 48px; }
+@media (max-width: 719px) { .sec-head { text-align: left; margin-bottom: 32px; } }
+h2 { font: 600 clamp(30px, 3.6vw, 44px)/1.12 var(--display); letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+.sec-head p { margin-top: 14px; color: var(--muted); font-size: 18px; }
 
-.spec { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; }
-@media (min-width: 720px) { .spec { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1080px) { .spec { grid-template-columns: repeat(5, 1fr); } }
-.spec > div { background: var(--page); padding: 22px 20px 24px; }
-.spec h3 { font: 600 17px/1.3 var(--display); margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
-.spec h3 svg { width: 20px; height: 20px; color: var(--primary); flex: none; }
-.spec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.spec li { color: var(--muted); font-size: 15px; line-height: 1.4; padding-left: 14px; position: relative; }
-.spec li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 5px; height: 5px; border-radius: 1px; background: var(--line-strong); }
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgb(15 23 42 / 0.04); }
+.card .txt { padding: 28px 28px 0; }
+.card.plain .txt { padding-bottom: 28px; }
+h3 { font: 600 20px/1.3 var(--display); letter-spacing: -0.01em; margin: 0 0 8px; }
+.card p, .card li { color: var(--muted); font-size: 16px; line-height: 1.55; }
+.card p b, .card li b { color: var(--text); font-weight: 600; }
+.card ul { margin: 12px 0 0; padding: 0 0 0 18px; }
+.card ul li + li { margin-top: 6px; }
+.card ul li::marker { color: var(--line-strong); }
+/* A screenshot region that runs off the card's right and bottom edge */
+.vis { margin: 28px -1px -1px 28px; margin-top: auto; padding-top: 28px; }
+.vis .crop { border-radius: 10px 0 0 0; box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06), 0 10px 30px -10px rgb(15 23 42 / 0.30); background: #0B1220; }
+/* A whole small window, centred */
+.vis.win { margin: auto 28px 0; padding: 28px 0; display: flex; justify-content: center; }
+.vis.win > * { width: 100%; max-width: 380px; border-radius: 10px; box-shadow: var(--window-shadow); background: #0B1220; }
 
-.ways { display: grid; gap: 12px; }
-@media (min-width: 720px) { .ways { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1080px) { .ways { grid-template-columns: 2fr 1fr 1fr 1fr; } }
-.way { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px; }
-.way.main { background: linear-gradient(160deg, #1D3557, var(--surface) 70%); border-color: #79B8FF44; }
-.way h3 { font: 600 18px/1.3 var(--display); margin: 0 0 8px; }
-.way p { margin: 0; color: var(--muted); font-size: 15px; }
-code { font: 400 13.5px/1.4 var(--small); background: #0B1220; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; color: var(--text); overflow-wrap: anywhere; }
+.bento { display: grid; gap: 16px; }
+@media (min-width: 720px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bento .wide { grid-column: span 2; } }
+@media (min-width: 1000px) { .bento { grid-template-columns: repeat(3, minmax(0, 1fr)); } .bento .wide { grid-column: span 2; } }
+.bento + .bento { margin-top: 16px; }
 
-.seq { list-style: none; margin: 0; padding: 0; display: grid; counter-reset: s; }
-@media (min-width: 900px) { .seq { grid-template-columns: repeat(5, 1fr); } }
-.seq li { counter-increment: s; position: relative; padding: 18px 20px 20px 0; border-top: 2px solid var(--line-strong); }
-.seq li::before { content: counter(s); position: absolute; top: -13px; left: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line-strong); display: grid; place-items: center; font: 600 12px var(--small); color: var(--muted); }
-.seq li.fallback { border-top-color: var(--warn); }
-.seq li.fallback::before { border-color: var(--warn); color: var(--warn); }
-.seq b { display: block; font: 600 16px/1.3 var(--display); margin: 10px 0 6px; }
-.seq span { color: var(--muted); font-size: 15px; line-height: 1.45; display: block; }
-.aside { margin-top: 26px; color: var(--muted); font-size: 15px; border-left: 2px solid var(--primary); padding: 2px 0 2px 16px; max-width: 46em; }
-.aside b { color: var(--text); }
+.grid2 { display: grid; gap: 16px; }
+@media (min-width: 860px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.status { list-style: none; padding: 0 !important; }
+.status li { display: flex; justify-content: space-between; gap: 16px; }
+.status .s { font: 600 14px/1.6 var(--small); white-space: nowrap; }
+.status .s.ok { color: var(--ok); }
+.status .s.open { color: var(--warn); }
+@media (max-width: 479px) { .status li { flex-direction: column; gap: 0; } }
 
-.session { display: grid; gap: 12px; }
-@media (min-width: 900px) { .session { grid-template-columns: 1fr 1.2fr 1fr; } }
-.phase { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px 22px; background: var(--page); }
-.phase.during { background: var(--selected); border-color: #79B8FF44; }
-.phase h3 { font: 600 13px/1 var(--small); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin: 0 0 14px; }
-.phase.during h3 { color: var(--primary); }
-.phase ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--muted); font-size: 15px; }
-.phase ol b { color: var(--text); font-weight: 600; }
-.phase p { margin: 14px 0 0; color: var(--muted); font-size: 14px; border-top: 1px solid #79B8FF33; padding-top: 12px; }
-
-.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.tabs button { font: 600 14px/1 var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; cursor: pointer; transition: all var(--fast); }
-.tabs button:hover { color: var(--text); border-color: var(--line-strong); }
-.tabs button[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-.shots { border: 1px solid var(--line); border-radius: var(--r-card); background: #0A111D; padding: 16px; }
-.shots figure { margin: 0; }
-.shots img { margin: 0 auto; border-radius: 8px; box-shadow: 0 16px 50px #0008; max-height: 700px; width: auto; }
-.shots figcaption { margin-top: 14px; color: var(--muted); font-size: 15px; text-align: center; }
-
-.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-card); }
-table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 680px; }
-th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
-tr:last-child th, tr:last-child td { border-bottom: 0; }
-thead th { font: 600 14px/1.3 var(--small); color: var(--muted); background: var(--page); }
-tbody th { font-weight: 400; color: var(--muted); }
-.us { background: #79B8FF10; white-space: nowrap; }
+/* Compare */
+.table-card { padding: 8px 28px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 15px; line-height: 1.45; min-width: 760px; }
+th, td { text-align: left; padding: 18px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr > :first-child { padding-left: 0; width: 30%; }
+tr > :last-child { padding-right: 0; }
+tbody tr:last-child > * { border-bottom: 0; }
+thead th { font-weight: 600; color: var(--text); padding-top: 22px; }
 thead th.us { color: var(--primary); }
-.y { color: var(--ok); font-weight: 600; } .n { color: var(--faint); } .p { color: var(--warn); }
-.below { margin-top: 18px; color: var(--muted); font-size: 15px; }
+tbody th { font-weight: 400; color: var(--text); }
+td { color: var(--muted); }
+td.us { color: var(--text); font-weight: 500; }
+/* Yes / no as marks, with the word kept for screen readers */
+.mark { display: inline-flex; vertical-align: middle; }
+.mark svg { width: 20px; height: 20px; }
+.mark.yes { color: var(--ok); }
+.mark.no { color: var(--line-strong); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.below { margin: 20px auto 0; max-width: 46em; text-align: center; color: var(--muted); font-size: 16px; }
+@media (max-width: 719px) { .below { text-align: left; } }
 
-.trust { display: grid; gap: 12px; }
-@media (min-width: 900px) { .trust { grid-template-columns: 1fr 1fr; } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 24px; }
-.panel h3 { font: 600 20px/1.3 var(--display); margin: 0 0 12px; }
-.panel p { color: var(--muted); margin: 14px 0 0; font-size: 15px; }
-.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: 15px; color: var(--muted); }
-.checks li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; }
-.checks svg { width: 18px; height: 18px; color: var(--ok); margin-top: 3px; }
-.checks b, .tested b { color: var(--text); font-weight: 600; }
-.tested { list-style: none; padding: 0; margin: 0; }
-.tested li { display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--muted); }
-.tested li:first-child { padding-top: 0; }
-.tag { font: 600 12px/1 var(--small); border-radius: 999px; padding: 6px 9px; white-space: nowrap; align-self: start; }
-.tag.ok { color: var(--ok); background: #74D99A18; }
-.tag.open { color: var(--warn); background: #F4C96B18; }
-
-.faq { border-top: 1px solid var(--line); max-width: 860px; }
-.faq details { border-bottom: 1px solid var(--line); }
-.faq summary { cursor: pointer; list-style: none; padding: 18px 36px 18px 0; font: 600 17px/1.4 var(--display); position: relative; }
+/* FAQ */
+.faq { max-width: 800px; margin: 0 auto; display: grid; gap: 10px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.faq summary { cursor: pointer; list-style: none; padding: 18px 52px 18px 22px; font-weight: 600; position: relative; }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: ""; position: absolute; right: 6px; top: 26px; width: 9px; height: 9px; border-right: 2px solid var(--faint); border-bottom: 2px solid var(--faint); transform: rotate(45deg); transition: transform var(--normal); }
-.faq details[open] summary::after { transform: rotate(-135deg); top: 30px; }
-.faq details p { margin: 0 0 18px; color: var(--muted); max-width: 46em; }
+.faq summary::after { content: ""; position: absolute; right: 24px; top: 24px; width: 7px; height: 7px; border-right: 2px solid var(--faint); border-bottom: 2px solid var(--faint); transform: rotate(45deg); transition: transform 200ms; }
+.faq details[open] summary::after { transform: rotate(-135deg); top: 28px; }
+.faq details p { margin: 0; padding: 0 22px 20px; color: var(--muted); }
 
-.closing { margin-top: 96px; padding: 56px 0; border-top: 1px solid var(--line); background: radial-gradient(700px 300px at 50% 0%, #14305A55, transparent 70%); text-align: center; }
-.closing h2 { margin: 0 auto 12px; }
-.closing p { color: var(--muted); margin: 0 auto 24px; max-width: 36em; }
-.closing .cta { justify-content: center; }
+/* Support */
+.support { margin-top: 136px; padding: 96px 0; background: var(--tint); text-align: center; }
+@media (max-width: 719px) { .support { margin-top: 88px; padding: 64px 0; text-align: left; } }
+.support p { margin: 14px auto 0; max-width: 34em; color: var(--muted); font-size: 18px; }
 footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--faint); font: 400 14px/1.6 var(--small); }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
 footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--text); }
 footer .fine { margin-left: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important; }
 }
 </style>
 </head>
 <body>
-<header class="top">
+<header class="top" id="top">
   <div class="wrap">
-    <a class="logo" href="./" data-i18n-aria="home" aria-label="RigShift home"><img src="brand/rigshift-horizontal-color-dark.svg" alt="RigShift" width="140" height="28"></a>
-    <nav aria-label="Page">
-      <a class="hide-s" href="#how" data-i18n="nav.how">How it works</a>
+    <a class="logo" href="./" data-i18n-aria="home" aria-label="RigShift home"><img src="brand/rigshift-horizontal-color-light.svg" alt="RigShift" width="130" height="26"></a>
+    <nav aria-label="Page" data-i18n-aria="nav">
+      <a class="hide-s" href="#features" data-i18n="nav.features">Features</a>
       <a class="hide-s" href="#compare" data-i18n="nav.compare">Compare</a>
       <a class="hide-s" href="#faq" data-i18n="nav.faq">FAQ</a>
       <a class="hide-s" href="https://github.com/ManuelStaggl/RigShift">GitHub</a>
@@ -250,283 +196,201 @@ footer .fine { margin-left: auto; }
 </header>
 
 <main>
-  <div class="hero">
+  <section class="intro">
     <div class="wrap">
-      <div class="hero-grid">
-        <h1 data-i18n="h1">Wheelbase on.<br><span class="lit">Rig mode.</span></h1>
-        <div>
-          <p class="lead" data-i18n="lead">RigShift switches one Windows PC between your desk and your sim rig – displays, sound,
-            apps and desktop icons in one step. It reacts to the wheelbase, a hotkey or a Stream Deck button, and puts the
-            desk back by itself if the rig stays dark.</p>
-          <div class="cta">
-            <a class="btn btn-primary" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span data-i18n="cta.dl">Download for Windows 10/11</span></a>
-            <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift" data-i18n="cta.src">Source on GitHub</a>
+      <h1><img src="brand/rigshift-horizontal-color-light.svg" alt="RigShift" width="660" height="186"></h1>
+      <p class="lead" data-i18n="lead">Switches a Windows PC between desk and sim rig: displays, sound, apps and desktop icons in one step.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n="cta.dl">Download for Windows 10/11</span></a>
+        <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift" data-i18n="cta.src">View on GitHub</a>
+      </div>
+      <p class="facts" data-i18n="facts">Free · MIT licence · No account, no telemetry · English and German</p>
+
+      <div class="tour">
+        <div class="tabs-scroll">
+          <div class="tabs" role="tablist" id="tabs" data-i18n-aria="tour" aria-label="Screenshots of the app"></div>
+        </div>
+        <div class="stage" id="stage" role="tabpanel" aria-labelledby="">
+          <div class="view"><img class="full" src="screenshots/overview-dark.png" width="1700" height="1020" alt=""></div>
+          <div class="view"><img class="full" src="screenshots/profiles-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
+          <div class="view"><img class="full" src="screenshots/triggers-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
+          <div class="view"><img class="full" src="screenshots/game-editor-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
+          <div class="view"><img class="small confirm" src="screenshots/confirmation-dark.png" width="520" height="382" alt="" loading="lazy"></div>
+          <div class="view"><div class="small tray crop" style="--iw:444; --x:42; --y:16; --w:361; --h:347"><img src="screenshots/tray-popup-dark.png" width="444" height="387" alt="" loading="lazy"></div></div>
+          <div class="view"><img class="full" src="screenshots/fov-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
+        </div>
+        <p class="caption" id="caption" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 data-i18n="f.h">Features</h2>
+      </div>
+      <div class="bento">
+        <article class="card wide">
+          <div class="txt">
+            <h3 data-i18n="f.d.h">Displays</h3>
+            <p data-i18n="f.d.p">Which monitors are on, their arrangement, main display, refresh rate, HDR and NVIDIA Surround. The whole layout is applied in one Windows call, so it either works completely or nothing changes.</p>
           </div>
-          <ul class="facts" data-i18n="facts"><li>Free, MIT licence</li><li>No account, no telemetry</li><li>No admin rights</li><li>English and German</li></ul>
-        </div>
-      </div>
-
-      <div class="stage-card">
-        <div class="stage-head">
-          <span class="dot" aria-hidden="true"></span>
-          <span><span data-i18n="stage.active">Active profile:</span> <b id="activeName">Desk</b></span>
-          <span class="note" data-i18n="stage.note">Illustration of the app, sped up</span>
-        </div>
-        <div class="stage">
-          <svg viewBox="0 0 1200 420" role="img" aria-labelledby="stageTitle">
-            <title id="stageTitle" data-i18n="stage.title">Desk with three monitors on the left, sim rig with a super-ultrawide monitor, a dash tablet and a wheel on the right. The active side is lit.</title>
-            <defs>
-              <linearGradient id="screenOn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B4F80"/><stop offset="1" stop-color="#1B2D4A"/></linearGradient>
-              <radialGradient id="spill" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#79B8FF" stop-opacity="0.22"/><stop offset="1" stop-color="#79B8FF" stop-opacity="0"/></radialGradient>
-              <filter id="bloom" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
-            </defs>
-            <line x1="0" y1="392" x2="1200" y2="392" stroke="#1E293B" stroke-width="2"/>
-            <text class="zone-lbl" x="60" y="52" data-i18n="zone.desk">DESK</text>
-            <text class="zone-lbl" x="700" y="52" data-i18n="zone.rig">RIG</text>
-
-            <g id="desk">
-              <ellipse class="glow" data-on="1" cx="300" cy="340" rx="300" ry="70" fill="url(#spill)"/>
-              <rect class="glow" data-on="0.25" x="80" y="150" width="440" height="110" rx="10" fill="#79B8FF" opacity="0.25" filter="url(#bloom)"/>
-              <path d="M40 318h520M70 318v74M530 318v74" class="frame"/>
-              <rect x="126" y="258" width="10" height="46" fill="#1A2539"/><rect x="104" y="302" width="54" height="6" rx="2" fill="#1A2539"/>
-              <rect x="58" y="176" width="146" height="84" rx="4" fill="#0A111D" stroke="#3A4A63" stroke-width="2"/>
-              <rect class="scr scr-on" x="62" y="180" width="138" height="76" rx="2"/>
-              <text class="lbl" x="131" y="214" text-anchor="middle">CM27X3</text>
-              <text class="lbl-sub" x="131" y="232" text-anchor="middle">1080p · 100 Hz</text>
-              <rect x="294" y="258" width="12" height="46" fill="#1A2539"/><rect x="266" y="302" width="68" height="6" rx="2" fill="#1A2539"/>
-              <rect x="214" y="160" width="172" height="100" rx="4" fill="#0A111D" stroke="#3A4A63" stroke-width="2"/>
-              <rect class="scr scr-on" x="218" y="164" width="164" height="92" rx="2"/>
-              <circle class="glow" data-on="1" cx="232" cy="178" r="5" fill="#79B8FF"/>
-              <text class="lbl" x="300" y="206" text-anchor="middle">XG32UCWG</text>
-              <text class="lbl-sub" x="300" y="224" text-anchor="middle">4K · 165 Hz</text>
-              <rect x="464" y="258" width="10" height="46" fill="#1A2539"/><rect x="442" y="302" width="54" height="6" rx="2" fill="#1A2539"/>
-              <rect x="396" y="176" width="146" height="84" rx="4" fill="#0A111D" stroke="#3A4A63" stroke-width="2"/>
-              <rect class="scr scr-on" x="400" y="180" width="138" height="76" rx="2"/>
-              <text class="lbl" x="469" y="214" text-anchor="middle">CM27X3</text>
-              <text class="lbl-sub" x="469" y="232" text-anchor="middle">1080p · 100 Hz</text>
-            </g>
-
-            <g id="rig">
-              <ellipse class="glow" data-on="1" cx="900" cy="350" rx="320" ry="70" fill="url(#spill)" opacity="0"/>
-              <rect class="glow" data-on="0.25" x="740" y="140" width="330" height="110" rx="10" fill="#79B8FF" opacity="0" filter="url(#bloom)"/>
-              <path d="M826 246v146M982 246v146M790 392h228M826 346h156M982 296h18" class="frame"/>
-              <path d="M748 160 Q904 142 1060 160 L1060 246 Q904 228 748 246 Z" fill="#0A111D" stroke="#3A4A63" stroke-width="2"/>
-              <path class="scr scr-off" d="M753 165 Q904 148 1055 165 L1055 241 Q904 225 753 241 Z"/>
-              <circle class="glow" data-on="1" cx="770" cy="176" r="5" fill="#79B8FF" opacity="0"/>
-              <text class="lbl" x="904" y="196" text-anchor="middle" opacity="0.35">Odyssey G9</text>
-              <text class="lbl-sub" x="904" y="214" text-anchor="middle" opacity="0.35">5120 × 1440 · 240 Hz</text>
-              <rect x="1000" y="268" width="80" height="56" rx="6" fill="#0A111D" stroke="#3A4A63" stroke-width="2"/>
-              <rect class="scr scr-off" x="1005" y="273" width="70" height="46" rx="3"/>
-              <text class="lbl-sub" x="1040" y="300" text-anchor="middle" opacity="0.35">dash</text>
-              <rect x="872" y="312" width="64" height="34" rx="5" fill="#1A2539" stroke="#3A4A63" stroke-width="2"/>
-              <circle id="led" class="led" cx="925" cy="322" r="3.5" fill="#3A4A63"/>
-              <circle cx="904" cy="298" r="44" fill="none" stroke="#708099" stroke-width="7"/>
-              <path d="M862 306h84M904 298v40" stroke="#708099" stroke-width="6"/>
-              <circle cx="904" cy="298" r="10" fill="#1A2539" stroke="#708099" stroke-width="3"/>
-            </g>
-          </svg>
-          <div class="confirm" id="confirm" aria-hidden="true">
-            <div class="ring">
-              <svg viewBox="0 0 54 54"><circle class="track" cx="27" cy="27" r="24"/><circle class="bar" id="ringBar" cx="27" cy="27" r="24"/></svg>
-              <span id="ringNum">15</span>
-            </div>
-            <div><b id="confirmTitle"></b><small id="confirmText"></small></div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:505; --y:228; --w:960; --h:470"><img src="screenshots/profiles-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.d" alt="Displays of the Sim Rig profile: an Odyssey G93SC as main display, a dash tablet marked optional, and the NVIDIA Surround setting."></div></div>
+        </article>
+        <article class="card">
+          <div class="txt">
+            <h3 data-i18n="f.c.h">Countdown</h3>
+            <p data-i18n="f.c.p">After each switch, Enter or any wheel button keeps the layout. Otherwise the previous layout and sound return, also after a crash.</p>
           </div>
-        </div>
-        <div class="console">
-          <button class="power" id="power" role="switch" aria-checked="false" aria-describedby="log">
-            <span class="sw" aria-hidden="true"></span>
-            <span class="t"><b data-i18n="power">Wheelbase power</b><span id="powerHint"></span></span>
-          </button>
-          <div class="state">
-            <div class="log" id="log" aria-live="polite"></div>
-            <div class="chips">
-              <span class="chip" id="cAudio"><i data-i18n="chip.sound">Sound</i> <span></span></span>
-              <span class="chip" id="cMic"><i data-i18n="chip.mic">Mic</i> <span></span></span>
-              <span class="chip" id="cApps"><i>Apps</i> <span>–</span></span>
-              <span class="chip" id="cAwake"><i data-i18n="chip.awake">Keep awake</i> <span></span></span>
-            </div>
+          <div class="vis win"><img src="screenshots/confirmation-dark.png" width="520" height="382" loading="lazy" data-i18n-alt="alt.c" alt="Dialog asking to keep the new layout, with a countdown."></div>
+        </article>
+        <article class="card">
+          <div class="txt">
+            <h3 data-i18n="f.t.h">Tray menu</h3>
+            <p data-i18n="f.t.p">Profiles and games are one click away. Each profile can have a hotkey, and one more toggles between the last two.</p>
           </div>
-        </div>
+          <div class="vis win"><div class="crop" style="--iw:444; --x:42; --y:16; --w:361; --h:347"><img src="screenshots/tray-popup-dark.png" width="444" height="387" loading="lazy" data-i18n-alt="alt.t" alt="Tray menu with the profiles Desk and Sim Rig and three games."></div></div>
+        </article>
+        <article class="card wide">
+          <div class="txt">
+            <h3 data-i18n="f.g.h">Games</h3>
+            <p data-i18n="f.g.p">A game entry starts tools like SimHub and Crew Chief in order, moves their windows into place and launches the game. When the game exits, the tools close and the desk can come back. Games from Steam, Epic, EA, Xbox and iRacing are found automatically.</p>
+          </div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:505; --y:180; --w:960; --h:510"><img src="screenshots/game-editor-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.g" alt="Tools of the iRacing entry: wait for the Fanatec wheelbase, then start Fanatec Control Panel and SimHub before the game and Crew Chief after it."></div></div>
+        </article>
+        <article class="card wide">
+          <div class="txt">
+            <h3 data-i18n="f.v.h">Field of view</h3>
+            <p data-i18n="f.v.p">The real screen size is read from the monitor. From seating distance and screen angle, RigShift calculates the value for 18 sims, each in the unit the game expects.</p>
+          </div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:668; --y:138; --w:882; --h:470"><img src="screenshots/fov-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.v" alt="Triple screens seen from above with 53 degrees horizontal and 31.3 degrees vertical field of view."></div></div>
+        </article>
+        <article class="card plain">
+          <div class="txt">
+            <h3 data-i18n="f.w.h">Other ways to switch</h3>
+            <ul data-i18n="f.w.l">
+              <li>A desktop shortcut or <code>rigshift://</code> link, for example on a Stream Deck</li>
+              <li>The command line, with exit codes for scripts</li>
+              <li>A USB rule that switches when chosen devices connect or disconnect</li>
+            </ul>
+          </div>
+        </article>
       </div>
-    </div>
-  </div>
-
-  <section class="block" id="how">
-    <div class="wrap">
-      <p class="kicker" data-i18n="p.kicker">One profile</p>
-      <h2 data-i18n="p.h2">A profile is the whole PC, not just a monitor layout.</h2>
-      <p class="intro" data-i18n="p.intro">Arrange everything the way you like it once, save it, and every switch brings back all
-        of it. These are the five tabs of a profile in the app.</p>
-      <div class="spec">
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="16" height="11" rx="1.5"/><path d="M7 17h6M10 14v3"/></svg><span data-i18n="p.d">Displays</span></h3>
-          <ul data-i18n="p.dl"><li>Which monitors are on, their layout and the main display</li><li>Resolution, refresh rate and HDR per monitor</li><li>NVIDIA Surround on or off, bezel correction kept</li><li>Optional screens, like a spacedesk tablet</li></ul>
-        </div>
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8v4h3l4 3V5L6 8H3Z" stroke-linejoin="round"/><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.5 6.5 0 0 1 0 9" stroke-linecap="round"/></svg><span>Audio</span></h3>
-          <ul data-i18n="p.al"><li>Output and microphone, each with its volume</li><li>Separate devices for calls, e.g. for Discord</li><li>Game sound not lowered during calls</li><li>A monitor's HDMI sound is waited for</li></ul>
-        </div>
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg><span>Apps</span></h3>
-          <ul data-i18n="p.pl"><li>Start SimHub, Crew Chief or anything else</li><li>Close what the rig doesn't need</li><li>Wait for the previous app's window, or for a USB device</li></ul>
-        </div>
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2v5M6.5 4.5 10 8l3.5-3.5M4 11h12v6H4z" stroke-linejoin="round" stroke-linecap="round"/></svg><span data-i18n="p.t">Triggers</span></h3>
-          <ul data-i18n="p.tl"><li>USB rule: wheelbase and pedals on or off</li><li>Hotkey, desktop shortcut, <code>rigshift://</code> link</li><li>Command line with exit codes</li></ul>
-        </div>
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h9" stroke-linecap="round"/></svg><span data-i18n="p.b">Behavior</span></h3>
-          <ul data-i18n="p.bl"><li>Keep the PC awake while the rig is active</li><li>Its own desktop icon layout</li><li>Switch without asking, when you want that</li></ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="wrap">
-      <p class="kicker" data-i18n="w.kicker">Ways in</p>
-      <h2 data-i18n="w.h2">Switch the way your rig is built.</h2>
-      <p class="intro" data-i18n="w.intro">The wheelbase is the one no other display switcher offers. The others are there for the days you sit down without it.</p>
-      <div class="ways">
-        <div class="way main"><h3 data-i18n="w.1h">The wheelbase itself</h3><p data-i18n="w.1">Pick your wheelbase and pedals once. When all devices of the rule are on, RigShift switches to the rig; when they have been off for the time you set, it goes back to the desk. It waits while the PC is locked and ignores a short USB dropout.</p></div>
-        <div class="way"><h3 data-i18n="w.2h">Hotkey</h3><p data-i18n="w.2">One per profile and game, plus one key that goes back and forth.</p></div>
-        <div class="way"><h3>Stream Deck</h3><p data-i18n="w.3">A hotkey, a desktop shortcut or <code>rigshift://apply/Rig</code> as a website action.</p></div>
-        <div class="way"><h3>Tray</h3><p data-i18n="w.4">Your profiles with their layout and your games, one click away.</p></div>
+      <div class="bento">
+        <article class="card plain"><div class="txt"><h3 data-i18n="f.s.h">Sound</h3><p data-i18n="f.s.p">Output and microphone with their volume, and separate devices for calls.</p></div></article>
+        <article class="card plain"><div class="txt"><h3 data-i18n="f.a.h">Apps</h3><p data-i18n="f.a.p">Start or close programs with a profile, if needed only once a USB device is connected.</p></div></article>
+        <article class="card plain"><div class="txt"><h3 data-i18n="f.i.h">Desktop</h3><p data-i18n="f.i.p">Icon positions per profile. The PC can stay awake while the rig profile is active.</p></div></article>
       </div>
     </div>
   </section>
 
-  <section class="block">
+  <section class="section" id="install">
     <div class="wrap">
-      <p class="kicker" data-i18n="s.kicker">Safety net</p>
-      <h2 data-i18n="s.h2">You never have to reboot to see your desk again.</h2>
-      <p class="intro" data-i18n="s.intro">Black screens are what people hate most about display switchers. This is what happens on every switch.</p>
-      <ol class="seq" data-i18n="s.seq">
-        <li><b>Check</b><span>Every display the profile needs is there. A missing one is named before anything changes.</span></li>
-        <li><b>Wake and wait</b><span>Sleeping monitors are woken; a slow G9 gets the seconds it needs.</span></li>
-        <li><b>One step</b><span>Windows receives the whole layout at once – it works, or nothing changes.</span></li>
-        <li><b>Countdown</b><span>Keep it with Enter or any button on the wheel, button box or controller.</span></li>
-        <li class="fallback"><b>No answer, no picture</b><span>The old layout and sound come back on their own.</span></li>
-      </ol>
-      <p class="aside" data-i18n="s.aside"><b>Crash in the middle?</b> The next start restores the layout from before. <b>Screen still dark?</b> Ctrl+Alt+Shift+D turns every display on, from anywhere.</p>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="wrap">
-      <p class="kicker" data-i18n="g.kicker">Games</p>
-      <h2 data-i18n="g.h2">One click for the whole evening.</h2>
-      <p class="intro" data-i18n="g.intro">A game entry wraps a session around your sim. Installed games from Steam, Epic, EA, Xbox and iRacing are found on their own – nothing to type.</p>
-      <div class="session">
-        <div class="phase"><h3 data-i18n="g.b">Before</h3><ol data-i18n="g.bl"><li><b>Switch</b> to the game's profile</li><li><b>Start</b> Fanatec, SimHub, Crew Chief – in order, waiting for the wheelbase</li><li><b>Place</b> their windows where you saved them</li></ol></div>
-        <div class="phase during"><h3 data-i18n="g.d">During</h3><ol start="4" data-i18n="g.dl"><li><b>Launch</b> the sim through its launcher</li><li><b>Follow</b> it, even through a launcher that stays open</li></ol><p data-i18n="g.dn">Started the sim from Steam yourself? RigShift notices and does the same.</p></div>
-        <div class="phase"><h3 data-i18n="g.a">After</h3><ol start="6" data-i18n="g.al"><li><b>Close</b> the tools the session started</li><li><b>Switch back</b> to the desk, or stay – your choice</li></ol></div>
+      <div class="sec-head">
+        <h2 data-i18n="i.h">Installation</h2>
+        <p data-i18n="i.p">Windows 10 or 11, 64-bit. About 80 MB including the .NET runtime; updates are a few MB and are offered in the app.</p>
       </div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="wrap">
-      <p class="kicker" data-i18n="a.kicker">The app</p>
-      <h2 data-i18n="a.h2">Have a look before you install.</h2>
-      <p class="intro" data-i18n="a.intro">Screenshots with demo data.</p>
-      <div class="tabs" role="tablist" id="shotTabs" data-i18n-aria="shots" aria-label="Screenshots"></div>
-      <div class="shots" role="tabpanel" id="shotPanel" tabindex="0">
-        <figure><img id="shotImg" src="screenshots/overview-dark.png" width="1700" height="1020" alt=""><figcaption id="shotCap"></figcaption></figure>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="compare">
-    <div class="wrap">
-      <p class="kicker" data-i18n="c.kicker">Compared</p>
-      <h2 data-i18n="c.h2">Already using DisplayMagician, DisplayFusion or a batch file?</h2>
-      <p class="intro" data-i18n="c.intro">Keep it if it works for you. Every tool here switches screens – this is where they differ.</p>
-      <div class="table-scroll">
-        <table data-i18n="c.table">
-          <thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead>
-          <tbody>
-            <tr><th>Switch when the wheelbase powers on</th><td class="us y">Yes</td><td class="n">No</td><td class="n">No</td><td class="n">No</td></tr>
-            <tr><th>Revert after a countdown, also after a crash</th><td class="us y">Yes</td><td class="n">No</td><td class="n">No</td><td class="p">Ask first, manual undo</td></tr>
-            <tr><th>Audio, apps and desktop icons in the profile</th><td class="us y">Yes</td><td class="p">Audio and apps per shortcut</td><td class="p">Audio device, icons</td><td class="p">Audio and apps</td></tr>
-            <tr><th>Window positions of your tools</th><td class="us y">Per game</td><td class="n">Planned</td><td class="y">Yes</td><td class="y">Yes</td></tr>
-            <tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td class="y">Both</td><td class="p">Surround by macro</td><td class="n">Neither</td></tr>
-            <tr><th>Price and source</th><td class="us">Free, MIT</td><td>Free, GPL-3.0</td><td>$34, closed</td><td>Free in early access</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="below" data-i18n="c.below">DisplayMagician is the better pick for AMD Eyefinity and GOG or Ubisoft games, DisplayFusion for full window management, PitLaunch for a signed Microsoft Store install. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Full comparison with six tools</a></p>
-    </div>
-  </section>
-
-  <section class="block" id="safe">
-    <div class="wrap">
-      <p class="kicker" data-i18n="t.kicker">Trust</p>
-      <h2 data-i18n="t.h2">Check it instead of trusting it.</h2>
-      <p class="intro" data-i18n="t.intro">RigShift is a free hobby project and not code-signed, so Windows asks the first time: <b>More info → Run anyway</b>. Here is what you can check yourself.</p>
-      <div class="trust">
-        <div class="panel">
-          <h3 data-i18n="t.safe">Is it safe?</h3>
-          <ul class="checks" data-i18n="t.checks">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>All source on GitHub</b>, MIT licence. The only network request asks GitHub for updates – <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">privacy</a>.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>VirusTotal scan</b> linked on every release.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Built from this source</b>, provable with a GitHub attestation: <code>gh attestation verify RigShift-win-Setup.exe -R ManuelStaggl/RigShift</code></span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Checksums and SBOM</b> in every release; each one is installed over the previous version and checked before it goes out.</span></li>
+      <div class="grid2">
+        <article class="card plain"><div class="txt">
+          <h3 data-i18n="i.a.h">Setup</h3>
+          <ul data-i18n="i.a.l">
+            <li>Installs for the current user, no admin rights needed.</li>
+            <li>A setup assistant saves the desk and the rig as profiles and runs a first test switch.</li>
+            <li>Uninstall in Windows Settings → Apps. Profiles stay in <code>%AppData%\RigShift</code> until the folder is deleted.</li>
           </ul>
-          <p data-i18n="t.size">Windows 11's Smart App Control blocks unsigned apps without a "run anyway". The download is about 80 MB because it brings its own .NET runtime; updates are a few MB.</p>
-        </div>
-        <div class="panel">
-          <h3 data-i18n="t.tested">Tested on</h3>
-          <ul class="tested" data-i18n="t.list">
-            <li><span><b>RTX 4080 SUPER, Windows 11</b><br>Desk: XG32UCWG + 2× CM27X3 · Rig: Odyssey G9 + spacedesk</span><span class="tag ok">Daily use</span></li>
-            <li><span>Windows 10 code base, every change in CI</span><span class="tag ok">Tests + live display read</span></li>
-            <li><span>NVIDIA Surround on/off</span><span class="tag open">Not yet on a Surround rig</span></li>
-            <li><span>AMD and Intel graphics – <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">report yours</a></span><span class="tag open">Not tested yet</span></li>
+        </div></article>
+        <article class="card plain"><div class="txt">
+          <h3 data-i18n="i.b.h">Windows warning</h3>
+          <p data-i18n="i.b.p">RigShift is not code-signed. On first start SmartScreen shows a warning; <b>More info → Run anyway</b> starts it. With Smart App Control turned on, Windows 11 blocks unsigned apps.</p>
+        </div></article>
+        <article class="card plain"><div class="txt">
+          <h3 data-i18n="i.c.h">Source and releases</h3>
+          <ul data-i18n="i.c.l">
+            <li>Source code on GitHub, MIT licence.</li>
+            <li>The only network access is the update check on GitHub. No account, no telemetry. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">Privacy</a></li>
+            <li>Every release lists a VirusTotal scan, SHA-256 checksums, an SBOM and a build attestation.</li>
+            <li>Developed with Claude Code as a coding assistant; every change runs more than 1,200 automated tests, analyzers and CodeQL.</li>
           </ul>
-          <p data-i18n="t.built">I write RigShift with Claude Code as a pair programmer. What keeps it honest: 1,200+ automated tests, analyzers and CodeQL on every change – and hardware I don't own is listed as untested, not claimed.</p>
+        </div></article>
+        <article class="card plain"><div class="txt">
+          <h3 data-i18n="i.d.h">Tested hardware</h3>
+          <ul class="status" data-i18n="i.d.l">
+            <li><span><b>RTX 4080 SUPER, Windows 11</b></span><span class="s ok">Daily use</span></li>
+            <li><span>Windows 10, in CI on every change</span><span class="s ok">Tested</span></li>
+            <li><span>NVIDIA Surround on and off</span><span class="s open">Not on a Surround rig yet</span></li>
+            <li><span>AMD and Intel graphics. <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">Report yours</a></span><span class="s open">Not tested</span></li>
+          </ul>
+        </div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="compare">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 data-i18n="k.h">Compared with other tools</h2>
+      </div>
+      <div class="card table-card">
+        <div class="table-scroll">
+          <table data-i18n="k.table">
+            <thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead>
+            <tbody>
+              <tr><th>Revert after a countdown, also after a crash</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td>Asks first, manual undo</td></tr>
+              <tr><th>Sound, apps and desktop icons in the profile</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td>Sound and apps per shortcut</td><td>Sound device, icons</td><td>Sound and apps</td></tr>
+              <tr><th>Window positions of tools</th><td class="us">Per game</td><td>Planned</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td></tr>
+              <tr><th>Switch on USB devices</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td></tr>
+              <tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td>Both</td><td>Surround by macro</td><td>Neither</td></tr>
+              <tr><th>Price and source</th><td class="us">Free, MIT</td><td>Free, GPL-3.0</td><td>$34, closed</td><td>Free in early access</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
+      <p class="below" data-i18n="k.p">DisplayMagician supports AMD Eyefinity and GOG or Ubisoft games, DisplayFusion offers full window management, PitLaunch is signed and available in the Microsoft Store. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Comparison with six tools</a></p>
     </div>
   </section>
 
-  <section class="block" id="faq">
+  <section class="section" id="faq">
     <div class="wrap">
-      <p class="kicker">FAQ</p>
-      <h2 data-i18n="f.h2">Questions people ask first.</h2>
-      <div class="faq" data-i18n="f.list">
-        <details><summary>Does it work with AMD or Intel graphics?</summary><p>It should: displays are switched through the plain Windows display API every driver supports. I only have NVIDIA to test on, so a hardware report helps. AMD Eyefinity is not supported.</p></details>
-        <details><summary>What if a monitor is still asleep, or connected through spacedesk or a KVM?</summary><p>Sleeping monitors are woken and waited for. Mark a screen as optional and the switch goes ahead without it. RigShift can only switch displays Windows sees at that moment.</p></details>
-        <details><summary>Does it help with the field of view?</summary><p>Yes: the field-of-view page takes your monitor's real size, your distance and the rig layout, and gives the value each of 18 sims wants – degrees, a multiplier, a slider or radians.</p></details>
-        <details><summary>VR?</summary><p>Audio and apps work in a VR profile, and a USB rule reacts to any USB device, a headset's link box included. The headset itself is not part of the layout, and I haven't tested a VR setup.</p></details>
-        <details><summary>Does it need admin rights or the internet?</summary><p>No admin rights: it installs for your user. It only talks to GitHub to check for updates. No account, no telemetry.</p></details>
-        <details><summary>How do I get rid of it?</summary><p>Windows Settings → Apps → RigShift → Uninstall. That also removes the desktop shortcuts it created. Your profiles stay in <code>%AppData%\RigShift</code> until you delete the folder.</p></details>
+      <div class="sec-head">
+        <h2 data-i18n="q.h">Questions</h2>
       </div>
-      <p class="below" data-i18n="f.below"><a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/faq.md">All questions</a> · <a href="https://github.com/ManuelStaggl/RigShift/discussions">Ask in Discussions</a></p>
+      <div class="faq" data-i18n="q.l">
+        <details><summary>Does it work with AMD or Intel graphics?</summary><p>Displays are switched through the standard Windows display API that every driver supports, so it should. It has only been tested on NVIDIA; hardware reports are welcome. AMD Eyefinity is not supported.</p></details>
+        <details><summary>What happens if a monitor is asleep or connected through spacedesk or a KVM?</summary><p>Sleeping monitors are woken and waited for. A display marked as optional can be missing without stopping the switch. Only displays that Windows sees at that moment can be switched.</p></details>
+        <details><summary>Does it support VR?</summary><p>Sound and apps work in a VR profile, and a USB rule can react to a headset's link box. The headset is not part of the display layout. VR has not been tested.</p></details>
+        <details><summary>Does it need admin rights or an internet connection?</summary><p>No admin rights. The internet is only used for the update check on GitHub.</p></details>
+      </div>
+      <p class="below" data-i18n="q.more"><a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/faq.md">More questions</a> · <a href="https://github.com/ManuelStaggl/RigShift/discussions">Discussions</a></p>
     </div>
   </section>
 
-  <div class="closing">
+  <section class="support" id="support">
     <div class="wrap">
-      <h2 data-i18n="e.h2">Set it up once. Then just sit down.</h2>
-      <p data-i18n="e.p">The setup assistant saves your desk, then your rig, adds the wheelbase rule and runs a first test switch.</p>
+      <h2 data-i18n="u.h">Free and open source</h2>
+      <p data-i18n="u.p">A star on GitHub helps other sim racers find RigShift. Donations through Ko-fi support further development.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe" data-i18n="cta.dl">Download for Windows 10/11</a>
-        <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift/blob/main/CHANGELOG.md" data-i18n="e.new">What's new</a>
+        <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7L10 2.8Z" stroke-linejoin="round"/></svg>
+          <span data-i18n="u.star">Star on GitHub</span></a>
+        <a class="btn btn-quiet" href="https://ko-fi.com/filthyjoker">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3.5 7h10v5a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4V7Z M13.5 8.5h1a2 2 0 0 1 0 4h-1 M6.5 2.5v2M9.5 2.5v2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n="u.kofi">Support on Ko-fi</span></a>
       </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
     <a href="https://github.com/ManuelStaggl/RigShift">GitHub</a>
     <a href="https://github.com/ManuelStaggl/RigShift/releases">Releases</a>
+    <a href="https://ko-fi.com/filthyjoker">Ko-fi</a>
     <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md" data-i18n="ft.privacy">Privacy</a>
     <a href="https://github.com/ManuelStaggl/RigShift/blob/main/LICENSE" data-i18n="ft.license">MIT licence</a>
-    <span class="fine" data-i18n="ft.fine">© 2026 Manuel Staggl · This page sets no cookies and loads nothing from other sites.</span>
+    <span class="fine" data-i18n="ft.fine">© 2026 Manuel Staggl. This page sets no cookies and loads nothing from other sites.</span>
   </div>
 </footer>
 
@@ -534,226 +398,142 @@ footer .fine { margin-left: auto; }
 (() => {
   // German texts for every data-i18n key; English is the page as written.
   const DE = {
-    'home': 'RigShift Startseite', 'shots': 'Screenshots',
-    'nav.how': 'So funktioniert es', 'nav.compare': 'Vergleich', 'nav.faq': 'FAQ', 'nav.dl': 'Download',
-    'h1': 'Wheelbase an.<br><span class="lit">Rig-Modus.</span>',
-    'lead': 'RigShift schaltet einen Windows-PC zwischen Schreibtisch und Sim-Rig um – Bildschirme, Ton, Apps und Desktop-Symbole in einem Schritt. Es reagiert auf die Wheelbase, ein Tastenkürzel oder eine Stream-Deck-Taste und holt den Schreibtisch von selbst zurück, wenn das Rig dunkel bleibt.',
-    'cta.dl': 'Download für Windows 10/11', 'cta.src': 'Quellcode auf GitHub',
-    'facts': '<li>Kostenlos, MIT-Lizenz</li><li>Kein Konto, keine Telemetrie</li><li>Keine Adminrechte</li><li>Deutsch und Englisch</li>',
-    'stage.active': 'Aktives Profil:', 'stage.note': 'Darstellung der App, beschleunigt',
-    'stage.title': 'Links ein Schreibtisch mit drei Monitoren, rechts ein Sim-Rig mit Super-Ultrawide-Monitor, Dash-Tablet und Lenkrad. Die aktive Seite leuchtet.',
-    'zone.desk': 'SCHREIBTISCH', 'zone.rig': 'RIG', 'power': 'Wheelbase',
-    'chip.sound': 'Ton', 'chip.mic': 'Mikro', 'chip.awake': 'Wach halten',
-    'p.kicker': 'Ein Profil', 'p.h2': 'Ein Profil ist der ganze PC, nicht nur eine Monitor-Anordnung.',
-    'p.intro': 'Einmal alles so einrichten, wie du es willst, speichern – und jeder Wechsel bringt alles davon zurück. Das sind die fünf Reiter eines Profils in der App.',
-    'p.d': 'Bildschirme', 'p.t': 'Auslöser', 'p.b': 'Verhalten',
-    'p.dl': '<li>Welche Monitore an sind, ihre Anordnung und der Hauptbildschirm</li><li>Auflösung, Bildwiederholrate und HDR pro Monitor</li><li>NVIDIA Surround an oder aus, Rahmenkorrektur bleibt</li><li>Optionale Bildschirme wie ein spacedesk-Tablet</li>',
-    'p.al': '<li>Ausgabe und Mikrofon, jeweils mit Lautstärke</li><li>Eigene Geräte für Anrufe, etwa für Discord</li><li>Spielton wird bei Anrufen nicht abgesenkt</li><li>Auf den HDMI-Ton eines Monitors wird gewartet</li>',
-    'p.pl': '<li>SimHub, Crew Chief oder alles andere starten</li><li>Beenden, was das Rig nicht braucht</li><li>Auf das Fenster der vorigen App oder ein USB-Gerät warten</li>',
-    'p.tl': '<li>USB-Regel: Wheelbase und Pedale an oder aus</li><li>Tastenkürzel, Desktop-Verknüpfung, <code>rigshift://</code>-Link</li><li>Kommandozeile mit Exit-Codes</li>',
-    'p.bl': '<li>PC wach halten, solange das Rig aktiv ist</li><li>Eigene Anordnung der Desktop-Symbole</li><li>Ohne Nachfrage umschalten, wenn du das willst</li>',
-    'w.kicker': 'Auslöser', 'w.h2': 'Schalte so um, wie dein Rig gebaut ist.',
-    'w.intro': 'Die Wheelbase bietet sonst kein Anzeige-Umschalter. Die anderen Wege sind für die Tage, an denen du dich ohne sie hinsetzt.',
-    'w.1h': 'Die Wheelbase selbst',
-    'w.1': 'Wheelbase und Pedale einmal auswählen. Sind alle Geräte der Regel an, schaltet RigShift aufs Rig; sind sie so lange aus, wie du eingestellt hast, zurück an den Schreibtisch. Bei gesperrtem PC wartet es, und ein kurzer USB-Aussetzer löst nichts aus.',
-    'w.2h': 'Tastenkürzel', 'w.2': 'Eines pro Profil und Spiel, dazu eine Taste für hin und zurück.',
-    'w.3': 'Ein Tastenkürzel, eine Desktop-Verknüpfung oder <code>rigshift://apply/Rig</code> als Website-Aktion.',
-    'w.4': 'Deine Profile mit ihrer Anordnung und deine Spiele, einen Klick entfernt.',
-    's.kicker': 'Sicherheitsnetz', 's.h2': 'Du musst nie neu starten, um deinen Schreibtisch wiederzusehen.',
-    's.intro': 'Schwarze Bildschirme sind das, was an Anzeige-Umschaltern am meisten nervt. Das passiert bei jedem Wechsel.',
-    's.seq': '<li><b>Prüfen</b><span>Alle Bildschirme des Profils sind da. Fehlt einer, steht er da, bevor sich etwas ändert.</span></li><li><b>Wecken und warten</b><span>Schlafende Monitore werden geweckt; ein langsamer G9 bekommt die Sekunden, die er braucht.</span></li><li><b>Ein Schritt</b><span>Windows bekommt die ganze Anordnung auf einmal – sie klappt, oder nichts ändert sich.</span></li><li><b>Countdown</b><span>Behalten mit Enter oder jeder Taste an Lenkrad, Buttonbox oder Controller.</span></li><li class="fallback"><b>Keine Antwort, kein Bild</b><span>Alte Anordnung und alter Ton kommen von selbst zurück.</span></li>',
-    's.aside': '<b>Absturz mittendrin?</b> Der nächste Start stellt die Anordnung von vorher wieder her. <b>Bildschirm trotzdem dunkel?</b> Strg+Alt+Umschalt+D schaltet alle Bildschirme an, von überall.',
-    'g.kicker': 'Spiele', 'g.h2': 'Ein Klick für den ganzen Abend.',
-    'g.intro': 'Ein Spiel-Eintrag legt eine Sitzung um deine Sim. Installierte Spiele aus Steam, Epic, EA, Xbox und iRacing findet RigShift selbst – nichts abzutippen.',
-    'g.b': 'Vorher', 'g.d': 'Währenddessen', 'g.a': 'Danach',
-    'g.bl': '<li><b>Umschalten</b> auf das Profil des Spiels</li><li><b>Starten</b>: Fanatec, SimHub, Crew Chief – der Reihe nach, wartend auf die Wheelbase</li><li><b>Platzieren</b>: ihre Fenster dorthin, wo du sie gespeichert hast</li>',
-    'g.dl': '<li><b>Starten</b> der Sim über ihren Launcher</li><li><b>Verfolgen</b>, auch durch einen Launcher, der offen bleibt</li>',
-    'g.dn': 'Die Sim selbst aus Steam gestartet? RigShift merkt es und macht dasselbe.',
-    'g.al': '<li><b>Beenden</b> der Tools, die die Sitzung gestartet hat</li><li><b>Zurückschalten</b> an den Schreibtisch – oder bleiben, wie du willst</li>',
-    'a.kicker': 'Die App', 'a.h2': 'Schau sie dir an, bevor du sie installierst.', 'a.intro': 'Screenshots mit Demo-Daten, hier in der englischen Oberfläche – die App gibt es genauso auf Deutsch.',
-    'c.kicker': 'Vergleich', 'c.h2': 'Du nutzt schon DisplayMagician, DisplayFusion oder eine Batch-Datei?',
-    'c.intro': 'Bleib dabei, wenn es für dich passt. Umschalten können alle – hier liegen die Unterschiede.',
-    'c.table': '<thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead><tbody><tr><th>Schaltet, wenn die Wheelbase angeht</th><td class="us y">Ja</td><td class="n">Nein</td><td class="n">Nein</td><td class="n">Nein</td></tr><tr><th>Rückfall nach Countdown, auch nach Absturz</th><td class="us y">Ja</td><td class="n">Nein</td><td class="n">Nein</td><td class="p">Vorab-Frage, manuelles Rückgängig</td></tr><tr><th>Ton, Apps und Desktop-Symbole im Profil</th><td class="us y">Ja</td><td class="p">Ton und Apps pro Verknüpfung</td><td class="p">Audiogerät, Symbole</td><td class="p">Ton und Apps</td></tr><tr><th>Fensterpositionen deiner Tools</th><td class="us y">Pro Spiel</td><td class="n">Geplant</td><td class="y">Ja</td><td class="y">Ja</td></tr><tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td class="y">Beides</td><td class="p">Surround per Makro</td><td class="n">Keins</td></tr><tr><th>Preis und Quellcode</th><td class="us">Kostenlos, MIT</td><td>Kostenlos, GPL-3.0</td><td>34 $, geschlossen</td><td>Kostenlos im Early Access</td></tr></tbody>',
-    'c.below': 'DisplayMagician ist die bessere Wahl für AMD Eyefinity und Spiele aus GOG oder Ubisoft, DisplayFusion für umfassendes Fenster-Management, PitLaunch für eine signierte Installation aus dem Microsoft Store. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Ganzer Vergleich mit sechs Tools (Englisch)</a>',
-    't.kicker': 'Vertrauen', 't.h2': 'Prüf es, statt ihm zu vertrauen.',
-    't.intro': 'RigShift ist ein kostenloses Hobbyprojekt und nicht code-signiert, deshalb fragt Windows beim ersten Mal: <b>Weitere Informationen → Trotzdem ausführen</b>. Das hier kannst du selbst prüfen.',
-    't.safe': 'Ist es sicher?',
-    't.checks': '<li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Gesamter Quellcode auf GitHub</b>, MIT-Lizenz. Die einzige Netzwerkanfrage fragt GitHub nach Updates – <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">Datenschutz</a>.</span></li><li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>VirusTotal-Scan</b> bei jedem Release verlinkt.</span></li><li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Aus diesem Quellcode gebaut</b>, belegbar per GitHub-Attestation: <code>gh attestation verify RigShift-win-Setup.exe -R ManuelStaggl/RigShift</code></span></li><li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Prüfsummen und SBOM</b> in jedem Release; jedes wird vor der Veröffentlichung über die Vorversion installiert und geprüft.</span></li>',
-    't.size': 'Die Smart App Control von Windows 11 blockiert unsignierte Apps ohne „Trotzdem ausführen“. Der Download hat rund 80 MB, weil er seine eigene .NET-Laufzeit mitbringt; Updates sind danach wenige MB groß.',
-    't.tested': 'Getestet auf',
-    't.list': '<li><span><b>RTX 4080 SUPER, Windows 11</b><br>Schreibtisch: XG32UCWG + 2× CM27X3 · Rig: Odyssey G9 + spacedesk</span><span class="tag ok">Täglich im Einsatz</span></li><li><span>Windows-10-Codebasis, jede Änderung in der CI</span><span class="tag ok">Tests + echte Anzeige-Abfrage</span></li><li><span>NVIDIA Surround an/aus</span><span class="tag open">Noch nicht an einem Surround-Rig</span></li><li><span>AMD- und Intel-Grafik – <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">deine melden</a></span><span class="tag open">Noch nicht getestet</span></li>',
-    't.built': 'Ich schreibe RigShift mit Claude Code als Pair-Programmer. Was es ehrlich hält: über 1.200 automatische Tests, Analyzer und CodeQL bei jeder Änderung – und Hardware, die ich nicht besitze, steht als ungetestet da, statt behauptet zu werden.',
-    'f.h2': 'Was zuerst gefragt wird.',
-    'f.list': '<details><summary>Funktioniert es mit AMD- oder Intel-Grafik?</summary><p>Sollte es: Die Bildschirme werden über die normale Windows-Anzeige-API umgeschaltet, die jeder Treiber unterstützt. Ich kann nur mit NVIDIA testen, ein Hardware-Bericht hilft also. AMD Eyefinity wird nicht unterstützt.</p></details><details><summary>Was, wenn ein Monitor noch schläft oder über spacedesk oder einen KVM hängt?</summary><p>Schlafende Monitore werden geweckt und abgewartet. Markier einen Bildschirm als optional, dann schaltet RigShift auch ohne ihn. Umschalten lässt sich nur, was Windows in dem Moment sieht.</p></details><details><summary>Hilft es beim Sichtfeld?</summary><p>Ja: Die Sichtfeld-Seite nimmt die echte Größe deines Monitors, deinen Abstand und den Aufbau des Rigs und nennt den Wert, den jede der 18 Sims will – Grad, Faktor, Schieberegler oder Radiant.</p></details><details><summary>VR?</summary><p>Ton und Apps funktionieren in einem VR-Profil, und eine USB-Regel reagiert auf jedes USB-Gerät, auch auf die Link-Box eines Headsets. Das Headset selbst ist nicht Teil der Anordnung, und ein VR-Setup habe ich nicht getestet.</p></details><details><summary>Braucht es Adminrechte oder Internet?</summary><p>Keine Adminrechte: Es installiert sich für deinen Benutzer. Es fragt nur GitHub nach Updates. Kein Konto, keine Telemetrie.</p></details><details><summary>Wie werde ich es wieder los?</summary><p>Windows-Einstellungen → Apps → RigShift → Deinstallieren. Das entfernt auch die Desktop-Verknüpfungen, die es angelegt hat. Deine Profile bleiben in <code>%AppData%\\RigShift</code>, bis du den Ordner löschst.</p></details>',
-    'f.below': '<a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/faq.md">Alle Fragen (Englisch)</a> · <a href="https://github.com/ManuelStaggl/RigShift/discussions">In den Discussions fragen</a>',
-    'e.h2': 'Einmal einrichten. Dann nur noch hinsetzen.',
-    'e.p': 'Der Einrichtungsassistent speichert deinen Schreibtisch, dann dein Rig, legt die Wheelbase-Regel an und macht einen ersten Probewechsel.',
-    'e.new': 'Was ist neu',
+    'home': 'RigShift Startseite', 'nav': 'Seite', 'tour': 'Screenshots der App',
+    'nav.features': 'Funktionen', 'nav.compare': 'Vergleich', 'nav.faq': 'FAQ', 'nav.dl': 'Download',
+    'lead': 'Schaltet einen Windows-PC zwischen Schreibtisch und Sim-Rig um: Bildschirme, Ton, Apps und Desktop-Symbole in einem Schritt.',
+    'cta.dl': 'Download für Windows 10/11', 'cta.src': 'Auf GitHub ansehen',
+    'facts': 'Kostenlos · MIT-Lizenz · Kein Konto, keine Telemetrie · Deutsch und Englisch',
+    'f.h': 'Funktionen',
+    'f.d.h': 'Bildschirme',
+    'f.d.p': 'Welche Monitore an sind, ihre Anordnung, Hauptbildschirm, Bildwiederholrate, HDR und NVIDIA Surround. Die ganze Anordnung wird in einem Windows-Aufruf gesetzt, sie klappt also ganz oder es ändert sich nichts.',
+    'alt.d': 'Bildschirme des Profils Sim Rig: ein Odyssey G93SC als Hauptbildschirm, ein optionales Dash-Tablet und die Einstellung für NVIDIA Surround.',
+    'f.c.h': 'Countdown',
+    'f.c.p': 'Nach jedem Wechsel behält Enter oder eine Lenkradtaste die Anordnung. Sonst kommen die vorherige Anordnung und der vorherige Ton zurück, auch nach einem Absturz.',
+    'alt.c': 'Dialog mit der Frage, ob die neue Anordnung bleiben soll, mit Countdown.',
+    'f.t.h': 'Tray-Menü',
+    'f.t.p': 'Profile und Spiele sind einen Klick entfernt. Jedes Profil kann ein Tastenkürzel haben, ein weiteres wechselt zwischen den letzten beiden.',
+    'alt.t': 'Tray-Menü mit den Profilen Desk und Sim Rig und drei Spielen.',
+    'f.g.h': 'Spiele',
+    'f.g.p': 'Ein Spiel-Eintrag startet Tools wie SimHub und Crew Chief der Reihe nach, setzt ihre Fenster an ihren Platz und startet das Spiel. Endet das Spiel, werden die Tools beendet und der Schreibtisch kann zurückkommen. Spiele aus Steam, Epic, EA, Xbox und iRacing werden automatisch gefunden.',
+    'alt.g': 'Tools des Eintrags iRacing: auf die Fanatec-Wheelbase warten, dann Fanatec Control Panel und SimHub vor dem Spiel und Crew Chief danach starten.',
+    'f.v.h': 'Sichtfeld',
+    'f.v.p': 'Die echte Bildschirmgröße wird aus dem Monitor gelesen. Aus Sitzabstand und Bildschirmwinkel berechnet RigShift den Wert für 18 Sims, jeweils in der Einheit, die das Spiel erwartet.',
+    'alt.v': 'Drei Bildschirme von oben mit 53 Grad horizontalem und 31,3 Grad vertikalem Sichtfeld.',
+    'f.w.h': 'Weitere Wege zum Umschalten',
+    'f.w.l': '<li>Eine Desktop-Verknüpfung oder ein <code>rigshift://</code>-Link, etwa auf einem Stream Deck</li><li>Die Kommandozeile, mit Exit-Codes für Skripte</li><li>Eine USB-Regel, die schaltet, wenn ausgewählte Geräte verbunden oder getrennt werden</li>',
+    'f.s.h': 'Ton', 'f.s.p': 'Ausgabe und Mikrofon mit ihrer Lautstärke, dazu eigene Geräte für Anrufe.',
+    'f.a.h': 'Apps', 'f.a.p': 'Programme mit einem Profil starten oder beenden, auf Wunsch erst, wenn ein USB-Gerät verbunden ist.',
+    'f.i.h': 'Desktop', 'f.i.p': 'Positionen der Symbole pro Profil. Der PC kann wach bleiben, solange das Rig-Profil aktiv ist.',
+    'i.h': 'Installation',
+    'i.p': 'Windows 10 oder 11, 64 Bit. Rund 80 MB inklusive .NET-Laufzeit; Updates sind wenige MB groß und werden in der App angeboten.',
+    'i.a.h': 'Einrichtung',
+    'i.a.l': '<li>Installiert sich für den aktuellen Benutzer, ohne Adminrechte.</li><li>Ein Einrichtungsassistent speichert Schreibtisch und Rig als Profile und macht einen ersten Probewechsel.</li><li>Deinstallieren unter Windows-Einstellungen → Apps. Die Profile bleiben in <code>%AppData%\\RigShift</code>, bis der Ordner gelöscht wird.</li>',
+    'i.b.h': 'Windows-Warnung',
+    'i.b.p': 'RigShift ist nicht code-signiert. Beim ersten Start zeigt SmartScreen eine Warnung; <b>Weitere Informationen → Trotzdem ausführen</b> startet es. Mit eingeschalteter Smart App Control blockiert Windows 11 unsignierte Apps.',
+    'i.c.h': 'Quellcode und Releases',
+    'i.c.l': '<li>Quellcode auf GitHub, MIT-Lizenz.</li><li>Einziger Netzwerkzugriff ist die Update-Prüfung bei GitHub. Kein Konto, keine Telemetrie. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/PRIVACY.md">Datenschutz</a></li><li>Jedes Release führt einen VirusTotal-Scan, SHA-256-Prüfsummen, eine SBOM und eine Build-Attestation auf.</li><li>Entwickelt mit Claude Code als Programmier-Assistent; jede Änderung durchläuft über 1.200 automatische Tests, Analyzer und CodeQL.</li>',
+    'i.d.h': 'Getestete Hardware',
+    'i.d.l': '<li><span><b>RTX 4080 SUPER, Windows 11</b></span><span class="s ok">Täglich im Einsatz</span></li><li><span>Windows 10, in der CI bei jeder Änderung</span><span class="s ok">Getestet</span></li><li><span>NVIDIA Surround an und aus</span><span class="s open">Noch nicht am Surround-Rig</span></li><li><span>AMD- und Intel-Grafik. <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">Deine melden</a></span><span class="s open">Nicht getestet</span></li>',
+    'k.h': 'Vergleich mit anderen Tools',
+    'k.table': '<thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead><tbody><tr><th>Rückfall nach Countdown, auch nach Absturz</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td>Vorab-Frage, manuelles Rückgängig</td></tr><tr><th>Ton, Apps und Desktop-Symbole im Profil</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td>Ton und Apps pro Verknüpfung</td><td>Audiogerät, Symbole</td><td>Ton und Apps</td></tr><tr><th>Fensterpositionen von Tools</th><td class="us">Pro Spiel</td><td>Geplant</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td></tr><tr><th>Umschalten über USB-Geräte</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td></tr><tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td>Beides</td><td>Surround per Makro</td><td>Keins</td></tr><tr><th>Preis und Quellcode</th><td class="us">Kostenlos, MIT</td><td>Kostenlos, GPL-3.0</td><td>34 $, geschlossen</td><td>Kostenlos im Early Access</td></tr></tbody>',
+    'k.p': 'DisplayMagician unterstützt AMD Eyefinity und Spiele aus GOG oder Ubisoft, DisplayFusion bietet umfassendes Fenster-Management, PitLaunch ist signiert und im Microsoft Store erhältlich. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Vergleich mit sechs Tools (Englisch)</a>',
+    'q.h': 'Fragen',
+    'q.l': '<details><summary>Funktioniert es mit AMD- oder Intel-Grafik?</summary><p>Die Bildschirme werden über die normale Windows-Anzeige-API umgeschaltet, die jeder Treiber unterstützt, es sollte also gehen. Getestet ist es nur mit NVIDIA; Hardware-Berichte helfen. AMD Eyefinity wird nicht unterstützt.</p></details><details><summary>Was passiert, wenn ein Monitor schläft oder über spacedesk oder einen KVM hängt?</summary><p>Schlafende Monitore werden geweckt und abgewartet. Ein als optional markierter Bildschirm darf fehlen, ohne dass der Wechsel abbricht. Umschalten lässt sich nur, was Windows in dem Moment sieht.</p></details><details><summary>Unterstützt es VR?</summary><p>Ton und Apps funktionieren in einem VR-Profil, und eine USB-Regel kann auf die Link-Box eines Headsets reagieren. Das Headset ist nicht Teil der Bildschirm-Anordnung. VR ist nicht getestet.</p></details><details><summary>Braucht es Adminrechte oder Internet?</summary><p>Keine Adminrechte. Das Internet wird nur für die Update-Prüfung bei GitHub genutzt.</p></details>',
+    'q.more': '<a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/faq.md">Weitere Fragen (Englisch)</a> · <a href="https://github.com/ManuelStaggl/RigShift/discussions">Discussions</a>',
+    'u.h': 'Kostenlos und Open Source',
+    'u.p': 'Ein Stern auf GitHub hilft anderen Sim-Racern, RigShift zu finden. Spenden über Ko-fi unterstützen die Weiterentwicklung.',
+    'u.star': 'Stern auf GitHub', 'u.kofi': 'Über Ko-fi unterstützen',
     'ft.privacy': 'Datenschutz', 'ft.license': 'MIT-Lizenz',
-    'ft.fine': '© 2026 Manuel Staggl · Diese Seite setzt keine Cookies und lädt nichts von anderen Seiten.',
+    'ft.fine': '© 2026 Manuel Staggl. Diese Seite setzt keine Cookies und lädt nichts von anderen Seiten.',
   };
-  // Texts the script writes itself.
-  const T = {
-    en: {
-      desk: 'Desk', rig: 'Sim Rig', on: 'Switch it on', off: 'On – switch it off',
-      idle: 'A USB rule on the rig profile watches the wheelbase.',
-      connected: '<b>Wheelbase connected.</b> Switching to Sim Rig …', switched: '<b>Displays and sound switched</b> in one step.',
-      rigActive: '<b>Sim Rig is active.</b> Switch the wheelbase off to go back.',
-      offIn: n => '<b>Wheelbase off.</b> Back to Desk in ' + n + ' s …',
-      deskBack: '<b>Desk is back.</b> SimHub and Crew Chief closed, desktop icons in place.',
-      keep: 'Keep this layout?', keepText: 'Enter or any wheel button keeps it. Otherwise it reverts.',
-      kept: 'Kept', keptText: 'A button on the wheel was pressed.',
-      speakers: 'Speakers', deskMic: 'Desk mic', headset: 'Headset', headsetMic: 'Headset mic', yes: 'on', no: 'off',
-      shots: [
-        ['Overview', 'The current layout, your profiles and games, and every display at a glance.'],
-        ['Profile', 'Displays of the rig profile: the G9 as main display, the dash tablet optional.'],
-        ['Triggers', 'To the rig when wheelbase and pedals are on, back to the desk 10 s after they are off.'],
-        ['Games', 'A game entry: where it comes from and how RigShift knows it is running.'],
-        ['Game tools', 'Tools start in order, before or after the game, and can wait for the wheelbase.'],
-        ['Field of view', 'Triple screens from above and the right value for every sim.'],
-        ['Tray', 'Switch or start a sim from the notification area.'],
-        ['Countdown', 'Before and after: keep it, or it reverts.'],
-      ],
-    },
-    de: {
-      desk: 'Schreibtisch', rig: 'Sim Rig', on: 'Einschalten', off: 'An – ausschalten',
-      idle: 'Eine USB-Regel am Rig-Profil beobachtet die Wheelbase.',
-      connected: '<b>Wheelbase verbunden.</b> Umschalten auf Sim Rig …', switched: '<b>Bildschirme und Ton umgeschaltet</b> in einem Schritt.',
-      rigActive: '<b>Sim Rig ist aktiv.</b> Wheelbase aus, und es geht zurück.',
-      offIn: n => '<b>Wheelbase aus.</b> Zurück zum Schreibtisch in ' + n + ' s …',
-      deskBack: '<b>Der Schreibtisch ist zurück.</b> SimHub und Crew Chief beendet, Desktop-Symbole an ihrem Platz.',
-      keep: 'Diese Anordnung behalten?', keepText: 'Enter oder eine Lenkradtaste behält sie. Sonst geht es zurück.',
-      kept: 'Behalten', keptText: 'Eine Taste am Lenkrad wurde gedrückt.',
-      speakers: 'Lautsprecher', deskMic: 'Tischmikro', headset: 'Headset', headsetMic: 'Headset-Mikro', yes: 'an', no: 'aus',
-      shots: [
-        ['Übersicht', 'Die aktuelle Anordnung, deine Profile und Spiele und alle Bildschirme auf einen Blick.'],
-        ['Profil', 'Bildschirme des Rig-Profils: der G9 als Hauptbildschirm, das Dash-Tablet optional.'],
-        ['Auslöser', 'Aufs Rig, wenn Wheelbase und Pedale an sind, zurück an den Schreibtisch 10 s nachdem sie aus sind.'],
-        ['Spiele', 'Ein Spiel-Eintrag: woher es kommt und woran RigShift erkennt, dass es läuft.'],
-        ['Spiel-Tools', 'Tools starten der Reihe nach, vor oder nach dem Spiel, und können auf die Wheelbase warten.'],
-        ['Sichtfeld', 'Triple-Bildschirme von oben und der richtige Wert für jede Sim.'],
-        ['Tray', 'Umschalten oder eine Sim starten, direkt aus dem Infobereich.'],
-        ['Countdown', 'Vorher und nachher: behalten, oder es geht zurück.'],
-      ],
-    },
+  // Tour tabs: label, caption and image description, in page order of the .view elements.
+  const TOUR = {
+    en: [
+      ['Overview', 'The current layout, the saved profiles and games, and every connected display.', 'Overview page with three desk monitors, the profiles Desk and Sim Rig and three games.'],
+      ['Profile', 'The displays of a profile: which are on, where they sit, refresh rate and HDR.', 'Displays tab of the Sim Rig profile with an Odyssey G93SC as main display and an optional tablet.'],
+      ['Triggers', 'Each profile can be switched by USB rule, hotkey, desktop shortcut or link.', 'Triggers tab with a USB rule for wheel and pedals, a hotkey and a rigshift link.'],
+      ['Games', 'Tools that start with a game, in order, before or after it.', 'Tools of the iRacing entry: Fanatec Control Panel, SimHub and Crew Chief.'],
+      ['Countdown', 'Shown after every switch. Without confirmation the previous layout returns.', 'Dialog asking to keep the new layout, with the old and new layout and a countdown.'],
+      ['Tray', 'Profiles and games in the notification area.', 'Tray menu with the profiles Desk and Sim Rig and three games.'],
+      ['Field of view', 'Field of view from screen size and seating distance, with the value for each sim.', 'Field of view page for triple 27-inch screens with the values per sim.'],
+    ],
+    de: [
+      ['Übersicht', 'Die aktuelle Anordnung, die gespeicherten Profile und Spiele und alle angeschlossenen Bildschirme.', 'Übersicht mit drei Schreibtisch-Monitoren, den Profilen Desk und Sim Rig und drei Spielen.'],
+      ['Profil', 'Die Bildschirme eines Profils: welche an sind, wo sie stehen, Bildwiederholrate und HDR.', 'Reiter Bildschirme des Profils Sim Rig mit einem Odyssey G93SC als Hauptbildschirm und einem optionalen Tablet.'],
+      ['Auslöser', 'Jedes Profil lässt sich per USB-Regel, Tastenkürzel, Desktop-Verknüpfung oder Link umschalten.', 'Reiter Auslöser mit einer USB-Regel für Lenkrad und Pedale, einem Tastenkürzel und einem rigshift-Link.'],
+      ['Spiele', 'Tools, die mit einem Spiel starten, der Reihe nach, davor oder danach.', 'Tools des Eintrags iRacing: Fanatec Control Panel, SimHub und Crew Chief.'],
+      ['Countdown', 'Erscheint nach jedem Wechsel. Ohne Bestätigung kommt die vorherige Anordnung zurück.', 'Dialog mit der Frage, ob die neue Anordnung bleiben soll, alter und neuer Anordnung und Countdown.'],
+      ['Tray', 'Profile und Spiele im Infobereich.', 'Tray-Menü mit den Profilen Desk und Sim Rig und drei Spielen.'],
+      ['Sichtfeld', 'Sichtfeld aus Bildschirmgröße und Sitzabstand, mit dem Wert für jede Sim.', 'Seite Sichtfeld für drei 27-Zoll-Bildschirme mit den Werten pro Sim.'],
+    ],
   };
-  const files = ['overview-dark.png', 'profiles-dark.png', 'triggers-dark.png', 'games-dark.png', 'game-editor-dark.png', 'fov-dark.png', 'tray-popup-dark.png', 'confirmation-dark.png'];
   const $ = id => document.getElementById(id);
-  const EN = {}, EN_ARIA = {};
+  const EN = {}, EN_ARIA = {}, EN_ALT = {};
   document.querySelectorAll('[data-i18n]').forEach(el => { EN[el.dataset.i18n] = el.innerHTML; });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { EN_ARIA[el.dataset.i18nAria] = el.getAttribute('aria-label'); });
+  document.querySelectorAll('[data-i18n-alt]').forEach(el => { EN_ALT[el.dataset.i18nAlt] = el.alt; });
 
-  let lang = 'en', shot = 0, state = 'desk';
-  const t = () => T[lang];
+  const tabs = $('tabs'), views = [...$('stage').children], caption = $('caption');
+  let lang = 'en', current = 0;
 
-  function applyLang(next, remember) {
-    lang = next;
-    document.documentElement.lang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const k = el.dataset.i18n, v = lang === 'de' ? DE[k] : EN[k];
-      if (v !== undefined) el.innerHTML = v;
-    });
-    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
-      const k = el.dataset.i18nAria; el.setAttribute('aria-label', lang === 'de' ? DE[k] : EN_ARIA[k]);
-    });
-    document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
-    document.title = lang === 'de' ? 'RigShift – vom Schreibtisch ins Rig mit einem Wechsel' : 'RigShift – desk to rig in one shift';
-    buildTabs(); showShot(shot);
-    if (state !== 'switching') renderIdle();
-    if (remember) { try { localStorage.setItem('rigshift-lang', lang); } catch (e) { /* private mode */ } }
-  }
-
-  // Screenshots
-  const tabs = $('shotTabs'), img = $('shotImg'), cap = $('shotCap');
   function buildTabs() {
     tabs.textContent = '';
-    t().shots.forEach(([name], i) => {
+    TOUR[lang].forEach(([name], i) => {
       const b = document.createElement('button');
-      b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = name; b.setAttribute('aria-controls', 'shotPanel');
-      b.addEventListener('click', () => showShot(i));
+      b.type = 'button'; b.id = 'tab-' + i; b.textContent = name;
+      b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'stage');
+      b.addEventListener('click', () => show(i));
       b.addEventListener('keydown', e => {
-        if (e.key === 'ArrowRight') showShot((i + 1) % files.length, true);
-        if (e.key === 'ArrowLeft') showShot((i + files.length - 1) % files.length, true);
+        const n = views.length;
+        if (e.key === 'ArrowRight') { e.preventDefault(); show((i + 1) % n, true); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); show((i + n - 1) % n, true); }
       });
       tabs.appendChild(b);
     });
   }
-  function showShot(i, focus) {
-    shot = i;
+  function show(i, focus) {
+    current = i;
+    const [, text, alt] = TOUR[lang][i];
     [...tabs.children].forEach((b, j) => { b.setAttribute('aria-selected', i === j); b.tabIndex = i === j ? 0 : -1; });
-    const [name, text] = t().shots[i];
-    img.src = 'screenshots/' + files[i]; img.alt = name + ' – ' + text; cap.textContent = text;
-    if (focus) tabs.children[i].focus();
+    views.forEach((v, j) => {
+      v.classList.toggle('on', i === j);
+      const img = v.querySelector('img');
+      if (i === j) { img.loading = 'eager'; img.alt = alt; } else { img.alt = ''; }
+    });
+    $('stage').setAttribute('aria-labelledby', 'tab-' + i);
+    caption.textContent = text;
+    if (focus) { const tab = tabs.children[i]; tab.focus(); tab.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
   }
 
-  // Stage
-  const power = $('power'), log = $('log'), confirm = $('confirm'), ringBar = $('ringBar'), ringNum = $('ringNum');
-  const desk = $('desk'), rig = $('rig'), led = $('led');
-  let timers = [], interacted = false;
-  const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-  const clear = () => { timers.forEach(clearTimeout); timers = []; };
-  const chip = (id, value, hot) => { const c = $(id); c.lastElementChild.textContent = value; c.classList.toggle('hot', hot); };
-  function light(zone, on) {
-    zone.querySelectorAll('.scr').forEach(s => { s.classList.toggle('scr-on', on); s.classList.toggle('scr-off', !on); });
-    zone.querySelectorAll('.glow').forEach(g => g.setAttribute('opacity', on ? g.dataset.on : 0));
-    zone.querySelectorAll('.lbl, .lbl-sub').forEach(x => x.setAttribute('opacity', on ? 1 : 0.35));
+  function applyLang(next, remember) {
+    lang = next;
+    const de = lang === 'de';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; el.innerHTML = de && DE[k] !== undefined ? DE[k] : EN[k]; });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => { const k = el.dataset.i18nAria; el.setAttribute('aria-label', de && DE[k] ? DE[k] : EN_ARIA[k]); });
+    document.querySelectorAll('[data-i18n-alt]').forEach(el => { const k = el.dataset.i18nAlt; el.alt = de && DE[k] ? DE[k] : EN_ALT[k]; });
+    document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+    document.title = de ? 'RigShift – Windows-PC zwischen Schreibtisch und Sim-Rig umschalten' : 'RigShift – switch a Windows PC between desk and sim rig';
+    buildTabs(); show(current);
+    if (remember) { try { localStorage.setItem('rigshift-lang', lang); } catch (e) { /* storage blocked */ } }
   }
-  // Static texts for the current state, e.g. after a language change.
-  function renderIdle() {
-    const rigOn = state === 'rig';
-    $('activeName').textContent = rigOn ? t().rig : t().desk;
-    $('powerHint').textContent = rigOn ? t().off : t().on;
-    log.innerHTML = rigOn ? t().rigActive : (state === 'desk-back' ? t().deskBack : t().idle);
-    chip('cAudio', rigOn ? t().headset : t().speakers, rigOn);
-    chip('cMic', rigOn ? t().headsetMic : t().deskMic, rigOn);
-    chip('cApps', rigOn ? 'SimHub, Crew Chief' : '–', rigOn);
-    chip('cAwake', rigOn ? t().yes : t().no, rigOn);
-  }
-  function countdown(from, done) {
-    const full = 150.8;
-    confirm.classList.remove('kept'); $('confirmTitle').textContent = t().keep; $('confirmText').textContent = t().keepText;
-    ringNum.textContent = from; ringBar.style.strokeDashoffset = 0;
-    confirm.classList.add('show');
-    for (let k = 1; k <= 3; k++) at(k * 450, () => { ringNum.textContent = from - k; ringBar.style.strokeDashoffset = full * k / from; });
-    at(1700, () => { confirm.classList.add('kept'); $('confirmTitle').textContent = t().kept; $('confirmText').textContent = t().keptText; ringNum.textContent = '✓'; });
-    at(2900, () => { confirm.classList.remove('show'); done(); });
-  }
-  function toRig() {
-    clear(); state = 'switching'; power.setAttribute('aria-checked', 'true'); $('powerHint').textContent = t().off;
-    led.setAttribute('fill', '#74D99A');
-    log.innerHTML = t().connected;
-    at(500, () => { light(desk, false); light(rig, true); $('activeName').textContent = t().rig; });
-    at(900, () => { chip('cAudio', t().headset, true); chip('cMic', t().headsetMic, true); log.innerHTML = t().switched; });
-    at(1300, () => { chip('cApps', 'SimHub, Crew Chief', true); chip('cAwake', t().yes, true); });
-    at(1500, () => countdown(15, () => { state = 'rig'; log.innerHTML = t().rigActive; }));
-  }
-  function toDesk() {
-    clear(); state = 'switching'; confirm.classList.remove('show'); power.setAttribute('aria-checked', 'false'); $('powerHint').textContent = t().on;
-    led.setAttribute('fill', '#3A4A63');
-    light(rig, true); light(desk, false);
-    log.innerHTML = t().offIn(10);
-    for (let k = 1; k <= 10; k++) at(k * 150, () => { log.innerHTML = t().offIn(10 - k); });
-    at(1650, () => { light(rig, false); light(desk, true); state = 'desk-back'; renderIdle(); });
-  }
-  power.addEventListener('click', () => { interacted = true; power.getAttribute('aria-checked') === 'true' ? toDesk() : toRig(); });
 
   // Language: ?lang= wins, then the visitor's own choice, then the browser.
-  let initial = 'en';
-  try { initial = localStorage.getItem('rigshift-lang') || initial; } catch (e) { /* private mode */ }
+  let initial = null;
   const asked = new URLSearchParams(location.search).get('lang');
   if (asked === 'de' || asked === 'en') initial = asked;
-  else if (!localStorage_has()) initial = (navigator.languages || [navigator.language]).some(l => /^de\b/i.test(l || '')) ? 'de' : 'en';
-  function localStorage_has() { try { return !!localStorage.getItem('rigshift-lang'); } catch (e) { return false; } }
+  if (!initial) { try { initial = localStorage.getItem('rigshift-lang'); } catch (e) { /* storage blocked */ } }
+  if (initial !== 'de' && initial !== 'en') initial = (navigator.languages || [navigator.language]).some(l => /^de\b/i.test(l || '')) ? 'de' : 'en';
   document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang, true)));
   applyLang(initial, false);
 
-  // Play it once when the stage comes into view, unless the visitor asked for less motion or already clicked.
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(entries => {
-      if (entries.some(e => e.isIntersecting)) { io.disconnect(); setTimeout(() => { if (!interacted) toRig(); }, 1200); }
-    }, { threshold: 0.35 });
-    io.observe(document.querySelector('.stage'));
-  }
+  // Load the other screenshots once the page is idle, so switching tabs is instant.
+  addEventListener('load', () => views.forEach(v => { v.querySelector('img').loading = 'eager'; }));
+
+  // Hairline under the header once the page moves.
+  const top = $('top');
+  const onScroll = () => top.classList.toggle('scrolled', scrollY > 4);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
 })();
 </script>
 </body>
