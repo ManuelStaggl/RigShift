@@ -7,9 +7,11 @@ using CommunityToolkit.Mvvm.Input;
 using RigShift.App.Controls;
 using RigShift.App.Localization;
 using RigShift.App.Services;
+using RigShift.App.Views;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Storage;
 using RigShift.Core.Topology;
+using RigShift.Windows.Display;
 using Serilog;
 
 namespace RigShift.App.ViewModels;
@@ -293,7 +295,11 @@ public sealed partial class AboutViewModel : ObservableObject
     private void OpenRepository() => ShellFolders.OpenUrl(RepositoryUrl, _log);
 
     [RelayCommand]
-    private void ReportProblem() => ShellFolders.OpenUrl(RepositoryUrl + "/issues/new", _log);
+    private void ReportProblem() => ShellFolders.OpenUrl(IssueUrl(_updates.CurrentVersion), _log);
+
+    /// <summary>The bug report form with the version filled in.</summary>
+    internal static string IssueUrl(string version) =>
+        RepositoryUrl + "/issues/new?template=bug_report.yml&version=" + Uri.EscapeDataString(version);
 
     [RelayCommand]
     private void OpenLicense() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/LICENSE", _log);
@@ -310,6 +316,57 @@ public sealed partial class AboutViewModel : ObservableObject
 
     [RelayCommand]
     private async Task CopyDiagnosticsAsync()
+    {
+        string report = await BuildReportAsync();
+        try
+        {
+            System.Windows.Clipboard.SetText(report);
+            CopyStatus = Loc.Instance["About_Copied"];
+            _log.Information("Diagnostic report copied to the clipboard ({Length} characters)", report.Length);
+        }
+        catch (COMException ex)
+        {
+            _log.Warning(ex, "Diagnostic report could not be copied to the clipboard");
+            CopyStatus = Loc.Format("About_CopyFailed", UserMessages.Describe(ex));
+        }
+    }
+
+    /// <summary>Diagnostics, logs and data files as one ZIP, then the bug report form to attach it to (v4 finding E-07).</summary>
+    [RelayCommand]
+    private async Task SaveSupportPackageAsync()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = $"RigShift-support-{DateTime.Now:yyyy-MM-dd}.zip",
+            DefaultExt = ".zip",
+            Filter = "ZIP (*.zip)|*.zip",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        string report = await BuildReportAsync();
+        try
+        {
+            int count = await Task.Run(() =>
+            {
+                using FileStream stream = File.Create(dialog.FileName);
+                return SupportPackage.Write(stream, report, _paths, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            });
+            _log.Information("Support package with {Count} file(s) saved to {File}", count, dialog.FileName);
+            CopyStatus = Loc.Instance["About_SupportSaved"];
+            ShellFolders.OpenUrl(IssueUrl(_updates.CurrentVersion), _log);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Support package could not be saved to {File}", dialog.FileName);
+            CopyStatus = Loc.Format("About_SupportFailed", UserMessages.Describe(ex));
+        }
+    }
+
+    private async Task<string> BuildReportAsync()
     {
         DisplaySnapshot? snapshot = null;
         string? displayError = null;
@@ -337,21 +394,10 @@ public sealed partial class AboutViewModel : ObservableObject
             audioError = ex.Message;
         }
 
-        string report = DiagnosticsReport.Build(new DiagnosticsInput(
+        return DiagnosticsReport.Build(new DiagnosticsInput(
             _updates.CurrentVersion, _updates.IsInstalled, snapshot, displayError, playback, recording, audioError,
-            _catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.KnownDisplayNames, [.. History]));
-
-        try
-        {
-            System.Windows.Clipboard.SetText(report);
-            CopyStatus = Loc.Instance["About_Copied"];
-            _log.Information("Diagnostic report copied to the clipboard ({Length} characters)", report.Length);
-        }
-        catch (COMException ex)
-        {
-            _log.Warning(ex, "Diagnostic report could not be copied to the clipboard");
-            CopyStatus = Loc.Format("About_CopyFailed", UserMessages.Describe(ex));
-        }
+            _catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.KnownDisplayNames, [.. History],
+            GraphicsDrivers.Read(), _settings.Current, _games.Items.Count, TextScale.Setting()));
     }
 
     private void RefreshUpdateStatus()

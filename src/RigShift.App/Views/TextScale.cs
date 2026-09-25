@@ -104,7 +104,8 @@ internal static class TextScale
         return scale;
     }
 
-    private static int? Setting()
+    /// <summary>The Windows "Text size" in percent, <c>null</c> when it was never changed.</summary>
+    internal static int? Setting()
     {
 #if DEBUG
         // Screenshots of the scaled layout without touching the Windows setting.

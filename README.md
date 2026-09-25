@@ -106,7 +106,7 @@ welcome.
 
 - A monitor counts as missing while it sleeps: [Monitors in standby](docs/monitor-standby.md).
 - Wheelbase or pedals drop off USB: [USB power saving](docs/usb-power-saving.md).
-- Something else: **Help → Diagnostic info → Copy** and [open an issue](https://github.com/ManuelStaggl/RigShift/issues/new).
+- Something else: **Help → Save support package** and attach the ZIP to the [issue](https://github.com/ManuelStaggl/RigShift/issues/new?template=bug_report.yml) that opens.
 
 Ideas and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/ROADMAP.md).
 If RigShift saves you time, you can [buy me a coffee](https://ko-fi.com/filthyjoker).

@@ -650,7 +650,7 @@
     <value>Commands for Stream Deck and scripts</value>
   </data>
   <data name="About_ProblemText" xml:space="preserve">
-    <value>Copy the diagnostic info (without your user name) and paste it into a GitHub issue.</value>
+    <value>Save the support package and attach it to the GitHub issue that opens. Your user name is left out.</value>
   </data>
   <data name="About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
@@ -921,5 +921,17 @@ The log is in {1}</value>
   </data>
   <data name="Games_Unreadable" xml:space="preserve">
     <value>The game list can't be read, so RigShift won't change it: {0}</value>
+  </data>
+  <data name="About_SupportPackage" xml:space="preserve">
+    <value>Save support package</value>
+  </data>
+  <data name="About_SupportHint" xml:space="preserve">
+    <value>A ZIP with the diagnostics, the last three logs, your settings, profiles and games. It holds device names, not your user name.</value>
+  </data>
+  <data name="About_SupportSaved" xml:space="preserve">
+    <value>Saved. Drag the file into the issue.</value>
+  </data>
+  <data name="About_SupportFailed" xml:space="preserve">
+    <value>Couldn't save. {0}</value>
   </data>
 </root>

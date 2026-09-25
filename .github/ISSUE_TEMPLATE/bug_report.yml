@@ -10,14 +10,13 @@ body:
     validations:
       required: true
   - type: textarea
-    id: setup
+    id: diagnostics
     attributes:
-      label: Display and audio setup
-      description: GPU + driver version, each monitor with resolution/refresh/connection, virtual displays (spacedesk, VR), audio devices involved.
-      placeholder: |
-        RTX 4080 SUPER, driver 32.0.16.1656
-        Desk: 3840x2160@165 DP (primary), 2x 1920x1080@100 DP
-        Rig: 5120x1440@240 HDMI, spacedesk 2880x1920
+      label: Support package or diagnostics
+      description: >
+        In RigShift, **Help → Save support package** and drag the ZIP file in here. It holds the diagnostics, the last
+        three logs, your settings, profiles and games, without your Windows user name. If you'd rather not share files,
+        use **Help → Copy diagnostics** and paste the text.
     validations:
       required: true
   - type: input
@@ -27,8 +26,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: log
+    id: setup
     attributes:
-      label: Log
-      description: Paste the relevant part of `%AppData%\RigShift\logs\rigshift-<date>.log`. Device paths are fine to include; redact anything you consider personal.
-      render: text
+      label: Anything about your setup the package can't know
+      description: How the monitors are connected (DisplayPort, HDMI, adapters, KVM), virtual displays (spacedesk, VR), what should happen on which screen.

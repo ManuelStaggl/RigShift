@@ -239,13 +239,19 @@
             </StackPanel>
             <WrapPanel Margin="0,16,0,0">
               <Button
-                Margin="0,0,8,0"
+                Margin="0,0,8,8"
+                Command="{Binding SaveSupportPackageCommand}"
+                Content="{loc:Tr About_SupportPackage}"
+                Style="{StaticResource RigShift.Button.Primary}"
+                ToolTip="{loc:Tr About_SupportHint}" />
+              <Button
+                Margin="0,0,8,8"
                 Command="{Binding CopyDiagnosticsCommand}"
                 Content="{loc:Tr About_CopyDiagnostics}"
                 Style="{StaticResource RigShift.Button}"
                 ToolTip="{loc:Tr About_CopyHint}" />
               <Button
-                Margin="0,0,8,0"
+                Margin="0,0,8,8"
                 Command="{Binding ReportProblemCommand}"
                 Style="{StaticResource RigShift.Button}">
                 <StackPanel Orientation="Horizontal">

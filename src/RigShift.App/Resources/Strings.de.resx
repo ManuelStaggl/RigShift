@@ -650,7 +650,7 @@
     <value>Befehle für Stream Deck und Skripte</value>
   </data>
   <data name="About_ProblemText" xml:space="preserve">
-    <value>Diagnose-Infos kopieren (ohne Benutzernamen) und ins GitHub-Issue einfügen.</value>
+    <value>Support-Paket speichern und an das GitHub-Issue hängen, das sich öffnet. Dein Benutzername wird weggelassen.</value>
   </data>
   <data name="About_CopyDiagnostics" xml:space="preserve">
     <value>Diagnose kopieren</value>
@@ -921,5 +921,17 @@ Das Log liegt in {1}</value>
   </data>
   <data name="Games_Unreadable" xml:space="preserve">
     <value>Die Spieleliste ist nicht lesbar, deshalb ändert RigShift sie nicht: {0}</value>
+  </data>
+  <data name="About_SupportPackage" xml:space="preserve">
+    <value>Support-Paket speichern</value>
+  </data>
+  <data name="About_SupportHint" xml:space="preserve">
+    <value>Eine ZIP-Datei mit Diagnose, den letzten drei Logs, Einstellungen, Profilen und Spielen. Sie enthält Gerätenamen, nicht deinen Benutzernamen.</value>
+  </data>
+  <data name="About_SupportSaved" xml:space="preserve">
+    <value>Gespeichert. Zieh die Datei ins Issue.</value>
+  </data>
+  <data name="About_SupportFailed" xml:space="preserve">
+    <value>Speichern nicht möglich. {0}</value>
   </data>
 </root>
