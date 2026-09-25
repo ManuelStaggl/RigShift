@@ -1,27 +1,16 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using NSubstitute;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.Views;
-using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
-using RigShift.Core.Games;
-using RigShift.Core.Profiles;
-using RigShift.Core.Storage;
-using RigShift.Core.Tests.Fakes;
-using RigShift.Core.Updates;
-using Serilog.Core;
 using Shouldly;
 using Xunit;
-using static RigShift.Core.Tests.TestDisplays;
 
 namespace RigShift.App.Tests;
 
@@ -35,17 +24,14 @@ public sealed class XamlSmokeTests : IDisposable
 {
     private static readonly TimeSpan Settle = TimeSpan.FromSeconds(20);
 
-    private readonly AppPaths _paths = new(Path.GetFullPath(Path.Combine(Path.GetTempPath(), "rigshift-app-tests", Guid.NewGuid().ToString("N"))));
+    private readonly DemoServices _demo = new();
     private readonly BindingErrors _errors = new();
     private readonly ConcurrentQueue<string> _crashes = new();
 
     public void Dispose()
     {
         _errors.Dispose();
-        if (Directory.Exists(_paths.DataDirectory))
-        {
-            Directory.Delete(_paths.DataDirectory, recursive: true);
-        }
+        _demo.Dispose();
     }
 
     [Fact]
@@ -79,12 +65,9 @@ public sealed class XamlSmokeTests : IDisposable
         typeof(Application).GetField("_resourceAssembly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             .ShouldNotBeNull("WPF keeps the resource assembly in this field")
             .SetValue(null, typeof(App).Assembly);
-        var app = new App(new CliRequest(), _paths);
+        var app = new App(new CliRequest(), _demo.Paths);
         app.InitializeComponent();
-        using ServiceProvider services = Services().BuildServiceProvider();
-        await services.GetRequiredService<SettingsService>().LoadAsync(CancellationToken.None);
-        await services.GetRequiredService<ProfileCatalog>().ReloadAsync(CancellationToken.None);
-        await services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
+        using ServiceProvider services = await _demo.StartAsync();
 
         MainWindow main = services.GetRequiredService<MainWindow>();
         Offscreen(main);
@@ -190,47 +173,6 @@ public sealed class XamlSmokeTests : IDisposable
                 yield return inner;
             }
         }
-    }
-
-    /// <summary>The app's container with demo data and nothing that reaches hardware, the registry or the network.</summary>
-    private IServiceCollection Services()
-    {
-        Profile desk = Profile("Desk", DeskModes, confirm: true);
-        Profile rig = Rig(confirm: true) with { Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 } };
-        var profiles = new InMemoryProfileStore();
-        profiles.Profiles.AddRange([desk, rig]);
-        var games = new InMemoryGameStore();
-        games.Games.Add(new GameEntry
-        {
-            Id = Guid.NewGuid(),
-            Name = "iRacing",
-            Launch = new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410" },
-            ProfileId = rig.Id,
-        });
-
-        IAudioController audio = Substitute.For<IAudioController>();
-        audio.ListAsync(default, default).ReturnsForAnyArgs(Task.FromResult<IReadOnlyList<AudioDeviceInfo>>([]));
-        IUsbDeviceList usb = Substitute.For<IUsbDeviceList>();
-        usb.ConnectedDevices().Returns([]);
-        usb.PresentDeviceIds().Returns(new HashSet<string>());
-
-        return new ServiceCollection()
-            .AddRigShift(_paths, Substitute.For<IAppShell>(), Logger.None)
-            .Replace(ServiceDescriptor.Singleton<IProfileStore>(profiles))
-            .Replace(ServiceDescriptor.Singleton<IGameStore>(games))
-            .Replace(ServiceDescriptor.Singleton<IDisplayConfigurator>(new FakeDisplayConfigurator(DeskActive())))
-            .Replace(ServiceDescriptor.Singleton(audio))
-            .Replace(ServiceDescriptor.Singleton(usb))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IAutostart>()))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IUsbPowerCheck>()))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IDisplaySizeReader>()))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IGameLibrary>()))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IUpdateFeed>()))
-            .Replace(ServiceDescriptor.Singleton(Substitute.For<IUpdatePolicy>()))
-            .Replace(ServiceDescriptor.Singleton<ISurroundController>(new FakeSurroundController()))
-            .Replace(ServiceDescriptor.Singleton<IDesktopIcons>(new FakeDesktopIcons()))
-            .Replace(ServiceDescriptor.Singleton<IDuckingPreference>(new FakeDuckingPreference()))
-            .Replace(ServiceDescriptor.Singleton<ISessionWatch>(new FakeSessionWatch()));
     }
 
     /// <summary>WPF writes binding failures to a trace source that is silent unless someone listens.</summary>
