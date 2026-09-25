@@ -92,3 +92,7 @@ jobs:
 
       - name: Test
         run: dotnet test --solution RigShift.slnx -c Release
+
+      # The display and audio reading on the Windows 10 code base, against the runner's virtual display.
+      - name: Probe snapshot
+        run: dotnet run --project tools/RigShift.Probe -c Release -- snapshot
