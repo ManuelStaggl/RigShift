@@ -240,7 +240,18 @@ public sealed class DisplayTopology : FrameworkElement
         Rebuild();
     }
 
-    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) => Rebuild();
+    /// <summary>The language is app-wide and may change on any thread; the control only on its own.</summary>
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (CheckAccess())
+        {
+            Rebuild();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(Rebuild);
+        }
+    }
 
     private void Rebuild()
     {

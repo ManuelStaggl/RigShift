@@ -42,8 +42,16 @@ public sealed class Loc : INotifyPropertyChanged
     /// <param name="language"><c>null</c> follows Windows, otherwise a culture name such as <c>de</c>.</param>
     public void SetLanguage(string? language)
     {
-        UICulture = string.IsNullOrWhiteSpace(language) ? SystemUICulture : CultureInfo.GetCultureInfo(language);
-        CultureInfo.DefaultThreadCurrentUICulture = UICulture;
+        CultureInfo wanted = string.IsNullOrWhiteSpace(language) ? SystemUICulture : CultureInfo.GetCultureInfo(language);
+        CultureInfo.DefaultThreadCurrentUICulture = wanted;
+
+        // Every settings load sets the language; only a real change is worth rebuilding every list and page for.
+        if (Equals(wanted, UICulture))
+        {
+            return;
+        }
+
+        UICulture = wanted;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
     }
 }
