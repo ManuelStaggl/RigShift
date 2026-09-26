@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-09-26
+
 ### Fixed
 
 - **NVIDIA Surround on/off** (first report from a Surround rig): the driver's pre-check no longer blocks a grid – it is
