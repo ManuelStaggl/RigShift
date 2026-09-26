@@ -36,9 +36,17 @@ public sealed class Loc : INotifyPropertyChanged
         {
             if (value is not null)
             {
+                // The base context has no thread of its own: posting to it only runs the handler on the pool, next to the
+                // same object's other handlers (two catalogs rebuilding one list at once crashed the test run).
+                SynchronizationContext? context = SynchronizationContext.Current;
+                if (context?.GetType() == typeof(SynchronizationContext))
+                {
+                    context = null;
+                }
+
                 lock (_gate)
                 {
-                    _listeners.Add(new Listener(value, SynchronizationContext.Current, Environment.CurrentManagedThreadId));
+                    _listeners.Add(new Listener(value, context, Environment.CurrentManagedThreadId));
                 }
             }
         }

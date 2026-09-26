@@ -26,7 +26,7 @@ internal sealed class SingleThreadContext : SynchronizationContext, IDisposable
         {
             _queue.Add((d, state));
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
         {
         }
     }
