@@ -240,18 +240,20 @@ public static class SwitchMessages
     {
         ArgumentNullException.ThrowIfNull(plan);
 
+        // The display a Surround grid becomes only exists once the switch built the grid (issue #9).
+        MissingDisplay[] missing = [.. plan.Missing.Where(m => m.Reason != MissingReason.AwaitsSurround)];
         var lines = new List<string>();
         if (plan.IsAmbiguous)
         {
-            lines.Add(Loc.Format("Check_Ambiguous", Names(plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous))));
+            lines.Add(Loc.Format("Check_Ambiguous", Names(missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous))));
         }
-        else if (plan.IsBlocked)
+        else if (plan.BlocksSwitch)
         {
-            lines.Add(Loc.Format("Check_Blocked", Names(plan.Missing.Where(m => !m.Assignment.IsOptional))));
+            lines.Add(Loc.Format("Check_Blocked", Names(missing.Where(m => !m.Assignment.IsOptional))));
         }
-        else if (plan.Missing.Count > 0)
+        else if (missing.Length > 0)
         {
-            lines.Add(Loc.Format("Check_OptionalMissing", Names(plan.Missing)));
+            lines.Add(Loc.Format("Check_OptionalMissing", Names(missing)));
         }
         else
         {

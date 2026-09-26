@@ -408,7 +408,7 @@ public sealed class CommandRunner
         var text = new StringBuilder();
         if (result.Outcome == SwitchOutcome.DryRun)
         {
-            text.Append(CultureInfo.InvariantCulture, $"{profile.Name}: {(result.Plan.IsBlocked ? "blocked" : "ready")}");
+            text.Append(CultureInfo.InvariantCulture, $"{profile.Name}: {(result.Plan.BlocksSwitch ? "blocked" : "ready")}");
         }
         else
         {

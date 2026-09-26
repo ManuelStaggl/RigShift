@@ -369,4 +369,75 @@ public sealed class TopologyPlannerTests
 
         plan.Warnings.Single().Kind.ShouldBe(PlanWarningKind.NoPrimary);
     }
+
+    /// <summary>
+    /// Issue #9: the wide display of a Surround grid carries the EDID of one of its monitors. With the grid down, its three
+    /// monitors are listed on their own; the plan called the grid "ambiguous" and the app would not switch to the profile
+    /// that builds it.
+    /// </summary>
+    [Fact]
+    public void Plan_SurroundDisplayWhileTheGridIsDown_AwaitsSurround_AndDoesNotBlockTheSwitch()
+    {
+        TopologyPlan plan = _planner.Plan(TripleProfile(), Snapshot([Attached(Desk4K), .. TripleMonitors()]));
+
+        plan.Missing.Single().Reason.ShouldBe(MissingReason.AwaitsSurround);
+        plan.IsAmbiguous.ShouldBeFalse();
+        plan.BlocksSwitch.ShouldBeFalse();
+        plan.IsBlocked.ShouldBeTrue();
+        plan.Resolved.Single().Target.Identity.ShouldBe(Desk4K);
+    }
+
+    /// <summary>One monitor of the grid alone matches its EDID uniquely – it is still not the grid.</summary>
+    [Fact]
+    public void Plan_SurroundDisplay_IsNeverTakenForOneOfItsMonitors()
+    {
+        TopologyPlan plan = _planner.Plan(TripleProfile(), Snapshot(Attached(Desk4K), TripleMonitors()[0]));
+
+        plan.Resolved.ShouldNotContain(r => r.Assignment.Width == 5760);
+        plan.Missing.Single().Reason.ShouldBe(MissingReason.AwaitsSurround);
+    }
+
+    [Fact]
+    public void Plan_SurroundDisplayOnANewPath_IsFoundByEdidAndName()
+    {
+        DisplayIdentity rebuilt = SurroundScreen with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#GRID&2" };
+
+        TopologyPlan plan = _planner.Plan(TripleProfile(), Snapshot(Attached(Desk4K), Attached(rebuilt)));
+
+        plan.Missing.ShouldBeEmpty();
+        plan.Resolved.Single(r => r.Assignment.Width == 5760).Target.Identity.ShouldBe(rebuilt);
+    }
+
+    [Fact]
+    public void Plan_WideDisplayOfAProfileWithoutSurround_StaysAmbiguousAsBefore()
+    {
+        TopologyPlan plan = _planner.Plan(TripleProfile() with { Surround = null }, Snapshot([Attached(Desk4K), .. TripleMonitors()]));
+
+        plan.Missing.Single().Reason.ShouldBe(MissingReason.Ambiguous);
+        plan.BlocksSwitch.ShouldBeTrue();
+    }
+
+    private static readonly DisplayIdentity SurroundScreen = Identity(Gpu, @"\\?\DISPLAY#DEL0003#GRID&1", 0x10AC, 0x0003, "NV Surround");
+
+    private static AttachedDisplay[] TripleMonitors() =>
+    [
+        .. Enumerable.Range(1, 3).Select(i => Attached(DeskLeft with { TargetDevicePath = $@"\\?\DISPLAY#DEL0003#MEMBER&{i}" })),
+    ];
+
+    private static Profile TripleProfile() =>
+        Profile("Triple", [Mode(SurroundScreen, 5760, 1080, 60, x: -5760), DeskModes[0]]) with
+        {
+            Surround = new SurroundSetting
+            {
+                Enabled = true,
+                Grid = new SurroundGrid
+                {
+                    Rows = 1,
+                    Columns = 3,
+                    Width = 1920,
+                    Height = 1080,
+                    Displays = [new() { DisplayId = 1 }, new() { DisplayId = 2 }, new() { DisplayId = 3 }],
+                },
+            },
+        };
 }

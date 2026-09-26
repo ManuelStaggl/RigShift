@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.0.3] - 2026-09-26
+
+### Fixed
+
+- **A Surround profile showed "Blocked" while Surround was off** (#9), so it could not be switched to from the app. The
+  wide Surround display carries the EDID of one of its monitors, and with the grid down those monitors are listed on
+  their own – RigShift took them for identical monitors it could not tell apart. The Surround display is now only
+  matched as itself, and until the switch has built the grid it no longer counts as missing.
+
 ## [4.0.2] - 2026-09-26
 
 ### Fixed
