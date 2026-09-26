@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.0.2] - 2026-09-26
+
+### Fixed
+
+- **NVIDIA Surround would not switch on** from a desktop without Surround (#7): the driver refused every new grid with
+  "no active SLI topology", because RigShift asked it to keep a GPU topology that only exists while Surround runs. It
+  now retries without that restriction – first still without a driver reload, and only as the last resort with one.
+- A reverted switch no longer claims everything is back when Surround could not be switched on again; the message says
+  so and how to get it back.
+
 ## [4.0.1] - 2026-09-26
 
 ### Fixed

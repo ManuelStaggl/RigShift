@@ -274,6 +274,8 @@ public static class SwitchMessages
                 (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_AppliedFollowUpText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.Applied => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Instance["Result_AppliedText"], H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.AppliedPartially => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_PartialText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
+            SwitchOutcome.RolledBack when record.Note == SwitchNote.SurroundNotRestored =>
+                (Loc.Format("Result_RolledBackTitle", record.ProfileName), Loc.Instance["Result_RolledBackNoSurroundText"], H.NotifyIcon.Core.NotificationIcon.Warning),
             SwitchOutcome.RolledBack => (Loc.Format("Result_RolledBackTitle", record.ProfileName), Loc.Instance["Result_RolledBackText"], H.NotifyIcon.Core.NotificationIcon.Warning),
             SwitchOutcome.Blocked => (Loc.Format("Result_BlockedTitle", record.ProfileName),
                 Loc.Format(record.Ambiguous ? "Result_AmbiguousText" : "Result_BlockedText", missing), H.NotifyIcon.Core.NotificationIcon.Warning),

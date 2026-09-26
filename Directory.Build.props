@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>4.0.1</Version>
+    <Version>4.0.2</Version>
     <!-- Nothing here is packed as NuGet. A fixed package version keeps the project entries in packages.lock.json
          unchanged across releases, so a version bump cannot break the locked restore after the tag is pushed. -->
     <PackageVersion>1.0.0</PackageVersion>

@@ -10,7 +10,8 @@ namespace RigShift.App.ViewModels;
 /// Surround in the profile editor. There are three answers per profile: leave it alone (the default, and what every
 /// profile before 1.9 means), switch it off, or run this grid. Once another profile runs a grid, "leave alone" means off
 /// (<see cref="SurroundDefaults"/>) and is not offered. There is no grid editor: a grid is built once in the NVIDIA
-/// control panel and taken over from there, because the driver needs a reload to create one and that closes running games.
+/// control panel and taken over from there, because a grid the driver has never built may need a driver reload, and that
+/// closes running games.
 /// </summary>
 public sealed partial class SurroundSection : ObservableObject
 {

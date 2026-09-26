@@ -90,6 +90,9 @@ public enum SwitchNote
 
     /// <summary>A call into the graphics driver did not return; nothing could be restored (v4 finding K-07).</summary>
     DriverHung,
+
+    /// <summary>A rollback brought the displays back, but the graphics driver would not put Surround back.</summary>
+    SurroundNotRestored,
 }
 
 public enum AppsOutcome

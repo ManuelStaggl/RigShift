@@ -54,6 +54,7 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
+  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die Bildschirme sind zurück, aber Surround ließ sich nicht wieder einschalten – wähle ein Profil mit Surround oder nutze die NVIDIA-Systemsteuerung.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>Wechsel zu {0} nicht möglich</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, dann erneut umschalten.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>

@@ -471,6 +471,7 @@ public sealed class CommandRunner
             SwitchNote.RestoreFailed => "the previous displays could not be restored",
             SwitchNote.ModesFromDatabase => "Windows used its own display modes, the stored ones did not work",
             SwitchNote.DriverHung => "the graphics driver does not answer; restart the PC if the displays stay wrong",
+            SwitchNote.SurroundNotRestored => "Surround could not be put back; switch to a profile with Surround or use the NVIDIA Control Panel",
             _ => null,
         };
         if (note is not null)
