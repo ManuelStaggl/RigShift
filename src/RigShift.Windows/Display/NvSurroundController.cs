@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
@@ -8,7 +9,7 @@ namespace RigShift.Windows.Display;
 
 /// <summary>
 /// NVIDIA Surround through NVAPI's Mosaic calls. Careful by design: the state is read first, a grid that already runs
-/// is left alone (rebuilding it costs seconds of black screen), a grid is validated before it is set, and a change is
+/// is left alone (rebuilding it costs seconds of black screen), the driver is never allowed to reload, and a change is
 /// checked afterwards - a driver bug on record answers "done" to a call that did nothing.
 /// </summary>
 public sealed class NvSurroundController : ISurroundController, IDisposable
@@ -179,8 +180,14 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             return SurroundApplyResult.Unchanged;
         }
 
+        if (!before.IsActive)
+        {
+            Wake(api, grid);
+        }
+
         MosaicGridTopoV2[] topo = [ToTopo(grid)];
-        return Refusal(api, topo, switchingOn: true) ?? Set(api, topo, "switch Surround on", before);
+        Validate(api, topo);
+        return Set(api, topo, "switch Surround on", before);
     }
 
     private SurroundApplyResult Disable(NvApi api, SurroundState before)
@@ -191,7 +198,27 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
 
         MosaicGridTopoV2[] singles = [.. Singles(before.Grids).Select(ToTopo)];
-        return Refusal(api, singles, switchingOn: false) ?? Set(api, singles, "switch Surround off", before);
+        Validate(api, singles);
+        return Set(api, singles, "switch Surround off", before);
+    }
+
+    /// <summary>
+    /// Gives every display of the grid its own 1x1 grid before the grid is built. A display the previous arrangement
+    /// switched off in Windows does not join a new grid; set on its own, it wakes up. DisplayMagician does the same
+    /// before it builds a grid on a desktop without Surround. A failure here is only logged - the build still decides.
+    /// </summary>
+    private void Wake(NvApi api, SurroundGrid grid)
+    {
+        MosaicGridTopoV2[] singles = [.. Singles([grid]).Select(ToTopo)];
+        _log.Information("Waking the {Count} displays of the Surround grid before building it", singles.Length);
+        int status = api.SetDisplayGrids(singles);
+        if (status != NvApi.Status.Ok)
+        {
+            _log.Warning("Waking the displays of the Surround grid failed, building it anyway: {Message}", api.Describe(status));
+            return;
+        }
+
+        Thread.Sleep(WakeSettle);
     }
 
     /// <summary>
@@ -211,16 +238,18 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }));
 
     /// <summary>
-    /// Lets the driver check the grids before they are set. Returns why it refuses them, or <c>null</c> when they can be
-    /// set - a grid that needs a driver reload counts as refused: the reload closes running games (plan point 21).
+    /// Lets the driver check the grids and logs what it finds - for the log only. The check is known to reject grids that
+    /// the set call then builds without complaint (DisplayMagician switched it off for that reason), so the set call's own
+    /// answer decides. Nothing is risked by that: the set call carries the flag that forbids a driver reload.
     /// </summary>
-    private SurroundApplyResult? Refusal(NvApi api, MosaicGridTopoV2[] grids, bool switchingOn)
+    private void Validate(NvApi api, MosaicGridTopoV2[] grids)
     {
         var verdicts = new MosaicDisplayTopoStatus[grids.Length];
         int status = api.ValidateDisplayGrids(grids, verdicts);
         if (status != NvApi.Status.Ok)
         {
-            return Failure(api, "The graphics driver refused to check the Surround grid", status);
+            _log.Warning("The driver's check of the Surround grid failed, setting it anyway: {Message}", api.Describe(status));
+            return;
         }
 
         foreach (MosaicDisplayTopoStatus check in verdicts)
@@ -228,31 +257,15 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             string? problems = DisplayProblems(check);
             if (check.ErrorFlags != 0 || problems is not null)
             {
-                string detail = MosaicProblems.Describe(check.ErrorFlags) ?? problems ?? "no reason given";
-                _log.Warning("Surround grid rejected by the driver: {Detail}", detail);
-                return new SurroundApplyResult
-                {
-                    Outcome = SurroundOutcome.Failed,
-                    Message = (switchingOn ? "The graphics driver cannot build this Surround grid: " : "The graphics driver cannot switch Surround off: ")
-                        + detail + ".",
-                };
+                _log.Warning("The driver's check objects to the Surround grid, setting it anyway: {Detail} (flags {Flags:X})",
+                    MosaicProblems.Describe(check.ErrorFlags) ?? problems ?? "no reason given", check.ErrorFlags);
             }
 
             if ((check.WarningFlags & MosaicDisplayTopoStatus.WarningDriverReloadRequired) != 0)
             {
-                return new SurroundApplyResult
-                {
-                    Outcome = SurroundOutcome.Failed,
-                    Message = switchingOn
-                        ? "Surround would only start if the graphics driver reloaded itself, which would close running games. "
-                            + "Switch Surround on once in the NVIDIA control panel, then this profile can do it without a reload."
-                        : "Surround would only stop if the graphics driver reloaded itself, which would close running games. "
-                            + "Switch Surround off once in the NVIDIA control panel, then this profile can do it without a reload.",
-                };
+                _log.Warning("The driver's check says the Surround grid needs a driver reload, which this app never allows");
             }
         }
-
-        return null;
     }
 
     private SurroundApplyResult Set(NvApi api, MosaicGridTopoV2[] grids, string what, SurroundState before)
@@ -264,11 +277,20 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             return Failure(api, "The graphics driver could not " + what, status);
         }
 
-        // The driver is on record answering "done" without doing anything (RTX 50 series, 2026). Look, do not trust.
+        // The driver is on record answering "done" without doing anything (RTX 50 series, 2026). Look, do not trust - but
+        // give it time: the grids it reports can trail the change by a moment.
+        long started = Stopwatch.GetTimestamp();
         SurroundState after = ReadLocked(api);
+        while ((after.Availability != SurroundAvailability.Available || SameGrids(before, after))
+            && Stopwatch.GetElapsedTime(started) < SettleBudget)
+        {
+            Thread.Sleep(SettlePoll);
+            after = ReadLocked(api);
+        }
+
         if (after.Availability == SurroundAvailability.Available && SameGrids(before, after))
         {
-            _log.Error("The driver reported success but Surround did not change");
+            _log.Error("The driver reported success but Surround did not change within {Seconds:0.0} s", SettleBudget.TotalSeconds);
             return new SurroundApplyResult
             {
                 Outcome = SurroundOutcome.Failed,
@@ -277,7 +299,8 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             };
         }
 
-        _log.Information("Surround changed: {Grids} grid(s) active", after.Grids.Count);
+        _log.Information("Surround changed after {Milliseconds:0} ms: {Grids} grid(s) active",
+            Stopwatch.GetElapsedTime(started).TotalMilliseconds, after.Grids.Count);
         return new SurroundApplyResult { Outcome = SurroundOutcome.Changed };
     }
 
@@ -482,4 +505,12 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
     /// <summary>Enough for every display the driver can drive, each as its own grid.</summary>
     private const int MaxGrids = NvApi.MaxDisplays;
+
+    /// <summary>Pause after waking the displays, before the grid is built on them. DisplayMagician waits a similar time.</summary>
+    private static readonly TimeSpan WakeSettle = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>How long a set call may take to show in the reported grids before it counts as "did nothing".</summary>
+    private static readonly TimeSpan SettleBudget = TimeSpan.FromSeconds(5);
+
+    private static readonly TimeSpan SettlePoll = TimeSpan.FromMilliseconds(250);
 }
