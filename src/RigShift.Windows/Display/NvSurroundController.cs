@@ -9,8 +9,9 @@ namespace RigShift.Windows.Display;
 
 /// <summary>
 /// NVIDIA Surround through NVAPI's Mosaic calls. Careful by design: the state is read first, a grid that already runs
-/// is left alone (rebuilding it costs seconds of black screen), the driver is never allowed to reload, and a change is
-/// checked afterwards - a driver bug on record answers "done" to a call that did nothing.
+/// is left alone (rebuilding it costs seconds of black screen), a driver reload is only allowed when nothing else builds
+/// the grid (<see cref="FlagSteps"/>), and a change is checked afterwards - a driver bug on record answers "done" to a
+/// call that did nothing.
 /// </summary>
 public sealed class NvSurroundController : ISurroundController, IDisposable
 {
@@ -186,7 +187,6 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
 
         MosaicGridTopoV2[] topo = [ToTopo(grid)];
-        Validate(api, topo);
         return Set(api, topo, "switch Surround on", before);
     }
 
@@ -198,7 +198,6 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
 
         MosaicGridTopoV2[] singles = [.. Singles(before.Grids).Select(ToTopo)];
-        Validate(api, singles);
         return Set(api, singles, "switch Surround off", before);
     }
 
@@ -211,7 +210,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     {
         MosaicGridTopoV2[] singles = [.. Singles([grid]).Select(ToTopo)];
         _log.Information("Waking the {Count} displays of the Surround grid before building it", singles.Length);
-        int status = api.SetDisplayGrids(singles);
+        int status = SetGrids(api, singles, validate: false);
         if (status != NvApi.Status.Ok)
         {
             _log.Warning("Waking the displays of the Surround grid failed, building it anyway: {Message}", api.Describe(status));
@@ -238,14 +237,59 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }));
 
     /// <summary>
+    /// Sets the grids, from the strictest flags to the loosest (<see cref="FlagSteps"/>). Only an answer that names the
+    /// flags as the obstacle moves on to the next step; any other failure is final.
+    /// </summary>
+    private int SetGrids(NvApi api, MosaicGridTopoV2[] grids, bool validate)
+    {
+        int status = NvApi.Status.Ok;
+        for (int step = 0; step < FlagSteps.Length; step++)
+        {
+            uint flags = FlagSteps[step];
+            if (validate)
+            {
+                Validate(api, grids, flags);
+            }
+
+            status = api.SetDisplayGrids(grids, flags);
+            if (status == NvApi.Status.Ok)
+            {
+                if (step > 0)
+                {
+                    _log.Information("The graphics driver accepted the grids with flags {Flags}", DescribeFlags(flags));
+                }
+
+                return status;
+            }
+
+            if (status is not (NvApi.Status.NoActiveSliTopology or NvApi.Status.DriverReloadRequired) || step == FlagSteps.Length - 1)
+            {
+                return status;
+            }
+
+            _log.Warning("The graphics driver refused the grids with flags {Flags}: {Message}; trying {Next}",
+                DescribeFlags(flags), api.Describe(status), DescribeFlags(FlagSteps[step + 1]));
+        }
+
+        return status;
+    }
+
+    private static string DescribeFlags(uint flags) => flags switch
+    {
+        NvApi.SetTopologyFlag.None => "none (driver reload allowed)",
+        NvApi.SetTopologyFlag.NoDriverReload => "no driver reload",
+        _ => "keep GPU topology, no driver reload",
+    };
+
+    /// <summary>
     /// Lets the driver check the grids and logs what it finds - for the log only. The check is known to reject grids that
     /// the set call then builds without complaint (DisplayMagician switched it off for that reason), so the set call's own
-    /// answer decides. Nothing is risked by that: the set call carries the flag that forbids a driver reload.
+    /// answer decides. It is asked with the same flags as the set call that follows.
     /// </summary>
-    private void Validate(NvApi api, MosaicGridTopoV2[] grids)
+    private void Validate(NvApi api, MosaicGridTopoV2[] grids, uint flags)
     {
         var verdicts = new MosaicDisplayTopoStatus[grids.Length];
-        int status = api.ValidateDisplayGrids(grids, verdicts);
+        int status = api.ValidateDisplayGrids(grids, verdicts, flags);
         if (status != NvApi.Status.Ok)
         {
             _log.Warning("The driver's check of the Surround grid failed, setting it anyway: {Message}", api.Describe(status));
@@ -263,7 +307,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
             if ((check.WarningFlags & MosaicDisplayTopoStatus.WarningDriverReloadRequired) != 0)
             {
-                _log.Warning("The driver's check says the Surround grid needs a driver reload, which this app never allows");
+                _log.Warning("The driver's check says the Surround grid needs a driver reload with flags {Flags}", DescribeFlags(flags));
             }
         }
     }
@@ -271,7 +315,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     private SurroundApplyResult Set(NvApi api, MosaicGridTopoV2[] grids, string what, SurroundState before)
     {
         _log.Information("Asking the graphics driver to {What} ({Grids} grid(s))", what, grids.Length);
-        int status = api.SetDisplayGrids(grids);
+        int status = SetGrids(api, grids, validate: true);
         if (status != NvApi.Status.Ok)
         {
             return Failure(api, "The graphics driver could not " + what, status);
@@ -502,6 +546,19 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         DisplayRotation.Rotate270 => 3,
         _ => 0,
     };
+
+    /// <summary>
+    /// The flags of each try at setting grids. Keeping the running GPU topology works while Surround runs; on a desktop
+    /// without Surround there is none to keep, and the driver refuses every new grid with NVAPI_NO_ACTIVE_SLI_TOPOLOGY
+    /// (RTX 2080, driver 610.88). The second step lets the driver choose the topology but still forbids a reload; the last
+    /// is what DisplayMagician always passes. It may reload the driver - still better than no Surround when it was asked for.
+    /// </summary>
+    private static readonly uint[] FlagSteps =
+    [
+        NvApi.SetTopologyFlag.CurrentGpuTopology | NvApi.SetTopologyFlag.NoDriverReload,
+        NvApi.SetTopologyFlag.NoDriverReload,
+        NvApi.SetTopologyFlag.None,
+    ];
 
     /// <summary>Enough for every display the driver can drive, each as its own grid.</summary>
     private const int MaxGrids = NvApi.MaxDisplays;

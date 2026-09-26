@@ -23,12 +23,6 @@ internal sealed unsafe class NvApi : IDisposable
     /// <summary>NVAPI_SHORT_STRING_MAX.</summary>
     private const int ShortStringMax = 64;
 
-    /// <summary>
-    /// Keep the GPU arrangement, and never let the driver reload itself: a forced reload takes down every running
-    /// GPU application, which on this machine means the game the user is about to play.
-    /// </summary>
-    private const uint SetTopologyFlags = SetTopologyFlag.CurrentGpuTopology | SetTopologyFlag.NoDriverReload;
-
     private readonly nint _library;
     private readonly delegate* unmanaged[Cdecl]<int, sbyte*, int> _getErrorMessage;
     private readonly delegate* unmanaged[Cdecl]<void*, uint*, int> _enumDisplayGrids;
@@ -192,7 +186,7 @@ internal sealed unsafe class NvApi : IDisposable
     /// Checks grids without changing anything, one verdict per grid in <paramref name="verdicts"/>. Error flags other
     /// than zero mean that grid is not possible.
     /// </summary>
-    internal int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts)
+    internal int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts, uint flags)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(verdicts.Length, grids.Length, nameof(verdicts));
         for (int i = 0; i < grids.Length; i++)
@@ -204,16 +198,16 @@ internal sealed unsafe class NvApi : IDisposable
         fixed (MosaicGridTopoV2* first = grids)
         fixed (MosaicDisplayTopoStatus* status = verdicts)
         {
-            return _validateDisplayGrids(SetTopologyFlags, first, status, (uint)grids.Length);
+            return _validateDisplayGrids(flags, first, status, (uint)grids.Length);
         }
     }
 
     /// <summary>Replaces the grids that use these displays. Singleton grids for every display remove Surround.</summary>
-    internal int SetDisplayGrids(Span<MosaicGridTopoV2> grids)
+    internal int SetDisplayGrids(Span<MosaicGridTopoV2> grids, uint flags)
     {
         fixed (MosaicGridTopoV2* first = grids)
         {
-            return _setDisplayGrids(first, (uint)grids.Length, SetTopologyFlags);
+            return _setDisplayGrids(first, (uint)grids.Length, flags);
         }
     }
 
@@ -266,14 +260,21 @@ internal sealed unsafe class NvApi : IDisposable
         internal const int NoImplementation = -3;
         internal const int EndEnumeration = -7;
         internal const int IncompatibleStructVersion = -9;
+        internal const int NoActiveSliTopology = -113;
         internal const int DataNotFound = -121;
         internal const int ModeChangeFailed = -149;
         internal const int DriverReloadRequired = -157;
     }
 
-    private static class SetTopologyFlag
+    /// <summary>NV_MOSAIC_SETDISPLAYTOPO_FLAG_*.</summary>
+    internal static class SetTopologyFlag
     {
+        internal const uint None = 0;
+
+        /// <summary>Keep the GPU topology that runs now. Without Surround there is none, and the driver answers -113.</summary>
         internal const uint CurrentGpuTopology = 1;
+
+        /// <summary>Never reload the driver: a reload takes down every running GPU application.</summary>
         internal const uint NoDriverReload = 2;
     }
 }
