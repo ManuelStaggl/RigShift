@@ -31,6 +31,13 @@ public sealed class TopologyPlanner
         var matchedBy = new MatchedBy[assignments.Count];
         var claimed = new HashSet<AttachedDisplay>(ReferenceEqualityComparer.Instance);
 
+        // The wide display of a Surround grid carries the EDID of one of its monitors. While the grid is down those monitors
+        // are listed on their own, so the fallback passes would take one of them for the grid – or call it ambiguous and
+        // block the very switch that builds the grid (issue #9). It is only ever found as itself: by path or by its name.
+        bool[] surround = [.. assignments.Select(a => IsSurroundDisplay(profile, a))];
+        bool Fits(int index, AttachedDisplay display) =>
+            !surround[index] || SameName(display.Identity.FriendlyName, assignments[index].Identity.FriendlyName);
+
         void Match(int index, AttachedDisplay display, MatchedBy how)
         {
             matches[index] = display;
@@ -70,7 +77,7 @@ public sealed class TopologyPlanner
                 continue;
             }
 
-            if (Only(PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameSerial(d.Identity, wanted)))) is { } hit)
+            if (Only(PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameSerial(d.Identity, wanted) && Fits(i, d)))) is { } hit)
             {
                 Match(i, hit, MatchedBy.Serial);
             }
@@ -85,7 +92,7 @@ public sealed class TopologyPlanner
                 continue;
             }
 
-            List<AttachedDisplay> candidates = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameEdid(d.Identity, wanted)));
+            List<AttachedDisplay> candidates = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameEdid(d.Identity, wanted) && Fits(i, d)));
 
             // The connector is only worth something when the graphics card itself got a new identity (another card, slot or
             // BIOS update): then every path changed, but the card numbers its ports as before.
@@ -183,7 +190,10 @@ public sealed class TopologyPlanner
             if (match is null)
             {
                 missing.Add(new MissingDisplay(
-                    assignment, IsAmbiguous(assignments, matches, i, snapshot, claimed) ? MissingReason.Ambiguous : MissingReason.NotAttached));
+                    assignment,
+                    surround[i] ? MissingReason.AwaitsSurround
+                    : IsAmbiguous(assignments, matches, surround, i, snapshot, claimed) ? MissingReason.Ambiguous
+                    : MissingReason.NotAttached));
             }
             else if (!match.IsAvailable)
             {
@@ -268,7 +278,8 @@ public sealed class TopologyPlanner
     /// EDID model, or the same name where the EDID is unknown.
     /// </summary>
     private static bool IsAmbiguous(
-        IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, int index, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
+        IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, bool[] surround, int index, DisplaySnapshot snapshot,
+        HashSet<AttachedDisplay> claimed)
     {
         DisplayIdentity wanted = assignments[index].Identity;
         Func<DisplayIdentity, bool>? identical = HasEdid(wanted) ? d => SameEdid(d, wanted)
@@ -279,7 +290,7 @@ public sealed class TopologyPlanner
             return false;
         }
 
-        int missing = Enumerable.Range(0, assignments.Count).Count(j => matches[j] is null && identical(assignments[j].Identity));
+        int missing = Enumerable.Range(0, assignments.Count).Count(j => matches[j] is null && !surround[j] && identical(assignments[j].Identity));
         int attached = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && identical(d.Identity))).Count;
         return attached > 0 && attached >= missing;
     }
@@ -347,6 +358,14 @@ public sealed class TopologyPlanner
 
     private static bool SameName(string a, string b) =>
         !string.IsNullOrWhiteSpace(a) && string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether <paramref name="assignment"/> is the wide display of the grid the profile switches on: at least as many
+    /// pixels as all monitors of the grid together. Bezel correction only adds pixels, and rotation does not change the area.
+    /// </summary>
+    private static bool IsSurroundDisplay(Profile profile, DisplayAssignment assignment) =>
+        profile.Surround is { Enabled: true, Grid: { Displays.Count: > 1 } grid }
+        && (long)assignment.Width * assignment.Height >= (long)grid.Width * grid.Height * grid.Displays.Count;
 
     private static bool HasEdid(DisplayIdentity identity) => identity.EdidManufacturerId != 0 || identity.EdidProductCodeId != 0;
 

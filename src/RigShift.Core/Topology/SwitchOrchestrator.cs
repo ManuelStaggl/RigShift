@@ -240,7 +240,7 @@ public sealed class SwitchOrchestrator
         {
             DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
             bool complete = !_planner.Plan(profile, snapshot).Missing
-                .Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached);
+                .Any(m => !m.Assignment.IsOptional && m.Reason is MissingReason.NotAttached or MissingReason.AwaitsSurround);
             if (complete || _time.GetUtcNow() >= deadline)
             {
                 _log.Information("Displays after the Surround change {State} after {Milliseconds:0} ms",

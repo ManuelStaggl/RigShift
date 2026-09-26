@@ -149,7 +149,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return;
         }
 
-        int marked = editor.MarkOptional(plan.Missing.Where(m => !m.Assignment.IsOptional).Select(m => m.Assignment.Identity.TargetDevicePath));
+        int marked = editor.MarkOptional(plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason != MissingReason.AwaitsSurround).Select(m => m.Assignment.Identity.TargetDevicePath));
         Log.Information("Marked {Count} missing display(s) of {Profile} as optional", marked, item.Name);
     }
 
@@ -240,7 +240,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         }
 
         string text = SwitchMessages.DescribePlan(result.Plan).Replace(Environment.NewLine, " ", StringComparison.Ordinal);
-        ShowDetail(Loc.Format("Status_Tested", text), result.Plan.IsBlocked ? InfoKind.Error : result.Plan.Warnings.Count > 0 ? InfoKind.Warn : InfoKind.Info);
+        ShowDetail(Loc.Format("Status_Tested", text), result.Plan.BlocksSwitch ? InfoKind.Error : result.Plan.Warnings.Count > 0 ? InfoKind.Warn : InfoKind.Info);
         _plans[item.Profile.Id] = result.Plan;
         Editor?.ShowPlan(result.Plan);
         UpdateStatuses();
@@ -433,7 +433,9 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
         // A display that is off does not block: the switch asks for it and waits (K-06). Twin displays do (K-03).
         _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan);
-        MissingDisplay[] missing = plan is { IsBlocked: true } ? plan.Missing.Where(m => !m.Assignment.IsOptional).ToArray() : [];
+        MissingDisplay[] missing = plan is { BlocksSwitch: true }
+            ? plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason != MissingReason.AwaitsSurround).ToArray()
+            : [];
         (StatusKind readyKind, _, string? tip) = plan is null ? (StatusKind.Neutral, string.Empty, null) : ProfileReadiness.Of(plan);
         BlockedMessage = missing.Length == 0 || item.IsActive ? null : tip;
         BlockedKind = readyKind == StatusKind.Error ? InfoKind.Error : InfoKind.Warn;

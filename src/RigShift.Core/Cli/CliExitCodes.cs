@@ -30,7 +30,7 @@ public static class CliExitCodes
         return result.Outcome switch
         {
             SwitchOutcome.Applied or SwitchOutcome.AppliedPartially => Applied,
-            SwitchOutcome.DryRun => result.Plan.IsBlocked ? Blocked : Applied,
+            SwitchOutcome.DryRun => result.Plan.BlocksSwitch ? Blocked : Applied,
             SwitchOutcome.Blocked => Blocked,
             SwitchOutcome.RolledBack => RolledBack,
             _ => Failed,

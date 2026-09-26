@@ -28,6 +28,12 @@ public sealed record TopologyPlan
     /// </summary>
     public bool IsAmbiguous => Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous);
 
+    /// <summary>
+    /// What a check before the switch reports: a required display is missing that the switch cannot bring itself. The
+    /// wide display of a Surround grid the profile builds does not count – it only exists once the switch built it.
+    /// </summary>
+    public bool BlocksSwitch => Missing.Any(m => !m.Assignment.IsOptional && m.Reason != MissingReason.AwaitsSurround);
+
     /// <summary>True if every missing display is optional and may show up later (spacedesk, sleeping HDMI monitor).</summary>
     public bool ShouldRetryLater => Missing.Count > 0 && !IsBlocked;
 }
@@ -46,6 +52,12 @@ public enum MissingReason
     /// port and nothing else tells them apart (v4 finding K-03). Switching a display on would not help.
     /// </summary>
     Ambiguous,
+
+    /// <summary>
+    /// The wide display of the Surround grid the profile switches on, while the grid does not run: it appears once the
+    /// switch built the grid. It carries the EDID of one of its monitors, so it must never be taken for one of them.
+    /// </summary>
+    AwaitsSurround,
 }
 
 public sealed record PlanWarning(PlanWarningKind Kind, string Message);

@@ -222,6 +222,30 @@ public sealed class SwitchOrchestratorSurroundTests
         recorded.Previous.Surround.Grid.ShouldBe(TripleScreen);
     }
 
+    /// <summary>
+    /// Issue #9: with the grid down its monitors are listed on their own and share the grid display's EDID. The switch
+    /// builds the grid and waits for its display instead of calling it ambiguous.
+    /// </summary>
+    [Fact]
+    public async Task Switch_GridDisplayAppearsAfterBuildingTheGrid_Applies()
+    {
+        DisplayIdentity grid = Identity(Gpu, @"\\?\DISPLAY#DEL0003#GRID&1", 0x10AC, 0x0003, "NV Surround");
+        DisplaySnapshot down = Snapshot(
+            [Attached(Desk4K), .. Enumerable.Range(1, 3).Select(i => Attached(DeskLeft with { TargetDevicePath = $@"\\?\DISPLAY#DEL0003#MEMBER&{i}" }))]);
+        DisplaySnapshot up = Snapshot(Attached(Desk4K), Attached(grid));
+        var display = new FakeDisplayConfigurator([down, down, up]);
+        Profile triple = Profile("Triple", [Mode(grid, 5760, 1080, 60, x: -5760), DeskModes[0]]) with
+        {
+            Surround = new SurroundSetting { Enabled = true, Grid = TripleScreen },
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(triple, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Surround.ShouldBe(SurroundOutcome.Changed);
+        result.Plan.Missing.ShouldBeEmpty();
+    }
+
     private static SurroundDisplay Display(uint id) => new() { DisplayId = id };
 
     private static Profile WithSurround(bool on) => Rig() with

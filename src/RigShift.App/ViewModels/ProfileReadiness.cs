@@ -16,7 +16,9 @@ internal static class ProfileReadiness
     public static (StatusKind Kind, string Text, string? Tip) Of(TopologyPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        MissingDisplay[] required = [.. plan.Missing.Where(m => !m.Assignment.IsOptional)];
+        // The display a Surround grid becomes is there once the switch built the grid (issue #9): nothing to report.
+        MissingDisplay[] missing = [.. plan.Missing.Where(m => m.Reason != MissingReason.AwaitsSurround)];
+        MissingDisplay[] required = [.. missing.Where(m => !m.Assignment.IsOptional)];
         MissingDisplay[] ambiguous = [.. required.Where(m => m.Reason == MissingReason.Ambiguous)];
         if (ambiguous.Length > 0)
         {
@@ -29,8 +31,8 @@ internal static class ProfileReadiness
             return (StatusKind.Warn, text, Loc.Format("Detail_BlockedNames", Names(required)));
         }
 
-        return plan.Missing.Count > 0
-            ? (StatusKind.Ok, Loc.Format("List_OptionalMissing", Names(plan.Missing)), null)
+        return missing.Length > 0
+            ? (StatusKind.Ok, Loc.Format("List_OptionalMissing", Names(missing)), null)
             : (StatusKind.Ok, Loc.Instance["List_Ready"], null);
     }
 
