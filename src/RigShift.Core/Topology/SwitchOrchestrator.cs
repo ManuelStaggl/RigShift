@@ -520,12 +520,13 @@ public sealed class SwitchOrchestrator
         }
 
         RestoreKeepAwake(wayBack.KeepAwake);
+        string? surroundFailure = null;
         try
         {
             await _duckingSwitcher.RestoreAsync(wayBack.Ducking, rollbackToken);
 
             // Surround comes back first: while the wrong one runs, the displays of the old arrangement do not exist.
-            await _surroundSwitcher.RestoreAsync(wayBack.Surround, rollbackToken);
+            surroundFailure = await _surroundSwitcher.RestoreAsync(wayBack.Surround, rollbackToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -533,7 +534,7 @@ public sealed class SwitchOrchestrator
             _log.Error(ex, "Restoring ducking or Surround threw, the displays are rolled back regardless");
         }
 
-        SwitchResult rolledBack = await RollBackDisplaysAsync(wayBack, applied, answer, started, rollbackToken);
+        SwitchResult rolledBack = await RollBackDisplaysAsync(wayBack, applied, answer, surroundFailure, started, rollbackToken);
         if (cancelled)
         {
             _log.Warning("Switch to {Profile} cancelled, rolled back ({Outcome})", profile.Name, rolledBack.Outcome);
@@ -554,7 +555,7 @@ public sealed class SwitchOrchestrator
 
     /// <summary>The displays and the sound of a rollback, and the result it ends with.</summary>
     private async Task<SwitchResult> RollBackDisplaysAsync(
-        WayBack wayBack, ApplyOutcome applied, Answer answer, long started, CancellationToken cancellationToken)
+        WayBack wayBack, ApplyOutcome applied, Answer answer, string? surroundFailure, long started, CancellationToken cancellationToken)
     {
         ApplyOutcome rolledBack;
         try
@@ -598,8 +599,11 @@ public sealed class SwitchOrchestrator
             Plan = answer.Modes.Plan,
             Attempts = applied.Attempts + rolledBack.Attempts,
             LastNativeError = applied.LastNativeError,
-            Message = string.Create(CultureInfo.InvariantCulture, $"Not confirmed ({answer.Result}); previous topology restored."),
-            Note = SwitchNote.RestoredPrevious,
+            Message = surroundFailure is null
+                ? string.Create(CultureInfo.InvariantCulture, $"Not confirmed ({answer.Result}); previous topology restored.")
+                : string.Create(CultureInfo.InvariantCulture,
+                    $"Not confirmed ({answer.Result}); displays restored, but Surround could not be put back: {surroundFailure}"),
+            Note = surroundFailure is null ? SwitchNote.RestoredPrevious : SwitchNote.SurroundNotRestored,
             Audio = answer.Audio,
         }, started);
     }

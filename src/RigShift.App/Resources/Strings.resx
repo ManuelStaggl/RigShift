@@ -54,6 +54,7 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop icons could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>
+  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>The change was not confirmed. The displays are back, but Surround could not be switched on again – switch to a profile with Surround or use the NVIDIA Control Panel.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>Can't switch to {0}</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up, then switch again.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout” in the profile.</value></data>

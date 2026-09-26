@@ -76,22 +76,29 @@ internal sealed class SurroundSwitcher
         return result;
     }
 
-    /// <summary>Puts a captured state back. Failures are logged, never thrown: a rollback has nothing better to try.</summary>
-    internal async Task RestoreAsync(SurroundSetting? captured, CancellationToken cancellationToken)
+    /// <summary>
+    /// Puts a captured state back. Failures are logged, never thrown: a rollback has nothing better to try. Returns the
+    /// driver's reason when Surround could not be put back, so the result does not claim a state that is not there.
+    /// </summary>
+    internal async Task<string?> RestoreAsync(SurroundSetting? captured, CancellationToken cancellationToken)
     {
         if (captured is null)
         {
-            return;
+            return null;
         }
 
         SurroundApplyResult result = await _surround.ApplyAsync(captured, cancellationToken);
         if (result.Outcome == SurroundOutcome.Failed)
         {
             _log.Error("Surround could not be put back: {Message}", result.Message);
+            return result.Message ?? "Surround could not be put back.";
         }
-        else if (result.Outcome == SurroundOutcome.Changed)
+
+        if (result.Outcome == SurroundOutcome.Changed)
         {
             _log.Information("Surround put back to {State}", captured.Enabled ? "on" : "off");
         }
+
+        return null;
     }
 }

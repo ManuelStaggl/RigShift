@@ -185,6 +185,29 @@ public sealed class SwitchOrchestratorSurroundTests
         _surround.ActiveGrid.ShouldBe(TripleScreen);
     }
 
+    /// <summary>A rollback that could not bring Surround back must not claim the previous state is restored (issue #7).</summary>
+    [Fact]
+    public async Task Switch_NotConfirmedAndSurroundStaysOff_SaysSo()
+    {
+        _surround.ActiveGrid = TripleScreen;
+        _confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                _surround.NextFailure = new SurroundApplyResult { Outcome = SurroundOutcome.Failed, Message = "driver said no" };
+                return ConfirmationResult.Rejected;
+            });
+        var display = new FakeDisplayConfigurator([DeskActive(), DeskActive(), DeskActive()]);
+
+        SwitchResult result = await Create(display).SwitchAsync(
+            WithSurround(on: false) with { SwitchWithoutAsking = false },
+            SwitchRequest.Default with { DefaultConfirmTimeoutSeconds = 10 },
+            Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        result.Note.ShouldBe(SwitchNote.SurroundNotRestored);
+        result.Message.ShouldNotBeNull().ShouldContain("driver said no");
+    }
+
     /// <summary>The record for the next start carries the Surround state, so a crash can be undone completely.</summary>
     [Fact]
     public async Task Switch_WithSurround_RecordsTheStateToReturnTo()
