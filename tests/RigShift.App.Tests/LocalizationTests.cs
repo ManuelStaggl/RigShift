@@ -41,6 +41,33 @@ public sealed class LocalizationTests
         }
     }
 
+    /// <summary>The base context has no thread to go back to; the pool would run two handlers of one object at once.</summary>
+    [Fact]
+    public void LanguageChange_ListenerOnAThreadWithoutItsOwnContext_RunsOnTheChangingThread()
+    {
+        string before = Loc.Instance.UICulture.Name;
+        int calledOn = 0;
+        PropertyChangedEventHandler handler = (_, _) => calledOn = Environment.CurrentManagedThreadId;
+        var subscriber = new Thread(() =>
+        {
+            SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+            Loc.Instance.PropertyChanged += handler;
+        });
+        subscriber.Start();
+        subscriber.Join();
+        try
+        {
+            Loc.Instance.SetLanguage(before == "de" ? "en" : "de");
+
+            calledOn.ShouldBe(Environment.CurrentManagedThreadId);
+        }
+        finally
+        {
+            Loc.Instance.PropertyChanged -= handler;
+            Loc.Instance.SetLanguage(before);
+        }
+    }
+
     [Fact]
     public void SameLanguageAgain_ChangesNothing()
     {
