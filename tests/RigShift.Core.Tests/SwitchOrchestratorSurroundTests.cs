@@ -134,6 +134,26 @@ public sealed class SwitchOrchestratorSurroundTests
         _journal.Entry.ShouldBeNull();
     }
 
+    /// <summary>
+    /// A failed Surround step can still have changed something (woken displays, a driver that acted and then said
+    /// "failed"), so the state from before the switch is applied again.
+    /// </summary>
+    [Fact]
+    public async Task Switch_SurroundFails_PutsTheStateFromBeforeBack()
+    {
+        _surround.ActiveGrid = TripleScreen;
+        _surround.NextFailure = new SurroundApplyResult { Outcome = SurroundOutcome.Failed, Message = "fake" };
+        var display = new FakeDisplayConfigurator(DeskActive());
+
+        SwitchResult result = await Create(display).SwitchAsync(WithSurround(on: false), SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Blocked);
+        _surround.Applied.Count.ShouldBe(2);
+        SurroundSetting restored = _surround.Applied[1];
+        restored.Enabled.ShouldBeTrue();
+        restored.Grid.ShouldBe(TripleScreen);
+    }
+
     /// <summary>No NVIDIA driver is not a failure - the rest of the profile still applies.</summary>
     [Fact]
     public async Task Switch_WithoutNvidiaDriver_GoesOnWithoutSurround()

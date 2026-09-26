@@ -129,7 +129,10 @@ public sealed class SwitchOrchestrator
             surround = await _surroundSwitcher.SwitchAsync(profile, cancellationToken);
             if (surround.Outcome == SurroundOutcome.Failed)
             {
-                // Nothing else was touched yet, so this is a block, not a half-finished switch.
+                // Nothing else was touched yet, so this is a block, not a half-finished switch. Surround itself may have
+                // changed halfway, though - the displays were woken, or the driver answered "failed" after acting - so it
+                // goes back to what it was; a state that did not change costs one read.
+                await _surroundSwitcher.RestoreAsync(wayBack.Surround, cancellationToken);
                 return await Finish(
                     new SwitchResult
                     {

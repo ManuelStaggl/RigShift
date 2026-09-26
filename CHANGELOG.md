@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **NVIDIA Surround on/off** (first report from a Surround rig): the driver's pre-check no longer blocks a grid – it is
+  known to reject grids the driver then builds fine, so it only goes to the log. Before building a grid, RigShift wakes
+  its displays one by one, so monitors the previous profile had switched off join it. The check that the driver really
+  changed something now gives it up to five seconds, and a failed Surround step puts the previous Surround state back.
+
 ## [4.0.0] - 2026-09-25
 
 RigShift went from 1.0 to 3.6 in its first week because every fix shipped the same day. 4.0 bundles the work since
