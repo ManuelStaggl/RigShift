@@ -27,8 +27,9 @@ internal static class BrandWindow
     }
 
     /// <summary>
-    /// Once shown, a window that sticks out of its monitor is pulled back in – with mixed DPI, WPF can open it larger
-    /// than a side monitor, with the caption buttons out of reach.
+    /// Once shown, a window that opened with the wrong monitor's scaling goes to the primary monitor, and one that sticks
+    /// out of its monitor is pulled back in – with mixed DPI, WPF can open it larger than a side monitor, with the caption
+    /// buttons out of reach.
     /// </summary>
     private static void KeepOnScreen(object? sender, EventArgs e)
     {
@@ -41,9 +42,14 @@ internal static class BrandWindow
 
         double width = double.IsNaN(window.Width) ? window.ActualWidth : window.Width;
         double height = double.IsNaN(window.Height) ? window.ActualHeight : window.Height;
-        if (NativeWindow.FitIntoMonitor(new WindowInteropHelper(window).Handle, width, height) is { } bounds)
+        if (NativeWindow.FitIntoMonitor(new WindowInteropHelper(window).Handle, width, height) is { } fit)
         {
-            Log.Information("{Window} opened outside its monitor's work area, moved to {Bounds}", window.GetType().Name, bounds);
+            Log.Information(
+                fit.ToPrimary
+                    ? "{Window} opened on a monitor with other scaling than its own, moved to the primary monitor at {Bounds}"
+                    : "{Window} opened outside its monitor's work area, moved to {Bounds}",
+                window.GetType().Name,
+                fit.Bounds);
         }
     }
 }
