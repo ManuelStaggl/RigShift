@@ -73,8 +73,7 @@ public sealed class CcdPathBuilderTests
 
         (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdPathBuilder.Build(
             [(left, Assignment(1920, 1080, 60)), (right, Assignment(1920, 1080, 60)), (beside, Assignment(1920, 1080, 60, x: 1920))],
-            databaseModes: false,
-            allowClone: true);
+            databaseModes: false);
 
         paths[1].sourceInfo.id.ShouldBe(paths[0].sourceInfo.id);
         paths[1].sourceInfo.modeInfoIdx.ShouldBe(paths[0].sourceInfo.modeInfoIdx);
@@ -82,21 +81,38 @@ public sealed class CcdPathBuilderTests
         modes.Length.ShouldBe(2);
     }
 
-    /// <summary>A profile never duplicates by accident: two displays left at the same spot in the editor stay two desktops.</summary>
+    /// <summary>
+    /// A profile saved while Windows mirrored the center screen to the desk monitor mirrors again (Reddit, 2026-10-01): the
+    /// two keep their own refresh rate, the inactive desk monitor joins the center screen's source.
+    /// </summary>
     [Fact]
-    public void Build_SameRectangleWithoutAllowClone_KeepsDistinctSources()
+    public void Build_ProfileWithMirroredDisplays_SharesTheSource()
+    {
+        (DISPLAYCONFIG_PATH_INFO[] paths, DISPLAYCONFIG_MODE_INFO[] modes) = CcdPathBuilder.Build(
+            [(Target(1, activeSource: 0, sources: [0, 1]), Assignment(2560, 1440, 144)), (Target(2, null, [0, 1]), Assignment(2560, 1440, 60))],
+            databaseModes: false);
+
+        paths[1].sourceInfo.id.ShouldBe(0u);
+        modes.Length.ShouldBe(1);
+        paths[0].targetInfo.refreshRate.Numerator.ShouldBe(144_000u);
+        paths[1].targetInfo.refreshRate.Numerator.ShouldBe(60_000u);
+    }
+
+    /// <summary>A target that cannot show the shared source gets its own, rather than no picture at all.</summary>
+    [Fact]
+    public void Build_MirrorTargetWithoutTheSharedSource_TakesAFreeOne()
     {
         (DISPLAYCONFIG_PATH_INFO[] paths, _) = CcdPathBuilder.Build(
-            [(Target(1, null, [0, 1]), Assignment(1920, 1080, 60)), (Target(2, null, [0, 1]), Assignment(1920, 1080, 60))], databaseModes: false);
+            [(Target(1, 0, [0]), Assignment(1920, 1080, 60)), (Target(2, null, [1]), Assignment(1920, 1080, 60))], databaseModes: false);
 
-        paths[1].sourceInfo.id.ShouldNotBe(paths[0].sourceInfo.id);
+        paths[1].sourceInfo.id.ShouldBe(1u);
     }
 
     [Fact]
     public void Build_NoFreeSource_Throws()
     {
         Should.Throw<InvalidOperationException>(() => CcdPathBuilder.Build(
-            [(Target(1, null, [0]), Assignment(1920, 1080, 60)), (Target(2, null, [0]), Assignment(1920, 1080, 60))], databaseModes: false));
+            [(Target(1, null, [0]), Assignment(1920, 1080, 60)), (Target(2, null, [0]), Assignment(1920, 1080, 60, x: 1920))], databaseModes: false));
     }
 
     private static CcdTargetHandle Target(uint id, uint? activeSource, uint[] sources) =>

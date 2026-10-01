@@ -11,11 +11,11 @@ namespace RigShift.Windows.Display;
 internal static class CcdPathBuilder
 {
     public static (DISPLAYCONFIG_PATH_INFO[] Paths, DISPLAYCONFIG_MODE_INFO[] Modes) Build(
-        IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays, bool databaseModes, bool allowClone = false)
+        IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays, bool databaseModes)
     {
         ArgumentNullException.ThrowIfNull(displays);
 
-        CcdSource[] sources = AssignSources(displays, allowClone);
+        CcdSource[] sources = AssignSources(displays);
         var sourceModes = new Dictionary<CcdSource, uint>();
         var paths = new DISPLAYCONFIG_PATH_INFO[displays.Count];
         var modes = new List<DISPLAYCONFIG_MODE_INFO>();
@@ -82,14 +82,15 @@ internal static class CcdPathBuilder
 
     /// <summary>
     /// Every active path needs its own source, otherwise Windows clones the desktop. Targets keep their current
-    /// source where possible; the rest take the lowest free one they support. With <paramref name="allowClone"/> a
-    /// display on exactly the rectangle of an earlier one takes that one's source instead – that is what duplicating is.
+    /// source where possible; the rest take the lowest free one they support. A display on exactly the rectangle of an
+    /// earlier one takes that one's source instead – that is what "Duplicate these displays" is, and the only way Windows
+    /// records two displays on the same spot, so a profile saved from it mirrors again.
     /// </summary>
-    private static CcdSource[] AssignSources(IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays, bool allowClone)
+    private static CcdSource[] AssignSources(IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays)
     {
         var chosen = new CcdSource?[displays.Count];
         var used = new HashSet<CcdSource>();
-        int[] cloneOf = [.. Enumerable.Range(0, displays.Count).Select(i => allowClone ? FirstOnSameRectangle(displays, i) : i)];
+        int[] cloneOf = [.. Enumerable.Range(0, displays.Count).Select(i => FirstOnSameRectangle(displays, i))];
 
         for (int i = 0; i < displays.Count; i++)
         {

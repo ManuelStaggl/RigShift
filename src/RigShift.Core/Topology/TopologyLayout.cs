@@ -97,9 +97,27 @@ public static class TopologyLayout
             double y = offsetY + ((display.Y - minY) * scale) + gap;
             double w = Math.Max(1, (display.Width * scale) - (2 * gap));
             double h = Math.Max(1, (display.Height * scale) - (2 * gap));
+
+            // Mirrored displays share one rectangle: side by side in it, so each stays visible and clickable.
+            List<TopologyDisplay> mirrors = visible.Where(d => IsMirror(d, display)).ToList();
+            if (mirrors.Count > 1)
+            {
+                double slice = (w - ((mirrors.Count - 1) * 2 * gap)) / mirrors.Count;
+                x += mirrors.IndexOf(display) * (slice + (2 * gap));
+                w = Math.Max(1, slice);
+            }
+
             rects.Add(new TopologyRect(display, x, y, w, h, w >= minLabelWidth && h >= minLabelHeight));
         }
 
         return rects;
+    }
+
+    /// <summary>Same position and size: Windows shows one picture on both ("Duplicate these displays").</summary>
+    public static bool IsMirror(TopologyDisplay a, TopologyDisplay b)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        return a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height;
     }
 }

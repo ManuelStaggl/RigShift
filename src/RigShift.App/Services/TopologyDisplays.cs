@@ -11,7 +11,22 @@ public static class TopologyDisplays
     public static IReadOnlyList<TopologyDisplay> From(IEnumerable<DisplayAssignment> displays, IReadOnlySet<string>? missing = null)
     {
         ArgumentNullException.ThrowIfNull(displays);
-        return displays.Select(d => From(d, missing?.Contains(d.Identity.TargetDevicePath) == true)).ToList();
+        return MarkMirrors(displays.Select(d => From(d, missing?.Contains(d.Identity.TargetDevicePath) == true)).ToList());
+    }
+
+    /// <summary>Mirrored displays show "Mirrored" as their mode line – the picture draws them side by side in one spot.</summary>
+    public static IReadOnlyList<TopologyDisplay> MarkMirrors(IReadOnlyList<TopologyDisplay> displays)
+    {
+        ArgumentNullException.ThrowIfNull(displays);
+        return displays
+            .Select(d => displays.Where(o => !ReferenceEquals(o, d) && TopologyLayout.IsMirror(o, d)).Select(o => o.Name).ToList() is { Count: > 0 } partners
+                ? d with
+                {
+                    Mode = Loc.Instance["Displays_Mirrored"],
+                    Details = d.Details + Environment.NewLine + Loc.Format("Displays_MirroredWith", string.Join(", ", partners)),
+                }
+                : d)
+            .ToList();
     }
 
     public static TopologyDisplay From(DisplayAssignment display, bool isMissing = false)

@@ -217,7 +217,7 @@ public sealed partial class OverviewViewModel : ObservableObject
     /// <summary>The active displays as the picture draws them, with the user's names.</summary>
     private void UpdateTopology()
     {
-        LiveTopology = Displays
+        LiveTopology = Services.TopologyDisplays.MarkMirrors(Displays
             .Where(d => d.Mode is not null)
             .Select(d => new TopologyDisplay
             {
@@ -232,7 +232,7 @@ public sealed partial class OverviewViewModel : ObservableObject
                 Details = d.ModelName + " · " + d.ModeText,
                 IsPrimary = d.Mode.IsPrimary,
             })
-            .ToList();
+            .ToList());
     }
 
     private void UpdateActive()

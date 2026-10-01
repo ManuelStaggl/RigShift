@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-10-01
+
+### Added
+
+- **Mirrored displays in profiles.** Set up "Duplicate these displays" in Windows (e.g. the center screen of the
+  triples mirrored to the desk monitor), save the profile, and RigShift mirrors them again on every switch. Each
+  display keeps its own refresh rate; the picture shows mirrored displays side by side in one spot, marked "Mirrored".
+  With NVIDIA Surround, Windows can only mirror the whole Surround display, not one monitor of it.
+
 ## [4.0.3] - 2026-09-26
 
 ### Fixed
