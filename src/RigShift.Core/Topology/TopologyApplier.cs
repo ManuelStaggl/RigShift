@@ -46,9 +46,8 @@ internal sealed class TopologyApplier
     /// within the time budget (rule 4). Every retry uses a fresh snapshot because LUIDs may change (rule 2). HDR follows
     /// the arrangement that stayed.
     /// </summary>
-    /// <param name="restoring">The previous arrangement comes back: displays Windows had duplicated are duplicated again.</param>
     public async Task<ApplyOutcome> ApplyAsync(
-        Profile profile, TopologyPlan plan, DateTimeOffset deadline, CancellationToken cancellationToken, bool restoring = false)
+        Profile profile, TopologyPlan plan, DateTimeOffset deadline, CancellationToken cancellationToken)
     {
         int attempts = 0;
         int? lastError = null;
@@ -73,7 +72,7 @@ internal sealed class TopologyApplier
                 try
                 {
                     // The time limit is the driver guard's (K-07): it also makes every later call fail at once.
-                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes, AllowClone = restoring }, cancellationToken);
+                    code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken);
                 }
                 catch (DisplayDriverHungException)
                 {
@@ -246,7 +245,7 @@ internal sealed class TopologyApplier
             return ApplyOutcome.Failure(plan, 0, null, "None of the previously active displays is available.");
         }
 
-        return await ApplyAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken, restoring: true);
+        return await ApplyAsync(previous, plan, _time.GetUtcNow() + _options.TargetWaitBudget, cancellationToken);
     }
 
     /// <summary>The topology of a snapshot as a throwaway profile, every display optional.</summary>

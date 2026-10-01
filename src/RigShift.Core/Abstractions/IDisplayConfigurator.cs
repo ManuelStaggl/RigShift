@@ -15,7 +15,8 @@ public interface IDisplayConfigurator
 
     /// <summary>
     /// Applies the plan in ONE atomic SetDisplayConfig call. Never enables or disables displays one by one –
-    /// that is exactly what fails against NVIDIA's display-head limit.
+    /// that is exactly what fails against NVIDIA's display-head limit. Displays with the same position and size are
+    /// duplicated ("Duplicate these displays") instead of getting a desktop each.
     /// </summary>
     /// <returns>0 on success, otherwise the native error code.</returns>
     Task<int> ApplyAsync(TopologyPlan plan, ApplyOptions options, CancellationToken cancellationToken);
@@ -38,11 +39,4 @@ public sealed record ApplyOptions
 
     /// <summary>Persist the resulting topology to the OS display database (SDC_SAVE_TO_DATABASE).</summary>
     public bool SaveToDatabase { get; init; } = true;
-
-    /// <summary>
-    /// Displays with the same position and size are duplicated ("Duplicate these displays") instead of getting a desktop
-    /// each. Only for restoring what Windows showed before: in a profile, two displays on the same spot are a mistake in
-    /// the editor, not a wish to duplicate.
-    /// </summary>
-    public bool AllowClone { get; init; }
 }

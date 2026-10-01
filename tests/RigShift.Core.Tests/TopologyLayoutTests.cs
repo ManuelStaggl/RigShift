@@ -56,6 +56,21 @@ public sealed class TopologyLayoutTests
         rects.Min(r => r.Y).ShouldBeGreaterThanOrEqualTo(0);
     }
 
+    /// <summary>Mirrored displays share a rectangle; the picture splits it so neither hides the other.</summary>
+    [Fact]
+    public void Arrange_MirroredDisplays_SplitTheirRectangle()
+    {
+        IReadOnlyList<TopologyRect> rects = TopologyLayout.Arrange(
+            [Display("center", 0, 0, 1000, 500), Display("desk", 0, 0, 1000, 500), Display("right", 1000, 0, 1000, 500)], 200, 50, gap: 0);
+
+        rects[0].X.ShouldBe(0);
+        rects[0].Width.ShouldBe(50);
+        rects[1].X.ShouldBe(50);
+        rects[1].Width.ShouldBe(50);
+        rects[2].X.ShouldBe(100);
+        rects[2].Width.ShouldBe(100);
+    }
+
     [Fact]
     public void Arrange_Gap_ShrinksEveryRectangleOnAllSides()
     {

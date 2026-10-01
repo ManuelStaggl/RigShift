@@ -224,6 +224,8 @@
   <data name="Displays_StateOff" xml:space="preserve"><value>Connected, not in use</value></data>
   <data name="Displays_StateNotReady" xml:space="preserve"><value>Not ready</value></data>
   <data name="Displays_Mode" xml:space="preserve"><value>{0} × {1} · {2} Hz</value></data>
+  <data name="Displays_Mirrored" xml:space="preserve"><value>Mirrored</value></data>
+  <data name="Displays_MirroredWith" xml:space="preserve"><value>Shows the same picture as {0}</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
   <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed – in the log files too.</value></data>
