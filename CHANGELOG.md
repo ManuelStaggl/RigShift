@@ -6,13 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.1.3] - 2026-10-01
+
+### Fixed
+
+- **The window opens on the main monitor when it does not fit the one with the mouse.** RigShift opens where the
+  mouse is; on a small side monitor (e.g. 1080p at 150 %) 4.1.1 shrank the window to the whole screen. Now it opens
+  at its normal size on the main monitor if it fits there, and fills the side monitor only if not. The check in 4.1.2
+  looked for a scaling mix-up that was not the cause.
+
 ## [4.1.2] - 2026-10-01
 
 ### Fixed
 
-- **With mixed scaling, the window now opens on the main monitor at its normal size.** 4.1.1 kept it on the side
-  monitor, but there it still filled the whole screen with everything 1.5 × too large – Windows had given it the main
-  monitor's scaling. Monitors with the same scaling are not affected.
+- An attempt to open the window on the main monitor with mixed scaling; it did not take effect – see 4.1.3.
 
 ## [4.1.1] - 2026-10-01
 

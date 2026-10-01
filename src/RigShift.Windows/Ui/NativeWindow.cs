@@ -124,79 +124,98 @@ public static class NativeWindow
     }
 
     /// <summary>
-    /// Pulls a window that opened wrongly back onto a monitor. WPF's <c>CenterScreen</c> keeps the primary monitor's DPI
-    /// when it opens a window on another one (dotnet/wpf#6103): 1280 × 780 at 150 % is 1920 × 1170 pixels on a 1080p
-    /// monitor at 100 %, with the whole content 1.5 × too large. Such a window goes to the primary monitor, whose DPI it
-    /// carries; any other window that sticks out of its monitor's work area is pulled back in. <paramref name="width"/>
-    /// and <paramref name="height"/> are the window's intended size in device-independent units; it gets them at its own
-    /// DPI, at most the work area, centered.
+    /// Brings a window that does not fit its monitor's work area back onto a screen. WPF's <c>CenterScreen</c> opens the
+    /// window on the monitor with the cursor, whatever its size: 1280 × 780 at 150 % is 1920 × 1170 pixels, taller than a
+    /// 1080p monitor. If the window's intended size fits there, it is centered on that monitor; if not, it goes to the
+    /// primary monitor when it fits there, and otherwise takes the whole work area. <paramref name="width"/> and
+    /// <paramref name="height"/> are the intended size in device-independent units, each monitor gets it at its own DPI.
     /// </summary>
     /// <returns>
     /// The new bounds in physical pixels and whether the window went to the primary monitor, or null when it already
     /// fit or a Win32 call failed.
     /// </returns>
-    public static unsafe (System.Drawing.Rectangle Bounds, bool ToPrimary)? FitIntoMonitor(nint hwnd, double width, double height)
+    public static (System.Drawing.Rectangle Bounds, bool ToPrimary)? FitIntoMonitor(nint hwnd, double width, double height)
     {
         var handle = new HWND(hwnd);
-        if (!PInvoke.GetWindowRect(handle, out RECT window))
+        HMONITOR monitor = PInvoke.MonitorFromWindow(handle, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        HMONITOR primary = PInvoke.MonitorFromPoint(default, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
+        if (!PInvoke.GetWindowRect(handle, out RECT window) || WorkArea(monitor) is not { } work)
         {
             return null;
         }
 
         uint dpi = PInvoke.GetDpiForWindow(handle);
-        HMONITOR monitor = PInvoke.MonitorFromWindow(handle, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
-        HMONITOR primary = PInvoke.MonitorFromPoint(default, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
-        bool toPrimary = monitor != primary && dpi != 0 && MonitorDpi(monitor) is { } here && here != dpi && MonitorDpi(primary) == dpi;
-        if (toPrimary)
-        {
-            monitor = primary;
-        }
-
-        var info = new MONITORINFO { cbSize = (uint)sizeof(MONITORINFO) };
-        if (!PInvoke.GetMonitorInfo(monitor, &info))
+        System.Drawing.Rectangle primaryWork = monitor == primary ? default : WorkArea(primary) ?? default;
+        if (Place(ToRectangle(window), work, Scaled(width, height, dpi), primaryWork, Scaled(width, height, MonitorDpi(primary) ?? dpi))
+            is not { } placed)
         {
             return null;
         }
 
-        double scale = (dpi == 0 ? 96 : dpi) / 96d;
-        System.Drawing.Rectangle? fitted = FitInto(
-            ToRectangle(window),
-            ToRectangle(info.rcWork),
-            (int)Math.Round(width * scale),
-            (int)Math.Round(height * scale));
-        if (fitted is not { } bounds)
+        System.Drawing.Rectangle bounds = placed.Bounds;
+        if (!Move(handle, bounds))
         {
             return null;
         }
 
-        return PInvoke.SetWindowPos(handle, HWND.Null, bounds.X, bounds.Y, bounds.Width, bounds.Height,
-            SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE)
-            ? (bounds, toPrimary)
-            : null;
+        // A primary monitor with other scaling: WPF has just resized the window for the new DPI by Windows' suggestion,
+        // which starts from the old size – so the bounds go on once more.
+        if (placed.ToPrimary && PInvoke.GetDpiForWindow(handle) != dpi)
+        {
+            Move(handle, bounds);
+        }
+
+        return placed;
     }
 
-    private static uint? MonitorDpi(HMONITOR monitor) =>
-        PInvoke.GetDpiForMonitor(monitor, MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out uint dpiX, out _).Succeeded ? dpiX : null;
-
     /// <summary>
-    /// Where a window that sticks out of <paramref name="work"/> belongs: the wanted size, no larger than the work area,
-    /// centered on it. Null when it lies inside already.
+    /// Where a window that sticks out of <paramref name="work"/> belongs. <paramref name="primaryWork"/> is empty when the
+    /// window is on the primary monitor already. Null when it lies inside its work area.
     /// </summary>
-    internal static System.Drawing.Rectangle? FitInto(System.Drawing.Rectangle window, System.Drawing.Rectangle work, int width, int height)
+    internal static (System.Drawing.Rectangle Bounds, bool ToPrimary)? Place(
+        System.Drawing.Rectangle window,
+        System.Drawing.Rectangle work,
+        System.Drawing.Size wanted,
+        System.Drawing.Rectangle primaryWork,
+        System.Drawing.Size wantedOnPrimary)
     {
         if (work.IsEmpty || work.Contains(window))
         {
             return null;
         }
 
-        width = Math.Clamp(width, 1, work.Width);
-        height = Math.Clamp(height, 1, work.Height);
-        return new System.Drawing.Rectangle(
-            work.X + ((work.Width - width) / 2),
-            work.Y + ((work.Height - height) / 2),
-            width,
-            height);
+        bool fitsHere = wanted.Width <= work.Width && wanted.Height <= work.Height;
+        bool fitsPrimary = !primaryWork.IsEmpty && wantedOnPrimary.Width <= primaryWork.Width && wantedOnPrimary.Height <= primaryWork.Height;
+        return !fitsHere && fitsPrimary
+            ? (Center(primaryWork, wantedOnPrimary), true)
+            : (Center(work, wanted), false);
     }
+
+    private static System.Drawing.Rectangle Center(System.Drawing.Rectangle work, System.Drawing.Size size)
+    {
+        int width = Math.Clamp(size.Width, 1, work.Width);
+        int height = Math.Clamp(size.Height, 1, work.Height);
+        return new System.Drawing.Rectangle(work.X + ((work.Width - width) / 2), work.Y + ((work.Height - height) / 2), width, height);
+    }
+
+    private static System.Drawing.Size Scaled(double width, double height, uint dpi)
+    {
+        double scale = (dpi == 0 ? 96 : dpi) / 96d;
+        return new System.Drawing.Size((int)Math.Round(width * scale), (int)Math.Round(height * scale));
+    }
+
+    private static bool Move(HWND handle, System.Drawing.Rectangle bounds) =>
+        PInvoke.SetWindowPos(handle, HWND.Null, bounds.X, bounds.Y, bounds.Width, bounds.Height,
+            SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE);
+
+    private static unsafe System.Drawing.Rectangle? WorkArea(HMONITOR monitor)
+    {
+        var info = new MONITORINFO { cbSize = (uint)sizeof(MONITORINFO) };
+        return PInvoke.GetMonitorInfo(monitor, &info) ? ToRectangle(info.rcWork) : null;
+    }
+
+    private static uint? MonitorDpi(HMONITOR monitor) =>
+        PInvoke.GetDpiForMonitor(monitor, MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out uint dpiX, out _).Succeeded ? dpiX : null;
 
     private static System.Drawing.Rectangle ToRectangle(RECT rect) =>
         System.Drawing.Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
