@@ -123,6 +123,64 @@ public static class NativeWindow
             : null;
     }
 
+    /// <summary>
+    /// Pulls a window that sticks out of its monitor's work area back in. WPF's <c>CenterScreen</c> sizes a window by
+    /// the primary monitor's DPI even when it opens on another one (dotnet/wpf#6103): 1280 × 780 at 150 % is 1920 × 1170
+    /// pixels, wider and taller than a 1080p monitor at 100 %. <paramref name="width"/> and <paramref name="height"/> are
+    /// the window's intended size in device-independent units; it gets them at its monitor's DPI, at most the work area.
+    /// </summary>
+    /// <returns>The new bounds in physical pixels, or null when the window already fit or a Win32 call failed.</returns>
+    public static unsafe System.Drawing.Rectangle? FitIntoMonitor(nint hwnd, double width, double height)
+    {
+        var handle = new HWND(hwnd);
+        HMONITOR monitor = PInvoke.MonitorFromWindow(handle, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        var info = new MONITORINFO { cbSize = (uint)sizeof(MONITORINFO) };
+        if (!PInvoke.GetMonitorInfo(monitor, &info) || !PInvoke.GetWindowRect(handle, out RECT window))
+        {
+            return null;
+        }
+
+        uint dpi = PInvoke.GetDpiForWindow(handle);
+        double scale = (dpi == 0 ? 96 : dpi) / 96d;
+        System.Drawing.Rectangle? fitted = FitInto(
+            ToRectangle(window),
+            ToRectangle(info.rcWork),
+            (int)Math.Round(width * scale),
+            (int)Math.Round(height * scale));
+        if (fitted is not { } bounds)
+        {
+            return null;
+        }
+
+        return PInvoke.SetWindowPos(handle, HWND.Null, bounds.X, bounds.Y, bounds.Width, bounds.Height,
+            SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE)
+            ? bounds
+            : null;
+    }
+
+    /// <summary>
+    /// Where a window that sticks out of <paramref name="work"/> belongs: the wanted size, no larger than the work area,
+    /// centered on it. Null when it lies inside already.
+    /// </summary>
+    internal static System.Drawing.Rectangle? FitInto(System.Drawing.Rectangle window, System.Drawing.Rectangle work, int width, int height)
+    {
+        if (work.IsEmpty || work.Contains(window))
+        {
+            return null;
+        }
+
+        width = Math.Clamp(width, 1, work.Width);
+        height = Math.Clamp(height, 1, work.Height);
+        return new System.Drawing.Rectangle(
+            work.X + ((work.Width - width) / 2),
+            work.Y + ((work.Height - height) / 2),
+            width,
+            height);
+    }
+
+    private static System.Drawing.Rectangle ToRectangle(RECT rect) =>
+        System.Drawing.Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+
     /// <summary>Pixel size of a small icon such as the tray icon, at the current DPI of the primary monitor (where the tray is).</summary>
     public static int SmallIconSize()
     {

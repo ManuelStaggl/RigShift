@@ -68,6 +68,9 @@ GetWindowRect
 SetWindowPos
 // Tray popup: placement next to the cursor on the monitor that holds the tray.
 GetCursorPos
+// Windows that open larger than their monitor (mixed DPI): pulled back into its work area.
+MonitorFromWindow
+GetDpiForWindow
 // Tray icon size at the primary monitor's current DPI.
 GetDpiForMonitor
 GetSystemMetricsForDpi
