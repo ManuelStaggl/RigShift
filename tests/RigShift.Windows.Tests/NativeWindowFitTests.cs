@@ -25,6 +25,15 @@ public sealed class NativeWindowFitTests
             .ShouldBe(new Rectangle(4160, 130, 1280, 780));
     }
 
+    /// <summary>The window carries the primary monitor's 150 % while on the side monitor: it moves there at its own size.</summary>
+    [Fact]
+    public void FitInto_WindowOnAnotherMonitor_IsCenteredOnTheGivenWorkArea()
+    {
+        var primary = new Rectangle(0, 0, 3840, 2112);
+        NativeWindow.FitInto(new Rectangle(3840, 0, 1920, 1032), primary, 1920, 1170)
+            .ShouldBe(new Rectangle(960, 471, 1920, 1170));
+    }
+
     [Fact]
     public void FitInto_WantedSizeLargerThanTheWorkArea_TakesTheWholeWorkArea()
     {

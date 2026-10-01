@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.1.2] - 2026-10-01
+
+### Fixed
+
+- **With mixed scaling, the window now opens on the main monitor at its normal size.** 4.1.1 kept it on the side
+  monitor, but there it still filled the whole screen with everything 1.5 × too large – Windows had given it the main
+  monitor's scaling. Monitors with the same scaling are not affected.
+
 ## [4.1.1] - 2026-10-01
 
 ### Fixed
