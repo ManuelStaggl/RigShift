@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.1.1] - 2026-10-01
+
+### Fixed
+
+- **The window could open larger than a side monitor** when the monitors use different scaling (e.g. a 4K main
+  monitor at 150 % next to 1080p monitors at 100 %): its corners and caption buttons were off screen. A window that
+  sticks out of its monitor now gets the right size for that monitor and is centered on it.
+
 ## [4.1.0] - 2026-10-01
 
 ### Added
