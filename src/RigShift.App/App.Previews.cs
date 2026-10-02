@@ -54,6 +54,10 @@ public partial class App
         public bool IsEnabled { get; private set; } = true;
 
         public void SetEnabled(bool enabled) => IsEnabled = enabled;
+
+        public void UpgradeEntry()
+        {
+        }
     }
 
     /// <summary>Started once profiles and games are loaded, before the main window opens.</summary>

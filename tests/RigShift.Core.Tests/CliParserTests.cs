@@ -21,6 +21,16 @@ public sealed class CliParserTests
     }
 
     [Fact]
+    public void Parse_Autostart_MarksTheStartWithWindows()
+    {
+        CliRequest request = CliParser.Parse(["--minimized", "--autostart"]).Request.ShouldNotBeNull();
+
+        request.StartedWithWindows.ShouldBeTrue();
+        CliParser.Parse(["--minimized"]).Request.ShouldNotBeNull().StartedWithWindows.ShouldBeFalse();
+        CliParser.Parse(["--help"]).Output.ShouldNotContain("--autostart");
+    }
+
+    [Fact]
     public void Parse_ApplyWithOptions()
     {
         CliRequest request = CliParser.Parse(["apply", "Sim Rig", "--no-confirm", "--dry-run"]).Request.ShouldNotBeNull();

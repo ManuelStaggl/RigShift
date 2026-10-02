@@ -85,4 +85,18 @@ public sealed class ActiveProfileMatcherTests
 
         _matcher.FindActive([ultrawideOnly, _rig], snapshot).ShouldBe(_rig);
     }
+
+    [Fact]
+    public void FindActive_DisplayMirroringThePrimary_ReturnsTheProfile()
+    {
+        // Issue #14: Windows reports both displays of the primary source as primary, the profile marks only one.
+        DisplayAssignment main = Mode(Desk4K, 1920, 1080, 144, primary: true);
+        DisplayAssignment mirror = Mode(DeskLeft, 1920, 1080, 144);
+        DisplayAssignment right = Mode(DeskRight, 1920, 1080, 144, x: 1920);
+        Profile mirrored = Profile("Mirrored", [main, mirror, right]);
+        DisplaySnapshot snapshot = Snapshot(
+            Attached(Desk4K, activeMode: main), Attached(DeskLeft, activeMode: mirror with { IsPrimary = true }), Attached(DeskRight, activeMode: right));
+
+        _matcher.FindActive([_desk, mirrored], snapshot).ShouldBe(mirrored);
+    }
 }

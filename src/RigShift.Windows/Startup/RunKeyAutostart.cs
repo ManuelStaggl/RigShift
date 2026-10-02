@@ -14,14 +14,28 @@ public sealed class RunKeyAutostart : IAutostart
     private const string ValueName = "RigShift";
 
     private readonly string _command;
+
+    /// <summary>The entry versions before 4.2 wrote, without <c>--autostart</c>.</summary>
+    private readonly string _previousCommand;
     private readonly ILogger _log;
 
     public RunKeyAutostart(string executablePath, ILogger log)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(executablePath);
         ArgumentNullException.ThrowIfNull(log);
-        _command = "\"" + executablePath + "\" --minimized";
+        _previousCommand = "\"" + executablePath + "\" --minimized";
+        _command = _previousCommand + " " + Core.Cli.CliParser.AutostartOption;
         _log = log.ForContext<RunKeyAutostart>();
+    }
+
+    public void UpgradeEntry()
+    {
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+        if (key?.GetValue(ValueName) is string value && string.Equals(value, _previousCommand, StringComparison.OrdinalIgnoreCase))
+        {
+            key.SetValue(ValueName, _command, RegistryValueKind.String);
+            _log.Information("Autostart entry upgraded: {Command}", _command);
+        }
     }
 
     public bool IsEnabled

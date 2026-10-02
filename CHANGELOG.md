@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-10-02
+
+### Added
+
+- **Default profile at sign-in** (Settings → Switching, [#13](https://github.com/ManuelStaggl/RigShift/issues/13)).
+  Windows brings back the layout the PC was shut down in – the rig included. With this switch on, RigShift switches
+  to the default profile when it starts with Windows. A USB rule whose devices are connected at that moment wins.
+  Needs a default profile and “Start with Windows”; the autostart entry is updated on the first start of 4.2.
+
+### Fixed
+
+- **A profile with a display mirroring the main display was never shown as active**
+  ([#14](https://github.com/ManuelStaggl/RigShift/issues/14)). Windows reports both displays as the main display, the
+  profile marks only one. “Use current layout” on such an arrangement also gave two main displays.
+
 ## [4.1.3] - 2026-10-01
 
 ### Fixed

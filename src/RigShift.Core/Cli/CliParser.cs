@@ -51,6 +51,9 @@ public sealed record CliRequest
     /// <summary>Start in the tray without opening the main window (autostart, CLI launch).</summary>
     public bool Minimized { get; init; }
 
+    /// <summary>Started by the Windows autostart entry, through the hidden <see cref="CliParser.AutostartOption"/> (issue #13).</summary>
+    public bool StartedWithWindows { get; init; }
+
     /// <summary>Debug builds only: show the confirmation window without switching.</summary>
     public bool PreviewConfirmation { get; init; }
 
@@ -71,6 +74,9 @@ public sealed record CliParseResult(CliRequest? Request, int ExitCode, string Ou
 /// </summary>
 public static class CliParser
 {
+    /// <summary>Marks the start by the Windows autostart entry; hidden from the help.</summary>
+    public const string AutostartOption = "--autostart";
+
     public static CliParseResult Parse(IReadOnlyList<string> args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -92,6 +98,7 @@ public static class CliParser
     private static CliParseResult ParseInvariant(IReadOnlyList<string> args)
     {
         var minimized = new Option<bool>("--minimized") { Description = "Start in the tray without opening the window." };
+        var autostart = new Option<bool>(AutostartOption) { Hidden = true };
         var preview = new Option<bool>("--preview-confirmation") { Hidden = true };
         var previewBranding = new Option<string>("--preview-branding") { Hidden = true };
         var previewGallery = new Option<string>("--preview-gallery") { Hidden = true };
@@ -131,7 +138,7 @@ public static class CliParser
 
         var root = new RootCommand("RigShift switches displays and audio between profiles.")
         {
-            minimized, preview, previewBranding, previewGallery, apply, toggle, list, save, status, surround, games, play, icons,
+            minimized, autostart, preview, previewBranding, previewGallery, apply, toggle, list, save, status, surround, games, play, icons,
         };
 
         // Every command gets a no-op action. A parse result whose action differs is help, version or an error.
@@ -154,6 +161,7 @@ public static class CliParser
         var request = new CliRequest
         {
             Minimized = parsed.GetValue(minimized),
+            StartedWithWindows = parsed.GetValue(autostart),
             PreviewConfirmation = parsed.GetValue(preview),
             PreviewBranding = parsed.GetValue(previewBranding),
             PreviewGallery = parsed.GetValue(previewGallery),
