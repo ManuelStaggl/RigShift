@@ -50,10 +50,19 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
     public ObservableCollection<Choice> LanguageChoices { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanApplyDefaultWithWindows))]
     public partial Choice? SelectedDefaultProfile { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanApplyDefaultWithWindows))]
     public partial bool StartWithWindows { get; set; }
+
+    /// <summary>Switch to the default profile when RigShift starts with Windows (issue #13).</summary>
+    [ObservableProperty]
+    public partial bool ApplyDefaultWithWindows { get; set; }
+
+    /// <summary>Only with a default profile and the autostart on; otherwise the switch would have no effect.</summary>
+    public bool CanApplyDefaultWithWindows => StartWithWindows && SelectedDefaultProfile?.Key is not null;
 
     /// <summary>
     /// Switch "confirm after switching". Stored only as <see cref="AppSettings.ConfirmTimeoutSeconds"/>: off is 0, on
@@ -138,6 +147,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             DetailedLogging = current.DetailedLogging;
             StartWithWindows = _settings.Autostart.IsEnabled;
+            ApplyDefaultWithWindows = current.ApplyDefaultProfileWithWindows;
             ToggleHotkey = current.ToggleHotkey;
             Devices.Refresh();
         }
@@ -178,6 +188,15 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         {
             Guid? id = value.Key is { } key ? Guid.Parse(key) : null;
             Persist(s => s with { DefaultProfileId = id });
+        }
+    }
+
+    partial void OnApplyDefaultWithWindowsChanged(bool value)
+    {
+        if (!_loading)
+        {
+            _log.Information("Default profile with Windows turned {State}", value ? "on" : "off");
+            Persist(s => s with { ApplyDefaultProfileWithWindows = value });
         }
     }
 

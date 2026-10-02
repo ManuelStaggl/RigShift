@@ -47,6 +47,18 @@
 
           <controls:SettingRow
             Margin="0,8,0,0"
+            Caption="{loc:Tr Settings_DefaultWithWindowsHint}"
+            Title="{loc:Tr Settings_DefaultWithWindows}"
+            ToolTip="{loc:Tr Settings_DefaultWithWindowsTip}">
+            <ui:ToggleSwitch
+              AutomationProperties.Name="{loc:Tr Settings_DefaultWithWindows}"
+              IsChecked="{Binding ApplyDefaultWithWindows}"
+              IsEnabled="{Binding CanApplyDefaultWithWindows}"
+              Style="{StaticResource RigShift.Toggle}" />
+          </controls:SettingRow>
+
+          <controls:SettingRow
+            Margin="0,8,0,0"
             Caption="{Binding ToggleHotkeyHint}"
             Title="{loc:Tr Settings_ToggleHotkey}">
             <StackPanel Orientation="Horizontal">

@@ -7,7 +7,9 @@ using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
 using RigShift.Core.Abstractions;
+using RigShift.Core.Automation;
 using RigShift.Core.Cli;
+using RigShift.Core.Settings;
 using RigShift.Core.Topology;
 using Serilog;
 using Wpf.Ui.Appearance;
@@ -264,6 +266,8 @@ public partial class App : Application, IAppShell
             }
 
             KeepAwakeForActiveProfile(catalog);
+            UpgradeAutostartEntry();
+            await ApplyDefaultProfileWithWindowsAsync(catalog);
             ReportSettingsProblem();
             await OfferInterruptedRestoreAsync();
             await Services.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
@@ -273,6 +277,56 @@ public partial class App : Application, IAppShell
             Log.Fatal(ex, "RigShift failed to start");
             MessageBox.Show(Localization.Loc.Format("Error_Startup", UserMessages.Describe(ex), _paths.Logs), "RigShift", MessageBoxButton.OK, MessageBoxImage.Error);
             Quit();
+        }
+    }
+
+    /// <summary>Entries written before 4.2 lack <c>--autostart</c>; without it the next sign-in would not count (issue #13).</summary>
+    private void UpgradeAutostartEntry()
+    {
+        try
+        {
+            Services.GetRequiredService<SettingsService>().Autostart.UpgradeEntry();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or System.Security.SecurityException)
+        {
+            Log.Warning(ex, "Autostart entry could not be upgraded");
+        }
+    }
+
+    /// <summary>
+    /// Started with Windows: switch to the default profile if the user asked for it (issue #13). Windows brings back the
+    /// layout the PC was shut down in, the rig included; a USB rule whose devices are connected wins.
+    /// </summary>
+    private async Task ApplyDefaultProfileWithWindowsAsync(ProfileCatalog catalog)
+    {
+        if (!_request.StartedWithWindows)
+        {
+            return;
+        }
+
+        AppSettings settings = Services.GetRequiredService<SettingsService>().Current;
+        if (!settings.ApplyDefaultProfileWithWindows)
+        {
+            return;
+        }
+
+        IUsbDeviceList devices = Services.GetRequiredService<IUsbDeviceList>();
+        IReadOnlySet<string> present;
+        try
+        {
+            present = await Task.Run(devices.PresentDeviceIds);
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or UnauthorizedAccessException)
+        {
+            Log.Warning(ex, "USB devices could not be read at startup, default profile not applied");
+            return;
+        }
+
+        (StartupProfileDecision decision, Core.Profiles.Profile? profile) = StartupProfile.Choose(settings, catalog.Profiles, catalog.ActiveProfile?.Id, present);
+        Log.Information("Started with Windows, default profile {Profile}: {Decision}", profile?.Name ?? "(none)", decision);
+        if (decision == StartupProfileDecision.Apply && profile is not null)
+        {
+            await Services.GetRequiredService<SwitchCoordinator>().SwitchAsync(profile);
         }
     }
 

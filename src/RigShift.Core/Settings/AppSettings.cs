@@ -14,10 +14,17 @@ public sealed record AppSettings
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 
     /// <summary>
-    /// Profile marked as default. Applying it at startup was removed (user decision O-03, it competed with the USB
-    /// automation); older files with <c>applyDefaultProfileOnStartup</c> still load, the key is ignored.
+    /// Profile marked as default: where "switch back" goes without a last profile, and with
+    /// <see cref="ApplyDefaultProfileWithWindows"/> the layout after signing in. The 1.x key
+    /// <c>applyDefaultProfileOnStartup</c> is ignored: it applied on every start, not only with Windows.
     /// </summary>
     public Guid? DefaultProfileId { get; init; }
+
+    /// <summary>
+    /// Switch to <see cref="DefaultProfileId"/> when RigShift starts with Windows (issue #13): Windows brings back the
+    /// layout the PC was shut down in, the rig included. A USB rule whose devices are connected at that moment wins.
+    /// </summary>
+    public bool ApplyDefaultProfileWithWindows { get; init; }
 
     /// <summary>System-wide key combination for "back to the previous profile" (1.7.0); <c>null</c> = none.</summary>
     public Profiles.Hotkey? ToggleHotkey { get; init; }

@@ -506,6 +506,9 @@
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
   <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Ziel von „Zurückschalten“, solange es kein letztes Profil gibt.</value></data>
+  <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Standardprofil beim Anmelden</value></data>
+  <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Wechselt dorthin, wenn RigShift mit Windows startet.</value></data>
+  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit diesem Schalter startet er stattdessen im Standardprofil – außer die Geräte einer USB-Regel sind verbunden. Braucht ein Standardprofil und „Mit Windows starten“.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne „Behalten“ kommt die alte Anordnung zurück.</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
