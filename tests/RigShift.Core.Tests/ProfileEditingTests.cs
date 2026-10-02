@@ -20,6 +20,19 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void Capture_DisplayMirroringThePrimary_KeepsASinglePrimary()
+    {
+        // Windows reports both displays of the primary source as primary (issue #14).
+        DisplayAssignment main = Mode(Desk4K, 1920, 1080, 144, primary: true);
+        DisplaySnapshot mirrored = Snapshot(
+            Attached(Desk4K, activeMode: main), Attached(DeskLeft, activeMode: Mode(DeskLeft, 1920, 1080, 144, primary: true)));
+
+        Profile profile = ProfileEditing.Capture("Mirrored", mirrored);
+
+        ProfileEditing.Validate(profile, []).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void CurrentArrangement_KeepsOptionalFlagOfKnownDisplays()
     {
         DisplaySnapshot rigActive = Snapshot(

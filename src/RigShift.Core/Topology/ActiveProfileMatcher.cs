@@ -76,7 +76,7 @@ public sealed class ActiveProfileMatcher
                 continue;
             }
 
-            if (mode.PositionX != wanted.PositionX || mode.PositionY != wanted.PositionY || mode.IsPrimary != wanted.IsPrimary)
+            if (mode.PositionX != wanted.PositionX || mode.PositionY != wanted.PositionY || mode.IsPrimary != SharesPrimarySource(profile, wanted))
             {
                 return (0, 0);
             }
@@ -93,4 +93,13 @@ public sealed class ActiveProfileMatcher
         bool strangerActive = snapshot.Displays.Any(d => d.IsActive && !claimed.Contains(d));
         return strangerActive ? (0, 0) : (claimed.Count, modes);
     }
+
+    /// <summary>
+    /// Windows reports every display of the primary source as primary, so a display mirroring the primary one counts as
+    /// primary too, although the profile marks only one (issue #14).
+    /// </summary>
+    private static bool SharesPrimarySource(Profile profile, DisplayAssignment wanted) =>
+        wanted.IsPrimary || profile.Displays.Any(d => d.IsPrimary
+            && d.PositionX == wanted.PositionX && d.PositionY == wanted.PositionY
+            && d.Width == wanted.Width && d.Height == wanted.Height);
 }

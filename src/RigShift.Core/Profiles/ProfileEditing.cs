@@ -67,7 +67,7 @@ public static class ProfileEditing
             .Select(d => d.Identity.TargetDevicePath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return snapshot.Displays
+        List<DisplayAssignment> arrangement = snapshot.Displays
             .Where(d => d.IsActive && d.ActiveMode is not null)
             .Select(d => d.ActiveMode! with
             {
@@ -78,6 +78,24 @@ public static class ProfileEditing
             .OrderBy(d => d.PositionX)
             .ThenBy(d => d.PositionY)
             .ToList();
+        return SinglePrimary(arrangement, before);
+    }
+
+    /// <summary>
+    /// Windows reports every display of the primary source as primary; a profile has exactly one (issue #14). The one
+    /// <paramref name="previous"/> marked keeps it, otherwise the first in the list.
+    /// </summary>
+    private static List<DisplayAssignment> SinglePrimary(List<DisplayAssignment> arrangement, List<DisplayAssignment> previous)
+    {
+        List<DisplayAssignment> primaries = arrangement.Where(d => d.IsPrimary).ToList();
+        if (primaries.Count < 2)
+        {
+            return arrangement;
+        }
+
+        DisplayAssignment keep = primaries.FirstOrDefault(p => previous.Any(d => d.IsPrimary
+            && string.Equals(d.Identity.TargetDevicePath, p.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase))) ?? primaries[0];
+        return arrangement.Select(d => d.IsPrimary && !ReferenceEquals(d, keep) ? d with { IsPrimary = false } : d).ToList();
     }
 
     /// <summary>
