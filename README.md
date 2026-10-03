@@ -34,12 +34,12 @@ management. [Detailed comparison](docs/compare.md) · [FAQ](docs/faq.md)
 
 ## Features
 
-- **Profiles** – which monitors are on, layout, main display, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume.
-- **Triggers** – wheelbase on/off, hotkey, desktop shortcut, Stream Deck, `rigshift://` link, command line.
+- **Profiles** – which monitors are on, layout, main display, mirrored displays, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume.
+- **Triggers** – wheelbase on/off, hotkey, sign-in, desktop shortcut, Stream Deck, `rigshift://` link, command line.
 - **Games** – one click: switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam, Epic, EA, Xbox or iRacing, clean up after.
-- **Safety net** – the whole layout is applied in one step; no picture means it reverts after a countdown, even after a crash.
+- **Safety net** – the whole layout is applied in one step; no picture means it reverts after a countdown, even after a crash. Ctrl+Alt+Shift+D turns every display on.
 - **Real hardware** – wakes sleeping monitors, waits for a slow G9, skips optional screens like a spacedesk tablet.
-- **Desktop icons** – each profile keeps its own icon layout and puts it back after the switch.
+- **Windows and desktop icons** – a profile remembers where your open windows and your icons sit and puts them back when you return.
 - **Field of view** – the right FOV value for 18 sims, from your monitor's real size.
 - **Backup** – profiles, games and settings as one ZIP. English and German.
 
@@ -73,7 +73,7 @@ Updates install on the next start (Settings). Data lives in `%AppData%\RigShift`
 |---|---|
 | Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 (G93SC) + CM27X3 as SimHub dash | my own PC, daily use since September 2026 |
 | Windows 10 code base (Server 2022, build 20348) | every change in CI: tests and a live read of the display configuration |
-| NVIDIA Surround on/off | not tested on a Surround rig yet – reports welcome |
+| NVIDIA Surround on/off | two user reports, fixed in 4.0.1–4.0.3; a confirmed full on/off cycle is still open |
 | AMD / Intel graphics | not tested yet – [report your setup](https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml) |
 
 Every hardware report ends up in this table.
