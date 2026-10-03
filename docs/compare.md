@@ -31,7 +31,7 @@ welcome as an [issue](https://github.com/ManuelStaggl/RigShift/issues).
 | Start and close apps | ✓ | ✓ | ~ scripts | ✓ | – | ~ |
 | Finds installed games | Steam, Epic, EA, Xbox, iRacing | Steam, Epic, GOG, EA, Ubisoft | – | ✓ | – | – |
 | Game session, back when it ends | ✓ also when started from Steam | ✓ | ~ | ✓ | – | ~ |
-| Window positions of your tools | ✓ per game | – | ✓ | ✓ | – | ~ |
+| Window positions | ✓ per profile and per game | – | ✓ | ✓ | – | ~ |
 | Desktop icons per profile | ✓ | – | ✓ | ? | – | – |
 | **Wheelbase (USB) trigger** | **✓** | – | – | – | – | – |
 | **Countdown with automatic revert** | **✓** | – | – | ~ ask first, manual undo | – | – |

@@ -40,8 +40,9 @@ to test on, so a [hardware report](https://github.com/ManuelStaggl/RigShift/issu
 from your setup helps everyone. AMD Eyefinity is not supported.
 
 **Does it switch NVIDIA Surround?**
-Yes, per profile: a profile can turn Surround on with your bezel correction, or off. I don't run Surround myself, so the
-full on/off cycle hasn't been tested on a real Surround rig yet – reports are welcome.
+Yes, per profile: a profile can turn Surround on with your bezel correction, or off. I don't run Surround myself; two
+users reported problems on their rigs, fixed in 4.0.1–4.0.3. A confirmed full on/off cycle is still open – reports are
+welcome.
 
 **Triple screens?**
 Yes, with or without Surround. The field-of-view page knows triple-screen fields for the sims that ask for them.
