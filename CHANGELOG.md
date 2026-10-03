@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.3.0] - 2026-10-03
+
+### Added
+
+- **Remember window positions per profile** (profile → Behavior). With the switch on, RigShift notes where every open
+  window sits when you leave the profile and puts them back – position, size, minimized or maximized – when you return.
+  Nothing to capture: the desk is whatever it was a moment before the switch. Windows of programs running as
+  administrator cannot be moved, and windows closed in the meantime stay closed.
+
+### Fixed
+
+- **Window positions of a game's tools: snapped windows were saved at the place they had before snapping.** They are
+  now read where they really are. A saved place on a display that is off is skipped instead of hiding the window there.
+
 ## [4.2.0] - 2026-10-02
 
 ### Added
