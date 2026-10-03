@@ -100,6 +100,23 @@ switch (command)
         Print(new { Present = usb.PresentDeviceIds().Order(StringComparer.Ordinal), Connected = usb.ConnectedDevices() });
         break;
 
+    case "windows":
+        // Read-only: the open windows as a profile that remembers them would see them.
+        Print(new RigShift.Windows.Ui.WindowLayoutManager(log).Open().Select(w => new { Handle = (long)w.Handle, w.ProcessName, w.Title, Bounds = w.Bounds.ToString(), w.State }));
+        break;
+
+    case "window-place" when args.Length >= 6:
+        // Moves one window: handle, then left top right bottom. Changes the desktop, so not for a mere look.
+        int[] edges = [.. args.Skip(2).Take(4).Select(a => int.Parse(a, CultureInfo.InvariantCulture))];
+        Print(new
+        {
+            Placed = new RigShift.Windows.Ui.WindowLayoutManager(log).Place(
+                (nint)long.Parse(args[1], CultureInfo.InvariantCulture),
+                new RigShift.Core.Topology.PixelRect(edges[0], edges[1], edges[2], edges[3]),
+                RigShift.Core.Profiles.WindowState.Normal),
+        });
+        break;
+
     case "usb-power" when args.Length >= 2:
         // Read-only: selective suspend in the active power scheme and the device's power flags in the registry.
         RigShift.Core.Automation.UsbPowerFindings findings = new RigShift.Windows.Power.UsbPowerCheck(log).Check(args[1]);
@@ -157,7 +174,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | desktop-icons | desktop-icons-restore <file> | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | desktop-icons | desktop-icons-restore <file> | windows | window-place <handle> <left> <top> <right> <bottom> | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 

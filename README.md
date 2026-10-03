@@ -26,8 +26,8 @@ Keep it if it works for you. RigShift is for you if you want
 
 - the switch to happen when the wheelbase powers on, and back when it is off,
 - a layout that reverts by itself when a screen stays black,
-- audio and microphone, SimHub and Crew Chief, and your desktop icons in the same profile – and with a game entry,
-  the tools' window positions too.
+- audio and microphone, SimHub and Crew Chief, your desktop icons and the place of every open window in the same
+  profile – and with a game entry, the tools' window positions too.
 
 DisplayMagician is the better pick for AMD Eyefinity and many game launchers, DisplayFusion for full window
 management. [Detailed comparison](docs/compare.md) · [FAQ](docs/faq.md)

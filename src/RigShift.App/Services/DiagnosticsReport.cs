@@ -98,7 +98,7 @@ public static partial class DiagnosticsReport
             string displays = string.Join(", ", profile.Displays.Select(d =>
                 DisplayNames.Of(d) + (d.IsPrimary ? " (primary)" : string.Empty) + (d.IsOptional ? " (optional)" : string.Empty)));
             text.AppendLine(FormattableString.Invariant(
-                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s){(profile.KeepAwake ? ", keeps awake" : string.Empty)}"));
+                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s){(profile.KeepAwake ? ", keeps awake" : string.Empty)}{(profile.RememberWindows ? ", remembers windows" : string.Empty)}"));
         }
 
         text.AppendLine().AppendLine("## Recent switches");

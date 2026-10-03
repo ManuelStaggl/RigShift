@@ -1153,6 +1153,15 @@
                     IsChecked="{Binding KeepAwake}"
                     Style="{StaticResource RigShift.Toggle}" />
                 </controls:SettingRow>
+                <controls:SettingRow
+                  Margin="0,8,0,0"
+                  Caption="{loc:Tr Editor_RememberWindowsHint}"
+                  Title="{loc:Tr Editor_RememberWindows}">
+                  <ui:ToggleSwitch
+                    AutomationProperties.Name="{loc:Tr Editor_RememberWindows}"
+                    IsChecked="{Binding RememberWindows}"
+                    Style="{StaticResource RigShift.Toggle}" />
+                </controls:SettingRow>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>

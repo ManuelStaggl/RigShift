@@ -56,6 +56,43 @@ public static class WindowLayoutMatching
         return matches;
     }
 
+    /// <summary>
+    /// Pairs remembered windows with open ones: by handle first, as long as it still names a window of the same
+    /// program, then like <see cref="Match"/> for what is left. Windows found by handle come first, in the order of
+    /// <paramref name="saved"/>.
+    /// </summary>
+    public static IReadOnlyList<WindowMatch> MatchRemembered(IReadOnlyList<RememberedWindow> saved, IReadOnlyList<OpenWindow> open)
+    {
+        ArgumentNullException.ThrowIfNull(saved);
+        ArgumentNullException.ThrowIfNull(open);
+
+        var byHandle = new Dictionary<nint, OpenWindow>();
+        foreach (OpenWindow window in open)
+        {
+            byHandle.TryAdd(window.Handle, window);
+        }
+
+        var matches = new List<WindowMatch>(saved.Count);
+        var rest = new List<WindowPlacement>();
+        var taken = new HashSet<nint>();
+        foreach (RememberedWindow remembered in saved)
+        {
+            if (byHandle.TryGetValue((nint)remembered.Handle, out OpenWindow? window)
+                && SameProcess(remembered.Placement, window)
+                && taken.Add(window.Handle))
+            {
+                matches.Add(new WindowMatch(remembered.Placement, window));
+            }
+            else
+            {
+                rest.Add(remembered.Placement);
+            }
+        }
+
+        matches.AddRange(Match(rest, [.. open.Where(w => !taken.Contains(w.Handle))]));
+        return matches;
+    }
+
     private static readonly Func<WindowPlacement, OpenWindow, bool>[] Rules =
     [
         (placement, window) => SameProcess(placement, window)

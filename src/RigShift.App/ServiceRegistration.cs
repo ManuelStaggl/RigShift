@@ -48,6 +48,8 @@ public static class ServiceRegistration
         services.AddSingleton<IDuckingPreference, RegistryDuckingPreference>();
         services.AddSingleton<IDuckingMemory, SettingsDuckingMemory>();
         services.AddSingleton<IWindowRescuer, Windows.Ui.WindowRescuer>();
+        services.AddSingleton<IWindowMemoryStore>(_ => new JsonWindowMemoryStore(paths.DataDirectory, log));
+        services.AddSingleton<Core.Profiles.WindowMemory>();
         services.AddSingleton<IDesktopIcons, Windows.Shell.DesktopIcons>();
         services.AddSingleton<IDisplaySizeReader, EdidDisplaySizeReader>();
         services.AddSingleton<ISurroundController, NvSurroundController>();

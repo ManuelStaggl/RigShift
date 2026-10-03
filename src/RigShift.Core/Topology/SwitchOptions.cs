@@ -1,3 +1,5 @@
+using RigShift.Core.Profiles;
+
 namespace RigShift.Core.Topology;
 
 /// <summary>Time and attempt budget for <see cref="SwitchOrchestrator"/>.</summary>
@@ -88,6 +90,16 @@ public sealed record SwitchOptions
     public TimeSpan WindowRescueDelay { get; init; } = TimeSpan.FromSeconds(1);
 
     /// <summary>
+    /// Pause before looking again whether the remembered windows stayed where they were put: Windows restores window
+    /// positions of its own a moment after a display came back, and a program crossing to a display with another
+    /// scaling resizes itself.
+    /// </summary>
+    public TimeSpan WindowRestoreDelay { get; init; } = TimeSpan.FromMilliseconds(1500);
+
+    /// <summary>How often to put the remembered windows back while something keeps moving them.</summary>
+    public int WindowRestoreAttempts { get; init; } = 3;
+
+    /// <summary>
     /// How long to wait before each attempt at the desktop symbols. Explorer rearranges them itself a moment after the
     /// arrangement changed, so the first attempt can be overwritten again.
     /// </summary>
@@ -131,4 +143,10 @@ public sealed record SwitchRequest
     /// still be on the way to the seat (v4 finding U-04).
     /// </summary>
     public int MinimumConfirmTimeoutSeconds { get; init; }
+
+    /// <summary>
+    /// The profile that is active as the switch starts, or <c>null</c> when none is. Its windows are remembered if it
+    /// asks for that (<see cref="Profile.RememberWindows"/>).
+    /// </summary>
+    public Profile? Leaving { get; init; }
 }

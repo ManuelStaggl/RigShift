@@ -5,14 +5,17 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// Tidies up after an arrangement that stays: windows left on displays that are off, and the profile's desktop symbols.
+/// Tidies up after an arrangement that stays: windows left on displays that are off, the windows the profile remembers,
+/// and the profile's desktop symbols.
 /// Neither ever fails a switch – an untidy desktop is a log line. Both run after the result, in the background: they wait
 /// for Windows to finish its own rearranging first, and that used to hold up the result, the hotkeys and the next switch
 /// by one to eleven seconds (v4 finding K-04). Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
-internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons desktopIcons, SwitchOptions options, TimeProvider time, ILogger log)
+internal sealed class PostSwitchTidy(
+    IWindowRescuer windows, IDesktopIcons desktopIcons, WindowMemory? windowMemory, SwitchOptions options, TimeProvider time, ILogger log)
 {
     private readonly IWindowRescuer _windows = windows;
+    private readonly WindowMemory? _windowMemory = windowMemory;
     private readonly IDesktopIcons _desktopIcons = desktopIcons;
     private readonly SwitchOptions _options = options;
     private readonly TimeProvider _time = time;
@@ -26,12 +29,13 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
     /// <summary>
     /// Starts the tidy-up in the background: the windows, and with a <paramref name="profile"/> its desktop symbols, side by
     /// side. Ends the tidy-up of an earlier result first. Completes with what became of the symbols (K-15); never faults.
+    /// With <paramref name="restoreWindows"/> the windows the profile remembers go back to their places as well.
     /// </summary>
-    public Task<DesktopIconOutcome> Start(Profile? profile)
+    public Task<DesktopIconOutcome> Start(Profile? profile, bool restoreWindows = false)
     {
         var cancellation = new CancellationTokenSource();
         CancellationToken token = cancellation.Token;
-        Task<DesktopIconOutcome> run = Task.Run(() => RunAsync(profile, token), CancellationToken.None);
+        Task<DesktopIconOutcome> run = Task.Run(() => RunAsync(profile, restoreWindows, token), CancellationToken.None);
         Pending? previous;
         lock (_gate)
         {
@@ -80,9 +84,9 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
         }
     }
 
-    private async Task<DesktopIconOutcome> RunAsync(Profile? profile, CancellationToken cancellationToken)
+    private async Task<DesktopIconOutcome> RunAsync(Profile? profile, bool restoreWindows, CancellationToken cancellationToken)
     {
-        Task rescue = RescueWindowsAsync(cancellationToken);
+        Task rescue = TidyWindowsAsync(restoreWindows ? profile : null, cancellationToken);
         Task<DesktopIconOutcome> icons = profile is null ? SwitchResult.NothingToTidy : RestoreDesktopIconsAsync(profile, cancellationToken);
         try
         {
@@ -93,6 +97,28 @@ internal sealed class PostSwitchTidy(IWindowRescuer windows, IDesktopIcons deskt
         {
             _log.Information("Tidy-up after the switch cancelled");
             return DesktopIconOutcome.NotConfigured;
+        }
+    }
+
+    /// <summary>
+    /// The lost windows first, then the remembered ones: a window the profile knows a place for goes there, the others
+    /// stay where the rescue put them.
+    /// </summary>
+    private async Task TidyWindowsAsync(Profile? remembering, CancellationToken cancellationToken)
+    {
+        await RescueWindowsAsync(cancellationToken);
+        if (remembering is null || _windowMemory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _windowMemory.RestoreAsync(remembering, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Putting the remembered windows of {Profile} back failed", remembering.Name);
         }
     }
 

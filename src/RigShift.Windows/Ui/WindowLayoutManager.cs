@@ -4,6 +4,7 @@ using RigShift.Core.Topology;
 using Serilog;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace RigShift.Windows.Ui;
@@ -41,14 +42,22 @@ public sealed class WindowLayoutManager : IWindowLayout
                 continue;
             }
 
+            WindowState state = TopLevelWindows.StateOf(placement.showCmd);
             PixelRect bounds = workspace.ToScreen(placement.rcNormalPosition);
+
+            // A window snapped to a side or a corner reports the place it had before as its normal position; where it
+            // really is, only its rectangle says.
+            if (state == WindowState.Normal && PInvoke.GetWindowRect(hwnd, out RECT current))
+            {
+                bounds = TopLevelWindows.ToPixel(current);
+            }
+
             if (bounds.IsEmpty)
             {
                 continue;
             }
 
-            windows.Add(new OpenWindow(
-                (nint)hwnd.Value, ProcessName(hwnd), Title(hwnd), bounds, TopLevelWindows.StateOf(placement.showCmd)));
+            windows.Add(new OpenWindow((nint)hwnd.Value, ProcessName(hwnd), Title(hwnd), bounds, state));
         }
 
         return windows;
@@ -59,6 +68,14 @@ public sealed class WindowLayoutManager : IWindowLayout
         var hwnd = new HWND(windowHandle);
         if (!PInvoke.IsWindow(hwnd))
         {
+            return false;
+        }
+
+        // A place on a display that is off now (an optional one is missing, the profile was rearranged since): the
+        // window would vanish there.
+        if (PInvoke.MonitorFromRect(TopLevelWindows.ToRect(bounds), MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL).IsNull)
+        {
+            _log.Information("Window of {Process} not placed: {Bounds} lies on no active display", ProcessName(hwnd), bounds);
             return false;
         }
 

@@ -18,6 +18,9 @@ internal sealed class FakeWindowLayout : IWindowLayout
     /// <summary>Called with the number of <see cref="Open"/> calls so far, before the list is returned.</summary>
     public Action<int>? OnOpened { get; set; }
 
+    /// <summary>A placed window is where it was put the next time <see cref="Open"/> is asked, like on a real desktop.</summary>
+    public bool MoveOnPlace { get; set; }
+
     public int OpenCalls { get; private set; }
 
     public IReadOnlyList<OpenWindow> Open()
@@ -35,6 +38,12 @@ internal sealed class FakeWindowLayout : IWindowLayout
         }
 
         Placed.Add((windowHandle, bounds, state));
+        int index = Windows.FindIndex(w => w.Handle == windowHandle);
+        if (MoveOnPlace && index >= 0)
+        {
+            Windows[index] = Windows[index] with { Bounds = bounds, State = state };
+        }
+
         return true;
     }
 }
