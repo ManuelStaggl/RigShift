@@ -320,6 +320,8 @@
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profile</value></data>
   <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>Kein Standby, Bildschirmschoner oder Bildschirm-Aus.</value></data>
+  <data name="Editor_RememberWindows" xml:space="preserve"><value>Fensterpositionen merken</value></data>
+  <data name="Editor_RememberWindowsHint" xml:space="preserve"><value>Offene Fenster kehren an ihren Platz und in ihre Größe zurück, wenn du wieder zu diesem Profil wechselst.</value></data>
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Die Schreibtisch-Anordnung so speichern, wie sie gerade ist</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und ihn ebenfalls speichern</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: ein USB-Gerät, das automatisch umschaltet</value></data>

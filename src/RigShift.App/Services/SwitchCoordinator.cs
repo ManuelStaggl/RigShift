@@ -272,7 +272,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             // The name first: a handler of IsSwitching already wants to say where the switch goes.
             SwitchingProfile = profile;
             IsSwitching = true;
-            SwitchRequest effective = request with { DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds };
+            SwitchRequest effective = request with
+            {
+                DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds,
+                Leaving = _catalog.ActiveProfile,
+            };
             Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
             _current = running;
             SwitchResult result = await running;
@@ -471,6 +475,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     internal static bool HasMoreThanDisplays(Profile profile) =>
         profile.Apps.Count > 0
         || profile.KeepAwake
+        || profile.RememberWindows
         || profile.DisableCommunicationsDucking
         || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
             or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };

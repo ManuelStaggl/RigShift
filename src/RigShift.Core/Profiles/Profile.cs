@@ -80,6 +80,12 @@ public sealed record Profile
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DesktopIconLayout? DesktopIcons { get; init; }
 
+    /// <summary>
+    /// Remember where every open window sits when this profile is left, and put them back when it returns
+    /// (<see cref="WindowMemory"/>). The windows themselves are state and live outside the profile file.
+    /// </summary>
+    public bool RememberWindows { get; init; }
+
     /// <summary>Longer names push the badges and buttons off the profile card (analysis finding I-06).</summary>
     public const int MaxNameLength = 60;
 

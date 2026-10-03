@@ -320,6 +320,8 @@
   <data name="About_Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="About_Profiles" xml:space="preserve"><value>Profiles</value></data>
   <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>No sleep, screen saver or display timeout.</value></data>
+  <data name="Editor_RememberWindows" xml:space="preserve"><value>Remember window positions</value></data>
+  <data name="Editor_RememberWindowsHint" xml:space="preserve"><value>Open windows return to their place and size when you switch back to this profile.</value></data>
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Save your desk layout as it is now</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Switch to your rig and save it too</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: a USB device that switches automatically</value></data>

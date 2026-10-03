@@ -140,6 +140,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
             e => e.SwitchWithoutAsking = !e.SwitchWithoutAsking,
             e => e.Hotkey = CtrlAltR,
             e => e.KeepAwake = true,
+            e => e.RememberWindows = true,
             e => e.DisableCommunicationsDucking = true,
             e => e.DesktopIcons = icons,
             e => e.Surround.Selected = e.Surround.Choices.First(c => c.Key == "off"),

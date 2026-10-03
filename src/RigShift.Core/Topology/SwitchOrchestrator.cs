@@ -22,6 +22,7 @@ public sealed class SwitchOrchestrator
     private readonly ILogger _log;
     private readonly TopologyApplier _topology;
     private readonly PostSwitchTidy _tidy;
+    private readonly WindowMemory? _windowMemory;
     private readonly AudioSwitcher _audioSwitcher;
     private readonly AppRunner _appRunner;
     private readonly DuckingSwitcher _duckingSwitcher;
@@ -44,7 +45,8 @@ public sealed class SwitchOrchestrator
         TopologyPlanner planner,
         SwitchOptions options,
         TimeProvider time,
-        ILogger log)
+        ILogger log,
+        WindowMemory? windowMemory = null)
     {
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
@@ -73,7 +75,8 @@ public sealed class SwitchOrchestrator
         _time = time;
         _log = log.ForContext<SwitchOrchestrator>();
         _topology = new TopologyApplier(_display, planner, options, time, _log);
-        _tidy = new PostSwitchTidy(windows, desktopIcons, options, time, _log);
+        _windowMemory = windowMemory;
+        _tidy = new PostSwitchTidy(windows, desktopIcons, windowMemory, options, time, _log);
         _audioSwitcher = new AudioSwitcher(audio, options, time, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
@@ -109,6 +112,9 @@ public sealed class SwitchOrchestrator
         // A new switch ends what the previous one left running: apps, e.g. still waiting for their device (analysis finding
         // B-03), and its tidy-up (K-04).
         _ = CancelPendingAsync();
+
+        // Before anything changes: once a display goes dark, Windows has already moved what stood on it.
+        RememberedWindows? leftWindows = _windowMemory?.Capture(request.Leaving, profile);
 
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
@@ -208,7 +214,15 @@ public sealed class SwitchOrchestrator
             Hdr = applied.Hdr,
             DesktopIcons = PendingDesktopIcons(profile),
         }, started);
-        return AfterResult(result, profile);
+
+        // Only now: a switch that was rejected never left the profile.
+        if (leftWindows is not null && request.Leaving is { } left && _windowMemory is not null)
+        {
+            await _windowMemory.RememberAsync(left, leftWindows, CancellationToken.None);
+        }
+
+        // Applying the profile that is active already leaves its windows alone: they are where the user wants them now.
+        return AfterResult(result, profile, restoreWindows: request.Leaving?.Id != profile.Id);
     }
 
     /// <summary>
@@ -218,8 +232,8 @@ public sealed class SwitchOrchestrator
     /// the automation or the next switch (B-03). The journal is gone by then, so an exit meanwhile brings no question
     /// "undo it?" at the next start (K-14).
     /// </summary>
-    private SwitchResult AfterResult(SwitchResult result, Profile profile) =>
-        result with { TidyCompletion = _tidy.Start(profile), AppsCompletion = _appRunner.Start(profile) };
+    private SwitchResult AfterResult(SwitchResult result, Profile profile, bool restoreWindows) =>
+        result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(profile) };
 
     private static AppsOutcome PendingApps(Profile profile) =>
         profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
@@ -417,7 +431,9 @@ public sealed class SwitchOrchestrator
         SwitchResult result = await Finish(
             new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, DesktopIcons = PendingDesktopIcons(profile) },
             started);
-        return AfterResult(result, profile);
+
+        // Windows brought the displays back, not the windows to where they were when the profile was left.
+        return AfterResult(result, profile, restoreWindows: true);
     }
 
     /// <summary>
