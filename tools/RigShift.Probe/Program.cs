@@ -106,14 +106,15 @@ switch (command)
         break;
 
     case "window-place" when args.Length >= 6:
-        // Moves one window: handle, then left top right bottom. Changes the desktop, so not for a mere look.
+        // Moves one window: handle, then left top right bottom and optionally the state (Normal, Minimized, Maximized).
+        // Changes the desktop, so not for a mere look.
         int[] edges = [.. args.Skip(2).Take(4).Select(a => int.Parse(a, CultureInfo.InvariantCulture))];
         Print(new
         {
             Placed = new RigShift.Windows.Ui.WindowLayoutManager(log).Place(
                 (nint)long.Parse(args[1], CultureInfo.InvariantCulture),
                 new RigShift.Core.Topology.PixelRect(edges[0], edges[1], edges[2], edges[3]),
-                RigShift.Core.Profiles.WindowState.Normal),
+                args.Length >= 7 ? Enum.Parse<RigShift.Core.Profiles.WindowState>(args[6], ignoreCase: true) : RigShift.Core.Profiles.WindowState.Normal),
         });
         break;
 
@@ -174,7 +175,7 @@ switch (command)
         break;
 
     default:
-        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | desktop-icons | desktop-icons-restore <file> | windows | window-place <handle> <left> <top> <right> <bottom> | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
+        Console.Error.WriteLine("Usage: RigShift.Probe snapshot [--raw] | rates | audio | surround | desktop-icons | desktop-icons-restore <file> | windows | window-place <handle> <left> <top> <right> <bottom> [state] | usb | usb-power <id> | keep-awake <seconds> | import <folder> | convert <folder> <target> | plan <folder> <profile>");
         return 2;
 }
 
