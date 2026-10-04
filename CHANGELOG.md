@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.3.1] - 2026-10-04
+
+### Fixed
+
+- **Remembered windows: a maximized window came back on the wrong display.** Windows leaves a window that is maximized
+  already on the display it fills and only rewrites its restored position, so RigShift thought it was back in place.
+  Such a window is now restored onto its display first and maximized there, and the check afterwards looks at the
+  display the window really fills.
+
 ## [4.3.0] - 2026-10-03
 
 ### Added
