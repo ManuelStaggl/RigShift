@@ -46,10 +46,15 @@ public sealed class WindowLayoutManager : IWindowLayout
             PixelRect bounds = workspace.ToScreen(placement.rcNormalPosition);
 
             // A window snapped to a side or a corner reports the place it had before as its normal position; where it
-            // really is, only its rectangle says.
+            // really is, only its rectangle says. A maximized window keeps a normal position as well, and after a display
+            // change that can lie on another display than the one the window fills – the one it fills is where it is.
             if (state == WindowState.Normal && PInvoke.GetWindowRect(hwnd, out RECT current))
             {
                 bounds = TopLevelWindows.ToPixel(current);
+            }
+            else if (state == WindowState.Maximized && FilledWorkAreaElsewhere(hwnd, bounds) is { } filled)
+            {
+                bounds = WindowGeometry.CenteredIn(bounds, filled);
             }
 
             if (bounds.IsEmpty)
@@ -90,7 +95,22 @@ public sealed class WindowLayoutManager : IWindowLayout
             return false;
         }
 
-        int error = TopLevelWindows.Place(hwnd, placement, bounds, state, workspace);
+        // A window that is maximized already stays on its display: SetWindowPlacement only rewrites its normal position.
+        // It has to come down onto the other display first and is maximized there.
+        int error = 0;
+        if (state == WindowState.Maximized
+            && placement.showCmd == SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED
+            && FilledWorkAreaElsewhere(hwnd, bounds) is not null)
+        {
+            _log.Information("Window of {Process} is maximized on another display, restoring it before maximizing it again", ProcessName(hwnd));
+            error = TopLevelWindows.Place(hwnd, placement, bounds, WindowState.Normal, workspace);
+        }
+
+        if (error == 0)
+        {
+            error = TopLevelWindows.Place(hwnd, placement, bounds, state, workspace);
+        }
+
         if (error == 0)
         {
             _log.Information("Placed the window of {Process} at {Bounds} ({State})", ProcessName(hwnd), bounds, state);
@@ -108,6 +128,22 @@ public sealed class WindowLayoutManager : IWindowLayout
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// The work area of the display the window fills, when <paramref name="place"/> lies on another one; <c>null</c>
+    /// when both are the same display.
+    /// </summary>
+    private static unsafe PixelRect? FilledWorkAreaElsewhere(HWND hwnd, PixelRect place)
+    {
+        HMONITOR filled = PInvoke.MonitorFromWindow(hwnd, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);
+        if (filled.IsNull || filled == PInvoke.MonitorFromRect(TopLevelWindows.ToRect(place), MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST))
+        {
+            return null;
+        }
+
+        var info = new MONITORINFO { cbSize = (uint)sizeof(MONITORINFO) };
+        return PInvoke.GetMonitorInfo(filled, &info) ? TopLevelWindows.ToPixel(info.rcWork) : null;
     }
 
     private Workspace? PrimaryWorkspace()
