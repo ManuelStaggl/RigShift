@@ -52,9 +52,9 @@
       },
       "Velopack": {
         "type": "Direct",
-        "requested": "[1.2.158, )",
-        "resolved": "1.2.158",
-        "contentHash": "wQN38beVrAf0WzFMnZtl7UmwxqwaJ7xVYypqITdOI4YUTYch2UvE+xAjg9msfaitVDtgfWeIcGsjRNQ65C03ZQ=="
+        "requested": "[1.2.161, )",
+        "resolved": "1.2.161",
+        "contentHash": "OpHNacIumnkhaaX3ZlQ/TCR4YPOJvud2/PAOoWb6o+mIrLwIVA275I5wAgt4q/1O2VrJeDwR1qFQyqzG4lUArg=="
       },
       "WPF-UI": {
         "type": "Direct",

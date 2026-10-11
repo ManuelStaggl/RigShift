@@ -243,7 +243,7 @@
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.Debug": "[3.0.0, )",
           "Serilog.Sinks.File": "[7.0.0, )",
-          "Velopack": "[1.2.158, )",
+          "Velopack": "[1.2.161, )",
           "WPF-UI": "[4.3.0, )"
         }
       },
@@ -317,9 +317,9 @@
       },
       "Velopack": {
         "type": "CentralTransitive",
-        "requested": "[1.2.158, )",
-        "resolved": "1.2.158",
-        "contentHash": "wQN38beVrAf0WzFMnZtl7UmwxqwaJ7xVYypqITdOI4YUTYch2UvE+xAjg9msfaitVDtgfWeIcGsjRNQ65C03ZQ=="
+        "requested": "[1.2.161, )",
+        "resolved": "1.2.161",
+        "contentHash": "OpHNacIumnkhaaX3ZlQ/TCR4YPOJvud2/PAOoWb6o+mIrLwIVA275I5wAgt4q/1O2VrJeDwR1qFQyqzG4lUArg=="
       },
       "WPF-UI": {
         "type": "CentralTransitive",

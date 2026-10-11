@@ -17,7 +17,7 @@
 
     <!-- CLI / distribution -->
     <PackageVersion Include="System.CommandLine" Version="2.0.12" />
-    <PackageVersion Include="Velopack" Version="1.2.158" />
+    <PackageVersion Include="Velopack" Version="1.2.161" />
 
     <!-- Tests -->
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
