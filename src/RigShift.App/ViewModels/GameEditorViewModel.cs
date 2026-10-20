@@ -59,6 +59,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         StopApps = game.Exit.StopApps;
         WindowLayout = game.WindowLayout;
         Hotkey = game.Hotkey;
+        SettingsEnabled = game.Settings is not null;
+        SettingsFile = game.Settings?.File ?? string.Empty;
+        SettingsKeys = game.Settings is null ? string.Empty : string.Join(Environment.NewLine, game.Settings.Keys);
 
         FillChoices();
         SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == game.ProfileId?.ToString()) ?? NoProfileOption;
@@ -114,13 +117,19 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public bool HasHotkeyProblem => HotkeyProblem is not null;
 
     /// <summary>The tab "Game" holds launch, process and hotkey; one dot for all of them.</summary>
-    public bool HasGameTabProblem => HasLaunchProblem || HasHotkeyProblem;
+    public bool HasGameTabProblem => HasLaunchProblem || HasHotkeyProblem || HasSettingsProblem;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAppsProblem))]
     public partial string? AppsProblem { get; private set; }
 
     public bool HasAppsProblem => AppsProblem is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSettingsProblem), nameof(HasGameTabProblem))]
+    public partial string? SettingsProblem { get; private set; }
+
+    public bool HasSettingsProblem => SettingsProblem is not null;
 
     /// <summary>A save that failed on disk; cleared by the next successful save.</summary>
     [ObservableProperty]
@@ -180,6 +189,33 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
 
     /// <summary>Only a program started by RigShift itself can get its own runtime, and only when there is a choice.</summary>
     public bool SupportsRuntime => _launch.Kind == GameLaunchKind.Executable && RuntimeChoices.Count > 1;
+
+    /// <summary>The entry keeps its own values in the game's settings file (tab "Game").</summary>
+    [ObservableProperty]
+    public partial bool SettingsEnabled { get; set; }
+
+    /// <summary>The game's JSON settings file.</summary>
+    [ObservableProperty]
+    public partial string SettingsFile { get; set; }
+
+    /// <summary>The keys, one <c>Section/Name</c> per line.</summary>
+    [ObservableProperty]
+    public partial string SettingsKeys { get; set; }
+
+    /// <summary>How many values the entry keeps, or that they come with the end of the next session.</summary>
+    public string SettingsStatus => _original.Settings is { Values.Count: > 0 } settings
+        ? Loc.Format("Game_SettingsRemembered", settings.Values.Count)
+        : Loc.Instance["Game_SettingsNoneYet"];
+
+    /// <summary>Turning it on for a game we know fills in its file and keys.</summary>
+    partial void OnSettingsEnabledChanged(bool value)
+    {
+        if (value && !_loading && string.IsNullOrWhiteSpace(SettingsFile) && SimTemplates.SettingsFor(_launch) is { } suggestion)
+        {
+            SettingsFile = suggestion.File;
+            SettingsKeys = string.Join(Environment.NewLine, suggestion.Keys);
+        }
+    }
 
     /// <summary>
     /// The game's own process, without extension. Visible and editable on purpose: a first start learns it, but for a
@@ -361,7 +397,26 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         Exit = ExitFromChoice(),
         Hotkey = Hotkey,
         StartWithGame = StartWithGame,
+        Settings = SettingsFromFields(),
     };
+
+    /// <summary>The fields as settings; values already kept stay for the keys that are still listed.</summary>
+    private GameSettings? SettingsFromFields()
+    {
+        if (!SettingsEnabled)
+        {
+            return null;
+        }
+
+        string[] keys = [.. SettingsKeys.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal)];
+        IReadOnlyDictionary<string, string> kept = _original.Settings?.Values ?? new Dictionary<string, string>();
+        return new GameSettings
+        {
+            File = SettingsFile.Trim(),
+            Keys = keys,
+            Values = kept.Where(v => keys.Contains(v.Key, StringComparer.Ordinal)).ToDictionary(StringComparer.Ordinal),
+        };
+    }
 
     /// <summary>Writes the game. False: a problem remains or the disk said no; the detail shows why.</summary>
     public async Task<bool> SaveAsync()
@@ -435,6 +490,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         HotkeyProblem = ProblemTexts.Of(problems, GameProblem.HotkeyInvalid, GameProblem.HotkeyTaken);
         AppsProblem = ProblemTexts.Of(problems, GameProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
+        SettingsProblem = ProblemTexts.Of(problems, GameProblem.SettingsInvalid);
         IsDirty = IsNew || !StoredForm.Same(built, _initial);
     }
 
@@ -481,6 +537,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         ErrorMessage = null;
         OnPropertyChanged(nameof(WindowsText));
         OnPropertyChanged(nameof(ProcessHint));
+        OnPropertyChanged(nameof(SettingsStatus));
         Recalculate();
     }
 

@@ -73,6 +73,9 @@ public sealed record GameEntry
     /// </summary>
     public bool StartWithGame { get; init; }
 
+    /// <summary>Values this entry keeps for itself in the game's settings file, e.g. lighter graphics for VR; <c>null</c> for none.</summary>
+    public GameSettings? Settings { get; init; }
+
     /// <summary>Longer names push the buttons off the card, as with a profile.</summary>
     public const int MaxNameLength = Profile.MaxNameLength;
 }

@@ -40,9 +40,9 @@ public sealed class GameSessionRunnerTests
 
     private FakeRunningGame LongRunning() => new(_time, TimeSpan.FromHours(1));
 
-    private GameSessionRunner Runner(FakeWindowLayout? desktop = null) => new(
+    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, Logger.None, desktop);
+        _apps, _usb, new SwitchOptions(), _time, Logger.None, desktop, settings);
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {
@@ -411,6 +411,85 @@ public sealed class GameSessionRunnerTests
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         _time.Elapsed.ShouldBeLessThan(GameProcessLearner.Timeout);
         await _switcher.Received(1).SwitchAsync(_desk, Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    private const string SettingsFile = @"C:\Games\iRacing\Settings.JSON";
+
+    private GameEntry GameWithSettings() => Game() with
+    {
+        Settings = new GameSettings
+        {
+            File = SettingsFile,
+            Keys = ["Graphic Options/Shadows"],
+            Values = new Dictionary<string, string> { ["Graphic Options/Shadows"] = "2" },
+        },
+    };
+
+    private static Dictionary<string, string> Shadows(string value) =>
+        new Dictionary<string, string> { ["Graphic Options/Shadows"] = value };
+
+    private static IReadOnlyDictionary<string, string> WithShadows(string value) =>
+        Arg.Is<IReadOnlyDictionary<string, string>>(v => v["Graphic Options/Shadows"] == value);
+
+    /// <summary>LMU in VR: the light values go in before the game, the monitor's come back after it, and what the user set in the menu is kept.</summary>
+    [Fact]
+    public async Task Run_WritesTheEntrysSettingsBeforeTheGame_PutsTheOldOnesBack_AndReportsWhatTheGameLeft()
+    {
+        IGameSettingsFiles files = Substitute.For<IGameSettingsFiles>();
+        files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(Shadows("4"), Shadows("1"));
+        GameSessionRunner runner = Runner(settings: files);
+        GameSettingsRemembered? remembered = null;
+        runner.SettingsRemembered += (_, e) => remembered = e;
+
+        GameSessionResult result = await runner.RunAsync(GameWithSettings(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        Received.InOrder(() =>
+        {
+            files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), WithShadows("2"), Arg.Any<CancellationToken>());
+            _starter.Start(Arg.Any<GameLaunch>());
+            files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), WithShadows("4"), Arg.Any<CancellationToken>());
+        });
+        remembered.ShouldNotBeNull().Values["Graphic Options/Shadows"].ShouldBe("1");
+    }
+
+    [Fact]
+    public async Task Run_PutsTheSettingsBack_WhenTheGameCouldNotBeStarted()
+    {
+        IGameSettingsFiles files = Substitute.For<IGameSettingsFiles>();
+        files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(Shadows("4"), Shadows("2"));
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => throw new FileNotFoundException("gone"));
+        GameSessionRunner runner = Runner(settings: files);
+        bool remembered = false;
+        runner.SettingsRemembered += (_, _) => remembered = true;
+
+        GameSessionResult result = await runner.RunAsync(GameWithSettings(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.StartFailed);
+        await files.Received(1).SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), WithShadows("4"), Arg.Any<CancellationToken>());
+        remembered.ShouldBeFalse();
+    }
+
+    /// <summary>A running game writes its file as it closes: values written now would be lost, the ones read would be wrong.</summary>
+    [Fact]
+    public async Task Run_LeavesTheSettingsFileAlone_WhileSomethingFromTheGamesFolderRuns()
+    {
+        IGameSettingsFiles files = Substitute.For<IGameSettingsFiles>();
+        _processes.Running.Add(new RunningProcess(7, "start_protected_game", @"C:\Games\iRacing\start_protected_game.exe", _time.GetUtcNow()));
+        _processes.OnListed = call =>
+        {
+            if (call >= 2)
+            {
+                _processes.Running.Clear();
+            }
+        };
+
+        GameSessionResult result = await Runner(settings: files).RunAsync(GameWithSettings(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        await files.DidNotReceiveWithAnyArgs().SwapAsync(default!, default!, default!, default);
     }
 
     private GameEntry KnownSteamGame() => Game(new GameLaunch

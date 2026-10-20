@@ -20,11 +20,13 @@ public sealed class GameSessionRunner
     private readonly Func<Guid, Profile?> _profile;
     private readonly AppRunner _apps;
     private readonly WindowLayoutRestorer? _layout;
+    private readonly IGameSettingsFiles? _settings;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
     /// <param name="profile">Looks a profile up by id; <c>null</c> when it was deleted in the meantime.</param>
     /// <param name="windows">Restores saved window positions; <c>null</c> leaves windows where they are.</param>
+    /// <param name="settings">Writes the entry's own values into the game's settings file; <c>null</c> leaves the file alone.</param>
     public GameSessionRunner(
         IGameStarter starter,
         IGameProcesses processes,
@@ -35,7 +37,8 @@ public sealed class GameSessionRunner
         SwitchOptions options,
         TimeProvider time,
         ILogger log,
-        IWindowLayout? windows = null)
+        IWindowLayout? windows = null,
+        IGameSettingsFiles? settings = null)
     {
         ArgumentNullException.ThrowIfNull(starter);
         ArgumentNullException.ThrowIfNull(processes);
@@ -56,10 +59,20 @@ public sealed class GameSessionRunner
         _learner = new GameProcessLearner(processes, time, _log);
         _apps = new AppRunner(apps, usbDevices, options, time, _log);
         _layout = windows is null ? null : new WindowLayoutRestorer(windows, time, _log);
+        _settings = settings;
     }
 
     /// <summary>Raised with the learned process name so the caller can keep it in the entry; never raised twice for one session.</summary>
     public event EventHandler<GameProcessLearned>? ProcessLearned;
+
+    /// <summary>Raised after the game ended with the values it left in its settings file, when they differ from the entry's.</summary>
+    public event EventHandler<GameSettingsRemembered>? SettingsRemembered;
+
+    /// <summary>
+    /// How long to wait after the session for the game's processes to be gone before its settings file is touched. The
+    /// game writes the file as it closes; reading earlier would take old values, writing earlier would be overwritten.
+    /// </summary>
+    public static readonly TimeSpan SettingsCloseTimeout = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Runs the session and completes when the game has ended and the exit action is done.
@@ -118,6 +131,25 @@ public sealed class GameSessionRunner
         // arrangement they are placed on is the one the profile just applied.
         WindowLayoutResult? layout = await RestoreWindowsAsync(game, cancellationToken);
 
+        // A game started elsewhere has read its file already; its values belong to whoever started it.
+        IReadOnlyDictionary<string, string>? previous = alreadyRunning ? null : await ApplySettingsAsync(game, cancellationToken);
+        try
+        {
+            return await RunGameAsync(game, alreadyRunning, session, started, applied, apps, layout, cancellationToken);
+        }
+        finally
+        {
+            if (previous is not null)
+            {
+                await RestoreSettingsAsync(game, previous, cancellationToken);
+            }
+        }
+    }
+
+    private async Task<GameSessionResult> RunGameAsync(
+        GameEntry game, bool alreadyRunning, StartedGame session, long started, SwitchOutcome? applied, AppsOutcome apps,
+        WindowLayoutResult? layout, CancellationToken cancellationToken)
+    {
         int? processId = null;
         string? learned = null;
         if (!alreadyRunning)
@@ -202,6 +234,96 @@ public sealed class GameSessionRunner
             _log.Warning(ex, "Game {Game}: the window positions could not be restored", game.Name);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Writes the entry's own values into the game's settings file before it starts.
+    /// </summary>
+    /// <returns>The values from before, to put back after the game; <c>null</c> when the file was left alone.</returns>
+    private async Task<IReadOnlyDictionary<string, string>?> ApplySettingsAsync(GameEntry game, CancellationToken cancellationToken)
+    {
+        if (_settings is null || game.Settings is not { Keys.Count: > 0 } settings)
+        {
+            return null;
+        }
+
+        if (!settings.HasValidFile)
+        {
+            _log.Warning("Game {Game}: the settings file {File} is not a full path to a JSON file, left alone", game.Name, settings.File);
+            return null;
+        }
+
+        // The running game would overwrite the file as it closes, and the values from before would be the wrong ones.
+        if (IsGameRunning(game))
+        {
+            _log.Warning("Game {Game} runs already, its settings file is left alone", game.Name);
+            return null;
+        }
+
+        try
+        {
+            IReadOnlyDictionary<string, string> previous = await _settings.SwapAsync(settings.FullPath, settings.Keys, settings.Values, cancellationToken);
+            _log.Information("Game {Game}: {Count} own setting(s) applied", game.Name, settings.Values.Count);
+            return previous;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Never a reason to leave the game unstarted: it then simply runs with the values it has.
+            _log.Warning(ex, "Game {Game}: its own settings could not be applied", game.Name);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Once the game has closed: takes the values it left in its file as the entry's (the user may have changed them in
+    /// the game's menu) and puts the values from before back.
+    /// </summary>
+    private async Task RestoreSettingsAsync(GameEntry game, IReadOnlyDictionary<string, string> previous, CancellationToken cancellationToken)
+    {
+        GameSettings settings = game.Settings!;
+        try
+        {
+            DateTimeOffset deadline = _time.GetUtcNow() + SettingsCloseTimeout;
+            while (IsGameRunning(game))
+            {
+                if (_time.GetUtcNow() >= deadline)
+                {
+                    _log.Warning("Game {Game} still runs, its settings file keeps this session's values (backups: game-settings)", game.Name);
+                    return;
+                }
+
+                await Task.Delay(GameProcessLearner.PollInterval, _time, cancellationToken);
+            }
+
+            // Not cancelled any more: the game is gone, and a half-done way back is worse than a short wait on closing.
+            IReadOnlyDictionary<string, string> left = await _settings!.SwapAsync(settings.FullPath, settings.Keys, previous, CancellationToken.None);
+            _log.Information("Game {Game}: {Count} setting(s) from before put back", game.Name, previous.Count);
+            if (!left.OrderBy(v => v.Key, StringComparer.Ordinal).SequenceEqual(settings.Values.OrderBy(v => v.Key, StringComparer.Ordinal)))
+            {
+                SettingsRemembered?.Invoke(this, new GameSettingsRemembered(game.Id, left));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // RigShift is closing while the game may still run; writing now would be overwritten anyway.
+            _log.Warning("Game {Game}: RigShift stopped before the settings from before were put back (backups: game-settings)", game.Name);
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Game {Game}: the settings from before could not be put back (backups: game-settings)", game.Name);
+        }
+    }
+
+    /// <summary>Anything of the game's still runs: its known process, or any process from its folder (an anti-cheat starter, say).</summary>
+    private bool IsGameRunning(GameEntry game)
+    {
+        if (game.Launch.KnownProcessName() is { } name && _processes.IsRunning(name))
+        {
+            return true;
+        }
+
+        return GameFolder(game.Launch) is { } folder
+            && _processes.List().Any(p => p.ExecutablePath is not null && GameProcessLearner.IsFromInstallFolder(p, folder));
     }
 
     /// <returns>How the switch ended (<c>null</c> without a profile) and the apps the profile started after it.</returns>
@@ -467,6 +589,9 @@ public sealed class GameSessionRunner
 
 /// <summary>The process name a first start taught us about a game.</summary>
 public sealed record GameProcessLearned(Guid GameId, string ProcessName);
+
+/// <summary>The values a game left in its settings file at the end of a session, to keep in its entry.</summary>
+public sealed record GameSettingsRemembered(Guid GameId, IReadOnlyDictionary<string, string> Values);
 
 /// <summary>Outcome of one game session; the parts are judged separately, as with a switch.</summary>
 /// <param name="Outcome">How far the session got.</param>
