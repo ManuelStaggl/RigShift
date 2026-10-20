@@ -514,6 +514,57 @@
                   </StackPanel>
                 </Border>
 
+                <!-- Values this entry keeps in the game's own settings file, e.g. lighter graphics for "LMU (VR)". -->
+                <Border Margin="0,8,0,0" Style="{StaticResource RigShift.Card.Group}">
+                  <StackPanel>
+                    <controls:SettingRow
+                      Caption="{loc:Tr Game_SettingsHint}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr Game_Settings}">
+                      <ui:ToggleSwitch
+                        AutomationProperties.Name="{loc:Tr Game_Settings}"
+                        IsChecked="{Binding SettingsEnabled}"
+                        Style="{StaticResource RigShift.Toggle}" />
+                    </controls:SettingRow>
+                    <StackPanel Visibility="{Binding SettingsEnabled, Converter={StaticResource BoolToVisibility}}">
+                      <Border Style="{StaticResource RigShift.Divider}" />
+                      <StackPanel Margin="16,12,16,16">
+                        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Game_SettingsFile}" />
+                        <TextBox
+                          Margin="0,4,0,12"
+                          AutomationProperties.Name="{loc:Tr Game_SettingsFile}"
+                          Style="{StaticResource RigShift.Field.Value}"
+                          Text="{Binding SettingsFile, UpdateSourceTrigger=PropertyChanged}"
+                          controls:Interaction.IsInvalid="{Binding HasSettingsProblem}" />
+                        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="{loc:Tr Game_SettingsKeys}" />
+                        <TextBox
+                          Height="Auto"
+                          MinHeight="96"
+                          MaxHeight="240"
+                          Margin="0,4,0,8"
+                          Padding="10,6"
+                          AcceptsReturn="True"
+                          AutomationProperties.Name="{loc:Tr Game_SettingsKeys}"
+                          Style="{StaticResource RigShift.Field.Value}"
+                          Text="{Binding SettingsKeys, UpdateSourceTrigger=PropertyChanged}"
+                          TextWrapping="NoWrap"
+                          VerticalContentAlignment="Top"
+                          VerticalScrollBarVisibility="Auto" />
+                        <TextBlock
+                          Style="{StaticResource RigShift.Text.Caption}"
+                          Text="{Binding SettingsStatus}"
+                          TextWrapping="Wrap" />
+                        <TextBlock
+                          AutomationProperties.LiveSetting="Polite"
+                          Style="{StaticResource RigShift.Text.FieldError}"
+                          Text="{Binding SettingsProblem}"
+                          TextWrapping="Wrap"
+                          Visibility="{Binding HasSettingsProblem, Converter={StaticResource BoolToVisibility}}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
                 <!-- How RigShift knows the session runs and when it ends. -->
                 <Border Margin="0,8,0,0" Style="{StaticResource RigShift.Card.Group}">
                   <StackPanel>

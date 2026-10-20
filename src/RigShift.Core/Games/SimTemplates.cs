@@ -69,6 +69,38 @@ public static class SimTemplates
 
         return filled;
     }
+
+    /// <summary>
+    /// Le Mans Ultimate keeps the graphics for monitor and VR in one file (<c>Config_DX11_VR.ini</c> holds only
+    /// anti-aliasing and post effects). These are the keys that make the difference in VR, read from a 1.4.3 file.
+    /// </summary>
+    private static readonly string[] LeMansUltimateKeys =
+    [
+        "Graphic Options/Max Visible Vehicles",
+        "Graphic Options/Shadows",
+        "Graphic Options/Shadow Blur",
+        "Graphic Options/Environment Reflections",
+        "Graphic Options/Road Reflections",
+        "Graphic Options/Rain FX Quality",
+        "Graphic Options/Special FX",
+        "Graphic Options/Soft Particles",
+        "Graphic Options/Live TV Displays",
+        "Graphic Options/Track Detail",
+        "Graphic Options/Player Detail",
+        "Graphic Options/Opponent Detail",
+        "Graphic Options/Texture Detail",
+        "Graphic Options/Garage Car Detail",
+        "Sound Options/Maximum Effects",
+    ];
+
+    /// <summary>A suggestion for the game's own settings, or <c>null</c> when we know none for it.</summary>
+    public static GameSettings? SettingsFor(GameLaunch launch)
+    {
+        ArgumentNullException.ThrowIfNull(launch);
+        return launch.Kind == GameLaunchKind.Steam && launch.Target == "2399420" && launch.InstallFolder is { Length: > 0 } folder
+            ? new GameSettings { File = Path.Combine(folder, "UserData", "player", "Settings.JSON"), Keys = LeMansUltimateKeys }
+            : null;
+    }
 }
 
 /// <summary>What is known about one sim.</summary>

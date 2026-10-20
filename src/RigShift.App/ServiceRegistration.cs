@@ -100,6 +100,8 @@ public static class ServiceRegistration
         services.AddSingleton<IOpenXrRuntimes, Windows.Games.OpenXrRuntimes>();
         services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
+        services.AddSingleton<IGameSettingsFiles>(sp => new GameSettingsFiles(
+            System.IO.Path.Combine(paths.DataDirectory, "backups", "game-settings"), sp.GetRequiredService<TimeProvider>(), log));
         services.AddSingleton<GameCatalog>();
         services.AddSingleton<GameEditorServices>();
         services.AddSingleton<GameDialogs>();
@@ -116,7 +118,8 @@ public static class ServiceRegistration
             sp.GetRequiredService<SwitchOptions>(),
             sp.GetRequiredService<TimeProvider>(),
             log,
-            sp.GetRequiredService<IWindowLayout>()));
+            sp.GetRequiredService<IWindowLayout>(),
+            sp.GetRequiredService<IGameSettingsFiles>()));
         services.AddSingleton<GameSessionService>();
 
         // UI

@@ -121,6 +121,26 @@ public sealed partial class GameCatalog : ObservableObject
         }
     }
 
+    /// <summary>Keeps the values a game left in its settings file as the entry's own, for its next session.</summary>
+    public async Task RememberSettingsAsync(Guid gameId, IReadOnlyDictionary<string, string> values, CancellationToken cancellationToken)
+    {
+        if (Find(gameId) is not { Settings: { } settings } game)
+        {
+            return;
+        }
+
+        try
+        {
+            await _store.SaveAsync(game with { Settings = settings with { Values = values } }, cancellationToken);
+            await ReloadAsync(cancellationToken);
+            _log.Information("Game {Game}: {Count} own setting(s) remembered", game.Name, values.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _log.Warning(ex, "Game {Game}: the settings it left could not be saved", game.Name);
+        }
+    }
+
     private void Rebuild()
     {
         Items.Clear();

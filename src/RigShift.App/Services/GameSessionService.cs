@@ -192,6 +192,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         {
             runner = _runner();
             runner.ProcessLearned += OnProcessLearned;
+            runner.SettingsRemembered += OnSettingsRemembered;
             GameSessionResult result = await Task.Run(
                 () => runner.RunAsync(game, alreadyRunning, fromLink, _stopping.Token), CancellationToken.None);
             _log.Information("Game {Game} finished as {Outcome}", game.Name, result.Outcome);
@@ -209,11 +210,15 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         finally
         {
             runner?.ProcessLearned -= OnProcessLearned;
+            runner?.SettingsRemembered -= OnSettingsRemembered;
         }
     }
 
     private void OnProcessLearned(object? sender, GameProcessLearned learned) =>
         _dispatcher.BeginInvoke(() => _catalog.RememberProcessNameAsync(learned.GameId, learned.ProcessName, CancellationToken.None));
+
+    private void OnSettingsRemembered(object? sender, GameSettingsRemembered remembered) =>
+        _dispatcher.BeginInvoke(() => _catalog.RememberSettingsAsync(remembered.GameId, remembered.Values, CancellationToken.None));
 
     private void Finish(GameEntry game, string? status, GameSessionOutcome? outcome)
     {

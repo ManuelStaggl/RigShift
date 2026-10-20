@@ -59,6 +59,11 @@ public static class GameEditing
             problems.Add(GameProblem.AppPathMissing);
         }
 
+        if (game.Settings is { } settings && (!settings.HasValidFile || settings.Keys.Count == 0))
+        {
+            problems.Add(GameProblem.SettingsInvalid);
+        }
+
         return problems;
     }
 
@@ -85,4 +90,7 @@ public enum GameProblem
 
     /// <summary>A tool entry has no program.</summary>
     AppPathMissing,
+
+    /// <summary>Own settings without a full path to a JSON file, or without keys.</summary>
+    SettingsInvalid,
 }
