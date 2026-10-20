@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.5.1] - 2026-10-20
+
+### Fixed
+
+- **A duplicated profile could not be saved.** The copy kept the original's hotkey, which only one profile may have,
+  so every change to it was blocked until the hotkey was cleared. The copy now starts without one, as a duplicated
+  game already did.
+
 ## [4.5.0] - 2026-10-20
 
 ### Added

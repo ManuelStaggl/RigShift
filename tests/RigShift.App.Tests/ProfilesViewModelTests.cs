@@ -286,9 +286,12 @@ public sealed class ProfilesViewModelTests : IDisposable
     });
 
     [Fact]
-    public Task Duplicate_SavesACopyUnderAFreeName_AndSelectsIt() => _ui.RunAsync(async () =>
+    public Task Duplicate_SavesACopyUnderAFreeName_WithoutHotkey_AndSelectsIt() => _ui.RunAsync(async () =>
     {
-        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
+        Profile desk = await SavedAsync(Profile("Desk", DeskModes) with
+        {
+            Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x71 },
+        });
         ProfilesViewModel page = await PageAsync();
 
         await page.DuplicateCommand.ExecuteAsync(null);
@@ -298,6 +301,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         Profile copy = _host.Store.Profiles.Single(p => p.Id != desk.Id);
         copy.Name.ShouldBe(Loc.Format("Profile_CopyName", "Desk"));
         copy.Displays.ShouldBe(desk.Displays);
+        copy.Hotkey.ShouldBeNull();
         page.SelectedItem.ShouldNotBeNull().Profile.Id.ShouldBe(copy.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Duplicated", copy.Name));
     });
