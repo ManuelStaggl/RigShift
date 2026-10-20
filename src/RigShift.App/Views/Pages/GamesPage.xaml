@@ -336,6 +336,11 @@
                 <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
                 <Button.ContextMenu>
                   <ContextMenu>
+                    <MenuItem Command="{Binding DuplicateCommand}" Header="{loc:Tr Game_Duplicate}">
+                      <MenuItem.Icon>
+                        <ui:SymbolIcon Symbol="Copy16" />
+                      </MenuItem.Icon>
+                    </MenuItem>
                     <MenuItem Command="{Binding CreateShortcutCommand}" Header="{loc:Tr Profile_ShortcutMenu}">
                       <MenuItem.Icon>
                         <ui:SymbolIcon Symbol="Link16" />
@@ -475,6 +480,38 @@
                         Visibility="{Binding HasLaunchProblem, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                   </DockPanel>
+                </Border>
+
+                <!-- Launch options and the OpenXR runtime: what makes "LMU (VR)" differ from "LMU". -->
+                <Border Margin="0,8,0,0" Style="{StaticResource RigShift.Card.Group}" Visibility="{Binding SupportsArguments, Converter={StaticResource BoolToVisibility}}">
+                  <StackPanel>
+                    <controls:SettingRow
+                      Caption="{loc:Tr Game_ArgumentsHint}"
+                      Style="{StaticResource RigShift.SettingRow.Inner}"
+                      Title="{loc:Tr App_Arguments}">
+                      <TextBox
+                        Width="240"
+                        AutomationProperties.HelpText="{loc:Tr Game_ArgumentsHint}"
+                        AutomationProperties.Name="{loc:Tr App_Arguments}"
+                        Style="{StaticResource RigShift.Field.Value}"
+                        Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" />
+                    </controls:SettingRow>
+                    <StackPanel Visibility="{Binding SupportsRuntime, Converter={StaticResource BoolToVisibility}}">
+                      <Border Style="{StaticResource RigShift.Divider}" />
+                      <controls:SettingRow
+                        Caption="{loc:Tr Game_RuntimeHint}"
+                        Style="{StaticResource RigShift.SettingRow.Inner}"
+                        Title="{loc:Tr Game_Runtime}">
+                        <ComboBox
+                          Width="240"
+                          AutomationProperties.Name="{loc:Tr Game_Runtime}"
+                          DisplayMemberPath="Name"
+                          ItemsSource="{Binding RuntimeChoices}"
+                          SelectedItem="{Binding SelectedRuntime}"
+                          Style="{StaticResource RigShift.Select}" />
+                      </controls:SettingRow>
+                    </StackPanel>
+                  </StackPanel>
                 </Border>
 
                 <!-- How RigShift knows the session runs and when it ends. -->

@@ -97,6 +97,7 @@ public static class ServiceRegistration
         services.AddSingleton<IGameStore>(sp => new JsonGameStore(paths.DataDirectory, log, sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton<IGameLibrary, Windows.Games.GameLibrary>();
         services.AddSingleton<IGameProcesses, Windows.Games.SystemGameProcesses>();
+        services.AddSingleton<IOpenXrRuntimes, Windows.Games.OpenXrRuntimes>();
         services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
         services.AddSingleton<GameCatalog>();

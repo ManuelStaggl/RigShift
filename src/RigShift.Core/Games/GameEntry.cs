@@ -89,8 +89,15 @@ public sealed record GameLaunch
     /// </summary>
     public required string Target { get; init; }
 
-    /// <summary>Command line arguments; for a store launch they are passed to the store's URI where it supports them.</summary>
+    /// <summary>Command line arguments, such as <c>+VR</c>; for a store launch they go into the store's URI where it supports them (Steam).</summary>
     public string? Arguments { get; init; }
+
+    /// <summary>
+    /// Manifest of the OpenXR runtime this game runs with (<c>XR_RUNTIME_JSON</c>), or <c>null</c> for the one Windows
+    /// has set. Only for <see cref="GameLaunchKind.Executable"/>: a store launch hands the game to the client, and the
+    /// client's environment is not ours to set. The Windows setting itself is never touched.
+    /// </summary>
+    public string? OpenXrRuntime { get; init; }
 
     /// <summary>
     /// Install folder from the detection. Not used to start the game – it is the filter that tells the game's own
@@ -125,6 +132,9 @@ public sealed record GameLaunch
     [JsonIgnore]
     public string? Uri => Kind switch
     {
+        // steam://run passes launch options, rungameid does not.
+        GameLaunchKind.Steam when HasValidTarget && !string.IsNullOrWhiteSpace(Arguments)
+            => $"steam://run/{Target}//{System.Uri.EscapeDataString(Arguments.Trim())}/",
         GameLaunchKind.Steam when HasValidTarget => $"steam://rungameid/{Target}",
         GameLaunchKind.Epic when HasValidTarget => $"com.epicgames.launcher://apps/{Target}?action=launch&silent=true",
         GameLaunchKind.Xbox when HasValidTarget => $@"shell:AppsFolder\{Target}",

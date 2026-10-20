@@ -263,6 +263,11 @@ public sealed class JsonGameStoreTests : IDisposable
         => new GameLaunch { Kind = kind, Target = target }.Uri.ShouldBe(expected);
 
     [Fact]
+    public void Uri_ForSteamWithLaunchOptions_GoesThroughRun_Escaped()
+        => new GameLaunch { Kind = GameLaunchKind.Steam, Target = "2399420", Arguments = " +XR -x y " }.Uri
+            .ShouldBe("steam://run/2399420//%2BXR%20-x%20y/");
+
+    [Fact]
     public void KnownProcessName_ComesFromThePathForAnExecutable_AndFromTheLearnedNameOtherwise()
     {
         new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"C:\Games\rF2\rFactor2.exe" }
