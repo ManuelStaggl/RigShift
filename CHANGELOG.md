@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-10-20
+
+### Added
+
+- **Own game settings per game** (game → Game): values a game keeps in one file for every mode, such as Le Mans
+  Ultimate's graphics for monitor and VR. RigShift writes the entry's values before the game starts, and once it has
+  closed takes over what you changed in its menu and puts the previous values back. A copy of the file goes to
+  `%AppData%\RigShift\backups\game-settings` before every write; nothing is written while the game runs. For Le Mans
+  Ultimate on Steam the file and the graphics keys are filled in when you turn it on.
+
 ## [4.4.0] - 2026-10-20
 
 ### Added
