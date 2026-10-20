@@ -177,6 +177,29 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         }
     }
 
+    /// <summary>
+    /// A copy of the game as saved, e.g. "LMU (VR)" next to "LMU" with its own profile and launch options. Hotkey and
+    /// "also run when started from Steam" stay with the original: both copies would answer the same key and process.
+    /// </summary>
+    [RelayCommand]
+    private async Task DuplicateAsync()
+    {
+        if (!await ConfirmLeaveAsync() || SelectedItem is not { IsNew: false } item)
+        {
+            return;
+        }
+
+        GameEntry copy = item.Game with
+        {
+            Id = Guid.NewGuid(),
+            Name = Core.Profiles.ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), _catalog.Games.Select(g => g.Name)),
+            Hotkey = null,
+            StartWithGame = false,
+        };
+        SelectAfterRebuild(copy.Id);
+        await RunStoreActionAsync(() => _catalog.SaveAsync(copy, CancellationToken.None), Loc.Format("Status_Duplicated", copy.Name));
+    }
+
     [RelayCommand]
     private void CaptureWindows()
     {

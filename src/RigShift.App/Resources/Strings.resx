@@ -357,6 +357,13 @@
   <data name="Game_EndsWithLauncher" xml:space="preserve"><value>The launcher</value></data>
   <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher process</value></data>
   <data name="Game_LauncherProcessHint" xml:space="preserve"><value>For sims with their own menu app, such as iRacing: without it, the session would end every time you go back to the menu.</value></data>
+  <data name="Game_ArgumentsHint" xml:space="preserve"><value>Passed to the game at start, such as +XR.</value></data>
+  <data name="Game_Runtime" xml:space="preserve"><value>OpenXR runtime</value></data>
+  <data name="Game_RuntimeHint" xml:space="preserve"><value>Only for this game; the Windows setting stays as it is.</value></data>
+  <data name="Game_RuntimeWindows" xml:space="preserve"><value>Windows setting</value></data>
+  <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows setting)</value></data>
+  <data name="Game_RuntimeMissing" xml:space="preserve"><value>{0} (not installed)</value></data>
+  <data name="Game_Duplicate" xml:space="preserve"><value>Duplicate, e.g. as a VR variant</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Don't switch anything</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Arrange your tools as you like them, then save the positions here. They are put back before the game starts.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Save positions now…</value></data>

@@ -14,11 +14,17 @@ namespace RigShift.Windows.Games;
 /// </summary>
 public sealed class ShellGameStarter : IGameStarter
 {
+    /// <summary>The program needs elevation; only the shell can start it, and then without our environment.</summary>
+    private const int ErrorElevationRequired = 740;
+
+    private readonly IOpenXrRuntimes _runtimes;
     private readonly ILogger _log;
 
-    public ShellGameStarter(ILogger log)
+    public ShellGameStarter(IOpenXrRuntimes runtimes, ILogger log)
     {
+        ArgumentNullException.ThrowIfNull(runtimes);
         ArgumentNullException.ThrowIfNull(log);
+        _runtimes = runtimes;
         _log = log.ForContext<ShellGameStarter>();
     }
 
@@ -39,10 +45,37 @@ public sealed class ShellGameStarter : IGameStarter
         }
 
         string file = LaunchPath.ForStart(launch.Target);
+        ProcessStartInfo start = ShellStart(file, launch.Arguments);
+        if (file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && RuntimeFor(launch) is { } runtime)
+        {
+            // The shell cannot hand over an environment, so this one start goes straight through CreateProcess.
+            start.UseShellExecute = false;
+            start.Environment["XR_RUNTIME_JSON"] = runtime;
+            _log.Information("Starting {File} with OpenXR runtime {Runtime}", file, runtime);
+        }
+
+        // Not disposed here: the session waits on this very handle, see IRunningGame.
+        Process? process;
+        try
+        {
+            process = Process.Start(start);
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == ErrorElevationRequired && !start.UseShellExecute)
+        {
+            _log.Warning("{File} asks for administrator rights; started through the shell with the OpenXR runtime Windows has set", file);
+            process = Process.Start(ShellStart(file, launch.Arguments));
+        }
+
+        _log.Information("Started {File} (process {ProcessId})", file, process?.Id);
+        return process is null ? null : new StartedProcess(process, _log);
+    }
+
+    private static ProcessStartInfo ShellStart(string file, string? arguments)
+    {
         var start = new ProcessStartInfo
         {
             FileName = file,
-            Arguments = launch.Arguments ?? string.Empty,
+            Arguments = arguments ?? string.Empty,
             UseShellExecute = true,
         };
 
@@ -52,10 +85,24 @@ public sealed class ShellGameStarter : IGameStarter
             start.WorkingDirectory = directory;
         }
 
-        // Not disposed here: the session waits on this very handle, see IRunningGame.
-        Process? process = Process.Start(start);
-        _log.Information("Started {File} (process {ProcessId})", file, process?.Id);
-        return process is null ? null : new StartedProcess(process, _log);
+        return start;
+    }
+
+    /// <summary>The chosen runtime's manifest when it is still registered with Windows, else <c>null</c> with a warning.</summary>
+    private string? RuntimeFor(GameLaunch launch)
+    {
+        if (launch.OpenXrRuntime is not { Length: > 0 } wanted)
+        {
+            return null;
+        }
+
+        if (_runtimes.Installed().FirstOrDefault(r => string.Equals(r.ManifestPath, wanted, StringComparison.OrdinalIgnoreCase)) is { } runtime)
+        {
+            return runtime.ManifestPath;
+        }
+
+        _log.Warning("OpenXR runtime {Runtime} is not registered with Windows (any more); the game starts with the one Windows has set", wanted);
+        return null;
     }
 
     private sealed class StartedProcess(Process process, ILogger log) : IRunningGame

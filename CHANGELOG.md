@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.4.0] - 2026-10-20
+
+### Added
+
+- **Launch options per game** (game → Game), for programs and Steam games. With them a sim starts straight in VR,
+  e.g. `+XR` for Le Mans Ultimate or `-vr` for Assetto Corsa EVO.
+- **Duplicate a game** (the "…" menu), e.g. "LMU (VR)" next to "LMU" with its own profile and launch options. The copy
+  leaves the hotkey and "also run when started from Steam" with the original.
+- **OpenXR runtime per game** for games RigShift starts as a program: the game runs with the chosen runtime (Virtual
+  Desktop, SteamVR, Meta) while the Windows setting stays as it is. Steam and Epic games use the Windows setting.
+
 ## [4.3.1] - 2026-10-04
 
 ### Fixed

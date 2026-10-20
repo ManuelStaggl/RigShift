@@ -357,6 +357,13 @@
   <data name="Game_EndsWithLauncher" xml:space="preserve"><value>Dem Launcher</value></data>
   <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher-Prozess</value></data>
   <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Für Sims mit eigener Menü-App, etwa iRacing: sonst würde die Sitzung bei jeder Rückkehr ins Menü enden.</value></data>
+  <data name="Game_ArgumentsHint" xml:space="preserve"><value>Gehen beim Start ans Spiel, etwa +XR.</value></data>
+  <data name="Game_Runtime" xml:space="preserve"><value>OpenXR-Laufzeit</value></data>
+  <data name="Game_RuntimeHint" xml:space="preserve"><value>Nur für dieses Spiel; die Windows-Einstellung bleibt, wie sie ist.</value></data>
+  <data name="Game_RuntimeWindows" xml:space="preserve"><value>Windows-Einstellung</value></data>
+  <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows-Einstellung)</value></data>
+  <data name="Game_RuntimeMissing" xml:space="preserve"><value>{0} (nicht installiert)</value></data>
+  <data name="Game_Duplicate" xml:space="preserve"><value>Duplizieren, z. B. als VR-Variante</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Nichts umschalten</value></data>
   <data name="Game_WindowsHint" xml:space="preserve"><value>Schieb deine Tools zurecht und speichere die Positionen hier. Sie werden vor dem Spielstart wiederhergestellt.</value></data>
   <data name="Game_CaptureWindows" xml:space="preserve"><value>Positionen jetzt speichern…</value></data>

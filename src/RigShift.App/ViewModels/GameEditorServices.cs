@@ -1,4 +1,5 @@
 using RigShift.App.Services;
+using RigShift.Core.Abstractions;
 using Serilog;
 
 namespace RigShift.App.ViewModels;
@@ -8,4 +9,5 @@ public sealed record GameEditorServices(
     GameCatalog Catalog,
     HotkeyService Hotkeys,
     IAppPicker AppPicker,
+    IOpenXrRuntimes Runtimes,
     ILogger Log);

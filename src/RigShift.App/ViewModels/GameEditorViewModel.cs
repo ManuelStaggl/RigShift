@@ -26,6 +26,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     private readonly IReadOnlyList<GameEntry> _games;
     private readonly GameCatalog _catalog;
     private readonly HotkeyRecorder _hotkeyRecorder;
+    private readonly IReadOnlyList<OpenXrRuntime> _runtimes;
     private readonly ILogger _log;
     private GameEntry _initial;
     private GameLaunch _launch;
@@ -45,11 +46,13 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         _catalog = services.Catalog;
         _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id, "Game_HotkeyHint");
         _log = services.Log.ForContext<GameEditorViewModel>();
+        _runtimes = services.Runtimes.Installed();
         _launch = game.Launch;
         IsNew = isNew;
 
         Name = game.Name;
         LaunchTarget = game.Launch.Target;
+        Arguments = game.Launch.Arguments ?? string.Empty;
         ProcessName = game.Launch.ProcessName ?? string.Empty;
         LauncherProcessName = game.LauncherProcessName ?? string.Empty;
         StartWithGame = game.StartWithGame;
@@ -62,6 +65,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         SelectedEnd = EndChoices.First(c => c.Key == game.EndsWith.ToString());
         SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == ExitKeyOf(game.Exit)) ?? ExitChoices[0];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(game.Icon)) ?? IconChoices[0];
+        SelectedRuntime = RuntimeChoices.FirstOrDefault(c => string.Equals(c.Key, game.Launch.OpenXrRuntime, StringComparison.OrdinalIgnoreCase)) ?? RuntimeChoices[0];
 
         AppList = new AppListEditor(game.Apps, showWhen: true, context.AppsWaitDevice, services.AppPicker, "Game_AddTool");
         AppList.Changed += OnPartChanged;
@@ -162,6 +166,21 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
 
     public bool HasLaunch => !string.IsNullOrWhiteSpace(LaunchTarget);
 
+    /// <summary>Launch options such as <c>+VR</c>; a program gets them directly, Steam through its URI. Epic and Xbox take none.</summary>
+    [ObservableProperty]
+    public partial string Arguments { get; set; }
+
+    public bool SupportsArguments => _launch.Kind is GameLaunchKind.Executable or GameLaunchKind.Steam;
+
+    /// <summary>"Windows setting", then every installed OpenXR runtime (tab "Game").</summary>
+    public ObservableCollection<Choice> RuntimeChoices { get; } = [];
+
+    [ObservableProperty]
+    public partial Choice? SelectedRuntime { get; set; }
+
+    /// <summary>Only a program started by RigShift itself can get its own runtime, and only when there is a choice.</summary>
+    public bool SupportsRuntime => _launch.Kind == GameLaunchKind.Executable && RuntimeChoices.Count > 1;
+
     /// <summary>
     /// The game's own process, without extension. Visible and editable on purpose: a first start learns it, but for a
     /// sim whose interface stays open the guess can land on the interface, and then the user has to be able to say so.
@@ -261,8 +280,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         LauncherProcessName = filled.LauncherProcessName ?? string.Empty;
         SelectedEnd = EndChoices.First(c => c.Key == filled.EndsWith.ToString());
         LaunchTarget = installed.Launch.Target;
-        OnPropertyChanged(nameof(LaunchKindText));
-        OnPropertyChanged(nameof(LaunchText));
+        OnLaunchKindChanged();
     }
 
     /// <summary>Takes a program the user browsed for.</summary>
@@ -277,8 +295,16 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
 
         LaunchTarget = path;
+        OnLaunchKindChanged();
+    }
+
+    private void OnLaunchKindChanged()
+    {
         OnPropertyChanged(nameof(LaunchKindText));
         OnPropertyChanged(nameof(LaunchText));
+        OnPropertyChanged(nameof(SupportsArguments));
+        OnPropertyChanged(nameof(SupportsRuntime));
+        Recalculate();
     }
 
     /// <summary>A key combination pressed in the hotkey field; without Ctrl, Alt or Win it only shows a hint.</summary>
@@ -322,6 +348,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         {
             Target = LaunchTarget.Trim(),
             ProcessName = string.IsNullOrWhiteSpace(ProcessName) ? null : ProcessName.Trim(),
+            Arguments = SupportsArguments && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
+            OpenXrRuntime = _launch.Kind == GameLaunchKind.Executable ? SelectedRuntime?.Key : null,
         },
         ProfileId = Guid.TryParse(SelectedProfile?.Key, out Guid profileId) ? profileId : null,
         Apps = AppList.Build(),
@@ -431,6 +459,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         string? end = SelectedEnd?.Key;
         string? exit = SelectedExit?.Key;
         string? icon = SelectedIcon?.Key;
+        string? runtime = SelectedRuntime?.Key;
 
         _loading = true;
         try
@@ -440,6 +469,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
             SelectedEnd = EndChoices.FirstOrDefault(c => c.Key == end) ?? EndChoices[0];
             SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == exit) ?? ExitChoices[0];
             SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == icon) ?? IconChoices[0];
+            SelectedRuntime = RuntimeChoices.FirstOrDefault(c => c.Key == runtime) ?? RuntimeChoices[0];
             AppList.Relabel();
         }
         finally
@@ -475,6 +505,20 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         foreach (Profile profile in _profiles)
         {
             ExitChoices.Add(new Choice(profile.Id.ToString(), Loc.Format("Game_ExitProfile", profile.Name)));
+        }
+
+        RuntimeChoices.Clear();
+        RuntimeChoices.Add(new Choice(null, Loc.Instance["Game_RuntimeWindows"]));
+        foreach (OpenXrRuntime runtime in _runtimes)
+        {
+            RuntimeChoices.Add(new Choice(runtime.ManifestPath, runtime.IsActive ? Loc.Format("Game_RuntimeActive", runtime.Name) : runtime.Name));
+        }
+
+        // A saved runtime that is gone stays selectable, so opening the game does not change it behind the user's back.
+        if (_original.Launch.OpenXrRuntime is { Length: > 0 } saved
+            && !_runtimes.Any(r => string.Equals(r.ManifestPath, saved, StringComparison.OrdinalIgnoreCase)))
+        {
+            RuntimeChoices.Add(new Choice(saved, Loc.Format("Game_RuntimeMissing", Path.GetFileNameWithoutExtension(saved))));
         }
 
         IconChoices.Clear();

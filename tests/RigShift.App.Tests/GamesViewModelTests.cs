@@ -44,7 +44,7 @@ public sealed class GamesViewModelTests : IDisposable
         _hotkeys = _ui.Invoke(() => new HotkeyService(
             _host.Catalog, _catalog, _sessions, _host.Coordinator, _host.Settings, Logger.None, new FakeHotkeyRegistrar()));
         _dialogs = new Dialogs(new GameDialogs(
-            new GameEditorServices(_catalog, _hotkeys, new FakeAppPicker(), Logger.None),
+            new GameEditorServices(_catalog, _hotkeys, new FakeAppPicker(), new FakeOpenXrRuntimes(), Logger.None),
             _host.Catalog,
             Substitute.For<IGameLibrary>(),
             Substitute.For<IWindowLayout>(),
@@ -121,6 +121,31 @@ public sealed class GamesViewModelTests : IDisposable
         _store.Games.Select(g => g.Name).ShouldBe(["iRacing 2", "Assetto Corsa"]);
         page.SelectedItem.ShouldNotBeNull().Game.Id.ShouldBe(game.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Saved", "iRacing 2"));
+    });
+
+    [Fact]
+    public Task Duplicate_SavesACopy_WithoutHotkeyAndAutoStart_AndSelectsIt() => _ui.RunAsync(async () =>
+    {
+        GameEntry lmu = await SavedAsync("LMU", process: "LMU");
+        lmu = lmu with
+        {
+            Launch = lmu.Launch with { Arguments = "+XR" },
+            Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x4C },
+            StartWithGame = true,
+        };
+        await _catalog.SaveAsync(lmu, Ct);
+        GamesViewModel page = await PageAsync();
+
+        await page.DuplicateCommand.ExecuteAsync(null);
+        string copyName = Loc.Format("Profile_CopyName", "LMU");
+        await UntilAsync(() => page.SelectedItem?.Name == copyName, "the copy was not selected");
+
+        GameEntry copy = _store.Games.Single(g => g.Id != lmu.Id);
+        copy.Name.ShouldBe(copyName);
+        copy.Launch.ShouldBe(lmu.Launch);
+        copy.Hotkey.ShouldBeNull();
+        copy.StartWithGame.ShouldBeFalse();
+        page.StatusMessage.ShouldBe(Loc.Format("Status_Duplicated", copyName));
     });
 
     [Fact]

@@ -32,6 +32,9 @@ public sealed class GameEditorViewModelTests : IDisposable
     private readonly FakeHotkeyRegistrar _registrar = new();
     private readonly HotkeyService _hotkeys;
     private readonly List<GameEditorViewModel> _editors = [];
+    private readonly FakeOpenXrRuntimes _runtimes = new(
+        new OpenXrRuntime(@"C:\VD\virtualdesktop-openxr.json", "VirtualDesktopXR", IsActive: false),
+        new OpenXrRuntime(@"C:\Steam\steamxr_win64.json", "SteamVR", IsActive: true));
 
     public GameEditorViewModelTests()
     {
@@ -74,6 +77,63 @@ public sealed class GameEditorViewModelTests : IDisposable
         GameEntry built = editor.ToGame();
         built.Apps.ShouldBe(game.Apps);
         (built with { Apps = game.Apps }).ShouldBe(game);
+    }
+
+    [Fact]
+    public void SteamGame_TakesLaunchOptions_ButNoRuntime()
+    {
+        GameEditorViewModel editor = Editor(Game("LMU"));
+
+        editor.SupportsArguments.ShouldBeTrue();
+        editor.SupportsRuntime.ShouldBeFalse();
+        editor.Arguments = " +XR ";
+
+        editor.IsDirty.ShouldBeTrue();
+        editor.ToGame().Launch.Arguments.ShouldBe("+XR");
+        editor.ToGame().Launch.OpenXrRuntime.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Program_GetsItsOwnRuntime_TheWindowsSettingIsTheDefault()
+    {
+        GameEntry game = Game("iRacing") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"C:\iRacing\iRacingUI.exe" } };
+        GameEditorViewModel editor = Editor(game, games: [game]);
+
+        editor.SupportsRuntime.ShouldBeTrue();
+        editor.RuntimeChoices.Select(c => c.Key).ShouldBe([null, @"C:\VD\virtualdesktop-openxr.json", @"C:\Steam\steamxr_win64.json"]);
+        editor.SelectedRuntime.ShouldBe(editor.RuntimeChoices[0]);
+        editor.RuntimeChoices[2].Name.ShouldBe(Loc.Format("Game_RuntimeActive", "SteamVR"));
+
+        editor.SelectedRuntime = editor.RuntimeChoices[1];
+
+        editor.ToGame().Launch.OpenXrRuntime.ShouldBe(@"C:\VD\virtualdesktop-openxr.json");
+    }
+
+    [Fact]
+    public void SavedRuntime_ThatIsGone_StaysChosen()
+    {
+        GameEntry game = Game("iRacing") with
+        {
+            Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"C:\iRacing\iRacingUI.exe", OpenXrRuntime = @"C:\Old\gone.json" },
+        };
+
+        GameEditorViewModel editor = Editor(game, games: [game]);
+
+        editor.SelectedRuntime.ShouldNotBeNull().Key.ShouldBe(@"C:\Old\gone.json");
+        editor.SelectedRuntime.Name.ShouldBe(Loc.Format("Game_RuntimeMissing", "gone"));
+        editor.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void EpicGame_TakesNoLaunchOptions()
+    {
+        GameEntry game = Game("Snapdragon") with { Launch = new GameLaunch { Kind = GameLaunchKind.Epic, Target = "Snapdragon" } };
+        GameEditorViewModel editor = Editor(game, games: [game]);
+
+        editor.SupportsArguments.ShouldBeFalse();
+        editor.Arguments = "+XR";
+
+        editor.ToGame().Launch.Arguments.ShouldBeNull();
     }
 
     [Fact]
@@ -473,7 +533,7 @@ public sealed class GameEditorViewModelTests : IDisposable
             games ?? [game],
             new AppsWaitDeviceChoice(game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, [new UsbDevice(Wheelbase, "Fanatec Wheelbase")], [], null));
         var editor = new GameEditorViewModel(
-            game, isNew, context, new GameEditorServices(catalog ?? _catalog, _hotkeys, new FakeAppPicker(), Logger.None));
+            game, isNew, context, new GameEditorServices(catalog ?? _catalog, _hotkeys, new FakeAppPicker(), _runtimes, Logger.None));
         _editors.Add(editor);
         return editor;
     }
