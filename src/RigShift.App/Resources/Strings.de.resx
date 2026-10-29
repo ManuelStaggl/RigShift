@@ -323,7 +323,7 @@
   <data name="Editor_RememberWindows" xml:space="preserve"><value>Fensterpositionen merken</value></data>
   <data name="Editor_RememberWindowsHint" xml:space="preserve"><value>Offene Fenster kehren an ihren Platz und in ihre Größe zurück, wenn du wieder zu diesem Profil wechselst.</value></data>
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Die Schreibtisch-Anordnung so speichern, wie sie gerade ist</value></data>
-  <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und ihn ebenfalls speichern</value></data>
+  <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und es ebenfalls speichern</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: ein USB-Gerät, das automatisch umschaltet</value></data>
   <data name="Editor_Surround" xml:space="preserve"><value>NVIDIA Surround</value></data>
   <data name="Editor_SurroundUnchanged" xml:space="preserve"><value>Nicht ändern</value></data>
@@ -384,8 +384,8 @@
   <data name="Game_ExitPrevious" xml:space="preserve"><value>Zurück zum letzten Profil</value></data>
   <data name="Game_ExitProfile" xml:space="preserve"><value>Auf „{0}“ umschalten</value></data>
   <data name="Game_StopApps" xml:space="preserve"><value>Tools schließen</value></data>
-  <data name="Game_StartWithGame" xml:space="preserve"><value>Auch reagieren, wenn aus Steam oder einem anderen Launcher gestartet</value></data>
-  <data name="Game_StartWithGameHint" xml:space="preserve"><value>Klappt nach einem Start über RigShift, der den Spielprozess lernt.</value></data>
+  <data name="Game_StartWithGame" xml:space="preserve"><value>Auch bei Start über Steam oder einen anderen Launcher</value></data>
+  <data name="Game_StartWithGameHint" xml:space="preserve"><value>Klappt, sobald RigShift den Spielprozess bei einem Start über RigShift gelernt hat.</value></data>
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Spiel beendet</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Wechsel zum Profil fehlgeschlagen, das Spiel wurde nicht gestartet</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>Das Spiel ließ sich nicht starten</value></data>
@@ -481,7 +481,7 @@
   <data name="Trigger_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Befehl kopiert.</value></data>
   <data name="Behavior_Intro" xml:space="preserve"><value>Wie sich der PC verhält, solange das Profil aktiv ist.</value></data>
-  <data name="Profile_SetDefault" xml:space="preserve"><value>Als Standard</value></data>
+  <data name="Profile_SetDefault" xml:space="preserve"><value>Als Standard festlegen</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Desktop-Verknüpfung anlegen</value></data>
   <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Desktopsymbole wiederherstellen</value></data>
   <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 Desktopsymbol zurückgesetzt.</value></data>
@@ -497,7 +497,7 @@
   <data name="List_NewInstalled" xml:space="preserve"><value>Installierte Spiele suchen …</value></data>
   <data name="List_NewProgram" xml:space="preserve"><value>Programm wählen …</value></data>
   <data name="Detail_PlayTip" xml:space="preserve"><value>Schaltet das Profil um, startet Tools und Spiel (Strg+Eingabe)</value></data>
-  <data name="Game_OpenGameTab" xml:space="preserve"><value>Tab Spiel</value></data>
+  <data name="Game_OpenGameTab" xml:space="preserve"><value>Zum Tab „Spiel“</value></data>
   <data name="GameTab_Game" xml:space="preserve"><value>Spiel</value></data>
   <data name="GameTab_Profile" xml:space="preserve"><value>Profil</value></data>
   <data name="GameTab_Tools" xml:space="preserve"><value>Tools</value></data>
@@ -561,7 +561,7 @@
   <data name="Fov_RadiusOwn" xml:space="preserve"><value>Anderer Radius</value></data>
   <data name="Fov_Layout" xml:space="preserve"><value>Bildschirme</value></data>
   <data name="Fov_Single" xml:space="preserve"><value>Einzeln</value></data>
-  <data name="Fov_Triple" xml:space="preserve"><value>Triple</value></data>
+  <data name="Fov_Triple" xml:space="preserve"><value>Triples</value></data>
   <data name="Fov_Bezel" xml:space="preserve"><value>Rahmen (mm)</value></data>
   <data name="Fov_BezelTip" xml:space="preserve"><value>Breite eines Rahmens, Bildrand bis Gehäuserand; zwischen zwei Bildern liegen zwei davon.</value></data>
   <data name="Fov_AngleAuto" xml:space="preserve"><value>Seitenwinkel berechnen</value></data>
@@ -592,7 +592,7 @@
   <data name="Fov_Kind_DoubleVertical" xml:space="preserve"><value>vertikal × 2</value></data>
   <data name="Fov_Kind_Multiplier" xml:space="preserve"><value>Multiplikator</value></data>
   <data name="Fov_Kind_Slider" xml:space="preserve"><value>Regler</value></data>
-  <data name="Fov_Kind_Offset" xml:space="preserve"><value>Abweichung</value></data>
+  <data name="Fov_Kind_Offset" xml:space="preserve"><value>Versatz</value></data>
   <data name="Fov_Kind_Radians" xml:space="preserve"><value>Radiant, 4:3</value></data>
   <data name="Fov_Conf_Likely" xml:space="preserve"><value>Wahrscheinlich – nur eine Quelle sagt das.</value></data>
   <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unklar – die Quellen widersprechen sich, also beides probieren.</value></data>
