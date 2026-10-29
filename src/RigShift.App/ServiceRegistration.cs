@@ -90,7 +90,7 @@ public static class ServiceRegistration
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
         services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());
-        services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl));
+        services.AddSingleton<IUpdateFeed>(_ => new VelopackUpdateFeed(UpdateService.RepositoryUrl, log));
         services.AddSingleton<IUpdatePolicy>(_ => new RegistryUpdatePolicy(log));
         services.AddSingleton<UpdateService>();
 

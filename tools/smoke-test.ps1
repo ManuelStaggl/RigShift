@@ -5,7 +5,8 @@
 .DESCRIPTION
     Runs in the release workflow before anything is published: an update that does not start would never reach anyone
     with the fix. With -PreviousSetup it first installs that version, lets it write its settings and a profile, and
-    then installs the new setup over it - the path every user takes. Nothing here switches a display.
+    then lets it update itself from the packages next to -Setup - the path every user takes (with a previous release
+    before 4.6.0, which cannot do that yet, the new setup is installed over it instead). Nothing here switches a display.
 
     It installs into %LocalAppData%\RigShift and writes to %AppData%\RigShift, so it belongs on a build machine,
     not on a PC that uses RigShift.
@@ -63,7 +64,10 @@ function Start-Tray {
     while ($true) {
         $pipes = [System.IO.Directory]::GetFiles('\\.\pipe\') | Where-Object { $_ -like '*RigShift.*' }
         if ($pipes) { break }
-        if ([datetime]::UtcNow -gt $deadline) { throw 'The tray app did not open its command pipe within 60 s' }
+        if ([datetime]::UtcNow -gt $deadline) {
+            Get-Process RigShift -ErrorAction SilentlyContinue | Format-Table Id, StartTime, HasExited | Out-String | Write-Host
+            throw 'The tray app did not open its command pipe within 60 s'
+        }
         Start-Sleep -Milliseconds 250
     }
 }
@@ -86,15 +90,60 @@ function Assert-Log {
 
 if (Test-Path $uninstallKey) { throw "RigShift is installed already; run this on a clean machine" }
 
+# The previous version downloads the delta from the folder next to $Setup and installs it on its next start - the way
+# every installed RigShift updates. Versions before this one ignore the variable, so the step needs a previous release
+# that knows it.
+function Update-InPlace {
+    $env:RIGSHIFT_UPDATE_SOURCE = (Resolve-Path (Split-Path $Setup -Parent)).Path
+    try {
+        # A fresh start, so the tray reads the variable: Start-Tray would accept an instance that is still going down.
+        Stop-Tray
+        Start-Process $exe -ArgumentList '--minimized'
+        Start-Tray
+        $deadline = [datetime]::UtcNow.AddSeconds(180)
+        while ($true) {
+            $log = Get-ChildItem (Join-Path $dataDir 'logs') -Filter 'rigshift-*.log' | Get-Content -Raw
+            if ($log -match 'downloaded, it is installed on the next start') { break }
+            if ($log -match 'Downloading update .* failed') { $log | Write-Host; throw 'The previous version could not download the update' }
+            if ([datetime]::UtcNow -gt $deadline) { $log | Write-Host; throw 'The previous version did not download the update within 180 s' }
+            Start-Sleep -Seconds 2
+        }
+        Stop-Tray
+
+        # Velopack applies the downloaded package as the tray starts and starts it again.
+        Start-Process $exe -ArgumentList '--minimized'
+        $deadline = [datetime]::UtcNow.AddSeconds(180)
+        while (-not (Invoke-RigShift '--version').Output.Trim().StartsWith($ExpectedVersion)) {
+            if ([datetime]::UtcNow -gt $deadline) { throw "The update to $ExpectedVersion was not applied within 180 s" }
+            Start-Sleep -Seconds 2
+        }
+        Write-Host "Updated in place to $ExpectedVersion"
+    }
+    finally {
+        Remove-Item Env:RIGSHIFT_UPDATE_SOURCE -ErrorAction SilentlyContinue
+    }
+}
+
 if ($PreviousSetup) {
     Install-Setup $PreviousSetup
     Start-Tray
     Assert-Command 'status' | Out-Null
     Assert-Command 'save', 'Smoke test' | Out-Null
+    $previous = [version]((Invoke-RigShift '--version').Output.Trim() -replace '[^\d.].*$', '')
     Stop-Tray
+
+    if ($previous -ge [version]'4.6.0') {
+        Update-InPlace
+    }
+    else {
+        Write-Host "Previous release $previous predates RIGSHIFT_UPDATE_SOURCE: installing the setup over it instead of updating in place"
+        Install-Setup $Setup
+    }
+}
+else {
+    Install-Setup $Setup
 }
 
-Install-Setup $Setup
 Start-Tray
 $version = (Invoke-RigShift '--version').Output.Trim()
 Write-Host "Installed version: $version"

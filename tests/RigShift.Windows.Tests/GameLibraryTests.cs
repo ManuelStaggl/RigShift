@@ -1,7 +1,10 @@
+using System.Globalization;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using RigShift.Windows.Games;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Shouldly;
 using Xunit;
 
@@ -72,6 +75,32 @@ public sealed class GameLibraryTests : IDisposable
     [Fact]
     public void Steam_WithoutAnInstallation_FindsNothing()
         => new SteamLibrary(Logger.None, () => null).Find().ShouldBeEmpty();
+
+    /// <summary>A manifest Steam holds open while it writes it: skipped, and the log says which one.</summary>
+    [Fact]
+    public void Steam_LogsAManifestItCannotRead()
+    {
+        string client = MakeSteamClient();
+        string manifest = Path.Combine(client, "steamapps", "appmanifest_999.acf");
+        File.WriteAllText(manifest, "\"AppState\"\n{\n}");
+        var log = new CollectingSink();
+
+        using (new FileStream(manifest, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            SteamLibrary.GamesIn(Path.Combine(client, "steamapps"), new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Sink(log).CreateLogger())
+                .ShouldBeEmpty();
+        }
+
+        log.Events.ShouldHaveSingleItem().Level.ShouldBe(LogEventLevel.Debug);
+        log.Events[0].RenderMessage(CultureInfo.InvariantCulture).ShouldContain("appmanifest_999.acf");
+    }
+
+    private sealed class CollectingSink : ILogEventSink
+    {
+        public List<LogEvent> Events { get; } = [];
+
+        public void Emit(LogEvent logEvent) => Events.Add(logEvent);
+    }
 
     /// <summary>An install folder that no longer exists must not be handed on as a filter for learning.</summary>
     [Fact]

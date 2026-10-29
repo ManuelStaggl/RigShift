@@ -17,7 +17,8 @@
         "strict_required_status_checks_policy": false,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
-          { "context": "build", "integration_id": 15368 }
+          { "context": "build", "integration_id": 15368 },
+          { "context": "windows-10-base", "integration_id": 15368 }
         ]
       }
     }
