@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.7.0] - 2026-10-29
+
+### Changed
+
+- Shorter, plainer texts throughout the app: messages are short sentences, tabs no longer open with a sentence that
+  repeats their name.
+- German: grammar fixes and one word per thing (Log, speichern, An/Aus, Audio, Infobereich).
+- Field of view: confidence hints and the comfort margin no longer cite unnamed sources.
+- README, security policy and contributing guide rewritten more plainly.
+
 ## [4.6.0] - 2026-10-29
 
 ### Fixed
