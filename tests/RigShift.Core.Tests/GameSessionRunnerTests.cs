@@ -5,7 +5,9 @@ using RigShift.Core.Games;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
 using RigShift.Core.Topology;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Shouldly;
 using Xunit;
 using static RigShift.Core.Tests.TestDisplays;
@@ -40,9 +42,9 @@ public sealed class GameSessionRunnerTests
 
     private FakeRunningGame LongRunning() => new(_time, TimeSpan.FromHours(1));
 
-    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null) => new(
+    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, Logger.None, desktop, settings);
+        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings);
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {
@@ -490,6 +492,91 @@ public sealed class GameSessionRunnerTests
 
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         await files.DidNotReceiveWithAnyArgs().SwapAsync(default!, default!, default!, default);
+    }
+
+    /// <summary>A settings file whose first swap leaves something from the game's folder running, as an anti-cheat service does.</summary>
+    private IGameSettingsFiles FilesThatLeaveTheGameRunning(Action? onFirstSwap = null)
+    {
+        IGameSettingsFiles files = Substitute.For<IGameSettingsFiles>();
+        files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                _processes.Running.Add(new RunningProcess(7, "start_protected_game", @"C:\Games\iRacing\start_protected_game.exe", _time.GetUtcNow()));
+                onFirstSwap?.Invoke();
+                return Shadows("4");
+            });
+        return files;
+    }
+
+    [Fact]
+    public async Task Run_LeavesTheSessionsValuesInTheFile_WhenTheGameStillRunsAfterTheTimeout()
+    {
+        IGameSettingsFiles files = FilesThatLeaveTheGameRunning();
+        var log = new CollectingSink();
+        GameSessionRunner runner = Runner(settings: files, log: new LoggerConfiguration().WriteTo.Sink(log).CreateLogger());
+        bool remembered = false;
+        runner.SettingsRemembered += (_, _) => remembered = true;
+
+        GameSessionResult result = await runner.RunAsync(GameWithSettings(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        await files.Received(1).SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>());
+        remembered.ShouldBeFalse();
+        log.Events.ShouldContain(e => e.Level == LogEventLevel.Warning && e.MessageTemplate.Text.Contains("still runs", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Run_WritesNothingBack_WhenCancelledWhileWaitingForTheGameToClose()
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        DateTimeOffset? gameStart = null;
+        IGameSettingsFiles files = FilesThatLeaveTheGameRunning(() => gameStart = _time.GetUtcNow());
+
+        // The game runs an hour, then the short look for a successor; any poll after that is the wait for its folder to empty.
+        TimeSpan sessionEnd = TimeSpan.FromHours(1) + GameSessionRunner.LongRunGrace + GameProcessLearner.PollInterval;
+        _processes.OnListed = _ =>
+        {
+            if (gameStart is { } start && _time.GetUtcNow() >= start + sessionEnd)
+            {
+                cts.Cancel();
+            }
+        };
+        GameSessionRunner runner = Runner(settings: files);
+        bool remembered = false;
+        runner.SettingsRemembered += (_, _) => remembered = true;
+
+        await runner.RunAsync(GameWithSettings(), alreadyRunning: false, cts.Token);
+
+        cts.IsCancellationRequested.ShouldBeTrue();
+        await files.Received(1).SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>());
+        remembered.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Run_EndsNormally_WhenPuttingTheSettingsBackFails()
+    {
+        IGameSettingsFiles files = Substitute.For<IGameSettingsFiles>();
+        files.SwapAsync(SettingsFile, Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Shadows("4"), _ => throw new IOException("locked"));
+        var log = new CollectingSink();
+        GameSessionRunner runner = Runner(settings: files, log: new LoggerConfiguration().WriteTo.Sink(log).CreateLogger());
+        bool remembered = false;
+        runner.SettingsRemembered += (_, _) => remembered = true;
+
+        GameSessionResult result = await runner.RunAsync(GameWithSettings(), alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        remembered.ShouldBeFalse();
+        log.Events.ShouldContain(e => e.Level == LogEventLevel.Warning && e.Exception is IOException);
+    }
+
+    private sealed class CollectingSink : ILogEventSink
+    {
+        private readonly List<LogEvent> _events = [];
+
+        public IReadOnlyList<LogEvent> Events => _events;
+
+        public void Emit(LogEvent logEvent) => _events.Add(logEvent);
     }
 
     private GameEntry KnownSteamGame() => Game(new GameLaunch
