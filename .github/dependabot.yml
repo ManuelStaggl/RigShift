@@ -8,6 +8,7 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    labels: ["type:dependencies", "area:infra"]
     commit-message:
       prefix: chore
     groups:
@@ -16,6 +17,7 @@ updates:
 
   # The SDK version in global.json. (The tools in .config/dotnet-tools.json belong to the nuget entry above.)
   - package-ecosystem: dotnet-sdk
+    labels: ["type:dependencies", "area:infra"]
     directory: /
     schedule:
       interval: weekly
@@ -25,6 +27,7 @@ updates:
 
   # Actions are pinned to a commit; Dependabot moves the hash and the version comment together.
   - package-ecosystem: github-actions
+    labels: ["type:dependencies", "area:infra"]
     directory: /
     schedule:
       interval: weekly

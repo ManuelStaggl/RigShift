@@ -21,11 +21,25 @@ dotnet test --solution RigShift.slnx
 - Structured logging only (`Log.Information("Profile {Name}", name)`), never string interpolation in log calls.
 - Pass `CancellationToken` through async chains; never block the UI thread.
 
-## Commits and pull requests
+## From issue to release
 
-- [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`.
-- One topic per PR. Update `CHANGELOG.md` under *Unreleased*.
-- CI must be green.
+1. Every change starts as an issue. Feature requests use the form, which doubles as the spec: problem, acceptance
+   criteria, non-goals and test plan. Work is tracked on the [roadmap board](https://github.com/users/ManuelStaggl/projects/1)
+   (Backlog → Ready → In Progress → In Review → Done).
+2. One issue, one branch: `feat/<short-name>`, `fix/<short-name>`, `docs/…` or `chore/…`, cut from `main`.
+3. Open a pull request with `Closes #<issue>` and fill in the template. UI changes need before and after screenshots.
+4. `main` only takes pull requests with a green `build` check. Pull requests are merged with a merge commit.
+5. What is finished gets released; the version and milestone are set on the issue.
+
+## Commits
+
+- [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`, `ci:`.
+- One topic per PR. Update `CHANGELOG.md` under *Unreleased* for anything a user notices.
+
+## Labels
+
+`type:*` says what kind of work it is, `area:*` where it lands (display, audio, games, ui, cli, update, infra),
+`priority:*` how soon. `good first issue` marks small, well-described tasks.
 
 ## Bug reports
 
