@@ -1,3 +1,5 @@
+using System.IO;
+using Serilog;
 using Velopack;
 using Velopack.Sources;
 
@@ -22,9 +24,26 @@ public interface IUpdateFeed
 }
 
 /// <summary>GitHub Releases through Velopack.</summary>
-public sealed class VelopackUpdateFeed(string repositoryUrl) : IUpdateFeed
+public sealed class VelopackUpdateFeed(string repositoryUrl, ILogger log) : IUpdateFeed
 {
-    private readonly UpdateManager _manager = new(new GithubSource(repositoryUrl, accessToken: null, prerelease: false));
+    /// <summary>
+    /// Test only: a folder with packed releases replaces GitHub, so the release smoke test can update an installed build
+    /// to the one it just packed – the delta path every user takes. Ignored unless the folder exists.
+    /// </summary>
+    public const string LocalSourceVariable = "RIGSHIFT_UPDATE_SOURCE";
+
+    private readonly UpdateManager _manager = new(Source(repositoryUrl, log));
+
+    private static IUpdateSource Source(string repositoryUrl, ILogger log)
+    {
+        if (Environment.GetEnvironmentVariable(LocalSourceVariable) is { Length: > 0 } folder && Directory.Exists(folder))
+        {
+            log.Warning("Updates come from the local folder {Folder} ({Variable}), not from GitHub", folder, LocalSourceVariable);
+            return new SimpleFileSource(new DirectoryInfo(folder));
+        }
+
+        return new GithubSource(repositoryUrl, accessToken: null, prerelease: false);
+    }
 
     public bool IsInstalled => _manager.IsInstalled;
 
