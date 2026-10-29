@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
@@ -17,19 +16,36 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 {
     private readonly IDisplayConfigurator _display;
     private readonly ILogger _log;
+    private readonly Func<(INvMosaic? Api, string? Failure)> _open;
+    private readonly TimeProvider _time;
     private readonly Lock _gate = new();
-    private NvApi? _api;
+    private INvMosaic? _api;
     private string? _loadFailure;
     private bool _loaded;
     private bool _disposed;
 
     public NvSurroundController(IDisplayConfigurator display, ILogger log)
+        : this(display, log, OpenNvApi, TimeProvider.System)
+    {
+    }
+
+    /// <param name="open">Loads the driver interface; tests hand in a fake.</param>
+    /// <param name="time">Clock for the pauses between the driver calls.</param>
+    internal NvSurroundController(IDisplayConfigurator display, ILogger log, Func<(INvMosaic? Api, string? Failure)> open, TimeProvider time)
     {
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(log);
 
         _display = display;
         _log = log.ForContext<NvSurroundController>();
+        _open = open;
+        _time = time;
+    }
+
+    private static (INvMosaic? Api, string? Failure) OpenNvApi()
+    {
+        NvApi? api = NvApi.TryOpen(out string? failure);
+        return (api, failure);
     }
 
     public Task<SurroundState> QueryAsync(CancellationToken cancellationToken) =>
@@ -65,7 +81,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     }
 
     /// <summary>Opens NVAPI once. A machine without an NVIDIA driver answers null forever, without trying again.</summary>
-    private NvApi? Api()
+    private INvMosaic? Api()
     {
         lock (_gate)
         {
@@ -78,7 +94,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             _loaded = true;
             try
             {
-                _api = NvApi.TryOpen(out _loadFailure);
+                (_api, _loadFailure) = _open();
             }
             catch (Exception ex) when (ex is DllNotFoundException or BadImageFormatException or EntryPointNotFoundException)
             {
@@ -114,7 +130,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
     }
 
-    private SurroundState ReadLocked(NvApi api)
+    private SurroundState ReadLocked(INvMosaic api)
     {
         MosaicGridTopoV2[] grids = new MosaicGridTopoV2[MaxGrids];
         int status = api.EnumDisplayGrids(grids, out uint count);
@@ -164,7 +180,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
     }
 
-    private SurroundApplyResult Enable(NvApi api, SurroundGrid? grid, SurroundState before)
+    private SurroundApplyResult Enable(INvMosaic api, SurroundGrid? grid, SurroundState before)
     {
         if (grid is null || !grid.IsComplete)
         {
@@ -190,7 +206,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         return Set(api, topo, "switch Surround on", before);
     }
 
-    private SurroundApplyResult Disable(NvApi api, SurroundState before)
+    private SurroundApplyResult Disable(INvMosaic api, SurroundState before)
     {
         if (!before.IsActive)
         {
@@ -206,7 +222,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     /// switched off in Windows does not join a new grid; set on its own, it wakes up. DisplayMagician does the same
     /// before it builds a grid on a desktop without Surround. A failure here is only logged - the build still decides.
     /// </summary>
-    private void Wake(NvApi api, SurroundGrid grid)
+    private void Wake(INvMosaic api, SurroundGrid grid)
     {
         MosaicGridTopoV2[] singles = [.. Singles([grid]).Select(ToTopo)];
         _log.Information("Waking the {Count} displays of the Surround grid before building it", singles.Length);
@@ -217,7 +233,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             return;
         }
 
-        Thread.Sleep(WakeSettle);
+        Pause(WakeSettle);
     }
 
     /// <summary>
@@ -240,7 +256,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     /// Sets the grids, from the strictest flags to the loosest (<see cref="FlagSteps"/>). Only an answer that names the
     /// flags as the obstacle moves on to the next step; any other failure is final.
     /// </summary>
-    private int SetGrids(NvApi api, MosaicGridTopoV2[] grids, bool validate)
+    private int SetGrids(INvMosaic api, MosaicGridTopoV2[] grids, bool validate)
     {
         int status = NvApi.Status.Ok;
         for (int step = 0; step < FlagSteps.Length; step++)
@@ -286,7 +302,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
     /// the set call then builds without complaint (DisplayMagician switched it off for that reason), so the set call's own
     /// answer decides. It is asked with the same flags as the set call that follows.
     /// </summary>
-    private void Validate(NvApi api, MosaicGridTopoV2[] grids, uint flags)
+    private void Validate(INvMosaic api, MosaicGridTopoV2[] grids, uint flags)
     {
         var verdicts = new MosaicDisplayTopoStatus[grids.Length];
         int status = api.ValidateDisplayGrids(grids, verdicts, flags);
@@ -312,7 +328,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
     }
 
-    private SurroundApplyResult Set(NvApi api, MosaicGridTopoV2[] grids, string what, SurroundState before)
+    private SurroundApplyResult Set(INvMosaic api, MosaicGridTopoV2[] grids, string what, SurroundState before)
     {
         _log.Information("Asking the graphics driver to {What} ({Grids} grid(s))", what, grids.Length);
         int status = SetGrids(api, grids, validate: true);
@@ -323,12 +339,12 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
 
         // The driver is on record answering "done" without doing anything (RTX 50 series, 2026). Look, do not trust - but
         // give it time: the grids it reports can trail the change by a moment.
-        long started = Stopwatch.GetTimestamp();
+        long started = _time.GetTimestamp();
         SurroundState after = ReadLocked(api);
         while ((after.Availability != SurroundAvailability.Available || SameGrids(before, after))
-            && Stopwatch.GetElapsedTime(started) < SettleBudget)
+            && _time.GetElapsedTime(started) < SettleBudget)
         {
-            Thread.Sleep(SettlePoll);
+            Pause(SettlePoll);
             after = ReadLocked(api);
         }
 
@@ -344,11 +360,14 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
 
         _log.Information("Surround changed after {Milliseconds:0} ms: {Grids} grid(s) active",
-            Stopwatch.GetElapsedTime(started).TotalMilliseconds, after.Grids.Count);
+            _time.GetElapsedTime(started).TotalMilliseconds, after.Grids.Count);
         return new SurroundApplyResult { Outcome = SurroundOutcome.Changed };
     }
 
-    private SurroundApplyResult Failure(NvApi api, string what, int status)
+    /// <summary>A blocking pause on the worker thread the driver calls run on, as the driver calls themselves block.</summary>
+    private void Pause(TimeSpan duration) => Task.Delay(duration, _time).Wait();
+
+    private SurroundApplyResult Failure(INvMosaic api, string what, int status)
     {
         string message = api.Describe(status);
         _log.Error("{What}: {Message}", what, message);

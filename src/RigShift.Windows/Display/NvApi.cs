@@ -12,7 +12,21 @@ namespace RigShift.Windows.Display;
 /// NVAPI exports exactly one symbol, <c>nvapi_QueryInterface</c>; every function is fetched from it by a numeric id.
 /// The ids and the structures below come from NVIDIA's published headers (nvapi.h, nvapi_interface.h).
 /// </summary>
-internal sealed unsafe class NvApi : IDisposable
+/// <summary>The Mosaic calls <see cref="NvSurroundController"/> makes, so its sequencing can run against a fake driver.</summary>
+internal interface INvMosaic : IDisposable
+{
+    string Describe(int status);
+
+    int EnumDisplayGrids(Span<MosaicGridTopoV2> grids, out uint count);
+
+    int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts, uint flags);
+
+    int SetDisplayGrids(Span<MosaicGridTopoV2> grids, uint flags);
+
+    bool TryGetDisplayTarget(uint displayId, out uint adapterLow, out int adapterHigh, out uint targetId);
+}
+
+internal sealed unsafe class NvApi : INvMosaic
 {
     /// <summary>NV_MOSAIC_MAX_DISPLAYS.</summary>
     internal const int MaxMosaicDisplays = 64;
@@ -128,7 +142,7 @@ internal sealed unsafe class NvApi : IDisposable
     }
 
     /// <summary>The driver's own wording for a status code, or the bare number when it has none.</summary>
-    internal string Describe(int status)
+    public string Describe(int status)
     {
         if (_getErrorMessage is not null)
         {
@@ -151,7 +165,7 @@ internal sealed unsafe class NvApi : IDisposable
     /// Every grid the driver knows, written into <paramref name="grids"/>. A display that is not part of a Surround
     /// grid is reported as its own 1x1 grid, so this doubles as the list of available displays.
     /// </summary>
-    internal int EnumDisplayGrids(Span<MosaicGridTopoV2> grids, out uint count)
+    public int EnumDisplayGrids(Span<MosaicGridTopoV2> grids, out uint count)
     {
         count = 0;
         uint capacity = (uint)grids.Length;
@@ -186,7 +200,7 @@ internal sealed unsafe class NvApi : IDisposable
     /// Checks grids without changing anything, one verdict per grid in <paramref name="verdicts"/>. Error flags other
     /// than zero mean that grid is not possible.
     /// </summary>
-    internal int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts, uint flags)
+    public int ValidateDisplayGrids(Span<MosaicGridTopoV2> grids, Span<MosaicDisplayTopoStatus> verdicts, uint flags)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(verdicts.Length, grids.Length, nameof(verdicts));
         for (int i = 0; i < grids.Length; i++)
@@ -203,7 +217,7 @@ internal sealed unsafe class NvApi : IDisposable
     }
 
     /// <summary>Replaces the grids that use these displays. Singleton grids for every display remove Surround.</summary>
-    internal int SetDisplayGrids(Span<MosaicGridTopoV2> grids, uint flags)
+    public int SetDisplayGrids(Span<MosaicGridTopoV2> grids, uint flags)
     {
         fixed (MosaicGridTopoV2* first = grids)
         {
@@ -215,7 +229,7 @@ internal sealed unsafe class NvApi : IDisposable
     /// The Windows adapter and target a display id belongs to, so a driver display id can be matched with the display
     /// list Windows reports. Returns false when the driver is too old for this call (it arrived with R530).
     /// </summary>
-    internal bool TryGetDisplayTarget(uint displayId, out uint adapterLow, out int adapterHigh, out uint targetId)
+    public bool TryGetDisplayTarget(uint displayId, out uint adapterLow, out int adapterHigh, out uint targetId)
     {
         adapterLow = 0;
         adapterHigh = 0;
