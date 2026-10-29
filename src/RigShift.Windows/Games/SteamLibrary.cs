@@ -37,7 +37,7 @@ public sealed class SteamLibrary
         var games = new List<InstalledGame>();
         foreach (string steamApps in LibraryFolders(client))
         {
-            games.AddRange(GamesIn(steamApps));
+            games.AddRange(GamesIn(steamApps, _log));
         }
 
         _log.Information("Steam: {Count} installed games", games.Count);
@@ -94,7 +94,7 @@ public sealed class SteamLibrary
     }
 
     /// <summary>The games of one <c>steamapps</c> folder, from its <c>appmanifest_*.acf</c> files.</summary>
-    public static IReadOnlyList<InstalledGame> GamesIn(string steamAppsFolder)
+    public static IReadOnlyList<InstalledGame> GamesIn(string steamAppsFolder, ILogger? log = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(steamAppsFolder);
         var games = new List<InstalledGame>();
@@ -112,6 +112,7 @@ public sealed class SteamLibrary
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                log?.Debug(ex, "Steam manifest {File} could not be read, skipped", file);
                 continue;
             }
 
