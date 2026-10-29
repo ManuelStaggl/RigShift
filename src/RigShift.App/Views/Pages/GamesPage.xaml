@@ -429,10 +429,6 @@
               <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
               <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
-                <TextBlock
-                  Margin="0,0,0,16"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Game_GameIntro}" />
                 <!-- What starts: the picked game or program with "Choose…" in one card. -->
                 <Border Padding="16,12">
                   <Border.Style>
@@ -768,11 +764,6 @@
               <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
               <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
-                <TextBlock
-                  Margin="0,0,0,16"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Game_ToolsIntro}"
-                  TextWrapping="Wrap" />
                 <ContentPresenter Content="{Binding AppList}" />
               </StackPanel>
               </controls:ContentColumn>
@@ -849,10 +840,6 @@
               <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
               <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
-                <TextBlock
-                  Margin="0,0,0,16"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Game_EndIntro}" />
                 <controls:SettingRow Title="{loc:Tr Game_ExitLabel}">
                   <ComboBox
                     Width="260"
