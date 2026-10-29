@@ -57,14 +57,14 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die vorherigen Einstellungen sind wiederhergestellt.</value></data>
-  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die Bildschirme sind zurück, aber Surround ließ sich nicht wieder einschalten – wähle ein Profil mit Surround oder nutze die NVIDIA-Systemsteuerung.</value></data>
+  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>Der Wechsel wurde nicht bestätigt. Die Bildschirme sind zurück, aber Surround ließ sich nicht wieder einschalten. Wähle ein Profil mit Surround oder nutze die NVIDIA-Systemsteuerung.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>Wechsel zu {0} nicht möglich</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, dann erneut umschalten.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann im Profil „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Wechsel zu {0} fehlgeschlagen</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unerwarteter Fehler. Details: Hilfe → Logs.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>Die vorherigen Bildschirme sind wiederhergestellt.</value></data>
-  <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden – manche bleiben eventuell dunkel. Wähle erneut ein Profil oder drücke Win+P.</value></data>
+  <data name="Note_RestoreFailed" xml:space="preserve"><value>Die vorherigen Bildschirme konnten nicht wiederhergestellt werden, manche bleiben eventuell dunkel. Wähle erneut ein Profil oder drücke Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>Die gespeicherte Auflösung ging nicht; Windows hat die Anzeigemodi gewählt.</value></data>
   <data name="Note_DriverHung" xml:space="preserve"><value>Der Grafiktreiber antwortet nicht. Bleiben die Bildschirme falsch, starte den PC neu.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>Es läuft bereits ein Wechsel.</value></data>
@@ -124,7 +124,7 @@
   <data name="QuitGame_Stay" xml:space="preserve"><value>Weiterlaufen lassen</value></data>
   <data name="SettingsProblem_Title" xml:space="preserve"><value>Die Einstellungen konnten nicht gelesen werden</value></data>
   <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
-  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei ließ sich nicht kopieren – eine geänderte Einstellung überschreibt sie.</value></data>
+  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift läuft mit Standardwerten: USB-Regeln, Namen und Tastenkürzel fehlen, Updates stehen wieder auf automatisch. Die Datei ließ sich nicht kopieren, eine geänderte Einstellung überschreibt sie.</value></data>
   <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>Diese Einstellungen stammen von einem neueren RigShift</value></data>
   <data name="SettingsProblem_NewerText" xml:space="preserve"><value>Diese Version behält, was sie kennt, und verwirft den Rest beim nächsten Speichern. Die Datei wurde als „{0}“ aufbewahrt.</value></data>
   <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Ordner öffnen</value></data>
@@ -231,7 +231,7 @@
   <data name="Displays_MirroredWith" xml:space="preserve"><value>Zeigt dasselbe Bild wie {0}</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Noch in keinem Profil</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt – auch in den Logdateien.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Füge den Text in ein GitHub-Issue ein. Dein Benutzername wird entfernt, auch in den Logdateien.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Kopieren nicht möglich. {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Sicherung</value></data>
@@ -270,7 +270,7 @@
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (nicht verbunden)</value></data>
   <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Eine andere Regel nutzt dieselben Geräte. Werden sie verbunden, schalten beide Regeln um, nacheinander.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>Die Einstellung konnte nicht gespeichert werden. Details stehen im Log.</value></data>
-  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt – Apps trotzdem gestartet.</value></data>
+  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} wurde nicht innerhalb von {1} s erkannt. Apps trotzdem gestartet.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem Start auf ein Gerät warten</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Nicht warten</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Erscheint das Gerät nicht innerhalb von 30 Sekunden, starten die Apps trotzdem.</value></data>
@@ -278,7 +278,7 @@
   <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Windows-Kommunikationseinstellung. Discord muss dem Anruf eventuell neu beitreten.</value></data>
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Geräte für Anrufe</value></data>
   <data name="Automation_PowerSavingTitle" xml:space="preserve"><value>Windows darf dieses Gerät abschalten</value></data>
-  <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen – Pedale oder Wheelbase fallen dann während der Fahrt aus.</value></data>
+  <data name="Automation_PowerSavingText" xml:space="preserve"><value>Für dieses Gerät ist USB-Stromsparen aktiv. Windows kann ihm zum Energiesparen den Strom abdrehen, dann fallen Pedale oder Wheelbase während der Fahrt aus.</value></data>
   <data name="Automation_DeleteTitle" xml:space="preserve"><value>Regel löschen?</value></data>
   <data name="Automation_DeleteText" xml:space="preserve"><value>Die Regel für „{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>Diese Regel wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
@@ -298,7 +298,7 @@
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Jetzt dein Rig einrichten</value></data>
   <data name="Setup_SecondText" xml:space="preserve"><value>„{0}“ ist gespeichert. Jetzt Windows auf dein Rig umstellen: dessen Bildschirme einschalten, die vom Schreibtisch trennen (Anzeigeeinstellungen → Diese Anzeige trennen) und alles anordnen.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Automatisch umschalten (optional)</value></data>
-  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Aus- und wieder einschalten – RigShift erkennt es. Oder aus der Liste wählen.</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift kann umschalten, sobald ein USB-Gerät wie deine Wheelbase eingeschaltet wird. Aus- und wieder einschalten, dann erkennt RigShift es. Oder aus der Liste wählen.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>Fertig</value></data>
   <data name="Setup_DoneNoRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Symbol im Infobereich oder mit den Tastenkürzeln unten. Einen USB-Auslöser kannst du später unter Profile ergänzen.</value></data>
   <data name="Setup_DoneWithRule" xml:space="preserve"><value>Umschalten geht ab jetzt über das Symbol im Infobereich, mit den Tastenkürzeln unten oder über das Gerät.</value></data>
@@ -392,7 +392,7 @@
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Spiel beendet</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Wechsel zum Profil fehlgeschlagen, das Spiel wurde nicht gestartet</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>Das Spiel ließ sich nicht starten</value></data>
-  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>Kein Spielprozess erkannt – im Eintrag eintragen</value></data>
+  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>Kein Spielprozess erkannt. Im Eintrag festlegen.</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Spiel wählen</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installierte Spiele, von diesem PC gelesen. Ohne Anmeldung.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Spiele hinzufügen</value></data>
@@ -422,7 +422,7 @@
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gespeichert {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gespeichert {1}</value></data>
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
-  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gespeicherten Plätze zurück – ohne umzuschalten.</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gespeicherten Plätze zurück, ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>
   <data name="Detail_ChangedElsewhere" xml:space="preserve"><value>Wurde inzwischen an anderer Stelle geändert. Speichern ersetzt diese Änderung.</value></data>
   <data name="Detail_Reload" xml:space="preserve"><value>Gespeicherten Stand laden</value></data>
@@ -518,7 +518,7 @@
   <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools starten, Bildschirme bleiben, wie sie sind</value></data>
   <data name="Game_RunningSince" xml:space="preserve"><value>Läuft seit {0}</value></data>
   <data name="Game_LastEnded" xml:space="preserve"><value>Bereit · zuletzt gespielt {0}</value></data>
-  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Letzte Sitzung: kein Spielprozess erkannt – im Tab Spiel eintragen</value></data>
+  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Letzte Sitzung: kein Spielprozess erkannt. Im Tab „Spiel“ eintragen.</value></data>
   <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Prozess wird beim ersten Start gelernt</value></data>
   <data name="Problem_LaunchMissing" xml:space="preserve"><value>Wähle, was das Spiel startet.</value></data>
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Umschalten</value></data>
@@ -527,7 +527,7 @@
   <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Ziel von „Zurückschalten“, solange es kein letztes Profil gibt.</value></data>
   <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Standardprofil beim Anmelden</value></data>
   <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Wechselt dorthin, wenn RigShift mit Windows startet.</value></data>
-  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit diesem Schalter startet er stattdessen im Standardprofil – außer die Geräte einer USB-Regel sind verbunden. Braucht ein Standardprofil und „Mit Windows starten“.</value></data>
+  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit diesem Schalter startet er stattdessen im Standardprofil, außer die Geräte einer USB-Regel sind verbunden. Braucht ein Standardprofil und „Mit Windows starten“.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne „Behalten“ kommt die alte Anordnung zurück.</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
@@ -544,9 +544,9 @@
   <data name="Setup_Tagline" xml:space="preserve"><value>RigShift schaltet Bildschirme, Hauptanzeige und Audio in einem Wechsel. Drei Schritte, drei Minuten. Jeder Wechsel nimmt sich selbst zurück, wenn du ihn nicht bestätigst.</value></data>
   <data name="Setup_Now" xml:space="preserve"><value>Aktuelle Anordnung</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
-  <data name="Setup_DifferentText" xml:space="preserve"><value>Anders als „{0}“ – kann gespeichert werden.</value></data>
-  <data name="Setup_SurroundHint" xml:space="preserve"><value>Mit NVIDIA Surround? Jetzt in der NVIDIA-Systemsteuerung einschalten – dieses Profil schaltet es dann selbst ein.</value></data>
-  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround ist an – dieses Profil schaltet es selbst ein.</value></data>
+  <data name="Setup_DifferentText" xml:space="preserve"><value>Weicht von „{0}“ ab und kann gespeichert werden.</value></data>
+  <data name="Setup_SurroundHint" xml:space="preserve"><value>Mit NVIDIA Surround? Jetzt in der NVIDIA-Systemsteuerung einschalten. Dieses Profil schaltet es dann selbst ein.</value></data>
+  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround ist an. Dieses Profil schaltet es selbst ein.</value></data>
   <data name="Nav_Fov" xml:space="preserve"><value>Sichtfeld</value></data>
   <data name="Fov_Intro" xml:space="preserve"><value>Augenabstand und Bildschirmwinkel eingeben – jede Sim bekommt ihr richtiges FOV.</value></data>
   <data name="Fov_Rig" xml:space="preserve"><value>Dein Rig</value></data>
@@ -558,7 +558,7 @@
   <data name="Fov_Distance" xml:space="preserve"><value>Augenabstand (cm)</value></data>
   <data name="Fov_DistanceTip" xml:space="preserve"><value>Von den Augen bis zur Mitte des mittleren Bildschirms, in Fahrposition. Zuerst den Sitz einstellen.</value></data>
   <data name="Fov_Curvature" xml:space="preserve"><value>Krümmung</value></data>
-  <data name="Fov_CurvatureTip" xml:space="preserve"><value>Kein Bildschirm meldet seine Krümmung – einmal auswählen, sie wird je Bildschirm gemerkt. Bekannte Modelle sind vorbelegt.</value></data>
+  <data name="Fov_CurvatureTip" xml:space="preserve"><value>Kein Bildschirm meldet seine Krümmung. Einmal auswählen, sie wird je Bildschirm gemerkt. Bekannte Modelle sind vorbelegt.</value></data>
   <data name="Fov_Flat" xml:space="preserve"><value>Flach</value></data>
   <data name="Fov_Radius" xml:space="preserve"><value>{0}R</value></data>
   <data name="Fov_RadiusOwn" xml:space="preserve"><value>Anderer Radius</value></data>
@@ -572,7 +572,7 @@
   <data name="Fov_AngleTip" xml:space="preserve"><value>Wie weit jeder Seitenbildschirm eingedreht ist. Berechnet ist es der Winkel, der das mittlere Bild nahtlos fortsetzt.</value></data>
   <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig schon aufgebaut? Berechnung ausschalten und den Winkel eintragen, den die Seitenbildschirme wirklich haben.</value></data>
   <data name="Fov_Comfort" xml:space="preserve"><value>Komfortzuschlag (+5°)</value></data>
-  <data name="Fov_ComfortTip" xml:space="preserve"><value>Schlägt auf jeden Sim-Wert 5° auf, höchstens ein Zehntel des Winkels – der Spielraum, den die Guides als bequem nennen. Die Geometrie bleibt, wie sie ist.</value></data>
+  <data name="Fov_ComfortTip" xml:space="preserve"><value>Schlägt auf jeden Sim-Wert 5° auf, höchstens ein Zehntel des Winkels: der Spielraum, den die Guides als bequem nennen. Die Geometrie bleibt, wie sie ist.</value></data>
   <data name="Fov_Offset" xml:space="preserve"><value>Augenhöhe (cm)</value></data>
   <data name="Fov_OffsetTip" xml:space="preserve"><value>Wie weit die Augen über der Bildschirmmitte liegen. Ändert keinen Winkel; davon hängt nur der Hinweis darunter ab.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Du sitzt über der Bildmitte: den Horizont im Sim verschieben (iRacing „Shift horizon“, ACC „Height“), statt den Winkel zu ändern.</value></data>
@@ -585,7 +585,7 @@
   <data name="Fov_Total" xml:space="preserve"><value>Kante zu Kante</value></data>
   <data name="Fov_TotalTip" xml:space="preserve"><value>Von der linken Außenkante bis zur rechten, Rahmen eingerechnet.</value></data>
   <data name="Fov_OuterEdge" xml:space="preserve"><value>Außenkanten</value></data>
-  <data name="Fov_OuterEdgeTip" xml:space="preserve"><value>Abstand der beiden äußeren Bildkanten – mit dem Maßband nachprüfbar.</value></data>
+  <data name="Fov_OuterEdgeTip" xml:space="preserve"><value>Abstand der beiden äußeren Bildkanten, mit dem Maßband nachprüfbar.</value></data>
   <data name="Fov_Ppd" xml:space="preserve"><value>Pixel je Grad</value></data>
   <data name="Fov_PpdTip" xml:space="preserve"><value>60 entspricht scharfem Sehen; unter 40 wird das Bild weich.</value></data>
   <data name="Fov_PerGame" xml:space="preserve"><value>Wert je Sim</value></data>
@@ -597,20 +597,20 @@
   <data name="Fov_Kind_Slider" xml:space="preserve"><value>Regler</value></data>
   <data name="Fov_Kind_Offset" xml:space="preserve"><value>Versatz</value></data>
   <data name="Fov_Kind_Radians" xml:space="preserve"><value>Radiant, 4:3</value></data>
-  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Wahrscheinlich – nur eine Quelle sagt das.</value></data>
-  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unklar – die Quellen widersprechen sich, also beides probieren.</value></data>
+  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Wahrscheinlich: Nur eine Quelle sagt das.</value></data>
+  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unklar: Die Quellen widersprechen sich, also beides probieren.</value></data>
   <data name="Fov_Alternative" xml:space="preserve"><value>oder {0}</value></data>
   <data name="Fov_NoNativeTriple" xml:space="preserve"><value>Kein Triple-Rendering: ein breites Bild. Schirme flach stellen oder die Projektionskorrektur des Sims nutzen.</value></data>
   <data name="Fov_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Fov_Copied" xml:space="preserve"><value>Kopiert: {0}</value></data>
   <data name="Fov_Where" xml:space="preserve"><value>Wo eintragen</value></data>
   <data name="Fov_Measure" xml:space="preserve"><value>So messen: zuerst den Sitz einstellen, dann das Maßband vom Nasenrücken zur Mitte des mittleren Bildschirms. Der Rahmen ist einer allein, Bildrand bis Gehäuserand.</value></data>
-  <data name="Fov_Vr" xml:space="preserve"><value>In VR braucht es nichts davon – die Brille kennt ihre Geometrie selbst.</value></data>
+  <data name="Fov_Vr" xml:space="preserve"><value>In VR braucht es nichts davon. Die Brille kennt ihre Geometrie selbst.</value></data>
   <data name="Fov_Warn_Curve" xml:space="preserve"><value>Deine Augen liegen innerhalb der Krümmung des Bildschirms; weiter weg setzen.</value></data>
   <data name="Fov_Warn_Triple" xml:space="preserve"><value>Bei diesem Winkel würden die Seitenbildschirme an deinen Augen vorbeireichen.</value></data>
   <data name="Fov_Warn_Angle" xml:space="preserve"><value>Über 65° sind die Seitenbildschirme kaum baubar, und manche Sims nehmen den Winkel nicht mehr an.</value></data>
   <data name="Fov_Warn_CurvedTriple" xml:space="preserve"><value>Stark gekrümmte Schirme schließen nur knickfrei aneinander, wenn die Augen auf dem Radius sitzen.</value></data>
-  <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} Pixel je Grad – unter 40 wird das Bild weich.</value></data>
+  <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} Pixel je Grad. Unter 40 wird das Bild weich.</value></data>
   <data name="Fov_Where_AssettoCorsa" xml:space="preserve"><value>Options › View › Field of View oder cfg\camera_onboard.ini [MODE] FOV. Ganze Grad, 10–120, Standard 56.</value></data>
   <data name="Fov_Where_Acc" xml:space="preserve"><value>Im Auto: Pause › View Settings. Ganze Grad, Standard 54; im Triple-Modus ist der Regler gesperrt.</value></data>
   <data name="Fov_Where_AccEvo" xml:space="preserve"><value>Im Auto: Pause › View Settings. Ganze Grad, Standard 55.</value></data>
@@ -624,7 +624,7 @@
   <data name="Fov_Where_Ets2" xml:space="preserve"><value>F4 › Seat Adjustment oder config.cfg r_multimon_fov_horizontal.</value></data>
   <data name="Fov_Where_F1" xml:space="preserve"><value>Im Rennen: Settings › Camera Customisation. Schritte weg vom spieleigenen Basiswert, −20…+20.</value></data>
   <data name="Fov_Where_Wrc" xml:space="preserve"><value>Settings › Display and Graphics › Camera FOV (Head Cam). Der Regler läuft 0–100 über 18°–68°.</value></data>
-  <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV oder hardware_settings_config.xml – die Datei will den doppelten vertikalen Winkel.</value></data>
+  <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV oder hardware_settings_config.xml. Die Datei will den doppelten vertikalen Winkel.</value></data>
   <data name="Fov_Where_Forza" xml:space="preserve"><value>Settings › Gameplay &amp; HUD › Camera › Custom Camera FOV. 25–65.</value></data>
   <data name="Fov_Where_Rennsport" xml:space="preserve"><value>Options › Gameplay › Edit Gameplay Cameras, je Fahrzeug. 60–170.</value></data>
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>Das Kameramenü; es nimmt die Breiten und den Augenabstand selbst in Millimetern.</value></data>
@@ -637,7 +637,7 @@
   <data name="List_BlockedShort" xml:space="preserve"><value>Blockiert</value></data>
   <data name="Head_MissingOne" xml:space="preserve"><value>1 Bildschirm fehlt</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} Bildschirme fehlen</value></data>
-  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken – RigShift wartet beim Umschalten darauf. Oder als optional markieren.</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, RigShift wartet beim Umschalten darauf. Oder als optional markieren.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB-Geräte</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet zu diesem Profil, sobald alle Geräte einer Regel verbunden sind.</value></data>
@@ -669,7 +669,7 @@
     <value>Tastenkürzel &amp; Befehle</value>
   </data>
   <data name="About_NoShortcuts" xml:space="preserve">
-    <value>Noch keine Tastenkürzel – vergeben in Profil oder Spiel.</value>
+    <value>Noch keine Tastenkürzel. Festlegen in einem Profil oder Spiel.</value>
   </data>
   <data name="About_Commands" xml:space="preserve">
     <value>Befehle für Stream Deck und Skripte</value>
@@ -687,7 +687,7 @@
     <value>Als Profil speichern</value>
   </data>
   <data name="Profiles_EmptyInvite" xml:space="preserve">
-    <value>Das sind die Bildschirme, die Windows gerade zeigt. Speichere sie als erstes Profil – Audio und Apps kommen danach.</value>
+    <value>Das sind die Bildschirme, die Windows gerade zeigt. Speichere sie als erstes Profil, Audio und Apps kommen danach.</value>
   </data>
   <data name="Fov_SideView" xml:space="preserve">
     <value>Seite</value>
@@ -717,10 +717,10 @@
     <value>Ein Update ist bereit</value>
   </data>
   <data name="Confirm_KeyKeep" xml:space="preserve">
-    <value>behält – ebenso jede Taste an Lenkrad oder Controller</value>
+    <value>behält, ebenso jede Taste an Lenkrad oder Controller</value>
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
-    <value>setzt zurück – in jeder App</value>
+    <value>setzt zurück, in jeder App</value>
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximiert</value>
@@ -732,7 +732,7 @@
     <value>Die Sicherung bringt Folgendes mit:</value>
   </data>
   <data name="About_RestoreReviewAttention" xml:space="preserve">
-    <value>Die Sicherung bringt Folgendes mit – stelle sie nur wieder her, wenn du ihrer Herkunft vertraust:</value>
+    <value>Die Sicherung bringt Folgendes mit. Stelle sie nur wieder her, wenn du ihrer Herkunft vertraust:</value>
   </data>
   <data name="Restore_Starts" xml:space="preserve">
     <value>Startet</value>
@@ -753,7 +753,7 @@
     <value>Programm auf einer Netzwerkfreigabe</value>
   </data>
   <data name="Restore_WarnNotFullPath" xml:space="preserve">
-    <value>Kein voller Pfad – RigShift startet es nicht</value>
+    <value>Kein voller Pfad, RigShift startet es nicht</value>
   </data>
   <data name="Restore_WarnNoConfirm" xml:space="preserve">
     <value>Schaltet ohne Rückfrage um</value>
@@ -789,7 +789,7 @@
     <value>Bis sein Fenster da ist</value>
   </data>
   <data name="App_WaitForWindowTip" xml:space="preserve">
-    <value>Geht weiter, sobald das Programm ein Fenster zeigt – spätestens nach den Sekunden. Nicht für Programme, die im Infobereich starten.</value>
+    <value>Geht weiter, sobald das Programm ein Fenster zeigt, spätestens nach den Sekunden. Nicht für Programme, die im Infobereich starten.</value>
   </data>
   <data name="Profile_DefaultTip" xml:space="preserve">
     <value>Standardprofil: Ziel von „Zurückschalten“, solange es kein letztes Profil gibt. Ändern unter Einstellungen.</value>
@@ -810,7 +810,7 @@
     <value>Tastenkürzel und USB-Auslöser wirken nur, solange RigShift läuft.</value>
   </data>
   <data name="Setup_TrayHint" xml:space="preserve">
-    <value>Wenn du das Fenster schließt, läuft RigShift im Infobereich weiter. Windows versteckt das Symbol eventuell hinter dem ^ neben der Uhr – zieh es heraus, dann bleibt es sichtbar.</value>
+    <value>Wenn du das Fenster schließt, läuft RigShift im Infobereich weiter. Windows versteckt das Symbol eventuell hinter dem ^ neben der Uhr. Zieh es heraus, dann bleibt es sichtbar.</value>
   </data>
   <data name="Tray_KeepsRunning" xml:space="preserve">
     <value>RigShift läuft im Infobereich weiter. Zieh das Symbol neben die Uhr, dann bleibt es sichtbar.</value>
@@ -900,7 +900,7 @@
     <value>Windows verweigert den Zugriff. Ordnerrechte prüfen oder RigShift unter „Überwachter Ordnerzugriff“ in der Windows-Sicherheit zulassen.</value>
   </data>
   <data name="Error_NotFound" xml:space="preserve">
-    <value>Eine Datei oder ein Ordner fehlt – vielleicht verschoben oder gelöscht.</value>
+    <value>Eine Datei oder ein Ordner fehlt, vielleicht verschoben oder gelöscht.</value>
   </data>
   <data name="Error_Damaged" xml:space="preserve">
     <value>Die Datei ist beschädigt oder keine RigShift-Datei.</value>
@@ -909,7 +909,7 @@
     <value>Ein anderes Programm belegt die Zwischenablage. Noch einmal versuchen.</value>
   </data>
   <data name="Error_FileInUse" xml:space="preserve">
-    <value>Ein anderes Programm hat die Datei geöffnet – oft Virenscanner oder OneDrive. Gleich noch einmal versuchen.</value>
+    <value>Ein anderes Programm hat die Datei geöffnet, oft Virenscanner oder OneDrive. Gleich noch einmal versuchen.</value>
   </data>
   <data name="Error_DiskFull" xml:space="preserve">
     <value>Das Laufwerk ist voll.</value>
@@ -933,7 +933,7 @@
     <value>Windows lehnt diese Anordnung ab: Der Grafiktreiber kann diese Bildschirme so nicht betreiben. Auflösungen und Bildwiederholraten im Profil prüfen oder den Treiber aktualisieren.</value>
   </data>
   <data name="Error_Switch50" xml:space="preserve">
-    <value>Der Grafiktreiber unterstützt diese Anordnung nicht – oft mehr Bildschirme, als die Grafikkarte gleichzeitig betreiben kann.</value>
+    <value>Der Grafiktreiber unterstützt diese Anordnung nicht. Oft sind es mehr Bildschirme, als die Grafikkarte gleichzeitig betreiben kann.</value>
   </data>
   <data name="Error_Switch1610" xml:space="preserve">
     <value>Windows findet keinen passenden Modus für diese Bildschirme. Die Anordnung einmal in den Windows-Anzeigeeinstellungen einrichten, dann das Profil neu speichern.</value>

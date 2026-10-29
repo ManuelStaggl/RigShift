@@ -54,14 +54,14 @@
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop icons could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
   <data name="Result_RolledBackText" xml:space="preserve"><value>The change was not confirmed. The previous settings are back.</value></data>
-  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>The change was not confirmed. The displays are back, but Surround could not be switched on again – switch to a profile with Surround or use the NVIDIA Control Panel.</value></data>
+  <data name="Result_RolledBackNoSurroundText" xml:space="preserve"><value>The change was not confirmed. The displays are back, but Surround could not be switched on again. Switch to a profile with Surround or use the NVIDIA Control Panel.</value></data>
   <data name="Result_BlockedTitle" xml:space="preserve"><value>Can't switch to {0}</value></data>
   <data name="Result_BlockedText" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up, then switch again.</value></data>
   <data name="Result_AmbiguousText" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout” in the profile.</value></data>
   <data name="Result_FailedTitle" xml:space="preserve"><value>Switch to {0} failed</value></data>
   <data name="Result_FailedUnexpected" xml:space="preserve"><value>Unexpected error. Details: Help → Logs.</value></data>
   <data name="Note_RestoredPrevious" xml:space="preserve"><value>The previous displays are back.</value></data>
-  <data name="Note_RestoreFailed" xml:space="preserve"><value>The previous displays could not be restored – some may stay dark. Switch to a profile again or use Win+P.</value></data>
+  <data name="Note_RestoreFailed" xml:space="preserve"><value>The previous displays could not be restored, so some may stay dark. Switch to a profile again or use Win+P.</value></data>
   <data name="Note_ModesFromDatabase" xml:space="preserve"><value>The saved resolution did not work; Windows chose the display modes.</value></data>
   <data name="Note_DriverHung" xml:space="preserve"><value>The graphics driver does not answer. If the displays stay wrong, restart the PC.</value></data>
   <data name="Result_Busy" xml:space="preserve"><value>A switch is already running.</value></data>
@@ -121,7 +121,7 @@
   <data name="QuitGame_Stay" xml:space="preserve"><value>Keep running</value></data>
   <data name="SettingsProblem_Title" xml:space="preserve"><value>Your settings could not be read</value></data>
   <data name="SettingsProblem_TextCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file was kept as “{0}”.</value></data>
-  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file could not be copied – changing a setting now overwrites it.</value></data>
+  <data name="SettingsProblem_TextNoCopy" xml:space="preserve"><value>RigShift is running with default settings: USB rules, names and hotkeys are missing and updates are back to automatic. The file could not be copied, so changing a setting now overwrites it.</value></data>
   <data name="SettingsProblem_NewerTitle" xml:space="preserve"><value>These settings come from a newer RigShift</value></data>
   <data name="SettingsProblem_NewerText" xml:space="preserve"><value>This version keeps what it knows and drops the rest on the next save. The file was kept as “{0}”.</value></data>
   <data name="SettingsProblem_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
@@ -228,7 +228,7 @@
   <data name="Displays_MirroredWith" xml:space="preserve"><value>Shows the same picture as {0}</value></data>
   <data name="Displays_NotInProfiles" xml:space="preserve"><value>Not in any profile yet</value></data>
   <data name="About_Duration" xml:space="preserve"><value>{0} s</value></data>
-  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed – in the log files too.</value></data>
+  <data name="About_CopyHint" xml:space="preserve"><value>Paste it into a GitHub issue. Your user name is removed, also from the log files.</value></data>
   <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
   <data name="About_CopyFailed" xml:space="preserve"><value>Couldn't copy. {0}</value></data>
   <data name="About_Backup" xml:space="preserve"><value>Backup</value></data>
@@ -267,7 +267,7 @@
   <data name="Automation_DeviceNotConnected" xml:space="preserve"><value>{0} (not connected)</value></data>
   <data name="Automation_DuplicateDevice" xml:space="preserve"><value>Another rule uses the same devices. When they connect, both rules switch, one after the other.</value></data>
   <data name="Automation_PauseFailed" xml:space="preserve"><value>The setting could not be saved. Details are in the log.</value></data>
-  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s – apps started anyway.</value></data>
+  <data name="Result_AppsDeviceMissing" xml:space="preserve"><value>{0} was not detected within {1} s. Apps started anyway.</value></data>
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for a device before starting</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>If the device does not show up within 30 seconds, the apps start anyway.</value></data>
@@ -295,7 +295,7 @@
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Now set up your rig</value></data>
   <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now make Windows show your rig: turn its displays on, disconnect the desk displays (Display settings → Disconnect this display) and arrange them.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
-  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on – RigShift detects it. Or pick it from the list.</value></data>
+  <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on and RigShift detects it, or pick it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
   <data name="Setup_DoneNoRule" xml:space="preserve"><value>From now on you switch from the tray icon or with the hotkeys below. You can add a USB trigger later under Profiles.</value></data>
   <data name="Setup_DoneWithRule" xml:space="preserve"><value>From now on you switch from the tray icon, with the hotkeys below or with the device.</value></data>
@@ -389,7 +389,7 @@
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Game ended</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Switching to the profile failed, so the game was not started</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>The game could not be started</value></data>
-  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognized – set it in the entry</value></data>
+  <data name="GameOutcome_NotRecognised" xml:space="preserve"><value>No game process was recognized. Set it in the entry.</value></data>
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installed games, read from this PC. No sign-in.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Add games</value></data>
@@ -419,7 +419,7 @@
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 icon, saved {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} icons, saved {1}</value></data>
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Restore</value></data>
-  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Puts the icons back where they were saved – without switching.</value></data>
+  <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Puts the icons back where they were saved, without switching.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="Detail_ChangedElsewhere" xml:space="preserve"><value>This was changed elsewhere while you were editing. Saving replaces that change.</value></data>
   <data name="Detail_Reload" xml:space="preserve"><value>Load saved version</value></data>
@@ -515,7 +515,7 @@
   <data name="Game_NoProfileSub" xml:space="preserve"><value>Tools start, the displays stay as they are</value></data>
   <data name="Game_RunningSince" xml:space="preserve"><value>Running since {0}</value></data>
   <data name="Game_LastEnded" xml:space="preserve"><value>Ready · last played {0}</value></data>
-  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognized – enter it on the Game tab</value></data>
+  <data name="Game_StatusNotRecognised" xml:space="preserve"><value>Last session: no game process recognized. Enter it on the Game tab.</value></data>
   <data name="Game_ProcessUnknownStatus" xml:space="preserve"><value>Process is learned on the first start</value></data>
   <data name="Problem_LaunchMissing" xml:space="preserve"><value>Choose what starts the game.</value></data>
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Switching</value></data>
@@ -524,7 +524,7 @@
   <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Where “Switch back” goes when there is no last profile.</value></data>
   <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Default profile at sign-in</value></data>
   <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Switch to it when RigShift starts with Windows.</value></data>
-  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. With this on, it starts in the default profile instead – unless the devices of a USB rule are connected. Needs a default profile and “Start with Windows”.</value></data>
+  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. With this on, it starts in the default profile instead, unless the devices of a USB rule are connected. Needs a default profile and “Start with Windows”.</value></data>
   <data name="Settings_ConfirmHint" xml:space="preserve"><value>Reverts to the old layout unless you press Keep.</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
@@ -541,9 +541,9 @@
   <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go. Three steps, three minutes. Every switch reverts on its own unless you confirm it.</value></data>
   <data name="Setup_Now" xml:space="preserve"><value>Current layout</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
-  <data name="Setup_DifferentText" xml:space="preserve"><value>Different from “{0}” – can be saved.</value></data>
-  <data name="Setup_SurroundHint" xml:space="preserve"><value>Using NVIDIA Surround? Turn it on in the NVIDIA Control Panel now – this profile then turns it on by itself.</value></data>
-  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround is on – this profile turns it on by itself.</value></data>
+  <data name="Setup_DifferentText" xml:space="preserve"><value>Differs from “{0}” and can be saved.</value></data>
+  <data name="Setup_SurroundHint" xml:space="preserve"><value>Using NVIDIA Surround? Turn it on in the NVIDIA Control Panel now. This profile then turns it on by itself.</value></data>
+  <data name="Setup_SurroundOn" xml:space="preserve"><value>NVIDIA Surround is on. This profile turns it on by itself.</value></data>
   <data name="Nav_Fov" xml:space="preserve"><value>Field of view</value></data>
   <data name="Fov_Intro" xml:space="preserve"><value>Enter your eye distance and screen angle – get the right FOV for every sim.</value></data>
   <data name="Fov_Rig" xml:space="preserve"><value>Your rig</value></data>
@@ -555,7 +555,7 @@
   <data name="Fov_Distance" xml:space="preserve"><value>Eye distance (cm)</value></data>
   <data name="Fov_DistanceTip" xml:space="preserve"><value>From your eyes to the middle of the center screen, sitting as you drive. Set the seat first.</value></data>
   <data name="Fov_Curvature" xml:space="preserve"><value>Curvature</value></data>
-  <data name="Fov_CurvatureTip" xml:space="preserve"><value>No display reports its curve, so pick it once – it is remembered for that display. Known models come pre-filled.</value></data>
+  <data name="Fov_CurvatureTip" xml:space="preserve"><value>No display reports its curve, so pick it once. It is remembered for that display; known models come pre-filled.</value></data>
   <data name="Fov_Flat" xml:space="preserve"><value>Flat</value></data>
   <data name="Fov_Radius" xml:space="preserve"><value>{0}R</value></data>
   <data name="Fov_RadiusOwn" xml:space="preserve"><value>Other radius</value></data>
@@ -569,7 +569,7 @@
   <data name="Fov_AngleTip" xml:space="preserve"><value>How far each side screen turns in. Calculated, it is the angle that continues the center picture seamlessly.</value></data>
   <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig already built? Switch the calculation off and enter the angle your side screens really have.</value></data>
   <data name="Fov_Comfort" xml:space="preserve"><value>Comfort margin (+5°)</value></data>
-  <data name="Fov_ComfortTip" xml:space="preserve"><value>Adds 5°, at most a tenth of the angle, to every sim value – the margin the guides call comfortable. The geometry stays as it is.</value></data>
+  <data name="Fov_ComfortTip" xml:space="preserve"><value>Adds 5°, at most a tenth of the angle, to every sim value: the margin the guides call comfortable. The geometry stays as it is.</value></data>
   <data name="Fov_Offset" xml:space="preserve"><value>Eye height (cm)</value></data>
   <data name="Fov_OffsetTip" xml:space="preserve"><value>How far your eyes are above the middle of the screen. Changes no angle; it only decides whether the hint below appears.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Sitting above the middle of the picture: shift the horizon in the sim (iRacing “Shift horizon”, ACC “Height”) instead of changing the angle.</value></data>
@@ -582,7 +582,7 @@
   <data name="Fov_Total" xml:space="preserve"><value>Edge to edge</value></data>
   <data name="Fov_TotalTip" xml:space="preserve"><value>From the left outer edge to the right one, frames included.</value></data>
   <data name="Fov_OuterEdge" xml:space="preserve"><value>Outer edges apart</value></data>
-  <data name="Fov_OuterEdgeTip" xml:space="preserve"><value>Distance between the two outer picture edges – check it with a tape measure.</value></data>
+  <data name="Fov_OuterEdgeTip" xml:space="preserve"><value>Distance between the two outer picture edges. Check it with a tape measure.</value></data>
   <data name="Fov_Ppd" xml:space="preserve"><value>Pixels per degree</value></data>
   <data name="Fov_PpdTip" xml:space="preserve"><value>60 matches 20/20 vision; under 40 the picture gets soft.</value></data>
   <data name="Fov_PerGame" xml:space="preserve"><value>Value per sim</value></data>
@@ -594,20 +594,20 @@
   <data name="Fov_Kind_Slider" xml:space="preserve"><value>slider</value></data>
   <data name="Fov_Kind_Offset" xml:space="preserve"><value>offset</value></data>
   <data name="Fov_Kind_Radians" xml:space="preserve"><value>radians, 4:3</value></data>
-  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Likely – only one source says so.</value></data>
-  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unclear – the sources disagree, so try both.</value></data>
+  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Likely: only one source says so.</value></data>
+  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unclear: the sources disagree, so try both.</value></data>
   <data name="Fov_Alternative" xml:space="preserve"><value>or {0}</value></data>
   <data name="Fov_NoNativeTriple" xml:space="preserve"><value>No triple rendering: one wide picture. Stand the screens flat, or use the sim's projection correction.</value></data>
   <data name="Fov_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Fov_Copied" xml:space="preserve"><value>Copied: {0}</value></data>
   <data name="Fov_Where" xml:space="preserve"><value>Where it goes</value></data>
   <data name="Fov_Measure" xml:space="preserve"><value>Measuring: set the seat first, then the tape from the bridge of your nose to the middle of the center screen. The bezel is one frame, picture edge to case edge.</value></data>
-  <data name="Fov_Vr" xml:space="preserve"><value>In VR none of this is needed – the headset knows its own geometry.</value></data>
+  <data name="Fov_Vr" xml:space="preserve"><value>In VR none of this is needed. The headset knows its own geometry.</value></data>
   <data name="Fov_Warn_Curve" xml:space="preserve"><value>Your eyes are inside the curve of the screen; move back.</value></data>
   <data name="Fov_Warn_Triple" xml:space="preserve"><value>At that angle the side screens would reach past your eyes.</value></data>
   <data name="Fov_Warn_Angle" xml:space="preserve"><value>Over 65° the side screens are hard to build, and some sims no longer accept the angle.</value></data>
   <data name="Fov_Warn_CurvedTriple" xml:space="preserve"><value>Strongly curved screens only meet without a kink when your eyes sit on the radius.</value></data>
-  <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} pixels per degree – under 40 the picture gets soft.</value></data>
+  <data name="Fov_Warn_Pixels" xml:space="preserve"><value>{0} pixels per degree. Under 40 the picture gets soft.</value></data>
   <data name="Fov_Where_AssettoCorsa" xml:space="preserve"><value>Options › View › Field of View, or cfg\camera_onboard.ini [MODE] FOV. Whole degrees, 10–120, standard 56.</value></data>
   <data name="Fov_Where_Acc" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 54; in triple mode the slider is grayed out.</value></data>
   <data name="Fov_Where_AccEvo" xml:space="preserve"><value>In the car: Pause › View Settings. Whole degrees, standard 55.</value></data>
@@ -621,7 +621,7 @@
   <data name="Fov_Where_Ets2" xml:space="preserve"><value>F4 › Seat Adjustment, or config.cfg r_multimon_fov_horizontal.</value></data>
   <data name="Fov_Where_F1" xml:space="preserve"><value>During a race: Settings › Camera Customisation. Steps away from the game's own base, −20…+20.</value></data>
   <data name="Fov_Where_Wrc" xml:space="preserve"><value>Settings › Display and Graphics › Camera FOV (Head Cam). The slider runs 0–100 over 18°–68°.</value></data>
-  <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV, or hardware_settings_config.xml – the file wants twice the vertical angle.</value></data>
+  <data name="Fov_Where_DirtRally2" xml:space="preserve"><value>Graphics › FOV, or hardware_settings_config.xml. The file wants twice the vertical angle.</value></data>
   <data name="Fov_Where_Forza" xml:space="preserve"><value>Settings › Gameplay &amp; HUD › Camera › Custom Camera FOV. 25–65.</value></data>
   <data name="Fov_Where_Rennsport" xml:space="preserve"><value>Options › Gameplay › Edit Gameplay Cameras, per car. 60–170.</value></data>
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimeters itself.</value></data>
@@ -634,7 +634,7 @@
   <data name="List_BlockedShort" xml:space="preserve"><value>Blocked</value></data>
   <data name="Head_MissingOne" xml:space="preserve"><value>1 display missing</value></data>
   <data name="Head_MissingMany" xml:space="preserve"><value>{0} displays missing</value></data>
-  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up – RigShift waits for them when you switch. Or mark them optional.</value></data>
+  <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up; RigShift waits for them when you switch. Or mark them optional.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout”.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches to this profile once all devices in a rule are connected.</value></data>
@@ -666,7 +666,7 @@
     <value>Hotkeys &amp; commands</value>
   </data>
   <data name="About_NoShortcuts" xml:space="preserve">
-    <value>No hotkeys yet – set them in a profile or game.</value>
+    <value>No hotkeys yet. Set them in a profile or game.</value>
   </data>
   <data name="About_Commands" xml:space="preserve">
     <value>Commands for Stream Deck and scripts</value>
@@ -684,7 +684,7 @@
     <value>Save as profile</value>
   </data>
   <data name="Profiles_EmptyInvite" xml:space="preserve">
-    <value>These are the displays Windows shows right now. Save them as your first profile – audio and apps come after.</value>
+    <value>These are the displays Windows shows right now. Save them as your first profile; audio and apps come after.</value>
   </data>
   <data name="Fov_SideView" xml:space="preserve">
     <value>Side</value>
@@ -714,10 +714,10 @@
     <value>An update is ready</value>
   </data>
   <data name="Confirm_KeyKeep" xml:space="preserve">
-    <value>keeps – so does any wheel or controller button</value>
+    <value>keeps, as does any wheel or controller button</value>
   </data>
   <data name="Confirm_KeyRevert" xml:space="preserve">
-    <value>reverts – works in any app</value>
+    <value>reverts, in any app</value>
   </data>
   <data name="Game_WindowMaximized" xml:space="preserve">
     <value>maximized</value>
@@ -729,7 +729,7 @@
     <value>The backup brings the following along:</value>
   </data>
   <data name="About_RestoreReviewAttention" xml:space="preserve">
-    <value>The backup brings the following along – restore it only if you trust where it comes from:</value>
+    <value>The backup brings the following along. Restore it only if you trust where it comes from:</value>
   </data>
   <data name="Restore_Starts" xml:space="preserve">
     <value>Starts</value>
@@ -750,7 +750,7 @@
     <value>Program on a network share</value>
   </data>
   <data name="Restore_WarnNotFullPath" xml:space="preserve">
-    <value>No full path – RigShift will not start it</value>
+    <value>No full path, so RigShift will not start it</value>
   </data>
   <data name="Restore_WarnNoConfirm" xml:space="preserve">
     <value>Switches without asking</value>
@@ -786,7 +786,7 @@
     <value>Until its window</value>
   </data>
   <data name="App_WaitForWindowTip" xml:space="preserve">
-    <value>Goes on as soon as the program shows a window – at the latest after the seconds. Not for programs that start into the tray.</value>
+    <value>Goes on as soon as the program shows a window, at the latest after the seconds. Not for programs that start into the tray.</value>
   </data>
   <data name="Profile_DefaultTip" xml:space="preserve">
     <value>Default profile: where “Switch back” goes when there is no last profile. Change it under Settings.</value>
@@ -807,7 +807,7 @@
     <value>Hotkeys and USB triggers only work while RigShift is running.</value>
   </data>
   <data name="Setup_TrayHint" xml:space="preserve">
-    <value>Closing the window keeps RigShift running in the tray. Windows may hide its icon behind the ^ next to the clock – drag it out to keep it in view.</value>
+    <value>Closing the window keeps RigShift running in the tray. Windows may hide its icon behind the ^ next to the clock; drag it out to keep it in view.</value>
   </data>
   <data name="Tray_KeepsRunning" xml:space="preserve">
     <value>RigShift keeps running in the tray. Drag its icon next to the clock to keep it in view.</value>
@@ -897,7 +897,7 @@
     <value>Windows denied access. Check the folder's permissions, or allow RigShift under Controlled folder access in Windows Security.</value>
   </data>
   <data name="Error_NotFound" xml:space="preserve">
-    <value>A file or folder is missing – it may have been moved or deleted.</value>
+    <value>A file or folder is missing. It may have been moved or deleted.</value>
   </data>
   <data name="Error_Damaged" xml:space="preserve">
     <value>The file is damaged or not a RigShift file.</value>
@@ -906,7 +906,7 @@
     <value>Another program is using the clipboard. Try again.</value>
   </data>
   <data name="Error_FileInUse" xml:space="preserve">
-    <value>Another program has the file open – often an antivirus scan or OneDrive. Try again in a moment.</value>
+    <value>Another program has the file open, often an antivirus scan or OneDrive. Try again in a moment.</value>
   </data>
   <data name="Error_DiskFull" xml:space="preserve">
     <value>The drive is full.</value>
@@ -930,7 +930,7 @@
     <value>Windows rejected this layout: the graphics driver can't run these displays this way. Check the profile's resolutions and refresh rates, or update the driver.</value>
   </data>
   <data name="Error_Switch50" xml:space="preserve">
-    <value>The graphics driver doesn't support this layout – often more displays than the graphics card can run at once.</value>
+    <value>The graphics driver doesn't support this layout. Often that means more displays than the graphics card can run at once.</value>
   </data>
   <data name="Error_Switch1610" xml:space="preserve">
     <value>Windows found no working mode for these displays. Set the layout up once in Windows display settings, then save the profile again.</value>
