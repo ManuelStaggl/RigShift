@@ -43,19 +43,9 @@ public sealed class WindowLayoutManager : IWindowLayout
             }
 
             WindowState state = TopLevelWindows.StateOf(placement.showCmd);
-            PixelRect bounds = workspace.ToScreen(placement.rcNormalPosition);
-
-            // A window snapped to a side or a corner reports the place it had before as its normal position; where it
-            // really is, only its rectangle says. A maximized window keeps a normal position as well, and after a display
-            // change that can lie on another display than the one the window fills – the one it fills is where it is.
-            if (state == WindowState.Normal && PInvoke.GetWindowRect(hwnd, out RECT current))
-            {
-                bounds = TopLevelWindows.ToPixel(current);
-            }
-            else if (state == WindowState.Maximized && FilledWorkAreaElsewhere(hwnd, bounds) is { } filled)
-            {
-                bounds = WindowGeometry.CenteredIn(bounds, filled);
-            }
+            PixelRect normal = workspace.ToScreen(placement.rcNormalPosition);
+            PixelRect? current = PInvoke.GetWindowRect(hwnd, out RECT rect) ? TopLevelWindows.ToPixel(rect) : null;
+            PixelRect bounds = WindowGeometry.ReportedBounds(state, normal, current, FilledWorkAreaElsewhere(hwnd, normal));
 
             if (bounds.IsEmpty)
             {
@@ -76,14 +66,6 @@ public sealed class WindowLayoutManager : IWindowLayout
             return false;
         }
 
-        // A place on a display that is off now (an optional one is missing, the profile was rearranged since): the
-        // window would vanish there.
-        if (PInvoke.MonitorFromRect(TopLevelWindows.ToRect(bounds), MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL).IsNull)
-        {
-            _log.Information("Window of {Process} not placed: {Bounds} lies on no active display", ProcessName(hwnd), bounds);
-            return false;
-        }
-
         if (TopLevelWindows.IsHung(hwnd))
         {
             _log.Warning("Window of {Process} not placed: the program is not responding", ProcessName(hwnd));
@@ -95,20 +77,31 @@ public sealed class WindowLayoutManager : IWindowLayout
             return false;
         }
 
-        // A window that is maximized already stays on its display: SetWindowPlacement only rewrites its normal position.
-        // It has to come down onto the other display first and is maximized there.
-        int error = 0;
-        if (state == WindowState.Maximized
-            && placement.showCmd == SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED
-            && FilledWorkAreaElsewhere(hwnd, bounds) is not null)
+        // An optional display missing, the profile rearranged since: the place may lie on no display that is on now.
+        IReadOnlyList<WindowState> steps = WindowGeometry.PlacementSteps(
+            state,
+            targetOnActiveDisplay: !PInvoke.MonitorFromRect(TopLevelWindows.ToRect(bounds), MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL).IsNull,
+            maximizedNow: placement.showCmd == SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED,
+            fillsAnotherDisplay: FilledWorkAreaElsewhere(hwnd, bounds) is not null);
+        if (steps.Count == 0)
         {
-            _log.Information("Window of {Process} is maximized on another display, restoring it before maximizing it again", ProcessName(hwnd));
-            error = TopLevelWindows.Place(hwnd, placement, bounds, WindowState.Normal, workspace);
+            _log.Information("Window of {Process} not placed: {Bounds} lies on no active display", ProcessName(hwnd), bounds);
+            return false;
         }
 
-        if (error == 0)
+        if (steps.Count > 1)
         {
-            error = TopLevelWindows.Place(hwnd, placement, bounds, state, workspace);
+            _log.Information("Window of {Process} is maximized on another display, restoring it before maximizing it again", ProcessName(hwnd));
+        }
+
+        int error = 0;
+        foreach (WindowState step in steps)
+        {
+            error = TopLevelWindows.Place(hwnd, placement, bounds, step, workspace);
+            if (error != 0)
+            {
+                break;
+            }
         }
 
         if (error == 0)
