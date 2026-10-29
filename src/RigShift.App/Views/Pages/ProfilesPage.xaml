@@ -782,10 +782,6 @@
               <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
               <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
-                <TextBlock
-                  Margin="0,0,0,16"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Trigger_Intro}" />
                 <!-- Hotkeys and USB rules need RigShift running after a restart. -->
                 <controls:InfoBar
                   Margin="0,0,0,12"
@@ -1121,10 +1117,6 @@
               <!-- Detail content: full width up to 960 px, left-aligned beyond. -->
               <controls:ContentColumn MaxContentWidth="1008">
               <StackPanel Margin="24" DataContext="{Binding Editor}">
-                <TextBlock
-                  Margin="0,0,0,16"
-                  Style="{StaticResource RigShift.Text.Caption}"
-                  Text="{loc:Tr Behavior_Intro}" />
                 <!-- Seconds come from the settings only. Off in the settings, the switch changes
                      nothing; the caption says where the setting is. -->
                 <controls:SettingRow Title="{loc:Tr Editor_SwitchWithoutAsking}">
