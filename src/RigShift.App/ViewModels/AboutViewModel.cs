@@ -29,7 +29,7 @@ public sealed partial class AboutViewModel : ObservableObject
     private readonly AppPaths _paths;
     private readonly SettingsService _settings;
     private readonly GameCatalog _games;
-    private readonly ProfileDialogs _dialogs;
+    private readonly IHelpPageDialogs _dialogs;
     private readonly ILogger _log;
 
     public AboutViewModel(
@@ -41,7 +41,7 @@ public sealed partial class AboutViewModel : ObservableObject
         AppPaths paths,
         SettingsService settings,
         GameCatalog games,
-        ProfileDialogs dialogs,
+        IHelpPageDialogs dialogs,
         ILogger log)
     {
         ArgumentNullException.ThrowIfNull(updates);
@@ -84,14 +84,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveBackupAsync()
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog
-        {
-            FileName = $"RigShift-backup-{DateTime.Now:yyyy-MM-dd}.zip",
-            DefaultExt = ".zip",
-            Filter = "ZIP (*.zip)|*.zip",
-            AddExtension = true,
-        };
-        if (dialog.ShowDialog() != true)
+        if (_dialogs.PickZipToSave($"RigShift-backup-{DateTime.Now:yyyy-MM-dd}.zip") is not { } file)
         {
             return;
         }
@@ -100,15 +93,15 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             int count = await Task.Run(() =>
             {
-                using FileStream stream = File.Create(dialog.FileName);
+                using FileStream stream = File.Create(file);
                 return BackupArchive.Write(_paths.DataDirectory, stream);
             });
-            _log.Information("Backup with {Count} profile(s) saved to {File}", count, dialog.FileName);
+            _log.Information("Backup with {Count} profile(s) saved to {File}", count, file);
             BackupStatus = Loc.Format("About_BackupSaved", count);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _log.Warning(ex, "Backup could not be saved to {File}", dialog.FileName);
+            _log.Warning(ex, "Backup could not be saved to {File}", file);
             BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
         }
     }
@@ -123,8 +116,7 @@ public sealed partial class AboutViewModel : ObservableObject
             return;
         }
 
-        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "ZIP (*.zip)|*.zip", CheckFileExists = true };
-        if (dialog.ShowDialog() != true)
+        if (_dialogs.PickZipToOpen() is not { } file)
         {
             return;
         }
@@ -134,18 +126,18 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             content = await Task.Run(() =>
             {
-                using FileStream stream = File.OpenRead(dialog.FileName);
+                using FileStream stream = File.OpenRead(file);
                 return BackupArchive.Inspect(stream);
             });
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
-            _log.Warning(ex, "Backup {File} could not be read", dialog.FileName);
+            _log.Warning(ex, "Backup {File} could not be read", file);
             BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
             return;
         }
 
-        if (!await ProfileDialogs.ConfirmRestoreAsync(content))
+        if (!await _dialogs.ConfirmRestoreAsync(content))
         {
             return;
         }
@@ -163,7 +155,7 @@ public sealed partial class AboutViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _log.Error(ex, "Backup {File} could not be restored", dialog.FileName);
+            _log.Error(ex, "Backup {File} could not be restored", file);
             BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
             failed = true;
         }
@@ -335,14 +327,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveSupportPackageAsync()
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog
-        {
-            FileName = $"RigShift-support-{DateTime.Now:yyyy-MM-dd}.zip",
-            DefaultExt = ".zip",
-            Filter = "ZIP (*.zip)|*.zip",
-            AddExtension = true,
-        };
-        if (dialog.ShowDialog() != true)
+        if (_dialogs.PickZipToSave($"RigShift-support-{DateTime.Now:yyyy-MM-dd}.zip") is not { } file)
         {
             return;
         }
@@ -352,16 +337,16 @@ public sealed partial class AboutViewModel : ObservableObject
         {
             int count = await Task.Run(() =>
             {
-                using FileStream stream = File.Create(dialog.FileName);
+                using FileStream stream = File.Create(file);
                 return SupportPackage.Write(stream, report, _paths, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
             });
-            _log.Information("Support package with {Count} file(s) saved to {File}", count, dialog.FileName);
+            _log.Information("Support package with {Count} file(s) saved to {File}", count, file);
             CopyStatus = Loc.Instance["About_SupportSaved"];
             ShellFolders.OpenUrl(IssueUrl(_updates.CurrentVersion), _log);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _log.Warning(ex, "Support package could not be saved to {File}", dialog.FileName);
+            _log.Warning(ex, "Support package could not be saved to {File}", file);
             CopyStatus = Loc.Format("About_SupportFailed", UserMessages.Describe(ex));
         }
     }
