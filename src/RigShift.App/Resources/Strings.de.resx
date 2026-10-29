@@ -567,7 +567,7 @@
   <data name="Fov_AngleTip" xml:space="preserve"><value>Wie weit jeder Seitenbildschirm eingedreht ist. Berechnet ist es der Winkel, der das mittlere Bild nahtlos fortsetzt.</value></data>
   <data name="Fov_AngleManualTip" xml:space="preserve"><value>Rig schon aufgebaut? Berechnung ausschalten und den Winkel eintragen, den die Seitenbildschirme wirklich haben.</value></data>
   <data name="Fov_Comfort" xml:space="preserve"><value>Komfortzuschlag (+5°)</value></data>
-  <data name="Fov_ComfortTip" xml:space="preserve"><value>Schlägt auf jeden Sim-Wert 5° auf, höchstens ein Zehntel des Winkels: der Spielraum, den die Guides als bequem nennen. Die Geometrie bleibt, wie sie ist.</value></data>
+  <data name="Fov_ComfortTip" xml:space="preserve"><value>Schlägt auf jeden Sim-Wert 5° auf, höchstens ein Zehntel des Winkels, für einen etwas weiteren, entspannteren Blick. Die Geometrie bleibt, wie sie ist.</value></data>
   <data name="Fov_Offset" xml:space="preserve"><value>Augenhöhe (cm)</value></data>
   <data name="Fov_OffsetTip" xml:space="preserve"><value>Wie weit die Augen über der Bildschirmmitte liegen. Ändert keinen Winkel; davon hängt nur der Hinweis darunter ab.</value></data>
   <data name="Fov_OffsetHint" xml:space="preserve"><value>Du sitzt über der Bildmitte: den Horizont im Sim verschieben (iRacing „Shift horizon“, ACC „Height“), statt den Winkel zu ändern.</value></data>
@@ -592,8 +592,8 @@
   <data name="Fov_Kind_Slider" xml:space="preserve"><value>Regler</value></data>
   <data name="Fov_Kind_Offset" xml:space="preserve"><value>Versatz</value></data>
   <data name="Fov_Kind_Radians" xml:space="preserve"><value>Radiant, 4:3</value></data>
-  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Wahrscheinlich: Nur eine Quelle sagt das.</value></data>
-  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Unklar: Die Quellen widersprechen sich, also beides probieren.</value></data>
+  <data name="Fov_Conf_Likely" xml:space="preserve"><value>Unbestätigt: in der Sim nachprüfen.</value></data>
+  <data name="Fov_Conf_Unclear" xml:space="preserve"><value>Es sind zwei Werte im Umlauf, also beide probieren.</value></data>
   <data name="Fov_Alternative" xml:space="preserve"><value>oder {0}</value></data>
   <data name="Fov_NoNativeTriple" xml:space="preserve"><value>Kein Triple-Rendering: ein breites Bild. Schirme flach stellen oder die Projektionskorrektur des Sims nutzen.</value></data>
   <data name="Fov_Copy" xml:space="preserve"><value>Kopieren</value></data>
