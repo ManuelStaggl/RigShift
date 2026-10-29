@@ -6,3 +6,6 @@ contact_links:
   - name: Security issue
     url: https://github.com/ManuelStaggl/RigShift/security/advisories/new
     about: Report privately, see SECURITY.md.
+  - name: Roadmap
+    url: https://github.com/users/ManuelStaggl/projects/1
+    about: See what is planned before you suggest a feature.

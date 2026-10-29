@@ -1,6 +1,6 @@
 name: Hardware report
 description: RigShift works – or doesn't – on my setup
-labels: [hardware]
+labels: ["type:hardware-report"]
 body:
   - type: markdown
     attributes:

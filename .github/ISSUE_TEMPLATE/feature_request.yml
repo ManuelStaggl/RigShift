@@ -1,11 +1,11 @@
 name: Feature request
-description: Suggest an improvement
-labels: [enhancement]
+description: Suggest an improvement. Accepted requests become the spec for the work.
+labels: ["type:feature"]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: What problem would this solve?
+      label: Problem
       description: Describe the workflow, not the button. "When I start iRacing I want …"
     validations:
       required: true
@@ -13,9 +13,42 @@ body:
     id: proposal
     attributes:
       label: Proposed solution
+      description: What should RigShift do? Rough is fine.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkable statements that are true once this is done.
+      placeholder: |
+        - [ ] Switching to "Rig" with the wheelbase unplugged shows …
+        - [ ] The setting survives a restart
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-goals
+      description: What this explicitly does not cover.
+  - type: textarea
+    id: test-plan
+    attributes:
+      label: Test plan
+      description: Automated tests and the manual steps on real hardware, if any.
+  - type: dropdown
+    id: areas
+    attributes:
+      label: Affected areas
+      multiple: true
+      options:
+        - Displays
+        - Audio
+        - Games
+        - App window or tray
+        - Command line or links
+        - Updates and installer
+        - Build and CI
   - type: checkboxes
     id: roadmap
     attributes:
       label: Roadmap check
       options:
-        - label: I checked docs/ROADMAP.md and this is not already planned
+        - label: I checked docs/ROADMAP.md and the open issues, and this is not already planned or ruled out
+          required: true
