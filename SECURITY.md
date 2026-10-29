@@ -5,7 +5,7 @@
 Only the latest release gets fixes. RigShift updates itself, so staying current needs no action.
 
 RigShift brings its own .NET runtime. When Microsoft ships a .NET security update, a RigShift patch release with the
-new runtime follows on the day the update reaches this repository.
+new runtime follows soon after.
 
 ## Reporting a vulnerability
 
@@ -16,30 +16,16 @@ Include the version, what an attacker can do, and steps to reproduce.
 You will get an answer within a week. Once a fix is released, the advisory is published with credit to you, unless
 you prefer otherwise.
 
-## Updates and their residual risk
+## Updates
 
-- **Where updates come from.** RigShift uses [Velopack](https://velopack.io) and checks the
-  [GitHub releases](https://github.com/ManuelStaggl/RigShift/releases) of this repository. A release is built and
-  uploaded by the `release.yml` GitHub Actions workflow when a version tag on `main` is pushed. Before anything is
-  uploaded, the workflow installs the previous release, installs the new setup over it, starts it, checks that the
-  profile saved before is still there and uninstalls it again. The upload runs in a separate job, the only one with
-  write access. A downloaded update is applied at the next start of RigShift, unless updates are set to notify only.
-- **What is checked.** Velopack verifies the SHA-256 hash of every package against the release feed it downloaded from
-  the same GitHub release. That protects against broken or truncated downloads, not against a tampered release.
-- **What you can check yourself** (releases after 3.5.1). Every release carries `SHA256SUMS`, a CycloneDX SBOM
-  (`RigShift-<version>.cdx.json`) and a build provenance attestation: a signed statement that the file was built by
-  this repository's release workflow from the tagged commit. Verify a download with
-  `gh attestation verify RigShift-win-Setup.exe --repo ManuelStaggl/RigShift`. The `main` branch and the `v*` tags
-  are protected against force pushes, moves and deletion (`.github/rulesets`).
-- **No code signing.** The installer, the executable and the update packages are not signed (a deliberate decision
-  for a free hobby project). Windows SmartScreen may warn on the first install, and there is no signature that would
-  expose a manipulated update.
-- **Residual risk.** The trust anchor is the maintainer's GitHub account and the release workflow. Whoever gains write
-  access to the repository, its tags or its releases – or compromises an action the workflow uses – can ship an
-  update that every installation applies automatically. This is mitigated by two-factor authentication on the account
-  and by keeping the workflow small; it is not eliminated.
-- **If you want more control**, set updates to notify only in the settings and install a release after reviewing it,
-  or build RigShift from source.
+- Updates come from the [GitHub releases](https://github.com/ManuelStaggl/RigShift/releases) of this repository,
+  built by the `release.yml` workflow from a version tag on `main`, and are installed at the next start of RigShift.
+- Velopack checks the SHA-256 hash of every package against the release feed. That catches broken downloads, not a
+  tampered release.
+- Each release carries `SHA256SUMS`, an SBOM and a build attestation; check a download with
+  `gh attestation verify RigShift-win-Setup.exe --repo ManuelStaggl/RigShift`.
+- The files are not code-signed. Whoever gains write access to this repository could ship an update; if that worries
+  you, set updates to notify only and install a release after looking at it, or build from source.
 
 ## Scope
 
