@@ -22,39 +22,41 @@ without a picture, RigShift reverts it on its own.
 
 ## Already using DisplayMagician, DisplayFusion or a batch file?
 
-Keep it if it works for you. RigShift is for you if you want
+RigShift is for you if you want
 
 - the switch to happen when the wheelbase powers on, and back when it is off,
 - a layout that reverts by itself when a screen stays black,
 - audio and microphone, SimHub and Crew Chief, your desktop icons and the place of every open window in the same
-  profile – and with a game entry, the tools' window positions too.
+  profile, and with a game entry the tools' window positions too.
 
 DisplayMagician is the better pick for AMD Eyefinity and many game launchers, DisplayFusion for full window
 management. [Detailed comparison](docs/compare.md) · [FAQ](docs/faq.md)
 
 ## Features
 
-- **Profiles** – which monitors are on, layout, main display, mirrored displays, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume.
-- **Triggers** – wheelbase on/off, hotkey, sign-in, desktop shortcut, Stream Deck, `rigshift://` link, command line.
-- **Games** – one click: switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam, Epic, EA, Xbox or iRacing, clean up after.
-- **Safety net** – the whole layout is applied in one step; no picture means it reverts after a countdown, even after a crash. Ctrl+Alt+Shift+D turns every display on.
-- **Real hardware** – wakes sleeping monitors, waits for a slow G9, skips optional screens like a spacedesk tablet.
-- **Windows and desktop icons** – a profile remembers where your open windows and your icons sit and puts them back when you return.
-- **Field of view** – the right FOV value for 18 sims, from your monitor's real size.
-- **Backup** – profiles, games and settings as one ZIP. English and German.
+| | |
+|---|---|
+| Profiles | Which monitors are on, layout, main display, mirrored displays, resolution, refresh rate, HDR, NVIDIA Surround, audio and volume. |
+| Triggers | Wheelbase on/off, hotkey, sign-in, desktop shortcut, Stream Deck, `rigshift://` link, command line. |
+| Games | Switch, start SimHub and Crew Chief, place their windows, launch the sim from Steam, Epic, EA, Xbox or iRacing, clean up after. |
+| Safety net | The whole layout is applied in one step. Without a picture it reverts after a countdown, even after a crash. Ctrl+Alt+Shift+D turns every display on. |
+| Real hardware | Wakes sleeping monitors, waits for a slow G9, skips optional screens such as a spacedesk tablet. |
+| Windows and icons | A profile remembers where your open windows and desktop icons sit and puts them back. |
+| Field of view | The FOV value for 18 sims, from your monitor's real size. |
+| Backup | Profiles, games and settings as one ZIP. The app is in English and German. |
 
 | | |
 |---|---|
 | <img alt="Displays of a profile" src="docs/screenshots/profiles-dark.png" width="400"> | <img alt="Triggers of a profile" src="docs/screenshots/triggers-dark.png" width="400"> |
-| **Profiles** – displays, audio, apps and behavior per profile. | **Triggers** – to the rig when wheelbase and pedals are on, back when they are off. |
+| Displays, audio, apps and behavior per profile. | To the rig when wheelbase and pedals are on, back when they are off. |
 | <img alt="Games page" src="docs/screenshots/games-dark.png" width="400"> | <img alt="The tools of a game session" src="docs/screenshots/game-editor-dark.png" width="400"> |
-| **Games** – one click for the sim, its profile, its tools and the way back. | **Tools** – start order, waiting for the wheelbase, before or after the game. |
+| One click for the sim, its profile, its tools and the way back. | Start order, waiting for the wheelbase, before or after the game. |
 | <img alt="Tray popup" src="docs/screenshots/tray-popup-dark.png" width="400"> | <img alt="Confirmation dialog" src="docs/screenshots/confirmation-dark.png" width="400"> |
-| **Tray** – switch or start a sim from the notification area. | **Safety net** – keep the new layout with any wheel button, or it reverts. |
+| Switch or start a sim from the notification area. | Keep the new layout with any wheel button, or it reverts. |
 
 <p align="center">
   <img alt="Field of view page for a triple screen rig" src="docs/screenshots/fov-dark.png" width="820"><br>
-  <b>Field of view</b> – the rig from above and the right number for every sim.
+  The rig from above and the FOV for every sim.
 </p>
 
 ## Getting started
@@ -74,34 +76,24 @@ Updates install on the next start (Settings). Data lives in `%AppData%\RigShift`
 | Windows 11 · RTX 4080 SUPER · desk: XG32UCWG + 2× CM27X3 · rig: Odyssey G9 (G93SC) + CM27X3 as SimHub dash | my own PC, daily use since September 2026 |
 | Windows 10 code base (Server 2022, build 20348) | every change in CI: tests and a live read of the display configuration |
 | NVIDIA Surround on/off | two user reports, fixed in 4.0.1–4.0.3; a confirmed full on/off cycle is still open |
-| AMD / Intel graphics | not tested yet – [report your setup](https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml) |
-
-Every hardware report ends up in this table.
+| AMD / Intel graphics | not tested yet, [report your setup](https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml) |
 
 ## Is it safe?
 
 RigShift is a free hobby project and not code-signed, so Windows shows **"Windows protected your PC"** the first
 time. Click **More info → Run anyway**.
 
-You don't have to take my word for it:
+To check it yourself:
 
 - **Source:** everything is in this repository, MIT licensed. No telemetry, see [privacy](PRIVACY.md).
 - **VirusTotal:** each release links its scan.
-- **Built from this source:** every release carries a GitHub build attestation –
+- **Built from this source:** every release carries a GitHub build attestation:
   `gh attestation verify RigShift-win-Setup.exe -R ManuelStaggl/RigShift`
 - **Checksums and SBOM:** `SHA256SUMS` and a CycloneDX SBOM in every release.
 
 **Smart App Control** (Windows 11) blocks unsigned apps without a "run anyway" option; RigShift can't run while it is
 on. Why 80 MB? RigShift brings its own .NET runtime, so there is nothing to install first. Updates after that are
 usually a few MB. More in the [FAQ](docs/faq.md) and [SECURITY.md](SECURITY.md).
-
-## How RigShift is built
-
-I write RigShift with Claude Code (Anthropic) as a pair programmer, and I use it on my own rig every day. What keeps it
-honest is not the tool but the checks: 1,200+ automated tests, analyzers with warnings as errors and CodeQL run on
-every change; each release is installed over the previous version, started and checked in CI before it is published,
-and carries checksums, an SBOM and a build attestation. Hardware I don't own is listed as untested above, not
-claimed.
 
 ## Stream Deck and button boxes
 
@@ -150,7 +142,8 @@ dotnet test --solution RigShift.slnx
 
 .NET 10 SDK. `RigShift.Core` holds profiles, planner and orchestration without Win32; `RigShift.Windows` the CCD,
 Core Audio and USB layer (CsWin32); `RigShift.App` the WPF tray app and CLI. See [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-and the [display topology rules](docs/display-topology.md).
+and the [display topology rules](docs/display-topology.md). Parts of the code are written with Claude Code; every change
+passes the same tests, analyzers and CodeQL in CI.
 
 ## License
 
