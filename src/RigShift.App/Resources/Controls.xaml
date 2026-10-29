@@ -27,7 +27,7 @@
     </Setter>
   </Style>
 
-  <!-- Elevation of flyouts, menus and drop downs (F-02): a shadow on its own layer behind the surface, so the text
+  <!-- Elevation of flyouts, menus and drop downs: a shadow on its own layer behind the surface, so the text
        above it keeps ClearType. The popup needs AllowsTransparency and a margin the shadow can fall into. -->
   <Style x:Key="RigShift.FlyoutShadow" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
@@ -88,7 +88,7 @@
   </Style>
   <!-- Values: resolutions, refresh rates, hotkeys, process names, paths, times. The text face with tabular figures,
        so columns of numbers stay aligned without a monospaced font. -->
-  <!-- A result as a key figure (V-02): big, semibold, tabular figures. -->
+  <!-- A result as a key figure: big, semibold, tabular figures. -->
   <Style x:Key="RigShift.Text.Metric" TargetType="TextBlock" BasedOn="{StaticResource RigShift.Text.Body}">
     <Setter Property="Margin" Value="0,2,0,0" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Display}" />
@@ -160,7 +160,7 @@
         <Setter TargetName="PressedLayer" Property="Opacity" Value="1" />
         <Setter TargetName="HoverLayer" Property="Visibility" Value="Hidden" />
       </Trigger>
-      <!-- Disabled: no accent, no frame, muted text – it must not look clickable (Z-06). -->
+      <!-- Disabled: no accent, no frame, muted text – it must not look clickable. -->
       <Trigger Property="IsEnabled" Value="False">
         <Setter TargetName="Root" Property="Background" Value="{Binding Path=(controls:Interaction.DisabledBackground), RelativeSource={RelativeSource TemplatedParent}}" />
         <Setter TargetName="Root" Property="BorderBrush" Value="Transparent" />
@@ -191,7 +191,7 @@
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
     <Setter Property="Template" Value="{StaticResource RigShift.ButtonTemplate}" />
   </Style>
-  <!-- Primary: the one accent button of a view (R-ACT-1). -->
+  <!-- Primary: the one accent button of a view. -->
   <Style x:Key="RigShift.Button.Primary" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Accent}" />
     <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
@@ -216,13 +216,13 @@
     <Setter Property="Width" Value="32" />
     <Setter Property="Padding" Value="0" />
   </Style>
-  <!-- Kept as a key for existing pages; every icon button is a ghost now (B-08). -->
+  <!-- Kept as a key for existing pages; every icon button is a ghost now. -->
   <Style x:Key="RigShift.Button.IconOutlined" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}" />
   <!-- Delete and remove: quiet at rest, red on hover. -->
   <Style x:Key="RigShift.Button.IconDanger" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Icon}">
     <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.Error}" />
   </Style>
-  <!-- Destructive: red fill with dark text, only in dialogs (D-03); hover lightens it like the other buttons. -->
+  <!-- Destructive: red fill with dark text, only in dialogs; hover lightens it like the other buttons. -->
   <Style x:Key="RigShift.Button.Danger" TargetType="Button" BasedOn="{StaticResource RigShift.Button}">
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Error}" />
     <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Error}" />
@@ -232,7 +232,7 @@
     <Setter Property="controls:Interaction.HoverForeground" Value="{DynamicResource RigShift.Brush.OnAccent}" />
     <Setter Property="controls:Interaction.PressedBackground" Value="{DynamicResource RigShift.Brush.PressedOverlay}" />
   </Style>
-  <!-- Link: accent text, underline only on hover (B-09). -->
+  <!-- Link: accent text, underline only on hover. -->
   <Style x:Key="RigShift.Link" TargetType="Button" BasedOn="{StaticResource RigShift.Button.Ghost}">
     <Setter Property="Height" Value="Auto" />
     <Setter Property="MinWidth" Value="0" />
@@ -298,7 +298,7 @@
               CornerRadius="{DynamicResource RigShift.Radius.Control}"
               SnapsToDevicePixels="True">
               <Grid>
-                <!-- The hint from Tag while the field is empty (v4 U-15: an empty hotkey field said nothing). -->
+                <!-- The hint from Tag while the field is empty (an empty hotkey field said nothing). -->
                 <TextBlock
                   x:Name="Placeholder"
                   Margin="{TemplateBinding Padding}"
@@ -372,7 +372,7 @@
     </Style.Triggers>
   </Style>
   <!--
-    Inline edit in a list row (O-03): reads as plain text, shows its frame and a pen on hover, the full field with the
+    Inline edit in a list row: reads as plain text, shows its frame and a pen on hover, the full field with the
     focus. An empty value shows the placeholder from Tag in the disabled text color.
   -->
   <Style x:Key="RigShift.Field.Inline" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
@@ -448,7 +448,7 @@
       </Setter.Value>
     </Setter>
   </Style>
-  <!-- Search field (v4 U-26): the field with a magnifier in front and the hint from Tag while it is empty. -->
+  <!-- Search field: the field with a magnifier in front and the hint from Tag while it is empty. -->
   <Style x:Key="RigShift.Field.Search" TargetType="TextBox" BasedOn="{StaticResource RigShift.Field}">
     <Setter Property="Padding" Value="32,0,10,0" />
     <Setter Property="Template">
@@ -755,7 +755,7 @@
     <Setter Property="FocusVisualStyle" Value="{StaticResource RigShift.FocusVisual}" />
   </Style>
   <!--
-    Number box in the field's look (v4 U-26): the WPF-UI template marks the focus with a line under the box whose
+    Number box in the field's look: the WPF-UI template marks the focus with a line under the box whose
     corners come out slanted. None of our number boxes shows spin or clear buttons, so the template needs no parts.
   -->
   <Style x:Key="RigShift.Number" TargetType="ui:NumberBox" BasedOn="{StaticResource {x:Type ui:NumberBox}}">
@@ -838,7 +838,7 @@
       </Setter.Value>
     </Setter>
   </Style>
-  <!-- Radio (Z-01): 20 px, 1.5 px ring; chosen = accent disc with an 8 px dot, 10 px on hover. One look everywhere. -->
+  <!-- Radio: 20 px, 1.5 px ring; chosen = accent disc with an 8 px dot, 10 px on hover. One look everywhere. -->
   <Style x:Key="RigShift.Radio" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="Background" Value="Transparent" />
@@ -1087,7 +1087,7 @@
     <Setter Property="BorderThickness" Value="0,1,0,0" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
   </Style>
-  <!-- Surface under a topology picture: chrome, a soft light in the middle, a solid hairline, 12 radius (F-01). -->
+  <!-- Surface under a topology picture: chrome, a soft light in the middle, a solid hairline, 12 radius. -->
   <Style x:Key="RigShift.TopologyPanel" TargetType="ContentControl">
     <Setter Property="Padding" Value="16,12,16,16" />
     <Setter Property="IsTabStop" Value="False" />
@@ -1116,7 +1116,7 @@
     </Setter>
   </Style>
 
-  <!-- ===== Master list and navigation rows (R-NAV-1/2, R-ACT-4: rows carry no buttons) ===== -->
+  <!-- ===== Master list and navigation rows (rows carry no buttons) ===== -->
   <Style x:Key="RigShift.List" TargetType="ListBox">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
@@ -1231,12 +1231,12 @@
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="Template" Value="{StaticResource RigShift.RowTemplate}" />
   </Style>
-  <!-- Picker row (D-01): 48 high, the list's full width; selected = the row fill of the master lists. -->
+  <!-- Picker row: 48 high, the list's full width; selected = the row fill of the master lists. -->
   <Style x:Key="RigShift.PickerRow" TargetType="ListBoxItem" BasedOn="{StaticResource RigShift.ListRow}">
     <Setter Property="Height" Value="48" />
     <Setter Property="Margin" Value="0,0,0,2" />
   </Style>
-  <!-- Dialog foot: chrome surface under a line, actions on the right (D-01). -->
+  <!-- Dialog foot: chrome surface under a line, actions on the right. -->
   <Style x:Key="RigShift.DialogFooter" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Chrome}" />
     <Setter Property="BorderBrush" Value="{DynamicResource RigShift.Brush.Line}" />
@@ -1263,7 +1263,7 @@
     <Setter Property="Height" Value="36" />
   </Style>
 
-  <!-- ===== Status line: dot + caption; the color never stands alone (R-COL-2) ===== -->
+  <!-- ===== Status line: dot + caption; the color never stands alone ===== -->
   <Style TargetType="controls:StatusLine">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
     <Setter Property="DotBrush" Value="{DynamicResource RigShift.Brush.TextDisabled}" />
@@ -1471,7 +1471,7 @@
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
   </Style>
 
-  <!-- Keys as keycaps ("Ctrl+Alt+F1", "Enter"): a thin frame with a heavier bottom edge, text face (T-01). -->
+  <!-- Keys as keycaps ("Ctrl+Alt+F1", "Enter"): a thin frame with a heavier bottom edge, text face. -->
   <Style x:Key="RigShift.Keycap" TargetType="ContentControl">
     <Setter Property="IsTabStop" Value="False" />
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextSecondary}" />
@@ -1495,7 +1495,7 @@
     </Setter>
   </Style>
 
-  <!-- ===== Slider (B-05): 4 px rail, accent fill up to the thumb, 20 px thumb with an accent dot that grows on hover ===== -->
+  <!-- ===== Slider: 4 px rail, accent fill up to the thumb, 20 px thumb with an accent dot that grows on hover ===== -->
   <Style x:Key="RigShift.SliderFill" TargetType="RepeatButton">
     <Setter Property="Focusable" Value="False" />
     <Setter Property="IsTabStop" Value="False" />
@@ -1605,7 +1605,7 @@
     </Setter>
   </Style>
 
-  <!-- ===== Save bar: 48 high at the bottom of a detail; Save is the primary while it shows (R-ACT-1) ===== -->
+  <!-- ===== Save bar: 48 high at the bottom of a detail; Save is the primary while it shows ===== -->
   <Style TargetType="controls:SaveBar">
     <Setter Property="Height" Value="48" />
     <Setter Property="Background" Value="{DynamicResource RigShift.Brush.Layer}" />
@@ -1947,7 +1947,7 @@
     </Setter>
   </Style>
 
-  <!-- Option cards (G-03): side by side, 216 wide; the chosen card carries a 2 px accent edge and a check badge. -->
+  <!-- Option cards: side by side, 216 wide; the chosen card carries a 2 px accent edge and a check badge. -->
   <Style x:Key="RigShift.OptionCards" TargetType="ListBox" BasedOn="{StaticResource RigShift.List}">
     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     <Setter Property="ItemsPanel">
@@ -2035,7 +2035,7 @@
     <Setter Property="SnapsToDevicePixels" Value="True" />
   </Style>
 
-  <!-- "+ Device" (B-07): a chip of the same height, dashed because it is a slot to fill, not a device. -->
+  <!-- "+ Device": a chip of the same height, dashed because it is a slot to fill, not a device. -->
   <Style x:Key="RigShift.Button.AddChip" TargetType="Button">
     <Setter Property="Height" Value="28" />
     <Setter Property="Padding" Value="10,0,12,0" />
@@ -2087,7 +2087,7 @@
     <Setter Property="BarBrush" Value="{DynamicResource RigShift.Brush.Accent}" />
   </Style>
 
-  <!-- Tooltip (B-10): layer surface, 6 radius, a soft shadow, caption text; implicit, so every tooltip gets it. -->
+  <!-- Tooltip: layer surface, 6 radius, a soft shadow, caption text; implicit, so every tooltip gets it. -->
   <Style TargetType="ToolTip">
     <Setter Property="Foreground" Value="{DynamicResource RigShift.Brush.TextPrimary}" />
     <Setter Property="FontFamily" Value="{DynamicResource RigShift.Font.Text}" />

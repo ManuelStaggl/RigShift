@@ -6,8 +6,8 @@ using RigShift.Core.Topology;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// What a profile's plan means to the user – the same words in the profile list, the overview and the tray (v4 findings
-/// U-10, U-11). A required display that is off is a warning, not a dead end: switching asks for it and waits. Only twin
+/// What a profile's plan means to the user – the same words in the profile list, the overview and the tray.
+/// A required display that is off is a warning, not a dead end: switching asks for it and waits. Only twin
 /// displays that cannot be told apart block, because no waiting helps there.
 /// </summary>
 internal static class ProfileReadiness

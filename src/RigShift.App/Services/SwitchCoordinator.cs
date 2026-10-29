@@ -33,7 +33,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly int _uiThread = Environment.CurrentManagedThreadId;
 
-    /// <summary>Cancelled when the app exits; a running switch rolls back and ends (analysis finding B-02).</summary>
+    /// <summary>Cancelled when the app exits; a running switch rolls back and ends.</summary>
     private readonly CancellationTokenSource _stopping = new();
 
     /// <summary>The switch or catch-up running now, if any. UI thread only.</summary>
@@ -65,7 +65,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler<SwitchRecord>? SwitchCompleted;
 
     /// <summary>
-    /// A switch waits for required displays that are not connected; carries their names (finding HW-16). Raised on the
+    /// A switch waits for required displays that are not connected; carries their names. Raised on the
     /// switch's thread pool thread.
     /// </summary>
     public event EventHandler<IReadOnlyList<string>>? WaitingForDisplays;
@@ -76,14 +76,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler<AllDisplaysOnReport>? AllDisplaysOnCompleted;
 
     /// <summary>
-    /// Windows restored a profile's displays by itself and the profile has more than displays (finding HW-15). The tray
+    /// Windows restored a profile's displays by itself and the profile has more than displays. The tray
     /// offers to apply the rest with <see cref="SwitchRequest.KeepDisplays"/>.
     /// </summary>
     public event EventHandler<Profile>? RestoredByWindows;
 
     /// <summary>
-    /// What a switch left running after its result ended – its apps (analysis finding B-03) and its tidy-up with the
-    /// desktop symbols (v4 finding K-04): the history record, now with their final outcomes. Raised on the context that
+    /// What a switch left running after its result ended – its apps and its tidy-up with the
+    /// desktop symbols: the history record, now with their final outcomes. Raised on the context that
     /// started the switch.
     /// </summary>
     public event EventHandler<SwitchRecord>? FollowUpCompleted;
@@ -169,7 +169,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// A dry run only reads: it takes neither the gate nor <see cref="IsSwitching"/>, so a hotkey during "Check" still
-    /// switches (analysis finding B-13).
+    /// switches.
     /// </summary>
     private async Task<SwitchResult?> CheckCoreAsync(Profile profile, bool rethrow, CancellationToken cancellationToken)
     {
@@ -458,7 +458,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     /// <summary>
     /// Call after a display change, once the active profile was refreshed and a catch-up ran. A profile that became active
     /// without RigShift switching – Windows restored its layout – only has its displays; audio, apps and the rest are
-    /// offered via <see cref="RestoredByWindows"/> (finding HW-15). Returns whether it was offered.
+    /// offered via <see cref="RestoredByWindows"/>. Returns whether it was offered.
     /// </summary>
     public bool NoticeDisplayChange(Profile? before, Profile? after)
     {
@@ -505,8 +505,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private static bool IsAmbiguous(SwitchResult result) => result.Outcome == SwitchOutcome.Blocked && result.Plan.IsAmbiguous;
 
     /// <summary>
-    /// A blocked switch names only the required displays that blocked it, not optional ones (finding HW-14) – and of those
-    /// only the identical ones that could not be told apart, when that is why (K-03): the switch did not wait for the others.
+    /// A blocked switch names only the required displays that blocked it, not optional ones – and of those
+    /// only the identical ones that could not be told apart, when that is why: the switch did not wait for the others.
     /// </summary>
     private static IEnumerable<MissingDisplay> MissingForRecord(SwitchResult result) =>
         IsAmbiguous(result) ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous)
@@ -516,7 +516,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// Records the result and tells the listeners. Never throws: a listener that fails must not turn a switch that worked
-    /// into a second, failed history entry (v4 finding A-15).
+    /// into a second, failed history entry.
     /// </summary>
     private async Task CompleteAsync(SwitchRecord record)
     {
@@ -533,7 +533,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _log.Error(ex, "A listener of the switch history threw for {Profile}", record.ProfileName);
         }
 
-        // Awaited: whoever gets the result next (automation, tray) must see the profile that is active now (C-06, A-07).
+        // Awaited: whoever gets the result next (automation, tray) must see the profile that is active now.
         try
         {
             await _catalog.RefreshActiveAsync(CancellationToken.None);
@@ -543,7 +543,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _log.Warning(ex, "The active profile could not be refreshed after the switch to {Profile}", record.ProfileName);
         }
 
-        // Displays that are only on in this profile (spacedesk) can list their rates now; the editor offers them later (HW-13).
+        // Displays that are only on in this profile (spacedesk) can list their rates now; the editor offers them later.
         if (record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially)
         {
             _ = _catalog.RememberActiveRefreshRatesAsync(CancellationToken.None);
@@ -564,7 +564,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// A switch that stayed tells where the monitors are now: monitors found on another port or graphics card, and serial
-    /// numbers older profiles lack, go into every profile (v4 finding K-03). After the result, so nothing waits for the disk.
+    /// numbers older profiles lack, go into every profile. After the result, so nothing waits for the disk.
     /// </summary>
     private async Task HealAsync(SwitchResult result)
     {

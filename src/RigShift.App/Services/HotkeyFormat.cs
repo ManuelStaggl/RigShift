@@ -48,7 +48,7 @@ public static class HotkeyFormat
             >= Key.D0 and <= Key.D9 => ((int)(key - Key.D0)).ToString(CultureInfo.InvariantCulture),
             >= Key.NumPad0 and <= Key.NumPad9 => "Num " + ((int)(key - Key.NumPad0)).ToString(CultureInfo.InvariantCulture),
             >= Key.A and <= Key.Z or >= Key.F1 and <= Key.F24 => key.ToString(),
-            // Everything else as the keyboard layout names it: "," instead of OemComma, "Page Up" instead of Prior (I-14).
+            // Everything else as the keyboard layout names it: "," instead of OemComma, "Page Up" instead of Prior.
             _ => LayoutName(virtualKey) ?? (key == Key.None ? "0x" + virtualKey.ToString("X2", CultureInfo.InvariantCulture) : key.ToString()),
         };
     }

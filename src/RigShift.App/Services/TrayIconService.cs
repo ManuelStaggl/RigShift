@@ -32,7 +32,7 @@ public sealed class TrayIconService : IDisposable
     private ApplicationTheme? _popupTheme;
     private readonly ProfileCatalog _catalog;
     private readonly SwitchCoordinator _coordinator;
-    /// <summary>Resolved on use: the profiles page must not be built before the tray icon appears (v4 finding A-06).</summary>
+    /// <summary>Resolved on use: the profiles page must not be built before the tray icon appears.</summary>
     private readonly Func<ProfilesViewModel> _profiles;
     private readonly IAppShell _shell;
     private readonly UpdateService _updates;
@@ -101,7 +101,7 @@ public sealed class TrayIconService : IDisposable
         // makes WPF re-resolve every DynamicResource below it.
         ApplicationThemeManager.Changed += (theme, _) => popup.Dispatcher.InvokeAsync(() =>
         {
-            // Each window reports the same change once (finding R-01); high contrast colors can change within the theme.
+            // Each window reports the same change once; high contrast colors can change within the theme.
             if (theme == _popupTheme && theme != ApplicationTheme.HighContrast)
             {
                 return;
@@ -154,7 +154,7 @@ public sealed class TrayIconService : IDisposable
         };
         _icon.TrayBalloonTipClosed += (_, _) => _notificationClick = null;
 
-        // Windows restored a profile's displays by itself: a click applies audio, apps and the rest (finding HW-15).
+        // Windows restored a profile's displays by itself: a click applies audio, apps and the rest.
         coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(
             (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NotificationIcon.Info),
             async () =>
@@ -247,7 +247,7 @@ public sealed class TrayIconService : IDisposable
         System.Drawing.Icon icon;
         Color color = highContrast ? SystemColors.WindowTextColor : lightTaskbar ? LightTaskbarStroke : Colors.White;
 
-        // Windows raises preference and display events in bursts (seven redraws after an RDP reconnect, finding R-01).
+        // Windows raises preference and display events in bursts (seven redraws after an RDP reconnect).
         var state = (key, size, lightTaskbar, color);
         if (_trayIcon is not null && state == _iconState)
         {
@@ -276,7 +276,7 @@ public sealed class TrayIconService : IDisposable
 
     /// <summary>
     /// An unexpected error in the UI, once per <see cref="ErrorNotificationInterval"/> so a failing timer cannot flood the
-    /// tray. Before, such errors only reached the log and a button simply seemed to do nothing (analysis finding I-07).
+    /// tray. Before, such errors only reached the log and a button simply seemed to do nothing.
     /// </summary>
     public void ShowUnexpectedError(string message)
     {

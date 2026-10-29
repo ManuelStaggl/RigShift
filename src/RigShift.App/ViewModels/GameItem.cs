@@ -92,7 +92,7 @@ public sealed partial class GameItem(GameEntry game, string? profileName = null)
     [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(CanPlay), nameof(ShowsHotkey))]
     public partial bool IsRunning { get; set; }
 
-    /// <summary>Play is off while a session runs: starting twice would switch twice and start two sets of apps (R-FLOW-4).</summary>
+    /// <summary>Play is off while a session runs: starting twice would switch twice and start two sets of apps.</summary>
     public bool CanPlay => !IsRunning && !IsNew;
 
     /// <summary>Last result or "running"; <c>null</c> when nothing has happened yet.</summary>

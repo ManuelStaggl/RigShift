@@ -75,7 +75,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         };
         coordinator.History.CollectionChanged += (_, _) => OnUi(RebuildHistory);
         coordinator.FollowUpCompleted += (_, _) => OnUi(RebuildHistory);
-        // The catalog reads the displays after every change and every switch; showing that read saves one of our own (v4 finding A-03).
+        // The catalog reads the displays after every change and every switch; showing that read saves one of our own.
         catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowDisplays(snapshot));
         Loc.Instance.PropertyChanged += (_, _) => OnUi(() =>
         {
@@ -283,7 +283,7 @@ public sealed class HistoryRow(SwitchRecord record, DateTimeOffset now)
 
     public StatusKind Kind { get; } = KindOf(record);
 
-    /// <summary>The result wording of the toast (R-FLOW-2), with the missing displays or the error after it.</summary>
+    /// <summary>The result wording of the toast, with the missing displays or the error after it.</summary>
     public string ResultText { get; } = record.HasDetails ? record.OutcomeText + " · " + record.Details : record.OutcomeText;
 
     public string DurationText { get; } = record.Outcome is SwitchOutcome.Applied or SwitchOutcome.AppliedPartially ? record.DurationText : "—";

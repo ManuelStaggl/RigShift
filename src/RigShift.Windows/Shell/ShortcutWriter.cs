@@ -40,7 +40,7 @@ public static class ShortcutWriter
     }
 
     /// <summary>
-    /// Points a shortcut RigShift made at a renamed profile or game (v4 finding U-12): only a <c>.lnk</c> that starts
+    /// Points a shortcut RigShift made at a renamed profile or game: only a <c>.lnk</c> that starts
     /// <paramref name="executable"/> with exactly <paramref name="oldArguments"/> is touched – a game's own shortcut of the
     /// same name, from its installer, stays as it is. The icon is kept.
     /// </summary>
@@ -72,7 +72,7 @@ public static class ShortcutWriter
 
     /// <summary>
     /// Deletes the shortcuts RigShift made in <paramref name="folder"/>: those that start <paramref name="executable"/>
-    /// with a profile or game. Called before an uninstall, so the desktop keeps no dead symbols (v4 finding E-16). A
+    /// with a profile or game. Called before an uninstall, so the desktop keeps no dead symbols. A
     /// shortcut that cannot be read or deleted is left alone; the others still go.
     /// </summary>
     /// <returns>The deleted files.</returns>

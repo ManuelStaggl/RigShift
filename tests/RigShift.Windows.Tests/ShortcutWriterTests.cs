@@ -4,7 +4,7 @@ using Xunit;
 
 namespace RigShift.Windows.Tests;
 
-/// <summary>A renamed profile takes RigShift's own desktop shortcut along, and nothing else (v4 finding U-12).</summary>
+/// <summary>A renamed profile takes RigShift's own desktop shortcut along, and nothing else.</summary>
 public sealed class ShortcutWriterTests : IDisposable
 {
     private readonly string _folder = Directory.CreateTempSubdirectory("rigshift-shortcuts-").FullName;

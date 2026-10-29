@@ -25,7 +25,7 @@ public sealed class FixtureMigrationTests : IDisposable
         profile.Id.ShouldBe(Guid.Parse("5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11"));
         profile.Name.ShouldBe("Rig");
         profile.Icon.ShouldBe("rig");
-        // Own confirmation time 15 s (analysis decision O-01): the profile asks, with the seconds of the app setting.
+        // Own confirmation time 15 s: the profile asks, with the seconds of the app setting.
         profile.SwitchWithoutAsking.ShouldBeFalse();
         profile.ConfirmTimeoutSeconds.ShouldBeNull();
         profile.Displays.Count.ShouldBe(2);
@@ -135,7 +135,7 @@ public sealed class FixtureMigrationTests : IDisposable
 
         settings.SchemaVersion.ShouldBe(1);
         settings.DefaultProfileId.ShouldBe(Guid.Parse("5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11"));
-        // The fixture still has "applyDefaultProfileOnStartup": true – removed in O-03, the key must simply be ignored.
+        // The fixture still has "applyDefaultProfileOnStartup": true – removed in 1.4, the key must simply be ignored.
         settings.ConfirmTimeoutSeconds.ShouldBe(20);
         settings.Language.ShouldBe("de");
         settings.OnlyNotifyAboutUpdates.ShouldBeFalse();

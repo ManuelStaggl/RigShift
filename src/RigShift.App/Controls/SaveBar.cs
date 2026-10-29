@@ -38,7 +38,7 @@ public sealed class SaveBar : Control
 
     public SaveBar()
     {
-        // Texts built in code need the language change by hand (finding I-13); weak, the bar lives shorter than Loc.
+        // Texts built in code need the language change by hand; weak, the bar lives shorter than Loc.
         PropertyChangedEventManager.AddHandler(Loc.Instance, OnLanguageChanged, string.Empty);
         IsVisibleChanged += (_, e) =>
         {

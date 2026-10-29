@@ -21,7 +21,7 @@ public sealed class AutomationService : IDisposable
     /// <summary>ERROR_ACCESS_DENIED: the display calls of a session without its desktop.</summary>
     private const int ErrorAccessDenied = 5;
 
-    /// <summary>Shortest countdown after a rule switched: the wheelbase is on, its owner not yet in the seat (U-04).</summary>
+    /// <summary>Shortest countdown after a rule switched: the wheelbase is on, its owner not yet in the seat.</summary>
     internal const int RuleConfirmSeconds = 30;
 
     private readonly SettingsService _settings;
@@ -102,7 +102,7 @@ public sealed class AutomationService : IDisposable
 
     /// <summary>
     /// The timer runs only while a rule can act: without rules or paused, a tick every two seconds only woke the UI thread
-    /// for nothing (v4 finding E-08). Going idle forgets what the devices did, as the idle poll did before.
+    /// for nothing. Going idle forgets what the devices did, as the idle poll did before.
     /// </summary>
     private void UpdateTimer()
     {
@@ -134,7 +134,7 @@ public sealed class AutomationService : IDisposable
         }
     }
 
-    /// <returns><c>false</c> if the settings could not be saved; the paused state stays as it was (analysis finding A-07).</returns>
+    /// <returns><c>false</c> if the settings could not be saved; the paused state stays as it was.</returns>
     public async Task<bool> SetPausedAsync(bool paused)
     {
         try
@@ -162,7 +162,7 @@ public sealed class AutomationService : IDisposable
 
     /// <summary>
     /// Back in the session: look at the devices at once. What happened while it was locked is decided now – a wheelbase
-    /// switched on then starts its rule, one switched off ends it (A-04).
+    /// switched on then starts its rule, one switched off ends it.
     /// </summary>
     private void OnSessionChanged(object? sender, EventArgs e)
     {
@@ -180,7 +180,7 @@ public sealed class AutomationService : IDisposable
 
     /// <summary>
     /// After sleep the devices are re-enumerated and the timer did not tick: a device turned off before sleeping must not
-    /// switch back on the first poll, so the next poll sets a new baseline (analysis finding C-03).
+    /// switch back on the first poll, so the next poll sets a new baseline.
     /// </summary>
     private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
     {
@@ -214,7 +214,7 @@ public sealed class AutomationService : IDisposable
         }
 
         // Locked or away from the console: every display call would fail with "access denied". The devices are looked at
-        // again once the session is back, with the rules' state as it was before (A-04).
+        // again once the session is back, with the rules' state as it was before.
         if (!_session.IsInteractive)
         {
             if (!_awayLogged)
@@ -288,9 +288,9 @@ public sealed class AutomationService : IDisposable
             return;
         }
 
-        // A start that did not succeed must not count as started (analysis finding C-01).
+        // A start that did not succeed must not count as started.
         // "Access denied" means the session lost the desktop while switching (locked): try again later, not only after a
-        // reconnect of the device (A-04).
+        // reconnect of the device.
         RetryMode? retry = result switch
         {
             null or { Outcome: SwitchOutcome.Blocked } or { Outcome: SwitchOutcome.Failed, LastNativeError: ErrorAccessDenied } => RetryMode.Later,

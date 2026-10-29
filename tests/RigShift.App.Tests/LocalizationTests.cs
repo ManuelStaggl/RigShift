@@ -127,7 +127,7 @@ public sealed class LocalizationTests
     }
 
     /// <summary>
-    /// One word per thing (v4 findings U-15…U-18): a layout is not also an arrangement or a setup – in sim racing a
+    /// One word per thing: a layout is not also an arrangement or a setup – in sim racing a
     /// setup is the car's –, a hotkey is not also a shortcut, and English is American like Windows. Pages that were
     /// renamed must not live on in texts that point at them.
     /// </summary>

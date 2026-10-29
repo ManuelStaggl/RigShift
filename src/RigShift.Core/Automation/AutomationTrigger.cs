@@ -30,7 +30,7 @@ public enum TriggerEventKind
 
     /// <summary>
     /// The rule started with the end action "switch back", but no other profile was active, so there is nothing to go back
-    /// to (analysis finding C-05).
+    /// to.
     /// </summary>
     NoPreviousProfile,
 
@@ -77,7 +77,7 @@ public enum RetryMode
     AfterReconnect,
 }
 
-/// <summary>A decision of the trigger, for the log (analysis finding K-02).</summary>
+/// <summary>A decision of the trigger, for the log.</summary>
 public sealed record TriggerEvent(AutomationRule Rule, TriggerEventKind Kind)
 {
     public TimeSpan? Delay { get; init; }
@@ -101,7 +101,7 @@ public sealed record TriggerEvaluation(IReadOnlyList<TriggerAction> Actions, IRe
 /// End: acted on once the device has been gone for the rule's <see cref="ExitDelayOf"/> and for at least two polls in a
 /// row (a single missed poll is no end, even with a delay of 0), and only while the rule's profile is still active – a
 /// profile the user picked in the meantime is not overridden. A start switch that did not succeed is reported back with
-/// <see cref="Disarm"/>, so the rule does not count as started (analysis finding C-01).
+/// <see cref="Disarm"/>, so the rule does not count as started.
 /// </remarks>
 public sealed class AutomationTrigger
 {
@@ -112,7 +112,7 @@ public sealed class AutomationTrigger
 
     /// <summary>
     /// The shortest gap after which a device that comes back counts as connected anew, unless the rule's own delay is
-    /// longer (v4 finding K-10): a wheelbase re-enumerating after interference or a hub reset is gone for a poll or two.
+    /// longer: a wheelbase re-enumerating after interference or a hub reset is gone for a poll or two.
     /// </summary>
     private static readonly TimeSpan MinimumGapForStart = TimeSpan.FromSeconds(5);
 
@@ -215,7 +215,7 @@ public sealed class AutomationTrigger
                 continue;
             }
 
-            // A combination runs while all of its devices are present (user decision U-02).
+            // A combination runs while all of its devices are present.
             IReadOnlyList<string> devices = WatchedDevicesOf(rule);
             string watched = string.Join('+', devices);
             bool running = devices.Count > 0 && devices.All(present.Contains);
@@ -257,7 +257,7 @@ public sealed class AutomationTrigger
 
                     // Back within the delay continues the session the rule started. A short gap in a session the rule did not
                     // start – the device was there at startup, or its start was turned down – is no reconnect either: that
-                    // switched to the rig in the middle of desk work (K-10). Otherwise it is a new start.
+                    // switched to the rig in the middle of desk work. Otherwise it is a new start.
                     if (!(restarted && state.StartedByRule) && !(briefGap && !state.StartedByRule))
                     {
                         events.Add(new TriggerEvent(rule, TriggerEventKind.DeviceConnected));
@@ -399,7 +399,7 @@ public sealed class AutomationTrigger
 
         /// <summary>
         /// Monotonic time the device went missing, kept through an end action that did not switch, so a device that comes
-        /// back can be told from a short gap (K-10). Cleared when it is back and when an end action switched away.
+        /// back can be told from a short gap. Cleared when it is back and when an end action switched away.
         /// </summary>
         public TimeSpan? MissingSince { get; set; }
 

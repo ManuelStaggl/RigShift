@@ -48,7 +48,7 @@ public sealed class ProfileEditingTests
     [Fact]
     public void Capture_LeavesHdrAsWindowsHasIt()
     {
-        // K-12: a captured profile that sets HDR turned every change in Windows back on the next switch.
+        // A captured profile that sets HDR turned every change in Windows back on the next switch.
         DisplaySnapshot hdrOn = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = true }));
 
         ProfileEditing.Capture("Rig", hdrOn).Displays.Single().Hdr.ShouldBeNull();

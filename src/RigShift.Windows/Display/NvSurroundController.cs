@@ -172,7 +172,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             SurroundState before = ReadLocked(api);
             if (before.Availability != SurroundAvailability.Available)
             {
-                // An unclear state is never written over (plan point 21).
+                // An unclear state is never written over.
                 return new SurroundApplyResult { Outcome = SurroundOutcome.NotAvailable, Message = before.Message };
             }
 

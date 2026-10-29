@@ -51,7 +51,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>
     /// Raised after the displays were read again and the active profile worked out – on a display change, after a switch
     /// or a reload – whether the active profile changed or not. Carries what was read, so a page that shows the displays
-    /// does not read them once more (v4 finding A-03). A new active profile alone is <see cref="ActiveProfile"/>'s
+    /// does not read them once more. A new active profile alone is <see cref="ActiveProfile"/>'s
     /// property change; the items' flags are already up to date when it is raised.
     /// </summary>
     public event EventHandler<DisplaySnapshot>? DisplaysRefreshed;
@@ -72,7 +72,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// </summary>
     public Guid? PreviousProfileId { get; private set; }
 
-    /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout (K-13).</summary>
+    /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout.</summary>
     public Guid? LastAppliedProfileId { get; set; }
 
     [ObservableProperty]
@@ -85,7 +85,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     [ObservableProperty]
     public partial string? UnreadableFilesMessage { get; set; }
 
-    /// <summary>Empty-state text; rebuilt with the items, so it follows a language change (analysis finding I-13).</summary>
+    /// <summary>Empty-state text; rebuilt with the items, so it follows a language change.</summary>
     [ObservableProperty]
     public partial string? EmptyMessage { get; set; }
 
@@ -96,7 +96,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>Custom monitor names from the settings registry and the profiles.</summary>
     public IReadOnlyDictionary<string, string> KnownDisplayNames => DisplayNames.Known(_profiles, _settings.Current.DisplayNames);
 
-    /// <summary>Rates the display offered at this resolution when it was last active (finding HW-13).</summary>
+    /// <summary>Rates the display offered at this resolution when it was last active.</summary>
     public IReadOnlyList<RefreshRate> RememberedRefreshRates(DisplayIdentity identity, int width, int height) =>
         RefreshRateMemory.Get(_settings.Current.RefreshRates, identity, width, height);
 
@@ -167,7 +167,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     }
 
     /// <summary>
-    /// Writes what a switch found out about the monitors into every profile (v4 finding K-03): a monitor now on another port
+    /// Writes what a switch found out about the monitors into every profile: a monitor now on another port
     /// or graphics card, and the EDID serial number that profiles from before 4.0 lack. Custom names and curvature move
     /// with a monitor. Call only for a switch that stayed; failures are logged, the switch result stands.
     /// </summary>
@@ -316,7 +316,7 @@ public sealed partial class ProfileCatalog : ObservableObject
             return;
         }
 
-        // Between profiles with the same layout, the one RigShift applied – or showed – last stays (K-13).
+        // Between profiles with the same layout, the one RigShift applied – or showed – last stays.
         Profile? active = _matcher.FindActive(_profiles, snapshot, LastAppliedProfileId ?? ActiveProfile?.Id);
         if (ActiveProfile is { } before && before.Id != active?.Id)
         {
@@ -356,7 +356,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         ProfilesChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Each profile against the displays as read last, so the overview and the tray say what the list says (U-10).</summary>
+    /// <summary>Each profile against the displays as read last, so the overview and the tray say what the list says.</summary>
     private void UpdateReadiness()
     {
         if (LastSnapshot is not { } snapshot)

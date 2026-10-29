@@ -19,7 +19,7 @@ public sealed record SurroundSetting
 /// <summary>
 /// What a profile without a Surround setting means. On its own: leave Surround as it is. Once another profile switches
 /// Surround on: off – otherwise the profile's own displays stay hidden inside that grid, the switch waits for monitors
-/// that are on and then blocks (findings K-09, U-05). A profile that should keep the grid says "on" itself.
+/// that are on and then blocks. A profile that should keep the grid says "on" itself.
 /// </summary>
 public static class SurroundDefaults
 {

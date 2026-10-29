@@ -251,7 +251,7 @@ public sealed class UpdateServiceTests : IDisposable
         _feed.Downloads.ShouldBe(1);
         _feed.Applied.ShouldBe(["9.9.9"]);
 
-        // The user's exit with its questions: a hidden editor with unsaved changes, a running game (A-14, E-06).
+        // The user's exit with its questions: a hidden editor with unsaved changes, a running game.
         _shell.Received(1).QuitByUser();
         _shell.DidNotReceive().Quit();
     }

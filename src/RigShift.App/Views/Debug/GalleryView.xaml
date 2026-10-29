@@ -16,10 +16,10 @@
     </Style>
   </UserControl.Resources>
   <StackPanel Margin="32,20,32,24">
-    <TextBlock Style="{StaticResource RigShift.Text.Title}" Text="Komponenten 3.0" />
-    <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Debug-Galerie: Tokens, Typografie und Komponenten aus Controls.xaml, gerendert ohne Fenster." />
+    <TextBlock Style="{StaticResource RigShift.Text.Title}" Text="Components" />
+    <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Debug gallery: tokens, type and components from Controls.xaml, rendered without a window." />
 
-    <TextBlock Style="{StaticResource Section}" Text="Marke" />
+    <TextBlock Style="{StaticResource Section}" Text="Brand" />
     <StackPanel Orientation="Horizontal">
       <Image Width="128" Height="128" Source="{StaticResource RigShift.Image.AppIcon}" />
       <Image Width="48" Height="48" Margin="24,0,0,0" VerticalAlignment="Center" Source="{StaticResource RigShift.Image.AppIcon}" />
@@ -29,110 +29,110 @@
         Margin="24,0,0,0"
         VerticalAlignment="Center"
         Style="{StaticResource RigShift.Text.Caption}"
-        Text="Vektor (Brand.xaml) – 128 · 48 · 36 · 18 px" />
+        Text="Vector (Brand.xaml) – 128 · 48 · 36 · 18 px" />
     </StackPanel>
 
-    <TextBlock Style="{StaticResource Section}" Text="Typografie" />
+    <TextBlock Style="{StaticResource Section}" Text="Type" />
     <StackPanel Orientation="Horizontal">
       <StackPanel Width="360">
         <TextBlock Style="{StaticResource RigShift.Text.Title}" Text="Title 28/36" />
-        <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="Subtitle 20/28 – Seitentitel, Detail-Kopf" />
-        <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="BodyStrong 14/20 – Listen-Namen, Kartentitel, Tabs" />
-        <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="Body 14/20 – Standardtext in Sätzen." />
-        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Caption 12/16 – Beschreibungen, Labels, Statuszeilen" />
+        <TextBlock Style="{StaticResource RigShift.Text.Subtitle}" Text="Subtitle 20/28 – page titles, detail head" />
+        <TextBlock Style="{StaticResource RigShift.Text.BodyStrong}" Text="BodyStrong 14/20 – list names, card titles, tabs" />
+        <TextBlock Style="{StaticResource RigShift.Text.Body}" Text="Body 14/20 – running text." />
+        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Caption 12/16 – descriptions, labels, status lines" />
         <TextBlock Style="{StaticResource RigShift.Text.Value}" Text="Value 13/18 · 5120×1440 @ 240 Hz · Ctrl+Alt+F2 · iRacingSim64DX11" />
         <TextBlock Style="{StaticResource RigShift.Text.ValueSecondary}" Text="ValueSecondary · C:\Program Files (x86)\SimHub\SimHubWPF.exe" />
       </StackPanel>
       <StackPanel Width="360" Margin="24,0,0,0">
-        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Statuszeilen (R-COL-2: Punkt + Text)" />
-        <controls:StatusLine Kind="Ok" Text="Bereit · Dash fehlt (optional)" />
-        <controls:StatusLine Margin="0,4,0,0" Kind="Warn" Text="Umgeschaltet · Apps unvollständig" />
-        <controls:StatusLine Margin="0,4,0,0" Kind="Error" Text="Blockiert: Odyssey G93SC fehlt" />
-        <controls:StatusLine Margin="0,4,0,0" Kind="Accent" Text="Wechselt … Bildschirme werden angewendet (Versuch 1)" />
-        <controls:StatusLine Margin="0,4,0,0" Kind="Neutral" Text="Verbunden, nicht in Betrieb" />
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Status lines (dot and text)" />
+        <controls:StatusLine Kind="Ok" Text="Ready · Dash missing (optional)" />
+        <controls:StatusLine Margin="0,4,0,0" Kind="Warn" Text="Switched · apps incomplete" />
+        <controls:StatusLine Margin="0,4,0,0" Kind="Error" Text="Blocked: Odyssey G93SC missing" />
+        <controls:StatusLine Margin="0,4,0,0" Kind="Accent" Text="Switching … applying displays (attempt 1)" />
+        <controls:StatusLine Margin="0,4,0,0" Kind="Neutral" Text="Connected, not in use" />
         <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="Chips" />
         <StackPanel Orientation="Horizontal">
-          <ContentControl Content="Standard" Style="{StaticResource RigShift.Chip}" />
+          <ContentControl Content="Default" Style="{StaticResource RigShift.Chip}" />
           <ContentControl Margin="6,0,0,0" Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Value}" />
           <ContentControl Margin="6,0,0,0" Content="Steam" Style="{StaticResource RigShift.Chip}" />
         </StackPanel>
-        <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="Fortschrittsleiste (2 px)" />
+        <TextBlock Margin="0,12,0,0" Style="{StaticResource RigShift.Text.Label}" Text="Progress bar (2 px)" />
         <controls:ProgressLine />
       </StackPanel>
     </StackPanel>
 
     <TextBlock Style="{StaticResource Section}" Text="Buttons" />
     <StackPanel Orientation="Horizontal">
-      <Button Content="Umschalten" Style="{StaticResource RigShift.Button.Primary}" />
-      <Button Margin="8,0,0,0" Content="Testen" Style="{StaticResource RigShift.Button}" />
-      <Button Margin="8,0,0,0" Content="Selbst einrichten" Style="{StaticResource RigShift.Button.Ghost}" />
-      <Button Margin="8,0,0,0" Style="{StaticResource RigShift.Button.IconOutlined}" AutomationProperties.Name="Menü">
+      <Button Content="Switch" Style="{StaticResource RigShift.Button.Primary}" />
+      <Button Margin="8,0,0,0" Content="Test" Style="{StaticResource RigShift.Button}" />
+      <Button Margin="8,0,0,0" Content="Set up myself" Style="{StaticResource RigShift.Button.Ghost}" />
+      <Button Margin="8,0,0,0" Style="{StaticResource RigShift.Button.IconOutlined}" AutomationProperties.Name="Menu">
         <ui:SymbolIcon FontSize="16" Symbol="MoreHorizontal16" />
       </Button>
       <Button Margin="8,0,0,0" Style="{StaticResource RigShift.Button.Icon}" AutomationProperties.Name="Entfernen">
         <ui:SymbolIcon FontSize="16" Symbol="Delete16" />
       </Button>
-      <Button Margin="8,0,0,0" Content="Löschen" Style="{StaticResource RigShift.Button.Danger}" />
-      <Button Margin="8,0,0,0" Content="Wechselt…" IsEnabled="False" Style="{StaticResource RigShift.Button.Primary}" />
+      <Button Margin="8,0,0,0" Content="Delete" Style="{StaticResource RigShift.Button.Danger}" />
+      <Button Margin="8,0,0,0" Content="Switching…" IsEnabled="False" Style="{StaticResource RigShift.Button.Primary}" />
       <Button Margin="8,0,0,0" Style="{StaticResource RigShift.Button}">
         <StackPanel Orientation="Horizontal">
           <ui:SymbolIcon Margin="0,0,8,0" FontSize="16" Symbol="Add16" />
-          <TextBlock Text="USB-Regel" />
+          <TextBlock Text="USB rule" />
         </StackPanel>
       </Button>
-      <Button Margin="16,0,0,0" VerticalAlignment="Center" Content="Was ist neu" Style="{StaticResource RigShift.Link}" />
+      <Button Margin="16,0,0,0" VerticalAlignment="Center" Content="What's new" Style="{StaticResource RigShift.Link}" />
     </StackPanel>
 
-    <TextBlock Style="{StaticResource Section}" Text="Felder" />
+    <TextBlock Style="{StaticResource Section}" Text="Fields" />
     <StackPanel Orientation="Horizontal">
       <StackPanel Width="180">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Name" />
         <TextBox Style="{StaticResource RigShift.Field}" Text="Sim Rig" />
       </StackPanel>
       <StackPanel Width="140" Margin="16,0,0,0">
-        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Tastenkürzel" />
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Hotkey" />
         <TextBox Style="{StaticResource RigShift.Field.Value}" Text="Ctrl+Alt+F2" />
       </StackPanel>
       <StackPanel Width="200" Margin="16,0,0,0">
-        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Spielprozess" />
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Game process" />
         <TextBox controls:Interaction.IsInvalid="True" Style="{StaticResource RigShift.Field.Value}" Text="FlightSimulator2024" />
-        <TextBlock Style="{StaticResource RigShift.Text.FieldError}" Text="Beim ersten Start wurde kein Prozess erkannt." />
+        <TextBlock Style="{StaticResource RigShift.Text.FieldError}" Text="No process was recognised on the first start." />
       </StackPanel>
       <StackPanel Width="220" Margin="16,0,0,0">
-        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Wiedergabe" />
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Playback" />
         <ComboBox SelectedIndex="0" Style="{StaticResource RigShift.Select}">
           <ComboBoxItem Content="Headset (Arctis Nova Pro)" />
-          <ComboBoxItem Content="Lautsprecher" />
+          <ComboBoxItem Content="Speakers" />
         </ComboBox>
       </StackPanel>
       <StackPanel Width="180" Margin="16,0,0,0">
-        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Auf Gerät warten" />
+        <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="Wait for device" />
         <!-- Bound like the pages do it: items are objects, the text comes from DisplayMemberPath. -->
         <ComboBox x:Name="WaitSelect" DisplayMemberPath="Name" SelectedIndex="0" Style="{StaticResource RigShift.Select}" />
       </StackPanel>
       <StackPanel Width="200" Margin="16,0,0,0">
         <TextBlock Style="{StaticResource RigShift.Text.Label}" Text="NVIDIA Surround" />
         <ListBox SelectedIndex="1" Style="{StaticResource RigShift.Segment}">
-          <ListBoxItem Content="Lassen" />
-          <ListBoxItem Content="Aus" />
-          <ListBoxItem Content="An" />
+          <ListBoxItem Content="Keep" />
+          <ListBoxItem Content="Off" />
+          <ListBoxItem Content="On" />
         </ListBox>
       </StackPanel>
     </StackPanel>
     <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-      <ui:ToggleSwitch Content="Nach dem Umschalten bestätigen" IsChecked="True" Style="{StaticResource RigShift.Toggle}" />
-      <ui:ToggleSwitch Margin="24,0,0,0" Content="USB-Regeln pausieren" Style="{StaticResource RigShift.Toggle}" />
-      <CheckBox Margin="24,0,0,0" Content="Hauptanzeige" IsChecked="True" Style="{StaticResource RigShift.Check}" />
+      <ui:ToggleSwitch Content="Confirm after switching" IsChecked="True" Style="{StaticResource RigShift.Toggle}" />
+      <ui:ToggleSwitch Margin="24,0,0,0" Content="Pause USB rules" Style="{StaticResource RigShift.Toggle}" />
+      <CheckBox Margin="24,0,0,0" Content="Main display" IsChecked="True" Style="{StaticResource RigShift.Check}" />
       <CheckBox Margin="24,0,0,0" Content="Optional" Style="{StaticResource RigShift.Check}" />
       <Slider Width="160" Margin="24,0,0,0" VerticalAlignment="Center" Maximum="100" Value="40" />
     </StackPanel>
 
-    <TextBlock Style="{StaticResource Section}" Text="Leisten" />
-    <controls:InfoBar Kind="Info" Text="Version 3.0.1 ist bereit und wird beim nächsten Start installiert." />
-    <controls:InfoBar Margin="0,8,0,0" Kind="Warn" Text="Die Grafikkarte treibt eventuell nicht alle Bildschirme mit diesen Auflösungen und Bildwiederholraten." />
-    <controls:InfoBar Margin="0,8,0,0" Kind="Error" Text="Getestet: nicht möglich. Surround-Raster ist nicht eingerichtet.">
+    <TextBlock Style="{StaticResource Section}" Text="Bars" />
+    <controls:InfoBar Kind="Info" Text="Version 3.0.1 is ready and installs on the next start." />
+    <controls:InfoBar Margin="0,8,0,0" Kind="Warn" Text="The graphics card may not drive all displays at these resolutions and refresh rates." />
+    <controls:InfoBar Margin="0,8,0,0" Kind="Error" Text="Tested: not possible. No Surround grid is set up.">
       <controls:InfoBar.Action>
-        <Button Height="28" Content="Details im Log" Style="{StaticResource RigShift.Button}" />
+        <Button Height="28" Content="Details in the log" Style="{StaticResource RigShift.Button}" />
       </controls:InfoBar.Action>
     </controls:InfoBar>
     <Border Margin="0,12,0,0" BorderBrush="{DynamicResource RigShift.Brush.Line}" BorderThickness="1">
@@ -142,14 +142,14 @@
       <controls:SaveBar />
     </Border>
 
-    <TextBlock Style="{StaticResource Section}" Text="Listen und Navigation" />
+    <TextBlock Style="{StaticResource Section}" Text="Lists and navigation" />
     <StackPanel Orientation="Horizontal">
       <Border Width="200" Background="{DynamicResource RigShift.Brush.Chrome}" Padding="8">
         <ListBox x:Name="Nav" SelectedIndex="1" Style="{StaticResource RigShift.List}" ItemContainerStyle="{StaticResource RigShift.NavItem}">
           <ListBoxItem>
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,12,0" FontSize="16" Symbol="Home16" />
-              <TextBlock Text="Übersicht" />
+              <TextBlock Text="Overview" />
             </StackPanel>
           </ListBoxItem>
           <ListBoxItem>
@@ -161,7 +161,7 @@
           <ListBoxItem>
             <StackPanel Orientation="Horizontal">
               <ui:SymbolIcon Margin="0,0,12,0" FontSize="16" Symbol="Games16" />
-              <TextBlock Text="Spiele" />
+              <TextBlock Text="Games" />
             </StackPanel>
           </ListBoxItem>
         </ListBox>
@@ -171,31 +171,31 @@
       </Border>
       <Border Width="280" Margin="24,0,0,0" Style="{StaticResource RigShift.Card}">
         <StackPanel>
-          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Aktives Profil" />
-          <TextBlock Margin="0,4,0,0" Style="{StaticResource RigShift.Text.Subtitle}" Text="Schreibtisch" />
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Active profile" />
+          <TextBlock Margin="0,4,0,0" Style="{StaticResource RigShift.Text.Subtitle}" Text="Desk" />
           <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
             <ContentControl Content="Ctrl+Alt+F1" Style="{StaticResource RigShift.Chip.Value}" />
-            <ContentControl Margin="6,0,0,0" Content="Standard" Style="{StaticResource RigShift.Chip}" />
+            <ContentControl Margin="6,0,0,0" Content="Default" Style="{StaticResource RigShift.Chip}" />
           </StackPanel>
-          <controls:StatusLine Margin="0,12,0,0" Kind="Ok" Text="Umgeschaltet vor 12 Min. · 2,4 s" />
+          <controls:StatusLine Margin="0,12,0,0" Kind="Ok" Text="Switched 12 min ago · 2.4 s" />
         </StackPanel>
       </Border>
     </StackPanel>
 
-    <TextBlock Style="{StaticResource Section}" Text="Topologie – XS · S · M · L" />
+    <TextBlock Style="{StaticResource Section}" Text="Topology – XS · S · M · L" />
     <StackPanel Orientation="Horizontal">
       <controls:DisplayTopology x:Name="TopoXs" Width="56" Height="24" VerticalAlignment="Center" Size="XS" />
       <controls:DisplayTopology x:Name="TopoS" Width="64" Height="28" Margin="16,0,0,0" VerticalAlignment="Center" Size="S" />
       <ContentControl Width="560" Margin="24,0,0,0" Style="{StaticResource RigShift.TopologyPanel}">
         <StackPanel>
-          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Jetzt angezeigt" />
+          <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="On screen now" />
           <controls:DisplayTopology x:Name="TopoM" Height="150" Margin="0,8,0,0" Size="M" />
         </StackPanel>
       </ContentControl>
     </StackPanel>
     <ContentControl Margin="0,16,0,0" Style="{StaticResource RigShift.TopologyPanel}">
       <StackPanel>
-        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Bildschirm anklicken zum Bearbeiten – L mit Auswahl, optional (gestrichelt), nicht in Betrieb, fehlt (schraffiert)" />
+        <TextBlock Style="{StaticResource RigShift.Text.Caption}" Text="Click a display to edit it – L with selection, optional (dashed), not in use, missing (hatched)" />
         <controls:DisplayTopology x:Name="TopoL" Height="190" Margin="0,8,0,0" Size="L" />
       </StackPanel>
     </ContentControl>

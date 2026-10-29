@@ -19,7 +19,7 @@ public interface IHotkeyField
 }
 
 /// <summary>
-/// The rules of a hotkey field, the same for the profile editor, the game editor and the settings (v4 finding A-07): a
+/// The rules of a hotkey field, the same for the profile editor, the game editor and the settings: a
 /// combination needs Ctrl, Alt or Win, must be free in Windows and must not belong to another profile, game or "back".
 /// Keeps the hint under the field, in the current language.
 /// </summary>

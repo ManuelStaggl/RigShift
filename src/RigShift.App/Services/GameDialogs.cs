@@ -201,7 +201,7 @@ public sealed class GameDialogs : IGamePageDialogs
         }
     }
 
-    /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
+    /// <summary>Delete is destructive: red text, never the accent.</summary>
     public async Task<bool> ConfirmDeleteAsync(string name) =>
         await DialogWindow.AskAsync(
             Loc.Instance["Games_DeleteTitle"],

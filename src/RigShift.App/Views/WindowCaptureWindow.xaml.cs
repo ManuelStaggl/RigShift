@@ -112,7 +112,7 @@ public sealed partial class CaptureRow(OpenWindow window) : ObservableObject
 
     public string Title => string.IsNullOrWhiteSpace(Window.Title) ? Window.ProcessName : Window.Title;
 
-    /// <summary>"SimHubWPF · 800 × 600" under the title (D-02); the position is the tooltip, not the headline.</summary>
+    /// <summary>"SimHubWPF · 800 × 600" under the title; the position is the tooltip, not the headline.</summary>
     public string Details => string.Create(
         Loc.Instance.Culture,
         $"{Window.ProcessName} · {Window.Bounds.Width} × {Window.Bounds.Height}");

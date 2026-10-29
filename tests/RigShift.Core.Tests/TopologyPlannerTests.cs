@@ -109,7 +109,7 @@ public sealed class TopologyPlannerTests
     [Fact]
     public void Plan_AmbiguousEdid_IsNotMatched_AndSaysWhy()
     {
-        // Both candidates are attached: asking the user to switch the monitor on would be wrong (K-03).
+        // Both candidates are attached: asking the user to switch the monitor on would be wrong.
         DisplayIdentity twinA = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
         DisplayIdentity twinB = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
 
@@ -123,7 +123,7 @@ public sealed class TopologyPlannerTests
     [Fact]
     public void Plan_TwinsOnANewCard_AreToldApartByTheirSerialNumbers()
     {
-        // K-03: after a new graphics card every path is new. The right twin even sits on the left one's old port number,
+        // After a new graphics card every path is new. The right twin even sits on the left one's old port number,
         // so only the serial number puts each back in its place.
         DisplayIdentity left = Twin(OldCard, "5&old", 4352, "AAAA");
         DisplayIdentity right = Twin(OldCard, "5&old", 4353, "BBBB");

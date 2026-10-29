@@ -13,8 +13,8 @@ public sealed class WpfSwitchConfirmation(ProfileCatalog catalog, ActiveProfileM
 {
     /// <summary>
     /// How long past the countdown the switch still waits for the window. Its own timer ends it; this only answers when
-    /// that timer never ran – the window did not render after the display change, or the UI thread stands (v4 finding
-    /// A-08). Without it the switch waited for good and every later one was refused as "already running".
+    /// that timer never ran – the window did not render after the display change, or the UI thread stands.
+    /// Without it the switch waited for good and every later one was refused as "already running".
     /// </summary>
     internal static readonly TimeSpan Slack = TimeSpan.FromSeconds(10);
 

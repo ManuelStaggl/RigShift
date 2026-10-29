@@ -130,7 +130,7 @@ public sealed class SwitchOrchestratorTests
 
         result.Outcome.ShouldBe(SwitchOutcome.Failed);
         result.LastNativeError.ShouldBe(31);
-        // The budget ended it, not the cap: retries kept coming for the whole budget (analysis finding L-05).
+        // The budget ended it, not the cap: retries kept coming for the whole budget.
         _time.Elapsed.ShouldBeInRange(options.TargetWaitBudget, options.TargetWaitBudget + options.PollInterval);
         result.Attempts.ShouldBeInRange((int)(options.TargetWaitBudget / options.PollInterval), options.MaxApplyAttempts - 1);
     }
@@ -177,7 +177,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_RequiredDisplayNeverWakes_AsksForItAndBlocksAfterTheWait()
     {
-        // K-06: a monitor Windows lists but that does not answer used to mean 20 silent seconds and then a block.
+        // A monitor Windows lists but that does not answer used to mean 20 silent seconds and then a block.
         var display = new FakeDisplayConfigurator(DeskActive(ultrawideAvailable: false));
         SwitchOrchestrator orchestrator = Create(display);
         IReadOnlyList<DisplayAssignment>? asked = null;
@@ -212,7 +212,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_IdenticalDisplaysOnNewPorts_BlockAtOnceWithoutAskingToSwitchThemOn()
     {
-        // K-03: both desk monitors are on, only on other ports – "switch your display on" and 30 s of waiting helped nobody.
+        // Both desk monitors are on, only on other ports – "switch your display on" and 30 s of waiting helped nobody.
         DisplayIdentity leftMoved = DeskLeft with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&1" };
         DisplayIdentity rightMoved = DeskRight with { TargetDevicePath = @"\\?\DISPLAY#DEL0003#NEW&2" };
         var display = new FakeDisplayConfigurator(Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(leftMoved), Attached(rightMoved)));
@@ -233,7 +233,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_RequiredDisplaySwitchedOnWhileWaiting_Applies()
     {
-        // HW-16: the G9 had left the bus; the user switches it on after the notification.
+        // The G9 had left the bus; the user switches it on after the notification.
         DisplaySnapshot ultrawideOff = Snapshot(Attached(Desk4K, activeMode: DeskModes[0]), Attached(Tablet));
         var display = new FakeDisplayConfigurator([ultrawideOff, ultrawideOff, ultrawideOff, DeskActive()]);
 
@@ -251,7 +251,7 @@ public sealed class SwitchOrchestratorTests
 
         SwitchResult result = await Create(display).SwitchAsync(Rig(), SwitchRequest.Default, Ct);
 
-        // HW-03: no "partially" for a spacedesk viewer that is not there; the plan still lists it for the catch-up.
+        // No "partially" for a spacedesk viewer that is not there; the plan still lists it for the catch-up.
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         result.Plan.ShouldRetryLater.ShouldBeTrue();
         display.Applied.Single().Plan.Resolved.Single().Target.Identity.ShouldBe(Ultrawide);
@@ -574,7 +574,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_FromLink_TimeoutZero_StillConfirms()
     {
-        // Analysis finding H-02: a web page must not switch without asking, even with confirmation turned off.
+        // A web page must not switch without asking, even with confirmation turned off.
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
@@ -592,7 +592,7 @@ public sealed class SwitchOrchestratorTests
     [InlineData(60, 60)]
     public async Task Switch_MinimumConfirmTimeout_LengthensOnlyAShorterCountdown(int appSeconds, int expectedSeconds)
     {
-        // v4 finding U-04: after a USB rule the user may still be on the way to the seat.
+        // After a USB rule the user may still be on the way to the seat.
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
 
@@ -715,7 +715,7 @@ public sealed class SwitchOrchestratorTests
 
     /// <summary>
     /// The sound device of a display the switch turned on (TV, AV receiver, monitor speakers) wakes a moment after the
-    /// picture. It is tried again instead of given up at once, which left the sound on the old device (finding K-02).
+    /// picture. It is tried again instead of given up at once, which left the sound on the old device.
     /// </summary>
     [Fact]
     public async Task Switch_SoundDeviceOfADisplayJustTurnedOn_IsWaitedFor()
@@ -750,7 +750,7 @@ public sealed class SwitchOrchestratorTests
     [InlineData("headphones ")]
     public async Task Switch_SoundDeviceOnAnotherPort_IsFoundByItsName(string listedAs)
     {
-        // K-08: a USB headset on another port has a new ID; the profile only knows the old one.
+        // A USB headset on another port has a new ID; the profile only knows the old one.
         var moved = new AudioEndpoint("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000009}", listedAs);
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
             .Returns([new AudioDeviceInfo(moved, AudioDirection.Render, IsActive: true, AudioRoleMask.None),
@@ -1191,7 +1191,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_HdrWantedOnADisplayWithoutHdr_IsReported()
     {
-        // K-15: only the log knew that the monitor cannot do HDR; the notification said "switched".
+        // Only the log knew that the monitor cannot do HDR; the notification said "switched".
         var display = new FakeDisplayConfigurator([DeskActive(), Snapshot(Attached(Ultrawide, activeMode: UltrawideMode with { Hdr = null }))]);
 
         SwitchResult result = await Create(display).SwitchAsync(Rig() with { Displays = [UltrawideMode with { Hdr = true }] }, SwitchRequest.Default, Ct);
@@ -1221,7 +1221,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_HdrCallHangs_SwitchGoesOnAndLeavesOtherDisplaysAlone()
     {
-        // HW-12: the native HDR call never returned and nothing after it ran.
+        // The native HDR call never returned and nothing after it ran.
         DisplayAssignment left = Mode(DeskLeft, 1920, 1080, 100, x: 5120);
         var display = new FakeDisplayConfigurator([
             DeskActive(),
@@ -1257,7 +1257,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_WhileTheDriverStillHangs_FailsAtOnce()
     {
-        // K-07: the next switch used to queue behind the stuck call for good; now it fails right away.
+        // The next switch used to queue behind the stuck call for good; now it fails right away.
         var display = new FakeDisplayConfigurator(DeskActive()) { ApplyNeverReturns = true };
         SwitchOrchestrator orchestrator = Create(display);
         await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct);
@@ -1312,7 +1312,7 @@ public sealed class SwitchOrchestratorTests
     }
 
     /// <summary>
-    /// K-04, the budget: a plain switch with the shipped options – sound, apps and desktop symbols, no HDR, no countdown –
+    /// The budget: a plain switch with the shipped options – sound, apps and desktop symbols, no HDR, no countdown –
     /// reports within two seconds. Moving windows and putting symbols back wait for Windows' own rearranging first; they
     /// used to come before the result and cost every switch one to eleven seconds.
     /// </summary>
@@ -1546,7 +1546,7 @@ public sealed class SwitchOrchestratorTests
     [InlineData(300)]
     public async Task Switch_AppsWaitForDevice_NeverAppears_WaitsFixedTimeIgnoringSavedValue(int savedSeconds)
     {
-        // Analysis decision O-04: the wait is fixed; a value saved by 1.3 no longer changes it.
+        // The wait is fixed; a value saved by 1.3 no longer changes it.
         _usbDevices.PresentDeviceIds().Returns(Present("VID_046D&PID_C547"));
 
         SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(
@@ -1770,7 +1770,7 @@ public sealed class SwitchOrchestratorTests
     // The rescue delay is zero unless a test sets it, so waits measured elsewhere stay exact.
     /// <summary>
     /// The way back is recorded before the screens change and dropped once the switch is over – whatever it ended as.
-    /// Only a process that dies in between leaves the record, and that is the case it exists for (plan point 22).
+    /// Only a process that dies in between leaves the record, and that is the case it exists for.
     /// </summary>
     [Fact]
     public async Task Switch_RecordsThePreviousTopologyAndDropsItWhenDone()
@@ -1801,7 +1801,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_RecordsTheSoundToGoBackTo()
     {
-        // K-14: after a crash the way back restored the displays, but the sound stayed on the rig's headset.
+        // After a crash the way back restored the displays, but the sound stayed on the rig's headset.
         var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
         _audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>()).Returns([
@@ -1822,7 +1822,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task Switch_Confirmed_DropsTheRecordBeforeTheTidyUp()
     {
-        // K-14: an exit while windows are moved into place must not ask to undo a switch the user kept.
+        // An exit while windows are moved into place must not ask to undo a switch the user kept.
         InterruptedSwitch? duringTidy = null;
         bool tidied = false;
         _windows.When(w => w.RescueOffscreenWindows()).Do(_ =>
@@ -1842,7 +1842,7 @@ public sealed class SwitchOrchestratorTests
     [Fact]
     public async Task DryRunDuringASwitch_KeepsItsRecord()
     {
-        // K-05: "Check" on the profile page or `apply --dry-run` while a switch waits for "keep" took its way back away.
+        // "Check" on the profile page or `apply --dry-run` while a switch waits for "keep" took its way back away.
         var answer = new TaskCompletionSource<ConfirmationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(answer.Task);
         SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));

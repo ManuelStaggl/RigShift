@@ -82,7 +82,7 @@ public sealed class GameSessionRunnerTests
     [Fact]
     public async Task Run_WaitsForTheProfilesApps_BeforeTheGameAndItsTools()
     {
-        // K-11: the wheelbase software is in the profile and waits for the wheelbase; the game must not start before it.
+        // The wheelbase software is in the profile and waits for the wheelbase; the game must not start before it.
         var profileApps = new TaskCompletionSource<AppsOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
         _switcher.SwitchAsync(Arg.Any<Profile>(), Arg.Any<SwitchRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<SwitchResult?>(new SwitchResult
@@ -314,7 +314,7 @@ public sealed class GameSessionRunnerTests
         _time.Elapsed.ShouldBeGreaterThanOrEqualTo(TimeSpan.FromHours(1));
         _processes.WaitedFor.ShouldBeEmpty();
 
-        // No polling while it ran; only the brief look for a game it might have started once it ended (K-16).
+        // No polling while it ran; only the brief look for a game it might have started once it ended.
         _processes.IsRunningCalls.ShouldBeLessThanOrEqualTo(3);
         started.Disposed.ShouldBeTrue();
     }
@@ -371,7 +371,7 @@ public sealed class GameSessionRunnerTests
     [Fact]
     public async Task Run_WhenALauncherStaysOpenForMinutesAndThenStartsTheGame_WaitsForTheGame()
     {
-        // K-16: a launcher with a DX11/VR choice; the user clicks "Play" after a minute and the launcher closes.
+        // A launcher with a DX11/VR choice; the user clicks "Play" after a minute and the launcher closes.
         _starter.Start(Arg.Any<GameLaunch>()).Returns(new FakeRunningGame(_time, TimeSpan.FromMinutes(1)));
         _processes.OnListed = call =>
         {

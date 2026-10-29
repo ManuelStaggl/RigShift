@@ -95,7 +95,7 @@ public sealed class SwitchOrchestratorSurroundTests
 
     /// <summary>
     /// Windows lists the displays of a grid that was just taken apart seconds later. The switch waits for them quietly
-    /// instead of asking the user to switch on monitors that are on (finding K-09).
+    /// instead of asking the user to switch on monitors that are on.
     /// </summary>
     [Fact]
     public async Task Switch_DisplaysAppearLateAfterSurroundOff_WaitsWithoutAskingForThem()

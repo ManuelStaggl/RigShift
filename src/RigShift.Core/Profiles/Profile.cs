@@ -23,7 +23,7 @@ public sealed record Profile
 
     /// <summary>
     /// Switch to this profile without the keep-or-revert question. The countdown seconds come from the application
-    /// setting only (analysis decision O-01).
+    /// setting only.
     /// </summary>
     public bool SwitchWithoutAsking { get; init; }
 
@@ -65,7 +65,7 @@ public sealed record Profile
 
     /// <summary>
     /// Wait time written by 1.3. No longer read – the wait is always <see cref="AppsDeviceWaitSeconds"/> (analysis decision
-    /// O-04); kept so the value survives in the file. <c>set</c>: an <c>init</c> initializer is skipped when the key is missing.
+    ///); kept so the value survives in the file. <c>set</c>: an <c>init</c> initializer is skipped when the key is missing.
     /// </summary>
     public int AppsWaitSeconds { get; set; } = AppsDeviceWaitSeconds;
 
@@ -86,7 +86,7 @@ public sealed record Profile
     /// </summary>
     public bool RememberWindows { get; init; }
 
-    /// <summary>Longer names push the badges and buttons off the profile card (analysis finding I-06).</summary>
+    /// <summary>Longer names push the badges and buttons off the profile card.</summary>
     public const int MaxNameLength = 60;
 
     /// <summary>Longest wait for <see cref="AppsWaitForUsbDeviceId"/> before the apps start anyway.</summary>

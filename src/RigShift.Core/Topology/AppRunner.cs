@@ -19,7 +19,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
 
     private readonly Lock _appsLock = new();
 
-    /// <summary>The apps of the last switch, running after its result until done or cancelled (analysis finding B-03).</summary>
+    /// <summary>The apps of the last switch, running after its result until done or cancelled.</summary>
     private PendingApps? _pendingApps;
 
     /// <summary>

@@ -40,7 +40,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         _ => null,
     };
 
-    /// <summary>What "Default" in the status means (finding U-13); <c>null</c> for any other profile, so there is no tooltip.</summary>
+    /// <summary>What "Default" in the status means; <c>null</c> for any other profile, so there is no tooltip.</summary>
     public string? DefaultTip => IsDefault ? Loc.Instance["Profile_DefaultTip"] : null;
 
     /// <summary>Whether <see cref="StatusText"/> says anything, for a caption that is hidden when it would be empty.</summary>
@@ -58,7 +58,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
         .Select(Describe)
         .ToList();
 
-    /// <summary>"SimHub, CrewChief · waits for Simagic Base"; <c>null</c> without apps (finding HW-09).</summary>
+    /// <summary>"SimHub, CrewChief · waits for Simagic Base"; <c>null</c> without apps.</summary>
     public string? AppsLine { get; } = DescribeApps(profile, usbDeviceNames);
 
     public bool HasApps => AppsLine is not null;
@@ -87,7 +87,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     /// <summary>A profile that exists only in the detail so far ("New profile" at the top of the list, F3).</summary>
     public bool IsNew { get; init; }
 
-    /// <summary>The S-size picture in the master list (R-NAV-2).</summary>
+    /// <summary>The S-size picture in the master list.</summary>
     public IReadOnlyList<TopologyDisplay> Topology { get; } = Services.TopologyDisplays.From(profile.Displays);
 
     /// <summary>The status line under the name in the list: active, ready, ready with optional displays missing, blocked.</summary>
@@ -104,7 +104,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     }
 
     /// <summary>
-    /// The profile against the displays as the catalog read them last, for the overview and the tray (v4 finding U-10):
+    /// The profile against the displays as the catalog read them last, for the overview and the tray:
     /// "XG32UCWG missing" with the next step as tooltip. The list keeps its own <see cref="ListStatus"/>.
     /// </summary>
     [ObservableProperty]

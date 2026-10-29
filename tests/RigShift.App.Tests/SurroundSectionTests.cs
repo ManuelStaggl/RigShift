@@ -60,7 +60,7 @@ public sealed class SurroundSectionTests
 
     /// <summary>
     /// Once another profile runs a grid, a profile without a setting switches Surround off. The editor shows that
-    /// instead of "leave", says why, and does not count its own reading as a change (findings K-09, U-05).
+    /// instead of "leave", says why, and does not count its own reading as a change.
     /// </summary>
     [Fact]
     public void AnotherProfileUsesSurround_NothingSaved_ShowsOffWithTheReason()

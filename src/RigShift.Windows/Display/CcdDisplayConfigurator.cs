@@ -204,7 +204,7 @@ public sealed class CcdDisplayConfigurator : IDisplayConfigurator
             return Task.FromResult((int)WIN32_ERROR.ERROR_INVALID_PARAMETER);
         }
 
-        // Logged before the native call: at HW-12 the call never returned and the log ended without a trace of it. The call
+        // Logged before the native call: in a hardware test the call never returned and the log ended without a trace of it. The call
         // runs on its own thread, so the orchestrator's time limit can give up on it without blocking a pool thread.
         _log.Information("Setting HDR of {Display} to {Enabled}", DisplayNames.Of(display.Identity), enabled);
         return Task.Factory.StartNew(

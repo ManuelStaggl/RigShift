@@ -247,7 +247,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsDirty.ShouldBeFalse();
     }
 
-    /// <summary>A hotkey on a PC where RigShift does not start with Windows stops working after a restart (U-01).</summary>
+    /// <summary>A hotkey on a PC where RigShift does not start with Windows stops working after a restart.</summary>
     [Fact]
     public async Task Hotkey_WhileNotStartingWithWindows_ShowsTheNote_AndTurnOnFixesIt()
     {

@@ -49,7 +49,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private readonly ILogger _log;
 
     /// <summary>
-    /// The hotkeys the first and the second profile get when they are free (finding U-02). Function keys, because
+    /// The hotkeys the first and the second profile get when they are free. Function keys, because
     /// Ctrl+Alt+digit is AltGr+digit on many layouts and would swallow ², ³, { and [ (German) or # (French).
     /// </summary>
     private static readonly Hotkey[] SuggestedHotkeys =
@@ -153,7 +153,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public string StepText => Step switch
     {
         SetupStep.Second => Loc.Format("Setup_SecondText", FirstProfile?.Name),
-        // Names only the ways that really exist: the hotkeys are on the cards below, when they were free (U-02).
+        // Names only the ways that really exist: the hotkeys are on the cards below, when they were free.
         SetupStep.Done => Loc.Instance[(CreatedRule is null ? "Setup_DoneNoRule" : "Setup_DoneWithRule") + (HasHotkeys ? string.Empty : "NoHotkey")],
         _ => Loc.Instance[$"Setup_{Step}Text"],
     };
@@ -201,7 +201,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     /// <summary>
     /// One line on NVIDIA Surround for the profile steps: that the running grid comes along, or on the second step how
-    /// to get one in (finding U-05). Empty without an NVIDIA driver.
+    /// to get one in. Empty without an NVIDIA driver.
     /// </summary>
     public string SurroundHint => HasSurroundHint ? Loc.Instance[_surroundHintKey!] : string.Empty;
 
@@ -210,11 +210,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [ObservableProperty]
     public partial AudioSlot? Playback { get; private set; }
 
-    /// <summary>The microphone, preset with the current default: the headset's at the rig (finding U-09).</summary>
+    /// <summary>The microphone, preset with the current default: the headset's at the rig.</summary>
     [ObservableProperty]
     public partial AudioSlot? Recording { get; private set; }
 
-    /// <summary>The three lines under "How?" on the rig step: how Windows turns a display off (finding U-09).</summary>
+    /// <summary>The three lines under "How?" on the rig step: how Windows turns a display off.</summary>
     [ObservableProperty]
     public partial bool ShowHow { get; set; }
 
@@ -379,7 +379,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             };
 
             // A running grid is part of the arrangement, as in "From the current arrangement": without it the profile could
-            // never bring the wide display back (finding U-05). The other profile needs nothing - without a setting of
+            // never bring the wide display back. The other profile needs nothing - without a setting of
             // its own it switches Surround off once this one uses it.
             if (await ReadSurroundAsync() is { IsActive: true } surround)
             {
@@ -597,7 +597,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             });
         }
 
-        // Preset on (finding U-01): after the next restart hotkeys and the USB trigger only work while RigShift runs.
+        // Preset on: after the next restart hotkeys and the USB trigger only work while RigShift runs.
         StartWithWindows = true;
         OnPropertyChanged(nameof(HasHotkeys));
         OnPropertyChanged(nameof(TryText));
@@ -617,7 +617,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     /// <summary>
     /// Where "Try it" switches: the profile that is not showing now, i.e. back to the first after the rig was set up
-    /// (finding U-02 – the one click that shows what RigShift does, with the countdown that takes it back).
+    /// (the one click that shows what RigShift does, with the countdown that takes it back).
     /// </summary>
     private Profile? TryTarget => _catalog.ActiveProfile?.Id == FirstProfile?.Id ? SecondProfile : FirstProfile;
 

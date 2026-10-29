@@ -165,7 +165,7 @@ public enum GameLaunchKind
     Epic,
 
     /// <summary>
-    /// A game from the Xbox app or the Microsoft Store (v4 finding U-07), started through <c>shell:AppsFolder</c> with
+    /// A game from the Xbox app or the Microsoft Store, started through <c>shell:AppsFolder</c> with
     /// its app user model id: its files sit in a package that cannot be started directly.
     /// </summary>
     Xbox,

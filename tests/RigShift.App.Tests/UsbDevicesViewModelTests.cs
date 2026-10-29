@@ -51,7 +51,7 @@ public sealed class UsbDevicesViewModelTests : IDisposable
     [Fact]
     public async Task NamedDevices_ListsADeviceAProfileWaitsFor()
     {
-        // HW-08: the device of a profile's app wait can be named although no rule mentions it.
+        // The device of a profile's app wait can be named although no rule mentions it.
         _host.Store.Profiles.Add(Profile("Desk", []) with { AppsWaitForUsbDeviceId = Pedals, AppsWaitForUsbDeviceName = "Pedals" });
 
         UsbDevicesViewModel devices = await CreateAsync();

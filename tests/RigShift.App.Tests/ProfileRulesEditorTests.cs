@@ -85,7 +85,7 @@ public sealed class ProfileRulesEditorTests
     [Fact]
     public void DeviceChoices_OfferKnownDevicesThatAreNotConnected()
     {
-        // HW-08: the base was in a profile's app wait, but off – it must still be selectable.
+        // The base was in a profile's app wait, but off – it must still be selectable.
         const string Button = "VID_1234&PID_0001";
         Profile desk = Profile("Desk", []) with { AppsWaitForUsbDeviceId = Pedals, AppsWaitForUsbDeviceName = "Pedals" };
 

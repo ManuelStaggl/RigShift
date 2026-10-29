@@ -11,7 +11,7 @@ public sealed class WpfSwitchConfirmationTests
     [Fact]
     public async Task WindowThatNeverAnswers_CountsAsTimedOut_AndIsClosed()
     {
-        // A-08: a window that did not render after the display change never started its countdown; the switch waited for
+        // A window that did not render after the display change never started its countdown; the switch waited for
         // good and every later one was refused as "already running".
         var never = new TaskCompletionSource<ConfirmationResult>();
         bool closed = false;

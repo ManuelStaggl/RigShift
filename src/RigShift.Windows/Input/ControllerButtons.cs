@@ -9,7 +9,7 @@ namespace RigShift.Windows.Input;
 
 /// <summary>
 /// Buttons on wheels, button boxes and game controllers while one window listens: the countdown, where the user sits at
-/// the rig without a keyboard (v4 finding U-04). Raw Input delivers the reports even while another window has the focus;
+/// the rig without a keyboard. Raw Input delivers the reports even while another window has the focus;
 /// the HID parser says which buttons they hold. Axes (wheel, pedals) and hat switches are never read.
 /// </summary>
 public sealed class ControllerButtons : IDisposable

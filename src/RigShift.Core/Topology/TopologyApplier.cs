@@ -55,7 +55,7 @@ internal sealed class TopologyApplier
         while (true)
         {
             // A cycle is transient if any attempt in it said "not ready": the database-mode attempt after a 31 may fail
-            // with 87 only because the display is still waking up (analysis finding B-08).
+            // with 87 only because the display is still waking up.
             bool transient = false;
             foreach (bool databaseModes in ModeSources)
             {
@@ -71,7 +71,7 @@ internal sealed class TopologyApplier
                 int code;
                 try
                 {
-                    // The time limit is the driver guard's (K-07): it also makes every later call fail at once.
+                    // The time limit is the driver guard's: it also makes every later call fail at once.
                     code = await _display.ApplyAsync(plan, new ApplyOptions { UseDatabaseModes = databaseModes }, cancellationToken);
                 }
                 catch (DisplayDriverHungException)
@@ -137,7 +137,7 @@ internal sealed class TopologyApplier
     /// <summary>
     /// Re-queries the topology while a required display is attached but not ready, until the deadline. With
     /// <paramref name="includeDetached"/> a required display that is not connected is waited for too: a waking monitor can
-    /// drop off the bus for seconds, and a switched-off one may be switched on (HW-16). <paramref name="force"/> re-queries
+    /// drop off the bus for seconds, and a switched-off one may be switched on. <paramref name="force"/> re-queries
     /// at least once.
     /// </summary>
     public async Task<TopologyPlan> WaitForDisplaysAsync(
@@ -157,7 +157,7 @@ internal sealed class TopologyApplier
 
     // After an attempt: wait for vanished required displays, and for optional ones when nothing else is left to apply –
     // the rollback profile marks every display optional (M5 log 2026-09-13 19:59: rollback to a G9 that fell asleep).
-    // Never for identical monitors that cannot be told apart: no display that turns up changes that (K-03).
+    // Never for identical monitors that cannot be told apart: no display that turns up changes that.
     private static bool IsWaitingForTarget(TopologyPlan plan, bool includeDetached) =>
         !plan.IsAmbiguous
         && (includeDetached
@@ -181,7 +181,7 @@ internal sealed class TopologyApplier
 
     /// <summary>
     /// With database modes Windows decides the modes and may even leave a display dark; the stored plan says nothing
-    /// about that. Compares a fresh snapshot with the plan (analysis finding B-11): dark displays count as missing,
+    /// about that. Compares a fresh snapshot with the plan: dark displays count as missing,
     /// the note only stays when a mode differs.
     /// </summary>
     public async Task<ModeCheck> CheckDatabaseModesAsync(TopologyPlan plan, CancellationToken cancellationToken)

@@ -86,7 +86,7 @@
     </DrawingImage.Drawing>
   </DrawingImage>
 
-  <!-- The mark without its plate, for dark surfaces such as the title bar: the charcoal parts turn light (F-05). -->
+  <!-- The mark without its plate, for dark surfaces such as the title bar: the charcoal parts turn light. -->
   <SolidColorBrush x:Key="RigShift.Brand.Light" Color="#E2E8F0" />
   <DrawingImage x:Key="RigShift.Image.AppMark">
     <DrawingImage.Drawing>

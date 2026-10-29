@@ -26,7 +26,7 @@ public partial class ProfilesPage : Page
         };
     }
 
-    /// <summary>F2 edits the name (R-NAV-5).</summary>
+    /// <summary>F2 edits the name.</summary>
     private void OnPagePreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.F2 && Keyboard.Modifiers == ModifierKeys.None && _viewModel.HasSelection)
@@ -169,7 +169,7 @@ public partial class GamesPage : Page
         Loaded += (_, _) => viewModel.PageShown();
     }
 
-    /// <summary>F2 edits the name (R-NAV-5).</summary>
+    /// <summary>F2 edits the name.</summary>
     private void OnPagePreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.F2 && Keyboard.Modifiers == ModifierKeys.None && _viewModel.HasSelection)

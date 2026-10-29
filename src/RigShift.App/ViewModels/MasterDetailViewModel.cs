@@ -11,7 +11,7 @@ using Serilog;
 
 namespace RigShift.App.ViewModels;
 
-/// <summary>An entry of a master list (R-NAV-2): a saved profile or game, or the unsaved new one on top.</summary>
+/// <summary>An entry of a master list: a saved profile or game, or the unsaved new one on top.</summary>
 public interface IMasterItem
 {
     Guid Id { get; }
@@ -24,7 +24,7 @@ public interface IMasterItem
     void SetStatus(StatusKind kind, string text);
 }
 
-/// <summary>The detail of the selected entry: seeing and editing are the same view (R-NAV-3).</summary>
+/// <summary>The detail of the selected entry: seeing and editing are the same view.</summary>
 public interface IDetailEditor : INotifyPropertyChanged, IDisposable
 {
     Guid Id { get; }
@@ -49,15 +49,15 @@ public interface IDetailEditor : INotifyPropertyChanged, IDisposable
 }
 
 /// <summary>
-/// A page with a master list on the left and the selected entry's editor on the right (R-NAV-2): selection, the question
-/// before unsaved changes are left (R-NAV-3), loading, saving and discarding, the list rebuilt from the catalog with the
+/// A page with a master list on the left and the selected entry's editor on the right: selection, the question
+/// before unsaved changes are left, loading, saving and discarding, the list rebuilt from the catalog with the
 /// selection kept, and the bars above the detail. The profiles and games pages add only their head, their status texts
-/// and their own commands (v4 finding A-07).
+/// and their own commands.
 /// </summary>
 /// <remarks>
 /// Unsaved changes are never replaced from outside – a display change, a switch, the end of a game session or a learned
 /// process name all reload the catalog. If the entry changed on disk meanwhile, a bar offers to reload it; a clean editor
-/// reloads by itself when its entry changed and stays as it is otherwise (v4 finding A-01).
+/// reloads by itself when its entry changed and stays as it is otherwise.
 /// </remarks>
 public abstract partial class MasterDetailViewModel<TItem, TEditor> : ObservableObject
     where TItem : class, IMasterItem
@@ -83,7 +83,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
     /// <summary>
     /// The page is on screen for the first time: the selected entry gets its editor now. Until then the list is there but
     /// no editor – building one reads audio and USB devices and Surround, and nobody looks at it while the window shows
-    /// another page or RigShift starts into the tray (v4 finding A-06).
+    /// another page or RigShift starts into the tray.
     /// </summary>
     public void PageShown()
     {
@@ -470,7 +470,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception or COMException)
         {
-            // Not the old editor either: the list shows another entry now (v4 finding A-16).
+            // Not the old editor either: the list shows another entry now.
             Log.Error(ex, "The editor of {Name} could not be opened", item.Name);
             CloseEditor();
             ShowDetail(UserMessages.Describe(ex), InfoKind.Error);

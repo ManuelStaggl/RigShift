@@ -12,7 +12,7 @@ namespace RigShift.App.Localization;
 /// The chosen language is kept here instead of relying on <see cref="CultureInfo.CurrentUICulture"/>: a change made
 /// inside an async method is undone for the caller when the await returns (culture flows with the execution context).
 /// Only the text language follows the setting; numbers, dates and times keep the Windows regional format
-/// (analysis finding J-02: choosing "Deutsch" must not turn de-AT formats into neutral de ones).
+/// (choosing "Deutsch" must not turn de-AT formats into neutral de ones).
 /// </remarks>
 public sealed class Loc : INotifyPropertyChanged
 {

@@ -46,13 +46,13 @@
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- ===== Master list (R-NAV-2, R-ACT-4, R-ACT-5) ===== -->
+    <!-- ===== Master list ===== -->
     <Border
       Grid.Column="0"
       BorderBrush="{DynamicResource RigShift.Brush.Line}"
       BorderThickness="0,0,1,0">
       <DockPanel>
-        <!-- Column head (B-01): the list's title and a compact "New" with its menu. -->
+        <!-- Column head: the list's title and a compact "New" with its menu. -->
         <DockPanel Height="52" Margin="16,0,12,0" DockPanel.Dock="Top">
           <Button
             x:Name="NewButton"
@@ -134,7 +134,7 @@
 
     <!-- ===== Detail ===== -->
     <Grid Grid.Column="1">
-      <!-- Empty (X-01): the games on this PC are one click away. -->
+      <!-- Empty: the games on this PC are one click away. -->
       <StackPanel
         MaxWidth="460"
         Margin="24"
@@ -196,7 +196,7 @@
           Text="{Binding Catalog.UnreadableMessage}"
           Visibility="{Binding Catalog.IsUnreadable, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- Head (72): symbol 40, name (F2), hotkey chip, status line; actions right (R-ACT-1…3). -->
+        <!-- Head (72): symbol 40, name (F2), hotkey chip, status line; actions right. -->
         <Border
           Grid.Row="1"
           BorderBrush="{DynamicResource RigShift.Brush.Line}"
@@ -271,7 +271,7 @@
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
                   ToolTip="{loc:Tr Editor_NameTip}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
-                <!-- The name is a field: a pencil shows it on hover (P-02). -->
+                <!-- The name is a field: a pencil shows it on hover. -->
                 <ui:SymbolIcon
                   Margin="4,0,0,0"
                   VerticalAlignment="Center"
@@ -313,7 +313,7 @@
               Margin="16,0,0,0"
               VerticalAlignment="Center"
               Orientation="Horizontal">
-              <!-- Save is the primary action while the save bar is visible; Play steps back (R-ACT-1). -->
+              <!-- Save is the primary action while the save bar is visible; Play steps back. -->
               <Button
                 Margin="0,0,8,0"
                 Command="{Binding PlayCommand}"
@@ -380,7 +380,7 @@
             </controls:InfoBar.Action>
           </controls:InfoBar>
 
-          <!-- Session results and store errors (R-FLOW-2); after "not recognised" the bar leads to the Game tab. -->
+          <!-- Session results and store errors; after "not recognised" the bar leads to the Game tab. -->
           <controls:InfoBar
             Margin="24,12,24,0"
             Kind="{Binding DetailKind}"
@@ -740,7 +740,7 @@
                           Text="{Binding Name}"
                           TextTrimming="CharacterEllipsis"
                           TextWrapping="NoWrap" />
-                        <!-- Two lines (U-21): the displays of a triple rig no longer end in "…" at 1280 px. -->
+                        <!-- Two lines: the displays of a triple rig no longer end in "…" at 1280 px. -->
                         <TextBlock
                           MinHeight="32"
                           MaxHeight="32"
@@ -805,7 +805,7 @@
                   </StackPanel>
                 </controls:SettingRow>
 
-                <!-- What was captured, one line per window (G-05). -->
+                <!-- What was captured, one line per window. -->
                 <Border
                   Margin="0,8,0,0"
                   Padding="0"

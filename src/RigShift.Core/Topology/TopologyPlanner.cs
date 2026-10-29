@@ -67,7 +67,7 @@ public sealed class TopologyPlanner
 
         // Pass 2: the serial number in the EDID. Exact like the path, so it too runs for every assignment before the passes
         // that go by the model: after a new graphics card or slot every path is new, and only the serial number still tells
-        // identical monitors apart (v4 finding K-03). A serial number two displays of the profile share tells nothing.
+        // identical monitors apart. A serial number two displays of the profile share tells nothing.
         for (int i = 0; i < assignments.Count; i++)
         {
             DisplayIdentity wanted = assignments[i].Identity;
@@ -98,7 +98,7 @@ public sealed class TopologyPlanner
             // BIOS update): then every path changed, but the card numbers its ports as before.
             bool adapterGone = !snapshot.Displays.Any(d => SameAdapter(d.Identity, wanted));
 
-            // Identical monitors in the profile without their ports: one candidate could be either of them (B-10). They are
+            // Identical monitors in the profile without their ports: one candidate could be either of them. They are
             // only matched as a group, by their connectors, and only if every one of them is found that way.
             List<int> twins = [.. Enumerable.Range(0, assignments.Count).Where(j => matches[j] is null && SameEdid(assignments[j].Identity, wanted))];
             if (twins.Count > 1)
@@ -274,7 +274,7 @@ public sealed class TopologyPlanner
 
     /// <summary>
     /// Whether identical displays are attached and free – at least as many as the profile still misses of that model – so
-    /// the display is most likely there and only could not be told apart from its twins (K-03). Identical means the same
+    /// the display is most likely there and only could not be told apart from its twins. Identical means the same
     /// EDID model, or the same name where the EDID is unknown.
     /// </summary>
     private static bool IsAmbiguous(

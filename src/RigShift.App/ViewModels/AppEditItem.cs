@@ -142,7 +142,7 @@ public sealed partial class AppEditItem : ObservableObject
     /// <summary>
     /// Note and icon follow the path. Whether the file exists is asked in the background once typing pauses: every key
     /// used to ask the disk twice on the UI thread, and a path on a sleeping NAS froze the editor for the network's
-    /// timeout (v4 finding A-12). A network path is not asked at all – whether the share is up right now says nothing
+    /// timeout. A network path is not asked at all – whether the share is up right now says nothing
     /// about the switch later.
     /// </summary>
     private void CheckPath(bool pause)

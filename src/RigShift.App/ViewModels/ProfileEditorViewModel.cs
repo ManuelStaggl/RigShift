@@ -15,7 +15,7 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The detail of one profile on the profiles page: seeing and editing are the same view (R-NAV-3). Every change is
+/// The detail of one profile on the profiles page: seeing and editing are the same view. Every change is
 /// validated at once; the save bar shows the problem count, and saving writes the profile and its USB rules together.
 /// Resolutions and positions are not editable; they come from "use current arrangement" (docs/display-topology.md).
 /// </summary>
@@ -91,7 +91,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         Surround.Changed += OnPartChanged;
         Rules.Changed += OnPartChanged;
 
-        // Texts built here follow a language change while the editor is open (I-13); Dispose unsubscribes.
+        // Texts built here follow a language change while the editor is open; Dispose unsubscribes.
         Loc.Instance.PropertyChanged += OnLanguageChanged;
         Recalculate();
     }
@@ -108,7 +108,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     [ObservableProperty]
     public partial bool IsNew { get; private set; }
 
-    /// <summary>The USB rules of this profile, saved with it (R-OBJ-1).</summary>
+    /// <summary>The USB rules of this profile, saved with it.</summary>
     public ProfileRulesEditor Rules { get; }
 
     public ObservableCollection<Choice> IconChoices { get; } = [];
@@ -118,7 +118,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     /// <summary>Playback and recording.</summary>
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
 
-    /// <summary>Call devices, under "Devices for calls"; by default they follow playback and recording (analysis decision O-02).</summary>
+    /// <summary>Call devices, under "Devices for calls"; by default they follow playback and recording.</summary>
     public IReadOnlyList<AudioSlot> CommunicationsAudioSlots { get; }
 
     /// <summary>The call devices start open only when the profile already sets one, so nothing set stays hidden.</summary>
@@ -222,7 +222,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     [RelayCommand]
     private async Task CaptureDesktopIconsAsync()
     {
-        // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread (v4 finding A-12).
+        // The shell call waits up to ten seconds for a hanging Explorer; never on the UI thread.
         DesktopIconLayout? layout = await Task.Run(_desktopIcons.Capture);
         if (layout is { IsEmpty: false })
         {
@@ -271,7 +271,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     /// <summary>
     /// "Confirm after switching" is on in the settings. Off, every profile switches without asking, so the checkbox is
-    /// disabled and a hint says where the setting is (finding HW-02).
+    /// disabled and a hint says where the setting is.
     /// </summary>
     public bool ConfirmationEnabled { get; }
 
@@ -287,8 +287,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public bool HasHotkey => Hotkey is not null;
 
     /// <summary>
-    /// A hotkey or USB rule while RigShift does not start with Windows: after the next restart neither works (finding
-    /// U-01). The Triggers tab says so and offers to turn it on.
+    /// A hotkey or USB rule while RigShift does not start with Windows: after the next restart neither works.
+    /// The Triggers tab says so and offers to turn it on.
     /// </summary>
     public bool ShowAutostartOff => (Hotkey is not null || Rules.Rules.Count > 0) && !_settings.Autostart.IsEnabled;
 
@@ -502,7 +502,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     /// <summary>
     /// Offers the refresh rates each display reports at its resolution. A display that is off offers the rates it reported
-    /// when it was last active; without any, a hint says why the list is short (finding HW-13).
+    /// when it was last active; without any, a hint says why the list is short.
     /// </summary>
     private async Task LoadRefreshRatesAsync()
     {

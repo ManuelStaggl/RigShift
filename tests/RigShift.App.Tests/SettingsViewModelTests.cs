@@ -58,7 +58,7 @@ public sealed class SettingsViewModelTests : IDisposable
         await UntilAsync(() => _host.Settings.Current.ToggleHotkey is null);
     }
 
-    /// <summary>A refused autostart change says so, and the switch shows what Windows really has (v4 finding A-16).</summary>
+    /// <summary>A refused autostart change says so, and the switch shows what Windows really has.</summary>
     [Fact]
     public void StartWithWindows_Refused_ShowsTheErrorAndTheRealState()
     {

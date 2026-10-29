@@ -22,7 +22,7 @@ public interface IAppPicker
 
 /// <summary>
 /// The programs a profile or a game starts and ends, and the USB device they wait for – one list, one card template
-/// (<c>Resources/EditorTemplates.xaml</c>) for both editors (v4 finding A-07).
+/// (<c>Resources/EditorTemplates.xaml</c>) for both editors.
 /// </summary>
 public sealed partial class AppListEditor : ObservableObject, IDisposable
 {
@@ -100,7 +100,7 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>A new entry starts with the picker; cancelling it adds nothing (finding HW-11).</summary>
+    /// <summary>A new entry starts with the picker; cancelling it adds nothing.</summary>
     [RelayCommand]
     private void AddPicked()
     {
@@ -161,7 +161,7 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
 
     /// <summary>
     /// Not for what an entry learns about its file: note and icon arrive from the background a moment after each change
-    /// and change nothing that is built (v4 finding A-12).
+    /// and change nothing that is built.
     /// </summary>
     private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -182,7 +182,7 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
 
 /// <summary>
 /// "Wait for USB device" above an app list: "Don't wait", the connected devices, then the known ones that are not
-/// connected – the saved device among them, with its name. The same for profiles and games (v4 finding A-07).
+/// connected – the saved device among them, with its name. The same for profiles and games.
 /// </summary>
 public sealed partial class AppsWaitDeviceChoice : ObservableObject
 {

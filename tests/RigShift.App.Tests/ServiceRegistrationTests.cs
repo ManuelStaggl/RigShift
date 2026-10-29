@@ -13,7 +13,7 @@ namespace RigShift.App.Tests;
 
 /// <summary>
 /// The tray app's container as the app registers it. A missing registration used to show only when the user opened the
-/// page that needed it (A-11); nothing here builds a window.
+/// page that needed it; nothing here builds a window.
 /// </summary>
 public sealed class ServiceRegistrationTests : IDisposable
 {

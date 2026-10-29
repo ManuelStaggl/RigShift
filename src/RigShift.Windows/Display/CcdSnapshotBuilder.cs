@@ -8,7 +8,7 @@ using Windows.Win32.Foundation;
 namespace RigShift.Windows.Display;
 
 /// <summary>
-/// Turns raw CCD input into the displays of a snapshot. No Windows calls, so it runs on fixtures (analysis finding L-04).
+/// Turns raw CCD input into the displays of a snapshot. No Windows calls, so it runs on fixtures.
 /// Rules: one display per target, every source a target appears with is a candidate, a target is available if any of its
 /// paths says so, connectors without a monitor are skipped, available displays come first (display-topology.md).
 /// </summary>

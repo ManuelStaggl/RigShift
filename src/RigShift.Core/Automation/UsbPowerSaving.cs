@@ -8,7 +8,7 @@ public sealed record UsbPowerFindings
 
     /// <summary>
     /// Connected device instances of this vendor and product id (one per port or serial number, plus interfaces). Ports
-    /// where the device was plugged in earlier are not counted (analysis finding C-04).
+    /// where the device was plugged in earlier are not counted.
     /// </summary>
     public int InstancesFound { get; init; }
 

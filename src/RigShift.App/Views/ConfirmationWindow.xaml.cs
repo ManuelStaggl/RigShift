@@ -57,7 +57,7 @@ public partial class ConfirmationWindow : FluentWindow
         SourceInitialized += OnSourceInitialized;
 
         // The countdown starts at Loaded at the latest: a window that never renders after the display change – a driver
-        // reset – must still take the switch back (v4 finding A-08).
+        // reset – must still take the switch back.
         Loaded += (_, _) => StartCountdown();
         ContentRendered += OnContentRendered;
         _cancellation = cancellationToken.Register(() => Dispatcher.InvokeAsync(() => Finish(ConfirmationResult.Cancelled)));
@@ -102,7 +102,7 @@ public partial class ConfirmationWindow : FluentWindow
             Log.Warning("Global Esc hotkey for the confirmation window could not be registered; Esc works only while the window has focus");
         }
 
-        // At the rig there may be no keyboard, only the wheel (v4 finding U-04).
+        // At the rig there may be no keyboard, only the wheel.
         _buttons = ControllerButtons.Listen(_hwnd, Log.Logger);
 
         BrandWindow.ApplyChrome(this, "RigShift.Brush.Page");
@@ -128,7 +128,7 @@ public partial class ConfirmationWindow : FluentWindow
         }
     }
 
-    /// <summary>Ends the open countdown as timed out; for the deadline that answers when the window never did (A-08).</summary>
+    /// <summary>Ends the open countdown as timed out; for the deadline that answers when the window never did.</summary>
     public static void CloseOpen() => s_open?.Finish(ConfirmationResult.TimedOut);
 
     private void OnTick(object? sender, EventArgs e)

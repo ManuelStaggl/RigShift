@@ -87,7 +87,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         desk.Name.ShouldBe("Desk");
         desk.Displays.Count.ShouldBe(3);
         desk.Audio.Playback.ShouldBe(Speakers);
-        desk.Audio.Recording.ShouldBe(DeskMic, "the microphone moves with the profile too (finding U-09)");
+        desk.Audio.Recording.ShouldBe(DeskMic, "the microphone moves with the profile too");
         desk.Icon.ShouldBe(ProfileIcons.Desk);
         _viewModel.Step.ShouldBe(SetupStep.Second);
     }
@@ -273,7 +273,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _viewModel.Summary[1].IsDefault.ShouldBeFalse();
     }
 
-    /// <summary>The assistant ends with hotkeys the user can press right away, and says so (finding U-02).</summary>
+    /// <summary>The assistant ends with hotkeys the user can press right away, and says so.</summary>
     [Fact]
     public async Task SavedProfiles_GetCtrlAltF1AndF2_AndTheLastStepPointsToThem()
     {
@@ -312,7 +312,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _host.Catalog.Profiles.Single().Hotkey.ShouldBe(CtrlAltD);
     }
 
-    /// <summary>"Try it" is the first real switch – back to the desk after the rig was set up (finding U-02).</summary>
+    /// <summary>"Try it" is the first real switch – back to the desk after the rig was set up.</summary>
     [Fact]
     public async Task TryIt_ClosesAndSwitchesBackToTheFirstProfile_WithStartWithWindowsOn()
     {
@@ -322,7 +322,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
         bool closed = false;
         _viewModel.CloseRequested += (_, _) => closed = true;
 
-        _viewModel.StartWithWindows.ShouldBeTrue("the last step presets it (finding U-01)");
+        _viewModel.StartWithWindows.ShouldBeTrue("the last step presets it");
         _viewModel.ShowTry.ShouldBeTrue();
         _viewModel.TryText.ShouldBe(Loc.Format("Setup_TryIt", "Desk"));
         _viewModel.TryItCommand.Execute(null);
@@ -351,7 +351,7 @@ public sealed class SetupWizardViewModelTests : IDisposable
 
     /// <summary>
     /// The triple rig saved while Surround runs keeps its grid, as "From the current arrangement" does; before, the
-    /// assistant saved none and the first real switch blocked (finding U-05). The desk needs no setting of its own.
+    /// assistant saved none and the first real switch blocked. The desk needs no setting of its own.
     /// </summary>
     [Fact]
     public async Task SecondStep_WhileSurroundRuns_SavesTheGrid()

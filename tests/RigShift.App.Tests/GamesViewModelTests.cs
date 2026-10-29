@@ -458,7 +458,7 @@ public sealed class GamesViewModelTests : IDisposable
         page.HasDetailMessage.ShouldBeFalse();
     });
 
-    /// <summary>The first start learned the process name while the game was being edited (v4 finding A-01).</summary>
+    /// <summary>The first start learned the process name while the game was being edited.</summary>
     [Fact]
     public Task DirtyEditor_ProcessNameLearned_KeepsTheChanges_AndOffersAReload() => _ui.RunAsync(async () =>
     {

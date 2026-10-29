@@ -2,7 +2,7 @@ using System.Text;
 
 namespace RigShift.Core.Cli;
 
-/// <summary>Builds command-line strings that Windows splits back into the same arguments (shortcuts, analysis finding G-04).</summary>
+/// <summary>Builds command-line strings that Windows splits back into the same arguments (shortcuts).</summary>
 public static class CommandLineArguments
 {
     /// <summary>

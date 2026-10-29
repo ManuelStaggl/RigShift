@@ -10,7 +10,7 @@ using Serilog;
 namespace RigShift.Windows.Games;
 
 /// <summary>
-/// PC games from the Xbox app (v4 finding U-07): each lies in <c>&lt;drive&gt;:\XboxGames\&lt;game&gt;\Content</c> with a
+/// PC games from the Xbox app: each lies in <c>&lt;drive&gt;:\XboxGames\&lt;game&gt;\Content</c> with a
 /// <c>MicrosoftGame.config</c> that names it, its package identity and its executable. It starts through
 /// <c>shell:AppsFolder</c> with its app user model id – the package cannot be started through its files.
 /// </summary>
@@ -95,7 +95,7 @@ public sealed class XboxLibrary
 
     /// <summary>
     /// The 13 characters of a package family name that stand for the publisher: the first 8 bytes of the SHA-256 of the
-    /// publisher (UTF-16), as 13 groups of 5 bits in Crockford-like base 32 – "8wekyb3d8bbwe" for Microsoft.
+    /// publisher, as 13 groups of 5 bits in Crockford-like base 32 – "8wekyb3d8bbwe" for Microsoft.
     /// </summary>
     public static string PublisherId(string publisher)
     {

@@ -33,19 +33,19 @@ public sealed record SwitchResult
 
     /// <summary>
     /// Apps are judged separately too; they only run after a confirmed switch. <see cref="AppsOutcome.Pending"/> when they
-    /// run after the result – their outcome then comes with <see cref="AppsCompletion"/> (analysis finding B-03).
+    /// run after the result – their outcome then comes with <see cref="AppsCompletion"/>.
     /// </summary>
     public AppsOutcome Apps { get; init; } = AppsOutcome.NotConfigured;
 
     /// <summary>Completes with the final apps outcome; never faults. Already complete when no apps run.</summary>
     public Task<AppsOutcome> AppsCompletion { get; init; } = NoApps;
 
-    /// <summary>Whether every display got the HDR state the profile sets; only in the log before 4.0 (v4 finding K-15).</summary>
+    /// <summary>Whether every display got the HDR state the profile sets; only in the log before 4.0.</summary>
     public HdrOutcome Hdr { get; init; } = HdrOutcome.NotConfigured;
 
     /// <summary>
-    /// What became of the profile's desktop symbols (K-15). <see cref="DesktopIconOutcome.Pending"/> when they go back
-    /// after the result – the outcome then comes with <see cref="TidyCompletion"/> (v4 finding K-04).
+    /// What became of the profile's desktop symbols. <see cref="DesktopIconOutcome.Pending"/> when they go back
+    /// after the result – the outcome then comes with <see cref="TidyCompletion"/>.
     /// </summary>
     public DesktopIconOutcome DesktopIcons { get; init; } = DesktopIconOutcome.NotConfigured;
 
@@ -73,7 +73,7 @@ public enum HdrOutcome
 
 /// <summary>
 /// The state the displays are left in when that is not obvious from the outcome – after a failure the user needs to
-/// know whether the old picture is back (analysis finding B-05).
+/// know whether the old picture is back.
 /// </summary>
 public enum SwitchNote
 {
@@ -88,7 +88,7 @@ public enum SwitchNote
     /// <summary>The stored modes did not work; Windows picked the modes from its own database.</summary>
     ModesFromDatabase,
 
-    /// <summary>A call into the graphics driver did not return; nothing could be restored (v4 finding K-07).</summary>
+    /// <summary>A call into the graphics driver did not return; nothing could be restored.</summary>
     DriverHung,
 
     /// <summary>A rollback brought the displays back, but the graphics driver would not put Surround back.</summary>
@@ -133,7 +133,7 @@ public enum SwitchOutcome
 {
     /// <summary>
     /// Topology and audio applied, user confirmed (or no confirmation required). Optional displays that are not there count
-    /// as applied (finding HW-03); they are in <see cref="TopologyPlan.Missing"/> and a follow-up pass picks them up.
+    /// as applied; they are in <see cref="TopologyPlan.Missing"/> and a follow-up pass picks them up.
     /// </summary>
     Applied,
 

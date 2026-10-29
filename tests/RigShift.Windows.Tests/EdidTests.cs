@@ -60,7 +60,7 @@ public sealed class EdidTests
     [Fact]
     public void SerialHash_TellsTwinsApart_AndStaysTheSame()
     {
-        // The two CM27X3 of the reference rig report 0x11 and 0x22 in bytes 12–15 and no serial text (K-03).
+        // The two CM27X3 of the reference rig report 0x11 and 0x22 in bytes 12–15 and no serial text.
         string first = Edid.SerialHash(WithSerial(0x11)).ShouldNotBeNull();
 
         first.Length.ShouldBe(16);

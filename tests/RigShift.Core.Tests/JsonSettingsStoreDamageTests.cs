@@ -93,7 +93,7 @@ public sealed class JsonSettingsStoreDamageTests : IDisposable
     [Fact]
     public async Task Load_FileLockedForAMoment_IsReadOnTheSecondTry()
     {
-        // K-17: a virus scanner holding settings.json at startup meant defaults – rules, names and hotkeys gone.
+        // A virus scanner holding settings.json at startup meant defaults – rules, names and hotkeys gone.
         await WriteAsync("""{ "schemaVersion": 1, "language": "de" }""");
         await using var holder = new FileStream(File, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         var store = new JsonSettingsStore(File, Logger.None, new UnlockingTime(holder.Dispose));

@@ -23,7 +23,7 @@ public sealed record TopologyPlan
     public bool IsBlocked => Missing.Any(m => !m.Assignment.IsOptional);
 
     /// <summary>
-    /// True if a required display is attached but cannot be told apart from an identical one (v4 finding K-03): waiting or
+    /// True if a required display is attached but cannot be told apart from an identical one: waiting or
     /// switching a display on does not help, only saving the arrangement again.
     /// </summary>
     public bool IsAmbiguous => Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous);
@@ -49,7 +49,7 @@ public enum MissingReason
 
     /// <summary>
     /// Identical monitors are attached – at least as many as the profile misses of that model – but none is on a saved
-    /// port and nothing else tells them apart (v4 finding K-03). Switching a display on would not help.
+    /// port and nothing else tells them apart. Switching a display on would not help.
     /// </summary>
     Ambiguous,
 
@@ -81,7 +81,7 @@ public enum PlanWarningKind
 
     /// <summary>
     /// Identical monitors (same EDID) in the profile lost their ports; the model alone cannot tell which is which, so none
-    /// is matched by EDID (analysis finding B-10).
+    /// is matched by EDID.
     /// </summary>
     AmbiguousTwin,
 }

@@ -86,7 +86,7 @@ public sealed class SwitchOrchestrator
 
     /// <summary>
     /// Raised on the switch's thread when required displays are not connected or not ready and the switch waits for the
-    /// user to switch them on (findings HW-16, K-06). Carries those displays.
+    /// user to switch them on. Carries those displays.
     /// </summary>
     public event EventHandler<IReadOnlyList<DisplayAssignment>>? WaitingForDisplays;
 
@@ -109,8 +109,8 @@ public sealed class SwitchOrchestrator
         _log.Information("Switching to profile {Profile} (skip confirmation: {SkipConfirmation}, from link: {FromLink})",
             profile.Name, request.SkipConfirmation, request.FromLink);
 
-        // A new switch ends what the previous one left running: apps, e.g. still waiting for their device (analysis finding
-        // B-03), and its tidy-up (K-04).
+        // A new switch ends what the previous one left running: apps, e.g. still waiting for their device,
+        // and its tidy-up.
         _ = CancelPendingAsync();
 
         // Before anything changes: once a display goes dark, Windows has already moved what stood on it.
@@ -119,7 +119,7 @@ public sealed class SwitchOrchestrator
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
 
-        // Before anything is recorded, so the record holds the sound to go back to as well (K-14).
+        // Before anything is recorded, so the record holds the sound to go back to as well.
         TimeSpan? confirmTimeout = ConfirmTimeout(profile, request);
         if (confirmTimeout is not null)
         {
@@ -168,7 +168,7 @@ public sealed class SwitchOrchestrator
         }
 
         // Waiting for a sleeping display may have used up most of the budget; a display that wakes late and then answers
-        // 31 still needs time for its retries (analysis finding B-09).
+        // 31 still needs time for its retries.
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
 
         await RecordAsync(profile, wayBack, cancellationToken);
@@ -196,7 +196,7 @@ public sealed class SwitchOrchestrator
             return await RollBackAsync(profile, wayBack, applied, answer, started, cancellationToken);
         }
 
-        // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it (finding HW-03).
+        // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it.
         SwitchOutcome outcome = answer.Modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
         AppsOutcome apps = PendingApps(profile);
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
@@ -226,11 +226,11 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// What follows a switch that stays, started once its result is there (v4 finding K-04). Only then: a rejected switch
-    /// must not leave windows moved without a way back (B-14), programs started or someone's work closed. In the
+    /// What follows a switch that stays, started once its result is there. Only then: a rejected switch
+    /// must not leave windows moved without a way back, programs started or someone's work closed. In the
     /// background: neither Windows' own rearranging nor an app waiting for its device may hold up the result, the hotkeys,
-    /// the automation or the next switch (B-03). The journal is gone by then, so an exit meanwhile brings no question
-    /// "undo it?" at the next start (K-14).
+    /// the automation or the next switch. The journal is gone by then, so an exit meanwhile brings no question
+    /// "undo it?" at the next start.
     /// </summary>
     private SwitchResult AfterResult(SwitchResult result, Profile profile, bool restoreWindows) =>
         result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(profile) };
@@ -244,7 +244,7 @@ public sealed class SwitchOrchestrator
     /// <summary>
     /// The displays after a Surround change. Windows lists the displays of a grid that was just built or taken apart
     /// seconds later, not at once; until the profile's required displays are there, this looks again quietly. Planning
-    /// at once used to ask the user to switch on monitors that were on (finding K-09).
+    /// at once used to ask the user to switch on monitors that were on.
     /// </summary>
     private async Task<DisplaySnapshot> SettleAfterSurroundAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -276,7 +276,7 @@ public sealed class SwitchOrchestrator
         _topology.LogPlan(plan);
         if (plan.IsAmbiguous)
         {
-            // Identical monitors on new ports: switching one on would change nothing, so neither ask for it nor wait (K-03).
+            // Identical monitors on new ports: switching one on would change nothing, so neither ask for it nor wait.
             return plan;
         }
 
@@ -289,8 +289,8 @@ public sealed class SwitchOrchestrator
         }
 
         // A monitor that left the bus cannot be woken by software (no CEC on GPUs, DDC/CI needs the link): ask the user to
-        // switch it on and wait for it instead of blocking at once (finding HW-16). The same for one Windows still lists but
-        // that does not answer - that used to be 20 silent seconds and then a block (K-06).
+        // switch it on and wait for it instead of blocking at once. The same for one Windows still lists but
+        // that does not answer - that used to be 20 silent seconds and then a block.
         _log.Information("Waiting up to {Seconds:0} s for required displays that are not connected or not ready: {Displays}",
             _options.MissingDisplayWaitBudget.TotalSeconds, string.Join(", ", notThere.Select(d => DisplayNames.Of(d))));
         WaitingForDisplays?.Invoke(this, notThere);
@@ -303,7 +303,7 @@ public sealed class SwitchOrchestrator
     {
         TimeSpan? timeout;
 
-        // A link may come from a web page: it always asks, at least with the default timeout (analysis finding H-02).
+        // A link may come from a web page: it always asks, at least with the default timeout.
         if (request.FromLink)
         {
             timeout = request.DefaultConfirmTimeoutSeconds > 0
@@ -371,7 +371,7 @@ public sealed class SwitchOrchestrator
             }
 
             long audioStarted = _time.GetTimestamp();
-            // A display that was off may carry the profile's sound device, which wakes a moment after its picture (K-02).
+            // A display that was off may carry the profile's sound device, which wakes a moment after its picture.
             bool displaysTurnedOn = applied.Plan.Resolved.Any(d => !d.Target.IsActive);
             audio = await _audioSwitcher.SwitchAsync(profile.Audio, displaysTurnedOn, cancellationToken);
             if (audio != AudioOutcome.NotConfigured)
@@ -383,7 +383,7 @@ public sealed class SwitchOrchestrator
             SwitchKeepAwake(profile);
             await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
 
-            // What the user waits for, from the click until picture and sound are there (v4 finding K-04).
+            // What the user waits for, from the click until picture and sound are there.
             _log.Information("Picture and sound of {Profile} ready after {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
 
             if (confirmTimeout is not { } timeout)
@@ -412,7 +412,7 @@ public sealed class SwitchOrchestrator
     }
 
     /// <summary>
-    /// Windows restored the profile's display layout on its own, e.g. when a monitor was switched on (finding HW-15): the
+    /// Windows restored the profile's display layout on its own, e.g. when a monitor was switched on: the
     /// rest of the profile follows without a display change and without asking – the user chose it from the notification.
     /// </summary>
     private async Task<SwitchResult> ApplyRestAsync(Profile profile, CancellationToken cancellationToken)
@@ -438,7 +438,7 @@ public sealed class SwitchOrchestrator
 
     /// <summary>
     /// Dry run: plans against the live topology without touching anything. Needs no exclusive access, so it may run while
-    /// a switch runs (analysis finding B-13).
+    /// a switch runs.
     /// </summary>
     public async Task<SwitchResult> CheckAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -451,7 +451,7 @@ public sealed class SwitchOrchestrator
         _topology.LogPlan(plan);
         _log.Information("Dry run of {Profile} finished in {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
 
-        // Not through Finish: a switch waiting for "keep" next to this dry run still needs its record (K-05).
+        // Not through Finish: a switch waiting for "keep" next to this dry run still needs its record.
         return new SwitchResult { Outcome = SwitchOutcome.DryRun, Plan = plan, Duration = _time.GetElapsedTime(started) };
     }
 
@@ -497,10 +497,10 @@ public sealed class SwitchOrchestrator
         _log.Information("Catch-up of {Profile} finished: {Outcome}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
 
-        // A failed catch-up can leave displays dark just like a failed switch (analysis finding B-06).
+        // A failed catch-up can leave displays dark just like a failed switch.
         SwitchNote note = applied.Succeeded ? modes.Note : await RestoreAfterFailureAsync(snapshot, null, cancellationToken);
 
-        // Tidied up like a switch, after the result (K-04): the arrangement changed, so Explorer lays out the symbols anew.
+        // Tidied up like a switch, after the result: the arrangement changed, so Explorer lays out the symbols anew.
         bool tidy = applied.Succeeded || note == SwitchNote.RestoredPrevious;
         SwitchResult result = await Finish(new SwitchResult
         {
@@ -523,7 +523,7 @@ public sealed class SwitchOrchestrator
         Profile profile, WayBack wayBack, ApplyOutcome applied, Answer answer, long started, CancellationToken cancellationToken)
     {
         // Cancelled (app exit, logoff): the window closing is no answer, and the rollback must run to the end before the
-        // caller learns about the cancellation (analysis finding B-02).
+        // caller learns about the cancellation.
         bool cancelled = answer.Thrown is null && cancellationToken.IsCancellationRequested;
         CancellationToken rollbackToken = cancelled || answer.Thrown is not null ? CancellationToken.None : cancellationToken;
         if (cancelled)
@@ -645,7 +645,7 @@ public sealed class SwitchOrchestrator
     {
         if (_display.IsHung)
         {
-            // Every display call fails at once until the stuck one returns; only a restart helps (K-07).
+            // Every display call fails at once until the stuck one returns; only a restart helps.
             _log.Error("Nothing restored after the failed switch: the graphics driver does not answer");
             return SwitchNote.DriverHung;
         }
@@ -734,8 +734,8 @@ public sealed class SwitchOrchestrator
     /// Every way out of a switch passes here, so this is where the journal entry goes again – whether the switch was
     /// applied, blocked, failed or rolled back. Only an exception leaves it behind, and that is the case the next start
     /// should ask about. Clearing a record this switch never wrote is harmless: the app reads it once at startup,
-    /// before any switch can run, and only one switch runs at a time. A dry run runs next to a switch (B-13), so it never
-    /// comes here (K-05).
+    /// before any switch can run, and only one switch runs at a time. A dry run runs next to a switch, so it never
+    /// comes here.
     /// </summary>
     private async Task<SwitchResult> Finish(SwitchResult result, long started)
     {

@@ -36,7 +36,7 @@ public sealed record AttachedDisplay
 
     /// <summary>
     /// <c>n</c> of the GDI name <c>\\.\DISPLAYn</c> of an active display: the number Windows counts displays with, which the
-    /// Windows settings show in most setups (finding HW-04). Null when inactive or unknown.
+    /// Windows settings show in most setups. Null when inactive or unknown.
     /// </summary>
     public int? WindowsNumber { get; init; }
 

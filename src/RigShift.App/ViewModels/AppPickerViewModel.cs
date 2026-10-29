@@ -10,7 +10,7 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The app picker (finding HW-11): installed and running programs with icon and search; a file dialog stays available for
+/// The app picker: installed and running programs with icon and search; a file dialog stays available for
 /// programs without a Start menu entry.
 /// </summary>
 public sealed partial class AppPickerViewModel : ObservableObject

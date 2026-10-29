@@ -97,8 +97,8 @@ public sealed class ProfilesViewModelTests : IDisposable
     });
 
     /// <summary>
-    /// A display that is off does not block: the switch asks for it and waits (K-06). The detail says which one and
-    /// offers the two ways out (U-10, U-11).
+    /// A display that is off does not block: the switch asks for it and waits. The detail says which one and
+    /// offers the two ways out.
     /// </summary>
     [Fact]
     public Task ProfileWithADisplayOff_CanStillSwitch_AndTheHeadNamesWhatIsMissing() => _ui.RunAsync(async () =>
@@ -133,7 +133,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         editor.IsDirty.ShouldBeTrue("the change waits for Save like any other");
     });
 
-    /// <summary>The overview and the tray read the same state from the catalog's items (U-10).</summary>
+    /// <summary>The overview and the tray read the same state from the catalog's items.</summary>
     [Fact]
     public Task CatalogItems_CarryTheReadinessForOverviewAndTray() => _ui.RunAsync(async () =>
     {
@@ -179,7 +179,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         _host.Store.Profiles.Select(p => p.Name).ShouldBe(["Desk 2", "Side"], ignoreOrder: true);
         page.SelectedItem.ShouldNotBeNull().Profile.Id.ShouldBe(desk.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Saved", "Desk 2"));
-        page.DetailMessage.ShouldBe(Loc.Format("Detail_Renamed", "Desk"), "links and keys with the old name stop working (U-12)");
+        page.DetailMessage.ShouldBe(Loc.Format("Detail_Renamed", "Desk"), "links and keys with the old name stop working");
     });
 
     [Fact]
@@ -386,7 +386,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     [Fact]
     public Task SwitchResult_LandsInTheDetail_WithoutTheTray() => _ui.RunAsync(async () =>
     {
-        // A-06: the tray used to hand every result to the page, and so built the page before the tray icon appeared.
+        // The tray used to hand every result to the page, and so built the page before the tray icon appeared.
         Profile rig = await SavedAsync(Rig());
         ProfilesViewModel page = await PageAsync();
 
@@ -396,7 +396,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.DetailMessage.ShouldNotBeNull().ShouldContain("Rig");
     });
 
-    /// <summary>A-06: the first editor reads audio and USB devices and Surround; nobody looks at it before the page is shown.</summary>
+    /// <summary>The first editor reads audio and USB devices and Surround; nobody looks at it before the page is shown.</summary>
     [Fact]
     public Task NewPage_OpensNoEditorUntilItIsShown() => _ui.RunAsync(async () =>
     {
@@ -473,7 +473,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse();
     });
 
-    /// <summary>Windows rearranged the displays while the profile was being edited (v4 finding A-01).</summary>
+    /// <summary>Windows rearranged the displays while the profile was being edited.</summary>
     [Fact]
     public Task DirtyEditor_SurvivesADisplayChange() => _ui.RunAsync(async () =>
     {
@@ -581,7 +581,7 @@ public sealed class ProfilesViewModelTests : IDisposable
         page.IsStale.ShouldBeFalse();
     });
 
-    /// <summary>The assistant added a USB rule for the profile that is open: a clean editor shows it (v4 finding A-02).</summary>
+    /// <summary>The assistant added a USB rule for the profile that is open: a clean editor shows it.</summary>
     [Fact]
     public Task CleanEditor_ItsRulesChangedOnDisk_ShowsThem() => _ui.RunAsync(async () =>
     {

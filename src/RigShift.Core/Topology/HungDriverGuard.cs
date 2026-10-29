@@ -5,7 +5,7 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// Puts a time limit on every call into the display driver (v4 finding K-07). A call that exceeds it counts as a hung
+/// Puts a time limit on every call into the display driver. A call that exceeds it counts as a hung
 /// driver: until that call returns, every further one fails at once with <see cref="DisplayDriverHungException"/> instead of
 /// queueing behind it in the kernel. A queued query without a limit used to hold the switch lock until RigShift restarted,
 /// and every later switch was refused as "already running".

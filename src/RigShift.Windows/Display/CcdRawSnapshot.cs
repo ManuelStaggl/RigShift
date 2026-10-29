@@ -5,7 +5,7 @@ namespace RigShift.Windows.Display;
 /// <summary>
 /// Everything a display snapshot is built from, as plain values: the CCD path and mode arrays plus the device names asked
 /// for per target and adapter. Serializable, so a real machine's input can be dumped (<c>Probe snapshot --raw</c>) and,
-/// anonymised, replayed in tests without hardware (analysis finding L-04). Adapters are LUIDs as 16 hex digits.
+/// anonymised, replayed in tests without hardware. Adapters are LUIDs as 16 hex digits.
 /// </summary>
 public sealed record CcdRawSnapshot
 {

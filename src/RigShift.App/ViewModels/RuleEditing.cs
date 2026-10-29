@@ -90,7 +90,7 @@ public static class RuleExits
 
     /// <summary>
     /// Profiles a new rule starts with: its end action switches to the default profile (the desk), or to the first profile
-    /// without a default – deterministic, unlike "switch back" (user decision O-08). The rule itself switches to the first
+    /// without a default – deterministic, unlike "switch back". The rule itself switches to the first
     /// other profile.
     /// </summary>
     public static (Guid Profile, Guid ExitProfile) NewRuleProfiles(IReadOnlyList<Profile> profiles, Guid? defaultProfileId)
@@ -143,7 +143,7 @@ public sealed partial class RuleCard : ObservableObject
 
     public IRuleOwner Owner => _owner;
 
-    /// <summary>One entry per device; a combination switches once all of them are connected (user decision U-02).</summary>
+    /// <summary>One entry per device; a combination switches once all of them are connected.</summary>
     public ObservableCollection<RuleDeviceSlot> Devices { get; } = [];
 
     public bool IsCombination => Devices.Count > 1;
@@ -193,7 +193,7 @@ public sealed partial class RuleCard : ObservableObject
 
     internal void UpdatePowerWarning() => HasPowerWarning = DeviceIds.Any(_owner.HasPowerWarning);
 
-    /// <summary>Another rule watches the same devices (analysis finding C-05).</summary>
+    /// <summary>Another rule watches the same devices.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasWarning))]
     public partial bool HasDuplicateDevice { get; internal set; }
@@ -332,7 +332,7 @@ public sealed partial class RuleDeviceSlot : ObservableObject
 
     public bool IsConnected => Card.Owner.IsDeviceConnected(SelectedDevice?.Key);
 
-    /// <summary>"Fanatec Wheel Base, not connected": the state is more than a dot's color (v4 finding U-25).</summary>
+    /// <summary>"Fanatec Wheel Base, not connected": the state is more than a dot's color.</summary>
     public string AccessibleName => $"{Name}, {Loc.Instance[IsConnected ? "Automation_NameConnected" : "Automation_NameNotConnected"]}";
 
     partial void OnSelectedDeviceChanged(Choice? value)
@@ -345,7 +345,7 @@ public sealed partial class RuleDeviceSlot : ObservableObject
 }
 
 /// <summary>
-/// The USB rules of one profile on its trigger tab (R-OBJ-1): the rules of <c>automation.json</c> filtered by the profile,
+/// The USB rules of one profile on its trigger tab: the rules of <c>automation.json</c> filtered by the profile,
 /// edited with the profile and written back with the other rules untouched when the profile is saved.
 /// </summary>
 public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
@@ -405,7 +405,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
 
     /// <summary>
     /// All rules for the settings: the other profiles' rules as they are on disk <em>now</em>, then this profile's. Not
-    /// the copy taken when the editor opened – the assistant or a restore may have changed them since (v4 finding A-02).
+    /// the copy taken when the editor opened – the assistant or a restore may have changed them since.
     /// </summary>
     public IReadOnlyList<AutomationRule> MergeInto(IReadOnlyList<AutomationRule>? current) =>
         [.. (current ?? []).Where(r => r.ProfileId != _profileId), .. Build()];

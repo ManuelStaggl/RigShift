@@ -184,7 +184,7 @@
                 <Border Margin="0,8,0,0" MinHeight="52" Padding="16,8" Style="{StaticResource RigShift.Card}">
                   <controls:AdaptiveColumns Gap="16">
                     <StackPanel VerticalAlignment="Center" controls:AdaptiveColumns.MinColumnWidth="150">
-                      <!-- Name and state; the VID/PID only as the tooltip (E-04). -->
+                      <!-- Name and state; the VID/PID only as the tooltip. -->
                       <TextBlock
                         Style="{StaticResource RigShift.Text.Body}"
                         Text="{Binding WindowsName}"

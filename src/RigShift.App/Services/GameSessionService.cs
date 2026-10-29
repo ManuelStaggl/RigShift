@@ -71,7 +71,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     public bool IsRunning(Guid gameId) => _running.ContainsKey(gameId);
 
-    /// <summary>The games whose session runs now; quitting would lose their way back (v4 findings A-14, E-06).</summary>
+    /// <summary>The games whose session runs now; quitting would lose their way back.</summary>
     public IReadOnlyList<Guid> RunningGames => [.. _running.Keys];
 
     /// <summary>When the running session of this game started, or <c>null</c> when none runs.</summary>
@@ -80,7 +80,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     /// <summary>
     /// Starts watching for games that run without RigShift having started them – but only while a game asks for it and
     /// its process name is known; without one, looking at every process every five seconds was the only noticeable load
-    /// of an idle RigShift (v4 findings A-05, E-08). Games that already run when watching starts only set the starting
+    /// of an idle RigShift. Games that already run when watching starts only set the starting
     /// point – switching the whole machine because the app was started while a game was open would be a nasty surprise.
     /// </summary>
     public void StartWatching()

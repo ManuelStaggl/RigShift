@@ -15,8 +15,8 @@ namespace RigShift.App.Views;
 
 /// <summary>
 /// Main window: title bar, the navigation rail on the left and one page on the right. Closing only hides it – RigShift
-/// keeps running in the tray. Ctrl+1…6 jump to the six pages (R-NAV-5). Below 1200 px the rail keeps only its symbols
-/// (N-01); its foot shows the active profile and paused rules, the help entry a dot for an update (N-02).
+/// keeps running in the tray. Ctrl+1…6 jump to the six pages. Below 1200 px the rail keeps only its symbols;
+///its foot shows the active profile and paused rules, the help entry a dot for an update.
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
@@ -177,7 +177,7 @@ public partial class MainWindow : FluentWindow
         TaskContinuationOptions.OnlyOnFaulted,
         TaskScheduler.FromCurrentSynchronizationContext());
 
-    /// <summary>Leaving the profiles or games page with unsaved changes asks first (R-NAV-3); "cancel" keeps the page.</summary>
+    /// <summary>Leaving the profiles or games page with unsaved changes asks first; "cancel" keeps the page.</summary>
     private async Task ShowPageAsync(Type? page)
     {
         Type target = page ?? _page;
@@ -272,9 +272,9 @@ public partial class MainWindow : FluentWindow
         content.Children.Add(text);
         var item = new ListBoxItem { Content = content, Tag = page };
 
-        // The chosen page shows its symbol filled (N-03); the name is the tooltip while the rail is narrow.
+        // The chosen page shows its symbol filled; the name is the tooltip while the rail is narrow.
         icon.SetBinding(SymbolIcon.FilledProperty, new Binding(nameof(ListBoxItem.IsSelected)) { Source = item });
-        // "Profiles (Ctrl+2)": the page keys are otherwise nowhere to be seen (v4 finding U-24).
+        // "Profiles (Ctrl+2)": the page keys are otherwise nowhere to be seen.
         var tip = new System.Windows.Controls.TextBlock();
         tip.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new MultiBinding
         {

@@ -13,7 +13,7 @@ namespace RigShift.Windows.Apps;
 public sealed record DiscoveredApp(string Name, string Path, bool IsRunning);
 
 /// <summary>
-/// Programs for the app picker instead of a file dialog (finding HW-11): Start menu shortcuts of all users and the current
+/// Programs for the app picker instead of a file dialog: Start menu shortcuts of all users and the current
 /// user that point to an <c>.exe</c>, plus running apps with a window. Read-only.
 /// </summary>
 public static class AppDiscovery
