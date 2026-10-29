@@ -32,4 +32,10 @@
     <None Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The core fakes and fixtures, shared as source: they are internal to the core test assembly. -->
+    <Compile Include="..\RigShift.Core.Tests\Fakes\*.cs" Link="Fakes\%(Filename)%(Extension)" />
+    <Compile Include="..\RigShift.Core.Tests\TestDisplays.cs" Link="TestDisplays.cs" />
+  </ItemGroup>
+
 </Project>
