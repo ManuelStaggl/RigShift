@@ -30,6 +30,8 @@ dotnet test --solution RigShift.slnx
 3. Open a pull request with `Closes #<issue>` and fill in the template. UI changes need before and after screenshots.
 4. `main` only takes pull requests with a green `build` check. Pull requests are merged with a merge commit.
 5. What is finished gets released; the version and milestone are set on the issue.
+6. RigShift ships its own .NET runtime. When a merged `dotnet-sdk` update brings a runtime with security fixes, a patch
+   release follows within a week; other runtime updates ship with the next release.
 
 ## Commits
 
