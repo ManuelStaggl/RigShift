@@ -38,6 +38,7 @@ dotnet test --solution RigShift.slnx
 
 - [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`, `ci:`.
 - One topic per PR. Update `CHANGELOG.md` under *Unreleased* for anything a user notices.
+  One line per entry, two at most, without a bold lead; the background belongs in the pull request.
 
 ## Labels
 
