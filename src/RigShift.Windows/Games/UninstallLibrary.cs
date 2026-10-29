@@ -16,8 +16,6 @@ public sealed record UninstallEntry(string DisplayName, string? Publisher, strin
 /// </summary>
 public sealed class UninstallLibrary
 {
-    private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
-
     /// <summary>Sims that ship their own installer; matched against the start of the display name.</summary>
     private static readonly string[] StandaloneSims = ["Live for Speed", "Richard Burns Rally", "Kart Racing Pro", "rFactor"];
 
@@ -133,17 +131,12 @@ public sealed class UninstallLibrary
     private List<UninstallEntry> ReadRegistry()
     {
         var entries = new List<UninstallEntry>();
-        foreach ((RegistryHive hive, RegistryView view) in new[]
-        {
-            (RegistryHive.LocalMachine, RegistryView.Registry64),
-            (RegistryHive.LocalMachine, RegistryView.Registry32),
-            (RegistryHive.CurrentUser, RegistryView.Default),
-        })
+        foreach ((RegistryHive hive, RegistryView view) in UninstallRegistry.Views)
         {
             try
             {
                 using RegistryKey root = RegistryKey.OpenBaseKey(hive, view);
-                using RegistryKey? uninstall = root.OpenSubKey(UninstallKey);
+                using RegistryKey? uninstall = root.OpenSubKey(UninstallRegistry.KeyPath);
                 if (uninstall is null)
                 {
                     continue;

@@ -32,8 +32,8 @@ public static class GameIconSource
             return null;
         }
 
-        string subKey = string.Create(CultureInfo.InvariantCulture, $@"{UninstallKey}\Steam App {appId}");
-        foreach ((RegistryHive hive, RegistryView view) in Views)
+        string subKey = string.Create(CultureInfo.InvariantCulture, $@"{UninstallRegistry.KeyPath}\Steam App {appId}");
+        foreach ((RegistryHive hive, RegistryView view) in UninstallRegistry.Views)
         {
             try
             {
@@ -53,16 +53,6 @@ public static class GameIconSource
 
         return null;
     }
-
-    private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
-
-    /// <summary>Steam is a 32-bit program, so its entries land in the 32-bit view; per-user installs live in HKCU.</summary>
-    private static readonly (RegistryHive Hive, RegistryView View)[] Views =
-    [
-        (RegistryHive.LocalMachine, RegistryView.Registry32),
-        (RegistryHive.LocalMachine, RegistryView.Registry64),
-        (RegistryHive.CurrentUser, RegistryView.Default),
-    ];
 }
 
 /// <summary>The shell's <c>path,index</c> notation, as it stands in <c>DisplayIcon</c> and in a shortcut.</summary>
