@@ -115,6 +115,21 @@ Found in the 1.3 analysis and deliberately left as they are:
 - The combo boxes on automation rule cards may not be found by UI Automation; check with `inspect.exe` if screen reader
   support becomes a topic (I-18).
 
+## Dependencies we did not take
+
+RigShift is MIT licensed and meant to stay small. A dependency has to save real work or risk, and copyleft licenses
+(GPL, LGPL) are out. These come up regularly; status as of October 2026:
+
+| Package | License | Last release | Why not |
+|---|---|---|---|
+| NvAPIWrapper.Net | LGPL-3.0 | 0.8.1, 2020 | License; unmaintained. The NVAPI calls RigShift needs are about 1,000 lines with tests. |
+| WindowsDisplayAPI | LGPL-3.0 | 1.3.0, 2020 | License; unmaintained. CCD is the core of the app; the interop comes from CsWin32. |
+| EDIDParser | LGPL-3.0 | 1.2.5, 2021 | License. RigShift reads a handful of bytes from the base block. |
+| GameFinder | GPL-3.0 | 4.9.0, 2025 | License. |
+| ValveKeyValue | MIT | 0.73, 2026 | Fine, but RigShift reads only two text files; the parser is 145 lines and never throws. Worth it once binary VDF (`shortcuts.vdf`) is needed. |
+| NAudio | MIT | 3.3, 2026 | Has no `IPolicyConfig`, so setting the default device needs the own declaration anyway. |
+| AudioSwitcher.AudioApi | MS-PL | 3.0.3, 2023 | Weak copyleft; unmaintained, targets .NET Framework 4.0. |
+
 ## Coding rules
 
 See `.editorconfig` and `Directory.Build.props`: warnings are errors, analyzers at `latest-recommended`,
