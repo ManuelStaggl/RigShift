@@ -18,19 +18,45 @@ namespace RigShift.Windows.Display;
 public sealed class EdidDisplaySizeReader : IDisplaySizeReader
 {
     private readonly ILogger _log;
+    private readonly Func<string, ILogger, byte[]?> _read;
+    private readonly HashSet<string> _rejected = new(StringComparer.OrdinalIgnoreCase);
 
     public EdidDisplaySizeReader(ILogger log)
+        : this(log, Edid.Read)
+    {
+    }
+
+    /// <param name="read">The registry read; tests hand in the bytes.</param>
+    internal EdidDisplaySizeReader(ILogger log, Func<string, ILogger, byte[]?> read)
     {
         ArgumentNullException.ThrowIfNull(log);
         _log = log.ForContext<EdidDisplaySizeReader>();
+        _read = read;
     }
 
     public ScreenSize? Read(DisplayIdentity display)
     {
         ArgumentNullException.ThrowIfNull(display);
-        if (Edid.Read(display.TargetDevicePath, _log) is not { } edid)
+        if (_read(display.TargetDevicePath, _log) is not { } edid)
         {
             _log.Debug("No EDID for {Display}", DisplayNames.Of(display));
+            return null;
+        }
+
+        // A size from broken bytes would put a wrong field of view on screen without any hint; none is better.
+        if (!Edid.IsValid(edid))
+        {
+            bool first;
+            lock (_rejected)
+            {
+                first = _rejected.Add(display.TargetDevicePath);
+            }
+
+            if (first)
+            {
+                _log.Warning("The EDID of {Display} has a wrong header or checksum, its picture size is not used", DisplayNames.Of(display));
+            }
+
             return null;
         }
 
@@ -67,6 +93,26 @@ public static class Edid
             log.Warning(ex, "EDID under {Key} could not be read", keyPath);
             return null;
         }
+    }
+
+    /// <summary>The fixed first eight bytes of every EDID base block.</summary>
+    private static ReadOnlySpan<byte> Header => [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+
+    /// <summary>Header and base block checksum are right: the bytes are an EDID, not a broken or foreign blob.</summary>
+    public static bool IsValid(ReadOnlySpan<byte> edid)
+    {
+        if (edid.Length < 128 || !edid[..8].SequenceEqual(Header))
+        {
+            return false;
+        }
+
+        byte sum = 0;
+        foreach (byte value in edid[..128])
+        {
+            sum += value;
+        }
+
+        return sum == 0;
     }
 
     /// <summary>
@@ -131,7 +177,8 @@ public static class Edid
 
     /// <summary>
     /// Picture size in millimetres: the first detailed timing descriptor (bytes 66–68) carries it to the millimetre,
-    /// the basic block (bytes 21/22) only to the centimetre. Zero in both means the display does not say.
+    /// the basic block (bytes 21/22) only to the centimetre. Zero in both means the display does not say. Some panels
+    /// write centimetres into the detailed timing too; less than half the basic block's width gives them away.
     /// </summary>
     public static ScreenSize? PictureSize(byte[] edid)
     {
@@ -143,13 +190,14 @@ public static class Edid
 
         int widthMm = edid[66] | ((edid[68] & 0xF0) << 4);
         int heightMm = edid[67] | ((edid[68] & 0x0F) << 8);
-        if (widthMm > 0 && heightMm > 0)
+        int widthCm = edid[21];
+        int heightCm = edid[22];
+        bool basic = widthCm > 0 && heightCm > 0;
+        if (widthMm > 0 && heightMm > 0 && !(basic && widthMm * 2 < widthCm * 10))
         {
             return new ScreenSize(widthMm, heightMm);
         }
 
-        int widthCm = edid[21];
-        int heightCm = edid[22];
-        return widthCm > 0 && heightCm > 0 ? new ScreenSize(widthCm * 10, heightCm * 10) : null;
+        return basic ? new ScreenSize(widthCm * 10, heightCm * 10) : null;
     }
 }
