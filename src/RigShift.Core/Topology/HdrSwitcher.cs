@@ -21,7 +21,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
     /// <summary>
     /// Works on a fresh snapshot: a display that was just switched on only reports its HDR state once active. Rollbacks
     /// restore it the same way, because the previous topology carries the state it had. Failures are logged and never
-    /// fail the switch; the outcome says whether every display got its HDR state (K-15).
+    /// fail the switch; the outcome says whether every display got its HDR state.
     /// </summary>
     public async Task<HdrOutcome> SwitchAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -42,7 +42,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
             }
 
             // A monitor may still do its handshake right after the apply and drop off the bus; switching HDR then is what
-            // froze the test PC (finding HW-12). Two snapshots in a row must agree first.
+            // froze the test PC. Two snapshots in a row must agree first.
             if (await WaitForSettledDisplaysAsync(now, cancellationToken) is not { } settled)
             {
                 _log.Warning("HDR for {Profile} left unchanged: the displays did not settle within {Budget}", profile.Name, _options.HdrSettleBudget);
@@ -53,7 +53,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
             bool complete = !pass.TimedOut && !pass.Failed;
             if (!pass.TimedOut && pass.Unknown.Count > 0)
             {
-                // Right after an apply the driver may not report HDR yet (analysis finding B-12): ask once more.
+                // Right after an apply the driver may not report HDR yet: ask once more.
                 _log.Information("HDR state of {Count} display(s) not reported yet, asking again in {Delay}", pass.Unknown.Count, RetryDelay);
                 await Task.Delay(RetryDelay, _time, cancellationToken);
                 now = await _display.QueryAsync(cancellationToken);
@@ -142,7 +142,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
                 int code;
                 try
                 {
-                    // The time limit is the driver guard's (K-07).
+                    // The time limit is the driver guard's.
                     code = await _display.SetHdrAsync(target, enabled, cancellationToken);
                 }
                 catch (DisplayDriverHungException)

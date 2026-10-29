@@ -29,7 +29,7 @@ public static class AppLogging
 
     /// <summary>
     /// Daily log file, 14 days. <c>shared</c> because the tray app and a command line process write at the same time.
-    /// Created first thing in <c>Main</c>, so Velopack's install and update steps land in the same file (analysis finding F-03).
+    /// Created first thing in <c>Main</c>, so Velopack's install and update steps land in the same file.
     /// </summary>
     public static ILogger Create(AppPaths paths)
     {
@@ -39,7 +39,7 @@ public static class AppLogging
             .MinimumLevel.ControlledBy(Level)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ProcessId", Environment.ProcessId)
-            // Static Log.* calls have no context of their own; "App" rather than an empty column (v4 finding E-17).
+            // Static Log.* calls have no context of their own; "App" rather than an empty column.
             .Enrich.WithProperty("SourceContext", "App");
 #if DEBUG
         // An OutputDebugString per line helps nobody in a release build.

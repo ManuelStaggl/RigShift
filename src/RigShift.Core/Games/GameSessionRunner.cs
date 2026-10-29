@@ -117,7 +117,7 @@ public sealed class GameSessionRunner
         }
 
         // The profile's apps first: wheelbase software often belongs to the rig rather than to one game, and may still wait
-        // for its USB device. The game used to start meanwhile and saw no wheel (v4 finding K-11).
+        // for its USB device. The game used to start meanwhile and saw no wheel.
         if (!profileApps.IsCompleted)
         {
             _log.Information("Game {Game}: waiting for the apps of its profile before starting", game.Name);
@@ -382,7 +382,7 @@ public sealed class GameSessionRunner
                 // Launchers, "Play" stubs and executables that restart themselves end within seconds and leave the game
                 // running. Taking their end for the game's would switch the displays back under it. A launcher with a
                 // choice to make (DX11 or VR) can stay open for minutes, so a long run gets a look too – a short one,
-                // because it is far more often the game itself ending (v4 finding K-16).
+                // because it is far more often the game itself ending.
                 TimeSpan grace = span < StubLifetime ? StubGrace : LongRunGrace;
                 _log.Information("Game {Game}: the started process ended after {Seconds:0.0} s, looking {Grace} for a game it left behind",
                     game.Name, span.TotalSeconds, grace);

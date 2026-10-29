@@ -14,7 +14,7 @@ internal sealed class DuckingSwitcher(IDuckingPreference ducking, IDuckingMemory
 
     /// <summary>
     /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
-    /// by the next profile without it. Persisted, so it survives a crash or restart (analysis finding B-01).
+    /// by the next profile without it. Persisted, so it survives a crash or restart.
     /// </summary>
     private readonly IDuckingMemory _duckingMemory = duckingMemory;
     private readonly ILogger _log = log;

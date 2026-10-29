@@ -304,7 +304,7 @@
                     IsHitTestVisible="False"
                     ShowLabels="False"
                     Size="M" />
-                  <!-- "Active" in the corner of the active tile: the check mark used everywhere (U-20). -->
+                  <!-- "Active" in the corner of the active tile: the check mark used everywhere. -->
                   <StackPanel
                     Margin="0,-4,-4,0"
                     HorizontalAlignment="Right"
@@ -318,7 +318,7 @@
                       Foreground="{DynamicResource RigShift.Brush.Accent}"
                       Text="{loc:Tr Profile_Active}" />
                   </StackPanel>
-                  <!-- A required display is off: the words of the profile list, the next step on hover (U-10). -->
+                  <!-- A required display is off: the words of the profile list, the next step on hover. -->
                   <controls:StatusLine
                     Margin="0,-4,-4,0"
                     HorizontalAlignment="Right"

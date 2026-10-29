@@ -109,7 +109,7 @@ internal static unsafe class CcdNative
 
     /// <summary>
     /// Sets HDR. When the _2 query answers (Windows 11 24H2 and later), only the 24H2 request is used and its error is
-    /// returned as is; the older advanced color request is used only when that query fails (analysis finding G-02).
+    /// returned as is; the older advanced color request is used only when that query fails.
     /// </summary>
     public static HdrSetResult SetHdr(LUID adapter, uint targetId, bool enabled)
     {

@@ -11,7 +11,7 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Views;
 
-/// <summary>Picks a program for a profile: installed and running apps, or any file (finding HW-11).</summary>
+/// <summary>Picks a program for a profile: installed and running apps, or any file.</summary>
 public partial class AppPickerWindow : FluentWindow
 {
     private readonly AppPickerViewModel _viewModel;

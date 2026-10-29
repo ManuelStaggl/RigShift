@@ -18,7 +18,7 @@ namespace RigShift.App;
 
 /// <summary>
 /// The tray app's container. A plain one: the app has no hosted services, configuration or Microsoft.Extensions.Logging
-/// users, and every service logs through Serilog directly (analysis finding A-05). A test builds it with
+/// users, and every service logs through Serilog directly. A test builds it with
 /// <c>ValidateOnBuild</c>, so a missing registration fails there instead of when the user opens a page.
 /// </summary>
 public static class ServiceRegistration
@@ -36,7 +36,7 @@ public static class ServiceRegistration
         services.AddSingleton<IProfileStore>(sp => new JsonProfileStore(paths.Profiles, log, sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton(_ => new JsonSettingsStore(paths.SettingsFile, log));
         services.AddSingleton<IAutostart>(_ => new RunKeyAutostart(Environment.ProcessPath ?? "RigShift.exe", log));
-        // Everyone shares the guard, so a call stuck in the driver makes the pages fail fast too, not just the switch (K-07).
+        // Everyone shares the guard, so a call stuck in the driver makes the pages fail fast too, not just the switch.
         services.AddSingleton<IDisplayConfigurator>(sp => new HungDriverGuard(
             new CcdDisplayConfigurator(log, sp.GetRequiredService<TimeProvider>()), sp.GetRequiredService<SwitchOptions>(), sp.GetRequiredService<TimeProvider>(), log));
         services.AddSingleton<IAudioController, PolicyConfigAudioController>();

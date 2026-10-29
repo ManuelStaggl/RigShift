@@ -6,7 +6,7 @@ using Xunit;
 
 namespace RigShift.App.Tests;
 
-/// <summary>One ZIP for a bug report: diagnostics, the newest logs, the data files, no user name (v4 finding E-07).</summary>
+/// <summary>One ZIP for a bug report: diagnostics, the newest logs, the data files, no user name.</summary>
 public sealed class SupportPackageTests : IDisposable
 {
     private const string UserProfile = @"C:\Users\Jane Doe";

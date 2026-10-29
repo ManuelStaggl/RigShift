@@ -17,7 +17,7 @@ namespace RigShift.App.Tests;
 /// <summary>
 /// The main window with every page and every tab, the setup assistant, a question dialog and the tray popup, with demo
 /// data, in English and German, 1080 and 1920 px wide. A binding path that does not exist, a template that throws or a
-/// layout that never settles fails here instead of on someone's screen (v4 finding E-04). The compiler sees none of it.
+/// layout that never settles fails here instead of on someone's screen. The compiler sees none of it.
 /// WPF allows one application object per process, so everything runs in this one test, on one thread.
 /// </summary>
 public sealed class XamlSmokeTests : IDisposable

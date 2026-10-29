@@ -8,7 +8,7 @@ namespace RigShift.App.Views;
 
 public partial class TrayPopupView : UserControl
 {
-    /// <summary>Share of the work area the profile list may take before it scrolls (analysis finding I-05).</summary>
+    /// <summary>Share of the work area the profile list may take before it scrolls.</summary>
     private const double ProfileListShare = 0.6;
 
     private readonly TrayPopupViewModel _viewModel;

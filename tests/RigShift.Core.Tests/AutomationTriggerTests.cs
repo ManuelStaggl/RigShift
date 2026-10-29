@@ -80,7 +80,7 @@ public sealed class AutomationTriggerTests
     [Fact]
     public void StartRejected_Disarm_ShortGapDoesNotStart()
     {
-        // K-10: the user turned the rig down and works at the desk; the wheelbase re-enumerating is no reconnect.
+        // The user turned the rig down and works at the desk; the wheelbase re-enumerating is no reconnect.
         AutomationRule rule = WheelbaseRule();
         Poll(rule, Desk);
         Poll(rule, Desk, Wheelbase).ShouldHaveSingleItem();
@@ -95,7 +95,7 @@ public sealed class AutomationTriggerTests
     [Fact]
     public void BaselinePresent_OnePollGap_DoesNotStart()
     {
-        // K-10: the wheelbase was on when RigShift started and drops out for a moment (hub reset, interference).
+        // The wheelbase was on when RigShift started and drops out for a moment (hub reset, interference).
         AutomationRule rule = WheelbaseRule(skip: true);
         Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
 

@@ -9,7 +9,7 @@ namespace RigShift.Core.Topology;
 /// and the profile's desktop symbols.
 /// Neither ever fails a switch – an untidy desktop is a log line. Both run after the result, in the background: they wait
 /// for Windows to finish its own rearranging first, and that used to hold up the result, the hotkeys and the next switch
-/// by one to eleven seconds (v4 finding K-04). Logs under the orchestrator's context, so the log source stays the same.
+/// by one to eleven seconds. Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
 internal sealed class PostSwitchTidy(
     IWindowRescuer windows, IDesktopIcons desktopIcons, WindowMemory? windowMemory, SwitchOptions options, TimeProvider time, ILogger log)
@@ -28,7 +28,7 @@ internal sealed class PostSwitchTidy(
 
     /// <summary>
     /// Starts the tidy-up in the background: the windows, and with a <paramref name="profile"/> its desktop symbols, side by
-    /// side. Ends the tidy-up of an earlier result first. Completes with what became of the symbols (K-15); never faults.
+    /// side. Ends the tidy-up of an earlier result first. Completes with what became of the symbols; never faults.
     /// With <paramref name="restoreWindows"/> the windows the profile remembers go back to their places as well.
     /// </summary>
     public Task<DesktopIconOutcome> Start(Profile? profile, bool restoreWindows = false)

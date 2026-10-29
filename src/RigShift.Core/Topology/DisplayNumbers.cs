@@ -2,7 +2,7 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// Numbers for the displays page and "Identify". Windows offers no API for the numbers of its settings page; they follow
-/// the GDI names <c>\\.\DISPLAYn</c> in most setups, so those are used (finding HW-04). Without them for every active display
+/// the GDI names <c>\\.\DISPLAYn</c> in most setups, so those are used. Without them for every active display
 /// the numbers go left to right, so no two displays share a number by accident.
 /// </summary>
 public static class DisplayNumbers

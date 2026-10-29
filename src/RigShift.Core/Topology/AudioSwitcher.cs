@@ -107,7 +107,7 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
     /// <summary>
     /// Sets the default. A device that is there but not active is tried again until <paramref name="wakeDeadline"/>, if
     /// there is one: the sound device of a display that was just switched on becomes active a moment after its picture,
-    /// and giving up at once left the sound on the wrong device (finding K-02).
+    /// and giving up at once left the sound on the wrong device.
     /// </summary>
     private async Task<bool> SetDefaultAsync(
         AudioEndpoint endpoint, AudioRoleMask roles, AudioDirection direction, DateTimeOffset? wakeDeadline, CancellationToken cancellationToken)
@@ -239,7 +239,7 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
 
     /// <summary>
     /// The assignment with every device Windows does not know under its saved ID replaced by the one active device of the
-    /// same direction and name (v4 finding K-08): a USB headset or DAC on another port gets a new ID. Between two devices
+    /// same direction and name: a USB headset or DAC on another port gets a new ID. Between two devices
     /// of that name nothing is guessed, and a device that is there but not active stays, so it can be waited for.
     /// </summary>
     private async Task<AudioAssignment> ResolveAsync(AudioAssignment audio, CancellationToken cancellationToken)
@@ -318,7 +318,7 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
 
         /// <summary>
         /// The captured defaults and volumes as a profile's audio, so the switch journal can put the sound back after a crash
-        /// the same way a switch sets it (K-14). Empty when nothing was captured.
+        /// the same way a switch sets it. Empty when nothing was captured.
         /// </summary>
         public AudioAssignment AsAssignment()
         {

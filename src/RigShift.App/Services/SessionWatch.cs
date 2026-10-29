@@ -4,7 +4,7 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Whether the user's session can switch displays right now (v4 finding A-04). While it is locked or not on the console,
+/// Whether the user's session can switch displays right now. While it is locked or not on the console,
 /// Windows answers every display call with "access denied": a USB rule firing then failed, and the rule only started again
 /// once the device was switched off and on.
 /// </summary>

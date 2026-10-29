@@ -20,7 +20,7 @@ public enum RepeatedErrorChoice
     OpenLog,
 }
 
-/// <summary>What the user chose when leaving a profile with unsaved changes (R-NAV-3).</summary>
+/// <summary>What the user chose when leaving a profile with unsaved changes.</summary>
 public enum UnsavedChoice
 {
     Save,
@@ -133,7 +133,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
 
     Task<UnsavedChoice> IProfilePageDialogs.ConfirmUnsavedAsync(string name, string? targetName) => ConfirmUnsavedAsync(name, targetName);
 
-    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3, R-FLOW-3).</summary>
+    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3).</summary>
     public async Task<Profile> NewFromCurrentAsync()
     {
         DisplaySnapshot snapshot;
@@ -222,14 +222,14 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
         window.ShowDialog();
         _log.Information("Setup assistant closed");
 
-        // "Try it" on the last step: the first real switch, with the countdown that takes it back (finding U-02).
+        // "Try it" on the last step: the first real switch, with the countdown that takes it back.
         if (viewModel.SwitchAfterClose is { } target)
         {
             await _coordinator.SwitchAsync(target);
         }
     }
 
-    /// <summary>Delete is destructive: red text, never the accent (R-ACT-3).</summary>
+    /// <summary>Delete is destructive: red text, never the accent.</summary>
     /// <param name="ruleCount">USB rules that go with the profile; named in the question so the loss is no surprise.</param>
     public static async Task<bool> ConfirmDeleteAsync(string name, int ruleCount = 0) =>
         await Ask(
@@ -249,7 +249,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
 
     /// <summary>
     /// Asks before quitting while a game session runs: without RigShift nothing switches back or closes the tools when the
-    /// game ends (v4 findings A-14, E-06). An update waits for the exit, so it simply comes later.
+    /// game ends. An update waits for the exit, so it simply comes later.
     /// </summary>
     public static async Task<bool> ConfirmQuitDuringGameAsync(string games) =>
         await Ask(
@@ -286,7 +286,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
             ],
             cancelResult: (int)RepeatedErrorChoice.Continue);
 
-    /// <summary>Same style as deleting a profile (analysis finding I-12).</summary>
+    /// <summary>Same style as deleting a profile.</summary>
     /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
     public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName) =>
         await Ask(
@@ -340,7 +340,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
     }
 
     /// <summary>
-    /// Asked when the selection or the navigation leaves a profile with unsaved changes (R-NAV-3): "Save changes to X?"
+    /// Asked when the selection or the navigation leaves a profile with unsaved changes: "Save changes to X?"
     /// with Save, Discard and Cancel. Save is the primary button: the changes were made on purpose.
     /// </summary>
     /// <param name="targetName">What the user is switching to, when that is known; it explains why the dialog is here.</param>

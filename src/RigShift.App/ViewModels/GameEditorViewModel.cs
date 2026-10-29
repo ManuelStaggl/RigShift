@@ -238,7 +238,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     [NotifyPropertyChangedFor(nameof(WindowsText), nameof(HasWindows), nameof(SavedWindows))]
     public partial WindowLayout? WindowLayout { get; set; }
 
-    /// <summary>The captured windows, one line each (G-05).</summary>
+    /// <summary>The captured windows, one line each.</summary>
     public IReadOnlyList<SavedWindowRow> SavedWindows => WindowLayout is { IsEmpty: false } layout
         ? [.. layout.Windows.Select(w => new SavedWindowRow(w))]
         : [];

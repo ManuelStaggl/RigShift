@@ -35,7 +35,7 @@ public sealed record AutomationRule
 
     /// <summary>
     /// The per-rule switch of 1.3.x, read only so that a rule switched off there is dropped on load instead of coming back
-    /// on (analysis finding O-07); never written.
+    /// on; never written.
     /// </summary>
     [JsonPropertyName("isEnabled")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -43,7 +43,7 @@ public sealed record AutomationRule
 
     /// <summary>
     /// The devices that must all be connected for the rule to start; the end action runs once one of them has been gone
-    /// for the delay (user decision U-02). Empty until a device is picked.
+    /// for the delay. Empty until a device is picked.
     /// </summary>
     public IReadOnlyList<RuleDevice>? Devices { get; init; }
 

@@ -1,7 +1,7 @@
 namespace RigShift.Core.Automation;
 
 /// <summary>
-/// Custom USB device names (user decision U-01): given once and shown everywhere – in rules, when apps wait for a device
+/// Custom USB device names: given once and shown everywhere – in rules, when apps wait for a device
 /// and in notifications. Stored in the settings by <c>VID_xxxx&amp;PID_xxxx</c>, like monitor names.
 /// </summary>
 public static class UsbDeviceNames

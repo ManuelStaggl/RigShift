@@ -39,7 +39,7 @@ public sealed class ActiveProfileMatcherTests
     [Fact]
     public void FindActive_SameLayoutTwice_TheOneWithTheRunningRefreshRateWins()
     {
-        // K-13: "Rig 144 Hz" and "Rig 240 Hz" – the one first in the list used to win whatever ran.
+        // "Rig 144 Hz" and "Rig 240 Hz" – the one first in the list used to win whatever ran.
         Profile rig144 = Profile("Rig 144 Hz", [UltrawideMode with { RefreshNumerator = 144_000 }]);
         Profile rig240 = Profile("Rig 240 Hz", [UltrawideMode]);
         DisplaySnapshot running240 = Snapshot(Attached(Ultrawide, activeMode: UltrawideMode));

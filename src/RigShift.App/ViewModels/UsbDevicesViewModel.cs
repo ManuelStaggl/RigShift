@@ -12,7 +12,7 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The settings' device group: the USB devices rules and profiles use, their custom names (user decision U-01) and
+/// The settings' device group: the USB devices rules and profiles use, their custom names and
 /// the switch that pauses every rule at once. The rules themselves live in the profile that owns them.
 /// </summary>
 public sealed partial class UsbDevicesViewModel : ObservableObject
@@ -38,7 +38,7 @@ public sealed partial class UsbDevicesViewModel : ObservableObject
         // A rule saved in a profile editor brings a new device, and the tray menu can pause: both without reopening.
         automation.Changed += (_, _) => Refresh();
 
-        // "Connected" and "not connected" are built in code, so they follow a language change (I-13).
+        // "Connected" and "not connected" are built in code, so they follow a language change.
         Loc.Instance.PropertyChanged += (_, _) => Refresh();
     }
 
@@ -120,7 +120,7 @@ public sealed partial class UsbDevicesViewModel : ObservableObject
         }
     }
 
-    /// <summary>A failed save shows an error and puts the switch back to the state on disk (analysis finding A-07).</summary>
+    /// <summary>A failed save shows an error and puts the switch back to the state on disk.</summary>
     private async Task SetPausedAsync(bool paused)
     {
         if (await _automation.SetPausedAsync(paused))

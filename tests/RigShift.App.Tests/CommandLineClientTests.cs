@@ -17,8 +17,8 @@ using static RigShift.Core.Tests.TestDisplays;
 namespace RigShift.App.Tests;
 
 /// <summary>
-/// The command line side of the bridge that Stream Deck keys, desktop shortcuts and SSH commands go through (v4 finding
-/// E-05): which instance it talks to, and what it reports when nobody answers.
+/// The command line side of the bridge that Stream Deck keys, desktop shortcuts and SSH commands go through:
+/// which instance it talks to, and what it reports when nobody answers.
 /// </summary>
 public sealed class CommandLineClientTests
 {

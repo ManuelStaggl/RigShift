@@ -8,7 +8,7 @@ using Xunit;
 
 namespace RigShift.Windows.Tests;
 
-/// <summary>Snapshot building on recorded CCD input, without hardware (analysis finding L-04).</summary>
+/// <summary>Snapshot building on recorded CCD input, without hardware.</summary>
 public sealed class CcdSnapshotBuilderTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

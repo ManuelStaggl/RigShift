@@ -32,7 +32,7 @@
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- The rig (V-05): label over field throughout, the switch last. -->
+        <!-- The rig: label over field throughout, the switch last. -->
         <Border VerticalAlignment="Top" Style="{StaticResource RigShift.Card}">
           <StackPanel>
             <TextBlock Style="{StaticResource RigShift.Text.CardTitle}" Text="{loc:Tr Fov_Rig}" />
@@ -204,7 +204,7 @@
           </StackPanel>
         </Border>
 
-        <!-- Top view with the result directly under it (V-02, 5.2). -->
+        <!-- Top view with the result directly under it (5.2). -->
         <StackPanel Grid.Column="2">
           <ContentControl Style="{StaticResource RigShift.TopologyPanel}">
             <Grid>
@@ -273,7 +273,7 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <!-- One line per sim (V-03): the value as a chip right behind its kind, copy with a short answer, search. -->
+      <!-- One line per sim: the value as a chip right behind its kind, copy with a short answer, search. -->
       <DockPanel Margin="0,24,0,10">
         <TextBox
           x:Name="SimSearch"

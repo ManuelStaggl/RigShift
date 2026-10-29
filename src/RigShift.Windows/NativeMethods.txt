@@ -54,7 +54,7 @@ DEVPKEY_Device_InLocalMachineContainer
 // Global hotkeys (v1.1).
 RegisterHotKey
 UnregisterHotKey
-// Hotkey names as the keyboard layout calls the keys (analysis finding I-14).
+// Hotkey names as the keyboard layout calls the keys.
 MapVirtualKey
 GetKeyNameText
 // Error codes we branch on (all live in the WIN32_ERROR enum).
@@ -103,7 +103,7 @@ WINDOWPLACEMENT
 MonitorFromRect
 GetWindowThreadProcessId
 SHOW_WINDOW_CMD
-// Skip windows of hung programs: SetWindowPlacement would wait for them (analysis finding B-04).
+// Skip windows of hung programs: SetWindowPlacement would wait for them.
 IsHungAppWindow
 SendMessageTimeout
 WM_NULL
@@ -132,7 +132,7 @@ SHGetDesktopFolder
 SHGDNF
 ILFree
 StrRetToStrW
-// Countdown: any button on a wheel, button box or game controller keeps the switch (v4 finding U-04). Raw Input for the
+// Countdown: any button on a wheel, button box or game controller keeps the switch. Raw Input for the
 // reports, the HID parser for which buttons they hold; axes and hat switches are never read.
 RegisterRawInputDevices
 GetRawInputData

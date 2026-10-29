@@ -8,7 +8,7 @@ namespace RigShift.Core.Tests;
 /// <summary>
 /// "No Surround setting" leaves Surround alone only while no other profile uses it. The triple rig with Surround and
 /// the desk without a setting is the common pair; before 4.0 the way back to the desk kept the grid, and the desk's
-/// monitors stayed hidden inside it (findings K-09, U-05).
+/// monitors stayed hidden inside it.
 /// </summary>
 public sealed class SurroundDefaultsTests
 {

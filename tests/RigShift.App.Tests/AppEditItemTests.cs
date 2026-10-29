@@ -65,7 +65,7 @@ public sealed class AppEditItemTests
         row.PathNote.ShouldBe(Loc.Instance["App_NotFound"]);
     }
 
-    /// <summary>A-12: a path on a sleeping NAS froze the editor for the network's timeout, at every key.</summary>
+    /// <summary>A path on a sleeping NAS froze the editor for the network's timeout, at every key.</summary>
     [Fact]
     public void PathNote_NetworkPath_IsNotLookedFor()
     {

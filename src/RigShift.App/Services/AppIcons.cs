@@ -14,7 +14,7 @@ namespace RigShift.App.Services;
 /// <summary>Program icons for the app picker, the editor and the profile cards; frozen, so they can be made off the UI thread.</summary>
 internal static class AppIcons
 {
-    /// <summary>Only icons that were found: a miss per typed character used to stay in here for good (v4 finding A-12).</summary>
+    /// <summary>Only icons that were found: a miss per typed character used to stay in here for good.</summary>
     private static readonly ConcurrentDictionary<string, ImageSource> Cache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <returns>

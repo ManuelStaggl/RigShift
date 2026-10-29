@@ -19,7 +19,7 @@
   WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner">
-  <!-- D-01: title in the content, 48 px rows with the programs' own icons, a foot on the chrome surface. -->
+  <!-- Title in the content, 48 px rows with the programs' own icons, a foot on the chrome surface. -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />

@@ -3,7 +3,7 @@ namespace RigShift.App.Services;
 /// <summary>
 /// The thread something was made on – the UI thread in the app – and the way back to it. Compares threads, not
 /// contexts: WPF hands out a new synchronization context per dispatcher operation, so a context comparison never matches
-/// and "right away" silently became "later" (v4 finding A-07).
+/// and "right away" silently became "later".
 /// </summary>
 internal sealed class UiThread
 {

@@ -64,7 +64,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     [Fact]
     public async Task Blocked_AsksForTheDisplay_AndNamesOnlyRequiredDisplays()
     {
-        // HW-14 and HW-16: neither the ultrawide (required) nor the tablet (optional) is connected.
+        // Neither the ultrawide (required) nor the tablet (optional) is connected.
         _host.Display.SetSnapshot(Snapshot(Attached(Desk4K, activeMode: DeskModes[0])));
         IReadOnlyList<string>? asked = null;
         _host.Coordinator.WaitingForDisplays += (_, names) => asked = names;
@@ -79,7 +79,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     [Fact]
     public async Task Switch_ThatStays_WritesAMonitorOnANewPortIntoEveryProfile()
     {
-        // K-03: the ultrawide moved to another port and is found by its EDID. Afterwards every profile with it and its
+        // The ultrawide moved to another port and is found by its EDID. Afterwards every profile with it and its
         // custom name know the new path, so the next switch finds it directly.
         DisplayIdentity moved = Ultrawide with { TargetDevicePath = @"\\?\DISPLAY#SAM0001#OTHERPORT&9", EdidSerialHash = "0123456789ABCDEF" };
         Profile rig = Rig();
@@ -120,7 +120,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     [Fact]
     public void NoticeDisplayChange_OffersTheRest_OnlyForAnotherProfileWithMoreThanDisplays()
     {
-        // HW-15: Windows restored the rig layout by itself when the ultrawide was switched on.
+        // Windows restored the rig layout by itself when the ultrawide was switched on.
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig() with { KeepAwake = true };
         var offered = new List<Profile>();
@@ -167,7 +167,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
         Profile rig = Rig();
         _host.Display.SetSnapshot(DeskActive(tabletAttached: false));
 
-        // The tablet is missing: applied (HW-03), and the catch-up follows the rig.
+        // The tablet is missing: applied, and the catch-up follows the rig.
         (await _host.Coordinator.SwitchAsync(rig, SwitchRequest.Default))!.Outcome.ShouldBe(SwitchOutcome.Applied);
 
         // A failed switch to the same profile keeps following it.
@@ -254,7 +254,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
     [Fact]
     public async Task Switch_DesktopSymbolsFollowTheResult_TheirProblemComesInASecondNotification()
     {
-        // K-04: the symbols no longer hold up the result; what went wrong with them comes once they are done.
+        // The symbols no longer hold up the result; what went wrong with them comes once they are done.
         _host.DesktopIcons.Outcome = DesktopIconOutcome.AutoArrange;
         var followUp = new TaskCompletionSource<SwitchRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
         _host.Coordinator.FollowUpCompleted += (_, record) => followUp.TrySetResult(record);
@@ -293,7 +293,7 @@ public sealed class SwitchCoordinatorTests : IDisposable
 
     /// <summary>
     /// The triple with Surround and the desk without a setting: the way back to the desk switches the grid off, or the
-    /// desk's monitors stay hidden inside it (findings K-09, U-05).
+    /// desk's monitors stay hidden inside it.
     /// </summary>
     [Fact]
     public async Task Switch_ProfileWithoutSurroundWhileAnotherUsesIt_SwitchesSurroundOff()

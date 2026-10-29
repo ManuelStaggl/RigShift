@@ -36,7 +36,7 @@ public sealed class HungDriverGuardTests
     [Fact]
     public async Task Call_StuckInTheDriver_MakesEveryLaterCallFailAtOnce_UntilItReturns()
     {
-        // K-07: the query after a hung apply queued behind it in the kernel, without a limit, and held the switch lock.
+        // The query after a hung apply queued behind it in the kernel, without a limit, and held the switch lock.
         var stuck = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         _driver.ApplyAsync(default!, default!, default).ReturnsForAnyArgs(stuck.Task);
 

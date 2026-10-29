@@ -7,7 +7,7 @@ public sealed record SwitchOptions
 {
     /// <summary>
     /// Confirmation timeout when nothing else sets one, and the minimum for switches from a <c>rigshift://</c> link,
-    /// which always ask (analysis finding H-02).
+    /// which always ask.
     /// </summary>
     public static TimeSpan DefaultConfirmTimeout { get; } = TimeSpan.FromSeconds(15);
 
@@ -19,13 +19,13 @@ public sealed record SwitchOptions
 
     /// <summary>
     /// How long to wait for a required display that is not connected at all (switched off, or dropped off the bus in
-    /// standby) before the switch is blocked; the user is asked to switch it on (finding HW-16).
+    /// standby) before the switch is blocked; the user is asked to switch it on.
     /// </summary>
     public TimeSpan MissingDisplayWaitBudget { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// Longest time a native HDR call may take. Switching HDR over HDMI froze the graphics stack of the test PC (finding
-    /// HW-12); the switch goes on without waiting for a call that does not return.
+    /// Longest time a native HDR call may take. Switching HDR over HDMI froze the graphics stack of the test PC;
+    /// the switch goes on without waiting for a call that does not return.
     /// </summary>
     public TimeSpan HdrCallTimeout { get; init; } = TimeSpan.FromSeconds(10);
 
@@ -36,23 +36,23 @@ public sealed record SwitchOptions
     public TimeSpan ApplyCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
 
     /// <summary>
-    /// Longest time one native query may take (v4 finding K-07). As long as an apply: a query waits behind a running apply
+    /// Longest time one native query may take. As long as an apply: a query waits behind a running apply
     /// in the kernel, and a shorter limit would take a slow but working apply for a hung driver.
     /// </summary>
     public TimeSpan QueryCallTimeout { get; init; } = TimeSpan.FromSeconds(45);
 
-    /// <summary>How long to wait for the displays to settle after an apply before HDR is switched (finding HW-12).</summary>
+    /// <summary>How long to wait for the displays to settle after an apply before HDR is switched.</summary>
     public TimeSpan HdrSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// Interval between the snapshots that must agree before HDR is switched. Short: the arrangement usually stands long
-    /// before, and a full <see cref="PollInterval"/> cost every HDR switch a second (v4 finding K-04).
+    /// before, and a full <see cref="PollInterval"/> cost every HDR switch a second.
     /// </summary>
     public TimeSpan HdrSettlePollInterval { get; init; } = TimeSpan.FromMilliseconds(250);
 
     /// <summary>
     /// How long Windows may take to list the displays of a Surround grid that was just built or taken apart, before the
-    /// switch treats a missing one as switched off (finding K-09).
+    /// switch treats a missing one as switched off.
     /// </summary>
     public TimeSpan SurroundSettleBudget { get; init; } = TimeSpan.FromSeconds(10);
 
@@ -61,7 +61,7 @@ public sealed record SwitchOptions
 
     /// <summary>
     /// How long the sound device of a display the switch turned on may take to become active: a TV, an AV receiver or
-    /// a monitor's own speakers appear with the picture, half a second to three seconds after it (finding K-02).
+    /// a monitor's own speakers appear with the picture, half a second to three seconds after it.
     /// </summary>
     public TimeSpan AudioWakeBudget { get; init; } = TimeSpan.FromSeconds(5);
 
@@ -125,7 +125,7 @@ public sealed record SwitchRequest
 
     /// <summary>
     /// Windows already restored the profile's displays itself: apply only audio, keep-awake, call ducking and apps, without
-    /// touching the displays and without asking (finding HW-15).
+    /// touching the displays and without asking.
     /// </summary>
     public bool KeepDisplays { get; init; }
 
@@ -140,7 +140,7 @@ public sealed record SwitchRequest
 
     /// <summary>
     /// The shortest countdown when the switch asks at all. A USB rule sets it: the user who switched on the wheelbase may
-    /// still be on the way to the seat (v4 finding U-04).
+    /// still be on the way to the seat.
     /// </summary>
     public int MinimumConfirmTimeoutSeconds { get; init; }
 

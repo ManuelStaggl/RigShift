@@ -31,7 +31,7 @@ public sealed record DiagnosticsInput(
 /// <summary>
 /// Plain-text report to paste into a GitHub issue ("Copy diagnostic info"). English and invariant culture on purpose:
 /// maintainers read it. Contains display device paths and device names, no audio endpoint IDs; the user name in paths
-/// is replaced (analysis finding H-05).
+/// is replaced.
 /// </summary>
 public static partial class DiagnosticsReport
 {
@@ -44,7 +44,7 @@ public static partial class DiagnosticsReport
         text.AppendLine(FormattableString.Invariant($"Windows {Environment.OSVersion.Version} ({RuntimeInformation.OSArchitecture}), .NET {Environment.Version}"));
         text.AppendLine(FormattableString.Invariant($"Created {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}"));
 
-        // The first question in every display issue: which card, which driver (v4 finding E-07).
+        // The first question in every display issue: which card, which driver.
         text.AppendLine().AppendLine("## Graphics");
         if (input.Graphics is not { Count: > 0 })
         {
@@ -165,7 +165,7 @@ public static partial class DiagnosticsReport
         }
 
         text.AppendLine();
-        // Four digits of the fingerprint are enough to see whether identical monitors report different serial numbers (K-03).
+        // Four digits of the fingerprint are enough to see whether identical monitors report different serial numbers.
         string serial = display.Identity.EdidSerialHash is { Length: >= 4 } hash ? "serial " + hash[..4] : "no serial number";
         text.AppendLine(FormattableString.Invariant($"  EDID {display.Identity.EdidManufacturerId:X4}:{display.Identity.EdidProductCodeId:X4}, {serial}"));
         text.AppendLine(FormattableString.Invariant($"  target {ShortTargetPath(display.Identity.TargetDevicePath)}"));
@@ -174,7 +174,7 @@ public static partial class DiagnosticsReport
 
     /// <summary>
     /// <c>\\?\DISPLAY#AUS32F6#5&amp;…&amp;UID4353#{…}</c> → <c>AUS32F6 · UID4353</c>. The instance ids identify the machine and
-    /// help nobody reading an issue (finding HW-17).
+    /// help nobody reading an issue.
     /// </summary>
     internal static string ShortTargetPath(string path)
     {

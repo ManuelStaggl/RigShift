@@ -69,10 +69,10 @@ public sealed partial class DisplayEditItem : ObservableObject
     [NotifyPropertyChangedFor(nameof(SwitchesHdr))]
     public partial HdrChoice? SelectedHdr { get; set; }
 
-    /// <summary>HDR is set on or off: the editor warns to try it in Windows first (finding HW-12).</summary>
+    /// <summary>HDR is set on or off: the editor warns to try it in Windows first.</summary>
     public bool SwitchesHdr => SelectedHdr?.Value is not null;
 
-    /// <summary>The display offered no rates now and none are remembered, so only the saved one is listed (HW-13).</summary>
+    /// <summary>The display offered no rates now and none are remembered, so only the saved one is listed.</summary>
     [ObservableProperty]
     public partial bool RatesUnknown { get; private set; }
 

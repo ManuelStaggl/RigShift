@@ -78,7 +78,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
     public bool IsPaused => _automation?.IsPaused == true;
 
-    /// <summary>What the pause button does next, and that rules are paused (v4 finding U-22).</summary>
+    /// <summary>What the pause button does next, and that rules are paused.</summary>
     public string PauseTip => Loc.Instance[IsPaused ? "Tray_RulesPausedTip" : "Automation_Pause"];
 
     /// <summary>"Switching to Sim Rig …" above the progress line; the plain sentence when the target is unknown.</summary>

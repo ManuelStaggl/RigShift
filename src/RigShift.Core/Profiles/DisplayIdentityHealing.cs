@@ -3,7 +3,7 @@ using RigShift.Core.Topology;
 namespace RigShift.Core.Profiles;
 
 /// <summary>
-/// Keeps the saved identities of the monitors current (v4 finding K-03). After a switch that stayed, a monitor the planner
+/// Keeps the saved identities of the monitors current. After a switch that stayed, a monitor the planner
 /// found anywhere but on its saved path – another port, a new graphics card – and one whose EDID serial number the profile
 /// does not know yet are written back into every profile that contains it. The next switch then finds it by its path again,
 /// and identical monitors stay apart even when all paths change at once.

@@ -11,8 +11,8 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// The head the tray app writes at its start and on every new day. It runs for days and the file rolls daily, so
-/// "today's log" in a forum post would otherwise hold neither version nor Windows build nor graphics driver (v4 finding
-/// A-17). Serilog's file hooks would do this per file, but they refuse shared files – and the tray app and command line
+/// "today's log" in a forum post would otherwise hold neither version nor Windows build nor graphics driver.
+/// Serilog's file hooks would do this per file, but they refuse shared files – and the tray app and command line
 /// processes share one.
 /// </summary>
 public static class LogFileHeader
@@ -63,7 +63,7 @@ public static class LogFileHeader
 /// <summary>
 /// Writes each line with the user's profile folder shortened to <c>%AppData%</c>, <c>%LocalAppData%</c> or
 /// <c>%UserProfile%</c>: whoever pastes a log into an issue would otherwise publish their Windows user name with every
-/// path (v4 finding E-17). Works on the finished line, so paths in exception texts are covered too. Puts
+/// path. Works on the finished line, so paths in exception texts are covered too. Puts
 /// <see cref="LogFileHeader"/> in front of the first line of each day.
 /// </summary>
 public sealed class LogLineFormatter(string outputTemplate) : ITextFormatter

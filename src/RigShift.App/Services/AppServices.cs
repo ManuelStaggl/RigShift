@@ -112,7 +112,7 @@ public sealed class SettingsService(JsonSettingsStore store, IAutostart autostar
                 return;
             }
 
-            // Saved first: if writing fails, Current keeps the value that is really on disk (analysis finding F-01).
+            // Saved first: if writing fails, Current keeps the value that is really on disk.
             await store.SaveAsync(updated, cancellationToken);
             languageChanged = !string.Equals(updated.Language, Current.Language, StringComparison.Ordinal);
             Current = updated;
@@ -271,7 +271,7 @@ public static class SwitchMessages
         string missing = string.Join(", ", record.MissingDisplays);
         (string title, string text, H.NotifyIcon.Core.NotificationIcon icon) = record.Outcome switch
         {
-            // Only optional displays are missing: switched, and they follow once connected (finding HW-03).
+            // Only optional displays are missing: switched, and they follow once connected.
             SwitchOutcome.Applied when record.MissingDisplays.Count > 0 =>
                 (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Format("Result_AppliedFollowUpText", missing), H.NotifyIcon.Core.NotificationIcon.Info),
             SwitchOutcome.Applied => (Loc.Format("Result_AppliedTitle", record.ProfileName), Loc.Instance["Result_AppliedText"], H.NotifyIcon.Core.NotificationIcon.Info),
@@ -305,7 +305,7 @@ public static class SwitchMessages
             text += Environment.NewLine + Loc.Instance["Result_AudioIncomplete"];
         }
 
-        // Only in the log before 4.0 (K-15).
+        // Only in the log before 4.0.
         if (record.Hdr == HdrOutcome.Incomplete)
         {
             text += Environment.NewLine + Loc.Instance["Result_HdrIncomplete"];
@@ -320,7 +320,7 @@ public static class SwitchMessages
     }
 
     /// <summary>
-    /// Apps and desktop symbols follow the switch result (B-03, K-04): a second notification only when something went wrong
+    /// Apps and desktop symbols follow the switch result: a second notification only when something went wrong
     /// with them.
     /// </summary>
     public static (string Title, string Text, H.NotifyIcon.Core.NotificationIcon Icon)? ForFollowUpNotification(SwitchRecord record)

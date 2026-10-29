@@ -65,7 +65,7 @@ public sealed partial class AboutViewModel : ObservableObject
         _updates.StateChanged += (_, _) => RefreshUpdateStatus();
         RefreshUpdateStatus();
 
-        // Version, update status and the history rows are built in code; re-read them on a language change (I-13).
+        // Version, update status and the history rows are built in code; re-read them on a language change.
         Loc.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(VersionText));
@@ -170,7 +170,7 @@ public sealed partial class AboutViewModel : ObservableObject
         }
     }
 
-    /// <summary>The hotkeys in use: profiles, games and "previous profile" (H-01).</summary>
+    /// <summary>The hotkeys in use: profiles, games and "previous profile".</summary>
     public ObservableCollection<ShortcutRow> Shortcuts { get; } = [];
 
     [ObservableProperty]
@@ -232,7 +232,7 @@ public sealed partial class AboutViewModel : ObservableObject
         // Always listed: the emergency hotkey has to be known before a screen stays dark.
         Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_AllOnHotkey"], HotkeyFormat.Format(HotkeyService.AllDisplaysOnHotkey)));
 
-        // The keys inside the window (v4 finding U-24).
+        // The keys inside the window.
         Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysPages"], Ctrl(0x31) + " … " + Ctrl(0x36)));
         Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysEdit"], string.Join(" · ", Ctrl(0x4E), Ctrl(0x53), Ctrl(0x0D))));
         Shortcuts.Add(new ShortcutRow(Loc.Instance["Help_KeysName"], "F2"));
@@ -279,7 +279,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
 
-    /// <summary>Next to the log folder: the settings page holds only settings (user decision O-06).</summary>
+    /// <summary>Next to the log folder: the settings page holds only settings.</summary>
     [RelayCommand]
     private void OpenProfileFolder() => ShellFolders.Open(_paths.Profiles, _log);
 
@@ -323,7 +323,7 @@ public sealed partial class AboutViewModel : ObservableObject
         }
     }
 
-    /// <summary>Diagnostics, logs and data files as one ZIP, then the bug report form to attach it to (v4 finding E-07).</summary>
+    /// <summary>Diagnostics, logs and data files as one ZIP, then the bug report form to attach it to.</summary>
     [RelayCommand]
     private async Task SaveSupportPackageAsync()
     {

@@ -19,7 +19,7 @@
   WindowBackdropType="None"
   WindowCornerPreference="Round"
   WindowStartupLocation="CenterOwner">
-  <!-- D-02: as tall as the list (room for five rows at least), one line per window with its size. -->
+  <!-- As tall as the list (room for five rows at least), one line per window with its size. -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />

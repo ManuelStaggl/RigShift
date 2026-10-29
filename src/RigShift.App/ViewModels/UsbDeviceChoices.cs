@@ -6,14 +6,14 @@ using RigShift.Core.Profiles;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The USB device list of the automation page and the profile editor (analysis finding A-08): connected devices first, then
-/// saved devices that are not connected, each shown with its custom name (user decision U-01).
+/// The USB device list of the automation page and the profile editor: connected devices first, then
+/// saved devices that are not connected, each shown with its custom name.
 /// </summary>
 internal static class UsbDeviceChoices
 {
     /// <summary>
     /// Every device RigShift knows without it being connected: the devices of the rules, the devices profiles wait for and
-    /// named devices. A device picked once stays selectable while it is off (finding HW-08).
+    /// named devices. A device picked once stays selectable while it is off.
     /// </summary>
     public static IEnumerable<RuleDevice> Known(
         IEnumerable<AutomationRule>? rules, IEnumerable<Profile> profiles, IReadOnlyDictionary<string, string>? customNames)

@@ -22,7 +22,7 @@ public sealed class AutomationServiceTests : IDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    /// <summary>E-08: without a rule that can act, the timer only woke the UI thread every two seconds for nothing.</summary>
+    /// <summary>Without a rule that can act, the timer only woke the UI thread every two seconds for nothing.</summary>
     [Fact]
     public async Task Timer_RunsOnlyWhileARuleCanAct()
     {
@@ -69,7 +69,7 @@ public sealed class AutomationServiceTests : IDisposable
     [Fact]
     public async Task Tick_WhileLocked_DoesNothing_AndTheUnlockStartsTheRule()
     {
-        // A-04: the driver sits down in the rig, switches the wheelbase on, then unlocks. While locked every display call
+        // The driver sits down in the rig, switches the wheelbase on, then unlocks. While locked every display call
         // fails with "access denied", and the failed start used to disarm the rule until the wheelbase was switched again.
         using AutomationService automation = await CreateAsync();
         await automation.PollAsync();
@@ -88,7 +88,7 @@ public sealed class AutomationServiceTests : IDisposable
     [Fact]
     public async Task Tick_RuleSwitch_CountsDownAtLeastTheRuleMinimum()
     {
-        // U-04: the wheelbase is on, its owner may still be on the way to the seat; the app setting says 15 s.
+        // The wheelbase is on, its owner may still be on the way to the seat; the app setting says 15 s.
         _host.Confirmation.ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
             .Returns(ConfirmationResult.Confirmed);
         using AutomationService automation = await CreateAsync();

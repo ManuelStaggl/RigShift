@@ -5,7 +5,7 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Views;
 
-/// <summary>How a dialog button looks: the rank decides, not the meaning (R-ACT-1, R-ACT-3).</summary>
+/// <summary>How a dialog button looks: the rank decides, not the meaning.</summary>
 public enum DialogButtonKind
 {
     /// <summary>The default rank; also the way out ("Cancel").</summary>
@@ -14,7 +14,7 @@ public enum DialogButtonKind
     /// <summary>The one accent button, for an action the user set out to do ("Save").</summary>
     Primary,
 
-    /// <summary>Destructive: red fill, never the accent (R-ACT-3, D-03).</summary>
+    /// <summary>Destructive: red fill, never the accent.</summary>
     Danger,
 }
 
@@ -29,7 +29,7 @@ public sealed record DialogDetail(string Heading, string Text, string? Warning =
 
 /// <summary>
 /// The question dialog of RigShift 3.0: a heading, one sentence and the choices on the right. Deliberately not the
-/// WPF-UI MessageBox – that one paints a destructive button in a filled red, which R-ACT-3 rules out.
+/// WPF-UI MessageBox – that one paints a destructive button in a filled red, which the design rules out.
 /// </summary>
 public partial class DialogWindow : FluentWindow
 {

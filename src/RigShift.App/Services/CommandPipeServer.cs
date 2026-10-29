@@ -23,7 +23,7 @@ public sealed class CommandPipeServer : IDisposable
     private const int MaxConnections = 4;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
-    /// <summary>A client that connects but sends no complete request must not hold one of the few instances (analysis finding H-04).</summary>
+    /// <summary>A client that connects but sends no complete request must not hold one of the few instances.</summary>
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     private readonly TimeSpan _requestTimeout;
@@ -66,8 +66,8 @@ public sealed class CommandPipeServer : IDisposable
     }
 
     /// <summary>
-    /// A request the caller cannot show the answer of: a link, a Stream Deck key or a desktop shortcut has no console
-    /// (v4 finding A-09). The text is for the tray, in the app's language.
+    /// A request the caller cannot show the answer of: a link, a Stream Deck key or a desktop shortcut has no console.
+    ///The text is for the tray, in the app's language.
     /// </summary>
     public event EventHandler<string>? Refused;
 
@@ -285,7 +285,7 @@ public sealed class CommandPipeServer : IDisposable
 
     /// <summary>
     /// What the tray says when a name is not found: most often a profile or game was renamed after the shortcut or Stream
-    /// Deck key was made (v4 finding U-12). A blocked or rolled back switch has told the user already.
+    /// Deck key was made. A blocked or rolled back switch has told the user already.
     /// </summary>
     private static string? RefusalText(CliRequest request, int exitCode) => (request.Command, exitCode) switch
     {

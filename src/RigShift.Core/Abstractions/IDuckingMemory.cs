@@ -3,7 +3,7 @@ namespace RigShift.Core.Abstractions;
 /// <summary>
 /// Persists the communications ducking value from before a profile with
 /// <see cref="Profiles.Profile.DisableCommunicationsDucking"/> took over, so a crash, restart or update between that
-/// profile and the next one does not leave the Windows setting changed for good (analysis finding B-01).
+/// profile and the next one does not leave the Windows setting changed for good.
 /// </summary>
 public interface IDuckingMemory
 {

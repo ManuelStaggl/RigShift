@@ -73,7 +73,7 @@ public sealed partial class FovViewModel : ObservableObject
         FillCurvatureChoices();
         _loading = false;
 
-        // The catalog reads the displays after every change and every switch; showing that read saves one of our own (v4 finding A-03).
+        // The catalog reads the displays after every change and every switch; showing that read saves one of our own.
         catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowDisplays(snapshot));
 
         Loc.Instance.PropertyChanged += (_, _) => OnUi(() =>
@@ -93,7 +93,7 @@ public sealed partial class FovViewModel : ObservableObject
     /// <summary>The rows as the page shows them: filtered by <see cref="SimFilter"/>, the user's own games first.</summary>
     public ObservableCollection<FovSimRow> ShownSimRows { get; } = [];
 
-    /// <summary>Search over 18 sims (V-03).</summary>
+    /// <summary>Search over 18 sims.</summary>
     [ObservableProperty]
     public partial string SimFilter { get; set; } = string.Empty;
 
@@ -108,7 +108,7 @@ public sealed partial class FovViewModel : ObservableObject
         }
     }
 
-    /// <summary>"One · Three" as a segmented control: 0 = one screen, 1 = three (V-01).</summary>
+    /// <summary>"One · Three" as a segmented control: 0 = one screen, 1 = three.</summary>
     public int LayoutIndex
     {
         get => IsTriple ? 1 : 0;

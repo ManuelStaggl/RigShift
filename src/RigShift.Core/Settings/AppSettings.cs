@@ -58,7 +58,7 @@ public sealed record AppSettings
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
 
-    /// <summary>Refresh rates displays offered once, for the profile editor (<see cref="Profiles.RefreshRateMemory"/>, finding HW-13).</summary>
+    /// <summary>Refresh rates displays offered once, for the profile editor (<see cref="Profiles.RefreshRateMemory"/>).</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>>? RefreshRates { get; init; }
 
     /// <summary>Custom USB device names by <c>VID_xxxx&amp;PID_xxxx</c> (user decision U-01, <see cref="Automation.UsbDeviceNames"/>).</summary>
@@ -77,13 +77,13 @@ public sealed record AppSettings
     public bool AutomationPaused { get; init; }
 
     /// <summary>
-    /// The note "RigShift keeps running in the tray" was shown on the first close of the window (v4 finding U-03).
+    /// The note "RigShift keeps running in the tray" was shown on the first close of the window.
     /// <c>false</c> for files without the key: users of older versions see it once.
     /// </summary>
     public bool TrayHintShown { get; init; }
 
     /// <summary>
-    /// A communications ducking value is remembered in <see cref="DuckingBeforeProfiles"/> (analysis finding B-01). Separate
+    /// A communications ducking value is remembered in <see cref="DuckingBeforeProfiles"/>. Separate
     /// flag because the remembered value itself may be <c>null</c> (registry value missing). Regular setters on purpose,
     /// see <see cref="ConfirmTimeoutSeconds"/>.
     /// </summary>
@@ -245,7 +245,7 @@ public sealed class JsonSettingsStore
         try
         {
             // With one retry, like the profiles: a virus scanner holding the file for a moment at startup used to mean
-            // defaults – rules, names and hotkeys gone until the next start (v4 finding K-17).
+            // defaults – rules, names and hotkeys gone until the next start.
             AppSettings? settings = await Storage.JsonFile.ReadWithRetryAsync(
                 _file, SettingsJsonContext.Default.AppSettings, _time, _log, cancellationToken);
 
@@ -311,9 +311,9 @@ public sealed class JsonSettingsStore
     }
 
     /// <summary>
-    /// Rules have no switch of their own any more (analysis finding O-07). A rule switched off in 1.3.x would start switching
+    /// Rules have no switch of their own any more. A rule switched off in 1.3.x would start switching
     /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file. The single device
-    /// of 1.3.x becomes the rule's device list (U-02).
+    /// of 1.3.x becomes the rule's device list.
     /// </summary>
     private AppSettings MigrateRules(AppSettings settings)
     {

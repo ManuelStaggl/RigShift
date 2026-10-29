@@ -293,7 +293,7 @@ public sealed class GameSessionServiceTests : IDisposable
         _clock.TimersCreated.ShouldBe(1);
     }
 
-    /// <summary>A-05, E-08: looking at every process every five seconds was the only noticeable load of an idle RigShift.</summary>
+    /// <summary>Looking at every process every five seconds was the only noticeable load of an idle RigShift.</summary>
     [Fact]
     public async Task StartWatching_NoGameAsksForIt_NeverLooksAtTheProcesses()
     {

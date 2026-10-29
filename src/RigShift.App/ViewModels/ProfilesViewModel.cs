@@ -15,8 +15,8 @@ using Serilog;
 namespace RigShift.App.ViewModels;
 
 /// <summary>
-/// The profiles page: the master list on the left, the selected profile's detail (its editor) on the right (R-NAV-2).
-/// Leaving a profile with unsaved changes asks first (R-NAV-3); the head shows what a switch would do right now (F2 phase 0).
+/// The profiles page: the master list on the left, the selected profile's detail (its editor) on the right.
+/// Leaving a profile with unsaved changes asks first; the head shows what a switch would do right now (F2 phase 0).
 /// </summary>
 public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileItem, ProfileEditorViewModel>
 {
@@ -53,7 +53,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         _desktopIcons = desktopIcons;
 
         // The list follows the profiles; the status lines and the plans follow every read of the displays – after a
-        // display change, a switch or a reload – without reading them once more (v4 finding A-03).
+        // display change, a switch or a reload – without reading them once more.
         catalog.ProfilesChanged += (_, _) => OnUi(Rebuild);
         catalog.DisplaysRefreshed += (_, snapshot) => OnUi(() => ShowPlans(snapshot));
 
@@ -89,11 +89,11 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     public ProfileCatalog Catalog => _catalog;
 
-    /// <summary>What Windows shows right now; the empty page offers it as the first profile (X-01).</summary>
+    /// <summary>What Windows shows right now; the empty page offers it as the first profile.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<TopologyDisplay> CurrentTopology { get; private set; } = [];
 
-    /// <summary>A switch runs: every trigger is locked, not hidden (R-FLOW-1).</summary>
+    /// <summary>A switch runs: every trigger is locked, not hidden.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SwitchCommand), nameof(TestCommand))]
     public partial bool IsBusy { get; private set; }
@@ -115,14 +115,14 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     public partial bool IsSelectedDefault { get; private set; }
 
     /// <summary>Switching is the accent action only when it would change something: not while the profile is
-    /// already active and not while unsaved edits make Save the primary (B-03).</summary>
+    /// already active and not while unsaved edits make Save the primary.</summary>
     [ObservableProperty]
     public partial bool SwitchIsPrimary { get; private set; }
 
     [ObservableProperty]
     public partial string SwitchLabel { get; private set; } = string.Empty;
 
-    /// <summary>The names of the missing displays; the head only counts them (P-01).</summary>
+    /// <summary>The names of the missing displays; the head only counts them.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBlockedMessage))]
     public partial string? BlockedMessage { get; private set; }
@@ -137,7 +137,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     [ObservableProperty]
     public partial bool ShowMonitorHelp { get; private set; }
 
-    /// <summary>"Mark optional" beside the note: the profile then switches without those displays (v4 finding U-11).</summary>
+    /// <summary>"Mark optional" beside the note: the profile then switches without those displays.</summary>
     [ObservableProperty]
     public partial bool CanMarkOptional { get; private set; }
 
@@ -159,7 +159,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     /// <summary>
     /// Every switch result also on the profile page: Windows suppresses tray balloons while a full-screen game runs,
-    /// which is exactly when RigShift switches (analysis finding I-04).
+    /// which is exactly when RigShift switches.
     /// </summary>
     private void ShowSwitchResult(SwitchRecord record)
     {
@@ -300,7 +300,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         }
     }
 
-    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot (v4 finding U-12).</summary>
+    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot.</summary>
     protected override void OnSaved(ProfileEditorViewModel editor)
     {
         ArgumentNullException.ThrowIfNull(editor);
@@ -434,7 +434,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return;
         }
 
-        // A display that is off does not block: the switch asks for it and waits (K-06). Twin displays do (K-03).
+        // A display that is off does not block: the switch asks for it and waits. Twin displays do.
         _plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan);
         MissingDisplay[] missing = plan is { BlocksSwitch: true }
             ? plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason != MissingReason.AwaitsSurround).ToArray()

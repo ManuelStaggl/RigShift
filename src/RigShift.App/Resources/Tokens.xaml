@@ -16,13 +16,13 @@
   <Color x:Key="RigShift.Color.LayerHover">#253449</Color>
   <Color x:Key="RigShift.Color.Selected">#273E5A</Color>
   <Color x:Key="RigShift.Color.Line">#2C3A52</Color>
-  <!-- Derived, raised from #5B6B85 for 3:1 against cards (v4 U-23, WCAG 1.4.11). -->
+  <!-- Derived, raised from #5B6B85 for 3:1 against cards (WCAG 1.4.11). -->
   <Color x:Key="RigShift.Color.LineStrong">#708099</Color>
   <!-- Text -->
   <Color x:Key="RigShift.Color.TextPrimary">#F8FAFC</Color>
   <Color x:Key="RigShift.Color.TextSecondary">#B8C6D9</Color>
   <Color x:Key="RigShift.Color.TextDisabled">#6B7A93</Color>
-  <!-- Derived: the hint in an empty field is read, so it needs 4.5:1 on a card (v4 U-23). -->
+  <!-- Derived: the hint in an empty field is read, so it needs 4.5:1 on a card. -->
   <Color x:Key="RigShift.Color.TextPlaceholder">#8391A8</Color>
   <!-- Accent (primary / onPrimary); hover and pressed are derived. -->
   <Color x:Key="RigShift.Color.Accent">#79B8FF</Color>

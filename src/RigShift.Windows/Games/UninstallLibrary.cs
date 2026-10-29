@@ -9,7 +9,7 @@ namespace RigShift.Windows.Games;
 public sealed record UninstallEntry(string DisplayName, string? Publisher, string? InstallLocation, string? DisplayIcon);
 
 /// <summary>
-/// Games that come with their own installer rather than Steam or Epic (v4 finding U-07), from the uninstall list:
+/// Games that come with their own installer rather than Steam or Epic, from the uninstall list:
 /// iRacing – most of its drivers use its own installer, and it is the sim RigShift knows best –, games from the EA app
 /// and a few standalone sims. They start through their executable; the EA app and iRacing's own updater step in by
 /// themselves.

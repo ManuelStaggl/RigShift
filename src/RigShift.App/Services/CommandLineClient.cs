@@ -78,7 +78,7 @@ internal static class CommandLineClient
 
     /// <summary>
     /// A rigshift:// link that cannot be read: a Stream Deck key or a web page has no console, so the running instance
-    /// says it in the tray (v4 finding A-09). Nothing is started for it.
+    /// says it in the tray. Nothing is started for it.
     /// </summary>
     public static void ReportInvalidLink(string link) =>
         Task.Run(async () =>

@@ -24,7 +24,7 @@ public sealed class ActiveProfileMatcher
 
     /// <param name="lastApplied">
     /// The profile RigShift applied last. Among profiles that fit the displays equally well – the same layout saved twice,
-    /// once with HDR "don't change" – it wins over the one first in the list (v4 finding K-13).
+    /// once with HDR "don't change" – it wins over the one first in the list.
     /// </param>
     public Profile? FindActive(IEnumerable<Profile> profiles, DisplaySnapshot snapshot, Guid? lastApplied = null)
     {
@@ -50,7 +50,7 @@ public sealed class ActiveProfileMatcher
     /// <summary>
     /// Number of matching active displays, or 0 if the profile is not active; and how many of them also run the profile's
     /// resolution, refresh rate and HDR state. That second number tells "Rig 144 Hz" from "Rig 240 Hz", which have the same
-    /// layout – before, the one first in the list won, and the USB automation then skipped its end (K-13).
+    /// layout – before, the one first in the list won, and the USB automation then skipped its end.
     /// </summary>
     private (int Displays, int Modes) Score(Profile profile, DisplaySnapshot snapshot)
     {

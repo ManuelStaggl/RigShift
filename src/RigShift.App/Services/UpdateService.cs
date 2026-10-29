@@ -56,7 +56,7 @@ public sealed class UpdateService : IDisposable
 
     /// <summary>
     /// Kept apart from the checks: a good check before each failed download would reset a shared count, and a broken
-    /// download was tried every minute forever (v4 finding A-13).
+    /// download was tried every minute forever.
     /// </summary>
     private int _downloadFailuresInARow;
     private DateTimeOffset? _lastSuccess;
@@ -201,7 +201,7 @@ public sealed class UpdateService : IDisposable
         }
 
         // The user's exit, with its questions: an editor with unsaved changes in the hidden window, or a game session whose
-        // way back would be lost (v4 findings A-14, E-06). Staying is fine – the updater waits for the exit either way.
+        // way back would be lost. Staying is fine – the updater waits for the exit either way.
         _shell.QuitByUser();
     }
 

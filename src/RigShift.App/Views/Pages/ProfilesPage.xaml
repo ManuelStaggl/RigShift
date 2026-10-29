@@ -32,7 +32,7 @@
         </DataTrigger>
       </Style.Triggers>
     </Style>
-    <!-- A device kind as a card: the device on top, its volume below as a switch with a slider (B-05). -->
+    <!-- A device kind as a card: the device on top, its volume below as a switch with a slider. -->
     <DataTemplate x:Key="AudioSlotTemplate" DataType="{x:Type vm:AudioSlot}">
       <Border Margin="0,0,0,8" Style="{StaticResource RigShift.Card.Group}">
         <StackPanel>
@@ -91,13 +91,13 @@
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- ===== Master list (R-NAV-2, R-ACT-4, R-ACT-5) ===== -->
+    <!-- ===== Master list ===== -->
     <Border
       Grid.Column="0"
       BorderBrush="{DynamicResource RigShift.Brush.Line}"
       BorderThickness="0,0,1,0">
       <DockPanel>
-        <!-- Column head (B-01): the list's title and a compact "New" with its menu. -->
+        <!-- Column head: the list's title and a compact "New" with its menu. -->
         <DockPanel Height="52" Margin="16,0,12,0" DockPanel.Dock="Top">
           <Button
             x:Name="NewButton"
@@ -178,7 +178,7 @@
 
     <!-- ===== Detail ===== -->
     <Grid Grid.Column="1">
-      <!-- Empty (X-01): nothing selected only while there are no profiles – the displays of right now as the invitation. -->
+      <!-- Empty: nothing selected only while there are no profiles – the displays of right now as the invitation. -->
       <StackPanel
         MaxWidth="460"
         Margin="24"
@@ -229,7 +229,7 @@
           Text="{Binding Catalog.UnreadableFilesMessage}"
           Visibility="{Binding Catalog.HasUnreadableFiles, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- Head (72): picture S, name (F2), chips, status line; actions right (R-ACT-1…3). -->
+        <!-- Head (72): picture S, name (F2), chips, status line; actions right. -->
         <Border
           Grid.Row="1"
           BorderBrush="{DynamicResource RigShift.Brush.Line}"
@@ -284,7 +284,7 @@
                   Text="{Binding Editor.Name, UpdateSourceTrigger=PropertyChanged}"
                   ToolTip="{loc:Tr Editor_NameTip}"
                   controls:Interaction.IsInvalid="{Binding Editor.HasNameProblem}" />
-                <!-- The name is a field: a pencil shows it on hover (P-02), the frame comes from the field style. -->
+                <!-- The name is a field: a pencil shows it on hover, the frame comes from the field style. -->
                 <ui:SymbolIcon
                   Margin="4,0,0,0"
                   VerticalAlignment="Center"
@@ -333,7 +333,7 @@
                 Style="{StaticResource RigShift.Button.Ghost}"
                 ToolTip="{loc:Tr Detail_TestTip}" />
               <!-- Accent only when switching would change something: Save leads while the save bar shows, and an active
-                   profile offers "Apply again" as a plain button (R-ACT-1, B-03). -->
+                   profile offers "Apply again" as a plain button. -->
               <Button
                 Margin="0,0,8,0"
                 Command="{Binding SwitchCommand}"
@@ -397,14 +397,14 @@
         </Border>
         <controls:ProgressLine Grid.Row="2" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- Missing displays by name (P-01), then test and switch results and store errors (R-FLOW-2). -->
+        <!-- Missing displays by name, then test and switch results and store errors. -->
         <StackPanel Grid.Row="3">
           <controls:InfoBar
             Margin="24,12,24,0"
             Kind="{Binding BlockedKind}"
             Text="{Binding BlockedMessage}"
             Visibility="{Binding HasBlockedMessage, Converter={StaticResource BoolToVisibility}}">
-            <!-- The two ways out (U-11): switch without those displays, or read how to wake them. -->
+            <!-- The two ways out: switch without those displays, or read how to wake them. -->
             <controls:InfoBar.Action>
               <StackPanel Orientation="Horizontal">
                 <Button
@@ -633,7 +633,7 @@
                       Style="{StaticResource RigShift.Text.Caption}"
                       Text="{loc:Tr Editor_RefreshRatesUnknown}"
                       Visibility="{Binding RatesUnknown, Converter={StaticResource BoolToVisibility}}" />
-                    <!-- Switching HDR froze a test PC over HDMI, also from the Windows settings (finding HW-12). -->
+                    <!-- Switching HDR froze a test PC over HDMI, also from the Windows settings. -->
                     <TextBlock
                       Margin="0,8,0,0"
                       Foreground="{DynamicResource RigShift.Brush.Warn}"
@@ -712,12 +712,12 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Audio_Intro}" />
-                <!-- One card per device kind: playback, recording, calls (L-06). -->
+                <!-- One card per device kind: playback, recording, calls. -->
                 <ItemsControl
                   Focusable="False"
                   ItemTemplate="{StaticResource AudioSlotTemplate}"
                   ItemsSource="{Binding AudioSlots}" />
-                <!-- Call devices follow playback and recording unless set here (analysis decision O-02). -->
+                <!-- Call devices follow playback and recording unless set here. -->
                 <Border Style="{StaticResource RigShift.Card.Group}">
                   <StackPanel>
                     <TextBlock
@@ -786,7 +786,7 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Trigger_Intro}" />
-                <!-- Hotkeys and USB rules need RigShift running after a restart (U-01). -->
+                <!-- Hotkeys and USB rules need RigShift running after a restart. -->
                 <controls:InfoBar
                   Margin="0,0,0,12"
                   Kind="Warn"
@@ -800,7 +800,7 @@
                       Style="{StaticResource RigShift.Button.Ghost}" />
                   </controls:InfoBar.Action>
                 </controls:InfoBar>
-                <!-- Three cards of one kind (L-06): USB devices, hotkey, shortcut and command. -->
+                <!-- Three cards of one kind: USB devices, hotkey, shortcut and command. -->
                 <Border DataContext="{Binding Rules}" Style="{StaticResource RigShift.Card.Group}">
                   <StackPanel>
                     <DockPanel Margin="0,12">
@@ -823,7 +823,7 @@
                           TextWrapping="Wrap" />
                       </StackPanel>
                     </DockPanel>
-                    <!-- USB rules of this profile (R-OBJ-1), saved with it; one section per rule. -->
+                    <!-- USB rules of this profile, saved with it; one section per rule. -->
                     <ItemsControl Focusable="False" ItemsSource="{Binding Rules}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:RuleCard}">
@@ -855,7 +855,7 @@
                                   </ItemsControl.ItemsPanel>
                                   <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type vm:RuleDeviceSlot}">
-                                      <!-- Device chip (B-07): plug symbol with a status dot, name, remove. -->
+                                      <!-- Device chip: plug symbol with a status dot, name, remove. -->
                                       <Border
                                         Margin="0,0,8,8"
                                         Style="{StaticResource RigShift.DeviceChip}"
@@ -898,7 +898,7 @@
                                               </Ellipse.Style>
                                             </Ellipse>
                                           </Grid>
-                                          <!-- The state for screen readers too; a device that is not there is dimmed (U-25). -->
+                                          <!-- The state for screen readers too; a device that is not there is dimmed. -->
                                           <TextBlock
                                             VerticalAlignment="Center"
                                             AutomationProperties.Name="{Binding AccessibleName}"
@@ -1016,7 +1016,7 @@
                                   Text="{loc:Tr Automation_PowerSavingText}"
                                   TextWrapping="Wrap"
                                   ToolTip="{loc:Tr Automation_PowerSavingTitle}" />
-                                <!-- What to do about it (U-11): the guide on the project page. -->
+                                <!-- What to do about it: the guide on the project page. -->
                                 <Button
                                   Margin="0,4,0,0"
                                   HorizontalAlignment="Left"
@@ -1125,8 +1125,8 @@
                   Margin="0,0,0,16"
                   Style="{StaticResource RigShift.Text.Caption}"
                   Text="{loc:Tr Behavior_Intro}" />
-                <!-- Seconds come from the settings only (analysis decision O-01). Off in the settings, the switch changes
-                     nothing; the caption says where the setting is (finding HW-02). -->
+                <!-- Seconds come from the settings only. Off in the settings, the switch changes
+                     nothing; the caption says where the setting is. -->
                 <controls:SettingRow Title="{loc:Tr Editor_SwitchWithoutAsking}">
                   <controls:SettingRow.Style>
                     <Style TargetType="controls:SettingRow" BasedOn="{StaticResource {x:Type controls:SettingRow}}">

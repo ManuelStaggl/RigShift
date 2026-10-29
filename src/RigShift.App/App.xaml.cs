@@ -30,7 +30,7 @@ public partial class App : Application, IAppShell
         _request = request;
         _paths = paths;
 
-        // Tooltips a little sooner than the Windows default (B-10); the look is the implicit style in Controls.xaml.
+        // Tooltips a little sooner than the Windows default; the look is the implicit style in Controls.xaml.
         System.Windows.Controls.ToolTipService.InitialShowDelayProperty.OverrideMetadata(
             typeof(FrameworkElement), new FrameworkPropertyMetadata(400));
         Controls.Interaction.TrackKeyboardFocus();
@@ -61,7 +61,7 @@ public partial class App : Application, IAppShell
 
     /// <summary>
     /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
-    /// window that simply vanishes looks like a closed app (v4 finding U-03). Once, remembered in the settings.
+    /// window that simply vanishes looks like a closed app. Once, remembered in the settings.
     /// </summary>
     private async void OnMainWindowHiddenToTray(object? sender, EventArgs e)
     {
@@ -84,7 +84,7 @@ public partial class App : Application, IAppShell
 
     /// <summary>
     /// Ends the app. A running switch is cancelled first and may roll back for up to 30 s, so displays, audio and the
-    /// ducking setting are never left half-switched (analysis finding B-02).
+    /// ducking setting are never left half-switched.
     /// </summary>
     public void Quit()
     {
@@ -117,7 +117,7 @@ public partial class App : Application, IAppShell
                 }
             }
 
-            // Without RigShift nothing switches back when the game ends (v4 findings A-14, E-06).
+            // Without RigShift nothing switches back when the game ends.
             GameCatalog catalog = Services.GetRequiredService<GameCatalog>();
             string running = string.Join(", ", Services.GetRequiredService<GameSessionService>().RunningGames
                 .Select(id => catalog.Find(id)?.Name).OfType<string>());
@@ -217,7 +217,7 @@ public partial class App : Application, IAppShell
             // elsewhere needs them, and a game that already runs must only set the starting point, not trigger a switch.
             await Services.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
 
-            // The pipe first: a rigshift:// link or a Stream Deck key that started RigShift waits for it (v4 finding A-06).
+            // The pipe first: a rigshift:// link or a Stream Deck key that started RigShift waits for it.
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
             CommandPipeServer pipe = Services.GetRequiredService<CommandPipeServer>();
@@ -237,7 +237,7 @@ public partial class App : Application, IAppShell
                 async (_, _) =>
                 {
                     // Monitors in standby or a return over RDP pass through "no profile": the same profile coming back
-                    // is not one Windows restored on its own (v4 finding A-16).
+                    // is not one Windows restored on its own.
                     Core.Profiles.Profile? before = catalog.ActiveProfile ?? _lastActive;
                     SwitchCoordinator coordinator = Services.GetRequiredService<SwitchCoordinator>();
                     await catalog.RefreshActiveAsync(CancellationToken.None);
@@ -400,7 +400,7 @@ public partial class App : Application, IAppShell
     {
         // One theme, dark; only high contrast comes from Windows. A window's theme watcher may still report the light
         // theme – it is put back. Every open window's watcher reports the same change (after an RDP reconnect twice in the
-        // log, finding R-01), so a repeat is skipped. High contrast is always applied: its colors can change without the
+        // log), so a repeat is skipped. High contrast is always applied: its colors can change without the
         // theme changing.
         ApplicationTheme applied = ThemeFor(ApplicationThemeManager.GetSystemTheme());
         ApplicationThemeManager.Changed += (current, _) =>

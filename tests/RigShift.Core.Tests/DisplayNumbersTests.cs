@@ -10,7 +10,7 @@ public sealed class DisplayNumbersTests
     [Fact]
     public void Assign_WithWindowsNumbers_UsesThemInsteadOfPositions()
     {
-        // HW-04: Windows counts the left display as 3, the 4K in the middle as 1.
+        // Windows counts the left display as 3, the 4K in the middle as 1.
         DisplaySnapshot snapshot = Snapshot(
             Attached(DeskLeft, activeMode: DeskModes[1]) with { WindowsNumber = 3 },
             Attached(Ultrawide),

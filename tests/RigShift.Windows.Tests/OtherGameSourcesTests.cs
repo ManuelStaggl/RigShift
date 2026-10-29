@@ -6,7 +6,7 @@ using Xunit;
 
 namespace RigShift.Windows.Tests;
 
-/// <summary>Games outside Steam and Epic: iRacing's own installer, the EA app, the Xbox app (v4 finding U-07).</summary>
+/// <summary>Games outside Steam and Epic: iRacing's own installer, the EA app, the Xbox app.</summary>
 public sealed class OtherGameSourcesTests : IDisposable
 {
     private readonly string _folder = Directory.CreateTempSubdirectory("rigshift-games-").FullName;

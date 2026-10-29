@@ -98,7 +98,7 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- Title bar: symbol, name and what this window is for (R-BRAND-1). -->
+    <!-- Title bar: symbol, name and what this window is for. -->
     <Grid Grid.Row="0">
       <ui:TitleBar
         Height="40"
@@ -161,8 +161,8 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
 
-          <!-- Welcome: the horizontal logo with the slogan, once in the whole app (R-BRAND-1). One block, centred;
-               the three steps as cards with a symbol – the numbers already stand in the list on the left (D-05). -->
+          <!-- Welcome: the horizontal logo with the slogan, once in the whole app. One block, centred;
+               the three steps as cards with a symbol – the numbers already stand in the list on the left. -->
           <StackPanel
             Grid.Row="0"
             VerticalAlignment="Center"
@@ -251,7 +251,7 @@
                   Text="{Binding SurroundHint}"
                   TextWrapping="Wrap"
                   Visibility="{Binding HasSurroundHint, Converter={StaticResource BoolToVisibility}}" />
-                <!-- The hardest part for a newcomer: how Windows turns a display off (U-09). -->
+                <!-- The hardest part for a newcomer: how Windows turns a display off. -->
                 <StackPanel Margin="0,6,0,0" Visibility="{Binding IsSecond, Converter={StaticResource BoolToVisibility}}">
                   <Button
                     HorizontalAlignment="Left"
@@ -468,7 +468,7 @@
                             Text="{Binding StatusText}"
                             TextTrimming="CharacterEllipsis"
                             Visibility="{Binding HasStatus, Converter={StaticResource BoolToVisibility}}" />
-                          <!-- The hotkey the assistant gave the profile (U-02), so the text above can point to it. -->
+                          <!-- The hotkey the assistant gave the profile, so the text above can point to it. -->
                           <StackPanel
                             Margin="0,6,0,0"
                             Orientation="Horizontal"
@@ -509,7 +509,7 @@
                   </StackPanel>
                 </Border>
 
-                <!-- Preset on (U-01): without it nothing switches after the next restart. -->
+                <!-- Preset on: without it nothing switches after the next restart. -->
                 <Border Margin="0,12,0,0" Padding="16,10" Style="{StaticResource RigShift.Card}">
                   <DockPanel>
                     <ui:ToggleSwitch
@@ -529,7 +529,7 @@
                   </DockPanel>
                 </Border>
 
-                <!-- Windows 11 puts a new tray icon behind the "^" – say where RigShift went (U-03). -->
+                <!-- Windows 11 puts a new tray icon behind the "^" – say where RigShift went. -->
                 <DockPanel Margin="0,14,0,0">
                   <ui:SymbolIcon
                     Margin="0,1,10,0"
@@ -548,7 +548,7 @@
             </StackPanel>
           </ScrollViewer>
 
-          <!-- One row of actions: back on the left, the step's primary on the right (R-ACT-1). -->
+          <!-- One row of actions: back on the left, the step's primary on the right. -->
           <Grid Grid.Row="1" Margin="0,20,0,0">
             <Button
               HorizontalAlignment="Left"
@@ -590,7 +590,7 @@
                 Content="{loc:Tr Setup_Finish}"
                 Style="{StaticResource RigShift.Button}"
                 Visibility="{Binding IsDone, Converter={StaticResource BoolToVisibility}}" />
-              <!-- The aha moment (U-02): one real switch, with the countdown that takes it back. -->
+              <!-- The aha moment: one real switch, with the countdown that takes it back. -->
               <Button
                 x:Name="TryButton"
                 MinWidth="120"

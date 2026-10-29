@@ -8,7 +8,7 @@ namespace RigShift.App.Controls;
 
 /// <summary>
 /// Turns a read-only text box into a hotkey field: <c>controls:HotkeyBox.Field="{Binding}"</c>. One place for what the
-/// profile editor, the game editor and the settings did three times in code-behind (v4 finding A-07). Without Ctrl, Alt
+/// profile editor, the game editor and the settings did three times in code-behind. Without Ctrl, Alt
 /// or Win, Tab, Esc and Enter keep their usual meaning and Backspace/Delete clear the field.
 /// </summary>
 public static class HotkeyBox

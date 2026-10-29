@@ -21,7 +21,7 @@ public static class Program
     {
         AppPaths paths = AppPaths.ForCurrentUser();
 
-        // The log comes first, so Velopack's hooks and update steps are recorded too (analysis finding F-03).
+        // The log comes first, so Velopack's hooks and update steps are recorded too.
         Log.Logger = AppLogging.Create(paths);
         CrashLogging.Install(Log.Logger);
         try
@@ -135,7 +135,7 @@ public static class Program
     }
 
     /// <summary>
-    /// Velopack hook: removes the link handler and the autostart entry (analysis finding F-02). User data in
+    /// Velopack hook: removes the link handler and the autostart entry. User data in
     /// %AppData%\RigShift stays. Neither step may break the uninstall.
     /// </summary>
     private static void BeforeUninstall()

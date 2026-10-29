@@ -15,7 +15,7 @@ public enum StatusKind
     /// <summary>Something is in progress (a switch, a running game).</summary>
     Accent,
 
-    /// <summary>The profile on screen now: a check mark in the accent, the same everywhere (v4 finding U-20).</summary>
+    /// <summary>The profile on screen now: a check mark in the accent, the same everywhere.</summary>
     Active,
 }
 

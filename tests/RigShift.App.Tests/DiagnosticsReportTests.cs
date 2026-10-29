@@ -87,7 +87,7 @@ public sealed class DiagnosticsReportTests
     [Fact]
     public void Build_ErrorCodeOnlyForFailedSwitches()
     {
-        // HW-17: a transient 1610 on the way to a successful switch looked like the cause.
+        // A transient 1610 on the way to a successful switch looked like the cause.
         var switched = new SwitchRecord(DateTimeOffset.UnixEpoch, "Rig", SwitchOutcome.Applied, AudioOutcome.NotConfigured,
             AppsOutcome.NotConfigured, 6, TimeSpan.FromSeconds(7), 1610, null, ["spacedesk"]);
         var input = new DiagnosticsInput("1.4.1", IsInstalled: true, Snapshot: null, DisplayError: null,

@@ -102,18 +102,18 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
 - UI: WPF-UI pages scroll through `Controls/WheelScrolling`, which hands the mouse wheel to the page's outer scroll
   viewer; view models live one per file in `RigShift.App/ViewModels`.
 
-## Known limitations (accepted)
+## Known limitations
 
-Found in the 1.3 analysis and deliberately left as they are:
+Deliberately left as they are:
 
-- Windows calls behind `Task.FromResult` are synchronous; callers that must not block wrap them in `Task.Run` (A-09).
-- USB devices are matched by VID/PID only: identical devices count as one, and hubs are filtered by name only (C-07). Polling does some duplicate work per poll; measured, it does not matter (C-08).
-- Every save reloads all profiles and rebuilds history and tray menu; the working set grew by 19 MB after 50 saves
-  (D-03, watch only).
-- `rigshift save` while the profile editor is open: whoever saves last wins, without a warning (F-06).
-- Downgrading to an older version drops fields the older version does not know, without a warning (F-07).
+- Windows calls behind `Task.FromResult` are synchronous; callers that must not block wrap them in `Task.Run`.
+- USB devices are matched by VID/PID only: identical devices count as one, and hubs are filtered by name only. Polling
+  does some duplicate work per poll; measured, it does not matter.
+- Every save reloads all profiles and rebuilds history and tray menu; the working set grew by 19 MB after 50 saves.
+- `rigshift save` while the profile editor is open: whoever saves last wins, without a warning.
+- Downgrading to an older version drops fields the older version does not know, without a warning.
 - The combo boxes on automation rule cards may not be found by UI Automation; check with `inspect.exe` if screen reader
-  support becomes a topic (I-18).
+  support becomes a topic.
 
 ## Dependencies we did not take
 

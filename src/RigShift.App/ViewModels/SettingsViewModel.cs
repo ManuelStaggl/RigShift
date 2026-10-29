@@ -33,7 +33,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
 
-        // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart (I-13).
+        // Texts built in code (hint, "None", "Same as Windows") follow a language change without a restart.
         Loc.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(ToggleHotkeyHint));
@@ -267,7 +267,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         }
     }
 
-    /// <summary>A setting that could not be stored (v4 finding A-16); the fields show the stored values again.</summary>
+    /// <summary>A setting that could not be stored; the fields show the stored values again.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorMessage { get; private set; }

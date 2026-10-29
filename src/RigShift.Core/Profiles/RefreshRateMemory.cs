@@ -4,7 +4,7 @@ namespace RigShift.Core.Profiles;
 
 /// <summary>
 /// Refresh rates a display offered once, per target device path and resolution. Windows lists rates only for active
-/// displays, so the profile editor could offer nothing else for a display that is off right now (finding HW-13).
+/// displays, so the profile editor could offer nothing else for a display that is off right now.
 /// Stored as <c>"numerator/denominator"</c> strings in the settings.
 /// </summary>
 public static class RefreshRateMemory

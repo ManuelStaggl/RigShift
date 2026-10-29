@@ -11,7 +11,7 @@ namespace RigShift.App.Controls;
 /// <summary>
 /// <c>controls:LiveRegion.IsLive="True"</c>: a polite live region that really announces. WPF does not raise
 /// <see cref="AutomationEvents.LiveRegionChanged"/> by itself when a text changes, so a screen reader ignored the
-/// <c>LiveSetting</c> alone (analysis finding I-17). Announces when the text, the message or the visibility set on the
+/// <c>LiveSetting</c> alone. Announces when the text, the message or the visibility set on the
 /// element changes – not when a page with the element is merely shown.
 /// </summary>
 public static class LiveRegion

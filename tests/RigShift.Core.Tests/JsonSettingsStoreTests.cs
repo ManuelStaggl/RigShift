@@ -130,7 +130,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
     [Fact]
     public async Task Load_DisabledRuleFromOldVersion_IsDroppedAndEnabledRuleKept()
     {
-        // 1.3.x wrote "isEnabled"; a rule switched off there must not come back on and switch unexpectedly (finding O-07).
+        // 1.3.x wrote "isEnabled"; a rule switched off there must not come back on and switch unexpectedly.
         Directory.CreateDirectory(_directory);
         await System.IO.File.WriteAllTextAsync(File, """
             {

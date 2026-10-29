@@ -53,7 +53,7 @@ public enum SurroundAvailability
     Available,
 }
 
-/// <summary>Result of a Surround change. The message always names what the driver answered (plan point 21).</summary>
+/// <summary>Result of a Surround change. The message always names what the driver answered.</summary>
 public sealed record SurroundApplyResult
 {
     public required SurroundOutcome Outcome { get; init; }

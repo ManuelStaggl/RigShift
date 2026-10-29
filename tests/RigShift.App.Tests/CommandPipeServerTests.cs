@@ -45,7 +45,7 @@ public sealed class CommandPipeServerTests
         response.Output.ShouldContain("Rig");
     }
 
-    /// <summary>A shortcut or Stream Deck key with an old name has no console: the tray says it (v4 finding A-09).</summary>
+    /// <summary>A shortcut or Stream Deck key with an old name has no console: the tray says it.</summary>
     [Theory]
     [InlineData("apply", "Nope")]
     [InlineData("rigshift://apply", null)]

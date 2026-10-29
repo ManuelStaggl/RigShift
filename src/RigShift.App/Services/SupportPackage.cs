@@ -6,7 +6,7 @@ using RigShift.Core.Storage;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Everything a bug report needs in one ZIP (v4 finding E-07): <c>diagnostics.txt</c>, the three newest logs, the
+/// Everything a bug report needs in one ZIP: <c>diagnostics.txt</c>, the three newest logs, the
 /// settings, the profiles and the games. The user name is replaced everywhere, device names and paths stay – they are
 /// what the report is for.
 /// </summary>

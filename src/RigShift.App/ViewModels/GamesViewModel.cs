@@ -13,7 +13,7 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// The games page: the master list on the left, the selected game's detail (its editor, tabs in session order) on the
-/// right (R-NAV-2, F5). A running session marks its game in the list and locks "Play" (R-FLOW-4).
+/// right (F5). A running session marks its game in the list and locks "Play".
 /// </summary>
 public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, GameEditorViewModel>
 {
@@ -58,7 +58,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
     [ObservableProperty]
     public partial string HeadStatusText { get; private set; } = string.Empty;
 
-    /// <summary>The selected game's session runs: the primary reads "Running" and is off (R-FLOW-4).</summary>
+    /// <summary>The selected game's session runs: the primary reads "Running" and is off.</summary>
     [ObservableProperty]
     public partial bool IsSelectedRunning { get; private set; }
 
@@ -221,7 +221,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
     [RelayCommand]
     private void ShowGameTab() => SelectedTabIndex = 0;
 
-    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot (v4 finding U-12).</summary>
+    /// <summary>A new name: the own desktop shortcut follows, links and Stream Deck keys cannot.</summary>
     protected override void OnSaved(GameEditorViewModel editor)
     {
         ArgumentNullException.ThrowIfNull(editor);

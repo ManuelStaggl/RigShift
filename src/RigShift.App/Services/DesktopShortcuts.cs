@@ -8,8 +8,8 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// The desktop shortcuts "Desktop shortcut" makes: where they go, what they run, and how they follow a rename (v4
-/// finding U-12). A profile's is "RigShift – Name", a game's carries the game's own name.
+/// The desktop shortcuts "Desktop shortcut" makes: where they go, what they run, and how they follow a rename.
+/// A profile's is "RigShift – Name", a game's carries the game's own name.
 /// </summary>
 public static class DesktopShortcuts
 {
