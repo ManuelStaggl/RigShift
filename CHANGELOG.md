@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.6.0] - 2026-10-29
+
+### Fixed
+
+- Field of view: a monitor whose EDID is damaged no longer feeds a wrong screen size into the calculation, and panels
+  that report their size in centimetres are read correctly.
+- Game picker: a Steam game whose manifest cannot be read now leaves a line in the log instead of disappearing silently.
+
+### Changed
+
+- Ships with the latest .NET 10 runtime.
+- Updates are now tested before each release the way installed copies receive them, as a delta from the previous
+  version.
+
 ## [4.5.1] - 2026-10-20
 
 ### Fixed
