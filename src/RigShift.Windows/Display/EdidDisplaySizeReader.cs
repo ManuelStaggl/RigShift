@@ -110,7 +110,7 @@ public static class Edid
     }
 
     /// <summary>
-    /// <c>\\?\DISPLAY#XEC2389#4&amp;2f6eb3e3&amp;0&amp;UID20531#{guid}</c> → <c>SYSTEM\...\DISPLAY\XEC2389\4&amp;2f6eb3e3&amp;0&amp;UID20531\Device Parameters</c>.
+    /// <c>\\?\DISPLAY#XEC2389#4&amp;1a2b3c4d&amp;0&amp;UID20531#{guid}</c> → <c>SYSTEM\...\DISPLAY\XEC2389\4&amp;1a2b3c4d&amp;0&amp;UID20531\Device Parameters</c>.
     /// </summary>
     public static string? RegistryKeyFor(string targetDevicePath)
     {

@@ -111,7 +111,7 @@ public sealed class DiagnosticsReportTests
         DiagnosticsReport.ShortAdapterPath(path).ShouldBe(expected);
 
     [Theory]
-    [InlineData(@"D:\Users\manue\Games\x.exe", @"D:\Users\<user>\Games\x.exe")]
+    [InlineData(@"D:\Users\jdoe\Games\x.exe", @"D:\Users\<user>\Games\x.exe")]
     [InlineData(@"c:\users\Someone Else", @"c:\users\<user> Else")]
     [InlineData(@"C:\Program Files\SimHub", @"C:\Program Files\SimHub")]
     public void Anonymize_ReplacesUserFolderSegments(string text, string expected) =>

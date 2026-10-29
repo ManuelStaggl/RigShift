@@ -235,7 +235,7 @@ public sealed class TopologyPlanner
     }
 
     /// <summary>
-    /// <c>\\?\DISPLAY#XEC2389#5&amp;101428be&amp;0&amp;UID4352#{…}</c> → <c>UID4352</c>: the port the graphics card reports the
+    /// <c>\\?\DISPLAY#XEC2389#5&amp;1a2b3c4d&amp;0&amp;UID4352#{…}</c> → <c>UID4352</c>: the port the graphics card reports the
     /// monitor on. The part before it is derived from the card's own identity and changes with it. <c>null</c> without one.
     /// </summary>
     private static string? Connector(string? targetDevicePath)
