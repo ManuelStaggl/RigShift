@@ -49,8 +49,22 @@ public interface IProfilePageDialogs
     Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
 }
 
+/// <summary>What the help page asks of the user: files for backups and support packages, and the restore question.</summary>
+public interface IHelpPageDialogs
+{
+    Task ShowSetupAssistantAsync();
+
+    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
+    string? PickZipToSave(string suggestedName);
+
+    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
+    string? PickZipToOpen();
+
+    Task<bool> ConfirmRestoreAsync(BackupContent content);
+}
+
 /// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
-public sealed class ProfileDialogs : IProfilePageDialogs
+public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
 {
     private readonly ProfileEditorServices _editorServices;
     private readonly ProfileCatalog _catalog;
@@ -92,6 +106,28 @@ public sealed class ProfileDialogs : IProfilePageDialogs
     }
 
     Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task IHelpPageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task<bool> IHelpPageDialogs.ConfirmRestoreAsync(BackupContent content) => ConfirmRestoreAsync(content);
+
+    public string? PickZipToSave(string suggestedName)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = suggestedName,
+            DefaultExt = ".zip",
+            Filter = "ZIP (*.zip)|*.zip",
+            AddExtension = true,
+        };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? PickZipToOpen()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "ZIP (*.zip)|*.zip", CheckFileExists = true };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
 
     Task<bool> IProfilePageDialogs.ConfirmDeleteAsync(string name, int ruleCount) => ConfirmDeleteAsync(name, ruleCount);
 
