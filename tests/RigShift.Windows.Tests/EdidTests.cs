@@ -10,7 +10,7 @@ namespace RigShift.Windows.Tests;
 public sealed class EdidTests
 {
     [Theory]
-    [InlineData(@"\\?\DISPLAY#XEC2389#4&2f6eb3e3&0&UID20531#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}", @"SYSTEM\CurrentControlSet\Enum\DISPLAY\XEC2389\4&2f6eb3e3&0&UID20531\Device Parameters")]
+    [InlineData(@"\\?\DISPLAY#XEC2389#4&1a2b3c4d&0&UID20531#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}", @"SYSTEM\CurrentControlSet\Enum\DISPLAY\XEC2389\4&1a2b3c4d&0&UID20531\Device Parameters")]
     [InlineData(@"\\?\DISPLAY#SAM749B#5&1a2b3c&0&UID4352#{guid}", @"SYSTEM\CurrentControlSet\Enum\DISPLAY\SAM749B\5&1a2b3c&0&UID4352\Device Parameters")]
     public void RegistryKeyFor_TakesPnpIdAndInstanceFromThePath(string path, string expected)
     {
