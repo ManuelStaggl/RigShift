@@ -2,6 +2,7 @@
   x:Class="RigShift.UI.Tray.TrayPopupWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="using:RigShift.UI.Controls"
   xmlns:l="using:RigShift.UI.Localization"
   xmlns:vm="using:RigShift.App.ViewModels"
   Title="RigShift">
@@ -32,6 +33,7 @@
           <Grid Padding="0,6" AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}" ColumnSpacing="12">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="16" />
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <FontIcon
@@ -39,7 +41,14 @@
               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
               Glyph="&#xE73E;"
               Visibility="{x:Bind IsActive, Mode=OneWay}" />
-            <StackPanel Grid.Column="1">
+            <c:DisplayTopology
+              Grid.Column="1"
+              Width="56"
+              Height="24"
+              VerticalAlignment="Center"
+              Displays="{x:Bind Topology}"
+              Size="Tray" />
+            <StackPanel Grid.Column="2">
               <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
               <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"

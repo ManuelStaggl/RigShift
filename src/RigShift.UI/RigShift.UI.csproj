@@ -41,4 +41,9 @@
     <Content Include="..\RigShift.App\Assets\Brand\rigshift-tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Screenshot helpers stay out of release builds. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Page Remove="Debug\**" />
+    <Compile Remove="Debug\**" />
+  </ItemGroup>
 </Project>
