@@ -46,17 +46,17 @@ public sealed partial class TopologyGalleryWindow : Window
 
     private static TopologyDisplay Display(string key, int x, int y, int width, int height, int number, string name, string? mode,
         bool primary = false, bool optional = false, TopologyDisplayState state = TopologyDisplayState.Active) => new()
-    {
-        Key = key,
-        X = x,
-        Y = y,
-        Width = width,
-        Height = height,
-        Number = number,
-        Name = name,
-        Mode = mode,
-        IsPrimary = primary,
-        IsOptional = optional,
-        State = state,
-    };
+        {
+            Key = key,
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+            Number = number,
+            Name = name,
+            Mode = mode,
+            IsPrimary = primary,
+            IsOptional = optional,
+            State = state,
+        };
 }
