@@ -12,5 +12,5 @@ public sealed partial class Tr : MarkupExtension
 {
     public string Key { get; set; } = string.Empty;
 
-    protected override object ProvideValue() => Loc.Instance[Key];
+    protected override object ProvideValue() => Loc.WithoutAccessKey(Loc.Instance[Key]);
 }

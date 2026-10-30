@@ -18,6 +18,14 @@ namespace RigShift.App.Tests;
 /// </summary>
 public sealed class LocalizationTests
 {
+    [Theory]
+    [InlineData("_Identify", "Identify")]
+    [InlineData("Save _current layout", "Save current layout")]
+    [InlineData("config.cfg r_multimon_fov_horizontal", "config.cfg r_multimon_fov_horizontal")]
+    [InlineData("_", "_")]
+    public void WithoutAccessKey_DropsOnlyTheWpfMarker(string text, string expected) =>
+        Loc.WithoutAccessKey(text).ShouldBe(expected);
+
     /// <summary>A list or control belongs to the thread that made it; a language change must reach it there.</summary>
     [Fact]
     public void LanguageChange_ReachesEachListenerOnItsOwnThread()
