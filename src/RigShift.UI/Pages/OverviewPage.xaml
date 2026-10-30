@@ -7,27 +7,26 @@
   xmlns:s="using:RigShift.UI.Services"
   xmlns:vm="using:RigShift.App.ViewModels">
 
-  <!-- The profiles are the positions of one switch, the active one lit; a click on another switches. Games sit below
-       as a launcher. Everything else about displays lives on its own pages. -->
+  <!-- Style 1 "Calm": Windows Settings rhythm on Mica, cards only for profiles and games, the brand blue only on the
+       active profile. Structure: profile switch, current layout, games. -->
   <ScrollViewer>
-    <StackPanel MaxWidth="1100" Padding="36,24,36,36" Spacing="24">
+    <StackPanel MaxWidth="1100" Padding="32,24,32,32" Spacing="24">
       <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{l:Tr Key=Nav_Overview}" />
 
       <InfoBar
         IsClosable="False"
         IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
-        Visibility="{x:Bind ViewModel.HasError, Mode=OneWay}"
         Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-        Severity="Error" />
+        Severity="Error"
+        Visibility="{x:Bind ViewModel.HasError, Mode=OneWay}" />
 
-      <!-- No profile yet: one way in. -->
       <StackPanel
         x:Name="EmptyState"
         Padding="24"
         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="8"
+        CornerRadius="{StaticResource CardRadius}"
         Spacing="12"
         Visibility="Collapsed">
         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Overview_SetupTitle}" />
@@ -39,7 +38,7 @@
           Style="{StaticResource AccentButtonStyle}" />
       </StackPanel>
 
-      <StackPanel Spacing="10" Visibility="{x:Bind ViewModel.HasProfiles, Mode=OneWay}">
+      <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.HasProfiles, Mode=OneWay}">
         <!-- Nothing to start while a switch runs. -->
         <ContentControl HorizontalContentAlignment="Stretch" IsEnabled="{x:Bind ViewModel.Coordinator.IsIdle, Mode=OneWay}" IsTabStop="False">
           <ItemsRepeater ItemsSource="{x:Bind ViewModel.Catalog.Items}">
@@ -47,63 +46,64 @@
               <UniformGridLayout
                 ItemsStretch="Fill"
                 MaximumRowsOrColumns="4"
-                MinColumnSpacing="8"
-                MinItemWidth="240"
-                MinRowSpacing="8" />
+                MinColumnSpacing="12"
+                MinItemWidth="260"
+                MinRowSpacing="12" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
               <DataTemplate x:DataType="vm:ProfileItem">
                 <Grid>
                   <Button
-                    Padding="16,14"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
                     AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}"
                     Click="OnSwitch"
+                    Style="{StaticResource TileButtonStyle}"
                     Tag="{x:Bind}">
-                    <Grid RowSpacing="10">
+                    <Grid RowSpacing="12">
                       <Grid.RowDefinitions>
-                        <RowDefinition Height="120" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="112" />
                         <RowDefinition Height="Auto" />
                       </Grid.RowDefinitions>
-                      <c:DisplayTopology Displays="{x:Bind Topology}" Size="Card" />
-                      <Grid Grid.Row="1" ColumnSpacing="8">
+                      <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
                           <ColumnDefinition Width="*" />
                           <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel>
-                          <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                          <TextBlock
-                            Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                            Style="{StaticResource CaptionTextBlockStyle}"
-                            Text="{x:Bind ReadyText, Mode=OneWay}"
-                            TextTrimming="CharacterEllipsis"
-                            ToolTipService.ToolTip="{x:Bind ReadyTip, Mode=OneWay}"
-                            Visibility="{x:Bind ShowsReadiness, Mode=OneWay}" />
-                          <TextBlock
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Style="{StaticResource CaptionTextBlockStyle}"
-                            Text="{x:Bind HotkeyText}"
-                            Visibility="{x:Bind ShowsHotkeyLine, Mode=OneWay}" />
-                        </StackPanel>
-                        <Border
+                        <Path Data="{x:Bind s:ProfileGlyphs.Drawing(IconKey)}" Style="{StaticResource ProfileSymbolStyle}" />
+                        <TextBlock
                           Grid.Column="1"
-                          Padding="8,2"
-                          VerticalAlignment="Top"
-                          Background="{ThemeResource AccentFillColorDefaultBrush}"
-                          CornerRadius="10"
-                          Visibility="{x:Bind IsActive, Mode=OneWay}">
-                          <TextBlock Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{l:Tr Key=Profile_Active}" />
-                        </Border>
+                          VerticalAlignment="Center"
+                          Style="{StaticResource BodyStrongTextBlockStyle}"
+                          Text="{x:Bind Name}"
+                          TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                          Grid.Column="2"
+                          VerticalAlignment="Center"
+                          Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                          Style="{StaticResource CaptionTextBlockStyle}"
+                          Text="{x:Bind HotkeyText}" />
+                      </Grid>
+                      <!-- The displays sit in a recessed bay, like a screen in its bezel. -->
+                      <Border Grid.Row="1" Padding="12" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="{StaticResource BayRadius}">
+                        <c:DisplayTopology Displays="{x:Bind Topology}" Size="Card" />
+                      </Border>
+                      <Grid Grid.Row="2" MinHeight="20">
+                        <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Visibility="{x:Bind IsActive, Mode=OneWay}"><Run FontFamily="{ThemeResource SymbolThemeFontFamily}" Text="&#xE73E;" /><Run Text=" " /><Run Text="{l:Tr Key=Profile_Active}" /></TextBlock>
+                        <TextBlock
+                          Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                          Style="{StaticResource CaptionTextBlockStyle}"
+                          Text="{x:Bind ReadyText, Mode=OneWay}"
+                          TextTrimming="CharacterEllipsis"
+                          ToolTipService.ToolTip="{x:Bind ReadyTip, Mode=OneWay}"
+                          Visibility="{x:Bind ShowsReadiness, Mode=OneWay}" />
                       </Grid>
                     </Grid>
                   </Button>
-                  <!-- The lit position of the switch. -->
                   <Border
                     BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
                     BorderThickness="2"
-                    CornerRadius="{ThemeResource ControlCornerRadius}"
+                    CornerRadius="{StaticResource CardRadius}"
                     IsHitTestVisible="False"
                     Visibility="{x:Bind IsActive, Mode=OneWay}" />
                 </Grid>
@@ -112,8 +112,7 @@
           </ItemsRepeater>
         </ContentControl>
 
-        <!-- Under the switch: what is on screen now, or the switch that is running. -->
-        <Grid x:Name="NowLine" ColumnSpacing="12">
+        <Grid x:Name="NowLine" Padding="4,0" ColumnSpacing="12">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -121,8 +120,8 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <c:DisplayTopology
-            Width="72"
-            Height="28"
+            Width="56"
+            Height="24"
             Displays="{x:Bind ViewModel.LiveTopology, Mode=OneWay}"
             Size="Tray" />
           <TextBlock
@@ -148,56 +147,49 @@
         </StackPanel>
       </StackPanel>
 
-      <!-- Games as a launcher: a click switches to the game's profile and starts it. -->
-      <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.Games.HasGames, Mode=OneWay}">
-        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Games}" />
-        <!-- Nothing to start while a switch runs. -->
+      <!-- Games as Settings-style rows: icon, name, where it starts and with which profile, one Play. -->
+      <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.Games.HasGames, Mode=OneWay}">
+        <TextBlock Margin="0,8,0,4" Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Games}" />
         <ContentControl HorizontalContentAlignment="Stretch" IsEnabled="{x:Bind ViewModel.Coordinator.IsIdle, Mode=OneWay}" IsTabStop="False">
           <ItemsRepeater ItemsSource="{x:Bind ViewModel.Games.Items}">
             <ItemsRepeater.Layout>
-              <UniformGridLayout
-                ItemsStretch="Fill"
-                MinColumnSpacing="12"
-                MinItemHeight="150"
-                MinItemWidth="170"
-                MinRowSpacing="12" />
+              <StackLayout Spacing="4" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
               <DataTemplate x:DataType="vm:GameItem">
-                <Button
-                  Padding="12"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}"
-                  Click="OnPlay"
-                  IsEnabled="{x:Bind CanPlay, Mode=OneWay}"
-                  Tag="{x:Bind}"
-                  ToolTipService.ToolTip="{x:Bind PlayText}">
-                  <StackPanel HorizontalAlignment="Center" Spacing="8">
-                    <Grid
-                      Width="56"
-                      Height="56"
-                      HorizontalAlignment="Center">
-                      <!-- The game's own icon when there is one, else its chosen symbol or the generic game glyph. -->
-                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="12" Visibility="{x:Bind s:Bindings.CollapsedIf(HasGameIcon), Mode=OneWay}">
-                        <FontIcon FontSize="28" Glyph="{x:Bind s:ProfileGlyphs.ForGame(IconKey)}" />
-                      </Border>
-                      <Image Source="{x:Bind s:WinUiIcons.Image(GameIcon), Mode=OneWay}" Visibility="{x:Bind HasGameIcon, Mode=OneWay}" />
-                    </Grid>
-                    <TextBlock
-                      HorizontalAlignment="Center"
-                      Style="{StaticResource BodyStrongTextBlockStyle}"
-                      Text="{x:Bind Name}"
-                      TextAlignment="Center"
-                      TextTrimming="CharacterEllipsis" />
-                    <TextBlock
-                      HorizontalAlignment="Center"
-                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                      Style="{StaticResource CaptionTextBlockStyle}"
-                      Text="{x:Bind SourceText}"
-                      TextTrimming="CharacterEllipsis" />
+                <Grid
+                  Padding="16,12"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  BorderThickness="1"
+                  ColumnSpacing="16"
+                  CornerRadius="{StaticResource BayRadius}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Grid Width="40" Height="40">
+                    <FontIcon FontSize="22" Glyph="{x:Bind s:ProfileGlyphs.ForGame(IconKey)}" Visibility="{x:Bind s:Bindings.CollapsedIf(HasGameIcon), Mode=OneWay}" />
+                    <Image Source="{x:Bind s:WinUiIcons.Image(GameIcon), Mode=OneWay}" Visibility="{x:Bind HasGameIcon, Mode=OneWay}" />
+                  </Grid>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind SourceText}" />
                   </StackPanel>
-                </Button>
+                  <Button
+                    Grid.Column="2"
+                    MinWidth="96"
+                    AutomationProperties.Name="{x:Bind PlayText}"
+                    Click="OnPlay"
+                    IsEnabled="{x:Bind CanPlay, Mode=OneWay}"
+                    Tag="{x:Bind}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <FontIcon FontSize="12" Glyph="&#xE768;" />
+                      <TextBlock Text="{l:Tr Key=Game_Play}" />
+                    </StackPanel>
+                  </Button>
+                </Grid>
               </DataTemplate>
             </ItemsRepeater.ItemTemplate>
           </ItemsRepeater>

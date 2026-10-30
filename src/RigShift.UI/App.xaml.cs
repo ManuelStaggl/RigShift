@@ -24,6 +24,13 @@ public partial class App : Application, IAppShell
     {
         _request = request;
         _paths = paths;
+#if DEBUG
+        // Screenshots in the other theme without changing Windows: RIGSHIFT_PREVIEW_THEME=Light|Dark.
+        if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_THEME"), out ApplicationTheme theme))
+        {
+            RequestedTheme = theme;
+        }
+#endif
         InitializeComponent();
     }
 
