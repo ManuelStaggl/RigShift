@@ -4,6 +4,7 @@ using Microsoft.UI.Dispatching;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Cli;
+using RigShift.Core.Ipc;
 using RigShift.Core.Settings;
 using RigShift.Windows.Shell;
 using RigShift.Windows.Startup;
@@ -77,13 +78,21 @@ public static class Program
             return CommandLineClient.Run(args, request, paths);
         }
 
+        using var instance = new Mutex(initiallyOwned: true, PipeProtocol.SingleInstanceMutex, out bool isFirstInstance);
+        if (!isFirstInstance)
+        {
+            // Started again while RigShift runs: bring the running window forward instead.
+            return CommandLineClient.ShowRunningInstance();
+        }
+
         Loc.Instance.SetLanguage(settings.Language);
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Microsoft.UI.Xaml.Application.Start(callback =>
         {
             SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
-            _ = new App();
+            _ = new App(request, paths);
         });
+        instance.ReleaseMutex();
         return 0;
     }
 

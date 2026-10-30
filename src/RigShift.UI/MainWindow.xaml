@@ -2,11 +2,26 @@
   x:Class="RigShift.UI.MainWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:local="using:RigShift.UI"
   Title="RigShift">
   <Window.SystemBackdrop>
     <MicaBackdrop />
   </Window.SystemBackdrop>
 
-  <local:Shell />
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <TitleBar x:Name="AppTitleBar" Title="RigShift">
+      <TitleBar.IconSource>
+        <ImageIconSource ImageSource="ms-appx:///Assets/rigshift.ico" />
+      </TitleBar.IconSource>
+    </TitleBar>
+    <ContentControl
+      x:Name="ShellHost"
+      Grid.Row="1"
+      HorizontalContentAlignment="Stretch"
+      VerticalContentAlignment="Stretch"
+      IsTabStop="False" />
+  </Grid>
 </Window>

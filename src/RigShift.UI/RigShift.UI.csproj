@@ -33,4 +33,9 @@
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Title bar and taskbar icon; the brand package lives with the WPF app until the switch-over. -->
+    <Content Include="..\RigShift.App\Assets\Brand\rigshift-app-light.ico" Link="Assets\rigshift.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

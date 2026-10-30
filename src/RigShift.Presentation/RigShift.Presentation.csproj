@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <!-- Power and session events; the WPF app had them from the Windows Desktop framework. -->
     <PackageReference Include="Microsoft.Win32.SystemEvents" />
     <PackageReference Include="Serilog" />

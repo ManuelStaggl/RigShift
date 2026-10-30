@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Controls;
+using RigShift.App.Services;
 
 namespace RigShift.UI;
 
@@ -8,5 +9,30 @@ public sealed partial class Shell : UserControl
     public Shell()
     {
         InitializeComponent();
+    }
+
+    /// <summary>The page on screen; the overview until something else was chosen.</summary>
+    public AppPage Page { get; private set; } = AppPage.Overview;
+
+    public void Navigate(AppPage page)
+    {
+        // Selecting the item navigates (SelectionChanged), whether the user clicked it or the app chose it; selecting
+        // the selected one again does nothing.
+        Navigation.SelectedItem = Items().First(i => (string)i.Tag == page.ToString());
+    }
+
+    private IEnumerable<NavigationViewItem> Items() =>
+        Navigation.MenuItems.Concat(Navigation.FooterMenuItems).OfType<NavigationViewItem>();
+
+    private void OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is not NavigationViewItem { Tag: string tag } item || !Enum.TryParse(tag, out AppPage page))
+        {
+            return;
+        }
+
+        Page = page;
+        // shortcut: one empty page with the item's name until the real pages exist (#91-#94).
+        ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }
 }
