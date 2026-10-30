@@ -1,0 +1,145 @@
+<Page
+  x:Class="RigShift.UI.Pages.ProfilesSheetPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="using:RigShift.UI.Controls"
+  xmlns:l="using:RigShift.UI.Localization"
+  xmlns:s="using:RigShift.UI.Services"
+  xmlns:vm="using:RigShift.App.ViewModels">
+
+  <!-- Prototype B "Sheet": profiles as a row of chips on top, the selected profile as one page – the picture with the
+       chosen display's settings beside it, then every other area as a section that shows its summary and opens in
+       place. Section contents are demo data; chips, picture and header are live. -->
+  <ScrollViewer>
+    <StackPanel MaxWidth="1100" Padding="32,24,32,32" Spacing="16">
+      <Grid ColumnSpacing="12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <ListView
+          x:Name="Chips"
+          ItemsSource="{x:Bind Catalog.Items}"
+          ScrollViewer.HorizontalScrollMode="Enabled"
+          ScrollViewer.VerticalScrollMode="Disabled"
+          SelectionChanged="OnSelected">
+          <ListView.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4" />
+            </ItemsPanelTemplate>
+          </ListView.ItemsPanel>
+          <ListView.ItemTemplate>
+            <DataTemplate x:DataType="vm:ProfileItem">
+              <StackPanel Padding="4,8" Orientation="Horizontal" Spacing="10">
+                <Path Data="{x:Bind s:ProfileGlyphs.Drawing(IconKey)}" Style="{StaticResource ProfileSymbolStyle}" />
+                <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" />
+                <FontIcon
+                  FontSize="12"
+                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                  Glyph="&#xE73E;"
+                  Visibility="{x:Bind IsActive, Mode=OneWay}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+        <Button Grid.Column="1" VerticalAlignment="Center"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon FontSize="12" Glyph="&#xE710;" /><TextBlock Text="New profile" /></StackPanel></Button>
+      </Grid>
+
+      <!-- The sheet -->
+      <StackPanel Padding="24" Background="{ThemeResource BrandSurfaceBrush}" CornerRadius="{StaticResource CardRadius}" Spacing="20">
+        <Grid ColumnSpacing="14">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Path x:Name="HeadSymbol" VerticalAlignment="Center" Style="{StaticResource ProfileSymbolStyle}" />
+          <StackPanel Grid.Column="1">
+            <TextBlock x:Name="HeadName" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Name="HeadLine" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+          </StackPanel>
+          <Button Grid.Column="2" Content="{l:Tr Key=Profile_Apply}" Style="{StaticResource AccentButtonStyle}" />
+          <Button Grid.Column="3" AutomationProperties.Name="More"><FontIcon FontSize="14" Glyph="&#xE712;" /></Button>
+        </Grid>
+
+        <!-- Picture and the chosen display side by side: what you click is edited right next to it. -->
+        <Grid ColumnSpacing="16">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="2*" />
+          </Grid.ColumnDefinitions>
+          <Border Height="232" Padding="16" Background="{ThemeResource BrandSurfaceAltBrush}" CornerRadius="{StaticResource BayRadius}">
+            <c:DisplayTopology x:Name="Picture" Size="Full" />
+          </Border>
+          <StackPanel Grid.Column="1" Spacing="10">
+            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Odyssey G93SC · 5120 × 1440" />
+            <TextBox Header="Name" PlaceholderText="e.g. Center" />
+            <Grid ColumnSpacing="8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <ComboBox HorizontalAlignment="Stretch" Header="Refresh rate" SelectedIndex="0"><x:String>240 Hz</x:String></ComboBox>
+              <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" Header="HDR" SelectedIndex="0"><x:String>Don't change</x:String></ComboBox>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="20">
+              <RadioButton Content="Main display" IsChecked="True" />
+              <CheckBox Content="Optional" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <!-- Every other area: its summary as the header, the settings open in place. -->
+        <StackPanel Spacing="8">
+          <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{ThemeResource BrandBackgroundBrush}" IsExpanded="True">
+            <Expander.Header>
+              <StackPanel Padding="0,8">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Tab_Audio}" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Headset · 40 % · microphone: Headset" />
+              </StackPanel>
+            </Expander.Header>
+            <Grid ColumnSpacing="16" RowSpacing="12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <ComboBox HorizontalAlignment="Stretch" Header="Output" SelectedIndex="0"><x:String>Headset (Arctis Nova)</x:String></ComboBox>
+              <Slider Grid.Column="1" Header="Volume" Value="40" />
+              <ComboBox Grid.Row="1" HorizontalAlignment="Stretch" Header="Microphone" SelectedIndex="0"><x:String>Headset (Arctis Nova)</x:String></ComboBox>
+              <Slider Grid.Row="1" Grid.Column="1" Header="Microphone volume" Value="80" />
+            </Grid>
+          </Expander>
+          <Expander HorizontalAlignment="Stretch" Background="{ThemeResource BrandBackgroundBrush}">
+            <Expander.Header>
+              <StackPanel Padding="0,8">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Tab_Apps}" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="SimHub, Fanatec App · closed again when switching away" />
+              </StackPanel>
+            </Expander.Header>
+          </Expander>
+          <Expander HorizontalAlignment="Stretch" Background="{ThemeResource BrandBackgroundBrush}">
+            <Expander.Header>
+              <StackPanel Padding="0,8">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Tab_Triggers}" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Wheel + Heusinkveld Pedals connected · Ctrl+Alt+F2" />
+              </StackPanel>
+            </Expander.Header>
+          </Expander>
+          <Expander HorizontalAlignment="Stretch" Background="{ThemeResource BrandBackgroundBrush}">
+            <Expander.Header>
+              <StackPanel Padding="0,8">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Tab_Behavior}" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Asks to keep the layout · keeps the PC awake · remembers desktop icons" />
+              </StackPanel>
+            </Expander.Header>
+          </Expander>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Page>

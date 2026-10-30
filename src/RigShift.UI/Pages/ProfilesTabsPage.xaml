@@ -1,0 +1,208 @@
+<Page
+  x:Class="RigShift.UI.Pages.ProfilesTabsPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="using:RigShift.UI.Controls"
+  xmlns:l="using:RigShift.UI.Localization"
+  xmlns:s="using:RigShift.UI.Services"
+  xmlns:vm="using:RigShift.App.ViewModels">
+
+  <!-- Prototype A "Tabs": profile list on the left, the selected profile on the right with a header and one tab per
+       area. Section contents are demo data; only list, picture and header are live. -->
+  <Grid ColumnSpacing="0">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="248" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- List -->
+    <Grid Padding="16,24,12,16" RowSpacing="12">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <Grid>
+        <TextBlock VerticalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Profiles}" />
+        <Button HorizontalAlignment="Right" AutomationProperties.Name="New profile">
+          <FontIcon FontSize="14" Glyph="&#xE710;" />
+        </Button>
+      </Grid>
+      <ListView
+        x:Name="List"
+        Grid.Row="1"
+        Margin="-4,0"
+        ItemsSource="{x:Bind Catalog.Items}"
+        SelectionChanged="OnSelected">
+        <ListView.ItemTemplate>
+          <DataTemplate x:DataType="vm:ProfileItem">
+            <Grid Padding="0,10" ColumnSpacing="12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Path Data="{x:Bind s:ProfileGlyphs.Drawing(IconKey)}" Style="{StaticResource ProfileSymbolStyle}" />
+              <StackPanel Grid.Column="1">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Visibility="{x:Bind IsActive, Mode=OneWay}"><Run FontFamily="{ThemeResource SymbolThemeFontFamily}" Text="&#xE73E;" /><Run Text=" " /><Run Text="{l:Tr Key=Profile_Active}" /></TextBlock>
+                <TextBlock
+                  Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                  Style="{StaticResource CaptionTextBlockStyle}"
+                  Text="{x:Bind ReadyText, Mode=OneWay}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="{x:Bind ShowsReadiness, Mode=OneWay}" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+    </Grid>
+
+    <!-- Detail -->
+    <Grid Grid.Column="1" Background="{ThemeResource BrandSurfaceBrush}" CornerRadius="12,0,0,0">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <Grid Padding="28,20,28,8" ColumnSpacing="14">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Path x:Name="HeadSymbol" VerticalAlignment="Center" Style="{StaticResource ProfileSymbolStyle}" />
+        <StackPanel Grid.Column="1">
+          <TextBlock x:Name="HeadName" Style="{StaticResource TitleTextBlockStyle}" />
+          <TextBlock x:Name="HeadLine" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+        </StackPanel>
+        <Button Grid.Column="2" Content="{l:Tr Key=Profile_Apply}" Style="{StaticResource AccentButtonStyle}" />
+        <Button Grid.Column="3" AutomationProperties.Name="More">
+          <FontIcon FontSize="14" Glyph="&#xE712;" />
+        </Button>
+      </Grid>
+
+      <SelectorBar x:Name="Tabs" Grid.Row="1" Margin="20,0" SelectionChanged="OnTab">
+        <SelectorBarItem Tag="Displays" Text="{l:Tr Key=Tab_Displays}" IsSelected="True" />
+        <SelectorBarItem Tag="Audio" Text="{l:Tr Key=Tab_Audio}" />
+        <SelectorBarItem Tag="Apps" Text="{l:Tr Key=Tab_Apps}" />
+        <SelectorBarItem Tag="Triggers" Text="{l:Tr Key=Tab_Triggers}" />
+        <SelectorBarItem Tag="Behavior" Text="{l:Tr Key=Tab_Behavior}" />
+      </SelectorBar>
+
+      <ScrollViewer Grid.Row="2">
+        <Grid Padding="28,16,28,28">
+          <!-- Displays: the picture picks a display; its settings sit in one card under it. -->
+          <StackPanel x:Name="DisplaysTab" Spacing="12">
+            <Border Height="220" Padding="16" Background="{ThemeResource BrandSurfaceAltBrush}" CornerRadius="{StaticResource BayRadius}">
+              <c:DisplayTopology x:Name="Picture" Size="Full" />
+            </Border>
+            <Grid
+              Padding="16"
+              Background="{ThemeResource BrandBackgroundBrush}"
+              ColumnSpacing="12"
+              CornerRadius="{StaticResource BayRadius}"
+              RowSpacing="8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <TextBlock Grid.ColumnSpan="3" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Odyssey G93SC · 5120 × 1440" />
+              <TextBox Grid.Row="1" Header="Name" PlaceholderText="e.g. Center" />
+              <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Header="Refresh rate" SelectedIndex="0">
+                <x:String>240 Hz</x:String>
+              </ComboBox>
+              <ComboBox Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" Header="HDR" SelectedIndex="0">
+                <x:String>Don't change</x:String>
+              </ComboBox>
+              <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="24">
+                <RadioButton Content="Main display" IsChecked="True" />
+                <CheckBox Content="Optional" />
+              </StackPanel>
+            </Grid>
+            <Grid Padding="16" Background="{ThemeResource BrandBackgroundBrush}" ColumnSpacing="12" CornerRadius="{StaticResource BayRadius}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel>
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Desktop icons" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Remembered automatically when you switch away · 14 icons" />
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsOn="True" OffContent="" OnContent="" />
+            </Grid>
+          </StackPanel>
+
+          <!-- Apps: one row per app, start time and whether it closes again. -->
+          <StackPanel x:Name="AppsTab" Spacing="8" Visibility="Collapsed">
+            <Grid Padding="16,12" Background="{ThemeResource BrandBackgroundBrush}" ColumnSpacing="12" CornerRadius="{StaticResource BayRadius}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel>
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Close these apps when switching away" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Only apps RigShift started for this profile" />
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" IsOn="True" OffContent="" OnContent="" />
+            </Grid>
+            <Grid Padding="16,12" Background="{ThemeResource BrandBackgroundBrush}" ColumnSpacing="12" CornerRadius="{StaticResource BayRadius}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <FontIcon Glyph="&#xE7FC;" />
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="SimHub" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Starts after the displays · waits for its window" />
+              </StackPanel>
+              <Button Grid.Column="2" AutomationProperties.Name="Remove"><FontIcon FontSize="14" Glyph="&#xE74D;" /></Button>
+            </Grid>
+            <Grid Padding="16,12" Background="{ThemeResource BrandBackgroundBrush}" ColumnSpacing="12" CornerRadius="{StaticResource BayRadius}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <FontIcon Glyph="&#xE7FC;" />
+              <StackPanel Grid.Column="1">
+                <TextBlock Text="Fanatec App" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Starts after the displays · waits for Wheel" />
+              </StackPanel>
+              <Button Grid.Column="2" AutomationProperties.Name="Remove"><FontIcon FontSize="14" Glyph="&#xE74D;" /></Button>
+            </Grid>
+            <Button Margin="0,4,0,0"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon FontSize="12" Glyph="&#xE710;" /><TextBlock Text="Add app" /></StackPanel></Button>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+
+      <!-- Unsaved changes: one bar at the bottom, Save as the main action. -->
+      <Grid
+        x:Name="SaveBar"
+        Grid.Row="2"
+        Margin="20"
+        Padding="16,10"
+        VerticalAlignment="Bottom"
+        Background="{ThemeResource BrandSelectedBrush}"
+        ColumnSpacing="8"
+        CornerRadius="{StaticResource BayRadius}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock VerticalAlignment="Center" Text="Unsaved changes" />
+        <Button Grid.Column="1" Content="Discard" />
+        <Button Grid.Column="2" Content="Save" Style="{StaticResource AccentButtonStyle}" />
+      </Grid>
+    </Grid>
+  </Grid>
+</Page>

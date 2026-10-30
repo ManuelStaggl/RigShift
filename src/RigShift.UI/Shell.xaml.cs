@@ -38,6 +38,13 @@ public sealed partial class Shell : UserControl
             return;
         }
 
+        if (page == AppPage.Profiles)
+        {
+            // shortcut: two layout prototypes until one is chosen (#92); RIGSHIFT_PREVIEW_PROFILES=B shows the sheet.
+            ContentFrame.Navigate(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PROFILES") == "B" ? typeof(Pages.ProfilesSheetPage) : typeof(Pages.ProfilesTabsPage));
+            return;
+        }
+
         // shortcut: one empty page with the item's name until the real pages exist (#92-#94).
         ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }
