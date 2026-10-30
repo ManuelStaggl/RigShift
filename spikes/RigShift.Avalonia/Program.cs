@@ -19,6 +19,8 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack's install/update hooks run before anything else, like in the WPF app.
+        Velopack.VelopackApp.Build().Run();
         string data = Environment.GetEnvironmentVariable("RIGSHIFT_DATA_DIR") is { Length: > 0 } dir
             ? dir
             : Path.Combine(Path.GetTempPath(), "rigshift-avalonia-spike");

@@ -17,6 +17,7 @@ public sealed class App : Application, IAppShell
 {
     private ServiceProvider? _services;
     private MainWindow? _window;
+    private SpikeTray? _tray;
 
     internal static AppPaths Paths { get; set; } = new(Path.Combine(Path.GetTempPath(), "rigshift-avalonia-spike"));
 
@@ -53,11 +54,53 @@ public sealed class App : Application, IAppShell
             desktop.MainWindow = _window;
             _window.Show();
             _window.Navigate(page);
+            Log.Information("Spike main window shown");
+
+            _tray = new SpikeTray(this);
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
+            {
+                _tray.TogglePopup();
+            }
+
+            await UpdateTestAsync();
         }
         catch (Exception ex)
         {
             Log.Fatal(ex, "Avalonia spike failed to start");
             desktop.Shutdown(1);
+        }
+    }
+
+    /// <summary>
+    /// Update test for #155: with RIGSHIFT_UPDATE_SOURCE set (a folder of packed releases) an installed spike downloads the
+    /// newer release and lets Velopack install it and start it again – the path the WPF app's update takes.
+    /// </summary>
+    private async Task UpdateTestAsync()
+    {
+        var feed = new VelopackUpdateFeed("https://github.com/ManuelStaggl/RigShift", Log.Logger);
+        Log.Information("Spike installed: {Installed}, version {Version}", feed.IsInstalled, feed.InstalledVersion ?? "-");
+        if (!feed.IsInstalled || Environment.GetEnvironmentVariable(VelopackUpdateFeed.LocalSourceVariable) is not { Length: > 0 })
+        {
+            return;
+        }
+
+        try
+        {
+            if (await feed.CheckAsync() is not { } update)
+            {
+                Log.Information("Spike update: no newer release");
+                return;
+            }
+
+            Log.Information("Spike update: downloading {Version}", update.TargetFullRelease.Version);
+            await feed.DownloadAsync(update, CancellationToken.None);
+            Log.Information("Spike update: downloaded, applying after exit");
+            feed.ApplyAfterExit(update.TargetFullRelease);
+            Quit();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Spike update failed");
         }
     }
 
