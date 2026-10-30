@@ -1,6 +1,7 @@
 using System.IO;
 using System.Security;
 using Microsoft.UI.Dispatching;
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.Core.Cli;
 using RigShift.Core.Settings;
@@ -41,9 +42,10 @@ public static class Program
     {
         // Same order as the WPF app: Velopack may exit the process, and only the window app may restart for an update.
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
+        AppSettings settings = LoadSettings(paths);
         VelopackApp.Build()
             .SetLogger(new SerilogVelopackLogger(Log.Logger))
-            .SetAutoApplyOnStartup(!isCommand && InstallUpdatesAutomatically(paths))
+            .SetAutoApplyOnStartup(!isCommand && settings.OnlyNotifyAboutUpdates is false)
             .OnAfterInstallFastCallback(_ => RegisterUriScheme())
             .OnAfterUpdateFastCallback(_ => RegisterUriScheme())
             .OnBeforeUninstallFastCallback(_ => BeforeUninstall())
@@ -75,6 +77,7 @@ public static class Program
             return CommandLineClient.Run(args, request, paths);
         }
 
+        Loc.Instance.SetLanguage(settings.Language);
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Microsoft.UI.Xaml.Application.Start(callback =>
         {
@@ -117,10 +120,10 @@ public static class Program
         }
     }
 
-    private static bool InstallUpdatesAutomatically(AppPaths paths) =>
+    /// <summary>Runs before Velopack; an unreadable file means defaults, and the app logs that later.</summary>
+    private static AppSettings LoadSettings(AppPaths paths) =>
         new JsonSettingsStore(paths.SettingsFile, Logger.None)
             .LoadAsync(CancellationToken.None)
             .GetAwaiter()
-            .GetResult()
-            .OnlyNotifyAboutUpdates is false;
+            .GetResult();
 }

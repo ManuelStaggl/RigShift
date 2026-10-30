@@ -2,12 +2,11 @@
   x:Class="RigShift.UI.MainWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:RigShift.UI"
   Title="RigShift">
   <Window.SystemBackdrop>
     <MicaBackdrop />
   </Window.SystemBackdrop>
 
-  <NavigationView IsBackButtonVisible="Collapsed" IsSettingsVisible="False">
-    <Frame x:Name="ContentFrame" />
-  </NavigationView>
+  <local:Shell />
 </Window>
