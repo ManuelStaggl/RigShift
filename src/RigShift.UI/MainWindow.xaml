@@ -3,11 +3,9 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   Title="RigShift">
-  <Window.SystemBackdrop>
-    <MicaBackdrop />
-  </Window.SystemBackdrop>
 
-  <Grid>
+  <!-- The brand surface instead of Mica: the same navy (dark) or cool white (light) behind title bar, navigation and pages. -->
+  <Grid Background="{ThemeResource BrandBackgroundBrush}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />

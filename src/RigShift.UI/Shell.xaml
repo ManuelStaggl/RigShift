@@ -9,6 +9,13 @@
     IsBackButtonVisible="Collapsed"
     IsSettingsVisible="False"
     SelectionChanged="OnSelectionChanged">
+    <!-- Pane and content sit on the window's brand surface: no separate pane colour, no content frame. -->
+    <NavigationView.Resources>
+      <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+    </NavigationView.Resources>
     <NavigationView.MenuItems>
       <NavigationViewItem Content="{l:Tr Key=Nav_Overview}" Tag="Overview">
         <NavigationViewItem.Icon>

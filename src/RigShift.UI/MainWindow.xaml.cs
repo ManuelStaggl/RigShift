@@ -25,6 +25,13 @@ public sealed partial class MainWindow : Window
         _shell = new Shell();
         ShellHost.Content = _shell;
 
+        // The caption buttons are drawn by Windows in its own theme's colours, which need not match the app's surface.
+        if (Content is FrameworkElement root)
+        {
+            root.ActualThemeChanged += (sender, _) => ColorCaptionButtons(sender.ActualTheme);
+            ColorCaptionButtons(root.ActualTheme);
+        }
+
         // Texts are read once per load ({l:Tr}); a new language takes a new shell on the same page. Loc raises this on
         // the UI thread.
         Loc.Instance.PropertyChanged += (_, _) =>
@@ -34,6 +41,16 @@ public sealed partial class MainWindow : Window
             ShellHost.Content = _shell;
             _shell.Navigate(page);
         };
+    }
+
+    private void ColorCaptionButtons(ElementTheme theme)
+    {
+        global::Windows.UI.Color glyph = theme == ElementTheme.Dark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
+        AppWindow.TitleBar.ButtonForegroundColor = glyph;
+        AppWindow.TitleBar.ButtonHoverForegroundColor = glyph;
+        AppWindow.TitleBar.ButtonPressedForegroundColor = glyph;
+        AppWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        AppWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
     }
 
     /// <summary>Brings the window forward, restored, on <paramref name="page"/> (or the page it showed last).</summary>

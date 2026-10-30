@@ -34,13 +34,7 @@ public sealed partial class Shell : UserControl
         Page = page;
         if (page == AppPage.Overview)
         {
-            // shortcut: three style prototypes until one is chosen; RIGSHIFT_PREVIEW_STYLE=2|3 shows the others.
-            ContentFrame.Navigate(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_STYLE") switch
-            {
-                "2" => typeof(Pages.OverviewCockpitPage),
-                "3" => typeof(Pages.OverviewInstrumentPage),
-                _ => typeof(Pages.OverviewPage),
-            });
+            ContentFrame.Navigate(typeof(Pages.OverviewPage));
             return;
         }
 
