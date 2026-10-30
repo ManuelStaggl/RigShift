@@ -53,7 +53,8 @@ public static class ServiceRegistration
         services.AddSingleton<IDesktopIcons, Windows.Shell.DesktopIcons>();
         services.AddSingleton<IDisplaySizeReader, EdidDisplaySizeReader>();
         services.AddSingleton<ISurroundController, NvSurroundController>();
-        services.AddSingleton<ISwitchConfirmation, WpfSwitchConfirmation>();
+        services.AddSingleton<WpfSwitchConfirmation>();
+        services.AddSingleton<ISwitchConfirmation>(sp => sp.GetRequiredService<WpfSwitchConfirmation>());
         services.AddSingleton<ISwitchJournal>(_ => new JsonSwitchJournal(paths.DataDirectory, log));
         services.AddSingleton(new TopologyPlannerOptions());
         services.AddSingleton(new SwitchOptions());
@@ -66,7 +67,15 @@ public static class ServiceRegistration
         services.AddSingleton<ProfileCatalog>();
         services.AddSingleton<SwitchCoordinator>();
         services.AddSingleton<DisplayChangeWatcher>();
-        services.AddSingleton<HotkeyService>();
+        services.AddSingleton(sp => new HotkeyService(
+            sp.GetRequiredService<ProfileCatalog>(),
+            sp.GetRequiredService<GameCatalog>(),
+            sp.GetRequiredService<GameSessionService>(),
+            sp.GetRequiredService<SwitchCoordinator>(),
+            sp.GetRequiredService<SettingsService>(),
+            log,
+            new Win32HotkeyRegistrar(),
+            sp.GetRequiredService<WpfSwitchConfirmation>()));
         services.AddSingleton<ISessionWatch>(_ => new SystemSessionWatch(log));
         services.AddSingleton<AutomationService>();
         services.AddSingleton<TrayIconService>();
@@ -84,8 +93,13 @@ public static class ServiceRegistration
             sp.GetRequiredService<IGameStore>(),
             sp.GetRequiredService<GameSessionService>(),
             sp.GetRequiredService<IDesktopIcons>()));
-        services.AddSingleton<CommandPipeServer>();
+        services.AddSingleton(sp => new CommandPipeServer(
+            sp.GetRequiredService<CommandRunner>(),
+            shell,
+            log,
+            work => System.Windows.Application.Current.Dispatcher.InvokeAsync(work).Task.Unwrap()));
         services.AddSingleton<IAppPicker, WindowAppPicker>();
+        services.AddSingleton<ITextClipboard, WpfClipboard>();
         services.AddSingleton<ProfileEditorServices>();
         services.AddSingleton<ProfileDialogs>();
         services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<ProfileDialogs>());

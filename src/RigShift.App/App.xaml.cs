@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.App.Views;
+using RigShift.App.Views.Pages;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Cli;
@@ -40,7 +41,7 @@ public partial class App : Application, IAppShell
 
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
-    public void ShowMainWindow(Type? page = null)
+    public void ShowMainWindow(AppPage? page = null)
     {
         MainWindow window = Services.GetRequiredService<MainWindow>();
         if (!_hiddenToTrayWatched)
@@ -49,7 +50,16 @@ public partial class App : Application, IAppShell
             _hiddenToTrayWatched = true;
         }
 
-        window.ShowPage(page);
+        window.ShowPage(page switch
+        {
+            AppPage.Overview => typeof(OverviewPage),
+            AppPage.Profiles => typeof(ProfilesPage),
+            AppPage.Games => typeof(GamesPage),
+            AppPage.FieldOfView => typeof(FovPage),
+            AppPage.Settings => typeof(SettingsPage),
+            AppPage.Help => typeof(AboutPage),
+            _ => null,
+        });
         window.Show();
         if (window.WindowState == WindowState.Minimized)
         {
@@ -58,6 +68,8 @@ public partial class App : Application, IAppShell
 
         window.Activate();
     }
+
+    public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, Core.Profiles.DisplayAssignment Mode)> displays) => IdentifyWindow.ShowAll(displays);
 
     /// <summary>
     /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
@@ -187,6 +199,7 @@ public partial class App : Application, IAppShell
         // Log.Logger was created in Program.Main, before Velopack ran.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         Controls.WheelScrolling.Register();
+        AppIcons.Extract = WpfIcons.Extract;
         LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
         Log.Information("RigShift {Version} starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, _paths.DataDirectory);
 

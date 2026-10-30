@@ -8,7 +8,7 @@
   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
   xmlns:controls="clr-namespace:RigShift.App.Controls"
   xmlns:loc="clr-namespace:RigShift.App.Localization"
-  xmlns:vm="clr-namespace:RigShift.App.ViewModels">
+  xmlns:vm="clr-namespace:RigShift.App.ViewModels;assembly=RigShift.Presentation">
 
   <!-- Its own copy: a template in a merged dictionary sees the dictionaries merged before it, not the resources App.xaml
        declares after them (a missing BoolToVisibility left the Apps tab blank). -->

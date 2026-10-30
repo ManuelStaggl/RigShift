@@ -5,13 +5,6 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Controls;
 
-public enum InfoKind
-{
-    Info,
-    Warn,
-    Error,
-}
-
 /// <summary>
 /// A 40 px bar with a 3 px colored edge, a symbol, one line of text and an optional action on the right: planner
 /// warnings, wizard checks, load errors. Not the WPF-UI InfoBar – no title, no close button, no fill in the state color.

@@ -4,21 +4,6 @@ using System.Windows.Media;
 
 namespace RigShift.App.Controls;
 
-/// <summary>Color of a status: always paired with text, never the only signal.</summary>
-public enum StatusKind
-{
-    Neutral,
-    Ok,
-    Warn,
-    Error,
-
-    /// <summary>Something is in progress (a switch, a running game).</summary>
-    Accent,
-
-    /// <summary>The profile on screen now: a check mark in the accent, the same everywhere.</summary>
-    Active,
-}
-
 /// <summary>An 8 px dot and one caption line: "Ready · Dash missing (optional)". The text is a result key, never rephrased.</summary>
 public sealed class StatusLine : Control
 {

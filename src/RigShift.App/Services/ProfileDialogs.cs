@@ -12,57 +12,6 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Services;
 
-/// <summary>The answer to "the same error keeps coming back".</summary>
-public enum RepeatedErrorChoice
-{
-    Continue,
-    Restart,
-    OpenLog,
-}
-
-/// <summary>What the user chose when leaving a profile with unsaved changes.</summary>
-public enum UnsavedChoice
-{
-    Save,
-    Discard,
-    Cancel,
-}
-
-/// <summary>
-/// What the profiles page asks of the user or builds for them. The page's logic – what happens to unsaved changes,
-/// which profile is selected after a delete – runs against this, so it can be tested without a window.
-/// </summary>
-public interface IProfilePageDialogs
-{
-    /// <summary>A new, unsaved profile from the active displays.</summary>
-    Task<Profile> NewFromCurrentAsync();
-
-    /// <summary>The detail's editor for a profile.</summary>
-    Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew);
-
-    Task ShowSetupAssistantAsync();
-
-    /// <param name="ruleCount">USB rules that go with the profile.</param>
-    Task<bool> ConfirmDeleteAsync(string name, int ruleCount);
-
-    /// <param name="targetName">The profile the user picked instead, when the question comes from the list.</param>
-    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
-}
-
-/// <summary>What the help page asks of the user: files for backups and support packages, and the restore question.</summary>
-public interface IHelpPageDialogs
-{
-    Task ShowSetupAssistantAsync();
-
-    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
-    string? PickZipToSave(string suggestedName);
-
-    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
-    string? PickZipToOpen();
-
-    Task<bool> ConfirmRestoreAsync(BackupContent content);
-}
-
 /// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
 public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
 {

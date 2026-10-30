@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- View models, app services and strings without a UI framework: the WPF app and the WinUI app both build on it.
+       The namespaces stay RigShift.App.*, so moving them here changed no type name. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <RootNamespace>RigShift.App</RootNamespace>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RigShift.Core\RigShift.Core.csproj" />
+    <ProjectReference Include="..\RigShift.Windows\RigShift.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- Power and session events; the WPF app had them from the Windows Desktop framework. -->
+    <PackageReference Include="Microsoft.Win32.SystemEvents" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Debug" />
+    <PackageReference Include="Velopack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RigShift" />
+    <InternalsVisibleTo Include="RigShift.UI" />
+    <InternalsVisibleTo Include="RigShift.App.Tests" />
+    <InternalsVisibleTo Include="RigShift.Presentation.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -9,7 +9,7 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary><see cref="ISwitchConfirmation"/> as a countdown window on the new primary display.</summary>
-public sealed class WpfSwitchConfirmation(ProfileCatalog catalog, ActiveProfileMatcher matcher) : ISwitchConfirmation
+public sealed class WpfSwitchConfirmation(ProfileCatalog catalog, ActiveProfileMatcher matcher) : ISwitchConfirmation, IOpenConfirmation
 {
     /// <summary>
     /// How long past the countdown the switch still waits for the window. Its own timer ends it; this only answers when
@@ -27,6 +27,8 @@ public sealed class WpfSwitchConfirmation(ProfileCatalog catalog, ActiveProfileM
         return WithDeadlineAsync(
             answer, timeout + Slack, TimeProvider.System, () => Application.Current.Dispatcher.InvokeAsync(ConfirmationWindow.CloseOpen), cancellationToken);
     }
+
+    public bool TryConfirm(Guid profileId) => ConfirmationWindow.TryConfirm(profileId);
 
     /// <summary>The window's answer, or <see cref="ConfirmationResult.TimedOut"/> – "take it back" – once <paramref name="deadline"/> passed.</summary>
     internal static async Task<ConfirmationResult> WithDeadlineAsync(
