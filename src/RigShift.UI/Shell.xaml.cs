@@ -38,7 +38,13 @@ public sealed partial class Shell : UserControl
             return;
         }
 
-        // shortcut: one empty page with the item's name until the real pages exist (#92-#94).
+        if (page == AppPage.Profiles)
+        {
+            ContentFrame.Navigate(typeof(Pages.ProfilesPage));
+            return;
+        }
+
+        // shortcut: one empty page with the item's name until the real pages exist (#93, #94).
         ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }
 }

@@ -92,6 +92,12 @@
     </Setter>
   </Style>
 
+  <!-- Switches without On/Off words: the thumb says it, and Windows would put them in its own language, not the app's. -->
+  <Style BasedOn="{StaticResource DefaultToggleSwitchStyle}" TargetType="ToggleSwitch">
+    <Setter Property="OnContent" Value="" />
+    <Setter Property="OffContent" Value="" />
+  </Style>
+
   <!-- A brand profile symbol: a stroke drawing on a 24 × 24 grid that takes the text colour. -->
   <Style x:Key="ProfileSymbolStyle" TargetType="Path">
     <Setter Property="Width" Value="24" />

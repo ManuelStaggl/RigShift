@@ -1,0 +1,67 @@
+<ResourceDictionary
+  x:Class="RigShift.UI.Themes.Templates"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:l="using:RigShift.UI.Localization"
+  xmlns:s="using:RigShift.UI.Services"
+  xmlns:vm="using:RigShift.App.ViewModels">
+
+  <!-- One audio device of a profile: the device, and the volume it gets when that is set. -->
+  <DataTemplate x:Key="AudioSlotTemplate" x:DataType="vm:AudioSlot">
+    <Grid ColumnSpacing="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <ComboBox
+        HorizontalAlignment="Stretch"
+        DisplayMemberPath="Name"
+        Header="{x:Bind Label}"
+        ItemsSource="{x:Bind Choices}"
+        SelectedItem="{x:Bind Selected, Mode=TwoWay}" />
+      <Grid Grid.Column="1" ColumnSpacing="8" Visibility="{x:Bind SupportsVolume, Mode=OneWay}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="40" />
+        </Grid.ColumnDefinitions>
+        <CheckBox
+          VerticalAlignment="Bottom"
+          Content="{l:Tr Key=Audio_SetVolume}"
+          IsChecked="{x:Bind SetVolume, Mode=TwoWay}"
+          IsEnabled="{x:Bind HasDevice, Mode=OneWay}" />
+        <Slider
+          Grid.Column="1"
+          VerticalAlignment="Bottom"
+          IsEnabled="{x:Bind SetVolume, Mode=OneWay}"
+          Maximum="100"
+          Minimum="0"
+          Value="{x:Bind Volume, Mode=TwoWay}" />
+        <TextBlock Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Bottom" Text="{x:Bind VolumeText, Mode=OneWay}" />
+      </Grid>
+    </Grid>
+  </DataTemplate>
+
+  <!-- One program in the app picker: icon, name, path, "Running" when it is. -->
+  <DataTemplate x:Key="AppChoiceTemplate" x:DataType="vm:AppChoice">
+    <Grid Padding="0,6" ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="32" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Image Width="32" Height="32" Source="{x:Bind s:WinUiIcons.Image(Icon), Mode=OneWay}" />
+      <StackPanel Grid.Column="1">
+        <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ShownPath}" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+      <TextBlock
+        Grid.Column="2"
+        VerticalAlignment="Center"
+        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+        Style="{StaticResource CaptionTextBlockStyle}"
+        Text="{l:Tr Key=AppPicker_Running}"
+        Visibility="{x:Bind IsRunning}" />
+    </Grid>
+  </DataTemplate>
+</ResourceDictionary>

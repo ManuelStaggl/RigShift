@@ -74,12 +74,17 @@ public sealed class Loc : INotifyPropertyChanged
 
     public string this[string key] => _resources.GetString(key, UICulture) ?? key;
 
-    /// <summary>"_Identify" → "Identify": WPF marks access keys with an underscore at the start of a word; WinUI would show it.</summary>
+    /// <summary>
+    /// "_Identify" → "Identify", "C_hoose" → "Choose": WPF marks access keys with an underscore before a letter; WinUI
+    /// would show it. A text with several underscores keeps all but one at a word start ("r_multimon_fov" is a name).
+    /// </summary>
     public static string WithoutAccessKey(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
+        bool single = text.IndexOf('_', StringComparison.Ordinal) == text.LastIndexOf('_');
         for (int i = 0; i < text.Length - 1; i++)
         {
-            if (text[i] == '_' && (i == 0 || text[i - 1] == ' ') && char.IsLetter(text[i + 1]))
+            if (text[i] == '_' && (single || i == 0 || text[i - 1] == ' ') && char.IsLetter(text[i + 1]))
             {
                 return text.Remove(i, 1);
             }

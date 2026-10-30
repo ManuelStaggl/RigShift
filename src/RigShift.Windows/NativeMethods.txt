@@ -150,3 +150,19 @@ RID_DEVICE_INFO_TYPE
 HIDP_STATUS_SUCCESS
 
 ShutdownBlockReasonCreate
+
+// Message-only window for WM_HOTKEY (WinUI app)
+RegisterClassEx
+CreateWindowEx
+DefWindowProc
+DestroyWindow
+GetModuleHandle
+UnregisterClass
+HWND_MESSAGE
+FileOpenDialog
+IFileOpenDialog
+IShellItem
+SHCreateItemFromParsingName
+SIGDN
+FILEOPENDIALOGOPTIONS
+COMDLG_FILTERSPEC

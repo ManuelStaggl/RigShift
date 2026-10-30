@@ -6,6 +6,9 @@
     <PackageVersion Include="H.NotifyIcon" Version="2.4.1" />
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="2.6.4" />
+    <!-- 8.3 preview: the stable 8.2 depends on the whole Windows App SDK (+60 MB); move to 8.3 when it is released. -->
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.3.260402-preview2" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 
     <!-- DI / Logging -->

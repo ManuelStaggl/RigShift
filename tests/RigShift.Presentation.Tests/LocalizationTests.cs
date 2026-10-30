@@ -21,6 +21,7 @@ public sealed class LocalizationTests
     [Theory]
     [InlineData("_Identify", "Identify")]
     [InlineData("Save _current layout", "Save current layout")]
+    [InlineData("C_hoose", "Choose")]
     [InlineData("config.cfg r_multimon_fov_horizontal", "config.cfg r_multimon_fov_horizontal")]
     [InlineData("_", "_")]
     public void WithoutAccessKey_DropsOnlyTheWpfMarker(string text, string expected) =>

@@ -1,0 +1,530 @@
+<Page
+  x:Class="RigShift.UI.Pages.ProfilesPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:c="using:RigShift.UI.Controls"
+  xmlns:l="using:RigShift.UI.Localization"
+  xmlns:s="using:RigShift.UI.Services"
+  xmlns:tk="using:CommunityToolkit.WinUI.Controls"
+  xmlns:vm="using:RigShift.App.ViewModels">
+  <!-- Layout "sheet": profiles as chips on top; the selected profile as one page – its displays with the chosen
+       display's settings beside them, then audio, apps, triggers and behaviour as sections that open in place. -->
+  <Grid>
+    <ScrollViewer>
+      <StackPanel MaxWidth="1100" Padding="32,24,32,96" Spacing="16">
+        <Grid ColumnSpacing="12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ListView
+            x:Name="Chips"
+            AutomationProperties.Name="{l:Tr Key=Nav_Profiles}"
+            ItemsSource="{x:Bind ViewModel.Items}"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            ScrollViewer.HorizontalScrollMode="Enabled"
+            ScrollViewer.VerticalScrollMode="Disabled"
+            SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}">
+            <ListView.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="4" />
+              </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
+              <DataTemplate x:DataType="vm:ProfileItem">
+                <StackPanel Padding="4,8" AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}" Orientation="Horizontal" Spacing="10">
+                  <Path Data="{x:Bind s:ProfileGlyphs.Drawing(IconKey)}" Style="{StaticResource ProfileSymbolStyle}" />
+                  <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" />
+                  <FontIcon
+                    FontSize="12"
+                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                    Glyph="&#xE73E;"
+                    Visibility="{x:Bind IsActive, Mode=OneWay}" />
+                </StackPanel>
+              </DataTemplate>
+            </ListView.ItemTemplate>
+          </ListView>
+          <!-- shortcut: "Setup guide" joins the menu once the wizard is built (#95). -->
+          <Button Grid.Column="1" VerticalAlignment="Center" Command="{x:Bind ViewModel.NewFromCurrentCommand}" ToolTipService.ToolTip="{l:Tr Key=List_NewProfileTip}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <FontIcon FontSize="12" Glyph="&#xE710;" />
+              <TextBlock Text="{l:Tr Key=List_NewFromCurrent}" />
+            </StackPanel>
+          </Button>
+        </Grid>
+
+        <InfoBar
+          IsClosable="False"
+          IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
+          Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+          Severity="Success"
+          Visibility="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}" />
+
+        <!-- No profile yet. -->
+        <StackPanel
+          Padding="24"
+          Background="{ThemeResource BrandSurfaceBrush}"
+          CornerRadius="{StaticResource CardRadius}"
+          Spacing="12"
+          Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
+          <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Profiles_EmptyTitle}" />
+          <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{l:Tr Key=Profiles_EmptyInvite}" TextWrapping="Wrap" />
+          <Button Command="{x:Bind ViewModel.NewFromCurrentCommand}" Content="{l:Tr Key=Profiles_EmptySave}" Style="{StaticResource AccentButtonStyle}" />
+        </StackPanel>
+
+        <!-- The sheet -->
+        <StackPanel
+          Padding="24"
+          Background="{ThemeResource BrandSurfaceBrush}"
+          CornerRadius="{StaticResource CardRadius}"
+          Spacing="20"
+          Visibility="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+          <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <DropDownButton
+              x:Name="IconButton"
+              Padding="8"
+              VerticalAlignment="Top"
+              AutomationProperties.Name="{l:Tr Key=Editor_Icon}"
+              ToolTipService.ToolTip="{l:Tr Key=Editor_Icon}">
+              <Path x:Name="IconPath" Style="{StaticResource ProfileSymbolStyle}" />
+              <DropDownButton.Flyout>
+                <MenuFlyout x:Name="IconMenu" Placement="BottomEdgeAlignedLeft" />
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <StackPanel Grid.Column="1" Spacing="2">
+              <TextBox
+                x:Name="NameBox"
+                AutomationProperties.Name="{l:Tr Key=Editor_Name}"
+                FontSize="24"
+                FontWeight="SemiBold"
+                Text="{x:Bind ViewModel.Editor.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}"
+                ToolTipService.ToolTip="{l:Tr Key=Editor_NameTip}" />
+              <TextBlock
+                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind ViewModel.Editor.NameProblem, Mode=OneWay}"
+                Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.NameProblem), Mode=OneWay, FallbackValue=Collapsed}" />
+              <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ViewModel.HeadStatusText, Mode=OneWay}" />
+            </StackPanel>
+            <Button
+              Grid.Column="2"
+              VerticalAlignment="Top"
+              Command="{x:Bind ViewModel.SwitchCommand}"
+              Content="{x:Bind ViewModel.SwitchLabel, Mode=OneWay}"
+              Style="{StaticResource AccentButtonStyle}"
+              ToolTipService.ToolTip="{l:Tr Key=Detail_SwitchTip}" />
+            <Button
+              Grid.Column="3"
+              VerticalAlignment="Top"
+              AutomationProperties.Name="{l:Tr Key=Profile_More}"
+              ToolTipService.ToolTip="{l:Tr Key=Profile_More}">
+              <FontIcon FontSize="14" Glyph="&#xE712;" />
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuFlyoutItem Command="{x:Bind ViewModel.DuplicateCommand}" Text="{l:Tr Key=Profile_Duplicate}" />
+                  <ToggleMenuFlyoutItem Command="{x:Bind ViewModel.ToggleDefaultCommand}" IsChecked="{x:Bind ViewModel.IsSelectedDefault, Mode=OneWay}" Text="{l:Tr Key=Profile_SetDefault}" />
+                  <MenuFlyoutItem Command="{x:Bind ViewModel.CreateShortcutCommand}" Text="{l:Tr Key=Profile_ShortcutMenu}" />
+                  <MenuFlyoutItem Command="{x:Bind ViewModel.RestoreDesktopIconsCommand}" Text="{l:Tr Key=Profile_RestoreIconsMenu}" />
+                  <MenuFlyoutSeparator />
+                  <MenuFlyoutItem Command="{x:Bind ViewModel.DeleteCommand}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{l:Tr Key=Profile_Delete}" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+          </Grid>
+
+          <!-- Messages about this profile: what blocks it, what changed elsewhere, what went wrong. -->
+          <InfoBar
+            IsClosable="False"
+            IsOpen="{x:Bind ViewModel.HasBlockedMessage, Mode=OneWay}"
+            Message="{x:Bind ViewModel.BlockedMessage, Mode=OneWay}"
+            Severity="Warning"
+            Visibility="{x:Bind ViewModel.HasBlockedMessage, Mode=OneWay}">
+            <InfoBar.ActionButton>
+              <Button Command="{x:Bind ViewModel.MarkMissingOptionalCommand}" Content="{l:Tr Key=Detail_MarkOptional}" Visibility="{x:Bind ViewModel.CanMarkOptional, Mode=OneWay}" />
+            </InfoBar.ActionButton>
+          </InfoBar>
+          <InfoBar
+            IsClosable="True"
+            IsOpen="{x:Bind ViewModel.HasDetailMessage, Mode=OneWay}"
+            Message="{x:Bind ViewModel.DetailMessage, Mode=OneWay}"
+            Severity="Informational"
+            Visibility="{x:Bind ViewModel.HasDetailMessage, Mode=OneWay}">
+            <InfoBar.ActionButton>
+              <Button Command="{x:Bind ViewModel.ReloadCommand}" Content="{l:Tr Key=Detail_Reload}" ToolTipService.ToolTip="{l:Tr Key=Detail_ReloadTip}" Visibility="{x:Bind ViewModel.IsStale, Mode=OneWay}" />
+            </InfoBar.ActionButton>
+          </InfoBar>
+          <InfoBar
+            IsClosable="False"
+            IsOpen="{x:Bind s:Bindings.IsSet(ViewModel.Editor.WarningText), Mode=OneWay, FallbackValue=False}"
+            Message="{x:Bind ViewModel.Editor.WarningText, Mode=OneWay}"
+            Severity="Warning"
+            Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.WarningText), Mode=OneWay, FallbackValue=Collapsed}" />
+          <InfoBar
+            IsClosable="False"
+            IsOpen="{x:Bind s:Bindings.IsSet(ViewModel.Editor.ErrorMessage), Mode=OneWay, FallbackValue=False}"
+            Message="{x:Bind ViewModel.Editor.ErrorMessage, Mode=OneWay}"
+            Severity="Error"
+            Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.ErrorMessage), Mode=OneWay, FallbackValue=Collapsed}" />
+
+          <!-- Displays: the picture picks a display, its settings sit right beside it. -->
+          <Grid ColumnSpacing="16" RowSpacing="8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="3*" />
+              <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Border Height="232" Padding="16" Background="{ThemeResource BrandSurfaceAltBrush}" CornerRadius="{StaticResource BayRadius}">
+              <c:DisplayTopology Displays="{x:Bind ViewModel.Editor.TopologyDisplays, Mode=OneWay}" SelectedKey="{x:Bind ViewModel.Editor.SelectedDisplayKey, Mode=TwoWay}" Size="Full" />
+            </Border>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+              <Button Command="{x:Bind ViewModel.Editor.TakeCurrentCommand, Mode=OneWay}" Content="{l:Tr Key=Editor_TakeCurrent}" ToolTipService.ToolTip="{l:Tr Key=Editor_DisplaysHint}" />
+              <HyperlinkButton Command="{x:Bind ViewModel.OpenDisplaySettingsCommand}" Content="{l:Tr Key=Displays_OpenSettings}" />
+            </StackPanel>
+
+            <!-- The chosen display -->
+            <StackPanel Grid.RowSpan="2" Grid.Column="1" Spacing="10" Visibility="{x:Bind ViewModel.Editor.HasSelectedDisplay, Mode=OneWay}">
+              <Grid>
+                <StackPanel>
+                  <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind ViewModel.Editor.SelectedDisplay.ModelName, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ViewModel.Editor.SelectedDisplay.ResolutionText, Mode=OneWay}" />
+                </StackPanel>
+                <Button
+                  x:Name="RemoveDisplayButton"
+                  HorizontalAlignment="Right"
+                  AutomationProperties.Name="{l:Tr Key=Editor_Remove}"
+                  Click="OnRemoveDisplay"
+                  ToolTipService.ToolTip="{l:Tr Key=Editor_Remove}">
+                  <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                </Button>
+              </Grid>
+              <TextBox
+                Header="{l:Tr Key=Editor_CustomName}"
+                PlaceholderText="{l:Tr Key=Editor_CustomNamePlaceholder}"
+                Text="{x:Bind ViewModel.Editor.SelectedDisplay.CustomName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}" />
+              <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                  x:Name="RefreshBox"
+                  HorizontalAlignment="Stretch"
+                  DisplayMemberPath="Text"
+                  Header="{l:Tr Key=Editor_RefreshRate}"
+                  ItemsSource="{x:Bind ViewModel.Editor.SelectedDisplay.RefreshChoices, Mode=OneWay}"
+                  SelectedItem="{x:Bind s:Bindings.Same(ViewModel.Editor.SelectedDisplay.SelectedRefresh), Mode=TwoWay, BindBack=SetRefresh}"
+                  ToolTipService.ToolTip="{l:Tr Key=Editor_RefreshRateHint}" />
+                <ComboBox
+                  x:Name="HdrBox"
+                  Grid.Column="1"
+                  HorizontalAlignment="Stretch"
+                  DisplayMemberPath="Text"
+                  Header="HDR"
+                  ItemsSource="{x:Bind ViewModel.Editor.SelectedDisplay.HdrChoices, Mode=OneWay}"
+                  SelectedItem="{x:Bind s:Bindings.Same(ViewModel.Editor.SelectedDisplay.SelectedHdr), Mode=TwoWay, BindBack=SetHdr}"
+                  ToolTipService.ToolTip="{l:Tr Key=Editor_HdrHint}" />
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="20">
+                <RadioButton Content="{l:Tr Key=Editor_Primary}" IsChecked="{x:Bind ViewModel.Editor.SelectedDisplay.IsPrimary, Mode=TwoWay, FallbackValue=False}" />
+                <CheckBox Content="{l:Tr Key=Editor_Optional}" IsChecked="{x:Bind ViewModel.Editor.SelectedDisplay.IsOptional, Mode=TwoWay, FallbackValue=False}" IsEnabled="{x:Bind ViewModel.Editor.SelectedDisplay.CanBeOptional, Mode=OneWay}" />
+              </StackPanel>
+              <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{l:Tr Key=Editor_RefreshRatesUnknown}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind ViewModel.Editor.SelectedDisplay.RatesUnknown, Mode=OneWay}" />
+            </StackPanel>
+            <TextBlock
+              Grid.RowSpan="2"
+              Grid.Column="1"
+              VerticalAlignment="Center"
+              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+              Text="{l:Tr Key=Displays_NoneSelected}"
+              TextWrapping="Wrap"
+              Visibility="{x:Bind s:Bindings.CollapsedIf(ViewModel.Editor.HasSelectedDisplay), Mode=OneWay}" />
+          </Grid>
+          <TextBlock
+            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+            Text="{x:Bind ViewModel.Editor.DisplaysProblem, Mode=OneWay}"
+            TextWrapping="Wrap"
+            Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.DisplaysProblem), Mode=OneWay, FallbackValue=Collapsed}" />
+          <TextBlock
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind ViewModel.Editor.ArrangementNote, Mode=OneWay}"
+            TextWrapping="Wrap"
+            Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.ArrangementNote), Mode=OneWay, FallbackValue=Collapsed}" />
+
+          <!-- Sections: the summary is the header, the settings open in place. -->
+          <StackPanel Spacing="4">
+            <tk:SettingsCard
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Description="{x:Bind ViewModel.Editor.Surround.Hint, Mode=OneWay}"
+              Header="{l:Tr Key=Editor_Surround}"
+              Visibility="{x:Bind ViewModel.Editor.Surround.IsVisible, Mode=OneWay}">
+              <tk:Segmented ItemsSource="{x:Bind ViewModel.Editor.Surround.Choices, Mode=OneWay}" SelectedItem="{x:Bind s:Bindings.Same(ViewModel.Editor.Surround.Selected), Mode=TwoWay, BindBack=SetSurround}" />
+            </tk:SettingsCard>
+
+            <tk:SettingsCard
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Description="{x:Bind ViewModel.Editor.DesktopIconsText, Mode=OneWay}"
+              Header="{l:Tr Key=Editor_DesktopIcons}"
+              ToolTipService.ToolTip="{l:Tr Key=Editor_DesktopIconsHint}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{x:Bind ViewModel.Editor.ClearDesktopIconsCommand, Mode=OneWay}" Content="{l:Tr Key=Editor_DesktopIconsClear}" Visibility="{x:Bind ViewModel.Editor.HasDesktopIcons, Mode=OneWay}" />
+                <Button Command="{x:Bind ViewModel.Editor.CaptureDesktopIconsCommand, Mode=OneWay}" Content="{l:Tr Key=Editor_DesktopIconsCapture}" />
+              </StackPanel>
+            </tk:SettingsCard>
+
+            <tk:SettingsExpander
+              x:Name="AudioSection"
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Header="{l:Tr Key=Tab_Audio}">
+              <tk:SettingsExpander.HeaderIcon>
+                <FontIcon Glyph="&#xE767;" />
+              </tk:SettingsExpander.HeaderIcon>
+              <tk:SettingsExpander.ItemsHeader>
+                <StackPanel Padding="58,12,16,12" Spacing="12">
+                  <ItemsRepeater ItemsSource="{x:Bind ViewModel.Editor.AudioSlots, Mode=OneWay}" ItemTemplate="{StaticResource AudioSlotTemplate}">
+                    <ItemsRepeater.Layout>
+                      <StackLayout Spacing="12" />
+                    </ItemsRepeater.Layout>
+                  </ItemsRepeater>
+                  <Expander
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    Header="{l:Tr Key=Editor_AudioAdvanced}"
+                    Visibility="{x:Bind ViewModel.Editor.ShowCommunicationsAudio, Mode=OneWay}">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Editor.CommunicationsAudioSlots, Mode=OneWay}" ItemTemplate="{StaticResource AudioSlotTemplate}">
+                      <ItemsRepeater.Layout>
+                        <StackLayout Spacing="12" />
+                      </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                  </Expander>
+                  <ToggleSwitch Header="{l:Tr Key=Editor_DisableDucking}" IsOn="{x:Bind ViewModel.Editor.DisableCommunicationsDucking, Mode=TwoWay, FallbackValue=False}" ToolTipService.ToolTip="{l:Tr Key=Editor_DisableDuckingHint}" />
+                </StackPanel>
+              </tk:SettingsExpander.ItemsHeader>
+            </tk:SettingsExpander>
+
+            <tk:SettingsExpander
+              x:Name="AppsSection"
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Header="{l:Tr Key=Tab_Apps}">
+              <tk:SettingsExpander.HeaderIcon>
+                <FontIcon Glyph="&#xE71D;" />
+              </tk:SettingsExpander.HeaderIcon>
+              <tk:SettingsExpander.ItemsHeader>
+                <c:AppListView Padding="58,12,16,12" List="{x:Bind ViewModel.Editor.AppList, Mode=OneWay}" />
+              </tk:SettingsExpander.ItemsHeader>
+            </tk:SettingsExpander>
+
+            <tk:SettingsExpander
+              x:Name="TriggersSection"
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Header="{l:Tr Key=Tab_Triggers}">
+              <tk:SettingsExpander.HeaderIcon>
+                <FontIcon Glyph="&#xE945;" />
+              </tk:SettingsExpander.HeaderIcon>
+              <tk:SettingsExpander.ItemsHeader>
+                <StackPanel Padding="58,12,16,12" Spacing="12">
+                  <InfoBar
+                    IsClosable="False"
+                    IsOpen="{x:Bind ViewModel.Editor.ShowAutostartOff, Mode=OneWay}"
+                    Message="{l:Tr Key=Trigger_AutostartOff}"
+                    Severity="Warning"
+                    Visibility="{x:Bind ViewModel.Editor.ShowAutostartOff, Mode=OneWay}">
+                    <InfoBar.ActionButton>
+                      <Button Command="{x:Bind ViewModel.Editor.TurnOnAutostartCommand, Mode=OneWay}" Content="{l:Tr Key=Trigger_AutostartTurnOn}" />
+                    </InfoBar.ActionButton>
+                  </InfoBar>
+
+                  <!-- USB rules -->
+                  <Grid>
+                    <StackPanel>
+                      <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Trigger_UsbTitle}" />
+                      <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{l:Tr Key=Trigger_UsbCaption}" />
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Command="{x:Bind ViewModel.Editor.Rules.AddRuleCommand, Mode=OneWay}">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="12" Glyph="&#xE710;" />
+                        <TextBlock Text="{l:Tr Key=Trigger_AddRule}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <ItemsRepeater ItemsSource="{x:Bind ViewModel.Editor.Rules.Rules, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                      <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RuleCard">
+                        <StackPanel Padding="16" Background="{ThemeResource BrandSurfaceBrush}" CornerRadius="{StaticResource BayRadius}" Spacing="10">
+                          <Grid>
+                            <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="{l:Tr Key=Trigger_RuleTitle}" />
+                            <Button
+                              HorizontalAlignment="Right"
+                              AutomationProperties.Name="{l:Tr Key=Automation_Delete}"
+                              Click="OnRemoveRule"
+                              Tag="{x:Bind}"
+                              ToolTipService.ToolTip="{l:Tr Key=Automation_Delete}">
+                              <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                            </Button>
+                          </Grid>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ItemsRepeater ItemsSource="{x:Bind Devices}">
+                              <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Horizontal" Spacing="8" />
+                              </ItemsRepeater.Layout>
+                              <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RuleDeviceSlot">
+                                  <Button
+                                    Padding="10,4"
+                                    AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}"
+                                    Click="OnRemoveDevice"
+                                    Tag="{x:Bind}"
+                                    ToolTipService.ToolTip="{l:Tr Key=Automation_RemoveDevice}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                      <FontIcon FontSize="12" Glyph="&#xE88E;" />
+                                      <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                                      <FontIcon FontSize="10" Glyph="&#xE711;" />
+                                    </StackPanel>
+                                  </Button>
+                                </DataTemplate>
+                              </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                            <DropDownButton Content="{l:Tr Key=Trigger_AddDevice}" Tag="{x:Bind}" ToolTipService.ToolTip="{l:Tr Key=Automation_AddDeviceHint}">
+                              <DropDownButton.Flyout>
+                                <MenuFlyout Opening="OnAddDeviceOpening" />
+                              </DropDownButton.Flyout>
+                            </DropDownButton>
+                          </StackPanel>
+                          <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox
+                              HorizontalAlignment="Stretch"
+                              Header="{l:Tr Key=Automation_DeviceGone}"
+                              ItemsSource="{x:Bind Owner.ExitChoices}"
+                              SelectedItem="{x:Bind SelectedExit, Mode=TwoWay}" />
+                            <NumberBox
+                              Grid.Column="1"
+                              Width="140"
+                              Header="{l:Tr Key=Automation_ExitDelay}"
+                              Minimum="0"
+                              SpinButtonPlacementMode="Compact"
+                              ToolTipService.ToolTip="{l:Tr Key=Automation_ExitDelayHint}"
+                              Tag="{x:Bind}"
+                              ValueChanged="OnExitDelayChanged"
+                              Value="{x:Bind s:Bindings.Number(ExitDelaySeconds), Mode=OneWay}" />
+                          </Grid>
+                          <ToggleSwitch Header="{l:Tr Key=Automation_SkipConfirmation}" IsOn="{x:Bind SkipConfirmation, Mode=TwoWay}" ToolTipService.ToolTip="{l:Tr Key=Automation_SkipConfirmationHint}" />
+                          <TextBlock
+                            Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                            Text="{l:Tr Key=Automation_DuplicateDevice}"
+                            TextWrapping="Wrap"
+                            Visibility="{x:Bind HasDuplicateDevice, Mode=OneWay}" />
+                          <InfoBar
+                            Title="{l:Tr Key=Automation_PowerSavingTitle}"
+                            IsClosable="False"
+                            IsOpen="{x:Bind HasPowerWarning, Mode=OneWay}"
+                            Message="{l:Tr Key=Automation_PowerSavingText}"
+                            Severity="Warning"
+                            Visibility="{x:Bind HasPowerWarning, Mode=OneWay}" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                  </ItemsRepeater>
+
+                  <!-- Hotkey, shortcut, command -->
+                  <tk:SettingsCard Background="{ThemeResource BrandSurfaceBrush}" Description="{x:Bind ViewModel.Editor.HotkeyHint, Mode=OneWay}" Header="{l:Tr Key=Editor_Hotkey}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <c:HotkeyBox
+                        Width="200"
+                        Field="{x:Bind ViewModel.Editor, Mode=OneWay}"
+                        PlaceholderText="{l:Tr Key=Editor_HotkeyPlaceholder}"
+                        Text="{x:Bind ViewModel.Editor.HotkeyText, Mode=OneWay}"
+                        ToolTipService.ToolTip="{l:Tr Key=Hotkey_RecordTip}" />
+                      <Button
+                        AutomationProperties.Name="{l:Tr Key=Editor_HotkeyClear}"
+                        Command="{x:Bind ViewModel.Editor.ClearHotkeyCommand, Mode=OneWay}"
+                        ToolTipService.ToolTip="{l:Tr Key=Editor_HotkeyClear}"
+                        Visibility="{x:Bind ViewModel.Editor.HasHotkey, Mode=OneWay}">
+                        <FontIcon FontSize="12" Glyph="&#xE711;" />
+                      </Button>
+                    </StackPanel>
+                  </tk:SettingsCard>
+                  <TextBlock
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    Text="{x:Bind ViewModel.Editor.HotkeyProblem, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    Visibility="{x:Bind s:Bindings.VisibleIfText(ViewModel.Editor.HotkeyProblem), Mode=OneWay, FallbackValue=Collapsed}" />
+                  <tk:SettingsCard Background="{ThemeResource BrandSurfaceBrush}" Description="{l:Tr Key=Trigger_ShortcutHint}" Header="{l:Tr Key=Trigger_Shortcut}">
+                    <Button Command="{x:Bind ViewModel.CreateShortcutCommand}" Content="{l:Tr Key=Trigger_ShortcutCreate}" />
+                  </tk:SettingsCard>
+                  <tk:SettingsCard Background="{ThemeResource BrandSurfaceBrush}" Description="{l:Tr Key=Trigger_CommandHint}" Header="{l:Tr Key=Trigger_Command}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBox Width="260" IsReadOnly="True" Text="{x:Bind ViewModel.Editor.CommandText, Mode=OneWay}" />
+                      <Button AutomationProperties.Name="{l:Tr Key=Trigger_Copy}" Command="{x:Bind ViewModel.CopyCommandCommand}" ToolTipService.ToolTip="{l:Tr Key=Trigger_Copy}">
+                        <FontIcon FontSize="12" Glyph="&#xE8C8;" />
+                      </Button>
+                    </StackPanel>
+                  </tk:SettingsCard>
+                </StackPanel>
+              </tk:SettingsExpander.ItemsHeader>
+            </tk:SettingsExpander>
+
+            <tk:SettingsExpander
+              x:Name="BehaviorSection"
+              Background="{ThemeResource BrandBackgroundBrush}"
+              Header="{l:Tr Key=Tab_Behavior}">
+              <tk:SettingsExpander.HeaderIcon>
+                <FontIcon Glyph="&#xE713;" />
+              </tk:SettingsExpander.HeaderIcon>
+              <tk:SettingsExpander.Items>
+                <tk:SettingsCard Description="{l:Tr Key=Editor_SwitchWithoutAskingHint}" Header="{l:Tr Key=Editor_SwitchWithoutAsking}">
+                  <ToggleSwitch IsEnabled="{x:Bind ViewModel.Editor.ConfirmationEnabled, Mode=OneWay}" IsOn="{x:Bind ViewModel.Editor.SwitchWithoutAsking, Mode=TwoWay, FallbackValue=False}" />
+                </tk:SettingsCard>
+                <tk:SettingsCard Description="{l:Tr Key=Editor_KeepAwakeHint}" Header="{l:Tr Key=Editor_KeepAwake}">
+                  <ToggleSwitch IsOn="{x:Bind ViewModel.Editor.KeepAwake, Mode=TwoWay, FallbackValue=False}" />
+                </tk:SettingsCard>
+                <tk:SettingsCard Description="{l:Tr Key=Editor_RememberWindowsHint}" Header="{l:Tr Key=Editor_RememberWindows}">
+                  <ToggleSwitch IsOn="{x:Bind ViewModel.Editor.RememberWindows, Mode=TwoWay, FallbackValue=False}" />
+                </tk:SettingsCard>
+              </tk:SettingsExpander.Items>
+            </tk:SettingsExpander>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Unsaved changes: one bar at the bottom, Save as the main action. -->
+    <Grid
+      MaxWidth="1036"
+      Margin="32,0,32,20"
+      Padding="16,10"
+      VerticalAlignment="Bottom"
+      Background="{ThemeResource BrandSelectedBrush}"
+      ColumnSpacing="8"
+      CornerRadius="{StaticResource BayRadius}"
+      Visibility="{x:Bind ViewModel.Editor.IsDirty, Mode=OneWay, FallbackValue=Collapsed}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock VerticalAlignment="Center" Text="{l:Tr Key=List_Unsaved}" />
+      <Button Grid.Column="1" Command="{x:Bind ViewModel.DiscardCommand}" Content="{l:Tr Key=Common_Discard}" />
+      <Button Grid.Column="2" Command="{x:Bind ViewModel.SaveCommand}" Content="{l:Tr Key=Common_Save}" Style="{StaticResource AccentButtonStyle}" />
+    </Grid>
+  </Grid>
+</Page>
