@@ -1,0 +1,236 @@
+<!-- RigShift's own styles on top of Semi: type scale, rail, rows, links, the one primary button. -->
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:u="https://irihi.tech/ursa">
+
+  <!-- Type: 12/14/16/20/28, regular + semibold; tabular figures where numbers line up. -->
+  <Style Selector="TextBlock.h1">
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="TextBlock.h2">
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="TextBlock.h3">
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="TextBlock.strong">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.secondary">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+  </Style>
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+  </Style>
+  <Style Selector="TextBlock.warning">
+    <Setter Property="Foreground" Value="{DynamicResource RsWarning}" />
+  </Style>
+  <Style Selector="TextBlock.danger">
+    <Setter Property="Foreground" Value="{DynamicResource RsDanger}" />
+  </Style>
+  <Style Selector="TextBlock.num">
+    <Setter Property="FontFeatures" Value="+tnum" />
+  </Style>
+
+  <!-- Stroke icons on the 24 grid -->
+  <Style Selector="Path.icon">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="18" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="Stroke" Value="{DynamicResource RsText2}" />
+    <Setter Property="StrokeThickness" Value="1.75" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+  </Style>
+  <Style Selector="Path.icon.small">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+  </Style>
+  <Style Selector="Path.icon.dots">
+    <Setter Property="StrokeThickness" Value="3" />
+  </Style>
+  <!-- A profile symbol: the brand drawing at 24 px. -->
+  <Style Selector="Path.symbol">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="Stroke" Value="{DynamicResource RsText2}" />
+    <Setter Property="StrokeThickness" Value="1.6" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+  </Style>
+
+  <!-- Focus ring: clay, 2 px, everywhere the keyboard lands. -->
+  <Style Selector="Button, ToggleButton, TextBox, ComboBox, CheckBox, RadioButton, ToggleSwitch, NumericUpDown, ListBoxItem, u|SettingsCard, DropDownButton">
+    <Setter Property="FocusAdorner">
+      <FocusAdornerTemplate>
+        <Border Margin="-3" BorderBrush="{DynamicResource RsAccent}" BorderThickness="2" CornerRadius="8" />
+      </FocusAdornerTemplate>
+    </Setter>
+  </Style>
+
+  <!-- Controls: 6 px radius, hairline outline, raised fill. -->
+  <Style Selector="TextBox, ComboBox, NumericUpDown">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="MinHeight" Value="32" />
+  </Style>
+  <Style Selector="TextBox, ComboBox">
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button">
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+
+  <!-- Neutral button: raised fill, hairline, primary text. -->
+  <Style Selector="Button.neutral">
+    <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    <Setter Property="FontWeight" Value="Regular" />
+    <Setter Property="Padding" Value="12,6" />
+  </Style>
+  <Style Selector="Button.neutral:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsRaisedHover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
+  </Style>
+
+  <!-- The one saturated element on a screen. -->
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource RsAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource RsOnAccent}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="16,7" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsAccentHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource RsOnAccent}" />
+  </Style>
+  <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsAccentHover}" />
+  </Style>
+
+  <!-- Icon-only button: no fill until hovered. -->
+  <Style Selector="Button.ghost">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="7" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsRaisedHover}" />
+  </Style>
+
+  <!-- Links: neutral, semibold, underline on hover; clay is kept for the primary action. -->
+  <Style Selector="Button.link">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    <Setter Property="TextBlock.TextDecorations" Value="Underline" />
+  </Style>
+
+  <!-- Rail -->
+  <Style Selector="Button.rail">
+    <Setter Property="Width" Value="60" />
+    <Setter Property="Height" Value="62" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.rail:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.rail Border.plate">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.rail:pointerover Border.plate">
+    <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+  </Style>
+  <Style Selector="Button.rail.selected Border.plate">
+    <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+  </Style>
+  <Style Selector="Button.rail Border.pill">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.rail.selected Border.pill">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <Style Selector="Button.rail TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+  </Style>
+  <Style Selector="Button.rail.selected TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="Button.rail.selected Path">
+    <Setter Property="Stroke" Value="{DynamicResource RsText}" />
+  </Style>
+
+  <!-- Hairline divider -->
+  <Style Selector="Border.divider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource RsDivider}" />
+  </Style>
+
+  <!-- A row: label left, control right. -->
+  <Style Selector="Grid.row">
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Margin" Value="0,0" />
+  </Style>
+
+  <!-- Notices instead of InfoBars: tinted surface, no icon badge. -->
+  <Style Selector="Border.notice">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="Background" Value="{DynamicResource RsWarningSoft}" />
+  </Style>
+  <Style Selector="Border.notice.danger">
+    <Setter Property="Background" Value="{DynamicResource RsDangerSoft}" />
+  </Style>
+
+  <!-- Ursa SettingsCard as a group header row: no own fill, our type. -->
+  <Style Selector="u|SettingsCard">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="4,12" />
+    <Setter Property="MinHeight" Value="56" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="u|SettingsCard /template/ ContentPresenter#PART_Content">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="16" />
+  </Style>
+  <!-- Avalonia 12 drawn caption buttons (Semi theme): no title text (the rail carries the brand), no fullscreen button. -->
+  <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+</Styles>

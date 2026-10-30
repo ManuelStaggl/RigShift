@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Spike #155, comparison: the profile sheet once more on ShadUI instead of Semi/Ursa. Not part of RigShift.slnx.
+       Services, display picture, glyphs and the Mona Sans files come from the Semi spike next door. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RootNamespace>RigShift.Avalonia</RootNamespace>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>..\RigShift.Avalonia\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="ShadUI" Version="0.2.4" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RigShift.Core\RigShift.Core.csproj" />
+    <ProjectReference Include="..\..\src\RigShift.Windows\RigShift.Windows.csproj" />
+    <ProjectReference Include="..\..\src\RigShift.Presentation\RigShift.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\RigShift.Avalonia\Services\SpikeHost.cs" Link="Shared\SpikeHost.cs" />
+    <Compile Include="..\RigShift.Avalonia\Services\SpikeServices.cs" Link="Shared\SpikeServices.cs" />
+    <Compile Include="..\RigShift.Avalonia\Views\DisplayTopology.cs" Link="Shared\DisplayTopology.cs" />
+    <Compile Include="..\RigShift.Avalonia\Views\Glyphs.cs" Link="Shared\Glyphs.cs" />
+    <AvaloniaResource Include="..\RigShift.Avalonia\Assets\Fonts\*.ttf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

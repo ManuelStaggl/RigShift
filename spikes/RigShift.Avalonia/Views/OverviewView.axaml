@@ -1,0 +1,176 @@
+<UserControl
+  x:Class="RigShift.Avalonia.Views.OverviewView"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:vm="using:RigShift.App.ViewModels"
+  x:DataType="vm:OverviewViewModel">
+  <UserControl.Styles>
+    <!-- A switch position: flat in the housing, the active one raised with the clay pill. -->
+    <Style Selector="Button.position">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="16,14,16,16" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.position:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsRaisedHover}" />
+    </Style>
+    <Style Selector="Button.position.active">
+      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    </Style>
+    <Style Selector="Button.position.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    </Style>
+    <Style Selector="Button.position.active Path.symbol">
+      <Setter Property="Stroke" Value="{DynamicResource RsText}" />
+    </Style>
+    <Style Selector="Button.game">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="8,10" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.game:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    </Style>
+    <Style Selector="Button.game TextBlock.play">
+      <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+    </Style>
+    <Style Selector="Button.game:pointerover TextBlock.play">
+      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel MaxWidth="1040" Margin="40,48,40,40" HorizontalAlignment="Left" Spacing="32">
+      <TextBlock Classes="h1" Text="{v:Tr Nav_Overview}" />
+
+      <Border Classes="notice danger" IsVisible="{Binding HasError}">
+        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+      </Border>
+
+      <!-- No profile yet -->
+      <StackPanel x:Name="EmptyState" Spacing="12" IsVisible="False">
+        <TextBlock Classes="h2" Text="{v:Tr Overview_SetupTitle}" />
+        <TextBlock Classes="secondary" Text="{v:Tr Overview_SetupText}" TextWrapping="Wrap" />
+        <Button HorizontalAlignment="Left" Classes="primary" Command="{Binding SetupManuallyCommand}" Content="{v:Tr Overview_SetupManual}" />
+      </StackPanel>
+
+      <StackPanel Spacing="16" IsVisible="{Binding HasProfiles}">
+        <!-- The switch: one housing, one position per profile. -->
+        <Border Padding="4" Background="{DynamicResource RsRail}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="10">
+          <ItemsControl IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Catalog.Items}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Rows="1" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ProfileItem">
+                <Grid Margin="2">
+                  <Button
+                    AutomationProperties.Name="{Binding AccessibleName}"
+                    Classes="position"
+                    Classes.active="{Binding IsActive}"
+                    Click="OnSwitch"
+                    Tag="{Binding}">
+                    <Grid RowDefinitions="Auto,120" RowSpacing="14">
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Path VerticalAlignment="Top" Classes="symbol" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileGeometry}}" />
+                        <StackPanel Grid.Column="1" Spacing="2">
+                          <TextBlock Classes="h3" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Classes="caption" IsVisible="{Binding IsActive}" Text="{v:Tr Profile_Active}" />
+                          <TextBlock
+                            Classes="caption warning"
+                            IsVisible="{Binding ShowsReadiness}"
+                            Text="{Binding ReadyText}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip.Tip="{Binding ReadyTip}" />
+                          <TextBlock Classes="caption num" IsVisible="{Binding ShowsHotkeyLine}" Text="{Binding HotkeyText}" />
+                        </StackPanel>
+                      </Grid>
+                      <v:DisplayTopology Grid.Row="1" Displays="{Binding Topology}" Size="Card" />
+                    </Grid>
+                  </Button>
+                  <Border
+                    Width="3"
+                    Height="22"
+                    Margin="0,16,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource RsAccent}"
+                    CornerRadius="0,2,2,0"
+                    IsHitTestVisible="False"
+                    IsVisible="{Binding IsActive}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+
+        <!-- What is on now, and what to do about it -->
+        <Grid x:Name="NowLine" Margin="4,0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+          <v:DisplayTopology Width="56" Height="24" Displays="{Binding LiveTopology}" Size="Tray" />
+          <TextBlock x:Name="NowText" Grid.Column="1" VerticalAlignment="Center" Classes="secondary" TextTrimming="CharacterEllipsis" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="20">
+            <Button Classes="link" Command="{Binding IdentifyCommand}" Content="{v:Tr Displays_Identify}" />
+            <Button x:Name="ReapplyButton" Classes="link" Click="OnReapply" Content="{v:Tr Profile_Reapply}" />
+            <Button Classes="link" Command="{Binding SaveCurrentCommand}" Content="{v:Tr Overview_SaveCurrent}" />
+          </StackPanel>
+        </Grid>
+        <StackPanel x:Name="SwitchingLine" Spacing="6" IsVisible="False">
+          <ProgressBar IsIndeterminate="True" />
+          <TextBlock x:Name="SwitchingText" Classes="strong" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Games as a launcher list: rows, the whole row starts the game. -->
+      <StackPanel Spacing="8" IsVisible="{Binding Games.HasGames}">
+        <TextBlock Classes="h3" Text="{v:Tr Nav_Games}" />
+        <Border Classes="divider" />
+        <ItemsControl IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Games.Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:GameItem">
+              <StackPanel>
+                <Button
+                  AutomationProperties.Name="{Binding PlayText}"
+                  Classes="game"
+                  Click="OnPlay"
+                  IsEnabled="{Binding CanPlay}"
+                  Tag="{Binding}">
+                  <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="14">
+                    <Panel Width="32" Height="32">
+                      <Border Background="{DynamicResource RsRaised}" CornerRadius="6" IsVisible="{Binding !HasGameIcon}">
+                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Classes="icon" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileGeometry}}" />
+                      </Border>
+                      <Image IsVisible="{Binding HasGameIcon}" Source="{Binding GameIcon, Converter={x:Static v:Converters.IconImage}}" />
+                    </Panel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                      <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="caption" Text="{Binding SourceText}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal" Spacing="16">
+                      <TextBlock VerticalAlignment="Center" Classes="caption num" IsVisible="{Binding ShowsHotkey}" Text="{Binding HotkeyText}" />
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Path Classes="icon small" Data="{x:Static v:Icons.Play}" />
+                        <TextBlock VerticalAlignment="Center" Classes="play" FontWeight="SemiBold" Text="{v:Tr Game_Play}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Grid>
+                </Button>
+                <Border Classes="divider" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
