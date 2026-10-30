@@ -44,6 +44,13 @@ public sealed partial class Shell : UserControl
             return;
         }
 
+        if (page == AppPage.Games)
+        {
+            // shortcut: two layout prototypes until one is chosen (#93); RIGSHIFT_PREVIEW_GAMES=B shows the library.
+            ContentFrame.Navigate(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMES") == "B" ? typeof(Pages.GamesLibraryPage) : typeof(Pages.GamesFlowPage));
+            return;
+        }
+
         // shortcut: one empty page with the item's name until the real pages exist (#93, #94).
         ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }

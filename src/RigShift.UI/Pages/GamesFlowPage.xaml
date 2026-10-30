@@ -1,0 +1,170 @@
+<Page
+  x:Class="RigShift.UI.Pages.GamesFlowPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:l="using:RigShift.UI.Localization"
+  xmlns:s="using:RigShift.UI.Services"
+  xmlns:vm="using:RigShift.App.ViewModels">
+  <Page.Resources>
+    <!-- One step of the session: number on the rail, title, what happens, and the step's settings. -->
+    <Style x:Key="StepCard" TargetType="Border">
+      <Setter Property="Padding" Value="16,14" />
+      <Setter Property="Background" Value="{ThemeResource BrandBackgroundBrush}" />
+      <Setter Property="CornerRadius" Value="{StaticResource BayRadius}" />
+    </Style>
+    <Style x:Key="StepNumber" TargetType="Border">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Background" Value="{ThemeResource BrandSurfaceAltBrush}" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="0,12,0,0" />
+    </Style>
+  </Page.Resources>
+
+  <!-- Prototype A "Flow": game list on the left; the selected game as its session from start to end, one step per card
+       on a rail. Step contents are demo data; list, icon and header are live. -->
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="260" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <Grid Padding="16,24,12,16" RowSpacing="12">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <Grid>
+        <TextBlock VerticalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Games}" />
+        <Button HorizontalAlignment="Right" AutomationProperties.Name="New game"><FontIcon FontSize="14" Glyph="&#xE710;" /></Button>
+      </Grid>
+      <ListView x:Name="List" Grid.Row="1" Margin="-4,0" ItemsSource="{x:Bind Catalog.Items}" SelectionChanged="OnSelected">
+        <ListView.ItemTemplate>
+          <DataTemplate x:DataType="vm:GameItem">
+            <Grid Padding="0,10" ColumnSpacing="12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid Width="36" Height="36">
+                <FontIcon FontSize="20" Glyph="{x:Bind s:ProfileGlyphs.ForGame(IconKey)}" Visibility="{x:Bind s:Bindings.CollapsedIf(HasGameIcon), Mode=OneWay}" />
+                <Image Source="{x:Bind s:WinUiIcons.Image(GameIcon), Mode=OneWay}" Visibility="{x:Bind HasGameIcon, Mode=OneWay}" />
+              </Grid>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind SourceText}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>
+    </Grid>
+
+    <Grid Grid.Column="1" Background="{ThemeResource BrandSurfaceBrush}" CornerRadius="12,0,0,0">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <Grid Padding="28,20,28,12" ColumnSpacing="14">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Image x:Name="HeadIcon" Width="40" Height="40" />
+        <FontIcon x:Name="HeadGlyph" FontSize="28" />
+        <StackPanel Grid.Column="1">
+          <TextBlock x:Name="HeadName" Style="{StaticResource TitleTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Ready · Ctrl+Alt+F5" />
+        </StackPanel>
+        <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon FontSize="12" Glyph="&#xE768;" /><TextBlock Text="{l:Tr Key=Game_Play}" /></StackPanel></Button>
+        <Button Grid.Column="3" AutomationProperties.Name="More"><FontIcon FontSize="14" Glyph="&#xE712;" /></Button>
+      </Grid>
+
+      <ScrollViewer Grid.Row="1">
+        <Grid Padding="28,4,28,28" ColumnSpacing="16">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="28" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <!-- The rail -->
+          <Rectangle Width="2" Margin="0,24" HorizontalAlignment="Center" Fill="{ThemeResource BrandSurfaceAltBrush}" />
+
+          <StackPanel Grid.ColumnSpan="2" Spacing="10">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+              <Border Style="{StaticResource StepNumber}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="1" /></Border>
+              <Border Grid.Column="1" Style="{StaticResource StepCard}">
+                <Grid ColumnSpacing="12">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Switch to Sim Rig" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Displays, audio and the profile's apps, before anything else" />
+                  </StackPanel>
+                  <ComboBox Grid.Column="1" MinWidth="180" SelectedIndex="0"><x:String>Sim Rig</x:String></ComboBox>
+                </Grid>
+              </Border>
+            </Grid>
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+              <Border Style="{StaticResource StepNumber}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="2" /></Border>
+              <Border Grid.Column="1" Style="{StaticResource StepCard}">
+                <StackPanel Spacing="4">
+                  <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Tools before the game" />
+                  <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Fanatec App · waits for Wheel" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+              <Border Style="{StaticResource StepNumber}" Background="{ThemeResource AccentFillColorDefaultBrush}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Text="3" /></Border>
+              <Border Grid.Column="1" Style="{StaticResource StepCard}">
+                <StackPanel Spacing="10">
+                  <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                      <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Start the game" />
+                      <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Steam · AC2-Win64-Shipping" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Choose…" />
+                  </Grid>
+                  <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <TextBox Header="Launch options" PlaceholderText="e.g. -vr" />
+                    <TextBox Grid.Column="1" Header="Game process" Text="AC2-Win64-Shipping" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+              <Border Style="{StaticResource StepNumber}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="4" /></Border>
+              <Border Grid.Column="1" Style="{StaticResource StepCard}">
+                <StackPanel Spacing="4">
+                  <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Tools after the game" />
+                  <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="SimHub, Crew Chief V4 · placed at their saved positions" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+              <Border Style="{StaticResource StepNumber}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="5" /></Border>
+              <Border Grid.Column="1" Style="{StaticResource StepCard}">
+                <Grid ColumnSpacing="12">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="When the game ends" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="Close the tools, then switch back" />
+                  </StackPanel>
+                  <ComboBox Grid.Column="1" MinWidth="180" SelectedIndex="0"><x:String>Back to Desk</x:String></ComboBox>
+                </Grid>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</Page>
