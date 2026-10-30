@@ -27,6 +27,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
     private readonly DisplayChangeWatcher _displayChanges;
     private readonly SwitchCoordinator _coordinator;
     private readonly ILogger _log;
+    private readonly ProfileEditorFactory _factory;
 
     /// <param name="editorServices">Handed to every editor; its catalog, displays, settings and log serve the dialogs too.</param>
     public ProfileDialogs(
@@ -52,6 +53,7 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
         _displayChanges = displayChanges;
         _coordinator = coordinator;
         _log = editorServices.Log.ForContext<ProfileDialogs>();
+        _factory = new ProfileEditorFactory(editorServices, audio, usbDevices, surround, powerCheck);
     }
 
     Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
@@ -82,56 +84,9 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
 
     Task<UnsavedChoice> IProfilePageDialogs.ConfirmUnsavedAsync(string name, string? targetName) => ConfirmUnsavedAsync(name, targetName);
 
-    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3).</summary>
-    public async Task<Profile> NewFromCurrentAsync()
-    {
-        DisplaySnapshot snapshot;
-        try
-        {
-            snapshot = await _display.QueryAsync(CancellationToken.None);
-        }
-        catch (Win32Exception ex)
-        {
-            _log.Warning(ex, "Current arrangement could not be read for a new profile");
-            snapshot = new DisplaySnapshot { TakenAt = DateTimeOffset.Now, Displays = [] };
-        }
+    public Task<Profile> NewFromCurrentAsync() => _factory.NewFromCurrentAsync();
 
-        IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
-        string name = ProfileEditing.UniqueName(Loc.Instance["Editor_NewName"], _catalog.Profiles.Select(p => p.Name));
-        AudioEndpoint? defaultPlayback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
-        Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, _catalog.KnownDisplayNames);
-
-        // A running Surround grid is part of "the arrangement as it is now" - without it the profile could never
-        // reproduce the wide display it just recorded.
-        SurroundState surround = await ReadSurroundAsync();
-        if (surround.Grids.Count > 0)
-        {
-            profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
-        }
-
-        return profile;
-    }
-
-    /// <summary>The detail's editor for a profile: audio and USB lists, Surround and the profile's rules from the settings.</summary>
-    public async Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew)
-    {
-        ArgumentNullException.ThrowIfNull(profile);
-        IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
-        IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
-        IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
-        SurroundState surround = await ReadSurroundAsync();
-        Core.Settings.AppSettings settings = _settings.Current;
-        var rules = new ProfileRulesEditor(
-            profile.Id, settings.AutomationRules ?? [], _catalog.Profiles, settings.DefaultProfileId, usbDevices, settings.UsbDeviceNames,
-            _powerCheck, _log);
-        var appsWaitDevice = new AppsWaitDeviceChoice(
-            profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDevices,
-            UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
-        var context = new ProfileEditorContext(
-            playback, recording, appsWaitDevice, surround, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
-            SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, _catalog.Profiles)?.Name);
-        return new ProfileEditorViewModel(profile, isNew, context, _editorServices);
-    }
+    public Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew) => _factory.CreateEditorAsync(profile, isNew);
 
     /// <summary>The setup assistant; remembers that it was shown.</summary>
     /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
@@ -321,44 +276,4 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
                 new DialogChoice(cancelText ?? Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
             ],
             cancelResult: 0) == 1;
-
-    /// <summary>The Surround state, or "no driver" when it cannot be read - the editor then simply hides the section.</summary>
-    private async Task<SurroundState> ReadSurroundAsync()
-    {
-        try
-        {
-            return await _surround.QueryAsync(CancellationToken.None);
-        }
-        catch (Exception ex) when (DisplayApiFailure.Is(ex))
-        {
-            _log.Warning(ex, "Surround state could not be read for the editor");
-            return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
-        }
-    }
-
-    private async Task<IReadOnlyList<Core.Automation.UsbDevice>> ListUsbDevicesAsync()
-    {
-        try
-        {
-            return await Task.Run(_usbDevices.ConnectedDevices);
-        }
-        catch (Win32Exception ex)
-        {
-            _log.Warning(ex, "USB devices could not be listed for the editor");
-            return [];
-        }
-    }
-
-    private async Task<IReadOnlyList<AudioDeviceInfo>> ListAudioAsync(AudioDirection direction)
-    {
-        try
-        {
-            return await _audio.ListAsync(direction, CancellationToken.None);
-        }
-        catch (COMException ex)
-        {
-            _log.Warning(ex, "{Direction} devices could not be listed for the editor", direction);
-            return [];
-        }
-    }
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using RigShift.App.Services;
+using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Ipc;
@@ -38,6 +39,12 @@ public partial class App : Application, IAppShell
 
     /// <summary>The app's services, for pages the frame creates by type.</summary>
     internal static IServiceProvider Provider => ((App)Current).Services;
+
+    /// <summary>Where content dialogs open: the main window, which a page or editor that asks is always in.</summary>
+    internal static XamlRoot? XamlRoot => ((App)Current)._window?.Content?.XamlRoot;
+
+    /// <summary>The main window as owner for Win32 dialogs; 0 when it does not exist.</summary>
+    internal static nint WindowHandle => ((App)Current)._window is { } window ? WinRT.Interop.WindowNative.GetWindowHandle(window) : 0;
 
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
@@ -107,6 +114,7 @@ public partial class App : Application, IAppShell
             Services.GetRequiredService<AutomationService>().Start();
             Services.GetRequiredService<GameSessionService>().StartWatching();
             Services.GetRequiredService<UpdateService>().Start();
+            Services.GetRequiredService<HotkeyService>().Start();
 
             if (!_request.Minimized)
             {
@@ -163,9 +171,19 @@ public partial class App : Application, IAppShell
         services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
         services.AddSingleton<TrayIconService>();
         services.AddSingleton<ITextClipboard, WinUiClipboard>();
-        services.AddSingleton<PendingPageDialogs>();
-        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PendingPageDialogs>());
-        services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PendingPageDialogs>());
+        services.AddSingleton<IAppPicker, WinUiAppPicker>();
+        services.AddSingleton<ProfileEditorFactory>();
+        services.AddSingleton<PageDialogs>();
+        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
+        services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
+        services.AddSingleton(sp => new HotkeyService(
+            sp.GetRequiredService<ProfileCatalog>(),
+            sp.GetRequiredService<GameCatalog>(),
+            sp.GetRequiredService<GameSessionService>(),
+            sp.GetRequiredService<SwitchCoordinator>(),
+            sp.GetRequiredService<SettingsService>(),
+            Log.Logger,
+            new WinUiHotkeyRegistrar()));
         AppIcons.Extract = WinUiIcons.Extract;
         services.AddSingleton(sp => new CommandPipeServer(
             sp.GetRequiredService<CommandRunner>(), this, Log.Logger, work => OnUiThread(ui, work)));

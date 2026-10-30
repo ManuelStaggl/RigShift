@@ -17,7 +17,7 @@ public interface IAppPicker
 {
     /// <summary>The program picked, or <c>null</c> when the user cancelled.</summary>
     /// <param name="currentPath">The entry's program, to start from; <c>null</c> for a new entry.</param>
-    PickedApp? Pick(string? currentPath);
+    Task<PickedApp?> PickAsync(string? currentPath);
 }
 
 /// <summary>
@@ -102,18 +102,18 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
 
     /// <summary>A new entry starts with the picker; cancelling it adds nothing.</summary>
     [RelayCommand]
-    private void AddPicked()
+    private async Task AddPickedAsync()
     {
-        if (_picker.Pick(null) is { } picked)
+        if (await _picker.PickAsync(null) is { } picked)
         {
             Add(picked.Path, picked.Name);
         }
     }
 
     [RelayCommand]
-    private void Browse(AppEditItem? item)
+    private async Task BrowseAsync(AppEditItem? item)
     {
-        if (item is not null && _picker.Pick(item.Path) is { } picked)
+        if (item is not null && await _picker.PickAsync(item.Path) is { } picked)
         {
             item.SetPicked(picked.Path, picked.Name);
         }

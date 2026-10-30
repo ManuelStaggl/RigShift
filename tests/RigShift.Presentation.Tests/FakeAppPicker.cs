@@ -10,9 +10,9 @@ internal sealed class FakeAppPicker : IAppPicker
     /// <summary>The path each call started from; <c>null</c> for a new entry.</summary>
     public List<string?> OpenedWith { get; } = [];
 
-    public PickedApp? Pick(string? currentPath)
+    public Task<PickedApp?> PickAsync(string? currentPath)
     {
         OpenedWith.Add(currentPath);
-        return Answers.Count > 0 ? Answers.Dequeue() : null;
+        return Task.FromResult(Answers.Count > 0 ? Answers.Dequeue() : null);
     }
 }

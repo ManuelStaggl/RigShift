@@ -4,6 +4,8 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.HiDpi;
+using Windows.Win32.UI.Shell;
+using Windows.Win32.UI.Shell.Common;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -263,6 +265,83 @@ public static class NativeWindow
 
     private static System.Drawing.Rectangle ToRectangle(RECT rect) =>
         System.Drawing.Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+
+    /// <summary>
+    /// The Windows "Open" dialog, modal to <paramref name="owner"/>. WinRT's FileOpenPicker refuses to open in an
+    /// elevated process, which RigShift may be; the shell dialog behind it does not.
+    /// </summary>
+    /// <param name="filter">WPF style, e.g. "Programs (*.exe)|*.exe|All files (*.*)|*.*".</param>
+    /// <returns>The chosen file, or <c>null</c> when the user cancelled.</returns>
+    public static unsafe string? PickFile(nint owner, string filter, string title, string? initialFolder)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(title);
+        var dialog = (IFileOpenDialog)new FileOpenDialog();
+        string[] parts = filter.Split('|');
+        var specs = new COMDLG_FILTERSPEC[parts.Length / 2];
+        var pins = new List<GCHandle>();
+        try
+        {
+            for (int i = 0; i < specs.Length; i++)
+            {
+                GCHandle name = GCHandle.Alloc(parts[2 * i], GCHandleType.Pinned);
+                GCHandle pattern = GCHandle.Alloc(parts[(2 * i) + 1], GCHandleType.Pinned);
+                pins.Add(name);
+                pins.Add(pattern);
+                specs[i] = new() { pszName = (char*)name.AddrOfPinnedObject(), pszSpec = (char*)pattern.AddrOfPinnedObject() };
+            }
+
+            fixed (COMDLG_FILTERSPEC* specsPtr = specs)
+            fixed (char* titlePtr = title)
+            {
+                dialog.SetFileTypes((uint)specs.Length, specsPtr);
+                dialog.SetTitle(titlePtr);
+            }
+
+            dialog.SetOptions(FILEOPENDIALOGOPTIONS.FOS_FILEMUSTEXIST | FILEOPENDIALOGOPTIONS.FOS_FORCEFILESYSTEM | FILEOPENDIALOGOPTIONS.FOS_NOCHANGEDIR);
+            if (initialFolder is not null && Directory.Exists(initialFolder))
+            {
+                Guid shellItem = typeof(IShellItem).GUID;
+                fixed (char* folderPtr = initialFolder)
+                {
+                    if (PInvoke.SHCreateItemFromParsingName(folderPtr, null, &shellItem, out object folder).Succeeded)
+                    {
+                        dialog.SetFolder((IShellItem)folder);
+                    }
+                }
+            }
+
+            try
+            {
+                dialog.Show(new HWND(owner));
+            }
+            catch (COMException ex) when (ex.HResult == unchecked((int)0x800704C7))
+            {
+                return null; // ERROR_CANCELLED
+            }
+
+            dialog.GetResult(out IShellItem result);
+            PWSTR path;
+            result.GetDisplayName(SIGDN.SIGDN_FILESYSPATH, &path);
+            try
+            {
+                return path.ToString();
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem((nint)path.Value);
+            }
+        }
+        finally
+        {
+            foreach (GCHandle pin in pins)
+            {
+                pin.Free();
+            }
+
+            Marshal.FinalReleaseComObject(dialog);
+        }
+    }
 
     /// <summary>Physical pixels per device-independent unit on the window's monitor.</summary>
     public static double DpiScale(nint hwnd) => (PInvoke.GetDpiForWindow(new HWND(hwnd)) is var dpi and > 0 ? dpi : 96) / 96d;
