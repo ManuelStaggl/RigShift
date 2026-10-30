@@ -1,0 +1,28 @@
+<Window
+  x:Class="RigShift.UI.IdentifyWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  Title="RigShift">
+  <!-- Fixed colours on purpose: the overlay must read well on any wallpaper, whatever the app theme. -->
+  <Border
+    Background="#FF1B1B1F"
+    BorderBrush="#FF60CDFF"
+    BorderThickness="3"
+    CornerRadius="8">
+    <StackPanel Padding="24,8,24,20" VerticalAlignment="Center">
+      <TextBlock
+        x:Name="NumberText"
+        HorizontalAlignment="Center"
+        FontSize="120"
+        FontWeight="SemiBold"
+        Foreground="White" />
+      <TextBlock
+        x:Name="NameText"
+        HorizontalAlignment="Center"
+        FontSize="22"
+        Foreground="White"
+        TextAlignment="Center"
+        TextTrimming="CharacterEllipsis" />
+    </StackPanel>
+  </Border>
+</Window>

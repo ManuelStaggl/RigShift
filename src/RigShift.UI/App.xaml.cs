@@ -6,6 +6,7 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Ipc;
 using RigShift.Core.Profiles;
+using RigShift.UI.Services;
 using RigShift.UI.Tray;
 using Serilog;
 
@@ -27,6 +28,9 @@ public partial class App : Application, IAppShell
     }
 
     public bool IsExiting { get; private set; }
+
+    /// <summary>The app's services, for pages the frame creates by type.</summary>
+    internal static IServiceProvider Provider => ((App)Current).Services;
 
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
@@ -50,9 +54,7 @@ public partial class App : Application, IAppShell
         _window.Show(page);
     }
 
-    public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, DisplayAssignment Mode)> displays) =>
-        // shortcut: no identify windows yet; they come with the overview page (#91).
-        Log.Information("Identifying {Count} displays is not available in this build yet", displays.Count);
+    public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, DisplayAssignment Mode)> displays) => IdentifyWindow.ShowAll(displays);
 
     public void Quit()
     {
@@ -153,6 +155,11 @@ public partial class App : Application, IAppShell
         services.AddRigShiftServices(_paths, this, Log.Logger);
         services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
         services.AddSingleton<TrayIconService>();
+        services.AddSingleton<ITextClipboard, WinUiClipboard>();
+        services.AddSingleton<PendingPageDialogs>();
+        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PendingPageDialogs>());
+        services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PendingPageDialogs>());
+        AppIcons.Extract = WinUiIcons.Extract;
         services.AddSingleton(sp => new CommandPipeServer(
             sp.GetRequiredService<CommandRunner>(), this, Log.Logger, work => OnUiThread(ui, work)));
         return services;
