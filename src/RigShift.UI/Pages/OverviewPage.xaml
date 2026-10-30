@@ -7,27 +7,24 @@
   xmlns:s="using:RigShift.UI.Services"
   xmlns:vm="using:RigShift.App.ViewModels">
 
-  <!-- The profiles are the positions of one switch, the active one lit; a click on another switches. Games sit below
-       as a launcher. Everything else about displays lives on its own pages. -->
+  <!-- The profiles are the positions of one switch, the active one lit; a click on another switches. Brand surfaces,
+       borderless panels, the active profile on the selected surface with an accent edge. Games sit below as a launcher. -->
   <ScrollViewer>
-    <StackPanel MaxWidth="1100" Padding="36,24,36,36" Spacing="24">
+    <StackPanel MaxWidth="1100" Padding="32,24,32,32" Spacing="24">
       <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{l:Tr Key=Nav_Overview}" />
 
       <InfoBar
         IsClosable="False"
         IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
-        Visibility="{x:Bind ViewModel.HasError, Mode=OneWay}"
         Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-        Severity="Error" />
+        Severity="Error"
+        Visibility="{x:Bind ViewModel.HasError, Mode=OneWay}" />
 
-      <!-- No profile yet: one way in. -->
       <StackPanel
         x:Name="EmptyState"
         Padding="24"
-        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-        BorderThickness="1"
-        CornerRadius="8"
+        Background="{ThemeResource BrandSurfaceBrush}"
+        CornerRadius="{StaticResource CardRadius}"
         Spacing="12"
         Visibility="Collapsed">
         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Overview_SetupTitle}" />
@@ -39,41 +36,46 @@
           Style="{StaticResource AccentButtonStyle}" />
       </StackPanel>
 
-      <StackPanel Spacing="10" Visibility="{x:Bind ViewModel.HasProfiles, Mode=OneWay}">
-        <!-- Nothing to start while a switch runs. -->
+      <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.HasProfiles, Mode=OneWay}">
         <ContentControl HorizontalContentAlignment="Stretch" IsEnabled="{x:Bind ViewModel.Coordinator.IsIdle, Mode=OneWay}" IsTabStop="False">
           <ItemsRepeater ItemsSource="{x:Bind ViewModel.Catalog.Items}">
             <ItemsRepeater.Layout>
               <UniformGridLayout
                 ItemsStretch="Fill"
                 MaximumRowsOrColumns="4"
-                MinColumnSpacing="8"
-                MinItemWidth="240"
-                MinRowSpacing="8" />
+                MinColumnSpacing="12"
+                MinItemWidth="260"
+                MinRowSpacing="12" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
               <DataTemplate x:DataType="vm:ProfileItem">
                 <Grid>
                   <Button
-                    Padding="16,14"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
                     AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}"
+                    Background="{x:Bind s:Bindings.BrushIf(IsActive, 'BrandSelectedBrush', 'BrandSurfaceBrush'), Mode=OneWay}"
+                    BorderThickness="0"
                     Click="OnSwitch"
+                    Padding="20,18"
+                    Style="{StaticResource TileButtonStyle}"
                     Tag="{x:Bind}">
-                    <Grid RowSpacing="10">
+                    <Grid RowSpacing="14">
                       <Grid.RowDefinitions>
-                        <RowDefinition Height="120" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="104" />
                       </Grid.RowDefinitions>
-                      <c:DisplayTopology Displays="{x:Bind Topology}" Size="Card" />
-                      <Grid Grid.Row="1" ColumnSpacing="8">
+                      <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
-                          <ColumnDefinition Width="*" />
                           <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel>
+                        <Path
+                          VerticalAlignment="Top"
+                          Data="{x:Bind s:ProfileGlyphs.Drawing(IconKey)}"
+                          Stroke="{x:Bind s:Bindings.BrushIf(IsActive, 'AccentTextFillColorPrimaryBrush', 'TextFillColorSecondaryBrush'), Mode=OneWay}"
+                          Style="{StaticResource ProfileSymbolStyle}" />
+                        <StackPanel Grid.Column="1">
                           <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Visibility="{x:Bind IsActive, Mode=OneWay}"><Run FontFamily="{ThemeResource SymbolThemeFontFamily}" Text="&#xE73E;" /><Run Text=" " /><Run Text="{l:Tr Key=Profile_Active}" /></TextBlock>
                           <TextBlock
                             Foreground="{ThemeResource SystemFillColorCautionBrush}"
                             Style="{StaticResource CaptionTextBlockStyle}"
@@ -82,28 +84,24 @@
                             ToolTipService.ToolTip="{x:Bind ReadyTip, Mode=OneWay}"
                             Visibility="{x:Bind ShowsReadiness, Mode=OneWay}" />
                           <TextBlock
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                             Style="{StaticResource CaptionTextBlockStyle}"
                             Text="{x:Bind HotkeyText}"
                             Visibility="{x:Bind ShowsHotkeyLine, Mode=OneWay}" />
                         </StackPanel>
-                        <Border
-                          Grid.Column="1"
-                          Padding="8,2"
-                          VerticalAlignment="Top"
-                          Background="{ThemeResource AccentFillColorDefaultBrush}"
-                          CornerRadius="10"
-                          Visibility="{x:Bind IsActive, Mode=OneWay}">
-                          <TextBlock Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{l:Tr Key=Profile_Active}" />
-                        </Border>
                       </Grid>
+                      <Border Grid.Row="1" Padding="12" Background="{ThemeResource BrandSurfaceAltBrush}" CornerRadius="{StaticResource BayRadius}">
+                        <c:DisplayTopology Displays="{x:Bind Topology}" Size="Card" />
+                      </Border>
                     </Grid>
                   </Button>
-                  <!-- The lit position of the switch. -->
+                  <!-- The accent edge marks the switch position that is on. -->
                   <Border
-                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
-                    BorderThickness="2"
-                    CornerRadius="{ThemeResource ControlCornerRadius}"
+                    Width="4"
+                    Margin="0,16"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                    CornerRadius="0,2,2,0"
                     IsHitTestVisible="False"
                     Visibility="{x:Bind IsActive, Mode=OneWay}" />
                 </Grid>
@@ -112,8 +110,7 @@
           </ItemsRepeater>
         </ContentControl>
 
-        <!-- Under the switch: what is on screen now, or the switch that is running. -->
-        <Grid x:Name="NowLine" ColumnSpacing="12">
+        <Grid x:Name="NowLine" Padding="4,0" ColumnSpacing="12">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -121,8 +118,8 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <c:DisplayTopology
-            Width="72"
-            Height="28"
+            Width="56"
+            Height="24"
             Displays="{x:Bind ViewModel.LiveTopology, Mode=OneWay}"
             Size="Tray" />
           <TextBlock
@@ -131,11 +128,7 @@
             VerticalAlignment="Center"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
             TextTrimming="CharacterEllipsis" />
-          <HyperlinkButton
-            Grid.Column="2"
-            Command="{x:Bind ViewModel.IdentifyCommand}"
-            Content="{l:Tr Key=Displays_Identify}"
-            ToolTipService.ToolTip="{l:Tr Key=Displays_IdentifyTip}" />
+          <HyperlinkButton Grid.Column="2" Command="{x:Bind ViewModel.IdentifyCommand}" Content="{l:Tr Key=Displays_Identify}" />
           <HyperlinkButton
             x:Name="ReapplyButton"
             Grid.Column="3"
@@ -148,55 +141,51 @@
         </StackPanel>
       </StackPanel>
 
-      <!-- Games as a launcher: a click switches to the game's profile and starts it. -->
+      <!-- Games as wide tiles: the whole tile starts the game, Play sits on the right in the accent. -->
       <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.Games.HasGames, Mode=OneWay}">
-        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Games}" />
-        <!-- Nothing to start while a switch runs. -->
+        <TextBlock Margin="0,8,0,0" Style="{StaticResource SubtitleTextBlockStyle}" Text="{l:Tr Key=Nav_Games}" />
         <ContentControl HorizontalContentAlignment="Stretch" IsEnabled="{x:Bind ViewModel.Coordinator.IsIdle, Mode=OneWay}" IsTabStop="False">
           <ItemsRepeater ItemsSource="{x:Bind ViewModel.Games.Items}">
             <ItemsRepeater.Layout>
               <UniformGridLayout
                 ItemsStretch="Fill"
                 MinColumnSpacing="12"
-                MinItemHeight="150"
-                MinItemWidth="170"
+                MinItemWidth="320"
                 MinRowSpacing="12" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
               <DataTemplate x:DataType="vm:GameItem">
                 <Button
-                  Padding="12"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  AutomationProperties.Name="{x:Bind AccessibleName, Mode=OneWay}"
+                  AutomationProperties.Name="{x:Bind PlayText}"
+                  Background="{ThemeResource BrandSurfaceBrush}"
+                  BorderThickness="0"
                   Click="OnPlay"
                   IsEnabled="{x:Bind CanPlay, Mode=OneWay}"
-                  Tag="{x:Bind}"
-                  ToolTipService.ToolTip="{x:Bind PlayText}">
-                  <StackPanel HorizontalAlignment="Center" Spacing="8">
-                    <Grid
-                      Width="56"
-                      Height="56"
-                      HorizontalAlignment="Center">
-                      <!-- The game's own icon when there is one, else its chosen symbol or the generic game glyph. -->
-                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="12" Visibility="{x:Bind s:Bindings.CollapsedIf(HasGameIcon), Mode=OneWay}">
-                        <FontIcon FontSize="28" Glyph="{x:Bind s:ProfileGlyphs.ForGame(IconKey)}" />
+                  Padding="16,14"
+                  Style="{StaticResource TileButtonStyle}"
+                  Tag="{x:Bind}">
+                  <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="44" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="44" Height="44">
+                      <Border Background="{ThemeResource BrandSurfaceAltBrush}" CornerRadius="{StaticResource BayRadius}" Visibility="{x:Bind s:Bindings.CollapsedIf(HasGameIcon), Mode=OneWay}">
+                        <FontIcon FontSize="22" Glyph="{x:Bind s:ProfileGlyphs.ForGame(IconKey)}" />
                       </Border>
                       <Image Source="{x:Bind s:WinUiIcons.Image(GameIcon), Mode=OneWay}" Visibility="{x:Bind HasGameIcon, Mode=OneWay}" />
                     </Grid>
-                    <TextBlock
-                      HorizontalAlignment="Center"
-                      Style="{StaticResource BodyStrongTextBlockStyle}"
-                      Text="{x:Bind Name}"
-                      TextAlignment="Center"
-                      TextTrimming="CharacterEllipsis" />
-                    <TextBlock
-                      HorizontalAlignment="Center"
-                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                      Style="{StaticResource CaptionTextBlockStyle}"
-                      Text="{x:Bind SourceText}"
-                      TextTrimming="CharacterEllipsis" />
-                  </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind SourceText}" />
+                    </StackPanel>
+                    <FontIcon
+                      Grid.Column="2"
+                      FontSize="16"
+                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                      Glyph="&#xE768;" />
+                  </Grid>
                 </Button>
               </DataTemplate>
             </ItemsRepeater.ItemTemplate>
