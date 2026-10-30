@@ -32,3 +32,22 @@ public sealed partial class ProfilesSheetPage : Page
         Picture.SelectedKey = item.Topology.Count > 0 ? item.Topology[0].Key : null;
     }
 }
+
+/// <summary>Preview helpers of the profiles prototype.</summary>
+internal static class ProfilesPrototype
+{
+    /// <summary>The second profile when there is one: the demo's Sim Rig shows more than the desk.</summary>
+    public static int InitialIndex(ProfileCatalog catalog)
+    {
+#if DEBUG
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_ACTIVE") is { } name && catalog.Items.FirstOrDefault(i => i.Name == name) is { } active)
+        {
+            active.IsActive = true;
+        }
+#endif
+        return catalog.Items.Count > 1 ? 1 : 0;
+    }
+
+    public static string HeadLine(ProfileItem item) =>
+        string.Join(" · ", new[] { item.IsActive ? RigShift.App.Localization.Loc.Instance["Profile_Active"] : item.ReadyText, item.HotkeyText }.Where(t => !string.IsNullOrEmpty(t)));
+}
