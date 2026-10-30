@@ -29,7 +29,7 @@ public enum TopologySize
 /// <summary>
 /// Port of the WinUI DisplayTopology: plain rectangles true to scale on a canvas, from <see cref="TopologyLayout"/>,
 /// placed once per change of arrangement, size, selection or theme. Number, name and mode as labels, a star for the main
-/// display, dashed for optional or missing. Neutral greys; the selected display's outline in clay.
+/// display, dashed for optional or missing. Neutral greys; the selected display's outline in the accent line colour.
 /// </summary>
 public sealed class DisplayTopology : Canvas
 {
@@ -145,7 +145,7 @@ public sealed class DisplayTopology : Canvas
             RadiusX = Radius,
             RadiusY = Radius,
             Fill = missing || off || display.IsOptional ? null : Brush("RsTileFill"),
-            Stroke = Brush(selected ? "RsAccent" : missing ? "RsWarning" : "RsTileStroke"),
+            Stroke = Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsTileStroke"),
             StrokeThickness = selected ? 2 : 1,
         };
         if (missing || display.IsOptional)

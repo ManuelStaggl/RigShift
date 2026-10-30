@@ -82,7 +82,7 @@ public sealed partial class MainWindow : Window
             CornerRadius = new global::Avalonia.CornerRadius(0, 2, 2, 0),
             Classes = { "pill" },
         };
-        pill.Bind(Border.BackgroundProperty, pill.GetResourceObservable("RsAccent"));
+        pill.Bind(Border.BackgroundProperty, pill.GetResourceObservable("RsAccentText"));
         var content = new Grid();
         content.Children.Add(new StackPanel { Spacing = 3, VerticalAlignment = VerticalAlignment.Center, Children = { plate, label } });
         content.Children.Add(pill);

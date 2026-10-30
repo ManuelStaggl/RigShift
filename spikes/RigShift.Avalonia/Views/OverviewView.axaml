@@ -6,7 +6,7 @@
   xmlns:vm="using:RigShift.App.ViewModels"
   x:DataType="vm:OverviewViewModel">
   <UserControl.Styles>
-    <!-- A switch position: flat in the housing, the active one raised with the clay pill. -->
+    <!-- A switch position: flat in the housing, the active one raised with the accent pill. -->
     <Style Selector="Button.position">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />

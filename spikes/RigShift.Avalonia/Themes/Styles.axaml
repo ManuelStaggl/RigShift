@@ -73,11 +73,11 @@
     <Setter Property="StrokeJoin" Value="Round" />
   </Style>
 
-  <!-- Focus ring: clay, 2 px, everywhere the keyboard lands. -->
+  <!-- Focus ring: accent line colour, 2 px, everywhere the keyboard lands. -->
   <Style Selector="Button, ToggleButton, TextBox, ComboBox, CheckBox, RadioButton, ToggleSwitch, NumericUpDown, ListBoxItem, u|SettingsCard, DropDownButton">
     <Setter Property="FocusAdorner">
       <FocusAdornerTemplate>
-        <Border Margin="-3" BorderBrush="{DynamicResource RsAccent}" BorderThickness="2" CornerRadius="8" />
+        <Border Margin="-3" BorderBrush="{DynamicResource RsAccentText}" BorderThickness="2" CornerRadius="8" />
       </FocusAdornerTemplate>
     </Setter>
   </Style>
@@ -136,7 +136,7 @@
     <Setter Property="Background" Value="{DynamicResource RsRaisedHover}" />
   </Style>
 
-  <!-- Links: neutral, semibold, underline on hover; clay is kept for the primary action. -->
+  <!-- Links: neutral, semibold, underline on hover; the accent is kept for the primary action. -->
   <Style Selector="Button.link">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
