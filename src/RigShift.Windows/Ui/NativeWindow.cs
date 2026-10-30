@@ -169,6 +169,45 @@ public static class NativeWindow
     }
 
     /// <summary>
+    /// Opens a window on the monitor with the cursor, centered at its intended size – or, when it does not fit there, on
+    /// the primary monitor if it fits there, and otherwise in the whole work area. The same rules as
+    /// <see cref="FitIntoMonitor"/>, for a window that has no place yet.
+    /// </summary>
+    /// <returns>The bounds in physical pixels and whether the window went to the primary monitor, or null when a Win32 call failed.</returns>
+    public static (System.Drawing.Rectangle Bounds, bool ToPrimary)? OpenOnCursorMonitor(nint hwnd, double width, double height)
+    {
+        var handle = new HWND(hwnd);
+        if (!PInvoke.GetCursorPos(out System.Drawing.Point cursor))
+        {
+            return null;
+        }
+
+        HMONITOR monitor = PInvoke.MonitorFromPoint(cursor, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        HMONITOR primary = PInvoke.MonitorFromPoint(default, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
+        if (WorkArea(monitor) is not { } work)
+        {
+            return null;
+        }
+
+        uint dpi = MonitorDpi(monitor) ?? PInvoke.GetDpiForWindow(handle);
+        System.Drawing.Rectangle primaryWork = monitor == primary ? default : WorkArea(primary) ?? default;
+        (System.Drawing.Rectangle bounds, bool toPrimary) = Choose(work, Scaled(width, height, dpi), primaryWork, Scaled(width, height, MonitorDpi(primary) ?? dpi));
+        if (!Move(handle, bounds))
+        {
+            return null;
+        }
+
+        // Another monitor's scaling: the window was just resized for the new DPI by Windows' suggestion, which starts
+        // from the old size – so the bounds go on once more.
+        if (PInvoke.GetDpiForWindow(handle) != dpi || toPrimary)
+        {
+            Move(handle, bounds);
+        }
+
+        return (bounds, toPrimary);
+    }
+
+    /// <summary>
     /// Where a window that sticks out of <paramref name="work"/> belongs. <paramref name="primaryWork"/> is empty when the
     /// window is on the primary monitor already. Null when it lies inside its work area.
     /// </summary>
@@ -179,11 +218,16 @@ public static class NativeWindow
         System.Drawing.Rectangle primaryWork,
         System.Drawing.Size wantedOnPrimary)
     {
-        if (work.IsEmpty || work.Contains(window))
-        {
-            return null;
-        }
+        return work.IsEmpty || work.Contains(window) ? null : Choose(work, wanted, primaryWork, wantedOnPrimary);
+    }
 
+    /// <summary>Centered on <paramref name="work"/>, or on the primary monitor when the window fits only there.</summary>
+    private static (System.Drawing.Rectangle Bounds, bool ToPrimary) Choose(
+        System.Drawing.Rectangle work,
+        System.Drawing.Size wanted,
+        System.Drawing.Rectangle primaryWork,
+        System.Drawing.Size wantedOnPrimary)
+    {
         bool fitsHere = wanted.Width <= work.Width && wanted.Height <= work.Height;
         bool fitsPrimary = !primaryWork.IsEmpty && wantedOnPrimary.Width <= primaryWork.Width && wantedOnPrimary.Height <= primaryWork.Height;
         return !fitsHere && fitsPrimary

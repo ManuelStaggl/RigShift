@@ -4,7 +4,11 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:l="using:RigShift.UI.Localization">
 
-  <NavigationView IsBackButtonVisible="Collapsed" IsSettingsVisible="False">
+  <NavigationView
+    x:Name="Navigation"
+    IsBackButtonVisible="Collapsed"
+    IsSettingsVisible="False"
+    SelectionChanged="OnSelectionChanged">
     <NavigationView.MenuItems>
       <NavigationViewItem Content="{l:Tr Key=Nav_Overview}" Tag="Overview">
         <NavigationViewItem.Icon>
