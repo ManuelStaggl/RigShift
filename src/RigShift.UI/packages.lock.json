@@ -2,22 +2,16 @@
   "version": 2,
   "dependencies": {
     "net10.0-windows10.0.26100": {
-      "Microsoft.WindowsAppSDK": {
+      "Microsoft.WindowsAppSDK.WinUI": {
         "type": "Direct",
         "requested": "[2.6.4, )",
         "resolved": "2.6.4",
-        "contentHash": "Q8DtDcFEvcOslXBly4kH44EBSbiUsNAzjkTaVioerP3tTjMktMY0DC5Z0a7/KzwDXKYzJ8ao0RLF07KbKigUiw==",
+        "contentHash": "AyQN+i9GEhwIt9YZA/fQXGZOLluKBfqtfwGCU8t9mbWtyABivaVsKZ7oZLxm1cGxhdlOhnUhZRfBO/1BV4+MUA==",
         "dependencies": {
-          "Microsoft.WindowsAppSDK.AI": "2.6.4",
-          "Microsoft.WindowsAppSDK.Base": "[2.6.4]",
-          "Microsoft.WindowsAppSDK.DWrite": "2.6.4",
+          "Microsoft.Web.WebView2": "1.0.3719.77",
+          "Microsoft.WindowsAppSDK.Base": "2.6.4",
           "Microsoft.WindowsAppSDK.Foundation": "2.6.4",
-          "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.6.4",
-          "Microsoft.WindowsAppSDK.ML": "2.6.4",
-          "Microsoft.WindowsAppSDK.Runtime": "[2.6.4]",
-          "Microsoft.WindowsAppSDK.Search": "2.6.4",
-          "Microsoft.WindowsAppSDK.Widgets": "2.6.4",
-          "Microsoft.WindowsAppSDK.WinUI": "2.6.4"
+          "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.6.4"
         }
       },
       "Serilog": {
@@ -55,14 +49,6 @@
         "resolved": "1.0.3719.77",
         "contentHash": "t+ucyKw5NTwMjsUrDF6R9Lk40lpcKQD1/HgyGFxl49tdA4h9dKlsj6FYGEmDRpFNfnTpENuTypMcdbrlkqBdDA=="
       },
-      "Microsoft.Windows.AI.MachineLearning": {
-        "type": "Transitive",
-        "resolved": "2.4.89",
-        "contentHash": "uc+Lej0vmZJprvHEuNJs7xMegoParROM9pZ2a7uMeXQiELva42V1wAUoYHCsw/u5ho/nwkYasiSFWZ95ABot3A==",
-        "dependencies": {
-          "System.Numerics.Tensors": "9.0.0"
-        }
-      },
       "Microsoft.Windows.SDK.BuildTools": {
         "type": "Transitive",
         "resolved": "10.0.26100.4654",
@@ -73,15 +59,6 @@
         "resolved": "1.7.251221100",
         "contentHash": "f4aIZJ0NUth2403oxrpR+9rxVzZVI6dabqB21u8ncnk8eJAKCs9m77E4iYAnvP1YwrRe4axz3f8+yUcttNSfEA=="
       },
-      "Microsoft.WindowsAppSDK.AI": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "6u7kDP6ykTnLWmpsSsRvkQr9RvTql1bEjdqBEWXKAPq95b8VBgUjBtnMXdJaNn3uP655kWy2Wo78Yi5L5RaiKQ==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.Base": "2.6.4",
-          "Microsoft.WindowsAppSDK.Foundation": "2.6.4"
-        }
-      },
       "Microsoft.WindowsAppSDK.Base": {
         "type": "Transitive",
         "resolved": "2.6.4",
@@ -89,14 +66,6 @@
         "dependencies": {
           "Microsoft.Windows.SDK.BuildTools": "10.0.26100.4654",
           "Microsoft.Windows.SDK.BuildTools.MSIX": "1.7.251221100"
-        }
-      },
-      "Microsoft.WindowsAppSDK.DWrite": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "j2XW/DHmG27Rp5sI7xZ1NOHupaC7QBqE6X+6aa+XWpzPD+HXmkrWz1SP3EK/cW4CIhAnoy/C5JJzhSurtxBoCA==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.Base": "2.6.4"
         }
       },
       "Microsoft.WindowsAppSDK.Foundation": {
@@ -115,58 +84,6 @@
         "dependencies": {
           "Microsoft.WindowsAppSDK.Base": "2.6.4"
         }
-      },
-      "Microsoft.WindowsAppSDK.ML": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "2Z6SFua1dnPNlYHRERIDBjF8Y/ToMTPeRA8pZYNLQTZ8BHK9Ok9+mPnR7bSDqbpAIc46XbmxHTy+ZhmLHFOUug==",
-        "dependencies": {
-          "Microsoft.Windows.AI.MachineLearning": "[2.4.89, 3.0.0)",
-          "Microsoft.WindowsAppSDK.Base": "2.6.4",
-          "Microsoft.WindowsAppSDK.Foundation": "2.6.4"
-        }
-      },
-      "Microsoft.WindowsAppSDK.Runtime": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "QArtzzUL7r2QpgyvDCWDBcXyv/RJxL+jQR42pJiseqnrLbHoq6izvTzqqmTkPrdXZD/FlR7x4uKzLeNeLxD7DQ==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.Base": "2.6.4"
-        }
-      },
-      "Microsoft.WindowsAppSDK.Search": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "HebiZBrawtoZWpdJ9/kM1AvqE+xlyy1n5epLjBjgpEll6Tsh12zBnh7w9PWbsUwaT9dXBxDCbNi8azHpb7b1tQ==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.AI": "[2.6.4]",
-          "Microsoft.WindowsAppSDK.Base": "2.6.4",
-          "Microsoft.WindowsAppSDK.Foundation": "2.6.4"
-        }
-      },
-      "Microsoft.WindowsAppSDK.Widgets": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "82j92RQ0pfUzAfxXPiuU6t3q6n6ywRx6m8TChGzfmm2C1pal+Ni1O9mLQPx8Ofc0BT/7RCxIJ8fJ4UVRpAFTlg==",
-        "dependencies": {
-          "Microsoft.WindowsAppSDK.Base": "2.6.4"
-        }
-      },
-      "Microsoft.WindowsAppSDK.WinUI": {
-        "type": "Transitive",
-        "resolved": "2.6.4",
-        "contentHash": "AyQN+i9GEhwIt9YZA/fQXGZOLluKBfqtfwGCU8t9mbWtyABivaVsKZ7oZLxm1cGxhdlOhnUhZRfBO/1BV4+MUA==",
-        "dependencies": {
-          "Microsoft.Web.WebView2": "1.0.3719.77",
-          "Microsoft.WindowsAppSDK.Base": "2.6.4",
-          "Microsoft.WindowsAppSDK.Foundation": "2.6.4",
-          "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.6.4"
-        }
-      },
-      "System.Numerics.Tensors": {
-        "type": "Transitive",
-        "resolved": "9.0.0",
-        "contentHash": "hyJB4UlpAi19Xr9AXzu2NuagKC4lPfHObNMEAA0HmqFz2rX7wKgzeYzO/jM/eBHDhnUGFFEjk5cOoJaxqg5J4A=="
       },
       "rigshift.core": {
         "type": "Project",
@@ -194,14 +111,6 @@
         "type": "Transitive",
         "resolved": "1.0.3719.77",
         "contentHash": "t+ucyKw5NTwMjsUrDF6R9Lk40lpcKQD1/HgyGFxl49tdA4h9dKlsj6FYGEmDRpFNfnTpENuTypMcdbrlkqBdDA=="
-      },
-      "Microsoft.Windows.AI.MachineLearning": {
-        "type": "Transitive",
-        "resolved": "2.4.89",
-        "contentHash": "uc+Lej0vmZJprvHEuNJs7xMegoParROM9pZ2a7uMeXQiELva42V1wAUoYHCsw/u5ho/nwkYasiSFWZ95ABot3A==",
-        "dependencies": {
-          "System.Numerics.Tensors": "9.0.0"
-        }
       },
       "Microsoft.WindowsAppSDK.Foundation": {
         "type": "Transitive",
