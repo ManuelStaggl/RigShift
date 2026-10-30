@@ -555,7 +555,7 @@ public sealed class GamesViewModelTests : IDisposable
     /// <summary>The page with its first editor loaded; that happens in the background after the constructor.</summary>
     private async Task<GamesViewModel> PageAsync()
     {
-        var page = new GamesViewModel(_catalog, _sessions, _dialogs, _host.Paths, Logger.None);
+        var page = new GamesViewModel(_catalog, _sessions, _dialogs, _host.Paths, Substitute.For<ITextClipboard>(), Logger.None);
         page.PageShown();
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;
@@ -592,6 +592,10 @@ public sealed class GamesViewModelTests : IDisposable
 
         /// <summary>How many editors the page asked for; counted when asked, before the editor is ready.</summary>
         public int EditorsCreated { get; private set; }
+
+        public string? CreateShortcutIcon(Guid gameId, string iconFile, string directory) => real.CreateShortcutIcon(gameId, iconFile, directory);
+
+        public void DeleteShortcutIcon(Guid gameId, string directory) => real.DeleteShortcutIcon(gameId, directory);
 
         public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew)
         {

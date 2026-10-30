@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RigShift.Core\RigShift.Core.csproj" />
     <ProjectReference Include="..\RigShift.Windows\RigShift.Windows.csproj" />
+    <ProjectReference Include="..\RigShift.Presentation\RigShift.Presentation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

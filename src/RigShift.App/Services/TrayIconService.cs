@@ -135,15 +135,15 @@ public sealed class TrayIconService : IDisposable
         coordinator.WaitingForDisplays += (_, names) => OnUi(() => Notify((
             Loc.Instance["Result_WaitingTitle"],
             Loc.Format("Result_WaitingText", string.Join(", ", names), (int)switchOptions.MissingDisplayWaitBudget.TotalSeconds),
-            NotificationIcon.Info)));
-        coordinator.BusyRejected += (_, _) => OnUi(() => Notify(("RigShift", Loc.Instance["Result_Busy"], NotificationIcon.Info)));
+            NoticeLevel.Info)));
+        coordinator.BusyRejected += (_, _) => OnUi(() => Notify(("RigShift", Loc.Instance["Result_Busy"], NoticeLevel.Info)));
         coordinator.AllDisplaysOnCompleted += (_, report) => OnUi(() => Notify(SwitchMessages.ForAllDisplaysOn(report)));
         _updates = updates;
-        updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NotificationIcon.Info), opensAbout: true));
-        updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NotificationIcon.Info), opensAbout: true));
+        updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NoticeLevel.Info), opensAbout: true));
+        updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NoticeLevel.Info), opensAbout: true));
         updates.StateChanged += (_, _) => OnUi(RebuildMenu);
         hotkeys.RegistrationFailed += (_, names) =>
-            OnUi(() => Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NotificationIcon.Warning)));
+            OnUi(() => Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NoticeLevel.Warning)));
 
         // Update notifications and switch problems lead to the about page (install the update, recent switches, log).
         _icon.TrayBalloonTipClicked += (_, _) =>
@@ -156,7 +156,7 @@ public sealed class TrayIconService : IDisposable
 
         // Windows restored a profile's displays by itself: a click applies audio, apps and the rest.
         coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(
-            (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NotificationIcon.Info),
+            (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NoticeLevel.Info),
             async () =>
             {
                 if (_catalog.ActiveProfile?.Id != restored.Id)
@@ -287,24 +287,29 @@ public sealed class TrayIconService : IDisposable
         }
 
         _lastErrorNotification = now;
-        Notify(("RigShift", Loc.Format("Status_Error", message), NotificationIcon.Error), opensAbout: true);
+        Notify(("RigShift", Loc.Format("Status_Error", message), NoticeLevel.Error), opensAbout: true);
     }
 
     /// <summary>A link, Stream Deck key or shortcut that could not run: its caller has no console to say why.</summary>
     public void ShowRefusedCommand(string text) =>
-        OnUi(() => Notify(("RigShift", text, NotificationIcon.Warning), click: null));
+        OnUi(() => Notify(("RigShift", text, NoticeLevel.Warning), click: null));
 
     /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
     public void ShowKeepsRunningHint() =>
-        OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NotificationIcon.Info), click: null));
+        OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NoticeLevel.Info), click: null));
 
-    private void Notify((string Title, string Text, NotificationIcon Icon) message, bool opensAbout = false) =>
-        Notify(message, opensAbout ? () => _shell.ShowMainWindow(typeof(AboutPage)) : null);
+    private void Notify((string Title, string Text, NoticeLevel Icon) message, bool opensAbout = false) =>
+        Notify(message, opensAbout ? () => _shell.ShowMainWindow(AppPage.Help) : null);
 
-    private void Notify((string Title, string Text, NotificationIcon Icon) message, Action? click)
+    private void Notify((string Title, string Text, NoticeLevel Icon) message, Action? click)
     {
         _notificationClick = click;
-        _icon.ShowNotification(message.Title, message.Text, message.Icon);
+        _icon.ShowNotification(message.Title, message.Text, message.Icon switch
+        {
+            NoticeLevel.Warning => NotificationIcon.Warning,
+            NoticeLevel.Error => NotificationIcon.Error,
+            _ => NotificationIcon.Info,
+        });
     }
 
     /// <summary>
@@ -383,14 +388,14 @@ public sealed class TrayIconService : IDisposable
                 _sessions.Start(game);
                 break;
             case TrayMenuCommand.SaveCurrent:
-                _shell.ShowMainWindow(typeof(ProfilesPage));
+                _shell.ShowMainWindow(AppPage.Profiles);
                 _profiles().NewFromCurrentCommand.Execute(null);
                 break;
             case TrayMenuCommand.Open:
                 _shell.ShowMainWindow();
                 break;
             case TrayMenuCommand.Settings:
-                _shell.ShowMainWindow(typeof(SettingsPage));
+                _shell.ShowMainWindow(AppPage.Settings);
                 break;
             case TrayMenuCommand.PauseAutomation:
                 await _automation.SetPausedAsync(isChecked);

@@ -13,8 +13,6 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Views;
 
-/// <summary>What the picker returned: an installed game, or a program the user browsed for.</summary>
-public sealed record PickedGame(InstalledGame? Installed, string? ExecutablePath);
 
 /// <summary>
 /// Picks the game an entry starts: the installed Steam and Epic games, read off the disk, or any program for
@@ -255,7 +253,7 @@ public sealed partial class GamePickerViewModel : ObservableObject
     {
         foreach (InstalledGameItem item in items)
         {
-            item.Icon = await GameIcons.LoadAsync(item.Game.Launch, Log.Logger);
+            item.Icon = await GameIcons.LoadAsync(item.Game.Launch, Log.Logger) as ImageSource;
         }
     }
 

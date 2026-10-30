@@ -13,42 +13,14 @@ using Wpf.Ui.Controls;
 
 namespace RigShift.App.Services;
 
-/// <summary>What came out of adding installed games at once.</summary>
-/// <param name="Added">The entries that were created.</param>
-/// <param name="Skipped">Games that were picked but already configured.</param>
-public sealed record AddedGames(IReadOnlyList<GameEntry> Added, int Skipped);
-
-/// <summary>
-/// What the games page asks of the user or builds for them. The page's logic – what happens to unsaved changes, which
-/// game is selected after a delete – runs against this, so it can be tested without a window.
-/// </summary>
-public interface IGamePageDialogs
-{
-    /// <summary>The detail's editor for a game.</summary>
-    Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew);
-
-    /// <summary>Installed games from the picker, saved right away.</summary>
-    Task<AddedGames> AddInstalledAsync();
-
-    /// <summary>A program from the file dialog; <c>null</c> when cancelled.</summary>
-    string? PickExecutable();
-
-    /// <summary>The game an entry starts: an installed one or a program; <c>null</c> when cancelled.</summary>
-    Task<PickedGame?> PickGameAsync();
-
-    /// <summary>The windows to put back, chosen from the open ones; <c>null</c> when cancelled.</summary>
-    /// <param name="current">What the entry has now, pre-selected.</param>
-    WindowLayout? CaptureWindows(WindowLayout? current);
-
-    Task<bool> ConfirmDeleteAsync(string name);
-
-    /// <param name="targetName">The game the user picked instead, when the question comes from the list.</param>
-    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
-}
-
 /// <summary>Builds the game detail's editor and opens the pickers, the window capture and the delete confirmation.</summary>
 public sealed class GameDialogs : IGamePageDialogs
 {
+    public string? CreateShortcutIcon(Guid gameId, string iconFile, string directory) =>
+        GameShortcutIcon.Create(gameId, iconFile, directory, _log);
+
+    public void DeleteShortcutIcon(Guid gameId, string directory) => GameShortcutIcon.Delete(gameId, directory, _log);
+
     private readonly GameEditorServices _editorServices;
     private readonly GameCatalog _catalog;
     private readonly ProfileCatalog _profiles;

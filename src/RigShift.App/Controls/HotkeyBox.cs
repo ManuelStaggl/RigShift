@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
+using RigShift.Core.Profiles;
 
 namespace RigShift.App.Controls;
 
@@ -100,7 +101,8 @@ public static class HotkeyBox
         int virtualKey = KeyInterop.VirtualKeyFromKey(key);
         if (virtualKey != 0 && !Core.Profiles.Hotkey.IsModifierKey(virtualKey))
         {
-            field.RecordHotkey(HotkeyFormat.FromWpf(modifiers), virtualKey);
+            // WPF's ModifierKeys use the same bit values as the Win32 MOD_* flags.
+            field.RecordHotkey((HotkeyModifiers)(int)modifiers, virtualKey);
         }
     }
 }

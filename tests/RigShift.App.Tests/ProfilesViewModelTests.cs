@@ -402,7 +402,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     {
         await SavedAsync(Profile("Desk", DeskModes));
         var page = new ProfilesViewModel(
-            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Logger.None);
+            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Substitute.For<ITextClipboard>(), Logger.None);
 
         page.SelectedItem.ShouldNotBeNull().Name.ShouldBe("Desk");
         _dialogs.EditorsCreated.ShouldBe(0);
@@ -649,7 +649,7 @@ public sealed class ProfilesViewModelTests : IDisposable
     private async Task<ProfilesViewModel> PageAsync()
     {
         var page = new ProfilesViewModel(
-            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Logger.None);
+            _host.Catalog, _host.Coordinator, _dialogs, _host.Settings, _display, new TopologyPlanner(new TopologyPlannerOptions()), _desktopIcons, Substitute.For<ITextClipboard>(), Logger.None);
         page.PageShown();
         await UntilAsync(() => page.IsEmpty || page.Editor is not null, "the first editor did not open");
         return page;

@@ -24,25 +24,13 @@
   <ItemGroup>
     <ProjectReference Include="..\RigShift.Core\RigShift.Core.csproj" />
     <ProjectReference Include="..\RigShift.Windows\RigShift.Windows.csproj" />
+    <ProjectReference Include="..\RigShift.Presentation\RigShift.Presentation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Not the Microsoft.WindowsAppSDK metapackage: its AI, ML and search parts (ONNX Runtime, DirectML) add 60 MB. -->
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
-    <PackageReference Include="Serilog" />
-    <PackageReference Include="Serilog.Sinks.File" />
-    <PackageReference Include="Serilog.Sinks.Debug" />
     <PackageReference Include="Velopack" />
-  </ItemGroup>
-
-  <!-- shortcut: the WPF app's start-up services, shared as source until they move to a UI-free library (#86). -->
-  <ItemGroup>
-    <Compile Include="..\RigShift.App\Services\AppLogging.cs" Link="Shared\AppLogging.cs" />
-    <Compile Include="..\RigShift.App\Services\AppPaths.cs" Link="Shared\AppPaths.cs" />
-    <Compile Include="..\RigShift.App\Services\CommandLineClient.cs" Link="Shared\CommandLineClient.cs" />
-    <Compile Include="..\RigShift.App\Services\CrashHandling.cs" Link="Shared\CrashHandling.cs" />
-    <Compile Include="..\RigShift.App\Services\LogFileFormat.cs" Link="Shared\LogFileFormat.cs" />
-    <Compile Include="..\RigShift.App\Services\PipeTrust.cs" Link="Shared\PipeTrust.cs" />
   </ItemGroup>
 
 </Project>
