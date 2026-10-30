@@ -110,6 +110,11 @@ public partial class App : Application, IAppShell
             {
                 _tray.ShowPopup();
             }
+
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TOPOLOGY") == "1")
+            {
+                new Debug.TopologyGalleryWindow(catalog.Items.Select(i => (i.Name, i.Topology))).Activate();
+            }
 #endif
         }
         catch (Exception ex)
