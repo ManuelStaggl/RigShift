@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using RigShift.App.Services;
+using RigShift.App.ViewModels;
 
 namespace RigShift.UI;
 
@@ -32,6 +34,12 @@ public sealed partial class Shell : UserControl
         }
 
         Page = page;
+        if (page == AppPage.Overview)
+        {
+            ContentFrame.Navigate(typeof(Pages.OverviewSwitchPage), App.Provider.GetRequiredService<TrayPopupViewModel>());
+            return;
+        }
+
         // shortcut: one empty page with the item's name until the real pages exist (#91-#94).
         ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }

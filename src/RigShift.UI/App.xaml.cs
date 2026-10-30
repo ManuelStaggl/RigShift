@@ -28,6 +28,9 @@ public partial class App : Application, IAppShell
 
     public bool IsExiting { get; private set; }
 
+    /// <summary>The app's services, for pages the frame creates by type.</summary>
+    internal static IServiceProvider Provider => ((App)Current).Services;
+
     private IServiceProvider Services => _services ?? throw new InvalidOperationException("Services not built.");
 
     public void ShowMainWindow(AppPage? page = null)
