@@ -115,6 +115,10 @@ public sealed partial class ProfileSheetView : UserControl
         }
 
         IconPath.Data = Glyphs.Profile(editor.SelectedIcon?.Key);
+        BarIcon.Data = IconPath.Data;
+        ProfileItem? active = ViewModel.Items.FirstOrDefault(i => i.IsActive);
+        ActiveCard.DataContext = active;
+        ActiveCard.IsVisible = active is not null;
         AudioCard.Description = Join(editor.AudioSlots.Where(s => s.HasDevice).Select(s => s.SetVolume ? $"{s.Selected?.Name} · {s.VolumeText}" : s.Selected?.Name));
         AppsCard.Description = Join(editor.AppList.Items.Select(a => a.DisplayName));
         TriggersCard.Description = Join(editor.Rules.Rules.Select(r => r.DevicesText).Append(editor.HotkeyText));

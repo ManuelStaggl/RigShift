@@ -155,8 +155,8 @@
 
   <!-- Rail -->
   <Style Selector="Button.rail">
-    <Setter Property="Width" Value="60" />
-    <Setter Property="Height" Value="62" />
+    <Setter Property="Width" Value="64" />
+    <Setter Property="Height" Value="40" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
@@ -164,32 +164,82 @@
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="VerticalContentAlignment" Value="Stretch" />
   </Style>
-  <Style Selector="Button.rail:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+  <Style Selector="Button.rail:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.rail:pressed /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="Transparent" />
   </Style>
   <Style Selector="Button.rail Border.plate">
     <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
   </Style>
   <Style Selector="Button.rail:pointerover Border.plate">
-    <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    <Setter Property="Background" Value="{DynamicResource RsHover}" />
   </Style>
   <Style Selector="Button.rail.selected Border.plate">
-    <Setter Property="Background" Value="{DynamicResource RsRaised}" />
+    <Setter Property="Background" Value="{DynamicResource RsRailOn}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RsRailOnShadow}" />
   </Style>
   <Style Selector="Button.rail Border.pill">
     <Setter Property="IsVisible" Value="False" />
+    <Setter Property="Background" Value="{DynamicResource RsAccentText}" />
   </Style>
   <Style Selector="Button.rail.selected Border.pill">
     <Setter Property="IsVisible" Value="True" />
   </Style>
-  <Style Selector="Button.rail TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+  <Style Selector="Path.icon.rail">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="StrokeThickness" Value="1.8" />
+    <Setter Property="Stroke" Value="{DynamicResource RsText3}" />
   </Style>
-  <Style Selector="Button.rail.selected TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-  </Style>
-  <Style Selector="Button.rail.selected Path">
+  <Style Selector="Button.rail:pointerover Path.icon.rail">
     <Setter Property="Stroke" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="Button.rail.selected Path.icon.rail">
+    <Setter Property="Stroke" Value="{DynamicResource RsRailOnText}" />
+    <Setter Property="Fill" Value="{DynamicResource RsAccentDuo}" />
+  </Style>
+
+  <!-- Title-bar search: a recessed well, placeholder in the hint colour, the shortcut as a keycap. -->
+  <Style Selector="Button.search">
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="10,0,4,0" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Background" Value="{DynamicResource RsDeep}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.search:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsDeep}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
+  </Style>
+  <Style Selector="Button.search Path.icon">
+    <Setter Property="Stroke" Value="{DynamicResource RsText4}" />
+  </Style>
+  <Style Selector="Button.search TextBlock.caption">
+    <Setter Property="Foreground" Value="{DynamicResource RsText4}" />
+  </Style>
+
+  <!-- Keycap: raised, 5 px radius, 11 px semibold. -->
+  <Style Selector="Border.kbd">
+    <Setter Property="MinWidth" Value="20" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Background" Value="{DynamicResource RsKey}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RsKeyShadow}" />
+  </Style>
+  <Style Selector="Border.kbd > TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
   </Style>
 
   <!-- Hairline divider -->

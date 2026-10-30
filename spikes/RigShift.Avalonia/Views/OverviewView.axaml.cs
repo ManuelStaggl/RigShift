@@ -40,8 +40,18 @@ public sealed partial class OverviewView : UserControl
     private void ShowState()
     {
         EmptyState.IsVisible = !ViewModel.HasProfiles;
-        NowText.Text = Loc.Instance["Overview_Now"] + " · " + ViewModel.ActiveName;
-        ReapplyButton.IsVisible = Active is not null;
+        ProfileItem? active = Active;
+        NowText.Text = ViewModel.ActiveName;
+        NowMeta.Text = active is null ? null : string.Join(" · ", active.DisplayLines);
+        ReapplyButton.IsVisible = active is not null;
+
+        // Action bar: the active profile and the switch to the next one.
+        ProfileItem? next = ViewModel.Catalog.Items.FirstOrDefault(i => !i.IsActive);
+        BarName.Text = active?.Name ?? ViewModel.ActiveName;
+        BarIcon.Data = Glyphs.Profile(active?.IconKey);
+        BarSwitch.Tag = next;
+        BarSwitch.IsVisible = next is not null;
+        BarSwitchText.Text = next is null ? null : $"Switch to {next.Name}";
 
         bool switching = ViewModel.Coordinator.SwitchingProfile is not null;
         NowLine.IsVisible = !switching;
@@ -55,4 +65,6 @@ public sealed partial class OverviewView : UserControl
     private void OnPlay(object? sender, RoutedEventArgs e) => ViewModel.PlayCommand.Execute(((Control)sender!).Tag as GameItem);
 
     private void OnReapply(object? sender, RoutedEventArgs e) => ViewModel.SwitchCommand.Execute(Active);
+
+    private void OnAllGames(object? sender, RoutedEventArgs e) => (TopLevel.GetTopLevel(this) as MainWindow)?.Navigate(RigShift.App.Services.AppPage.Games);
 }

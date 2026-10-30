@@ -3,53 +3,60 @@
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:chrome="using:Avalonia.Controls.Chrome"
-  xmlns:v="using:RigShift.Avalonia.Views"
   Title="RigShift"
   Width="1280"
   Height="780"
   MinWidth="900"
   MinHeight="560"
-  Background="{DynamicResource RsContent}"
+  Background="{DynamicResource RsRail}"
   ExtendClientAreaToDecorationsHint="True"
-  ExtendClientAreaTitleBarHeightHint="40"
+  ExtendClientAreaTitleBarHeightHint="38"
   WindowStartupLocation="CenterScreen">
-  <!-- Own title bar: the window content runs to the top edge, a 40 px strip is the drag area, the caption buttons are
-       Avalonia 12's drawn decorations (Semi styles them). The rail runs the full height on the left. -->
-  <Grid ColumnDefinitions="60,*" RowDefinitions="40,*">
-    <Border Grid.RowSpan="2" Background="{DynamicResource RsRail}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,1,0">
-      <DockPanel>
-        <!-- Brand symbol in the title-bar height -->
-        <Border Height="40" chrome:WindowDecorationProperties.ElementRole="TitleBar" DockPanel.Dock="Top">
-          <Viewbox Width="26" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Canvas Width="240" Height="180">
-              <Path
-                Data="M76 60 L17 55 Q10 54 10 61 V124 Q10 130 17 129 L74 124 M153 63 L222 55 Q230 54 230 62 V124 Q230 130 222 129 L166 123 M47 127 V140 M32 143 L64 138 M191 127 V140 M176 138 L207 144"
-                Stroke="{DynamicResource RsText}"
-                StrokeJoin="Round"
-                StrokeLineCap="Round"
-                StrokeThickness="12" />
-              <Path Data="M141 9 L177 40 L141 71 V52 C109 49 83 60 76 88 C67 68 75 44 97 32 C110 25 124 24 141 25 Z M89 62 H137 V72 H82 Z M41 116 C77 92 97 83 116 83 L88 114 Z M124 83 C145 84 167 95 199 116 L151 114 Z M119 88 H123 L125 95 H117 Z M116 99 H126 L129 109 H113 Z M111 114 H131 L135 130 H107 Z M105 122 V139 C133 142 145 135 148 122 C160 149 139 162 105 160 V174 L77 148 Z" Fill="{DynamicResource RsText}" />
-            </Canvas>
-          </Viewbox>
-        </Border>
-        <StackPanel x:Name="BottomRail" DockPanel.Dock="Bottom" Margin="0,0,0,8" />
-        <StackPanel x:Name="TopRail" Margin="0,8,0,0" />
-      </DockPanel>
-    </Border>
+  <!-- The window is chrome: a 38 px title bar (brand, search, Avalonia 12's drawn caption buttons), the 64 px icon rail,
+       and the content panel floating inside with its own hairline and 10 px radius. -->
+  <Grid ColumnDefinitions="64,*" RowDefinitions="38,*">
+    <!-- Title bar: the whole strip drags; the search box sits on top of it and takes its own clicks. -->
+    <Border Grid.ColumnSpan="2" Background="Transparent" chrome:WindowDecorationProperties.ElementRole="TitleBar" />
+    <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto,*" IsHitTestVisible="True">
+      <StackPanel Margin="14,0,0,0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsHitTestVisible="False">
+        <Viewbox Width="20" Height="15">
+          <Canvas Width="240" Height="180">
+            <Path
+              Data="M76 60 L17 55 Q10 54 10 61 V124 Q10 130 17 129 L74 124 M153 63 L222 55 Q230 54 230 62 V124 Q230 130 222 129 L166 123 M47 127 V140 M32 143 L64 138 M191 127 V140 M176 138 L207 144"
+              Stroke="{DynamicResource RsText}"
+              StrokeJoin="Round"
+              StrokeLineCap="Round"
+              StrokeThickness="12" />
+            <Path Data="M141 9 L177 40 L141 71 V52 C109 49 83 60 76 88 C67 68 75 44 97 32 C110 25 124 24 141 25 Z M89 62 H137 V72 H82 Z M41 116 C77 92 97 83 116 83 L88 114 Z M124 83 C145 84 167 95 199 116 L151 114 Z M119 88 H123 L125 95 H117 Z M116 99 H126 L129 109 H113 Z M111 114 H131 L135 130 H107 Z M105 122 V139 C133 142 145 135 148 122 C160 149 139 162 105 160 V174 L77 148 Z" Fill="{DynamicResource RsAccentText}" />
+          </Canvas>
+        </Viewbox>
+        <TextBlock Classes="caption" FontSize="13" Text="RigShift" VerticalAlignment="Center" />
+      </StackPanel>
+      <!-- shortcut: the search box only looks the part; the command palette behind it is not part of the spike. -->
+      <Button x:Name="Search" Grid.Column="1" Classes="search" Width="440">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Path Classes="icon small" Data="M11 4 A7 7 0 1 1 10.99 4 Z M16 16 L20 20" />
+          <TextBlock Grid.Column="1" Margin="8,0" Classes="caption" FontSize="13" Text="Search profiles, games, settings…" VerticalAlignment="Center" />
+          <Border Grid.Column="2" Classes="kbd"><TextBlock Text="Ctrl K" /></Border>
+        </Grid>
+      </Button>
+    </Grid>
 
-    <ContentControl
-      x:Name="Host"
-      Grid.RowSpan="2"
-      Grid.Column="1"
-      HorizontalContentAlignment="Stretch"
-      VerticalContentAlignment="Stretch" />
+    <DockPanel Grid.Row="1">
+      <StackPanel x:Name="BottomRail" DockPanel.Dock="Bottom" Margin="0,0,0,10" Spacing="4" />
+      <StackPanel x:Name="TopRail" Margin="0,6,0,0" Spacing="4" />
+    </DockPanel>
 
-    <!-- Drag strip over the page's top edge; pages keep this band free of controls. -->
     <Border
+      Grid.Row="1"
       Grid.Column="1"
-      Height="40"
-      VerticalAlignment="Top"
-      Background="Transparent"
-      chrome:WindowDecorationProperties.ElementRole="TitleBar" />
+      Margin="0,0,8,8"
+      Background="{DynamicResource RsContent}"
+      BorderBrush="{DynamicResource RsDivider}"
+      BorderThickness="1"
+      ClipToBounds="True"
+      CornerRadius="10">
+      <ContentControl x:Name="Host" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+    </Border>
   </Grid>
 </Window>

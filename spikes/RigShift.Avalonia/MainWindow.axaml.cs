@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Path = Avalonia.Controls.Shapes.Path;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -9,7 +8,7 @@ using RigShift.Avalonia.Views;
 
 namespace RigShift.Avalonia;
 
-/// <summary>Title bar, the 60 px icon rail and the page host. Pages are built once and kept, like the WinUI frame's cache.</summary>
+/// <summary>Title bar, the 64 px icon rail and the page host. Pages are built once and kept, like the WinUI frame's cache.</summary>
 public sealed partial class MainWindow : Window
 {
     private readonly Dictionary<AppPage, Control> _pages = [];
@@ -21,7 +20,7 @@ public sealed partial class MainWindow : Window
         AddRail(TopRail, AppPage.Overview, "Nav_Overview", Glyphs.Overview);
         AddRail(TopRail, AppPage.Profiles, "Nav_Profiles", Glyphs.Profiles);
         AddRail(TopRail, AppPage.Games, "Nav_Games", Glyphs.Games);
-        AddRail(TopRail, AppPage.FieldOfView, "Nav_Fov", Glyphs.Fov, "FOV");
+        AddRail(TopRail, AppPage.FieldOfView, "Nav_Fov", Glyphs.Fov);
         AddRail(BottomRail, AppPage.Settings, "Nav_Settings", Glyphs.Settings);
         AddRail(BottomRail, AppPage.Help, "Nav_About", Glyphs.Help);
     }
@@ -37,7 +36,7 @@ public sealed partial class MainWindow : Window
                 _ => new TextBlock
                 {
                     Text = "Not part of the spike.",
-                    Margin = new global::Avalonia.Thickness(32, 72),
+                    Margin = new global::Avalonia.Thickness(32),
                     Classes = { "secondary" },
                 },
             };
@@ -51,43 +50,33 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <param name="shortLabel">The label under the icon when the full name does not fit 60 px; the tooltip keeps the full name.</param>
-    private void AddRail(StackPanel panel, AppPage page, string textKey, string data, string? shortLabel = null)
+    /// <summary>A rail entry: icon only, the name in the tooltip; selected = accent tile with a duotone icon and the marker on the left edge.</summary>
+    private void AddRail(StackPanel panel, AppPage page, string textKey, string data)
     {
         string text = Loc.WithoutAccessKey(Loc.Instance[textKey]);
-        var plate = new Border
+        var tile = new Border
         {
-            Width = 40,
-            Height = 32,
-            CornerRadius = new global::Avalonia.CornerRadius(8),
-            HorizontalAlignment = HorizontalAlignment.Center,
+            Width = 44,
+            Height = 40,
+            CornerRadius = new global::Avalonia.CornerRadius(10),
             Classes = { "plate" },
-            Child = new Path { Data = Geometry.Parse(data), Classes = { "icon" }, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            Child = new Path { Data = Geometry.Parse(data), Classes = { "icon", "rail" }, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
-        var label = new TextBlock
-        {
-            Text = shortLabel ?? text,
-            FontSize = 12,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            MaxWidth = 56,
-        };
-        var pill = new Border
+        var marker = new Border
         {
             Width = 3,
-            Height = 20,
-            Margin = new global::Avalonia.Thickness(0, 6, 0, 0),
+            Height = 18,
             HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            CornerRadius = new global::Avalonia.CornerRadius(0, 2, 2, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            CornerRadius = new global::Avalonia.CornerRadius(0, 3, 3, 0),
             Classes = { "pill" },
         };
-        pill.Bind(Border.BackgroundProperty, pill.GetResourceObservable("RsAccentText"));
         var content = new Grid();
-        content.Children.Add(new StackPanel { Spacing = 3, VerticalAlignment = VerticalAlignment.Center, Children = { plate, label } });
-        content.Children.Add(pill);
+        content.Children.Add(tile);
+        content.Children.Add(marker);
         var button = new Button { Content = content, Classes = { "rail" } };
         ToolTip.SetTip(button, text);
+        ToolTip.SetPlacement(button, PlacementMode.Right);
         global::Avalonia.Automation.AutomationProperties.SetName(button, text);
         button.Click += (_, _) => Navigate(page);
         _rail[page] = button;

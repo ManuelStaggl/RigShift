@@ -48,6 +48,27 @@
       <SolidColorBrush x:Key="RsTileFill" Color="#1E1F23" />
       <SolidColorBrush x:Key="RsTileStroke" Color="#3E3F44" />
       <SolidColorBrush x:Key="RsBay" Color="#0C0D0F" />
+      <SolidColorBrush x:Key="RsColumn" Color="#111214" />
+      <SolidColorBrush x:Key="RsCard" Color="#1B1C1E" />
+      <BoxShadows x:Key="RsCardShadow">inset 0 1 0 0 #0FFFFFFF, 0 0 0 1 #66000000, 0 2 4 0 #59000000, 0 8 24 -8 #A6000000</BoxShadows>
+      <BoxShadows x:Key="RsWellShadow">inset 0 2 6 0 #B3000000, inset 0 0 0 1 #08FFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsPop" Color="#E62A2B2E" />
+      <BoxShadows x:Key="RsPopShadow">0 4 40 8 #80000000, 0 0 0 0.5 #CC000000, inset 0 0.5 0 0 #33FFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsHover" Color="#0DFFFFFF" />
+      <SolidColorBrush x:Key="RsText4" Color="#62666D" />
+      <!-- Selected rail tile: accent 24 → 12 %, a hairline ring in the accent, the icon in accent-tinted text with a 26 % fill. -->
+      <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#3D5AA9FF" />
+        <GradientStop Offset="1" Color="#1F5AA9FF" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsRailOnShadow">inset 0 1 0 0 #14FFFFFF, 0 0 0 0.5 #735AA9FF</BoxShadows>
+      <SolidColorBrush x:Key="RsRailOnText" Color="#99C9FC" />
+      <SolidColorBrush x:Key="RsAccentDuo" Color="#425AA9FF" />
+      <LinearGradientBrush x:Key="RsKey" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#2E2F33" />
+        <GradientStop Offset="1" Color="#232427" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #14FFFFFF, 0 1 2 0 #99000000</BoxShadows>
 
       <!-- Semi palette -->
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
@@ -137,6 +158,26 @@
       <SolidColorBrush x:Key="RsTileFill" Color="#FFFFFF" />
       <SolidColorBrush x:Key="RsTileStroke" Color="#C5C8CF" />
       <SolidColorBrush x:Key="RsBay" Color="#E9EBEF" />
+      <SolidColorBrush x:Key="RsColumn" Color="#F2F3F6" />
+      <SolidColorBrush x:Key="RsCard" Color="#FFFFFF" />
+      <BoxShadows x:Key="RsCardShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 1 #0D000000, 0 1 2 0 #12000000, 0 8 20 -8 #2E000000</BoxShadows>
+      <BoxShadows x:Key="RsWellShadow">inset 0 1 3 0 #1F000000, inset 0 0 0 1 #0D000000</BoxShadows>
+      <SolidColorBrush x:Key="RsPop" Color="#EBFFFFFF" />
+      <BoxShadows x:Key="RsPopShadow">0 8 32 2 #24000000, 0 0 0 0.5 #1F000000, inset 0 0.5 0 0 #FFFFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsHover" Color="#0A000000" />
+      <SolidColorBrush x:Key="RsText4" Color="#86848D" />
+      <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#3D0067B8" />
+        <GradientStop Offset="1" Color="#1F0067B8" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsRailOnShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #730067B8</BoxShadows>
+      <SolidColorBrush x:Key="RsRailOnText" Color="#104F82" />
+      <SolidColorBrush x:Key="RsAccentDuo" Color="#420067B8" />
+      <LinearGradientBrush x:Key="RsKey" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#FFFFFF" />
+        <GradientStop Offset="1" Color="#EFF0F3" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #24000000, 0 1 2 0 #1A000000</BoxShadows>
 
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#0067B8" />
