@@ -30,12 +30,15 @@
   <ItemGroup>
     <!-- Not the Microsoft.WindowsAppSDK metapackage: its AI, ML and search parts (ONNX Runtime, DirectML) add 60 MB. -->
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <!-- The UI-free core: H.NotifyIcon.WinUI would pull in the Windows App SDK metapackage 1.6. -->
+    <PackageReference Include="H.NotifyIcon" />
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Title bar and taskbar icon; the brand package lives with the WPF app until the switch-over. -->
     <Content Include="..\RigShift.App\Assets\Brand\rigshift-app-light.ico" Link="Assets\rigshift.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\RigShift.App\Assets\Brand\rigshift-tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

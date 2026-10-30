@@ -3,6 +3,7 @@
   <ItemGroup>
     <!-- UI -->
     <PackageVersion Include="WPF-UI" Version="4.3.0" />
+    <PackageVersion Include="H.NotifyIcon" Version="2.4.1" />
     <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="2.6.4" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
