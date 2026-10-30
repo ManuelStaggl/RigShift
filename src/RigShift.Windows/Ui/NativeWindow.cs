@@ -264,6 +264,9 @@ public static class NativeWindow
     private static System.Drawing.Rectangle ToRectangle(RECT rect) =>
         System.Drawing.Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
 
+    /// <summary>Physical pixels per device-independent unit on the window's monitor.</summary>
+    public static double DpiScale(nint hwnd) => (PInvoke.GetDpiForWindow(new HWND(hwnd)) is var dpi and > 0 ? dpi : 96) / 96d;
+
     /// <summary>Pixel size of a small icon such as the tray icon, at the current DPI of the primary monitor (where the tray is).</summary>
     public static int SmallIconSize()
     {

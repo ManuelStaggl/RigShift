@@ -6,6 +6,7 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Ipc;
 using RigShift.Core.Profiles;
+using RigShift.UI.Tray;
 using Serilog;
 
 namespace RigShift.UI;
@@ -16,6 +17,7 @@ public partial class App : Application, IAppShell
     private readonly AppPaths _paths;
     private ServiceProvider? _services;
     private MainWindow? _window;
+    private TrayIconService? _tray;
 
     public App(CliRequest request, AppPaths paths)
     {
@@ -33,7 +35,16 @@ public partial class App : Application, IAppShell
         if (_window is null)
         {
             _window = new MainWindow();
-            _window.Closed += (_, _) => Quit();
+            _window.AppWindow.Closing += (window, e) =>
+            {
+                // Closing the window keeps RigShift in the tray; Exit in the tray menu ends it.
+                if (!IsExiting)
+                {
+                    e.Cancel = true;
+                    window.Hide();
+                    OnHiddenToTray();
+                }
+            };
         }
 
         _window.Show(page);
@@ -52,6 +63,7 @@ public partial class App : Application, IAppShell
 
         IsExiting = true;
         Log.Information("RigShift exits");
+        _window?.Close();
         _services?.Dispose();
         Exit();
     }
@@ -77,7 +89,12 @@ public partial class App : Application, IAppShell
             // The pipe first: a second start or a rigshift:// link waits for it.
             CommandRunner runner = Services.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
-            Services.GetRequiredService<CommandPipeServer>().Start();
+            CommandPipeServer pipe = Services.GetRequiredService<CommandPipeServer>();
+            pipe.Refused += (_, text) => _tray?.ShowRefusedCommand(text);
+            pipe.Start();
+
+            _tray = Services.GetRequiredService<TrayIconService>();
+            _tray.Start();
             Services.GetRequiredService<AutomationService>().Start();
             Services.GetRequiredService<GameSessionService>().StartWatching();
             Services.GetRequiredService<UpdateService>().Start();
@@ -86,6 +103,14 @@ public partial class App : Application, IAppShell
             {
                 ShowMainWindow();
             }
+#if DEBUG
+            // Screenshots of the popup without clicking the tray: it opens next to wherever the cursor is. After the
+            // window, which would take the focus and so close it.
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
+            {
+                _tray.ShowPopup();
+            }
+#endif
         }
         catch (Exception ex)
         {
@@ -94,11 +119,35 @@ public partial class App : Application, IAppShell
         }
     }
 
+    /// <summary>
+    /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
+    /// window that simply vanishes looks like a closed app. Once, remembered in the settings.
+    /// </summary>
+    private async void OnHiddenToTray()
+    {
+        SettingsService settings = Services.GetRequiredService<SettingsService>();
+        if (settings.Current.TrayHintShown)
+        {
+            return;
+        }
+
+        _tray?.ShowKeepsRunningHint();
+        try
+        {
+            await settings.UpdateAsync(s => s with { TrayHintShown = true }, CancellationToken.None, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning(ex, "Could not remember that the tray hint was shown");
+        }
+    }
+
     private ServiceCollection Register(ServiceCollection services)
     {
         DispatcherQueue ui = DispatcherQueue.GetForCurrentThread();
         services.AddRigShiftServices(_paths, this, Log.Logger);
         services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
+        services.AddSingleton<TrayIconService>();
         services.AddSingleton(sp => new CommandPipeServer(
             sp.GetRequiredService<CommandRunner>(), this, Log.Logger, work => OnUiThread(ui, work)));
         return services;

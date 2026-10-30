@@ -55,6 +55,7 @@ public sealed partial class MainWindow : Window
             presenter.Restore();
         }
 
+        AppWindow.Show();
         Activate();
     }
 }
