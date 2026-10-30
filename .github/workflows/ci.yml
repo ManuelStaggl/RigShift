@@ -76,6 +76,18 @@ jobs:
       - name: Publish
         run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
 
+      # The WinUI app that replaces the WPF one. A missing resource file builds fine and only crashes at start.
+      - name: Publish and start the WinUI app
+        shell: pwsh
+        run: |
+          dotnet publish src/RigShift.UI/RigShift.UI.csproj -c Release -o publish-ui
+          ./publish-ui/RigShift.UI.exe --version | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "RigShift.UI.exe --version ended with $LASTEXITCODE" }
+          $app = Start-Process ./publish-ui/RigShift.UI.exe -PassThru
+          Start-Sleep -Seconds 10
+          if ($app.HasExited) { throw "RigShift.UI.exe ended after start with $($app.ExitCode)" }
+          Stop-Process -Id $app.Id
+
   # Windows 10 is supported but neither CI nor the author's PCs run it. Server 2022 (build 20348) shares its Windows 10
   # code base, so the tests running here show nothing assumes a Windows 11 API.
   windows-10-base:

@@ -2,6 +2,7 @@ using System.IO;
 using System.Security;
 using RigShift.App.Services;
 using RigShift.Core.Cli;
+using RigShift.Core.Ipc;
 using RigShift.Core.Settings;
 using RigShift.Windows.Shell;
 using RigShift.Windows.Startup;
@@ -13,9 +14,6 @@ namespace RigShift.App;
 
 public static class Program
 {
-    /// <summary>One tray app per Windows session.</summary>
-    public const string SingleInstanceMutex = @"Local\RigShift.SingleInstance";
-
     [STAThread]
     public static int Main(string[] args)
     {
@@ -83,7 +81,7 @@ public static class Program
         }
 
         int exitCode;
-        using (var instance = new Mutex(initiallyOwned: true, SingleInstanceMutex, out bool isFirstInstance))
+        using (var instance = new Mutex(initiallyOwned: true, PipeProtocol.SingleInstanceMutex, out bool isFirstInstance))
         {
             if (!isFirstInstance)
             {

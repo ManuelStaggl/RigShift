@@ -24,6 +24,9 @@ public static class PipeProtocol
     /// </summary>
     public static string PipeName { get; } = CreatePipeName();
 
+    /// <summary>One window app per Windows session, whichever UI it is.</summary>
+    public const string SingleInstanceMutex = @"Local\RigShift.SingleInstance";
+
     public static string PipeNameForSession(int sessionId) =>
         string.Create(CultureInfo.InvariantCulture, $"RigShift.{sessionId}");
 

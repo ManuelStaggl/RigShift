@@ -107,7 +107,7 @@ internal static class CommandLineClient
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Logger.Warning(ex, "The list of named pipes could not be read; falling back to this session");
-            return Mutex.TryOpenExisting(Program.SingleInstanceMutex, out Mutex? mutex) ? Keep(mutex, own) : null;
+            return Mutex.TryOpenExisting(PipeProtocol.SingleInstanceMutex, out Mutex? mutex) ? Keep(mutex, own) : null;
         }
 
         string? chosen = Choose(found, own);
