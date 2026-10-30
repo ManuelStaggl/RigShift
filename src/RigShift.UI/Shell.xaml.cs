@@ -40,11 +40,11 @@ public sealed partial class Shell : UserControl
 
         if (page == AppPage.Profiles)
         {
-            ContentFrame.Navigate(typeof(Pages.ProfilesSheetPage));
+            ContentFrame.Navigate(typeof(Pages.ProfilesPage));
             return;
         }
 
-        // shortcut: one empty page with the item's name until the real pages exist (#92-#94).
+        // shortcut: one empty page with the item's name until the real pages exist (#93, #94).
         ContentFrame.Navigate(typeof(PlaceholderPage), item.Content);
     }
 }

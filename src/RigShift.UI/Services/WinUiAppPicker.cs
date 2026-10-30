@@ -50,7 +50,7 @@ internal sealed class WinUiAppPicker : IAppPicker
             CloseButtonText = Loc.Instance["Common_Cancel"],
             DefaultButton = ContentDialogButton.Primary,
             IsPrimaryButtonEnabled = false,
-            Content = new StackPanel { Width = 520, Spacing = 12, Children = { search, loading, list, empty, browseButton } },
+            Content = new StackPanel { Width = 496, Spacing = 12, Children = { search, loading, list, empty, browseButton } },
         };
         browseButton.Click += (_, _) =>
         {
