@@ -95,9 +95,10 @@ public sealed class GameSettingsTests : IDisposable
     [Theory]
     [InlineData(@"D:\Steam\Le Mans Ultimate\UserData\player\Settings.JSON", true)]
     [InlineData(@"UserData\player\Settings.JSON", false)]
-    [InlineData(@"C:\Windows\win.ini", false)]
+    [InlineData(@"D:\Steam\steamapps\common\Game\Engine.ini", true)]
+    [InlineData(@"C:\Windows\notepad.exe", false)]
     [InlineData("", false)]
-    public void HasValidFile_WantsAFullPathToAJsonFile(string file, bool expected) =>
+    public void HasValidFile_WantsAFullPathToAJsonOrIniFile(string file, bool expected) =>
         new GameSettings { File = file }.HasValidFile.ShouldBe(expected);
 
     [Fact]
