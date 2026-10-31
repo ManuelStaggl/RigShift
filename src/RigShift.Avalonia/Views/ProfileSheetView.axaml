@@ -223,6 +223,7 @@
                   </Border>
                   <TextBlock Classes="danger" IsVisible="{Binding Editor.HasDisplaysProblem, FallbackValue=False}" Text="{Binding Editor.DisplaysProblem}" TextWrapping="Wrap" />
                   <TextBlock Classes="secondary" IsVisible="{Binding Editor.ArrangementNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" Text="{Binding Editor.ArrangementNote}" TextWrapping="Wrap" />
+                  <Button HorizontalAlignment="Left" Classes="link" Command="{Binding Editor.TakeCurrentAudioCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_TakeCurrentAudio}" IsVisible="{Binding Editor.OffersCurrentAudio, FallbackValue=False}" />
 
                   <!-- Groups: the summary is the header, the settings open in place. -->
                   <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="{DynamicResource RsRadiusLg}">

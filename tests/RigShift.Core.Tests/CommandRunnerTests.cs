@@ -214,6 +214,20 @@ public sealed class CommandRunnerTests
     }
 
     [Fact]
+    public async Task Save_TakesTheDefaultMicrophoneToo()
+    {
+        var microphone = new AudioEndpoint("{capture-1}", "Microphone");
+        _audio.ListAsync(AudioDirection.Capture, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(microphone, AudioDirection.Capture, IsActive: true, AudioRoleMask.All)]);
+
+        await Runner().RunAsync(new CliRequest { Command = CliCommand.Save, ProfileName = "Desk copy" }, CancellationToken.None);
+        await Runner().RunAsync(new CliRequest { Command = CliCommand.Save, ProfileName = "Rig" }, CancellationToken.None);
+
+        _store.Profiles.Single(p => p.Name == "Desk copy").Audio.Recording.ShouldBe(microphone);
+        _store.Profiles.Single(p => p.Name == "Rig").Audio.Recording.ShouldBe(microphone);
+    }
+
+    [Fact]
     public async Task Save_ExistingName_UpdatesArrangementAndKeepsIdentity()
     {
         Profile rig = _store.Profiles.Single(p => p.Name == "Rig") with { Icon = "rig", SwitchWithoutAsking = true };

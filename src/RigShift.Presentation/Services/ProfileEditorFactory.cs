@@ -22,7 +22,7 @@ public sealed class ProfileEditorFactory(
 {
     private readonly ILogger _log = editorServices.Log.ForContext<ProfileEditorFactory>();
 
-    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3).</summary>
+    /// <summary>A new, unsaved profile from the active displays, the default playback and recording devices and Surround.</summary>
     public async Task<Profile> NewFromCurrentAsync()
     {
         DisplaySnapshot snapshot;
@@ -38,9 +38,14 @@ public sealed class ProfileEditorFactory(
 
         ProfileCatalog catalog = editorServices.Catalog;
         IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
+        IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
         string name = ProfileEditing.UniqueName(Loc.Instance["Editor_NewName"], catalog.Profiles.Select(p => p.Name));
-        AudioEndpoint? defaultPlayback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
-        Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, catalog.KnownDisplayNames);
+        var audio = new AudioAssignment
+        {
+            Playback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint,
+            Recording = recording.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint,
+        };
+        Profile profile = ProfileEditing.Capture(name, snapshot, audio, catalog.KnownDisplayNames);
 
         // A running Surround grid is part of "the arrangement as it is now" - without it the profile could never
         // reproduce the wide display it just recorded.
