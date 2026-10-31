@@ -38,6 +38,24 @@ public sealed class HotkeyServiceTests : IDisposable
             Logger.None);
         _service = new HotkeyService(_host.Catalog, _catalog, _sessions, _host.Coordinator, _host.Settings, Logger.None, _registrar);
         _service.RegistrationFailed += (_, names) => _failures.Add(names);
+
+        // The quick switcher's default would show up in every list of held hotkeys; its own test turns it back on.
+        _host.Settings.UpdateAsync(s => s with { QuickSwitchHotkey = null }, CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    [Fact]
+    public async Task QuickSwitchHotkey_IsHeldByDefault_AndRaisesItsRequest()
+    {
+        await _host.Settings.UpdateAsync(s => s with { QuickSwitchHotkey = Core.Settings.AppSettings.DefaultQuickSwitchHotkey }, Ct);
+        bool requested = false;
+        _service.QuickSwitchRequested += (_, _) => requested = true;
+
+        _service.Start();
+        _registrar.Press(Core.Settings.AppSettings.DefaultQuickSwitchHotkey);
+
+        requested.ShouldBeTrue();
+        _service.UsedBy(Core.Settings.AppSettings.DefaultQuickSwitchHotkey, HotkeyUseKind.Profile, Guid.NewGuid())
+            .ShouldNotBeNull().Kind.ShouldBe(HotkeyUseKind.QuickSwitch);
     }
 
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);

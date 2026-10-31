@@ -76,6 +76,12 @@
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Switch back</value></data>
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One hotkey that returns to the last profile.</value></data>
+  <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Quick switcher</value></data>
+  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Opens a list of profiles and games on the display with the mouse, from any app.</value></data>
+  <data name="QuickSwitch_Search" xml:space="preserve"><value>Profile or game</value></data>
+  <data name="QuickSwitch_Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="QuickSwitch_Game" xml:space="preserve"><value>Game</value></data>
+  <data name="QuickSwitch_Empty" xml:space="preserve"><value>Nothing matches.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
