@@ -33,6 +33,10 @@ internal sealed class TrayIconService : IDisposable
     private System.Drawing.Icon? _trayIcon;
     private (int Size, bool LightTaskbar) _iconState;
     private long? _lastErrorNotification;
+    private DispatcherTimer? _retry;
+#if DEBUG
+    private int _createAttempts;
+#endif
 
     /// <summary>What a click on the last notification does; null when it does nothing.</summary>
     private Action? _notificationClick;
@@ -141,8 +145,8 @@ internal sealed class TrayIconService : IDisposable
         _icon.MessageWindow.TaskbarCreated += (_, _) => OnUi(() =>
         {
             _icon.TryRemove();
-            _icon.Create();
-            _log.Information("Explorer restarted, tray icon added again");
+            _log.Information("Explorer restarted, adding the tray icon again");
+            TryCreateIcon();
         });
 
         // Taskbar theme and DPI can change at any time; SystemEvents raises on its own thread.
@@ -153,8 +157,47 @@ internal sealed class TrayIconService : IDisposable
     public void Start()
     {
         Refresh();
-        _icon.Create();
-        _log.Information("Tray icon created");
+        TryCreateIcon();
+    }
+
+    /// <summary>
+    /// Adds the icon on the UI thread through <see cref="TrayIcon.Create"/>. <see cref="TrayIconWithContextMenu.Create"/>
+    /// would add it on a thread of its own, where a refused Shell_NotifyIcon (Explorer not ready at sign-in, busy, or a
+    /// restricted process) throws past every handler and ends RigShift. Here the icon's window lives in Avalonia's
+    /// message loop, which also runs the context menu; a refusal is logged and tried again every 10 s and on
+    /// TaskbarCreated until the taskbar takes it.
+    /// </summary>
+    private void TryCreateIcon()
+    {
+        if (_icon.IsCreated)
+        {
+            return;
+        }
+
+        try
+        {
+#if DEBUG
+            // RIGSHIFT_PREVIEW_TRAYFAIL=<n>: the first n attempts fail, as a refused Shell_NotifyIcon does.
+            if (int.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAYFAIL"), out int failures) && _createAttempts++ < failures)
+            {
+                throw new InvalidOperationException("TryCreate failed (preview).");
+            }
+#endif
+            ((TrayIcon)_icon).Create();
+            _retry?.Stop();
+            _log.Information("Tray icon created");
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (_retry is null)
+            {
+                _retry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+                _retry.Tick += (_, _) => TryCreateIcon();
+                _log.Warning(ex, "Tray icon could not be added, trying again every {Seconds} s", _retry.Interval.TotalSeconds);
+            }
+
+            _retry.Start();
+        }
     }
 
     /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
@@ -183,6 +226,7 @@ internal sealed class TrayIconService : IDisposable
     {
         SystemEvents.UserPreferenceChanged -= OnSystemChanged;
         SystemEvents.DisplaySettingsChanged -= OnSystemChanged;
+        _retry?.Stop();
         _icon.Dispose();
         _trayIcon?.Dispose();
     }
@@ -316,6 +360,13 @@ internal sealed class TrayIconService : IDisposable
 
     private void Notify((string Title, string Text, NoticeLevel Icon) message, Action? click)
     {
+        // Without an icon there is nothing to show a balloon on (the library throws); the log has the message.
+        if (!_icon.IsCreated)
+        {
+            _log.Information("No tray icon yet, notification not shown: {Title}: {Text}", message.Title, message.Text);
+            return;
+        }
+
         _notificationClick = click;
         _icon.ShowNotification(message.Title, message.Text, message.Icon switch
         {
