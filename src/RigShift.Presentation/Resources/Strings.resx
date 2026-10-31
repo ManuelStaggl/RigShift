@@ -226,7 +226,7 @@
   <data name="App_Path" xml:space="preserve"><value>App</value></data>
   <data name="App_Browse" xml:space="preserve"><value>Choose app</value></data>
   <data name="App_Arguments" xml:space="preserve"><value>Launch options</value></data>
-  <data name="App_Wait" xml:space="preserve"><value>Delay in seconds before the next one starts</value></data>
+  <data name="App_Wait" xml:space="preserve"><value>Seconds: the delay, or the longest wait for the window</value></data>
   <data name="App_Remove" xml:space="preserve"><value>Remove app</value></data>
   <data name="AppPicker_Search" xml:space="preserve"><value>Search installed and running apps</value></data>
   <data name="AppPicker_Running" xml:space="preserve"><value>Running</value></data>
@@ -659,7 +659,7 @@
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>The camera menu; it takes the widths and the eye distance in millimeters itself.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radians, three decimals.</value></data>
   <data name="App_Change" xml:space="preserve"><value>Change…</value></data>
-  <data name="App_WaitShort" xml:space="preserve"><value>Delay (s)</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Seconds</value></data>
   <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>When disconnected</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Check</value></data>
   <data name="Profile_Reapply" xml:space="preserve"><value>Re-apply</value></data>
@@ -821,8 +821,11 @@
     <value>Until its window</value>
   </data>
   <data name="App_WaitForWindowTip" xml:space="preserve">
-    <value>Goes on as soon as the program shows a window, at the latest after the seconds. Not for programs that start into the tray.</value>
+    <value>How long the next app waits for this one. “Until its window” goes on as soon as the program shows a window, at the latest after the seconds; not for programs that start into the tray.</value>
   </data>
+  <data name="App_WaitChoice" xml:space="preserve"><value>Wait before the next app</value></data>
+  <data name="App_WaitNone" xml:space="preserve"><value>No wait</value></data>
+  <data name="App_WaitFixed" xml:space="preserve"><value>Fixed time</value></data>
   <data name="Profile_DefaultTip" xml:space="preserve">
     <value>Default profile: where “Switch back” goes when there is no last profile. Change it under Settings.</value>
   </data>

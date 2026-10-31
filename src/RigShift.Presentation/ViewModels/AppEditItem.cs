@@ -22,14 +22,15 @@ public sealed partial class AppEditItem : ObservableObject
         ShowWhen = showWhen;
         FillKindChoices();
         FillWhenChoices();
+        FillWaitChoices();
         SelectedKind = KindChoices[action.Kind == AppActionKind.Stop ? 1 : 0];
         SelectedWhen = WhenChoices[action.When == AppTiming.AfterGame ? 1 : 0];
         Path = action.Path;
         _pickedPath = action.Name is null ? null : action.Path;
         _pickedName = action.Name;
         Arguments = action.Arguments ?? string.Empty;
-        WaitSeconds = action.WaitSeconds;
-        WaitForWindow = action.WaitForWindow;
+        WaitSeconds = action.Wait == AppWait.None ? null : action.WaitSeconds;
+        SelectedWait = WaitChoices[Enum.IsDefined(action.Wait) ? (int)action.Wait : 0];
         _ready = true;
         CheckPath(pause: false);
     }
@@ -39,9 +40,6 @@ public sealed partial class AppEditItem : ObservableObject
     internal static bool PreviewPathsExist { get; set; }
 
 #endif
-    /// <summary>What the seconds become when "until its window is open" is ticked with none: a limit that is visible.</summary>
-    internal const int DefaultWindowWaitSeconds = 60;
-
     /// <summary>How long typing has to pause before the file is looked for.</summary>
     private static readonly TimeSpan PathCheckPause = TimeSpan.FromMilliseconds(300);
 
@@ -71,6 +69,7 @@ public sealed partial class AppEditItem : ObservableObject
     /// <summary>Null only for a moment while the list is rebuilt; that counts as "start".</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStart))]
+    [NotifyPropertyChangedFor(nameof(ShowWaitSeconds))]
     public partial Choice? SelectedKind { get; set; }
 
     partial void OnSelectedKindChanged(Choice? value) => CheckPath(pause: false);
@@ -94,10 +93,13 @@ public sealed partial class AppEditItem : ObservableObject
     {
         bool start = IsStart;
         bool after = IsAfterGame;
+        AppWait wait = Wait;
         FillKindChoices();
         FillWhenChoices();
+        FillWaitChoices();
         SelectedKind = KindChoices[start ? 0 : 1];
         SelectedWhen = WhenChoices[after ? 1 : 0];
+        SelectedWait = WaitChoices[(int)wait];
         CheckPath(pause: false);
     }
 
@@ -115,6 +117,15 @@ public sealed partial class AppEditItem : ObservableObject
         WhenChoices.Clear();
         WhenChoices.Add(new Choice(nameof(AppTiming.BeforeGame), Loc.Instance["App_BeforeGame"]));
         WhenChoices.Add(new Choice(nameof(AppTiming.AfterGame), Loc.Instance["App_AfterGame"]));
+    }
+
+    /// <summary>In the order of <see cref="AppWait"/>, so that the value is the index.</summary>
+    private void FillWaitChoices()
+    {
+        WaitChoices.Clear();
+        WaitChoices.Add(new Choice(nameof(AppWait.None), Loc.Instance["App_WaitNone"]));
+        WaitChoices.Add(new Choice(nameof(AppWait.Window), Loc.Instance["App_WaitForWindow"]));
+        WaitChoices.Add(new Choice(nameof(AppWait.Fixed), Loc.Instance["App_WaitFixed"]));
     }
 
     [ObservableProperty]
@@ -208,18 +219,28 @@ public sealed partial class AppEditItem : ObservableObject
     [ObservableProperty]
     public partial string Arguments { get; set; }
 
+    /// <summary>The fixed pause, or the longest wait for the window; only asked for when the choice has seconds.</summary>
     [ObservableProperty]
     public partial double? WaitSeconds { get; set; }
 
-    /// <summary>The wait ends once the program shows a window; the seconds are the longest wait.</summary>
-    [ObservableProperty]
-    public partial bool WaitForWindow { get; set; }
+    public ObservableCollection<Choice> WaitChoices { get; } = [];
 
-    partial void OnWaitForWindowChanged(bool value)
+    /// <summary>How the next app waits for this one; null only for a moment while the list is rebuilt.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowWaitSeconds))]
+    public partial Choice? SelectedWait { get; set; }
+
+    /// <summary>A null selection counts as no wait.</summary>
+    private AppWait Wait => Enum.TryParse(SelectedWait?.Key, out AppWait wait) ? wait : AppWait.None;
+
+    public bool ShowWaitSeconds => IsStart && Wait != AppWait.None;
+
+    /// <summary>A window wait always shows its limit; up to 4.x an empty field meant a minute without saying so.</summary>
+    partial void OnSelectedWaitChanged(Choice? value)
     {
-        if (value && (WaitSeconds ?? 0) <= 0)
+        if (Wait == AppWait.Window && (WaitSeconds ?? 0) <= 0)
         {
-            WaitSeconds = DefaultWindowWaitSeconds;
+            WaitSeconds = AppAction.DefaultWindowWaitSeconds;
         }
     }
 
@@ -229,8 +250,8 @@ public sealed partial class AppEditItem : ObservableObject
         Path = Path.Trim(),
         Name = _pickedName is not null && string.Equals(Path.Trim(), _pickedPath, StringComparison.OrdinalIgnoreCase) ? _pickedName : null,
         Arguments = IsStart && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
-        WaitSeconds = (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
-        WaitForWindow = IsStart && WaitForWindow,
+        Wait = Wait,
+        WaitSeconds = Wait == AppWait.None ? 0 : (int)Math.Clamp(Math.Round(WaitSeconds ?? 0), 0, 300),
         When = IsAfterGame ? AppTiming.AfterGame : AppTiming.BeforeGame,
     };
 }

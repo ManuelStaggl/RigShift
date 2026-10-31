@@ -47,7 +47,7 @@ internal sealed record AppPlan(
             [.. game.Apps
                 .Where(a => a.Kind == AppActionKind.Start)
                 .Reverse()
-                .Select(a => a with { Kind = AppActionKind.Stop, WaitSeconds = 0 })],
+                .Select(a => a with { Kind = AppActionKind.Stop, Wait = AppWait.None, WaitSeconds = 0 })],
             null,
             null);
     }
