@@ -264,6 +264,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         {
             Id = Guid.NewGuid(),
             Name = ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), _catalog.Profiles.Select(p => p.Name)),
+            FormerNames = null,
 
             // A key combination has one owner; the copy kept it and could not be saved until it was cleared.
             Hotkey = null,

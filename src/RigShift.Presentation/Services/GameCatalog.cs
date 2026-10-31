@@ -5,6 +5,7 @@ using RigShift.App.Localization;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
+using RigShift.Core.Profiles;
 using Serilog;
 
 namespace RigShift.App.Services;
@@ -88,6 +89,12 @@ public sealed partial class GameCatalog : ObservableObject
 
     public async Task SaveAsync(GameEntry game, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(game);
+        if (Find(game.Id) is { } stored)
+        {
+            game = game with { FormerNames = NameHistory.After(stored.Name, stored.FormerNames, game.Name) };
+        }
+
         await _store.SaveAsync(game, cancellationToken);
         await ReloadAsync(cancellationToken);
     }

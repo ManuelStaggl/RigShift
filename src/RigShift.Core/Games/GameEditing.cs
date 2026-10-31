@@ -5,13 +5,12 @@ namespace RigShift.Core.Games;
 /// <summary>Rules for editing game entries. The counterpart of <c>ProfileEditing</c>, and far smaller.</summary>
 public static class GameEditing
 {
-    /// <summary>Game names are matched case-insensitively and without surrounding blanks (CLI: <c>play iracing</c>).</summary>
-    public static GameEntry? FindByName(IEnumerable<GameEntry> games, string name)
-    {
-        ArgumentNullException.ThrowIfNull(games);
-        ArgumentNullException.ThrowIfNull(name);
-        return games.FirstOrDefault(g => NamesEqual(g.Name, name));
-    }
+    /// <summary>
+    /// Game names are matched case-insensitively and without surrounding blanks (CLI: <c>play iracing</c>), then former
+    /// names and the id.
+    /// </summary>
+    public static GameEntry? FindByName(IEnumerable<GameEntry> games, string name) =>
+        NameHistory.Find(games, name, g => g.Name, g => g.FormerNames, g => g.Id);
 
     /// <summary>
     /// Everything that prevents saving <paramref name="game"/> next to <paramref name="others"/>. The hotkey is checked

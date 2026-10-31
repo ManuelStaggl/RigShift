@@ -1,3 +1,4 @@
+using System.IO;
 using NSubstitute;
 using RigShift.App.Localization;
 using RigShift.App.Services;
@@ -376,6 +377,36 @@ public sealed class SwitchCoordinatorTests : IDisposable
         report.ShouldNotBeNull().FallbackProfile.ShouldBeNull();
         _host.Coordinator.History.ShouldBeEmpty();
         _host.Display.Applied.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ToggleTarget_AfterARestart_IsTheProfileActiveBeforeTheLastChange()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile tv = Profile("TV", [Mode(Desk4K, 1920, 1080, 60, primary: true)]);
+        foreach (Profile profile in (Profile[])[desk, rig, tv])
+        {
+            await _host.Store.SaveAsync(profile, token);
+        }
+
+        await _host.Catalog.ReloadAsync(token);
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet, activeMode: TabletMode)));
+        await _host.Catalog.RefreshActiveAsync(token);
+
+        // A new start reads the settings file again.
+        using var restarted = new AppTestHost(_host.Display);
+        Directory.CreateDirectory(restarted.Paths.DataDirectory);
+        File.Copy(_host.Paths.SettingsFile, restarted.Paths.SettingsFile);
+        await restarted.Settings.LoadAsync(token);
+        foreach (Profile profile in (Profile[])[desk, rig, tv])
+        {
+            await restarted.Store.SaveAsync(profile, token);
+        }
+
+        await restarted.Catalog.ReloadAsync(token);
+        restarted.Coordinator.ToggleTarget.ShouldBe(desk);
     }
 
     public void Dispose() => _host.Dispose();

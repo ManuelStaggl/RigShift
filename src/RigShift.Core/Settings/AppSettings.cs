@@ -61,6 +61,9 @@ public sealed record AppSettings
     /// <summary>The app version that last wrote its automatic backup at start; a new version writes one more.</summary>
     public string? LastBackupVersion { get; init; }
 
+    /// <summary>The profile that was active before the current one: where "back to the previous profile" goes, also after a restart.</summary>
+    public Guid? PreviousProfileId { get; init; }
+
     /// <summary>Refresh rates displays offered once, for the profile editor (<see cref="Profiles.RefreshRateMemory"/>).</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>>? RefreshRates { get; init; }
 

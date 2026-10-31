@@ -72,9 +72,9 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     /// <summary>
     /// The profile that was active before <see cref="ActiveProfile"/> changed – the target of "back to the previous
-    /// profile" (1.7.0). Kept while no profile is active, not persisted across restarts.
+    /// profile". Kept while no profile is active and stored in the settings, so it survives a restart.
     /// </summary>
-    public Guid? PreviousProfileId { get; private set; }
+    public Guid? PreviousProfileId => _settings.Current.PreviousProfileId;
 
     /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout.</summary>
     public Guid? LastAppliedProfileId { get; set; }
@@ -228,6 +228,12 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(profile);
+        if (Find(profile.Id) is { } stored)
+        {
+            profile = profile with { FormerNames = NameHistory.After(stored.Name, stored.FormerNames, profile.Name) };
+        }
+
         await _store.SaveAsync(profile, cancellationToken);
         foreach (Profile other in DisplayNames.Propagate(profile, _profiles))
         {
@@ -396,7 +402,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         Profile? active = _matcher.FindActive(_profiles, snapshot, LastAppliedProfileId ?? ActiveProfile?.Id);
         if (ActiveProfile is { } before && before.Id != active?.Id)
         {
-            PreviousProfileId = before.Id;
+            await RememberPreviousAsync(before.Id, cancellationToken);
         }
 
         ActiveProfile = active;
@@ -404,6 +410,18 @@ public sealed partial class ProfileCatalog : ObservableObject
         LastSnapshot = snapshot;
         UpdateReadiness();
         DisplaysRefreshed?.Invoke(this, snapshot);
+    }
+
+    private async Task RememberPreviousAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _settings.UpdateAsync(s => s with { PreviousProfileId = id }, cancellationToken, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The previous profile could not be stored");
+        }
     }
 
     /// <summary>Before the property change goes out, so its listeners see the items' flags right.</summary>
