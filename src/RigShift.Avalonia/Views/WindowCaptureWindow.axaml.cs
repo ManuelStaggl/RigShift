@@ -19,6 +19,7 @@ public sealed partial class WindowCaptureWindow : Window
     public WindowCaptureWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
         Opened += (_, _) => List.Focus();
     }
 

@@ -24,6 +24,7 @@ public sealed partial class GamePickerWindow : Window
     public GamePickerWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
         GameList.AddHandler(KeyDownEvent, OnListKeyDown, RoutingStrategies.Tunnel);
         Opened += (_, _) => SearchBox.Focus();
     }

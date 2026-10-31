@@ -50,7 +50,7 @@
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.num.ahead, TextBlock.step.ahead">
-      <Setter Property="Foreground" Value="{DynamicResource RsText4}" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
     </Style>
 
     <Style Selector="Border.card">
@@ -168,7 +168,7 @@
                 <Grid RowDefinitions="Auto,115">
                   <Grid ColumnDefinitions="*,Auto">
                     <TextBlock VerticalAlignment="Center" Classes="caption" Text="{v:Tr Setup_Now}" />
-                    <Button Grid.Column="1" Classes="ghost" Padding="8,4" Command="{Binding OpenDisplaySettingsCommand}">
+                    <Button Grid.Column="1" AutomationProperties.Name="{v:Tr Setup_OpenDisplaySettings}" Classes="ghost" Padding="8,4" Command="{Binding OpenDisplaySettingsCommand}">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <Path Classes="icon small" Data="M14 4 H20 V10 M20 4 L11 13 M18 14 V20 H4 V6 H10" />
                         <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource RsText2}" Text="{v:Tr Setup_OpenDisplaySettings}" />

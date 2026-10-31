@@ -1,5 +1,5 @@
 <!-- RigShift's own styles on top of Semi: type scale, rail, rows, links, the one primary button. -->
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:u="https://irihi.tech/ursa">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:u="https://irihi.tech/ursa" xmlns:v="using:RigShift.Avalonia.Views">
 
   <!-- Type: 12/14/16/20/28, regular + semibold. -->
   <Style Selector="TextBlock.h1">
@@ -85,15 +85,15 @@
     </Setter>
   </Style>
 
-  <!-- Semi's NumericUpDown template leaves its field and spinner unnamed; Narrator read them as "PathIcon". -->
+  <!-- Semi's NumericUpDown and Slider templates leave their field and step buttons unnamed; Narrator read them as "PathIcon" or nothing. -->
   <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
     <Setter Property="AutomationProperties.Name" Value="{Binding $parent[NumericUpDown].(AutomationProperties.Name)}" />
   </Style>
-  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_IncreaseButton">
-    <Setter Property="AutomationProperties.Name" Value="Increase" />
+  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_IncreaseButton, Slider /template/ RepeatButton#PART_IncreaseButton">
+    <Setter Property="AutomationProperties.Name" Value="{v:Tr Common_Increase}" />
   </Style>
-  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_DecreaseButton">
-    <Setter Property="AutomationProperties.Name" Value="Decrease" />
+  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_DecreaseButton, Slider /template/ RepeatButton#PART_DecreaseButton">
+    <Setter Property="AutomationProperties.Name" Value="{v:Tr Common_Decrease}" />
   </Style>
 
   <!-- Controls: 6 px radius, hairline outline, raised fill. -->
@@ -225,7 +225,7 @@
     <Setter Property="Fill" Value="{DynamicResource RsAccentDuo}" />
   </Style>
 
-  <!-- Title-bar search: a recessed well, placeholder in the hint colour, the shortcut as a keycap. -->
+  <!-- Title-bar search: a recessed well, the icon in the hint colour, the shortcut as a keycap. -->
   <Style Selector="Button.search">
     <Setter Property="Height" Value="26" />
     <Setter Property="Padding" Value="10,0,4,0" />
@@ -242,9 +242,6 @@
   </Style>
   <Style Selector="Button.search Path.icon">
     <Setter Property="Stroke" Value="{DynamicResource RsText4}" />
-  </Style>
-  <Style Selector="Button.search TextBlock.caption">
-    <Setter Property="Foreground" Value="{DynamicResource RsText4}" />
   </Style>
 
   <!-- Keycap: raised, 5 px radius, 11 px semibold. -->
@@ -279,8 +276,10 @@
   <!-- Notices instead of InfoBars: tinted surface, no icon badge. -->
   <Style Selector="Border.notice">
     <Setter Property="CornerRadius" Value="6" />
-    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="Padding" Value="11,7" />
     <Setter Property="Background" Value="{DynamicResource RsWarningSoft}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsNoticeLine}" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
   <Style Selector="Border.notice.danger">
     <Setter Property="Background" Value="{DynamicResource RsDangerSoft}" />
@@ -326,8 +325,9 @@
     <Setter Property="BoxShadow" Value="{DynamicResource RsRailOnShadow}" />
   </Style>
 
-  <!-- The name as a 32 px heading that turns into a field on hover and focus. -->
+  <!-- The name as a 32 px heading that turns into a field on hover and focus; a long name wraps instead of running out. -->
   <Style Selector="TextBox.title">
+    <Setter Property="TextWrapping" Value="Wrap" />
     <Setter Property="FontSize" Value="32" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="LetterSpacing" Value="-0.7" />

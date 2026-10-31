@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using RigShift.App.ViewModels;
@@ -31,6 +32,7 @@ public sealed partial class SetupWizardWindow : Window
     public SetupWizardWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
         _hook = WndProc;
     }
 
@@ -44,6 +46,15 @@ public sealed partial class SetupWizardWindow : Window
         viewModel.PropertyChanged += window.OnViewModelChanged;
         window._usbTimer.Tick += (_, _) => viewModel.PollUsb();
         window._settle.Tick += window.OnDisplaysSettled;
+        // Esc leaves the assistant like its close button; a control that uses Esc itself (an open list) handles it first.
+        window.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                window.Close();
+            }
+        };
         window.Opened += (_, _) =>
         {
             Win32Properties.AddWndProcHookCallback(window, window._hook);

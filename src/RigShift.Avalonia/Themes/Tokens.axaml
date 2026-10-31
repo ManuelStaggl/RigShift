@@ -5,6 +5,8 @@
   control-level keys that matter are overridden directly further down.
   Values: the 5.0 design system (cool grey surface ladder, brand blue accent). RsAccent is the fill (primary button,
   toggle on), RsAccentText the line colour (focus ring, selection, nav marker).
+  Contrast: RsText to RsText3, RsAccentText and the status colours reach 4.5:1 on every surface; RsText4 is the hint
+  colour for icons, chevrons and dots and reaches 3:1, so no text uses it.
 -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!-- Section hues: content colour of the group tiles and their 24 % fill, the same in both themes. -->
@@ -38,6 +40,8 @@
   <SolidColorBrush x:Key="HueTriggersSoft" Color="#3DF2A83B" />
   <SolidColorBrush x:Key="HueWindows" Color="#6CBF5A" />
   <SolidColorBrush x:Key="HueWindowsSoft" Color="#3D6CBF5A" />
+  <!-- A notice's outline: none in the themes, the window text colour in high contrast, where its tint is gone. -->
+  <SolidColorBrush x:Key="RsNoticeLine" Color="Transparent" />
 
   <ResourceDictionary.ThemeDictionaries>
 
@@ -63,7 +67,7 @@
       <SolidColorBrush x:Key="RsDeep" Color="#0B0C0D" />
       <SolidColorBrush x:Key="RsText" Color="#F7F8F8" />
       <SolidColorBrush x:Key="RsText2" Color="#D0D6E0" />
-      <SolidColorBrush x:Key="RsText3" Color="#8A8F98" />
+      <SolidColorBrush x:Key="RsText3" Color="#8F949D" />
       <SolidColorBrush x:Key="RsDivider" Color="#0FFFFFFF" />
       <SolidColorBrush x:Key="RsOutline" Color="#17FFFFFF" />
       <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
@@ -73,7 +77,7 @@
       <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
       <SolidColorBrush x:Key="RsSuccess" Color="#4CB782" />
       <SolidColorBrush x:Key="RsWarning" Color="#F0BF00" />
-      <SolidColorBrush x:Key="RsDanger" Color="#EB5757" />
+      <SolidColorBrush x:Key="RsDanger" Color="#ED6969" />
       <SolidColorBrush x:Key="RsWarningSoft" Color="#24F0BF00" />
       <SolidColorBrush x:Key="RsDangerSoft" Color="#24EB5757" />
       <!-- Display picture: grey screens in a bezel, the selected one outlined in the accent line colour. -->
@@ -87,7 +91,7 @@
       <SolidColorBrush x:Key="RsPop" Color="#E62A2B2E" />
       <BoxShadows x:Key="RsPopShadow">0 4 40 8 #80000000, 0 0 0 0.5 #CC000000, inset 0 0.5 0 0 #33FFFFFF</BoxShadows>
       <SolidColorBrush x:Key="RsHover" Color="#0DFFFFFF" />
-      <SolidColorBrush x:Key="RsText4" Color="#62666D" />
+      <SolidColorBrush x:Key="RsText4" Color="#72767C" />
       <!-- Selected rail tile: accent 24 → 12 %, a hairline ring in the accent, the icon in accent-tinted text with a 26 % fill. -->
       <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
         <GradientStop Offset="0" Color="#3D5AA9FF" />
@@ -110,16 +114,16 @@
       <SolidColorBrush x:Key="SemiColorPrimaryLight" Color="#1F5AA9FF" />
       <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover" Color="#2E5AA9FF" />
       <SolidColorBrush x:Key="SemiColorPrimaryLightActive" Color="#3D5AA9FF" />
-      <SolidColorBrush x:Key="SemiColorTertiary" Color="#8A8F98" />
+      <SolidColorBrush x:Key="SemiColorTertiary" Color="#8F949D" />
       <SolidColorBrush x:Key="SemiColorSuccess" Color="#4CB782" />
       <SolidColorBrush x:Key="SemiColorWarning" Color="#F0BF00" />
-      <SolidColorBrush x:Key="SemiColorDanger" Color="#EB5757" />
+      <SolidColorBrush x:Key="SemiColorDanger" Color="#ED6969" />
       <SolidColorBrush x:Key="SemiColorDangerPointerover" Color="#D94C4C" />
       <SolidColorBrush x:Key="SemiColorDangerActive" Color="#C24343" />
       <SolidColorBrush x:Key="SemiColorText0" Color="#F7F8F8" />
       <SolidColorBrush x:Key="SemiColorText1" Color="#D0D6E0" />
-      <SolidColorBrush x:Key="SemiColorText2" Color="#8A8F98" />
-      <SolidColorBrush x:Key="SemiColorText3" Color="#62666D" />
+      <SolidColorBrush x:Key="SemiColorText2" Color="#8F949D" />
+      <SolidColorBrush x:Key="SemiColorText3" Color="#72767C" />
       <SolidColorBrush x:Key="SemiColorLink" Color="#5AA9FF" />
       <SolidColorBrush x:Key="SemiColorLinkPointerover" Color="#79B8FF" />
       <SolidColorBrush x:Key="SemiColorLinkActive" Color="#0078D4" />
@@ -179,7 +183,7 @@
       <SolidColorBrush x:Key="RsDeep" Color="#ECEEF2" />
       <SolidColorBrush x:Key="RsText" Color="#282A30" />
       <SolidColorBrush x:Key="RsText2" Color="#3C4149" />
-      <SolidColorBrush x:Key="RsText3" Color="#6F6E77" />
+      <SolidColorBrush x:Key="RsText3" Color="#63626B" />
       <SolidColorBrush x:Key="RsDivider" Color="#0F000000" />
       <SolidColorBrush x:Key="RsOutline" Color="#17000000" />
       <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
@@ -187,9 +191,9 @@
       <SolidColorBrush x:Key="RsAccentText" Color="#0067B8" />
       <SolidColorBrush x:Key="RsAccentSoft" Color="#E8F2FC" />
       <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="RsSuccess" Color="#27A644" />
-      <SolidColorBrush x:Key="RsWarning" Color="#C79A00" />
-      <SolidColorBrush x:Key="RsDanger" Color="#D9473F" />
+      <SolidColorBrush x:Key="RsSuccess" Color="#1B722F" />
+      <SolidColorBrush x:Key="RsWarning" Color="#7B5F00" />
+      <SolidColorBrush x:Key="RsDanger" Color="#B03A33" />
       <SolidColorBrush x:Key="RsWarningSoft" Color="#1FC79A00" />
       <SolidColorBrush x:Key="RsDangerSoft" Color="#1AD9473F" />
       <SolidColorBrush x:Key="RsTileFill" Color="#FFFFFF" />
@@ -202,7 +206,7 @@
       <SolidColorBrush x:Key="RsPop" Color="#EBFFFFFF" />
       <BoxShadows x:Key="RsPopShadow">0 8 32 2 #24000000, 0 0 0 0.5 #1F000000, inset 0 0.5 0 0 #FFFFFFFF</BoxShadows>
       <SolidColorBrush x:Key="RsHover" Color="#0A000000" />
-      <SolidColorBrush x:Key="RsText4" Color="#86848D" />
+      <SolidColorBrush x:Key="RsText4" Color="#7F7D86" />
       <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
         <GradientStop Offset="0" Color="#3D0067B8" />
         <GradientStop Offset="1" Color="#1F0067B8" />
@@ -223,16 +227,16 @@
       <SolidColorBrush x:Key="SemiColorPrimaryLight" Color="#1F0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover" Color="#2E0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryLightActive" Color="#3D0078D4" />
-      <SolidColorBrush x:Key="SemiColorTertiary" Color="#6F6E77" />
-      <SolidColorBrush x:Key="SemiColorSuccess" Color="#27A644" />
-      <SolidColorBrush x:Key="SemiColorWarning" Color="#C79A00" />
-      <SolidColorBrush x:Key="SemiColorDanger" Color="#D9473F" />
+      <SolidColorBrush x:Key="SemiColorTertiary" Color="#63626B" />
+      <SolidColorBrush x:Key="SemiColorSuccess" Color="#1B722F" />
+      <SolidColorBrush x:Key="SemiColorWarning" Color="#7B5F00" />
+      <SolidColorBrush x:Key="SemiColorDanger" Color="#B03A33" />
       <SolidColorBrush x:Key="SemiColorDangerPointerover" Color="#C23E37" />
       <SolidColorBrush x:Key="SemiColorDangerActive" Color="#AB3630" />
       <SolidColorBrush x:Key="SemiColorText0" Color="#282A30" />
       <SolidColorBrush x:Key="SemiColorText1" Color="#3C4149" />
-      <SolidColorBrush x:Key="SemiColorText2" Color="#6F6E77" />
-      <SolidColorBrush x:Key="SemiColorText3" Color="#86848D" />
+      <SolidColorBrush x:Key="SemiColorText2" Color="#63626B" />
+      <SolidColorBrush x:Key="SemiColorText3" Color="#7F7D86" />
       <SolidColorBrush x:Key="SemiColorLink" Color="#0067B8" />
       <SolidColorBrush x:Key="SemiColorLinkPointerover" Color="#005A9E" />
       <SolidColorBrush x:Key="SemiColorLinkActive" Color="#004A82" />

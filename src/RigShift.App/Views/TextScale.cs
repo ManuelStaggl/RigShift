@@ -15,27 +15,9 @@ namespace RigShift.App.Views;
 /// </summary>
 internal static class TextScale
 {
-    private const double Largest = 2.25;
-
-    /// <summary>
-    /// The factor for a window: the setting, never below 1, and no larger than lets the window's smallest size
-    /// still fit the screen – a layout cut off at the edge helps nobody who needs large text.
-    /// </summary>
-    internal static double Factor(int? percent, double roomWidth, double roomHeight, double minWidth, double minHeight)
-    {
-        double factor = Math.Clamp((percent ?? 100) / 100d, 1, Largest);
-        if (minWidth > 0)
-        {
-            factor = Math.Min(factor, roomWidth / minWidth);
-        }
-
-        if (minHeight > 0)
-        {
-            factor = Math.Min(factor, roomHeight / minHeight);
-        }
-
-        return Math.Max(1, factor);
-    }
+    /// <summary>The factor for a window, see <see cref="TextScaleSetting.Factor"/>.</summary>
+    internal static double Factor(int? percent, double roomWidth, double roomHeight, double minWidth, double minHeight) =>
+        TextScaleSetting.Factor(percent, roomWidth, roomHeight, minWidth, minHeight);
 
     /// <summary>Call right after <c>InitializeComponent</c>, so the start position already counts with the grown size.</summary>
     /// <returns>The factor in use; a window that compares its own width divides by it.</returns>

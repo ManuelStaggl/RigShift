@@ -172,7 +172,7 @@
                   <Button Classes="neutral" Command="{Binding CopyDiagnosticsCommand}" Content="{v:Tr About_CopyDiagnostics}" ToolTip.Tip="{v:Tr About_CopyHint}" />
                 </WrapPanel>
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                  <Button Classes="link" Command="{Binding ReportProblemCommand}" FontSize="13">
+                  <Button AutomationProperties.Name="{v:Tr About_ReportProblem}" Classes="link" Command="{Binding ReportProblemCommand}" FontSize="13">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <TextBlock Text="{v:Tr About_ReportProblem}" />
                       <Path Classes="icon small" Width="12" Height="12" Stroke="{Binding $parent[Button].Foreground}" Data="{x:Static v:Icons.External}" />

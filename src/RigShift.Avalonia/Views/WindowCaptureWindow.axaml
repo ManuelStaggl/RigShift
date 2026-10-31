@@ -23,7 +23,7 @@
     <ListBox x:Name="List" Grid.Row="1" AutomationProperties.Name="{v:Tr Capture_Title}" Background="Transparent" ItemsSource="{Binding Windows}" SelectionMode="Single">
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="vm:CaptureRow">
-          <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Position}">
+          <CheckBox VerticalAlignment="Center" AutomationProperties.Name="{Binding Title}" IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Position}">
             <StackPanel Margin="4,0,0,0">
               <TextBlock FontSize="14" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
               <TextBlock Classes="caption" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />

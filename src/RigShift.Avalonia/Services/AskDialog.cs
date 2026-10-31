@@ -77,6 +77,7 @@ internal static class AskDialog
             }
         };
 
+        global::RigShift.Avalonia.Views.TextScale.Apply(window);
         await ShowModalAsync(window);
 
         return result;

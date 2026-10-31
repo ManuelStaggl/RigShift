@@ -38,6 +38,7 @@ public sealed partial class ConfirmationWindow : Window
     public ConfirmationWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
         _hook = WndProc;
     }
 
