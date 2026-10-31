@@ -273,9 +273,9 @@
   </ResourceDictionary.ThemeDictionaries>
 
   <!-- Type, radii, spacing -->
-  <FontFamily x:Key="RsFont">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
-  <FontFamily x:Key="DefaultFontFamily">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
-  <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="RsFont">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="DefaultFontFamily">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
   <CornerRadius x:Key="RsRadiusControl">6</CornerRadius>
   <CornerRadius x:Key="RsRadiusSurface">10</CornerRadius>
   <CornerRadius x:Key="SemiBorderRadiusSmall">6</CornerRadius>

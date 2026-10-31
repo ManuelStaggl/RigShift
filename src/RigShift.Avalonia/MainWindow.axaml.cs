@@ -53,7 +53,7 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Windows' text size (100–225 %) as a scale on the pages, capped so the smallest window still fits the work area;
-    /// the title bar and rail keep their size, like the WPF app's TextScale.
+    /// the title bar and rail keep their size.
     /// </summary>
     private void ApplyTextScale()
     {
@@ -86,7 +86,7 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Once shown, a window that sticks out of its monitor's work area is pulled back in, onto the primary monitor when
-    /// it does not fit at its size, like the WPF app's windows.
+    /// it does not fit at its size.
     /// </summary>
     private void KeepOnScreen()
     {

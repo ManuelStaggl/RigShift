@@ -9,7 +9,7 @@ using Serilog;
 namespace RigShift.Avalonia.Services;
 
 /// <summary>
-/// The icon of a game's desktop shortcut, drawn with GDI+ like the WPF app's: the game's own icon in front of a card in
+/// The icon of a game's desktop shortcut, drawn with GDI+: the game's own icon in front of a card in
 /// the RigShift gradient that shows behind it at the top right. The game stays whole and recognisable; the card says
 /// the shortcut goes through RigShift.
 /// </summary>

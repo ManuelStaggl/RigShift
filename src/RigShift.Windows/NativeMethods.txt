@@ -150,8 +150,9 @@ RID_DEVICE_INFO_TYPE
 HIDP_STATUS_SUCCESS
 
 ShutdownBlockReasonCreate
+MessageBox
 
-// Message-only window for WM_HOTKEY (WinUI app)
+// Message window for WM_HOTKEY and WM_DISPLAYCHANGE
 RegisterClassEx
 CreateWindowEx
 DefWindowProc
