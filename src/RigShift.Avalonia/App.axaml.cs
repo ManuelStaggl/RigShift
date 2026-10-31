@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Avalonia.Services;
+using RigShift.Avalonia.Tray;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
@@ -20,7 +21,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
 {
     private ServiceProvider? _services;
     private MainWindow? _window;
-    private AppTray? _tray;
+    private TrayIconService? _tray;
 
     internal static IServiceProvider Provider => ((App)Current!)._services ?? throw new InvalidOperationException("Services not built.");
 
@@ -58,11 +59,11 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
             CommandRunner runner = Provider.GetRequiredService<CommandRunner>();
             runner.ProfilesChanged += async (_, _) => await catalog.ReloadAsync(CancellationToken.None);
             CommandPipeServer pipe = Provider.GetRequiredService<CommandPipeServer>();
-            // shortcut: the refusal is only logged; the tray balloon comes with the tray (#159).
-            pipe.Refused += (_, text) => Log.Warning("Command refused: {Text}", text);
+            pipe.Refused += (_, text) => _tray?.ShowRefusedCommand(text);
             pipe.Start();
 
-            _tray = new AppTray(this);
+            _tray = Provider.GetRequiredService<TrayIconService>();
+            _tray.Start();
             Provider.GetRequiredService<AutomationService>().Start();
             Provider.GetRequiredService<GameSessionService>().StartWatching();
             Provider.GetRequiredService<UpdateService>().Start();
@@ -95,6 +96,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
                 {
                     e.Cancel = true;
                     _window.Hide();
+                    OnHiddenToTray();
                 }
             };
             _window.Navigate(AppPage.Overview);
@@ -127,6 +129,29 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
     }
 
+    /// <summary>
+    /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
+    /// window that simply vanishes looks like a closed app. Once, remembered in the settings.
+    /// </summary>
+    private async void OnHiddenToTray()
+    {
+        SettingsService settings = Provider.GetRequiredService<SettingsService>();
+        if (settings.Current.TrayHintShown)
+        {
+            return;
+        }
+
+        _tray?.ShowKeepsRunningHint();
+        try
+        {
+            await settings.UpdateAsync(s => s with { TrayHintShown = true }, CancellationToken.None, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning(ex, "Could not remember that the tray hint was shown");
+        }
+    }
+
     // shortcut: nothing to ask about until the editor saves (#161); then this asks like the WPF app.
     public void QuitByUser() => Quit();
 
@@ -134,6 +159,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     {
         services.AddRigShiftServices(paths, this, Log.Logger);
         services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
+        services.AddSingleton<TrayIconService>();
         services.AddSingleton<ITextClipboard, AvaloniaClipboard>();
         services.AddSingleton<IAppPicker, NoAppPicker>();
         services.AddSingleton<ProfileEditorFactory>();

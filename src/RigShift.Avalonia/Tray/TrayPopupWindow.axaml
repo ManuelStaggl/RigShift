@@ -1,0 +1,96 @@
+<Window
+  x:Class="RigShift.Avalonia.Tray.TrayPopupWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:vm="using:RigShift.App.ViewModels"
+  x:DataType="vm:TrayPopupViewModel"
+  Title="RigShift"
+  Width="340"
+  SizeToContent="Height"
+  WindowDecorations="None"
+  ShowInTaskbar="False"
+  Topmost="True"
+  CanResize="False"
+  Opacity="0"
+  Background="Transparent"
+  TransparencyLevelHint="AcrylicBlur, Blur, None">
+  <!-- The popup next to the tray icon: profiles to switch to, games to start, open, pause and exit. -->
+  <Border Padding="8" Background="{DynamicResource RsPop}" BorderBrush="{DynamicResource RsOutline}" BorderThickness="1" CornerRadius="12">
+    <StackPanel Spacing="6">
+      <TextBlock Margin="6,2" Classes="caption" IsVisible="{Binding Coordinator.IsSwitching}" Text="{Binding SwitchingText}" TextWrapping="Wrap" />
+      <TextBlock Margin="6,2" Classes="secondary" IsVisible="{Binding HasStatusText}" Text="{Binding StatusText}" TextWrapping="Wrap" />
+
+      <TextBlock Margin="6,2" Classes="caption" Text="{v:Tr Nav_Profiles}" />
+      <ItemsControl x:Name="ProfileList" IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Catalog.Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ProfileItem">
+            <Button
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Stretch"
+              AutomationProperties.Name="{Binding AccessibleName}"
+              Classes="ghost"
+              Click="OnProfileClick"
+              Tag="{Binding}">
+              <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="10">
+                <v:DisplayTopology Width="56" Height="24" VerticalAlignment="Center" Displays="{Binding Topology}" Size="Tray" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Classes="caption" IsVisible="{Binding ShowsReadiness}" Text="{Binding ReadyText}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Classes="caption" IsVisible="{Binding ShowsHotkeyLine}" Text="{Binding HotkeyText}" />
+                </StackPanel>
+                <Path Grid.Column="2" Classes="icon small" VerticalAlignment="Center" IsVisible="{Binding IsActive}" Stroke="{DynamicResource RsAccentText}" Data="M5 12 L10 17 L19 7" />
+              </Grid>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel IsVisible="{Binding Games.HasGames}" Spacing="6">
+        <TextBlock Margin="6,2" Classes="caption" Text="{v:Tr Nav_Games}" />
+        <ItemsControl IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Games.Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:GameItem">
+              <Button
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                AutomationProperties.Name="{Binding PlayText}"
+                Classes="ghost"
+                Click="OnGameClick"
+                Tag="{Binding}">
+                <Grid ColumnDefinitions="16,*" ColumnSpacing="10">
+                  <Path Classes="icon small" VerticalAlignment="Center" Data="{x:Static v:Icons.Play}" />
+                  <TextBlock Grid.Column="1" FontSize="13" Foreground="{DynamicResource RsText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <Border Classes="divider" />
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding OpenCommand}" Content="{v:Tr Tray_Open}" />
+        <ToggleButton
+          x:Name="PauseButton"
+          Grid.Column="1"
+          Command="{Binding TogglePauseCommand}"
+          IsChecked="{Binding IsPaused, Mode=OneWay}"
+          IsVisible="{Binding HasRules}"
+          ToolTip.Tip="{Binding PauseTip}"
+          AutomationProperties.Name="{Binding PauseTip}">
+          <Path Classes="icon small" Data="M9 5 V19 M15 5 V19" />
+        </ToggleButton>
+        <Button Grid.Column="2" AutomationProperties.Name="{v:Tr Profile_More}" Classes="neutral">
+          <Path Classes="icon small dots" Data="{x:Static v:Icons.More}" />
+          <Button.Flyout>
+            <MenuFlyout Placement="TopEdgeAlignedRight">
+              <MenuItem Header="{v:Tr Tray_SaveCurrent}" Command="{Binding SaveCurrentCommand}" />
+              <MenuItem Header="{v:Tr Tray_Exit}" Command="{Binding ExitCommand}" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+      </Grid>
+    </StackPanel>
+  </Border>
+</Window>
