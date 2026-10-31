@@ -109,13 +109,28 @@ public sealed class ProfileEditingTests
     {
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig();
-        Profile[] all = [desk, rig];
+        Profile tv = Profile("TV", DeskModes);
+        Profile[] all = [desk, rig, tv];
 
         // Previous is active again (Windows restored it): fall through to the default.
         ProfileEditing.ToggleTarget(all, desk.Id, desk.Id, rig.Id).ShouldBe(rig);
         // Previous was deleted, default is the active one: nowhere to go.
         ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid(), desk.Id).ShouldBeNull();
         ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToggleTarget_WithTwoProfiles_GoesToTheOtherOne()
+    {
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile[] all = [desk, rig];
+
+        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBe(rig);
+        // Previous deleted, default is the active one.
+        ProfileEditing.ToggleTarget(all, rig.Id, Guid.NewGuid(), rig.Id).ShouldBe(desk);
+        // No profile active: there is no "other one".
+        ProfileEditing.ToggleTarget(all, null, null, null).ShouldBeNull();
     }
 
     [Fact]
