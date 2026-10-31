@@ -165,7 +165,7 @@ public sealed partial class GamesView : UserControl
         LaunchCard.Description = Join([
             editor.SupportsArguments ? editor.Arguments : null,
             editor.ProcessName.Length > 0 ? editor.ProcessName + ".exe" : Loc.Instance["Game_ProcessLearned"],
-            editor.SelectedEnd?.Name,
+            string.IsNullOrWhiteSpace(editor.LauncherProcessName) ? null : Loc.Format("Game_EndsWithLauncher", editor.LauncherProcessName.Trim()),
             editor.StartWithGame ? Loc.Instance["Game_StartWithGame"] : null,
         ]);
         GameSettingsCard.Description = editor.SettingsEnabled ? editor.SettingsStatus : null;

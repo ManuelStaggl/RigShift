@@ -375,11 +375,9 @@
   <data name="Game_ProcessLearned" xml:space="preserve"><value>Learned on the first start</value></data>
   <data name="Game_ProcessNameHint" xml:space="preserve"><value>Without extension, as Task Manager shows it.</value></data>
   <data name="Game_ProcessNameHintTip" xml:space="preserve"><value>RigShift learns it on the first start; correct it here if it picked the launcher instead of the game.</value></data>
-  <data name="Game_EndsWith" xml:space="preserve"><value>Session ends with</value></data>
-  <data name="Game_EndsWithGame" xml:space="preserve"><value>The game</value></data>
-  <data name="Game_EndsWithLauncher" xml:space="preserve"><value>The launcher</value></data>
-  <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher process</value></data>
-  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>For sims with their own menu app, such as iRacing: without it, the session would end every time you go back to the menu.</value></data>
+  <data name="Game_EndsWithLauncher" xml:space="preserve"><value>Ends with {0}</value></data>
+  <data name="Game_LauncherProcess" xml:space="preserve"><value>Menu or launcher process</value></data>
+  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>The session ends with it. For sims with their own menu, such as iRacing. Empty: the session ends with the game.</value></data>
   <data name="Game_ArgumentsHint" xml:space="preserve"><value>Passed to the game at start, such as +XR.</value></data>
   <data name="Game_Runtime" xml:space="preserve"><value>OpenXR runtime</value></data>
   <data name="Game_RuntimeHint" xml:space="preserve"><value>Only for this game; the Windows setting stays as it is.</value></data>

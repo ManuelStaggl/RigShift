@@ -64,7 +64,7 @@ public static class SimTemplates
 
         if (template.LauncherProcess is { } launcher && filled.LauncherProcessName is null)
         {
-            filled = filled with { LauncherProcessName = launcher, EndsWith = SessionEnd.LauncherProcess };
+            filled = filled with { LauncherProcessName = launcher };
         }
 
         return filled;

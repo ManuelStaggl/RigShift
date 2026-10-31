@@ -66,7 +66,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
 
         FillChoices();
         SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == game.ProfileId?.ToString()) ?? NoProfileOption;
-        SelectedEnd = EndChoices.First(c => c.Key == game.EndsWith.ToString());
         SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == ExitKeyOf(game.Exit)) ?? ExitChoices[0];
         SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == ProfileIcons.Normalize(game.Icon)) ?? IconChoices[0];
         SelectedRuntime = RuntimeChoices.FirstOrDefault(c => string.Equals(c.Key, game.Launch.OpenXrRuntime, StringComparison.OrdinalIgnoreCase)) ?? RuntimeChoices[0];
@@ -314,7 +313,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     [ObservableProperty]
     public partial string ProcessName { get; set; }
 
-    /// <summary>The launcher or interface in front of the game, for <see cref="SessionEnd.LauncherProcess"/>.</summary>
+    /// <summary>The menu or launcher the session ends with; empty: it ends with the game.</summary>
     [ObservableProperty]
     public partial string LauncherProcessName { get; set; }
 
@@ -354,14 +353,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public partial ProfileOption? SelectedProfile { get; set; }
 
     private ProfileOption NoProfileOption => ProfileOptions.First(o => o.Key is null);
-
-    public ObservableCollection<Choice> EndChoices { get; } = [];
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NeedsLauncherProcess))]
-    public partial Choice? SelectedEnd { get; set; }
-
-    public bool NeedsLauncherProcess => SelectedEnd?.Key == nameof(SessionEnd.LauncherProcess);
 
     public ObservableCollection<Choice> ExitChoices { get; } = [];
 
@@ -409,7 +400,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         _launch = filled.Launch;
         ProcessName = filled.Launch.ProcessName ?? string.Empty;
         LauncherProcessName = filled.LauncherProcessName ?? string.Empty;
-        SelectedEnd = EndChoices.First(c => c.Key == filled.EndsWith.ToString());
         LaunchTarget = installed.Launch.Target;
         OnLaunchKindChanged();
     }
@@ -492,7 +482,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         AppsWaitForUsbDeviceId = AppList.WaitDevice.DeviceId,
         AppsWaitForUsbDeviceName = AppList.WaitDevice.DeviceName,
         WindowLayout = WindowLayout is { IsEmpty: false } ? WindowLayout : null,
-        EndsWith = SelectedEnd?.Key == nameof(SessionEnd.LauncherProcess) ? SessionEnd.LauncherProcess : SessionEnd.GameProcess,
         LauncherProcessName = string.IsNullOrWhiteSpace(LauncherProcessName) ? null : LauncherProcessName.Trim(),
         Exit = ExitFromChoice(),
         Hotkey = Hotkey,
@@ -613,7 +602,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
         string? profile = SelectedProfile?.Key;
-        string? end = SelectedEnd?.Key;
         string? exit = SelectedExit?.Key;
         string? icon = SelectedIcon?.Key;
         string? runtime = SelectedRuntime?.Key;
@@ -623,7 +611,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         {
             FillChoices();
             SelectedProfile = ProfileOptions.FirstOrDefault(c => c.Key == profile) ?? NoProfileOption;
-            SelectedEnd = EndChoices.FirstOrDefault(c => c.Key == end) ?? EndChoices[0];
             SelectedExit = ExitChoices.FirstOrDefault(c => c.Key == exit) ?? ExitChoices[0];
             SelectedIcon = IconChoices.FirstOrDefault(c => c.Key == icon) ?? IconChoices[0];
             SelectedRuntime = RuntimeChoices.FirstOrDefault(c => c.Key == runtime) ?? RuntimeChoices[0];
@@ -652,10 +639,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
 
         ProfileOptions.Add(new ProfileOption(null, Loc.Instance["Game_NoProfile"], [], Loc.Instance["Game_NoProfileSub"]));
-
-        EndChoices.Clear();
-        EndChoices.Add(new Choice(nameof(SessionEnd.GameProcess), Loc.Instance["Game_EndsWithGame"]));
-        EndChoices.Add(new Choice(nameof(SessionEnd.LauncherProcess), Loc.Instance["Game_EndsWithLauncher"]));
 
         ExitChoices.Clear();
         ExitChoices.Add(new Choice(nameof(GameExitKind.Stay), Loc.Instance["Game_ExitStay"]));
