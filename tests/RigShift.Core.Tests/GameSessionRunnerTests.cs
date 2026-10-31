@@ -859,6 +859,69 @@ public sealed class GameSessionRunnerTests
         });
     }
 
+    /// <summary>A tool that starts after the game has no window yet before it: the game does not wait for it.</summary>
+    [Fact]
+    public async Task Run_PlacesAfterGameToolsOnceTheyStarted_WithoutHoldingUpTheGame()
+    {
+        var desktop = new FakeWindowLayout { MoveOnPlace = true };
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame } },
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement> { new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) } },
+            },
+        };
+        TimeSpan? startedAt = null;
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ =>
+        {
+            startedAt = _time.Elapsed;
+            return LongRunning();
+        });
+        _apps.When(a => a.Start(@"C:\SimHub\SimHubWPF.exe", null)).Do(_ =>
+            desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(0, 0, 800, 600), WindowState.Normal)));
+        GameWindowsRemembered? remembered = null;
+        GameSessionRunner runner = Runner(desktop);
+        runner.WindowsRemembered += (_, e) => remembered = e;
+
+        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        startedAt.ShouldBe(TimeSpan.Zero, "no wait for a window that only comes after the game");
+        result.Windows.ShouldBe(new WindowLayoutResult(1, 0, 0));
+        desktop.Placed.Single().Bounds.Left.ShouldBe(3840);
+        remembered.ShouldBeNull("the tool is where the layout put it");
+    }
+
+    /// <summary>A tool moved during the session keeps its new place for the next one.</summary>
+    [Fact]
+    public async Task Run_RemembersWhereTheToolWindowsAreAtTheEnd()
+    {
+        var desktop = new FakeWindowLayout();
+        desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(100, 100, 900, 700), WindowState.Normal));
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe" } },
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement>
+                {
+                    new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) },
+                    new() { ProcessName = "CrewChiefV4", Bounds = new PixelRect(0, 0, 400, 300) },
+                },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => LongRunning());
+        GameWindowsRemembered? remembered = null;
+        GameSessionRunner runner = Runner(desktop);
+        runner.WindowsRemembered += (_, e) => remembered = e;
+
+        await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        remembered.ShouldNotBeNull().GameId.ShouldBe(game.Id);
+        remembered.Layout.Windows.Select(w => w.Bounds).ShouldBe([new PixelRect(100, 100, 900, 700), new PixelRect(0, 0, 400, 300)],
+            "the window that is not open keeps its place");
+    }
+
     /// <summary>A window that cannot be moved is annoying, not a reason to leave the game unstarted.</summary>
     [Fact]
     public async Task Run_StartsTheGameEvenWhenNoWindowCouldBePlaced()
