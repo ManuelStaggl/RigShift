@@ -179,14 +179,6 @@ public sealed partial class ProfileSheetView : UserControl
         }
     }
 
-    private void OnBrowse(object? sender, RoutedEventArgs e) => _editor?.AppList.BrowseCommand.Execute(TagOf<AppEditItem>(sender));
-
-    private void OnMoveUp(object? sender, RoutedEventArgs e) => _editor?.AppList.MoveUpCommand.Execute(TagOf<AppEditItem>(sender));
-
-    private void OnMoveDown(object? sender, RoutedEventArgs e) => _editor?.AppList.MoveDownCommand.Execute(TagOf<AppEditItem>(sender));
-
-    private void OnRemoveApp(object? sender, RoutedEventArgs e) => _editor?.AppList.RemoveCommand.Execute(TagOf<AppEditItem>(sender));
-
     private static T? TagOf<T>(object? sender)
         where T : class => (sender as Control)?.Tag as T;
 

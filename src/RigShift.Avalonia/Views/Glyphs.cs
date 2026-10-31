@@ -55,6 +55,8 @@ public static class Glyphs
 public static class Icons
 {
     public static readonly Geometry Play = Geometry.Parse(Glyphs.Play);
+    public static readonly Geometry Games = Geometry.Parse(Glyphs.Games);
+    public static readonly Geometry Display = Geometry.Parse(Glyphs.Display);
     public static readonly Geometry Plus = Geometry.Parse(Glyphs.Plus);
     public static readonly Geometry More = Geometry.Parse(Glyphs.More);
     public static readonly Geometry Trash = Geometry.Parse(Glyphs.Trash);
@@ -100,6 +102,12 @@ public static class Converters
     /// <summary>The editor's problem count as "2 problems" on the save bar; empty without any.</summary>
     public static readonly IValueConverter ProblemCount = new FuncValueConverter<int, string>(count =>
         count == 0 ? string.Empty : Loc.Format(count == 1 ? "SaveBar_Problem" : "SaveBar_Problems", count));
+
+    /// <summary>An enum value (or anything) equal to the parameter by name, for <c>Classes.x</c> bindings.</summary>
+    public static readonly IValueConverter Is = new FuncValueConverter<object?, string?, bool>((value, name) => value?.ToString() == name);
+
+    /// <summary>A shared text with its WPF access key ("C_hoose") as plain text.</summary>
+    public static readonly IValueConverter NoAccessKey = new FuncValueConverter<string?, string?>(s => s is null ? null : Loc.WithoutAccessKey(s));
 
     /// <summary><c>double?</c> seconds to the <c>decimal?</c> of NumericUpDown and back.</summary>
     public static readonly IValueConverter Seconds = new SecondsConverter();

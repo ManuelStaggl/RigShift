@@ -305,4 +305,97 @@
     <Setter Property="IsVisible" Value="False" />
   </Style>
 
+  <!-- ===== The sheet of the profiles and games pages ===== -->
+
+  <!-- Master list of the profiles and games pages: the selected row is the accent pill, like the rail. -->
+  <Style Selector="ListBox.master">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="6" />
+  </Style>
+  <Style Selector="ListBox.master ListBoxItem">
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="MinHeight" Value="46" />
+    <Setter Property="CornerRadius" Value="9" />
+  </Style>
+  <Style Selector="ListBox.master ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsHover}" />
+  </Style>
+  <Style Selector="ListBox.master ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.master ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsRailOn}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RsRailOnShadow}" />
+  </Style>
+
+  <!-- The name as a 32 px heading that turns into a field on hover and focus. -->
+  <Style Selector="TextBox.title">
+    <Setter Property="FontSize" Value="32" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.7" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="Margin" Value="-7,0,0,0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+
+  <!-- Groups: Ursa SettingsCard rows inside one card, a hairline between them. -->
+  <Style Selector="u|SettingsCard.group">
+    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="MinHeight" Value="42" />
+  </Style>
+  <Style Selector="u|SettingsCard.group /template/ ContentPresenter#PART_Content">
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+  <Style Selector="u|SettingsCard.group /template/ Border#PART_Separator">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <Style Selector="u|SettingsCard.group /template/ Border#PART_DetailHost">
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="u|SettingsCard.group /template/ ContentPresenter#PART_Description">
+    <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis" />
+    <Setter Property="TextBlock.TextWrapping" Value="NoWrap" />
+  </Style>
+  <Style Selector="Border.tile">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="CornerRadius" Value="7" />
+  </Style>
+  <Style Selector="Border.tile > Path.icon">
+    <Setter Property="StrokeThickness" Value="2" />
+  </Style>
+
+  <!-- A settings row inside a group or the inspector. -->
+  <Style Selector="Grid.row > TextBlock.label">
+    <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+  </Style>
+  <!-- Inspector key/value rows -->
+  <Style Selector="Grid.kv">
+    <Setter Property="MinHeight" Value="36" />
+  </Style>
+  <Style Selector="Grid.kv > TextBlock.k">
+    <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Grid.kv TextBlock.val">
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!-- Action bar buttons: flat until hovered, label + keycap. -->
+  <Style Selector="Button.ab">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="10,0,6,0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
+  <Style Selector="Button.ab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsHover}" />
+  </Style>
 </Styles>
