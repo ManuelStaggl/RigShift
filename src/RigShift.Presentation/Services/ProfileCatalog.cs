@@ -198,6 +198,7 @@ public sealed partial class ProfileCatalog : ObservableObject
                 {
                     DisplayNames = DisplayIdentityHealing.Rekey(s.DisplayNames, updates),
                     FovCurvatureMm = DisplayIdentityHealing.Rekey(s.FovCurvatureMm, updates),
+                    RefreshRates = DisplayIdentityHealing.RekeyRefreshRates(s.RefreshRates, updates),
                 },
                 cancellationToken,
                 notify: false);

@@ -90,6 +90,44 @@ public static class DisplayIdentityHealing
         return rekeyed;
     }
 
+    /// <summary>
+    /// <see cref="Rekey{T}"/> for <see cref="RefreshRateMemory"/>, whose keys are <c>path|WxH</c>: every resolution of a
+    /// moved display goes to its new path.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<string>>? RekeyRefreshRates(
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? memory, IReadOnlyList<IdentityUpdate> updates)
+    {
+        ArgumentNullException.ThrowIfNull(updates);
+
+        List<IdentityUpdate> moves = [.. updates.Where(u => u.Moved)];
+        string? NewKey(string key) => moves
+            .Where(m => key.StartsWith(m.SavedPath + "|", StringComparison.OrdinalIgnoreCase))
+            .Select(m => m.Identity.TargetDevicePath + key[m.SavedPath.Length..])
+            .FirstOrDefault();
+
+        if (memory is null || !memory.Keys.Any(key => NewKey(key) is not null))
+        {
+            return memory;
+        }
+
+        var rekeyed = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach ((string key, IReadOnlyList<string> rates) in memory.Where(pair => NewKey(pair.Key) is null))
+        {
+            rekeyed.TryAdd(key, rates);
+        }
+
+        // What the new path learned already wins, as in Rekey.
+        foreach ((string key, IReadOnlyList<string> rates) in memory)
+        {
+            if (NewKey(key) is { } moved)
+            {
+                rekeyed.TryAdd(moved, rates);
+            }
+        }
+
+        return rekeyed;
+    }
+
     /// <summary>The identity the display reports now; what it does not report (a failed EDID read) stays as saved.</summary>
     private static DisplayIdentity Merge(DisplayIdentity saved, DisplayIdentity live)
     {
