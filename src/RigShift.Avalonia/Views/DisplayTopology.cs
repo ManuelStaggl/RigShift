@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Shapes;
@@ -8,6 +9,7 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using RigShift.App.Localization;
 using RigShift.Core.Topology;
 
@@ -16,7 +18,7 @@ namespace RigShift.Avalonia.Views;
 /// <summary>The three sizes of the topology picture.</summary>
 public enum TopologySize
 {
-    /// <summary>56 × 24, no labels: the current-layout line.</summary>
+    /// <summary>56 × 24, no labels: tray rows, the current-layout line.</summary>
     Tray,
 
     /// <summary>Labels: overview switch positions.</summary>
@@ -27,11 +29,13 @@ public enum TopologySize
 }
 
 /// <summary>
-/// Port of the WinUI DisplayTopology: plain rectangles true to scale on a canvas, from <see cref="TopologyLayout"/>,
-/// placed once per change of arrangement, size, selection or theme. Number, name and mode as labels, a star for the main
-/// display, dashed for optional or missing. Neutral greys; the selected display's outline in the accent line colour.
+/// Every display of an arrangement as a plain rectangle true to scale, placed by <see cref="TopologyLayout"/>. Number,
+/// name and mode as labels, a star for the main display; filled = in use, hollow = off, dashed = optional, dashed in the
+/// warning colour = missing. In size Full a display is selected by click or arrow keys, and each display is its own
+/// focusable element, so Narrator reads its name. The tiles are measured in arrange only, against their own rectangle:
+/// the picture never sizes to them, so the layout cannot swing back and forth.
 /// </summary>
-public sealed class DisplayTopology : Canvas
+public sealed class DisplayTopology : Panel
 {
     public static readonly StyledProperty<IReadOnlyList<TopologyDisplay>?> DisplaysProperty =
         AvaloniaProperty.Register<DisplayTopology, IReadOnlyList<TopologyDisplay>?>(nameof(Displays));
@@ -42,10 +46,14 @@ public sealed class DisplayTopology : Canvas
     public static readonly StyledProperty<string?> SelectedKeyProperty =
         AvaloniaProperty.Register<DisplayTopology, string?>(nameof(SelectedKey), defaultBindingMode: BindingMode.TwoWay);
 
+    private readonly List<Tile> _tiles = [];
+
     public DisplayTopology()
     {
         ClipToBounds = false;
         Background = Brushes.Transparent;
+        // One tab stop for the whole picture; the arrow keys move inside it.
+        KeyboardNavigation.SetTabNavigation(this, KeyboardNavigationMode.Once);
         ActualThemeVariantChanged += (_, _) => Rebuild();
     }
 
@@ -80,9 +88,20 @@ public sealed class DisplayTopology : Canvas
 
     private double Radius => Size == TopologySize.Tray ? 2 : 4;
 
+    protected override void OnAttachedToLogicalTree(global::Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        Loc.Instance.PropertyChanged += OnLanguageChanged;
+    }
+
+    protected override void OnDetachedFromLogicalTree(global::Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
+    {
+        Loc.Instance.PropertyChanged -= OnLanguageChanged;
+        base.OnDetachedFromLogicalTree(e);
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
-        base.MeasureOverride(availableSize);
         Size fallback = Size switch
         {
             TopologySize.Tray => new Size(56, 24),
@@ -90,158 +109,53 @@ public sealed class DisplayTopology : Canvas
             _ => new Size(560, 220),
         };
 
-        // Fills what it is given and never sizes to its rectangles.
+        // Fills what it is given and never reads the tiles, so a tile's new desired size re-measures to the same size;
+        // the tiles are measured in ArrangeOverride only.
         return new Size(
             double.IsInfinity(availableSize.Width) ? fallback.Width : availableSize.Width,
             double.IsInfinity(availableSize.Height) ? fallback.Height : availableSize.Height);
     }
 
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        IReadOnlyList<TopologyRect> rects = TopologyLayout.Arrange(
+            _tiles.Select(t => t.Display).ToList(), finalSize.Width, finalSize.Height, Gap,
+            HasLabels ? 60 : double.MaxValue, HasLabels ? 30 : double.MaxValue);
+        for (int i = 0; i < _tiles.Count; i++)
+        {
+            TopologyRect rect = rects[i];
+            var bounds = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
+            _tiles[i].Layout(bounds.Size, rect.ShowLabel);
+            _tiles[i].Root.Measure(bounds.Size);
+            _tiles[i].Root.Arrange(bounds);
+        }
+
+        return finalSize;
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == DisplaysProperty || change.Property == SizeProperty || change.Property == SelectedKeyProperty
-            || change.Property == BoundsProperty)
+        if (change.Property == DisplaysProperty || change.Property == SizeProperty)
         {
             Rebuild();
         }
-    }
-
-    private void Rebuild()
-    {
-        Children.Clear();
-        IReadOnlyList<TopologyDisplay> displays = Displays ?? [];
-        Focusable = IsSelectable && displays.Count > 0;
-        AutomationProperties.SetName(this, displays.Count == 0
-            ? Loc.Instance["Topology_Empty"]
-            : Loc.Format("Topology_Description", displays.Count, string.Join(", ", displays.Select(d =>
-                d.IsPrimary ? Loc.Format("Topology_PrimaryName", d.Name) : d.Name))));
-        if (Bounds.Width <= 0 || Bounds.Height <= 0)
+        else if (change.Property == SelectedKeyProperty)
         {
-            return;
-        }
-
-        IReadOnlyList<TopologyRect> rects = TopologyLayout.Arrange(
-            displays, Bounds.Width, Bounds.Height, Gap, HasLabels ? 60 : double.MaxValue, HasLabels ? 30 : double.MaxValue);
-        foreach (TopologyRect rect in rects)
-        {
-            Panel tile = Tile(rect);
-            SetLeft(tile, rect.X);
-            SetTop(tile, rect.Y);
-            Children.Add(tile);
+            UpdateSelection();
         }
     }
-
-    private Panel Tile(TopologyRect rect)
-    {
-        TopologyDisplay display = rect.Display;
-        bool missing = display.State == TopologyDisplayState.Missing;
-        bool off = display.State == TopologyDisplayState.Off;
-        bool selected = IsSelectable && display.Key == SelectedKey;
-        var tile = new Panel { Width = rect.Width, Height = rect.Height, Background = Brushes.Transparent };
-
-        // Filled = in use, hollow = off, dashed = optional, dashed in the warning colour = missing.
-        var frame = new Rectangle
-        {
-            RadiusX = Radius,
-            RadiusY = Radius,
-            Fill = missing || off || display.IsOptional ? null : Brush("RsTileFill"),
-            Stroke = Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsTileStroke"),
-            StrokeThickness = selected ? 2 : 1,
-        };
-        if (missing || display.IsOptional)
-        {
-            frame.StrokeDashArray = [4, 3];
-        }
-
-        tile.Children.Add(frame);
-
-        if (rect.ShowLabel)
-        {
-            tile.Children.Add(Labels(display, rect.Height, missing || off || display.IsOptional));
-            if (!string.IsNullOrEmpty(display.Details))
-            {
-                ToolTip.SetTip(tile, display.Details);
-            }
-        }
-        else if (display.IsPrimary && rect.Width >= 8 && rect.Height >= 8)
-        {
-            // Without labels a dot marks the main display.
-            tile.Children.Add(new Ellipse
-            {
-                Width = 4,
-                Height = 4,
-                Margin = new Thickness(2),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                Fill = Brush("RsAccent"),
-            });
-        }
-
-        if (IsSelectable)
-        {
-            tile.Cursor = new Cursor(StandardCursorType.Hand);
-            tile.PointerPressed += (_, e) =>
-            {
-                Focus(NavigationMethod.Pointer);
-                SelectedKey = display.Key;
-                e.Handled = true;
-            };
-        }
-
-        return tile;
-    }
-
-    /// <summary>"★ 1 · Desk" and, when there is height for it, the mode or "missing"; both lines trim instead of overlapping.</summary>
-    private StackPanel Labels(TopologyDisplay display, double height, bool dimmed)
-    {
-        var labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0), Spacing = 1 };
-        TextBlock name = Line(Size == TopologySize.Full ? 14 : 12, dimmed ? "RsText2" : "RsText");
-        name.FontWeight = FontWeight.SemiBold;
-        name.Inlines ??= [];
-        if (display.IsPrimary)
-        {
-            name.Inlines.Add(new Run("★ ") { Foreground = Brush("RsAccentText") });
-        }
-
-        string number = display.Number is { } n ? n.ToString(CultureInfo.InvariantCulture) + " · " : string.Empty;
-        name.Inlines.Add(new Run(number + display.Name));
-        labels.Children.Add(name);
-
-        bool isMissing = display.State == TopologyDisplayState.Missing;
-        string? mode = isMissing ? Loc.Instance["Topology_Missing"] : display.Mode;
-        if (!string.IsNullOrEmpty(mode) && height >= 48)
-        {
-            TextBlock line = Line(12, isMissing ? "RsWarning" : "RsText3");
-            line.Text = mode;
-            labels.Children.Add(line);
-        }
-
-        return labels;
-    }
-
-    private TextBlock Line(double size, string foreground) => new()
-    {
-        FontSize = size,
-        Foreground = Brush(foreground),
-        TextAlignment = TextAlignment.Center,
-        TextTrimming = TextTrimming.CharacterEllipsis,
-        TextWrapping = TextWrapping.NoWrap,
-        MaxLines = 1,
-    };
-
-    private IBrush? Brush(string key) => this.TryFindResource(key, ActualThemeVariant, out object? value) ? value as IBrush : null;
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        IReadOnlyList<TopologyDisplay> displays = Displays ?? [];
-        if (!IsSelectable || displays.Count == 0)
+        if (e.Handled || !IsSelectable || _tiles.Count == 0)
         {
             return;
         }
 
         // Left/Right walk the displays in desktop order, Home/End jump to the ends.
-        var ordered = displays.OrderBy(d => d.X).ThenBy(d => d.Y).Select(d => d.Key).ToList();
+        var ordered = _tiles.OrderBy(t => t.Display.X).ThenBy(t => t.Display.Y).Select(t => t.Display.Key).ToList();
         int current = ordered.IndexOf(SelectedKey ?? string.Empty);
         int next = e.Key switch
         {
@@ -254,7 +168,246 @@ public sealed class DisplayTopology : Canvas
         if (next >= 0)
         {
             SelectedKey = ordered[next];
+            // Focus follows the selection, so Narrator reads the display it landed on.
+            _tiles.First(t => t.Display.Key == SelectedKey).Root.Focus(NavigationMethod.Directional);
             e.Handled = true;
+        }
+    }
+
+    private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => Rebuild();
+
+    private void Rebuild()
+    {
+        Children.Clear();
+        _tiles.Clear();
+        // Same filter as the layout, so tiles and rectangles line up by index.
+        foreach (TopologyDisplay display in (Displays ?? []).Where(d => d.Width > 0 && d.Height > 0))
+        {
+            var tile = new Tile(display, this);
+            _tiles.Add(tile);
+            Children.Add(tile.Root);
+        }
+
+        // Size Full is a list of selectable displays, the smaller sizes a picture with one description.
+        AutomationProperties.SetIsControlElementOverride(this, true);
+        AutomationProperties.SetControlTypeOverride(this, IsSelectable ? AutomationControlType.List : AutomationControlType.Image);
+        AutomationProperties.SetName(this, _tiles.Count == 0
+            ? Loc.Instance["Topology_Empty"]
+            : Loc.Format("Topology_Description", _tiles.Count, string.Join(", ", _tiles.Select(t =>
+                t.Display.IsPrimary ? Loc.Format("Topology_PrimaryName", t.Display.Name) : t.Display.Name))));
+        UpdateSelection();
+        InvalidateArrange();
+    }
+
+    private void UpdateSelection()
+    {
+        foreach (Tile tile in _tiles)
+        {
+            tile.SetSelected(IsSelectable && tile.Display.Key == SelectedKey);
+        }
+    }
+
+    private IBrush? Brush(string key) => this.TryFindResource(key, ActualThemeVariant, out object? value) ? value as IBrush : null;
+
+    private static TextBlock Line(double size)
+    {
+        var line = new TextBlock
+        {
+            FontSize = size,
+            TextAlignment = TextAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            TextWrapping = TextWrapping.NoWrap,
+            MaxLines = 1,
+            IsHitTestVisible = false,
+        };
+        // The picture or the display's own element says it all; Narrator would read the labels twice.
+        AutomationProperties.SetAccessibilityView(line, AccessibilityView.Raw);
+        return line;
+    }
+
+    /// <summary>One display: frame, labels or the main-display dot; shows what fits once the owner knows the rectangle.</summary>
+    private sealed class Tile
+    {
+        private readonly DisplayTopology _owner;
+        private readonly Rectangle _frame;
+        private readonly StackPanel _labels;
+        private readonly TextBlock _name;
+        private readonly Run _nameRun;
+        private readonly TextBlock? _mode;
+        private readonly string _modeFull = string.Empty;
+        private readonly Ellipse? _primaryDot;
+
+        public Tile(TopologyDisplay display, DisplayTopology owner)
+        {
+            Display = display;
+            _owner = owner;
+            bool missing = display.State == TopologyDisplayState.Missing;
+            bool off = display.State == TopologyDisplayState.Off;
+            bool dimmed = missing || off || display.IsOptional;
+            Root = new Panel { Background = Brushes.Transparent };
+
+            _frame = new Rectangle
+            {
+                RadiusX = owner.Radius,
+                RadiusY = owner.Radius,
+                Fill = dimmed ? null : owner.Brush("RsTileFill"),
+                StrokeThickness = 1,
+            };
+            if (missing || display.IsOptional)
+            {
+                _frame.StrokeDashArray = [4, 3];
+            }
+
+            Root.Children.Add(_frame);
+
+            // "★ 1 · Desk" and, when there is height for it, the mode or "missing"; both lines trim instead of overlapping.
+            _labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0), Spacing = 1, IsHitTestVisible = false };
+            _name = Line(owner.Size == TopologySize.Full ? 14 : 12);
+            _name.FontWeight = FontWeight.SemiBold;
+            _name.Foreground = owner.Brush(dimmed ? "RsText2" : "RsText");
+            _name.Inlines ??= [];
+            if (display.IsPrimary)
+            {
+                _name.Inlines.Add(new Run("★ ") { Foreground = owner.Brush("RsAccentText") });
+            }
+
+            _nameRun = new Run(Numbered(display));
+            _name.Inlines.Add(_nameRun);
+            _labels.Children.Add(_name);
+            string? mode = missing ? Loc.Instance["Topology_Missing"] : display.Mode;
+            if (!string.IsNullOrEmpty(mode))
+            {
+                _modeFull = mode;
+                _mode = Line(12);
+                _mode.Text = mode;
+                _mode.Foreground = owner.Brush(missing ? "RsWarning" : "RsText3");
+                _labels.Children.Add(_mode);
+            }
+
+            Root.Children.Add(_labels);
+
+            // Without labels a dot marks the main display.
+            if (display.IsPrimary)
+            {
+                _primaryDot = new Ellipse
+                {
+                    Width = 4,
+                    Height = 4,
+                    Margin = new Thickness(2),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Fill = owner.Brush("RsAccent"),
+                    IsHitTestVisible = false,
+                };
+                Root.Children.Add(_primaryDot);
+            }
+
+            if (owner.HasLabels && !string.IsNullOrEmpty(display.Details))
+            {
+                ToolTip.SetTip(Root, display.Details);
+            }
+
+            if (owner.IsSelectable)
+            {
+                Root.Focusable = true;
+                Root.Cursor = new Cursor(StandardCursorType.Hand);
+                AutomationProperties.SetIsControlElementOverride(Root, true);
+                AutomationProperties.SetControlTypeOverride(Root, AutomationControlType.ListItem);
+                AutomationProperties.SetName(Root, SpokenName(display));
+                Root.PointerPressed += (_, e) =>
+                {
+                    Root.Focus(NavigationMethod.Pointer);
+                    e.Handled = true;
+                };
+                // Click, Tab or a screen reader moving focus: the focused display is the selected one.
+                Root.GotFocus += (_, _) => owner.SelectedKey = display.Key;
+            }
+
+            SetSelected(false);
+        }
+
+        public TopologyDisplay Display { get; }
+
+        public Panel Root { get; }
+
+        public void SetSelected(bool selected)
+        {
+            bool missing = Display.State == TopologyDisplayState.Missing;
+            _frame.Stroke = _owner.Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsTileStroke");
+            _frame.StrokeThickness = selected ? 2 : 1;
+            // The selected display is the one Tab lands on.
+            KeyboardNavigation.SetIsTabStop(Root, selected || _owner.SelectedKey is null);
+        }
+
+        /// <summary>Labels when the rectangle has room, the mode line only from 48 px height, else the dot.</summary>
+        public void Layout(Size size, bool showLabels)
+        {
+            _labels.IsVisible = showLabels;
+            _mode?.IsVisible = size.Height >= 48;
+            _primaryDot?.IsVisible = !showLabels && size.Width >= 8 && size.Height >= 8;
+            if (!showLabels)
+            {
+                return;
+            }
+
+            // A small display drops the model ("1 · Left · CM27X3" -> "1 · Left") and the rate ("… · 100 Hz") before letters.
+            double room = size.Width - _labels.Margin.Left - _labels.Margin.Right;
+            string full = Numbered(Display);
+            string star = Display.IsPrimary ? "★ " : string.Empty;
+            string name = Shorter(full, TextWidth(_name, star + full) > room);
+            if (_nameRun.Text != name)
+            {
+                _nameRun.Text = name;
+            }
+
+            if (_mode is not null)
+            {
+                string mode = Shorter(_modeFull, TextWidth(_mode, _modeFull) > room);
+                if (_mode.Text != mode)
+                {
+                    _mode.Text = mode;
+                }
+            }
+        }
+
+        /// <summary>The text without its last " · " part when it does not fit and has one.</summary>
+        private static string Shorter(string text, bool tooWide)
+        {
+            int cut = text.LastIndexOf(" · ", StringComparison.Ordinal);
+            return tooWide && cut > 0 ? text[..cut] : text;
+        }
+
+        // Measured on the side: setting both forms in turn would re-measure on every pass.
+        private static double TextWidth(TextBlock block, string text)
+        {
+            using var layout = new TextLayout(text, new Typeface(block.FontFamily, block.FontStyle, block.FontWeight), block.FontSize, null);
+            return layout.Width;
+        }
+
+        private static string Numbered(TopologyDisplay display) =>
+            display.Number is { } n ? n.ToString(CultureInfo.InvariantCulture) + " · " + display.Name : display.Name;
+
+        /// <summary>"1 · Left, main display, optional, 2560 × 1440 · 165 Hz" for Narrator.</summary>
+        private static string SpokenName(TopologyDisplay display)
+        {
+            List<string> parts = [Numbered(display)];
+            if (display.IsPrimary)
+            {
+                parts.Add(Loc.Instance["Profile_Primary"]);
+            }
+
+            parts.Add(display.State switch
+            {
+                TopologyDisplayState.Missing => Loc.Instance["Topology_Missing"],
+                TopologyDisplayState.Off => Loc.Instance["Topology_Off"],
+                _ => display.Mode ?? string.Empty,
+            });
+            if (display.IsOptional)
+            {
+                parts.Add(Loc.Instance["Profile_Optional"]);
+            }
+
+            return string.Join(", ", parts.Where(p => p.Length > 0));
         }
     }
 }

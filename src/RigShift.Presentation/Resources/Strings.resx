@@ -431,6 +431,7 @@
   <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (main display)</value></data>
   <data name="Topology_Empty" xml:space="preserve"><value>No displays</value></data>
   <data name="Topology_Missing" xml:space="preserve"><value>missing</value></data>
+  <data name="Topology_Off" xml:space="preserve"><value>off</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
   <data name="Overview_Now" xml:space="preserve"><value>Current layout</value></data>
   <data name="Overview_Empty" xml:space="preserve"><value>No active display. Details are in the log.</value></data>

@@ -434,6 +434,7 @@
   <data name="Topology_PrimaryName" xml:space="preserve"><value>{0} (Hauptanzeige)</value></data>
   <data name="Topology_Empty" xml:space="preserve"><value>Keine Bildschirme</value></data>
   <data name="Topology_Missing" xml:space="preserve"><value>fehlt</value></data>
+  <data name="Topology_Off" xml:space="preserve"><value>aus</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Übersicht</value></data>
   <data name="Overview_Now" xml:space="preserve"><value>Aktuelle Anordnung</value></data>
   <data name="Overview_Empty" xml:space="preserve"><value>Kein aktiver Bildschirm. Details stehen im Log.</value></data>
