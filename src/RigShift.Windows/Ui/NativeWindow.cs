@@ -401,10 +401,35 @@ public static class NativeWindow
         return PInvoke.GetSystemMetricsForDpi(SYSTEM_METRICS_INDEX.SM_CXSMICON, dpi);
     }
 
+    /// <summary>A Windows system colour (GetSysColor), for high contrast: the user's own colours, as 0xRRGGBB.</summary>
+    public static uint SystemColor(SystemColorKind kind)
+    {
+        uint bgr = PInvoke.GetSysColor((SYS_COLOR_INDEX)kind);
+        return ((bgr & 0xFF) << 16) | (bgr & 0xFF00) | ((bgr >> 16) & 0xFF);
+    }
+
     /// <summary>Whether the taskbar uses the light theme – independent of the app theme, which can differ.</summary>
     public static bool IsTaskbarLight()
     {
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
         return key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
     }
+}
+
+/// <summary>The system colours high contrast needs, with their GetSysColor index.</summary>
+public enum SystemColorKind
+{
+    Window = 5,
+
+    WindowText = 8,
+
+    Highlight = 13,
+
+    HighlightText = 14,
+
+    ButtonFace = 15,
+
+    GrayText = 17,
+
+    HotLight = 26,
 }
