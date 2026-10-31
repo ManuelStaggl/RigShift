@@ -30,7 +30,7 @@ public enum TopologySize
 
 /// <summary>
 /// Every display of an arrangement as a framed screen true to scale, placed by <see cref="TopologyLayout"/>. Number,
-/// name and mode as labels, an accent bezel for the main display; filled = in use, hollow = off, dashed = optional, dashed in the
+/// name and mode as labels, an accent bezel (solid accent at tray size) for the main display; filled = in use, hollow = off, dashed = optional, dashed in the
 /// warning colour = missing. In size Full a display is selected by click or arrow keys, and each display is its own
 /// focusable element, so Narrator reads its name. The tiles are measured in arrange only, against their own rectangle:
 /// the picture never sizes to them, so the layout cannot swing back and forth.
@@ -125,6 +125,17 @@ public sealed class DisplayTopology : Panel
         {
             TopologyRect rect = rects[i];
             var bounds = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
+            if (Size == TopologySize.Tray)
+            {
+                // Snap both edges, rather than rounding the size independently: neighbouring screens keep their gap.
+                double scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+                double left = Math.Round(bounds.Left * scale) / scale;
+                double top = Math.Round(bounds.Top * scale) / scale;
+                bounds = new Rect(left, top,
+                    Math.Max(1 / scale, (Math.Round(bounds.Right * scale) / scale) - left),
+                    Math.Max(1 / scale, (Math.Round(bounds.Bottom * scale) / scale) - top));
+            }
+
             _tiles[i].Layout(bounds.Size, rect.ShowLabel);
             _tiles[i].Root.Measure(bounds.Size);
             _tiles[i].Root.Arrange(bounds);
@@ -246,18 +257,24 @@ public sealed class DisplayTopology : Panel
             bool missing = display.State == TopologyDisplayState.Missing;
             bool off = display.State == TopologyDisplayState.Off;
             bool dimmed = missing || off || display.IsOptional;
+            bool miniature = owner.Size == TopologySize.Tray;
             Root = new Panel { Background = Brushes.Transparent };
+            if (miniature)
+            {
+                // Square pixel-aligned silhouettes stay legible even for portrait displays and triples.
+                RenderOptions.SetEdgeMode(Root, EdgeMode.Aliased);
+            }
 
             _frame = new Rectangle
             {
-                RadiusX = owner.Radius,
-                RadiusY = owner.Radius,
-                Fill = owner.Brush(!dimmed && owner.Size == TopologySize.Tray ? "RsScreenSurface" : "RsDeep"),
+                RadiusX = miniature ? 0 : owner.Radius,
+                RadiusY = miniature ? 0 : owner.Radius,
+                Fill = owner.Brush(miniature && !dimmed ? display.IsPrimary ? "RsAccent" : "RsScreenEdge" : "RsDeep"),
                 StrokeThickness = 1,
             };
             if (missing || display.IsOptional)
             {
-                _frame.StrokeDashArray = [4, 4];
+                _frame.StrokeDashArray = miniature ? missing ? [1, 1] : [2, 2] : [4, 4];
             }
 
             Root.Children.Add(_frame);
@@ -332,22 +349,29 @@ public sealed class DisplayTopology : Panel
         public void SetSelected(bool selected)
         {
             bool missing = Display.State == TopologyDisplayState.Missing;
-            _frame.Stroke = _owner.Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsScreenEdge");
+            _frame.Stroke = _owner.Brush(selected ? "RsAccentText" : missing ? "RsWarning" :
+                _owner.Size == TopologySize.Tray && Display.IsPrimary ? "RsAccentText" : "RsScreenEdge");
             _frame.StrokeThickness = selected ? 2 : 1;
             // The selected display is the one Tab lands on.
             KeyboardNavigation.SetIsTabStop(Root, selected || _owner.SelectedKey is null);
         }
 
-        /// <summary>Labels when the inset has room; a compact bezel remains visible at tray size.</summary>
+        /// <summary>Labels and bezel when the inset has room; tray screens are plain rectangular silhouettes.</summary>
         public void Layout(Size size, bool showLabels)
         {
             _labels.IsVisible = showLabels;
             _mode?.IsVisible = size.Height >= 72;
             bool miniature = _owner.Size == TopologySize.Tray;
+            if (miniature)
+            {
+                double scale = TopLevel.GetTopLevel(_owner)?.RenderScaling ?? 1;
+                _frame.StrokeThickness = Math.Max(1, Math.Round(scale)) / scale;
+            }
+
             _screen.IsVisible = !miniature && size.Width >= 24 && size.Height >= 24;
-            _bezel.Width = Math.Min(miniature ? 12 : 24, Math.Max(0, size.Width - 8));
-            _bezel.Margin = new Thickness(0, 0, 0, miniature ? 2 : 4);
-            _bezel.IsVisible = size.Width >= 8 && size.Height >= 8;
+            _bezel.Width = Math.Min(24, Math.Max(0, size.Width - 8));
+            _bezel.Margin = new Thickness(0, 0, 0, 4);
+            _bezel.IsVisible = !miniature && size.Width >= 8 && size.Height >= 8;
             if (!showLabels)
             {
                 return;
