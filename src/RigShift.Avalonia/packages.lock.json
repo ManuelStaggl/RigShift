@@ -27,6 +27,15 @@
           "Avalonia.X11": "12.1.4"
         }
       },
+      "H.NotifyIcon": {
+        "type": "Direct",
+        "requested": "[2.4.1, )",
+        "resolved": "2.4.1",
+        "contentHash": "nNPgNzo5UHcWYpVLO3AsRlH8fKE9shBA7/WLpZrFZUFbzpKGcLnz15Kmg0pQ851aboAfm3YuHjYFsYQges/pyw==",
+        "dependencies": {
+          "H.GeneratedIcons.System.Drawing": "2.4.1"
+        }
+      },
       "Irihi.Ursa": {
         "type": "Direct",
         "requested": "[2.3.0, )",
@@ -157,6 +166,14 @@
           "Avalonia.FreeDesktop": "12.1.4",
           "Avalonia.FreeDesktop.AtSpi": "12.1.4",
           "Avalonia.Skia": "12.1.4"
+        }
+      },
+      "H.GeneratedIcons.System.Drawing": {
+        "type": "Transitive",
+        "resolved": "2.4.1",
+        "contentHash": "gjYhuwHQzISqKhcNYaRdDhzKCoqLZii+6TTHP0MQf4Q9+H6z4f4A5Xu/j8B8XpFPQ1grCMlQYREvNyNJT9Q/Bg==",
+        "dependencies": {
+          "System.Drawing.Common": "10.0.0"
         }
       },
       "HarfBuzzSharp": {

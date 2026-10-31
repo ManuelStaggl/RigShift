@@ -28,14 +28,19 @@
     <PackageReference Include="Irihi.Ursa" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" />
     <PackageReference Include="Velopack" />
+    <!-- The UI-free core: Shell_NotifyIcon with balloon notifications, which Avalonia's TrayIcon does not have. -->
+    <PackageReference Include="H.NotifyIcon" />
     <!-- Program icons for the app and game rows. -->
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <!-- The brand package lives with the WPF app until the switch-over (#99). -->
-    <AvaloniaResource Include="..\RigShift.App\Assets\Brand\rigshift-tray-dark.ico" Link="Assets\tray.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tray icons, read per DPI from the output folder; the brand package lives with the WPF app until the switch-over (#99). -->
+    <Content Include="..\RigShift.App\Assets\Brand\rigshift-tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Screenshot helpers stay out of release builds. -->

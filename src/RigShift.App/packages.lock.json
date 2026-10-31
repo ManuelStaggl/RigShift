@@ -70,14 +70,6 @@
         "resolved": "2.4.1",
         "contentHash": "gjYhuwHQzISqKhcNYaRdDhzKCoqLZii+6TTHP0MQf4Q9+H6z4f4A5Xu/j8B8XpFPQ1grCMlQYREvNyNJT9Q/Bg=="
       },
-      "H.NotifyIcon": {
-        "type": "Transitive",
-        "resolved": "2.4.1",
-        "contentHash": "nNPgNzo5UHcWYpVLO3AsRlH8fKE9shBA7/WLpZrFZUFbzpKGcLnz15Kmg0pQ851aboAfm3YuHjYFsYQges/pyw==",
-        "dependencies": {
-          "H.GeneratedIcons.System.Drawing": "2.4.1"
-        }
-      },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.12",
@@ -113,6 +105,15 @@
         "dependencies": {
           "RigShift.Core": "[1.0.0, )",
           "Serilog": "[4.4.0, )"
+        }
+      },
+      "H.NotifyIcon": {
+        "type": "CentralTransitive",
+        "requested": "[2.4.1, )",
+        "resolved": "2.4.1",
+        "contentHash": "nNPgNzo5UHcWYpVLO3AsRlH8fKE9shBA7/WLpZrFZUFbzpKGcLnz15Kmg0pQ851aboAfm3YuHjYFsYQges/pyw==",
+        "dependencies": {
+          "H.GeneratedIcons.System.Drawing": "2.4.1"
         }
       },
       "System.CommandLine": {

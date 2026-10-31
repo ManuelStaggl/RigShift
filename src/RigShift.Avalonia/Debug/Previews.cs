@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
-using RigShift.Avalonia.Services;
+using RigShift.Avalonia.Tray;
 using RigShift.Core.Abstractions;
 
 namespace RigShift.Avalonia.Debug;
@@ -24,7 +24,7 @@ internal static class Previews
         }
     }
 
-    public static void AfterStart(App app, AppTray tray)
+    public static void AfterStart(App app, TrayIconService tray)
     {
         if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE"), out AppPage page))
         {
@@ -55,7 +55,7 @@ internal static class Previews
         // After the window, which would take the focus and so close the popup.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
         {
-            tray.TogglePopup();
+            tray.ShowPopup();
         }
     }
 }
