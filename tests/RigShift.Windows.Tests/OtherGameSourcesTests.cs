@@ -1,3 +1,4 @@
+using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using RigShift.Windows.Games;
 using Serilog.Core;
@@ -100,6 +101,50 @@ public sealed class OtherGameSourcesTests : IDisposable
         var library = new UninstallLibrary(Logger.None, () => [], folder);
 
         library.Find().ShouldHaveSingleItem().Name.ShouldBe("iRacing");
+    }
+
+    [Fact]
+    public void Gog_Game_StartsThroughItsExecutable_ButNotADlcOrAMissingOne()
+    {
+        string folder = Path.Combine(_folder, "Automobilista");
+        Directory.CreateDirectory(folder);
+        string exe = Path.Combine(folder, "AMS.exe");
+        File.WriteAllBytes(exe, []);
+        var library = new GogLibrary(Logger.None, () =>
+        [
+            new GogEntry("Automobilista ", exe, folder, ""),
+            new GogEntry("Automobilista - Season Pass", exe, folder, "1234"),
+            new GogEntry("Gone", Path.Combine(_folder, "gone.exe"), _folder, null),
+        ]);
+
+        InstalledGame game = library.Find().ShouldHaveSingleItem();
+
+        game.Name.ShouldBe("Automobilista");
+        game.Source.ShouldBe("GOG");
+        game.Launch.Kind.ShouldBe(GameLaunchKind.Executable);
+        game.Launch.Target.ShouldBe(exe);
+        game.Launch.InstallFolder.ShouldBe(folder);
+    }
+
+    [Fact]
+    public void Ubisoft_Game_TakesNameAndExecutableFromItsUninstallEntry()
+    {
+        string folder = Path.Combine(_folder, "games", "Trackmania");
+        Directory.CreateDirectory(folder);
+        string exe = Path.Combine(folder, "Trackmania.exe");
+        File.WriteAllBytes(exe, []);
+        var library = new UbisoftLibrary(Logger.None, () =>
+        [
+            new UbisoftEntry(folder.Replace('\\', '/') + "/", "Trackmania", $"\"{exe}\",0"),
+            new UbisoftEntry(folder.Replace('\\', '/') + "/", null, null),
+        ]);
+
+        InstalledGame game = library.Find().ShouldHaveSingleItem();
+
+        game.Name.ShouldBe("Trackmania");
+        game.Source.ShouldBe("Ubisoft");
+        game.Launch.Target.ShouldBe(exe);
+        game.Launch.InstallFolder.ShouldBe(folder);
     }
 
     public void Dispose() => Directory.Delete(_folder, recursive: true);
