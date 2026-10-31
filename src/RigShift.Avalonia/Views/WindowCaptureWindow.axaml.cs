@@ -20,6 +20,7 @@ public sealed partial class WindowCaptureWindow : Window
     {
         InitializeComponent();
         TextScale.Apply(this);
+        DialogChrome.Apply(this);
         Opened += (_, _) => List.Focus();
     }
 

@@ -3,6 +3,7 @@
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:chrome="using:Avalonia.Controls.Chrome"
+  xmlns:v="using:RigShift.Avalonia.Views"
   Title="RigShift"
   Width="1280"
   Height="780"
@@ -10,40 +11,31 @@
   MinHeight="560"
   Background="{DynamicResource RsRail}"
   ExtendClientAreaToDecorationsHint="True"
-  ExtendClientAreaTitleBarHeightHint="38"
+  ExtendClientAreaTitleBarHeightHint="40"
   WindowStartupLocation="CenterScreen">
-  <!-- The window is chrome: a 38 px title bar (brand, search, Avalonia 12's drawn caption buttons), the 64 px icon rail,
+  <!-- The window is chrome: a 40 px title bar (brand, search, Avalonia 12's drawn caption buttons), the 64 px icon rail,
        and the content panel floating inside with its own hairline and 10 px radius. -->
-  <Grid ColumnDefinitions="64,*" RowDefinitions="38,*">
+  <Grid ColumnDefinitions="64,*" RowDefinitions="40,*">
     <!-- Title bar: the whole strip drags; the search box sits on top of it and takes its own clicks. -->
     <Border Grid.ColumnSpan="2" Background="Transparent" chrome:WindowDecorationProperties.ElementRole="TitleBar" />
     <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto,*" IsHitTestVisible="True">
-      <StackPanel Margin="14,0,0,0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsHitTestVisible="False">
-        <Viewbox Width="20" Height="15">
-          <Canvas Width="240" Height="180">
-            <Path
-              Data="M76 60 L17 55 Q10 54 10 61 V124 Q10 130 17 129 L74 124 M153 63 L222 55 Q230 54 230 62 V124 Q230 130 222 129 L166 123 M47 127 V140 M32 143 L64 138 M191 127 V140 M176 138 L207 144"
-              Stroke="{DynamicResource RsText}"
-              StrokeJoin="Round"
-              StrokeLineCap="Round"
-              StrokeThickness="12" />
-            <Path Data="M141 9 L177 40 L141 71 V52 C109 49 83 60 76 88 C67 68 75 44 97 32 C110 25 124 24 141 25 Z M89 62 H137 V72 H82 Z M41 116 C77 92 97 83 116 83 L88 114 Z M124 83 C145 84 167 95 199 116 L151 114 Z M119 88 H123 L125 95 H117 Z M116 99 H126 L129 109 H113 Z M111 114 H131 L135 130 H107 Z M105 122 V139 C133 142 145 135 148 122 C160 149 139 162 105 160 V174 L77 148 Z" Fill="{DynamicResource RsAccentText}" />
-          </Canvas>
-        </Viewbox>
-        <TextBlock Classes="caption" FontSize="13" Text="RigShift" VerticalAlignment="Center" />
+      <StackPanel Margin="16,0,0,0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsHitTestVisible="False">
+        <!-- The brand package's tray symbol, drawn for small sizes; white in dark, dark in light (code-behind). -->
+        <Image x:Name="TitleIcon" Width="16" Height="16" RenderOptions.BitmapInterpolationMode="HighQuality" />
+        <TextBlock Classes="caption" Text="RigShift" VerticalAlignment="Center" />
       </StackPanel>
       <Button x:Name="Search" Grid.Column="1" Classes="search" Width="440" Click="OnSearchClick">
         <Grid ColumnDefinitions="Auto,*,Auto">
-          <Path Classes="icon small" Data="M11 4 A7 7 0 1 1 10.99 4 Z M16 16 L20 20" />
-          <TextBlock x:Name="SearchText" Grid.Column="1" Margin="8,0" Classes="caption" FontSize="13" VerticalAlignment="Center" />
+          <Path Classes="icon" Data="{x:Static v:Icons.Search16}" />
+          <TextBlock x:Name="SearchText" Grid.Column="1" Margin="8,0" Classes="caption" VerticalAlignment="Center" />
           <Border Grid.Column="2" Classes="kbd"><TextBlock x:Name="SearchKey" /></Border>
         </Grid>
       </Button>
     </Grid>
 
     <DockPanel Grid.Row="1">
-      <StackPanel x:Name="BottomRail" DockPanel.Dock="Bottom" Margin="0,0,0,10" Spacing="4" />
-      <StackPanel x:Name="TopRail" Margin="0,6,0,0" Spacing="4" />
+      <StackPanel x:Name="BottomRail" DockPanel.Dock="Bottom" Margin="0,0,0,12" Spacing="4" />
+      <StackPanel x:Name="TopRail" Margin="0,8,0,0" Spacing="4" />
     </DockPanel>
 
     <Border
@@ -54,7 +46,7 @@
       BorderBrush="{DynamicResource RsDivider}"
       BorderThickness="1"
       ClipToBounds="True"
-      CornerRadius="10">
+      CornerRadius="{DynamicResource RsRadiusLg}">
       <!-- Windows "Text size" scales the pages, which Avalonia does not follow on its own (see TextScaleSetting). -->
       <LayoutTransformControl x:Name="Scaled">
         <ContentControl x:Name="Host" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
@@ -74,25 +66,24 @@
         BorderThickness="1"
         BoxShadow="{DynamicResource RsPopShadow}"
         ClipToBounds="True"
-        CornerRadius="12">
+        CornerRadius="{DynamicResource RsRadiusLg}">
         <DockPanel>
           <Grid Height="48" Margin="16,0,12,0" ColumnDefinitions="Auto,*,Auto" DockPanel.Dock="Top">
-            <Path Classes="icon small" VerticalAlignment="Center" Data="M11 4 A7 7 0 1 1 10.99 4 Z M16 16 L20 20" />
+            <Path Classes="icon" Data="{x:Static v:Icons.Search16}" />
             <TextBox
               x:Name="PaletteQuery"
               Grid.Column="1"
-              Margin="6,0"
+              Margin="8,0"
               VerticalAlignment="Center"
               Background="Transparent"
               BorderThickness="0"
-              FontSize="15"
               TextChanged="OnPaletteQueryChanged"
               KeyDown="OnPaletteKeyDown" />
             <Border Grid.Column="2" VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Esc" /></Border>
           </Grid>
           <Border Classes="divider" DockPanel.Dock="Top" />
-          <TextBlock x:Name="PaletteEmpty" Margin="16,14" Classes="caption" DockPanel.Dock="Top" IsVisible="False" />
-          <ListBox x:Name="PaletteList" MaxHeight="360" Margin="6" Background="Transparent" Focusable="False" Tapped="OnPaletteTapped" />
+          <TextBlock x:Name="PaletteEmpty" Margin="16,12" Classes="caption" DockPanel.Dock="Top" IsVisible="False" />
+          <ListBox x:Name="PaletteList" MaxHeight="360" Margin="8" Background="Transparent" Focusable="False" Tapped="OnPaletteTapped" />
         </DockPanel>
       </Border>
     </Panel>

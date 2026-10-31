@@ -93,7 +93,7 @@ public sealed partial class GamesView : UserControl
             var item = new MenuItem
             {
                 Header = icon.Name,
-                Icon = new Path { Data = icon.Key is null ? Icons.Games : Glyphs.Profile(icon.Key), Classes = { "symbol" }, Width = 18, Height = 18 },
+                Icon = new Path { Data = icon.Key is null ? Icons.Games20 : ProfileSymbols.For(icon.Key, 20), Classes = { "icon", "md" } },
             };
             item.Click += (_, _) => editor.ChooseIconCommand.Execute(icon);
             iconMenu.Items.Add(item);
@@ -149,7 +149,7 @@ public sealed partial class GamesView : UserControl
         IconImage.Source = own is null ? null : new Bitmap(new MemoryStream(own));
         IconImage.IsVisible = own is not null;
         IconPath.IsVisible = own is null;
-        IconPath.Data = key is null ? Icons.Games : Glyphs.Profile(key);
+        IconPath.Data = key is null ? Icons.Games24 : ProfileSymbols.For(key, 24);
     }
 
     /// <summary>What each closed group holds, in one line: the sheet reads like the session without opening anything.</summary>

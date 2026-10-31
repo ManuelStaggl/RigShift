@@ -20,6 +20,7 @@ public sealed partial class AppPickerWindow : Window
     {
         InitializeComponent();
         TextScale.Apply(this);
+        DialogChrome.Apply(this);
     }
 
     private AppPickerViewModel ViewModel => (AppPickerViewModel)DataContext!;
