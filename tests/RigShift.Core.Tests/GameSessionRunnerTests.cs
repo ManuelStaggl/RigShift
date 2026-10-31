@@ -336,7 +336,7 @@ public sealed class GameSessionRunnerTests
     [Fact]
     public async Task Run_ForASimWhoseInterfaceOutlivesIt_WaitsForTheInterfaceToShowUpFirst()
     {
-        GameEntry game = KnownSteamGame() with { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
+        GameEntry game = KnownSteamGame() with { LauncherProcessName = "iRacingUI" };
         _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
         _processes.OnIsRunning = call =>
         {
@@ -808,7 +808,7 @@ public sealed class GameSessionRunnerTests
     {
         GameEntry game = Game(new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410", ProcessName = "iRacingSim64DX11" })
             with
-        { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
+        { LauncherProcessName = "iRacingUI" };
         _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
         _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
         // The session keeps waiting while the interface is up; only its end ends the session.
@@ -824,6 +824,20 @@ public sealed class GameSessionRunnerTests
 
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         _processes.IsRunningCalls.ShouldBeGreaterThan(1);
+    }
+
+    /// <summary>The launcher field is the whole choice: left empty, the session ends with the game even while a menu runs on.</summary>
+    [Fact]
+    public async Task Run_WithAnEmptyLauncherField_EndsWithTheGame()
+    {
+        GameEntry game = Game() with { LauncherProcessName = "  " };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => LongRunning());
+        _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
+
+        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        _processes.Running.ShouldContain(p => p.Name == "iRacingUI");
     }
 
     /// <summary>A dashboard has to go down before the wheelbase software it talks to.</summary>

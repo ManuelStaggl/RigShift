@@ -62,7 +62,6 @@ public sealed class GameEditorViewModelTests : IDisposable
             Apps = [new AppAction { Path = @"C:\Tools\SimHub.exe", Name = "SimHub", WaitSeconds = 5, When = AppTiming.AfterGame }],
             AppsWaitForUsbDeviceId = Wheelbase,
             AppsWaitForUsbDeviceName = "Fanatec Wheelbase",
-            EndsWith = SessionEnd.LauncherProcess,
             LauncherProcessName = "iRacingUI",
             Exit = new GameExitAction { Kind = GameExitKind.Profile, ProfileId = rig.Id, StopApps = false },
             Hotkey = CtrlAltR,
@@ -73,7 +72,6 @@ public sealed class GameEditorViewModelTests : IDisposable
 
         editor.IsDirty.ShouldBeFalse();
         editor.ProblemCount.ShouldBe(0);
-        editor.NeedsLauncherProcess.ShouldBeTrue();
         GameEntry built = editor.ToGame();
         built.Apps.ShouldBe(game.Apps);
         (built with { Apps = game.Apps }).ShouldBe(game);
@@ -179,7 +177,6 @@ public sealed class GameEditorViewModelTests : IDisposable
             e => e.WindowLayout = windows,
             e => e.Hotkey = CtrlAltR,
             e => e.SelectedProfile = e.ProfileOptions.First(o => o.Key == rig.Id.ToString()),
-            e => e.SelectedEnd = e.EndChoices.First(c => c.Key == nameof(SessionEnd.LauncherProcess)),
             e => e.SelectedExit = e.ExitChoices.First(c => c.Key == nameof(GameExitKind.PreviousProfile)),
             e => e.SelectedIcon = e.IconChoices.First(c => c.Key is not null),
         ];
@@ -337,7 +334,6 @@ public sealed class GameEditorViewModelTests : IDisposable
         GameEntry built = editor.ToGame();
         built.Launch.ProcessName.ShouldBe(expected.Launch.ProcessName);
         built.LauncherProcessName.ShouldBe(expected.LauncherProcessName);
-        built.EndsWith.ShouldBe(expected.EndsWith);
     }
 
     [Fact]

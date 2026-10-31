@@ -292,7 +292,7 @@ public static class BackupArchive
             throw new InvalidDataException("games.json is from a newer RigShift version.");
         }
 
-        IReadOnlyList<GameEntry> games = document.Games ?? [];
+        IReadOnlyList<GameEntry> games = document.CurrentGames();
         var ids = new HashSet<Guid>();
         foreach (GameEntry game in games)
         {
