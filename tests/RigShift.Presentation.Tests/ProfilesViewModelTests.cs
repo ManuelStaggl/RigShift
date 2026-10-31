@@ -70,24 +70,22 @@ public sealed class ProfilesViewModelTests : IDisposable
     });
 
     [Fact]
-    public Task StatusLines_ActiveDefaultReadyAndBlocked() => _ui.RunAsync(async () =>
+    public Task StatusLines_ActiveReadyAndBlocked() => _ui.RunAsync(async () =>
     {
-        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
+        await SavedAsync(Profile("Desk", DeskModes));
         await SavedAsync(Profile("Side", [Mode(DeskLeft, 1920, 1080, 100, primary: true)]));
         await SavedAsync(Rig());
-        await _host.Catalog.ToggleDefaultAsync(desk, Ct);
 
         ProfilesViewModel page = await PageAsync();
         await UntilAsync(() => page.Items.All(i => i.ListStatus != Loc.Instance["List_Checking"]), "the profiles were not planned");
 
         page.Items.Select(i => (i.Name, i.ListKind, i.ListStatus)).ShouldBe(
         [
-            ("Desk", StatusKind.Active, Loc.Instance["Profile_Active"] + " · " + Loc.Instance["Profile_Default"]),
+            ("Desk", StatusKind.Active, Loc.Instance["Profile_Active"]),
             ("Side", StatusKind.Ok, Loc.Instance["List_Ready"]),
             ("Rig", StatusKind.Warn, Loc.Format("List_MissingOne", "Ultrawide 49")),
         ]);
         page.IsSelectedActive.ShouldBeTrue();
-        page.IsSelectedDefault.ShouldBeTrue();
         page.SwitchIsPrimary.ShouldBeFalse();
         page.SwitchLabel.ShouldBe(Loc.Instance["Profile_Reapply"]);
     });
@@ -300,21 +298,6 @@ public sealed class ProfilesViewModelTests : IDisposable
         copy.Hotkey.ShouldBeNull();
         page.SelectedItem.ShouldNotBeNull().Profile.Id.ShouldBe(copy.Id);
         page.StatusMessage.ShouldBe(Loc.Format("Status_Duplicated", copy.Name));
-    });
-
-    [Fact]
-    public Task ToggleDefault_SetsAndClearsTheDefaultProfile() => _ui.RunAsync(async () =>
-    {
-        Profile desk = await SavedAsync(Profile("Desk", DeskModes));
-        ProfilesViewModel page = await PageAsync();
-
-        await page.ToggleDefaultCommand.ExecuteAsync(null);
-        await UntilAsync(() => page.IsSelectedDefault, "the default was not shown");
-        _host.Settings.Current.DefaultProfileId.ShouldBe(desk.Id);
-
-        await page.ToggleDefaultCommand.ExecuteAsync(null);
-        await UntilAsync(() => !page.IsSelectedDefault, "the default was not cleared");
-        _host.Settings.Current.DefaultProfileId.ShouldBeNull();
     });
 
     [Fact]

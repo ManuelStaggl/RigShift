@@ -130,20 +130,17 @@ public static class ProfileEditing
         NameHistory.Find(profiles, name, p => p.Name, p => p.FormerNames, p => p.Id);
 
     /// <summary>
-    /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, otherwise
-    /// the default profile – unless that is the active one. With exactly two profiles, the other one. <c>null</c> when
-    /// there is nowhere to go.
+    /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, unless that
+    /// is the active one. Without one, and with exactly two profiles, the other one. <c>null</c> when there is nowhere
+    /// to go.
     /// </summary>
-    public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId, Guid? defaultId)
+    public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         List<Profile> all = [.. profiles];
-        foreach (Guid? candidate in (Guid?[])[previousId, defaultId])
+        if (previousId is { } id && id != activeId && all.FirstOrDefault(p => p.Id == id) is { } target)
         {
-            if (candidate is { } id && id != activeId && all.FirstOrDefault(p => p.Id == id) is { } target)
-            {
-                return target;
-            }
+            return target;
         }
 
         return all.Count == 2 && all.Any(p => p.Id == activeId) ? all.First(p => p.Id != activeId) : null;

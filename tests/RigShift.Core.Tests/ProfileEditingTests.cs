@@ -92,16 +92,17 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
-    public void ToggleTarget_PrefersThePreviousProfile_ThenTheDefault()
+    public void ToggleTarget_GoesToThePreviousProfile()
     {
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig();
         Profile tv = Profile("TV", DeskModes);
         Profile[] all = [desk, rig, tv];
 
-        ProfileEditing.ToggleTarget(all, rig.Id, desk.Id, tv.Id).ShouldBe(desk);
-        ProfileEditing.ToggleTarget(all, rig.Id, null, tv.Id).ShouldBe(tv);
-        ProfileEditing.ToggleTarget(all, null, null, tv.Id).ShouldBe(tv);
+        ProfileEditing.ToggleTarget(all, rig.Id, desk.Id).ShouldBe(desk);
+        ProfileEditing.ToggleTarget(all, null, tv.Id).ShouldBe(tv);
+        // Without a previous profile there is no default to fill in any more.
+        ProfileEditing.ToggleTarget(all, rig.Id, null).ShouldBeNull();
     }
 
     [Fact]
@@ -112,11 +113,10 @@ public sealed class ProfileEditingTests
         Profile tv = Profile("TV", DeskModes);
         Profile[] all = [desk, rig, tv];
 
-        // Previous is active again (Windows restored it): fall through to the default.
-        ProfileEditing.ToggleTarget(all, desk.Id, desk.Id, rig.Id).ShouldBe(rig);
-        // Previous was deleted, default is the active one: nowhere to go.
-        ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid(), desk.Id).ShouldBeNull();
-        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBeNull();
+        // Previous is active again (Windows restored it): nowhere to go.
+        ProfileEditing.ToggleTarget(all, desk.Id, desk.Id).ShouldBeNull();
+        // Previous was deleted.
+        ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid()).ShouldBeNull();
     }
 
     [Fact]
@@ -126,11 +126,11 @@ public sealed class ProfileEditingTests
         Profile rig = Rig();
         Profile[] all = [desk, rig];
 
-        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBe(rig);
-        // Previous deleted, default is the active one.
-        ProfileEditing.ToggleTarget(all, rig.Id, Guid.NewGuid(), rig.Id).ShouldBe(desk);
+        ProfileEditing.ToggleTarget(all, desk.Id, null).ShouldBe(rig);
+        // Previous deleted.
+        ProfileEditing.ToggleTarget(all, rig.Id, Guid.NewGuid()).ShouldBe(desk);
         // No profile active: there is no "other one".
-        ProfileEditing.ToggleTarget(all, null, null, null).ShouldBeNull();
+        ProfileEditing.ToggleTarget(all, null, null).ShouldBeNull();
     }
 
     [Fact]

@@ -7,17 +7,21 @@ namespace RigShift.Core.Automation;
 public enum StartupProfileDecision
 {
     Apply,
+
+    /// <summary>"Keep what Windows restored".</summary>
     TurnedOff,
-    NoDefaultProfile,
+
+    /// <summary>The chosen profile no longer exists.</summary>
+    ProfileMissing,
     AlreadyActive,
 
-    /// <summary>A USB rule's devices are all connected: the rig is in use, the default profile would undo it.</summary>
+    /// <summary>A USB rule's devices are all connected: the rig is in use, the sign-in profile would undo it.</summary>
     RuleDevicesConnected,
 }
 
 /// <summary>
-/// The default profile when RigShift starts with Windows (issue #13). Windows restores the layout the PC was shut down
-/// in; with the setting on, the PC starts in the default profile instead.
+/// The sign-in choice when RigShift starts with Windows (issue #13). Windows restores the layout the PC was shut down
+/// in; with a profile chosen, the PC starts in that profile instead.
 /// </summary>
 public static class StartupProfile
 {
@@ -29,14 +33,14 @@ public static class StartupProfile
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(present);
 
-        if (!settings.ApplyDefaultProfileWithWindows)
+        if (settings.SignInProfileId is not { } id)
         {
             return (StartupProfileDecision.TurnedOff, null);
         }
 
-        if (settings.DefaultProfileId is not { } id || profiles.FirstOrDefault(p => p.Id == id) is not { } profile)
+        if (profiles.FirstOrDefault(p => p.Id == id) is not { } profile)
         {
-            return (StartupProfileDecision.NoDefaultProfile, null);
+            return (StartupProfileDecision.ProfileMissing, null);
         }
 
         if (activeProfileId == id)

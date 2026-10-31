@@ -112,9 +112,6 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     [ObservableProperty]
     public partial bool IsSelectedActive { get; private set; }
 
-    [ObservableProperty]
-    public partial bool IsSelectedDefault { get; private set; }
-
     /// <summary>Switching is the accent action only when it would change something: not while the profile is
     /// already active and not while unsaved edits make Save the primary.</summary>
     [ObservableProperty]
@@ -274,15 +271,6 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     }
 
     [RelayCommand]
-    private async Task ToggleDefaultAsync()
-    {
-        if (SelectedItem is { IsNew: false } item)
-        {
-            await RunStoreActionAsync(() => _catalog.ToggleDefaultAsync(item.Profile, CancellationToken.None), null);
-        }
-    }
-
-    [RelayCommand]
     private void CreateShortcut()
     {
         if (SelectedItem is not { IsNew: false } item || Environment.ProcessPath is not { } executable)
@@ -400,7 +388,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         UpdateHead();
     }
 
-    /// <summary>"Active · Default", "Ready · Dash missing (optional)", "Blocked: Odyssey G93SC missing" (F2 phase 0).</summary>
+    /// <summary>"Active", "Ready · Dash missing (optional)", "Blocked: Odyssey G93SC missing" (F2 phase 0).</summary>
     private (StatusKind Kind, string Text) StatusOf(ProfileItem item)
     {
         if (item.IsNew)
@@ -408,26 +396,24 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
             return (StatusKind.Neutral, Loc.Instance["List_Unsaved"]);
         }
 
-        string suffix = item.IsDefault ? " · " + Loc.Instance["Profile_Default"] : string.Empty;
         if (item.IsActive)
         {
-            return (StatusKind.Active, Loc.Instance["Profile_Active"] + suffix);
+            return (StatusKind.Active, Loc.Instance["Profile_Active"]);
         }
 
         if (!_plans.TryGetValue(item.Profile.Id, out TopologyPlan? plan))
         {
-            return (StatusKind.Neutral, Loc.Instance["List_Checking"] + suffix);
+            return (StatusKind.Neutral, Loc.Instance["List_Checking"]);
         }
 
         (StatusKind kind, string text, _) = ProfileReadiness.Of(plan);
-        return (kind, text + suffix);
+        return (kind, text);
     }
 
     protected override void UpdateHead()
     {
         ProfileItem? item = SelectedItem;
         IsSelectedActive = item is { IsNew: false, IsActive: true };
-        IsSelectedDefault = item is { IsNew: false, IsDefault: true };
         SwitchIsPrimary = !IsSelectedActive && Editor is { IsDirty: false };
         SwitchLabel = Loc.Instance[IsSelectedActive ? "Profile_Reapply" : "Profile_Apply"];
         if (item is null || Editor is null)

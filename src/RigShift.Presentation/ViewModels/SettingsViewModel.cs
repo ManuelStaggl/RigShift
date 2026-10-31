@@ -54,20 +54,12 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
 
     public ObservableCollection<Choice> LanguageChoices { get; } = [];
 
+    /// <summary>At sign-in (issue #13): keep what Windows restored (key <c>null</c>) or switch to a profile. Only has an effect with the autostart on.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanApplyDefaultWithWindows))]
-    public partial Choice? SelectedDefaultProfile { get; set; }
+    public partial Choice? SelectedSignInProfile { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanApplyDefaultWithWindows))]
     public partial bool StartWithWindows { get; set; }
-
-    /// <summary>Switch to the default profile when RigShift starts with Windows (issue #13).</summary>
-    [ObservableProperty]
-    public partial bool ApplyDefaultWithWindows { get; set; }
-
-    /// <summary>Only with a default profile and the autostart on; otherwise the switch would have no effect.</summary>
-    public bool CanApplyDefaultWithWindows => StartWithWindows && SelectedDefaultProfile?.Key is not null;
 
     /// <summary>Length of the countdown; whether a switch asks at all is set per profile.</summary>
     [ObservableProperty]
@@ -127,13 +119,13 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
             AppSettings current = _settings.Current;
 
             ProfileChoices.Clear();
-            ProfileChoices.Add(new Choice(null, Loc.Instance["Settings_None"]));
+            ProfileChoices.Add(new Choice(null, Loc.Instance["Settings_SignInKeep"]));
             foreach (ProfileItem item in _catalog.Items)
             {
                 ProfileChoices.Add(new Choice(item.Profile.Id.ToString("D"), item.Name));
             }
 
-            SelectedDefaultProfile = ProfileChoices.FirstOrDefault(c => c.Key == current.DefaultProfileId?.ToString("D")) ?? ProfileChoices[0];
+            SelectedSignInProfile = ProfileChoices.FirstOrDefault(c => c.Key == current.SignInProfileId?.ToString("D")) ?? ProfileChoices[0];
 
             LanguageChoices.Clear();
             LanguageChoices.Add(new Choice(null, Loc.Instance["Settings_LanguageSystem"]));
@@ -145,7 +137,6 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             DetailedLogging = current.DetailedLogging;
             StartWithWindows = _settings.Autostart.IsEnabled;
-            ApplyDefaultWithWindows = current.ApplyDefaultProfileWithWindows;
             ToggleHotkey = current.ToggleHotkey;
             QuickSwitch.Hotkey = current.QuickSwitchHotkey;
             Devices.Refresh();
@@ -181,21 +172,13 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         }
     }
 
-    partial void OnSelectedDefaultProfileChanged(Choice? value)
+    partial void OnSelectedSignInProfileChanged(Choice? value)
     {
         if (!_loading && value is not null)
         {
             Guid? id = value.Key is { } key ? Guid.Parse(key) : null;
-            Persist(s => s with { DefaultProfileId = id });
-        }
-    }
-
-    partial void OnApplyDefaultWithWindowsChanged(bool value)
-    {
-        if (!_loading)
-        {
-            _log.Information("Default profile with Windows turned {State}", value ? "on" : "off");
-            Persist(s => s with { ApplyDefaultProfileWithWindows = value });
+            _log.Information("At sign-in: {Choice}", id is null ? "keep what Windows restored" : value.Name);
+            Persist(s => s with { SignInProfileId = id });
         }
     }
 

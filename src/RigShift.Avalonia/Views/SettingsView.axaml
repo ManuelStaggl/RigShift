@@ -34,20 +34,12 @@
             </StackPanel>
             <Border Classes="sheet">
               <StackPanel>
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_SignInTip}">
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_DefaultProfile}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_DefaultProfileHint}" TextWrapping="Wrap" />
+                    <TextBlock Classes="label" Text="{v:Tr Settings_SignIn}" />
+                    <TextBlock Classes="caption" Text="{v:Tr Settings_SignInHint}" TextWrapping="Wrap" />
                   </StackPanel>
-                  <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Settings_DefaultProfile}" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedDefaultProfile, Converter={x:Static v:Converters.KeepOnNull}}" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_DefaultWithWindowsTip}">
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_DefaultWithWindows}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_DefaultWithWindowsHint}" TextWrapping="Wrap" />
-                  </StackPanel>
-                  <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Settings_DefaultWithWindows}" IsChecked="{Binding ApplyDefaultWithWindows}" IsEnabled="{Binding CanApplyDefaultWithWindows}" OffContent="" OnContent="" />
+                  <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Settings_SignIn}" IsEnabled="{Binding StartWithWindows}" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedSignInProfile, Converter={x:Static v:Converters.KeepOnNull}}" />
                 </Grid>
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">

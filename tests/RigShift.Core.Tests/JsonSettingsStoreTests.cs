@@ -28,7 +28,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
     public async Task SaveThenLoad_RoundTrips()
     {
         var store = new JsonSettingsStore(File, Logger.None);
-        var settings = new AppSettings { DefaultProfileId = Guid.NewGuid(), ConfirmTimeoutSeconds = 20, Language = "de", OnlyNotifyAboutUpdates = true };
+        var settings = new AppSettings { SignInProfileId = Guid.NewGuid(), ConfirmTimeoutSeconds = 20, Language = "de", OnlyNotifyAboutUpdates = true };
 
         await store.SaveAsync(settings, Ct);
 

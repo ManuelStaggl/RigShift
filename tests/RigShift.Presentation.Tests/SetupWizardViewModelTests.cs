@@ -240,23 +240,12 @@ public sealed class SetupWizardViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task FirstStep_MakesItsProfileTheDefault()
+    public async Task FirstStep_LeavesTheSignInChoiceAlone()
     {
         await SaveFirstAsync();
 
-        _host.Settings.Current.DefaultProfileId.ShouldBe(_viewModel.FirstProfile.ShouldNotBeNull().Id);
-    }
-
-    [Fact]
-    public async Task FirstStep_WithADefaultProfileAlready_LeavesItAlone()
-    {
-        Profile existing = new() { Id = Guid.NewGuid(), Name = "Kept", Displays = [] };
-        await _host.Catalog.SaveAsync(existing, CancellationToken.None);
-        await _host.Catalog.ToggleDefaultAsync(existing, CancellationToken.None);
-
-        await SaveFirstAsync();
-
-        _host.Settings.Current.DefaultProfileId.ShouldBe(existing.Id);
+        // Picking a sign-in profile would change what happens at sign-in; that is the user's call in Settings.
+        _host.Settings.Current.SignInProfileId.ShouldBeNull();
     }
 
     [Fact]
@@ -266,11 +255,10 @@ public sealed class SetupWizardViewModelTests : IDisposable
         _viewModel.SkipTriggerCommand.Execute(null);
 
         _viewModel.Summary.Count.ShouldBe(2);
-        _viewModel.Summary[0].IsDefault.ShouldBeTrue();
-        _viewModel.Summary[0].HasStatus.ShouldBeTrue();
+        _viewModel.Summary[0].HasStatus.ShouldBeFalse();
         // The second profile is the arrangement that is up right now, so it is the active one.
         _viewModel.Summary[1].IsActive.ShouldBeTrue();
-        _viewModel.Summary[1].IsDefault.ShouldBeFalse();
+        _viewModel.Summary[1].HasStatus.ShouldBeTrue();
     }
 
     /// <summary>The assistant ends with hotkeys the user can press right away, and says so.</summary>

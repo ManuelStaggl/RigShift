@@ -158,15 +158,15 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// The emergency hotkey: a running switch is cancelled first – it takes itself back – then every display that is
-    /// ready is turned on. When not even that works, the default profile is applied without asking: an arrangement that
-    /// worked before is the next best way to a picture.
+    /// ready is turned on. When not even that works, the sign-in profile, or else the previous one, is applied without
+    /// asking: an arrangement that worked before is the next best way to a picture.
     /// </summary>
     /// <returns>The result, or <c>null</c> when RigShift is exiting or the running switch did not end in time.</returns>
     public Task<AllDisplaysOnResult?> TurnAllDisplaysOnAsync() => OnUiThreadAsync(TurnAllDisplaysOnCoreAsync);
 
     /// <summary>Where "back to the previous profile" goes right now: the hotkey, <c>toggle</c> and <c>rigshift://toggle</c> share it.</summary>
     public Profile? ToggleTarget =>
-        ProfileEditing.ToggleTarget(_catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.PreviousProfileId, _settings.Current.DefaultProfileId);
+        ProfileEditing.ToggleTarget(_catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.PreviousProfileId);
 
     /// <summary>Command line: the caller needs the exception to report a failure instead of "busy".</summary>
     Task<SwitchResult?> IProfileSwitcher.SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
@@ -392,11 +392,13 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             _pendingCatchUp = null;
         }
 
-        Profile? fallback = result.Outcome == AllDisplaysOnOutcome.Failed && _settings.Current.DefaultProfileId is { } id ? _catalog.Find(id) : null;
+        Profile? fallback = result.Outcome != AllDisplaysOnOutcome.Failed ? null
+            : _settings.Current.SignInProfileId is { } id && _catalog.Find(id) is { } signIn ? signIn
+            : ToggleTarget;
         AllDisplaysOnCompleted?.Invoke(this, new AllDisplaysOnReport(result, fallback?.Name));
         if (fallback is not null)
         {
-            _log.Information("All displays on failed, switching to the default profile {Profile} without asking", fallback.Name);
+            _log.Information("All displays on failed, switching to {Profile} without asking", fallback.Name);
             await RunCoreAsync(fallback, new SwitchRequest { SkipConfirmation = true }, rethrow: false, CancellationToken.None);
         }
 
