@@ -19,7 +19,7 @@ public interface IGameLibrary
 /// <param name="Origin">Where a game started by its executable came from ("iRacing", "EA"); the launch kind says it otherwise.</param>
 public sealed record InstalledGame(string Name, GameLaunch Launch, string? Origin = null)
 {
-    /// <summary>Short source label for the picker ("Steam", "Epic", "Xbox", "iRacing", "EA").</summary>
+    /// <summary>Short source label for the picker ("Steam", "Epic", "Xbox", "iRacing", "EA", "GOG", "Ubisoft").</summary>
     public string Source => Origin ?? Launch.Kind switch
     {
         GameLaunchKind.Steam => "Steam",
