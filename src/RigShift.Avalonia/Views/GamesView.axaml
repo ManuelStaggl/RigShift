@@ -149,7 +149,11 @@
               <StackPanel Margin="32,24,32,72" HorizontalAlignment="Stretch" Spacing="24">
 
                 <Border Classes="notice" IsVisible="{Binding HasStatusMessage}">
-                  <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+                  <DockPanel>
+                    <Button Classes="link" DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center" IsVisible="{Binding HasUndo}"
+                            Command="{Binding UndoCommand}" Content="{v:Tr Status_Undo}" />
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                  </DockPanel>
                 </Border>
 
                 <!-- No game yet: the games on this PC are one click away. -->

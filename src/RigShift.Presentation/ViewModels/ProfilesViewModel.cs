@@ -181,7 +181,11 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     protected override Task<bool> ConfirmDeleteAsync(ProfileItem item) => _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id));
 
-    protected override Task DeleteStoredAsync(ProfileItem item) => _catalog.DeleteAsync(item.Profile, CancellationToken.None);
+    protected override async Task<Func<Task>> DeleteStoredAsync(ProfileItem item)
+    {
+        DeletedProfile deleted = await _catalog.DeleteAsync(item.Profile, CancellationToken.None);
+        return () => _catalog.UndoDeleteAsync(deleted, CancellationToken.None);
+    }
 
     protected override bool StoredChanged(ProfileEditorViewModel editor) =>
         !StoredForm.Same(_catalog.Find(editor.Id), editor.Saved) || editor.Rules.ChangedOnDisk(_settings.Current.AutomationRules);

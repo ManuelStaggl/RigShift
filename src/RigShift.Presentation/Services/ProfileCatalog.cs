@@ -8,6 +8,8 @@ using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
+using RigShift.Core.Settings;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 
@@ -23,6 +25,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     private readonly ActiveProfileMatcher _matcher;
     private readonly SettingsService _settings;
     private readonly ILogger _log;
+    private readonly string _dataDirectory;
     private IReadOnlyList<Profile> _profiles = [];
     private IReadOnlyList<UnreadableProfileFile> _unreadable = [];
 
@@ -39,6 +42,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         _settings = settings;
         _log = log.ForContext<ProfileCatalog>();
         ProfileDirectory = paths.Profiles;
+        _dataDirectory = paths.DataDirectory;
         IsEmpty = true;
 
         settings.Changed += (_, _) => UpdateFlags();
@@ -262,12 +266,15 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>
     /// Deletes the profile; if it was the default profile, there is no default afterwards. Its USB rules go with it –
     /// a rule that switches to a profile that no longer exists would keep firing into nothing. A rule of another
-    /// profile that only ends in this one keeps running and stays where it is instead.
+    /// profile that only ends in this one keeps running and stays where it is instead. A backup is written first.
     /// </summary>
-    public async Task DeleteAsync(Profile profile, CancellationToken cancellationToken)
+    /// <returns>What <see cref="UndoDeleteAsync"/> needs to bring it back.</returns>
+    public async Task<DeletedProfile> DeleteAsync(Profile profile, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
+        await BackupAsync("delete", cancellationToken);
+        var deleted = new DeletedProfile(profile, _settings.Current);
         await _store.DeleteAsync(profile.Id, cancellationToken);
         await _settings.UpdateAsync(
             s => s with
@@ -282,6 +289,75 @@ public sealed partial class ProfileCatalog : ObservableObject
             cancellationToken);
 
         await ReloadAsync(cancellationToken);
+        return deleted;
+    }
+
+    /// <summary>
+    /// Brings a deleted profile back with its USB rules (at their old place), exit targets and default flag. Changes
+    /// made to other profiles and rules since the delete stay.
+    /// </summary>
+    // shortcut: a hotkey or name another profile took in the meantime is not checked; the undo is offered for seconds only.
+    public async Task UndoDeleteAsync(DeletedProfile deleted, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(deleted);
+
+        Guid id = deleted.Profile.Id;
+        AppSettings before = deleted.SettingsBefore;
+        await _store.SaveAsync(deleted.Profile, cancellationToken);
+        await _settings.UpdateAsync(
+            s => s with
+            {
+                DefaultProfileId = before.DefaultProfileId == id && s.DefaultProfileId is null ? id : s.DefaultProfileId,
+                AutomationRules = RulesWith(s.AutomationRules, before.AutomationRules ?? [], id),
+            },
+            cancellationToken);
+        await ReloadAsync(cancellationToken);
+        _log.Information("Deleted profile {Profile} restored", deleted.Profile.Name);
+    }
+
+    /// <summary>Writes an automatic backup of the data folder (<see cref="AutoBackups"/>). IO failures go to the caller.</summary>
+    public async Task BackupAsync(string reason, CancellationToken cancellationToken)
+    {
+        string file = await Task.Run(() => AutoBackups.Write(_dataDirectory, reason, DateTimeOffset.Now), cancellationToken);
+        _log.Information("Automatic backup before {Reason} written to {File}", reason, file);
+    }
+
+    /// <summary>Once per app version, at start: a backup of the data the previous version left. Failures are only logged.</summary>
+    public async Task BackupOnceForVersionAsync(string version, CancellationToken cancellationToken)
+    {
+        if (_settings.Current.LastBackupVersion == version || _profiles.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await BackupAsync("version-" + version, cancellationToken);
+            await _settings.UpdateAsync(s => s with { LastBackupVersion = version }, cancellationToken, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The automatic backup for version {Version} could not be written", version);
+        }
+    }
+
+    private static List<AutomationRule>? RulesWith(IReadOnlyList<AutomationRule>? current, IReadOnlyList<AutomationRule> before, Guid id)
+    {
+        // Rules of other profiles that ended in this one went to "stay"; unless edited since, they end here again.
+        List<AutomationRule> rules = [.. (current ?? []).Select(r =>
+            r is { OnExit: ExitAction.Stay, ExitProfileId: null }
+            && before.Any(b => b.Id == r.Id && b.OnExit == ExitAction.SwitchTo && b.ExitProfileId == id)
+                ? r with { OnExit = ExitAction.SwitchTo, ExitProfileId = id }
+                : r)];
+        for (int i = 0; i < before.Count; i++)
+        {
+            if (before[i].ProfileId == id && rules.All(r => r.Id != before[i].Id))
+            {
+                rules.Insert(Math.Min(i, rules.Count), before[i]);
+            }
+        }
+
+        return current is null && rules.Count == 0 ? null : rules;
     }
 
     public async Task ReloadAsync(CancellationToken cancellationToken)
@@ -380,3 +456,6 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 }
+
+/// <summary>A deleted profile and the settings from just before, for undo.</summary>
+public sealed record DeletedProfile(Profile Profile, AppSettings SettingsBefore);
