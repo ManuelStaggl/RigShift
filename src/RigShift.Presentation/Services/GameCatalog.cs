@@ -99,8 +99,10 @@ public sealed partial class GameCatalog : ObservableObject
         await ReloadAsync(cancellationToken);
     }
 
+    /// <summary>Deletes the game after an automatic backup; <see cref="SaveAsync"/> with the entry brings it back.</summary>
     public async Task DeleteAsync(Guid gameId, CancellationToken cancellationToken)
     {
+        await _profiles.BackupAsync("delete", cancellationToken);
         await _store.DeleteAsync(gameId, cancellationToken);
         await ReloadAsync(cancellationToken);
     }

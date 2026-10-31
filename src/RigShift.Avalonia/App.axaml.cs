@@ -57,6 +57,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
             ProfileCatalog catalog = Provider.GetRequiredService<ProfileCatalog>();
             await catalog.ReloadAsync(CancellationToken.None);
             await Provider.GetRequiredService<GameCatalog>().ReloadAsync(CancellationToken.None);
+            await catalog.BackupOnceForVersionAsync(typeof(App).Assembly.GetName().Version?.ToString() ?? "unknown", CancellationToken.None);
 
             // The pipe first: a second start or a rigshift:// link waits for it.
             CommandRunner runner = Provider.GetRequiredService<CommandRunner>();

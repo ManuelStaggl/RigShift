@@ -84,10 +84,13 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
 
     protected override Task<bool> ConfirmDeleteAsync(GameItem item) => _dialogs.ConfirmDeleteAsync(item.Name);
 
-    protected override async Task DeleteStoredAsync(GameItem item)
+    protected override async Task<Func<Task>> DeleteStoredAsync(GameItem item)
     {
-        await _catalog.DeleteAsync(item.Game.Id, CancellationToken.None);
-        _dialogs.DeleteShortcutIcon(item.Game.Id, _paths.Icons);
+        GameEntry game = item.Game;
+        await _catalog.DeleteAsync(game.Id, CancellationToken.None);
+        // shortcut: the shortcut icon is gone after an undo too; a desktop shortcut of the game shows the RigShift icon until made again.
+        _dialogs.DeleteShortcutIcon(game.Id, _paths.Icons);
+        return () => _catalog.SaveAsync(game, CancellationToken.None);
     }
 
     protected override bool StoredChanged(GameEditorViewModel editor) => !StoredForm.Same(_catalog.Find(editor.Id), editor.Saved);

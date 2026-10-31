@@ -155,6 +155,18 @@ public sealed partial class AboutViewModel : ObservableObject
             return;
         }
 
+        try
+        {
+            await _catalog.BackupAsync("restore", CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Without a copy of today's data, nothing gets replaced.
+            _log.Error(ex, "Backup {File} not restored: the automatic backup before it failed", file);
+            BackupStatus = Loc.Format("About_BackupFailed", UserMessages.Describe(ex));
+            return;
+        }
+
         bool failed = false;
         try
         {

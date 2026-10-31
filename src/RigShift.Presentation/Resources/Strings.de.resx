@@ -141,6 +141,8 @@
   <data name="Status_Saved" xml:space="preserve"><value>„{0}“ gespeichert.</value></data>
   <data name="Status_Duplicated" xml:space="preserve"><value>„{0}“ angelegt.</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>
+  <data name="Status_Undo" xml:space="preserve"><value>Rückgängig</value></data>
+  <data name="Status_Undone" xml:space="preserve"><value>Wiederhergestellt.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Desktop-Verknüpfung „{0}“ erstellt. Sie funktioniert auch als Stream-Deck-Aktion.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Fehler: {0}</value></data>
 
