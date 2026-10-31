@@ -12,14 +12,6 @@
       <Setter Property="Margin" Value="0,8" />
     </Style>
 
-    <!-- The game's symbol: tile behind the icon, so a store icon and a stroke symbol sit the same. -->
-    <Style Selector="Border.gameicon">
-      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="ClipToBounds" Value="True" />
-    </Style>
-
     <!-- Profile choice: one card per profile with its arrangement; the chosen one in the accent. -->
     <Style Selector="ListBox.options">
       <Setter Property="Background" Value="Transparent" />
@@ -27,9 +19,9 @@
     </Style>
     <Style Selector="ListBox.options ListBoxItem">
       <Setter Property="Width" Value="168" />
-      <Setter Property="Margin" Value="0,0,10,10" />
-      <Setter Property="Padding" Value="12,10" />
-      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Margin" Value="0,0,8,8" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="CornerRadius" Value="{DynamicResource RsRadiusMd}" />
     </Style>
     <Style Selector="ListBox.options ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource RsCard}" />
@@ -44,15 +36,12 @@
       <Setter Property="BorderBrush" Value="{DynamicResource RsAccent}" />
     </Style>
 
-    <!-- Launch kind ("Steam", "EXE") as a chip. -->
-    <Style Selector="Border.chip">
-      <Setter Property="Padding" Value="8,2" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
+    <!-- Narrow page (small window or a large Windows text size): the inspector repeats the sheet, so it steps aside. -->
+    <ContainerQuery Name="detail" Query="max-width:1100">
+      <Style Selector="Panel#InspectorHost">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+    </ContainerQuery>
   </UserControl.Styles>
 
   <UserControl.KeyBindings>
@@ -61,17 +50,17 @@
     <KeyBinding Command="{Binding PlayCommand}" Gesture="Ctrl+Enter" />
   </UserControl.KeyBindings>
 
-  <Grid RowDefinitions="*,42">
+  <Grid RowDefinitions="*,44">
     <Grid ColumnDefinitions="248,*">
       <!-- ===== Games column ===== -->
       <Border Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,1,0">
         <DockPanel>
           <Border Height="44" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
             <Grid Margin="16,0,8,0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-              <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{v:Tr Nav_Games}" />
+              <TextBlock VerticalAlignment="Center" Classes="strong" Text="{v:Tr Nav_Games}" />
               <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption num" Text="{Binding Items.Count}" />
               <Button Grid.Column="2" AutomationProperties.Name="{v:Tr List_New}" Classes="ghost" ToolTip.Tip="{v:Tr List_NewGameTip}">
-                <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
+                <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
                 <Button.Flyout>
                   <MenuFlyout Placement="BottomEdgeAlignedRight">
                     <MenuItem Command="{Binding AddInstalledCommand}" Header="{v:Tr List_NewInstalled}" InputGesture="Ctrl+N" />
@@ -83,29 +72,29 @@
           </Border>
           <!-- A game list that could not be read is left alone; say so instead of losing it silently. -->
           <Border Margin="8" Classes="notice" DockPanel.Dock="Top" IsVisible="{Binding Catalog.IsUnreadable}">
-            <TextBlock FontSize="12.5" Text="{Binding Catalog.UnreadableMessage}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Catalog.UnreadableMessage}" TextWrapping="Wrap" />
           </Border>
           <ListBox AutomationProperties.Name="{v:Tr Nav_Games}" Classes="master" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:GameItem">
-                <Grid AutomationProperties.Name="{Binding AccessibleName}" ColumnDefinitions="32,*" ColumnSpacing="10">
-                  <Border Width="32" Height="32" Classes="gameicon" CornerRadius="8">
+                <Grid AutomationProperties.Name="{Binding AccessibleName}" ColumnDefinitions="32,*" ColumnSpacing="12">
+                  <Border Classes="symbol small">
                     <Panel>
-                      <Path HorizontalAlignment="Center" VerticalAlignment="Center" Classes="icon small" IsVisible="{Binding HasIcon}" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileGeometry}}" />
+                      <Path Classes="icon md" IsVisible="{Binding HasIcon}" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileSymbol}, ConverterParameter=20}" />
                       <Image Width="24" Height="24" IsVisible="{Binding HasGameIcon}" Source="{Binding GameIcon, Converter={x:Static v:Converters.IconImage}}" />
-                      <Path HorizontalAlignment="Center" VerticalAlignment="Center" Classes="icon small" IsVisible="{Binding HasFallbackIcon}" Data="{x:Static v:Icons.Games}" />
+                      <Path Classes="icon md" IsVisible="{Binding HasFallbackIcon}" Data="{x:Static v:Icons.Games20}" />
                     </Panel>
                   </Border>
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                    <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
                       <Ellipse
                         Classes="status"
                         Classes.ok="{Binding ListKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Ok}"
                         Classes.warn="{Binding ListKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Warn}"
                         Classes.error="{Binding ListKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Error}"
                         Classes.accent="{Binding ListKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Accent}" />
-                      <TextBlock Classes="caption" FontSize="11.5" Text="{Binding ListStatus}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="caption" Text="{Binding ListStatus}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                   </StackPanel>
                 </Grid>
@@ -116,18 +105,18 @@
       </Border>
 
       <!-- ===== Detail + inspector ===== -->
-      <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+      <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Container.Name="detail" Container.Sizing="Width">
         <DockPanel>
           <!-- Top bar: breadcrumb, more, the one primary action -->
           <Border Height="44" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
-            <Grid Margin="20,0,12,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="6">
-                <TextBlock Classes="secondary" FontSize="13" Text="{v:Tr Nav_Games}" />
-                <Path Classes="icon small" Width="12" Height="12" Stroke="{DynamicResource RsText4}" Data="M9 6 L15 12 L9 18" />
-                <TextBlock Classes="label" FontSize="13" Text="{Binding SelectedItem.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+            <Grid Margin="20,0,12,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+              <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
+                <TextBlock Classes="secondary" Text="{v:Tr Nav_Games}" />
+                <Path Classes="icon quiet" Data="{x:Static v:Icons.ChevronRight16}" IsVisible="{Binding HasSelection}" />
+                <TextBlock Classes="label" Text="{Binding SelectedItem.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
               <Button Grid.Column="1" AutomationProperties.Name="{v:Tr Profile_More}" Classes="ghost" IsVisible="{Binding HasSelection}" ToolTip.Tip="{v:Tr Profile_More}">
-                <Path Classes="icon dots" Data="{x:Static v:Icons.More}" />
+                <Path Classes="icon" Data="{x:Static v:Icons.MoreHorizontal16}" />
                 <Button.Flyout>
                   <MenuFlyout Placement="BottomEdgeAlignedRight">
                     <MenuItem Command="{Binding DuplicateCommand}" Header="{v:Tr Game_Duplicate}" />
@@ -140,17 +129,15 @@
               <!-- Save leads while the save bar is up; Play steps back to neutral then. -->
               <Button
                 Grid.Column="2"
-                Height="28"
-                Padding="10,0"
                 AutomationProperties.Name="{Binding PlayLabel}"
                 Classes.neutral="{Binding Editor.IsDirty, FallbackValue=False}"
                 Classes.primary="{Binding !Editor.IsDirty, FallbackValue=True}"
                 Command="{Binding PlayCommand}"
                 IsVisible="{Binding HasSelection}"
                 ToolTip.Tip="{v:Tr Detail_PlayTip}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Path Classes="icon" Width="11" Height="11" Fill="{Binding $parent[Button].Foreground}" Stroke="{Binding $parent[Button].Foreground}" Data="{x:Static v:Icons.Play}" />
-                  <TextBlock Text="{Binding PlayLabel}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Path Classes="icon" Data="{x:Static v:Icons.PlayFilled16}" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding PlayLabel}" />
                 </StackPanel>
               </Button>
             </Grid>
@@ -158,7 +145,8 @@
 
           <Grid>
             <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">
-              <StackPanel MaxWidth="760" Margin="32,24,32,120" HorizontalAlignment="Stretch" Spacing="20">
+              <!-- The sheet fills the room between list and inspector; at the foot only the room the floating save bar needs. -->
+              <StackPanel Margin="32,24,32,72" HorizontalAlignment="Stretch" Spacing="24">
 
                 <Border Classes="notice" IsVisible="{Binding HasStatusMessage}">
                   <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
@@ -166,7 +154,8 @@
 
                 <!-- No game yet: the games on this PC are one click away. -->
                 <StackPanel Spacing="12" IsVisible="{Binding IsEmpty}">
-                  <TextBlock Classes="h2" Text="{v:Tr Games_EmptyTitle}" />
+                  <Path HorizontalAlignment="Left" Classes="icon lg quiet" Data="{x:Static v:Icons.Games24}" />
+                  <TextBlock Classes="title" Text="{v:Tr Games_EmptyTitle}" />
                   <TextBlock Classes="secondary" Text="{v:Tr Games_EmptyText}" TextWrapping="Wrap" />
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Classes="primary" Command="{Binding AddInstalledCommand}" Content="{v:Tr Games_Scan}" />
@@ -174,24 +163,24 @@
                   </StackPanel>
                 </StackPanel>
 
-                <StackPanel Spacing="20" IsVisible="{Binding HasSelection}">
+                <StackPanel Spacing="24" IsVisible="{Binding HasSelection}">
                   <!-- Title: the game's icon (or a picked symbol), name, status, hotkey -->
-                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
                     <Button x:Name="IconButton" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Editor_Icon}" Classes="ghost" Padding="0" ToolTip.Tip="{v:Tr Editor_Icon}">
-                      <Border Width="52" Height="52" Classes="gameicon" CornerRadius="12">
+                      <Border Classes="symbol large">
                         <Panel>
-                          <Path x:Name="IconPath" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="symbol" />
-                          <Image x:Name="IconImage" Width="36" Height="36" />
+                          <Path x:Name="IconPath" Classes="icon lg" />
+                          <Image x:Name="IconImage" Width="32" Height="32" />
                         </Panel>
                       </Border>
                       <Button.Flyout>
                         <MenuFlyout Placement="BottomEdgeAlignedLeft" />
                       </Button.Flyout>
                     </Button>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                       <TextBox x:Name="NameBox" AutomationProperties.Name="{v:Tr Editor_Name}" Classes="title" MaxLength="60" Text="{Binding Editor.Name, FallbackValue=''}" ToolTip.Tip="{v:Tr Editor_NameTip}" />
                       <TextBlock Classes="caption danger" IsVisible="{Binding Editor.HasNameProblem, FallbackValue=False}" Text="{Binding Editor.NameProblem}" />
-                      <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !Editor.HasNameProblem, FallbackValue=False}">
+                      <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !Editor.HasNameProblem, FallbackValue=False}">
                         <Ellipse
                           Classes="status"
                           Classes.ok="{Binding HeadStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Ok}"
@@ -199,9 +188,8 @@
                           Classes.error="{Binding HeadStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Error}"
                           Classes.accent="{Binding HeadStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Accent}" />
                         <TextBlock
-                          Classes="caption"
+                          Classes="secondary"
                           Classes.danger="{Binding HeadStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Error}"
-                          FontSize="13"
                           Text="{Binding HeadStatusText}"
                           TextWrapping="Wrap" />
                       </StackPanel>
@@ -224,7 +212,7 @@
                       <TextBlock VerticalAlignment="Center" Text="{Binding DetailMessage}" TextWrapping="Wrap" />
                       <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" Click="OnShowGameGroup" Content="{v:Tr GameTab_Game}" IsVisible="{Binding DetailOffersGameTab}" />
                       <Button Grid.Column="2" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Common_Close}" Classes="ghost" Command="{Binding CloseDetailMessageCommand}" ToolTip.Tip="{v:Tr Common_Close}">
-                        <Path Classes="icon small" Data="{x:Static v:Icons.Close}" />
+                        <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
                       </Button>
                     </Grid>
                   </Border>
@@ -233,24 +221,24 @@
                   </Border>
 
                   <!-- Launch well: what starts, and the profile it switches to first – the two things a game entry is. -->
-                  <Border x:Name="LaunchWell" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="10">
+                  <Border x:Name="LaunchWell" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusLg}">
                     <StackPanel>
-                      <Grid Margin="14,10,10,10" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                      <Grid Margin="16,12,12,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                         <Border Classes="chip" IsVisible="{Binding Editor.HasLaunch, FallbackValue=False}">
-                          <TextBlock Classes="caption" FontWeight="SemiBold" Text="{Binding Editor.LaunchKindText, FallbackValue=''}" />
+                          <TextBlock Text="{Binding Editor.LaunchKindText, FallbackValue=''}" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                           <TextBlock Classes="caption" Text="{v:Tr Game_Launch}" />
-                          <TextBlock FontSize="13" IsVisible="{Binding Editor.HasLaunch, FallbackValue=False}" Text="{Binding Editor.LaunchText, FallbackValue=''}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Editor.LaunchText, FallbackValue=''}" />
-                          <TextBlock Classes="secondary" FontSize="13" IsVisible="{Binding !Editor.HasLaunch, FallbackValue=False}" Text="{v:Tr Game_LaunchPlaceholder}" />
+                          <TextBlock IsVisible="{Binding Editor.HasLaunch, FallbackValue=False}" Text="{Binding Editor.LaunchText, FallbackValue=''}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Editor.LaunchText, FallbackValue=''}" />
+                          <TextBlock Classes="secondary" IsVisible="{Binding !Editor.HasLaunch, FallbackValue=False}" Text="{v:Tr Game_LaunchPlaceholder}" />
                           <TextBlock Classes="caption danger" IsVisible="{Binding Editor.HasLaunchProblem, FallbackValue=False}" Text="{Binding Editor.LaunchProblem}" TextWrapping="Wrap" />
                         </StackPanel>
                         <Button Grid.Column="2" VerticalAlignment="Center" Classes="neutral" Command="{Binding PickGameCommand}" Content="{v:Tr Game_Choose}" />
                       </Grid>
                       <Border Classes="divider" />
-                      <StackPanel x:Name="ProfileWell" Margin="14,10,4,4" Spacing="10">
+                      <StackPanel x:Name="ProfileWell" Margin="16,12,8,4" Spacing="12">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                          <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{v:Tr GameTab_Profile}" />
+                          <TextBlock VerticalAlignment="Center" Classes="section" Text="{v:Tr GameTab_Profile}" />
                           <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Game_ProfileIntro}" TextWrapping="Wrap" />
                         </Grid>
                         <ListBox
@@ -269,11 +257,11 @@
                                 <!-- The arrangement as picture; "switch nothing" gets the desk symbol in the same place. -->
                                 <Panel Height="36">
                                   <v:DisplayTopology Displays="{Binding Topology}" IsVisible="{Binding HasTopology}" Size="Tray" />
-                                  <Path HorizontalAlignment="Center" VerticalAlignment="Center" Classes="icon" IsVisible="{Binding !HasTopology}" Data="{x:Static v:Icons.Display}" />
+                                  <Path HorizontalAlignment="Center" Classes="icon md quiet" IsVisible="{Binding !HasTopology}" Data="{x:Static v:Icons.Desktop20}" />
                                 </Panel>
                                 <StackPanel>
-                                  <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                  <TextBlock Classes="caption" FontSize="11.5" MaxLines="2" Text="{Binding Sub}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                                  <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                  <TextBlock Classes="caption" MaxLines="2" Text="{Binding Sub}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
                                 </StackPanel>
                               </StackPanel>
                             </DataTemplate>
@@ -284,14 +272,14 @@
                   </Border>
 
                   <!-- Groups in the order a session runs them; the summary is the header, the settings open in place. -->
-                  <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="10">
+                  <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="{DynamicResource RsRadiusLg}">
                     <StackPanel>
                       <u:SettingsCard x:Name="LaunchCard" Classes="group" Content="{v:Tr GameTab_Game}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueLaunchSoft}"><Path Classes="icon small" Stroke="{StaticResource HueLaunch}" Data="{x:Static v:Icons.Games}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Games20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <StackPanel IsVisible="{Binding Editor.SupportsArguments, FallbackValue=False}">
                               <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
                                 <StackPanel VerticalAlignment="Center">
@@ -317,7 +305,7 @@
                                 <TextBlock Classes="label" Text="{v:Tr Game_ProcessName}" />
                                 <TextBlock Classes="caption" Classes.danger="{Binding Editor.ProcessHintIsError, FallbackValue=False}" Text="{Binding Editor.ProcessHint, FallbackValue=''}" TextWrapping="Wrap" />
                               </StackPanel>
-                              <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{Binding Editor.ProcessHint, FallbackValue=''}" AutomationProperties.Name="{v:Tr Game_ProcessName}" Text="{Binding Editor.ProcessName, FallbackValue=''}" ToolTip.Tip="{v:Tr Game_ProcessLearned}" />
+                              <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{Binding Editor.ProcessHint, FallbackValue=''}" AutomationProperties.Name="{v:Tr Game_ProcessName}" Text="{Binding Editor.ProcessName, FallbackValue=''}" ToolTip.Tip="{v:Tr Game_ProcessNameHintTip}" />
                             </Grid>
                             <Border Classes="divider" />
                             <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
@@ -349,19 +337,19 @@
                       <!-- Values this entry keeps in the game's own settings file, e.g. lighter graphics for "LMU (VR)". -->
                       <u:SettingsCard x:Name="GameSettingsCard" Classes="group" Content="{v:Tr Game_Settings}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueSettingsSoft}"><Path Classes="icon small" Stroke="{StaticResource HueSettings}" Data="{x:Static v:Icons.Behavior}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.ToggleRight20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                               <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_SettingsHint}" TextWrapping="Wrap" />
                               <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_Settings}" IsChecked="{Binding Editor.SettingsEnabled, FallbackValue=False}" OffContent="" OnContent="" />
                             </Grid>
-                            <StackPanel Spacing="6" IsVisible="{Binding Editor.SettingsEnabled, FallbackValue=False}">
-                              <Border Margin="0,0,0,6" Classes="divider" />
+                            <StackPanel Spacing="8" IsVisible="{Binding Editor.SettingsEnabled, FallbackValue=False}">
+                              <Border Margin="0,0,0,4" Classes="divider" />
                               <TextBlock Classes="caption" Text="{v:Tr Game_SettingsFile}" />
                               <TextBox AutomationProperties.Name="{v:Tr Game_SettingsFile}" Text="{Binding Editor.SettingsFile, FallbackValue=''}" />
-                              <TextBlock Margin="0,6,0,0" Classes="caption" Text="{v:Tr Game_SettingsKeys}" />
+                              <TextBlock Margin="0,4,0,0" Classes="caption" Text="{v:Tr Game_SettingsKeys}" />
                               <TextBox
                                 MinHeight="96"
                                 MaxHeight="240"
@@ -379,10 +367,10 @@
 
                       <u:SettingsCard x:Name="ToolsCard" Classes="group" Content="{v:Tr GameTab_Tools}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueAppsSoft}"><Path Classes="icon small" Stroke="{StaticResource HueApps}" Data="{x:Static v:Icons.Apps}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Apps20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <v:AppListView DataContext="{Binding Editor.AppList, FallbackValue={x:Null}}" />
                             <TextBlock Margin="0,8,0,0" Classes="danger" IsVisible="{Binding Editor.HasAppsProblem, FallbackValue=False}" Text="{Binding Editor.AppsProblem}" TextWrapping="Wrap" />
                           </StackPanel>
@@ -391,10 +379,10 @@
 
                       <u:SettingsCard x:Name="WindowsCard" Classes="group" Content="{v:Tr Game_WindowsTitle}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueWindowsSoft}"><Path Classes="icon small" Stroke="{StaticResource HueWindows}" Data="{x:Static v:Icons.Window}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Window20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                               <StackPanel VerticalAlignment="Center">
                                 <TextBlock Classes="label" Text="{Binding Editor.WindowsText, FallbackValue=''}" />
@@ -411,10 +399,10 @@
                                 <DataTemplate x:DataType="vm:SavedWindowRow">
                                   <StackPanel>
                                     <Border Classes="divider" />
-                                    <Grid MinHeight="44" ColumnDefinitions="28,*" ColumnSpacing="10" ToolTip.Tip="{Binding Position}">
-                                      <Path VerticalAlignment="Center" Classes="icon small" Data="{x:Static v:Icons.Window}" />
+                                    <Grid MinHeight="44" ColumnDefinitions="28,*" ColumnSpacing="12" ToolTip.Tip="{Binding Position}">
+                                      <Path Classes="icon quiet" Data="{x:Static v:Icons.Window16}" />
                                       <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                         <TextBlock Classes="caption" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
                                       </StackPanel>
                                     </Grid>
@@ -428,10 +416,10 @@
 
                       <u:SettingsCard x:Name="EndCard" Classes="group" Content="{v:Tr GameTab_End}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueEndSoft}"><Path Classes="icon small" Stroke="{StaticResource HueEnd}" Data="{x:Static v:Icons.Close}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Dismiss20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
                               <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_ExitLabel}" />
                               <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Game_ExitLabel}" ItemsSource="{Binding Editor.ExitChoices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.SelectedExit, Converter={x:Static v:Converters.KeepOnNull}}" />
@@ -451,10 +439,10 @@
                       <!-- Everything that starts the session, as on the profile's triggers. -->
                       <u:SettingsCard x:Name="TriggersCard" Classes="group" Content="{v:Tr Tab_Triggers}">
                         <u:SettingsCard.Icon>
-                          <Border Classes="tile" Background="{StaticResource HueTriggersSoft}"><Path Classes="icon small" Stroke="{StaticResource HueTriggers}" Data="{x:Static v:Icons.Triggers}" /></Border>
+                          <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.PlugConnected20}" /></Border>
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
-                          <StackPanel Margin="36,0,4,16">
+                          <StackPanel Margin="40,0,4,16">
                             <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                               <StackPanel VerticalAlignment="Center">
                                 <TextBlock Classes="label" Text="{v:Tr Editor_Hotkey}" />
@@ -464,7 +452,7 @@
                               <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
                                 <v:HotkeyBox Width="200" AutomationProperties.HelpText="{v:Tr Hotkey_RecordTip}" AutomationProperties.Name="{v:Tr Editor_Hotkey}" Field="{Binding Editor}" Text="{Binding Editor.HotkeyText, FallbackValue=''}" PlaceholderText="{v:Tr Editor_HotkeyPlaceholder}" ToolTip.Tip="{v:Tr Hotkey_RecordTip}" />
                                 <Button AutomationProperties.Name="{v:Tr Editor_HotkeyClear}" Classes="ghost" Command="{Binding Editor.ClearHotkeyCommand, FallbackValue={x:Null}}" IsVisible="{Binding Editor.HasHotkey, FallbackValue=False}" ToolTip.Tip="{v:Tr Editor_HotkeyClear}">
-                                  <Path Classes="icon small" Data="{x:Static v:Icons.Close}" />
+                                  <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
                                 </Button>
                               </StackPanel>
                             </Grid>
@@ -485,7 +473,7 @@
                               <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
                                 <TextBox Width="240" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" ToolTip.Tip="{Binding Editor.CommandText, FallbackValue=''}" />
                                 <Button AutomationProperties.Name="{v:Tr Trigger_Copy}" Classes="ghost" Command="{Binding CopyCommandCommand}" ToolTip.Tip="{v:Tr Trigger_Copy}">
-                                  <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
+                                  <Path Classes="icon" Data="{x:Static v:Icons.Copy16}" />
                                 </Button>
                               </StackPanel>
                             </Grid>
@@ -501,18 +489,18 @@
             <!-- Unsaved changes: one floating bar, Save as the main action. -->
             <Border
               Margin="0,0,0,16"
-              Padding="14,6,6,6"
+              Padding="16,8,8,8"
               HorizontalAlignment="Center"
               VerticalAlignment="Bottom"
               Background="{DynamicResource RsPop}"
               BorderBrush="{DynamicResource RsDivider}"
               BorderThickness="1"
               BoxShadow="{DynamicResource RsPopShadow}"
-              CornerRadius="10"
+              CornerRadius="{DynamicResource RsRadiusLg}"
               IsVisible="{Binding Editor.IsDirty, FallbackValue=False}">
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label" FontSize="13" Text="{v:Tr List_Unsaved}" />
-                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label danger" FontSize="13" Text="{Binding Editor.ProblemCount, Converter={x:Static v:Converters.ProblemCount}, FallbackValue=''}" />
+                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label" Text="{v:Tr List_Unsaved}" />
+                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label danger" Text="{Binding Editor.ProblemCount, Converter={x:Static v:Converters.ProblemCount}, FallbackValue=''}" />
                 <Button Classes="neutral" Command="{Binding DiscardCommand}" Content="{v:Tr Common_Discard}" />
                 <Button Classes="primary" Command="{Binding SaveCommand}" Content="{v:Tr Common_Save}" />
               </StackPanel>
@@ -521,80 +509,83 @@
         </DockPanel>
 
         <!-- ===== Inspector: the session at a glance ===== -->
-        <Border
-          Grid.Column="1"
-          Width="284"
-          Margin="0,12,12,12"
-          Background="{DynamicResource RsCard}"
-          BorderBrush="{DynamicResource RsDivider}"
-          BorderThickness="1"
-          BoxShadow="{DynamicResource RsCardShadow}"
-          ClipToBounds="True"
-          CornerRadius="14"
-          IsVisible="{Binding HasSelection}">
-          <DockPanel>
-            <Border Height="44" Padding="16,0" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
-              <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{v:Tr Palette_KindGame}" />
-            </Border>
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-              <StackPanel Margin="16,10,16,24">
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr Overview_ColStatus}" />
-                  <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding HeadStatusText}" TextTrimming="None" TextWrapping="Wrap" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr Game_Launch}" />
-                  <TextBlock Grid.Column="1" Classes="val" Text="{Binding Editor.LaunchKindText, FallbackValue='–'}" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr GameTab_Profile}" />
-                  <TextBlock Grid.Column="1" Classes="val" Text="{Binding Editor.SelectedProfile.Name, FallbackValue='–'}" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr GameTab_Tools}" />
-                  <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding SelectedItem.AppsLine, FallbackValue='–', TargetNullValue='–'}" TextTrimming="None" TextWrapping="Wrap" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr GameTab_Windows}" />
-                  <TextBlock Grid.Column="1" Classes="val" Text="{Binding SelectedItem.WindowsLine, FallbackValue='–', TargetNullValue='–'}" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr GameTab_End}" />
-                  <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding Editor.SelectedExit.Name, FallbackValue='–'}" TextTrimming="None" TextWrapping="Wrap" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="kv" ColumnDefinitions="100,*">
-                  <TextBlock Classes="k" Text="{v:Tr Editor_Hotkey}" />
-                  <Border Grid.Column="1" HorizontalAlignment="Left" Classes="kbd" IsVisible="{Binding SelectedItem.ShowsHotkey, FallbackValue=False}">
-                    <TextBlock Classes="num" Text="{Binding SelectedItem.HotkeyText, FallbackValue=''}" />
-                  </Border>
-                </Grid>
-              </StackPanel>
-            </ScrollViewer>
-          </DockPanel>
-        </Border>
+        <Panel x:Name="InspectorHost" Grid.Column="1">
+          <Border
+            Width="320"
+            Margin="0,12,12,12"
+            Background="{DynamicResource RsCard}"
+            BorderBrush="{DynamicResource RsDivider}"
+            BorderThickness="1"
+            BoxShadow="{DynamicResource RsCardShadow}"
+            ClipToBounds="True"
+            CornerRadius="{DynamicResource RsRadiusLg}"
+            IsVisible="{Binding HasSelection}">
+            <DockPanel>
+              <Border Height="44" Padding="16,0" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
+                <TextBlock VerticalAlignment="Center" Classes="strong" Text="{v:Tr Palette_KindGame}" />
+              </Border>
+              <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16,8,16,24">
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr Overview_ColStatus}" />
+                    <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding HeadStatusText}" TextTrimming="None" TextWrapping="Wrap" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr Game_Launch}" />
+                    <TextBlock Grid.Column="1" Classes="val" Text="{Binding Editor.LaunchKindText, FallbackValue='–'}" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr GameTab_Profile}" />
+                    <TextBlock Grid.Column="1" Classes="val" Text="{Binding Editor.SelectedProfile.Name, FallbackValue='–'}" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr GameTab_Tools}" />
+                    <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding SelectedItem.AppsLine, FallbackValue='–', TargetNullValue='–'}" TextTrimming="None" TextWrapping="Wrap" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr GameTab_Windows}" />
+                    <TextBlock Grid.Column="1" Classes="val" Text="{Binding SelectedItem.WindowsLine, FallbackValue='–', TargetNullValue='–'}" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr GameTab_End}" />
+                    <TextBlock Grid.Column="1" Margin="0,8" Classes="val" Text="{Binding Editor.SelectedExit.Name, FallbackValue='–'}" TextTrimming="None" TextWrapping="Wrap" />
+                  </Grid>
+                  <Border Classes="divider" />
+                  <Grid Classes="kv" ColumnDefinitions="100,*">
+                    <TextBlock Classes="k" Text="{v:Tr Editor_Hotkey}" />
+                    <Border Grid.Column="1" HorizontalAlignment="Left" Classes="kbd" IsVisible="{Binding SelectedItem.ShowsHotkey, FallbackValue=False}">
+                      <TextBlock Classes="num" Text="{Binding SelectedItem.HotkeyText, FallbackValue=''}" />
+                    </Border>
+                    <!-- No hotkey: a quiet dash, so the row does not look unfinished. -->
+                    <TextBlock Grid.Column="1" Classes="val" Foreground="{DynamicResource RsText3}" IsVisible="{Binding !SelectedItem.ShowsHotkey, FallbackValue=True}" Text="–" />
+                  </Grid>
+                </StackPanel>
+              </ScrollViewer>
+            </DockPanel>
+          </Border>
+        </Panel>
       </Grid>
     </Grid>
 
     <!-- ===== Action bar: the selected game, Play, the palette ===== -->
-    <Border Grid.Row="1" Padding="12,0,6,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+    <Border Grid.Row="1" Padding="12,0,8,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasSelection}">
-          <Border Classes="tile" Width="24" Height="24" Background="{DynamicResource RsAccentDuo}">
-            <Path Classes="icon small" Stroke="{DynamicResource RsAccentText}" Data="{x:Static v:Icons.Games}" />
+          <Border Classes="tile">
+            <Path Classes="icon md" Data="{x:Static v:Icons.Games20}" />
           </Border>
-          <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{Binding SelectedItem.Name, FallbackValue=''}" />
-          <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{Binding SelectedItem.ListStatus, FallbackValue=''}" />
+          <TextBlock VerticalAlignment="Center" Classes="strong" Text="{Binding SelectedItem.Name, FallbackValue=''}" />
+          <TextBlock VerticalAlignment="Center" Classes="caption" Text="{Binding SelectedItem.ListStatus, FallbackValue=''}" />
         </StackPanel>
         <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{Binding PlayLabel}" Command="{Binding PlayCommand}" IsVisible="{Binding HasSelection}">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" Text="{Binding PlayLabel}" />
-            <Border Classes="kbd"><TextBlock Text="↵" /></Border>
+            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

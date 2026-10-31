@@ -22,14 +22,14 @@
     <KeyBinding Command="{Binding SwitchCommand}" Gesture="Ctrl+Enter" />
   </UserControl.KeyBindings>
 
-  <Grid RowDefinitions="*,42">
+  <Grid RowDefinitions="*,44">
     <Grid ColumnDefinitions="248,*">
       <!-- ===== Profiles column ===== -->
       <Border Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,1,0">
         <DockPanel>
           <Border Height="44" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
             <Grid Margin="16,0,8,0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-              <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{v:Tr Nav_Profiles}" />
+              <TextBlock VerticalAlignment="Center" Classes="strong" Text="{v:Tr Nav_Profiles}" />
               <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption num" Text="{Binding Items.Count}" />
               <Button
                 Grid.Column="2"
@@ -37,26 +37,26 @@
                 Classes="ghost"
                 Command="{Binding NewFromCurrentCommand}"
                 ToolTip.Tip="{v:Tr List_NewProfileTip}">
-                <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
+                <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
               </Button>
             </Grid>
           </Border>
           <!-- Profile files that could not be read are left out of the list; say so instead of losing them silently. -->
           <Border Margin="8" Classes="notice" DockPanel.Dock="Top" IsVisible="{Binding Catalog.HasUnreadableFiles}">
-            <TextBlock FontSize="12.5" Text="{Binding Catalog.UnreadableFilesMessage}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Catalog.UnreadableFilesMessage}" TextWrapping="Wrap" />
           </Border>
           <!-- The active profile, pinned under the list. -->
-          <Border x:Name="ActiveCard" IsVisible="False" Padding="10,10,10,12" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" DockPanel.Dock="Bottom" x:DataType="vm:ProfileItem">
-            <StackPanel Spacing="6">
-              <TextBlock Margin="6,0" Classes="caption" FontSize="11.5" Text="{v:Tr Profiles_ActiveHeader}" />
-              <Border Padding="8" Background="{DynamicResource RsRaised}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="7">
-                <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="10">
+          <Border x:Name="ActiveCard" IsVisible="False" Padding="8,8,8,12" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" DockPanel.Dock="Bottom" x:DataType="vm:ProfileItem">
+            <StackPanel Spacing="8">
+              <TextBlock Margin="8,0" Classes="caption" Text="{v:Tr Profiles_ActiveHeader}" />
+              <Border Padding="8" Background="{DynamicResource RsRaised}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusMd}">
+                <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="12">
                   <v:DisplayTopology Height="24" Displays="{Binding Topology}" Size="Tray" />
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Classes="caption" FontSize="11.5" Text="{Binding HotkeyText}" />
+                    <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="caption" Text="{Binding HotkeyText}" />
                   </StackPanel>
-                  <Ellipse Grid.Column="2" Width="7" Height="7" Fill="{DynamicResource RsSuccess}" />
+                  <Ellipse Grid.Column="2" Classes="status ok" />
                 </Grid>
               </Border>
             </StackPanel>
@@ -64,13 +64,13 @@
           <ListBox Classes="master" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:ProfileItem">
-                <Grid AutomationProperties.Name="{Binding AccessibleName}" ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
-                  <v:DisplayTopology Width="44" Height="22" Displays="{Binding Topology}" Size="Tray" />
+                <Grid AutomationProperties.Name="{Binding AccessibleName}" ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
+                  <v:DisplayTopology Width="44" Height="24" Displays="{Binding Topology}" Size="Tray" />
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Classes="caption" FontSize="11.5" Text="{Binding HotkeyText}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="caption" Text="{Binding HotkeyText}" TextTrimming="CharacterEllipsis" />
                   </StackPanel>
-                  <Ellipse Grid.Column="2" Width="7" Height="7" Fill="{DynamicResource RsSuccess}" IsVisible="{Binding IsActive}" />
+                  <Ellipse Grid.Column="2" Classes="status ok" IsVisible="{Binding IsActive}" />
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
@@ -83,11 +83,11 @@
         <DockPanel>
           <!-- Top bar: breadcrumb, more, the one primary action -->
           <Border Height="44" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
-            <Grid Margin="20,0,12,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="6">
-                <TextBlock Classes="secondary" FontSize="13" Text="{v:Tr Nav_Profiles}" />
-                <Path Classes="icon small" Width="12" Height="12" Stroke="{DynamicResource RsText4}" Data="M9 6 L15 12 L9 18" />
-                <TextBlock Classes="label" FontSize="13" Text="{Binding SelectedItem.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+            <Grid Margin="24,0,12,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+              <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
+                <TextBlock Classes="secondary" Text="{v:Tr Nav_Profiles}" />
+                <Path Classes="icon quiet" Data="{x:Static v:Icons.ChevronRight16}" IsVisible="{Binding HasSelection}" />
+                <TextBlock Classes="label" Text="{Binding SelectedItem.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
               <Button
                 Grid.Column="1"
@@ -95,7 +95,7 @@
                 Classes="ghost"
                 IsVisible="{Binding HasSelection}"
                 ToolTip.Tip="{v:Tr Profile_More}">
-                <Path Classes="icon dots" Data="{x:Static v:Icons.More}" />
+                <Path Classes="icon" Data="{x:Static v:Icons.MoreHorizontal16}" />
                 <Button.Flyout>
                   <MenuFlyout Placement="BottomEdgeAlignedRight">
                     <MenuItem Command="{Binding DuplicateCommand}" Header="{v:Tr Profile_Duplicate}" />
@@ -110,15 +110,13 @@
               <Button
                 Grid.Column="2"
                 AutomationProperties.Name="{Binding SwitchLabel}"
-                Height="28"
-                Padding="10,0"
                 Classes.neutral="{Binding !SwitchIsPrimary}"
                 Classes.primary="{Binding SwitchIsPrimary}"
                 Command="{Binding SwitchCommand}"
                 IsVisible="{Binding HasSelection}"
                 ToolTip.Tip="{v:Tr Detail_SwitchTip}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Path Classes="icon small" Stroke="{Binding $parent[Button].Foreground}" Data="M4 8 H20 M16 4 L20 8 L16 12 M20 16 H4 M8 12 L4 16 L8 20" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Path Classes="icon" Data="{x:Static v:Icons.ArrowSwap16}" />
                   <TextBlock Text="{Binding SwitchLabel}" />
                 </StackPanel>
               </Button>
@@ -127,15 +125,16 @@
 
           <Grid>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-              <StackPanel MaxWidth="760" Margin="32,24,32,120" HorizontalAlignment="Stretch" Spacing="20">
+              <StackPanel Margin="32,24,32,96" HorizontalAlignment="Stretch" Spacing="24">
 
                 <Border Classes="notice" IsVisible="{Binding HasStatusMessage}">
                   <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
                 </Border>
 
                 <!-- No profile yet -->
-                <StackPanel Spacing="12" IsVisible="{Binding IsEmpty}">
-                  <TextBlock Classes="h2" Text="{v:Tr Profiles_EmptyTitle}" />
+                <StackPanel MaxWidth="480" HorizontalAlignment="Left" Spacing="12" IsVisible="{Binding IsEmpty}">
+                  <Path HorizontalAlignment="Left" Classes="icon lg" Data="{x:Static v:Icons.Desktop24}" />
+                  <TextBlock Classes="subtitle" Text="{v:Tr Profiles_EmptyTitle}" />
                   <TextBlock Classes="secondary" Text="{v:Tr Profiles_EmptyInvite}" TextWrapping="Wrap" />
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Classes="primary" Command="{Binding NewFromCurrentCommand}" Content="{v:Tr Profiles_EmptySave}" />
@@ -145,20 +144,22 @@
 
                 <StackPanel Spacing="20" IsVisible="{Binding HasSelection}">
                   <!-- Title: symbol, name, status -->
-                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                     <Button
                       x:Name="IconButton"
                       VerticalAlignment="Center"
                       AutomationProperties.Name="{v:Tr Editor_Icon}"
                       Classes="ghost"
-                      Padding="6"
+                      Padding="0"
                       ToolTip.Tip="{v:Tr Editor_Icon}">
-                      <Path x:Name="IconPath" Width="26" Height="26" Classes="symbol" />
+                      <Border Classes="symbol large">
+                        <Path x:Name="IconPath" Classes="icon lg" />
+                      </Border>
                       <Button.Flyout>
                         <MenuFlyout Placement="BottomEdgeAlignedLeft" />
                       </Button.Flyout>
                     </Button>
-                    <StackPanel Grid.Column="1" Spacing="2">
+                    <StackPanel Grid.Column="1">
                       <TextBox
                         x:Name="NameBox"
                         AutomationProperties.Name="{v:Tr Editor_Name}"
@@ -167,7 +168,7 @@
                         Text="{Binding Editor.Name, FallbackValue=''}"
                         ToolTip.Tip="{v:Tr Editor_NameTip}" />
                       <TextBlock Classes="caption danger" IsVisible="{Binding Editor.HasNameProblem, FallbackValue=False}" Text="{Binding Editor.NameProblem}" />
-                      <TextBlock Classes="caption" FontSize="13" Text="{Binding HeadStatusText}" />
+                      <TextBlock Classes="caption" Text="{Binding HeadStatusText}" />
                     </StackPanel>
                   </Grid>
 
@@ -188,7 +189,7 @@
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                       <TextBlock VerticalAlignment="Center" Text="{Binding DetailMessage}" TextWrapping="Wrap" />
                       <Button Grid.Column="1" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Common_Close}" Classes="ghost" Command="{Binding CloseDetailMessageCommand}" ToolTip.Tip="{v:Tr Common_Close}">
-                        <Path Classes="icon small" Data="{x:Static v:Icons.Close}" />
+                        <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
                       </Button>
                     </Grid>
                   </Border>
@@ -200,15 +201,15 @@
                   </Border>
 
                   <!-- Arrangement well: the picture picks a display, its settings open in the inspector. -->
-                  <Border Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="10">
-                    <Grid RowDefinitions="40,230,32">
-                      <Grid Margin="14,0,8,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
-                        <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{v:Tr Editor_Displays}" />
-                        <Button Grid.Column="1" VerticalAlignment="Center" Classes="link" FontSize="12.5" Margin="0,0,12,0" Command="{Binding OpenDisplaySettingsCommand}" Content="{v:Tr Displays_OpenSettings}" />
-                        <Button Grid.Column="2" Classes="ghost" Padding="8,5" Foreground="{DynamicResource RsText}" AutomationProperties.Name="{v:Tr Editor_TakeCurrent}" Command="{Binding Editor.TakeCurrentCommand}" ToolTip.Tip="{v:Tr Editor_DisplaysHint}">
-                          <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Path Classes="icon small" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16 M8 12 H16" />
-                            <TextBlock FontWeight="SemiBold" FontSize="12.5" Text="{v:Tr Editor_TakeCurrent}" />
+                  <Border Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusLg}">
+                    <Grid RowDefinitions="44,232,32">
+                      <Grid Margin="16,0,8,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+                        <TextBlock VerticalAlignment="Center" Classes="section" Text="{v:Tr Editor_Displays}" />
+                        <Button Grid.Column="1" VerticalAlignment="Center" Classes="link" Margin="0,0,12,0" Command="{Binding OpenDisplaySettingsCommand}" Content="{v:Tr Displays_OpenSettings}" />
+                        <Button Grid.Column="2" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText}" AutomationProperties.Name="{v:Tr Editor_TakeCurrent}" Command="{Binding Editor.TakeCurrentCommand}" ToolTip.Tip="{v:Tr Editor_DisplaysHint}">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Classes="icon" Data="{x:Static v:Icons.ScanDash16}" />
+                            <TextBlock FontWeight="SemiBold" Text="{v:Tr Editor_TakeCurrent}" />
                           </StackPanel>
                         </Button>
                       </Grid>
@@ -220,14 +221,14 @@
                   <TextBlock Classes="secondary" IsVisible="{Binding Editor.ArrangementNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" Text="{Binding Editor.ArrangementNote}" TextWrapping="Wrap" />
 
                   <!-- Groups: the summary is the header, the settings open in place. -->
-                  <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="10">
+                  <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="{DynamicResource RsRadiusLg}">
                     <StackPanel>
               <u:SettingsCard x:Name="AudioCard" Classes="group" Content="{v:Tr Tab_Audio}">
                 <u:SettingsCard.Icon>
-                  <Border Classes="tile" Background="{StaticResource HueAudioSoft}"><Path Classes="icon small" Stroke="{StaticResource HueAudio}" Data="{x:Static v:Icons.Audio}" /></Border>
+                  <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Speaker220}" /></Border>
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
-                  <StackPanel Margin="36,0,4,16">
+                  <StackPanel Margin="40,0,4,16">
                     <ItemsControl ItemsSource="{Binding Editor.AudioSlots, FallbackValue={x:Null}}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:AudioSlot">
@@ -293,19 +294,19 @@
 
               <u:SettingsCard x:Name="AppsCard" Classes="group" Content="{v:Tr Tab_Apps}">
                 <u:SettingsCard.Icon>
-                  <Border Classes="tile" Background="{StaticResource HueAppsSoft}"><Path Classes="icon small" Stroke="{StaticResource HueApps}" Data="{x:Static v:Icons.Apps}" /></Border>
+                  <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Apps20}" /></Border>
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
-                  <v:AppListView Margin="36,0,4,16" DataContext="{Binding Editor.AppList, FallbackValue={x:Null}}" />
+                  <v:AppListView Margin="40,0,4,16" DataContext="{Binding Editor.AppList, FallbackValue={x:Null}}" />
                 </u:SettingsCard.Detail>
               </u:SettingsCard>
 
               <u:SettingsCard x:Name="TriggersCard" Classes="group" Content="{v:Tr Tab_Triggers}">
                 <u:SettingsCard.Icon>
-                  <Border Classes="tile" Background="{StaticResource HueTriggersSoft}"><Path Classes="icon small" Stroke="{StaticResource HueTriggers}" Data="{x:Static v:Icons.Triggers}" /></Border>
+                  <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.PlugConnected20}" /></Border>
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
-                  <StackPanel Margin="36,0,4,16">
+                  <StackPanel Margin="40,0,4,16">
                     <Border Margin="0,0,0,8" Classes="notice" IsVisible="{Binding Editor.ShowAutostartOff, FallbackValue=False}">
                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <TextBlock VerticalAlignment="Center" Text="{v:Tr Trigger_AutostartOff}" TextWrapping="Wrap" />
@@ -319,7 +320,7 @@
                       </StackPanel>
                       <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" AutomationProperties.Name="{v:Tr Trigger_AddRule}" Command="{Binding Editor.Rules.AddRuleCommand, FallbackValue={x:Null}}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                          <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
+                          <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
                           <TextBlock Text="{v:Tr Trigger_AddRule}" />
                         </StackPanel>
                       </Button>
@@ -332,7 +333,7 @@
                             <Grid Classes="row" ColumnDefinitions="*,Auto">
                               <TextBlock Classes="label" Text="{v:Tr Trigger_RuleTitle}" />
                               <Button Grid.Column="1" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Automation_Delete}" Classes="ghost" Click="OnRemoveRule" Tag="{Binding}" ToolTip.Tip="{v:Tr Automation_Delete}">
-                                <Path Classes="icon small" Data="{x:Static v:Icons.Trash}" />
+                                <Path Classes="icon" Data="{x:Static v:Icons.Delete16}" />
                               </Button>
                             </Grid>
                             <!-- Device chips: a dot for connected, the name, remove; then "+ Device" with the devices not yet in the rule. -->
@@ -345,12 +346,12 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                   <DataTemplate x:DataType="vm:RuleDeviceSlot">
-                                    <Border Margin="0,0,8,8" Padding="10,4,4,4" Background="{DynamicResource RsRaised}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="8" IsVisible="{Binding HasDevice}">
+                                    <Border Margin="0,0,8,8" Padding="12,4,4,4" Background="{DynamicResource RsRaised}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusSm}" IsVisible="{Binding HasDevice}">
                                       <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Ellipse Width="7" Height="7" VerticalAlignment="Center" Classes="dot" Classes.connected="{Binding IsConnected}" />
-                                        <TextBlock VerticalAlignment="Center" AutomationProperties.Name="{Binding AccessibleName}" FontSize="13" Text="{Binding Name}" />
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Classes="dot" Classes.connected="{Binding IsConnected}" />
+                                        <TextBlock VerticalAlignment="Center" AutomationProperties.Name="{Binding AccessibleName}" Text="{Binding Name}" />
                                         <Button AutomationProperties.HelpText="{Binding Name}" AutomationProperties.Name="{v:Tr Automation_RemoveDevice}" Classes="ghost" Padding="4" Command="{Binding Card.RemoveDeviceCommand}" CommandParameter="{Binding}" ToolTip.Tip="{v:Tr Automation_RemoveDevice}">
-                                          <Path Classes="icon small" Width="10" Height="10" Data="{x:Static v:Icons.Close}" />
+                                          <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
                                         </Button>
                                       </StackPanel>
                                     </Border>
@@ -358,8 +359,8 @@
                                 </ItemsControl.ItemTemplate>
                               </ItemsControl>
                               <Button Margin="0,0,0,8" Classes="neutral" Click="OnAddDevice" Tag="{Binding}" ToolTip.Tip="{v:Tr Automation_AddDeviceHint}" AutomationProperties.Name="{v:Tr Trigger_AddDevice}" AutomationProperties.HelpText="{v:Tr Automation_AddDeviceHint}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                  <Path Classes="icon small" Width="12" Height="12" Data="{x:Static v:Icons.Plus}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                  <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
                                   <TextBlock Text="{v:Tr Trigger_AddDevice}" />
                                 </StackPanel>
                               </Button>
@@ -393,7 +394,7 @@
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
                         <v:HotkeyBox Width="200" AutomationProperties.Name="{v:Tr Editor_Hotkey}" Field="{Binding Editor}" Text="{Binding Editor.HotkeyText, FallbackValue=''}" PlaceholderText="{v:Tr Editor_HotkeyPlaceholder}" />
                         <Button AutomationProperties.Name="{v:Tr Editor_HotkeyClear}" Classes="ghost" Command="{Binding Editor.ClearHotkeyCommand, FallbackValue={x:Null}}" IsVisible="{Binding Editor.HasHotkey, FallbackValue=False}" ToolTip.Tip="{v:Tr Editor_HotkeyClear}">
-                          <Path Classes="icon small" Data="{x:Static v:Icons.Close}" />
+                          <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
                         </Button>
                       </StackPanel>
                     </Grid>
@@ -415,7 +416,7 @@
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
                         <TextBox Width="240" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" />
                         <Button AutomationProperties.Name="{v:Tr Trigger_Copy}" Classes="ghost" Command="{Binding CopyCommandCommand}" ToolTip.Tip="{v:Tr Trigger_Copy}">
-                          <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
+                          <Path Classes="icon" Data="{x:Static v:Icons.Copy16}" />
                         </Button>
                       </StackPanel>
                     </Grid>
@@ -425,10 +426,10 @@
 
               <u:SettingsCard x:Name="BehaviorCard" Classes="group" Content="{v:Tr Tab_Behavior}">
                 <u:SettingsCard.Icon>
-                  <Border Classes="tile" Background="{StaticResource HueBehaviorSoft}"><Path Classes="icon small" Stroke="{StaticResource HueBehavior}" Data="{x:Static v:Icons.Behavior}" /></Border>
+                  <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.ToggleRight20}" /></Border>
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
-                  <StackPanel Margin="36,0,4,16">
+                  <StackPanel Margin="40,0,4,16">
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                       <StackPanel VerticalAlignment="Center">
                         <TextBlock Classes="label" Text="{v:Tr Editor_SwitchWithoutAsking}" />
@@ -486,18 +487,18 @@
             <!-- Unsaved changes: one floating bar, Save as the main action. -->
             <Border
               Margin="0,0,0,16"
-              Padding="14,6,6,6"
+              Padding="16,8,8,8"
               HorizontalAlignment="Center"
               VerticalAlignment="Bottom"
               Background="{DynamicResource RsPop}"
               BorderBrush="{DynamicResource RsDivider}"
               BorderThickness="1"
               BoxShadow="{DynamicResource RsPopShadow}"
-              CornerRadius="10"
+              CornerRadius="{DynamicResource RsRadiusLg}"
               IsVisible="{Binding Editor.IsDirty, FallbackValue=False}">
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label" FontSize="13" Text="{v:Tr List_Unsaved}" />
-                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label danger" FontSize="13" Text="{Binding Editor.ProblemCount, Converter={x:Static v:Converters.ProblemCount}, FallbackValue=''}" />
+                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label" Text="{v:Tr List_Unsaved}" />
+                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Classes="label danger" Text="{Binding Editor.ProblemCount, Converter={x:Static v:Converters.ProblemCount}, FallbackValue=''}" />
                 <Button Classes="neutral" Command="{Binding DiscardCommand}" Content="{v:Tr Common_Discard}" />
                 <Button Classes="primary" Command="{Binding SaveCommand}" Content="{v:Tr Common_Save}" />
               </StackPanel>
@@ -508,24 +509,24 @@
         <!-- ===== Inspector: the profile at a glance, or the chosen display ===== -->
         <Border
           Grid.Column="1"
-          Width="284"
+          Width="288"
           Margin="0,12,12,12"
           Background="{DynamicResource RsCard}"
           BorderBrush="{DynamicResource RsDivider}"
           BorderThickness="1"
           BoxShadow="{DynamicResource RsCardShadow}"
           ClipToBounds="True"
-          CornerRadius="14"
+          CornerRadius="{DynamicResource RsRadiusLg}"
           IsVisible="{Binding HasSelection}">
           <DockPanel>
             <Border Height="44" Padding="16,0" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
               <Panel VerticalAlignment="Center">
-                <TextBlock Classes="strong" FontSize="13" Text="{v:Tr Palette_KindProfile}" IsVisible="{Binding !Editor.HasSelectedDisplay, FallbackValue=True}" />
-                <TextBlock Classes="strong" FontSize="13" Text="{v:Tr Overview_ColDisplay}" IsVisible="{Binding Editor.HasSelectedDisplay, FallbackValue=False}" />
+                <TextBlock Classes="strong" Text="{v:Tr Palette_KindProfile}" IsVisible="{Binding !Editor.HasSelectedDisplay, FallbackValue=True}" />
+                <TextBlock Classes="strong" Text="{v:Tr Overview_ColDisplay}" IsVisible="{Binding Editor.HasSelectedDisplay, FallbackValue=False}" />
               </Panel>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-              <StackPanel Margin="16,10,16,24">
+              <StackPanel Margin="16,8,16,24">
                 <!-- No display chosen: the profile in key/value rows -->
                 <StackPanel IsVisible="{Binding !Editor.HasSelectedDisplay, FallbackValue=True}">
                   <Grid Classes="kv" ColumnDefinitions="100,*">
@@ -555,9 +556,9 @@
                       <TextBlock Classes="num" Text="{Binding SelectedItem.HotkeyText, FallbackValue=''}" />
                     </Border>
                   </Grid>
-                  <Panel Margin="0,14,0,0">
-                    <Rectangle RadiusX="8" RadiusY="8" Stroke="{DynamicResource RsOutline}" StrokeDashArray="4,3" StrokeThickness="1" />
-                    <TextBlock Margin="12,10" Classes="caption" Text="{v:Tr Displays_NoneSelected}" TextWrapping="Wrap" />
+                  <Panel Margin="0,16,0,0">
+                    <Rectangle RadiusX="8" RadiusY="8" Stroke="{DynamicResource RsOutline}" StrokeDashArray="4,4" StrokeThickness="1" />
+                    <TextBlock Margin="12,8" Classes="caption" Text="{v:Tr Displays_NoneSelected}" TextWrapping="Wrap" />
                   </Panel>
                 </StackPanel>
 
@@ -574,7 +575,7 @@
                     Classes="ghost"
                     Click="OnRemoveDisplay"
                     ToolTip.Tip="{v:Tr Editor_Remove}">
-                    <Path Classes="icon small" Data="{x:Static v:Icons.Trash}" />
+                    <Path Classes="icon" Data="{x:Static v:Icons.Delete16}" />
                   </Button>
                 </Grid>
                 <Border Classes="divider" />
@@ -652,19 +653,19 @@
     </Grid>
 
     <!-- ===== Action bar: what is selected, its main action, the palette ===== -->
-    <Border Grid.Row="1" Padding="12,0,6,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+    <Border Grid.Row="1" Padding="12,0,8,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasSelection}">
-          <Border Classes="tile" Width="24" Height="24" Background="{DynamicResource RsAccentDuo}">
-            <Path x:Name="BarIcon" Classes="icon small" Stroke="{DynamicResource RsAccentText}" />
+          <Border Width="28" Height="28" Background="{DynamicResource RsAccentSoft}" CornerRadius="{DynamicResource RsRadiusSm}">
+            <Path x:Name="BarIcon" HorizontalAlignment="Center" Classes="icon md accent" />
           </Border>
-          <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{Binding SelectedItem.Name, FallbackValue=''}" />
-          <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{Binding SelectedItem.StatusText, FallbackValue=''}" />
+          <TextBlock VerticalAlignment="Center" Classes="strong" Text="{Binding SelectedItem.Name, FallbackValue=''}" />
+          <TextBlock VerticalAlignment="Center" Classes="caption" Text="{Binding SelectedItem.StatusText, FallbackValue=''}" />
         </StackPanel>
         <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{Binding SwitchLabel}" Command="{Binding SwitchCommand}" IsVisible="{Binding HasSelection}">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" Text="{Binding SwitchLabel}" />
-            <Border Classes="kbd"><TextBlock Text="↵" /></Border>
+            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.ViewModels;
 
@@ -15,7 +16,17 @@ public sealed partial class HelpView : UserControl
         ViewModel = App.Provider.GetRequiredService<AboutViewModel>();
         DataContext = ViewModel;
         InitializeComponent();
+        ShowMark();
+        ActualThemeVariantChanged += (_, _) => ShowMark();
     }
 
     public AboutViewModel ViewModel { get; }
+
+    /// <summary>The brand package draws the mark once for dark and once for light surfaces.</summary>
+    private void ShowMark()
+    {
+        bool light = ActualThemeVariant == ThemeVariant.Light;
+        MarkLight.IsVisible = light;
+        MarkDark.IsVisible = !light;
+    }
 }

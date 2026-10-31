@@ -293,7 +293,7 @@
   <data name="Setup_FirstTitle" xml:space="preserve"><value>Save your desk layout</value></data>
   <data name="Setup_FirstText" xml:space="preserve"><value>Turn on the displays you use at your desk and arrange them in the Windows display settings. RigShift saves what is active right now.</value></data>
   <data name="Setup_SecondTitle" xml:space="preserve"><value>Now set up your rig</value></data>
-  <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now make Windows show your rig: turn its displays on, disconnect the desk displays (Display settings → Disconnect this display) and arrange them.</value></data>
+  <data name="Setup_SecondText" xml:space="preserve"><value>“{0}” is saved. Now make Windows show your rig.</value></data>
   <data name="Setup_TriggerTitle" xml:space="preserve"><value>Switch automatically (optional)</value></data>
   <data name="Setup_TriggerText" xml:space="preserve"><value>RigShift can switch when a USB device such as your wheelbase turns on. Turn it off and on and RigShift detects it, or pick it from the list.</value></data>
   <data name="Setup_DoneTitle" xml:space="preserve"><value>All set</value></data>
@@ -351,7 +351,8 @@
   <data name="Game_Choose" xml:space="preserve"><value>C_hoose…</value></data>
   <data name="Game_ProcessName" xml:space="preserve"><value>Game process</value></data>
   <data name="Game_ProcessLearned" xml:space="preserve"><value>Learned on the first start</value></data>
-  <data name="Game_ProcessNameHint" xml:space="preserve"><value>Without extension, as Task Manager shows it. RigShift learns it on the first start; correct it here if it picked the launcher instead of the game.</value></data>
+  <data name="Game_ProcessNameHint" xml:space="preserve"><value>Without extension, as Task Manager shows it.</value></data>
+  <data name="Game_ProcessNameHintTip" xml:space="preserve"><value>RigShift learns it on the first start; correct it here if it picked the launcher instead of the game.</value></data>
   <data name="Game_EndsWith" xml:space="preserve"><value>Session ends with</value></data>
   <data name="Game_EndsWithGame" xml:space="preserve"><value>The game</value></data>
   <data name="Game_EndsWithLauncher" xml:space="preserve"><value>The launcher</value></data>
@@ -393,7 +394,8 @@
   <data name="GamePicker_Title" xml:space="preserve"><value>Choose game</value></data>
   <data name="GamePicker_Intro" xml:space="preserve"><value>Installed games, read from this PC. No sign-in.</value></data>
   <data name="GamePicker_TitleMany" xml:space="preserve"><value>Add games</value></data>
-  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed games, read from this PC. Check everything you want to add; profile and tools follow afterwards.</value></data>
+  <data name="GamePicker_IntroMany" xml:space="preserve"><value>Installed games, read from this PC.</value></data>
+  <data name="GamePicker_IntroManyTip" xml:space="preserve"><value>Check everything you want to add; profile and tools follow afterwards.</value></data>
   <data name="GamePicker_Empty" xml:space="preserve"><value>No installed game found. Use “Browse for program” for everything else.</value></data>
   <data name="GamePicker_Search" xml:space="preserve"><value>Search installed games</value></data>
   <data name="GamePicker_BrowseFile" xml:space="preserve"><value>_Browse for program…</value></data>
@@ -536,7 +538,8 @@
   <data name="Setup_StepSecond" xml:space="preserve"><value>Your rig</value></data>
   <data name="Setup_StepTrigger" xml:space="preserve"><value>Trigger</value></data>
   <data name="Setup_StepDone" xml:space="preserve"><value>Done</value></data>
-  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go. Three steps, three minutes. Every switch reverts on its own unless you confirm it.</value></data>
+  <data name="Setup_Tagline" xml:space="preserve"><value>RigShift switches displays, main display and sound in one go.</value></data>
+  <data name="Setup_TaglineTip" xml:space="preserve"><value>Three steps, three minutes. Every switch reverts on its own unless you confirm it.</value></data>
   <data name="Setup_Now" xml:space="preserve"><value>Current layout</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_DifferentText" xml:space="preserve"><value>Differs from “{0}” and can be saved.</value></data>
@@ -670,7 +673,10 @@
     <value>Commands for Stream Deck and scripts</value>
   </data>
   <data name="About_ProblemText" xml:space="preserve">
-    <value>Save the support package and attach it to the GitHub issue that opens. Your user name is left out.</value>
+    <value>Save the support package and attach it to the GitHub issue that opens.</value>
+  </data>
+  <data name="About_ProblemTextTip" xml:space="preserve">
+    <value>Your user name is left out.</value>
   </data>
   <data name="About_CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
@@ -682,7 +688,7 @@
     <value>Save as profile</value>
   </data>
   <data name="Profiles_EmptyInvite" xml:space="preserve">
-    <value>These are the displays Windows shows right now. Save them as your first profile; audio and apps come after.</value>
+    <value>These are the displays Windows shows right now.</value>
   </data>
   <data name="Fov_SideView" xml:space="preserve">
     <value>Side</value>

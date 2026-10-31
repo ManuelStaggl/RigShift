@@ -6,114 +6,77 @@
   xmlns:vm="using:RigShift.App.ViewModels"
   x:DataType="vm:OverviewViewModel">
   <UserControl.Styles>
-    <!-- A switch position: flat in the recessed housing, the active one a raised card. -->
+    <!-- A switch position: every one the same card in the recessed housing; the active one carries the accent ring. -->
     <Style Selector="Button.position">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="10" />
-      <Setter Property="Padding" Value="16,14" />
+      <Setter Property="Background" Value="{DynamicResource RsCard}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="{DynamicResource RsRadiusMd}" />
+      <Setter Property="Padding" Value="16,12" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="VerticalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Top" />
     </Style>
     <Style Selector="Button.position:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsHover}" />
-    </Style>
-    <Style Selector="Button.position.active /template/ ContentPresenter#PART_ContentPresenter, Button.position.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsCard}" />
-      <Setter Property="BoxShadow" Value="{DynamicResource RsCardShadow}" />
-    </Style>
-    <Style Selector="Button.position TextBlock.name">
-      <Setter Property="FontSize" Value="15" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
-    </Style>
-    <Style Selector="Button.position.active TextBlock.name">
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-    </Style>
-
-    <!-- Small raised button with an icon -->
-    <Style Selector="Button.sm">
-      <Setter Property="Height" Value="26" />
-      <Setter Property="Padding" Value="8,0" />
-      <Setter Property="FontSize" Value="12.5" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Background" Value="{DynamicResource RsRaised}" />
-      <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-    </Style>
-    <Style Selector="Button.sm:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource RsRaisedHover}" />
       <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
     </Style>
-    <Style Selector="Button.sm Path.icon">
-      <Setter Property="Width" Value="14" />
-      <Setter Property="Height" Value="14" />
-      <Setter Property="Stroke" Value="{DynamicResource RsText2}" />
+    <Style Selector="Button.position:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsRaisedPressed}" />
+    </Style>
+    <Style Selector="Button.position.active /template/ ContentPresenter#PART_ContentPresenter, Button.position.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource RsAccentText}" />
     </Style>
 
     <Style Selector="Border.gamerow">
       <Setter Property="Padding" Value="8" />
-      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="CornerRadius" Value="{DynamicResource RsRadiusMd}" />
       <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="Border.gamerow:pointerover">
       <Setter Property="Background" Value="{DynamicResource RsHover}" />
     </Style>
-    <Style Selector="Button.ab">
-      <Setter Property="Height" Value="30" />
-      <Setter Property="Padding" Value="10,0,6,0" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-    </Style>
-    <Style Selector="Button.ab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsHover}" />
-    </Style>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="*,42">
+  <Grid RowDefinitions="*,44">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <StackPanel MaxWidth="856" Margin="32,28,32,40" Spacing="0">
-        <TextBlock Classes="h1" FontSize="32" LetterSpacing="-0.7" Text="{v:Tr Nav_Overview}" />
-        <TextBlock Margin="0,6,0,24" Classes="secondary" FontSize="13" Text="{v:Tr Overview_Lead}" />
+      <StackPanel Classes="page">
+        <TextBlock Classes="display" Text="{v:Tr Nav_Overview}" />
+        <TextBlock Classes="lead" Text="{v:Tr Overview_Lead}" />
 
         <Border Margin="0,0,0,16" Classes="notice danger" IsVisible="{Binding HasError}">
           <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
         </Border>
 
         <!-- Stage: the layout Windows shows right now, also before the first profile -->
-        <Border Margin="0,0,0,32" Padding="24,20,24,26" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="16">
+        <Border Margin="0,0,0,32" Classes="well">
           <Grid RowDefinitions="Auto,200">
-            <Grid x:Name="NowLine" ColumnDefinitions="*,Auto">
-              <StackPanel Spacing="2">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Ellipse Width="7" Height="7" Fill="{DynamicResource RsSuccess}" />
+            <Grid x:Name="NowLine" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Ellipse Classes="status ok" />
                   <TextBlock Classes="caption" Text="{v:Tr Overview_Now}" />
                 </StackPanel>
-                <TextBlock x:Name="NowText" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextWrapping="Wrap" />
+                <TextBlock x:Name="NowText" Margin="0,4,0,0" Classes="title" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="NowMeta" Classes="caption" TextWrapping="Wrap" />
               </StackPanel>
-              <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="6">
-                <Button Classes="sm" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Path Classes="icon" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16" />
+              <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="8">
+                <Button Classes="neutral" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Classes="icon" Data="{x:Static v:Icons.ScanDash16}" />
                     <TextBlock Text="{v:Tr Displays_Identify}" />
                   </StackPanel>
                 </Button>
-                <Button x:Name="ReapplyButton" Classes="sm" AutomationProperties.Name="{v:Tr Profile_Reapply}" Click="OnReapply">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Path Classes="icon" Data="M4 12 A8 8 0 1 0 6.3 6.3 M4 4 V9 H9" />
+                <Button x:Name="ReapplyButton" Classes="neutral" AutomationProperties.Name="{v:Tr Profile_Reapply}" Click="OnReapply">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Classes="icon" Data="{x:Static v:Icons.ArrowCounterclockwise16}" />
                     <TextBlock Text="{v:Tr Profile_Reapply}" />
                   </StackPanel>
                 </Button>
               </StackPanel>
             </Grid>
-            <StackPanel x:Name="SwitchingLine" Spacing="6" IsVisible="False">
+            <StackPanel x:Name="SwitchingLine" Spacing="8" IsVisible="False">
               <ProgressBar IsIndeterminate="True" />
               <TextBlock x:Name="SwitchingText" Classes="strong" />
             </StackPanel>
@@ -123,9 +86,19 @@
         </Border>
 
         <!-- No profile yet: the setup assistant, the layout on the stage as the first profile, or the profiles page. -->
-        <Border x:Name="EmptyState" MaxWidth="420" HorizontalAlignment="Left" Padding="20" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsOutline}" BorderThickness="1" CornerRadius="12" IsVisible="False">
+        <Border
+          x:Name="EmptyState"
+          MaxWidth="420"
+          Padding="24"
+          HorizontalAlignment="Left"
+          Background="{DynamicResource RsCard}"
+          BorderBrush="{DynamicResource RsOutline}"
+          BorderThickness="1"
+          CornerRadius="{DynamicResource RsRadiusLg}"
+          IsVisible="False">
           <StackPanel Spacing="12">
-            <TextBlock Classes="h3" Text="{v:Tr Overview_SetupTitle}" />
+            <Path HorizontalAlignment="Left" Classes="icon lg" Data="{x:Static v:Icons.Desktop24}" />
+            <TextBlock Classes="subtitle" Text="{v:Tr Overview_SetupTitle}" />
             <TextBlock Classes="secondary" Text="{v:Tr Overview_SetupText}" TextWrapping="Wrap" />
             <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding SetupAssistantCommand}" Content="{v:Tr Overview_SetupStart}" />
             <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding SaveCurrentCommand}" Content="{v:Tr Overview_SaveCurrent}" />
@@ -136,25 +109,24 @@
         <StackPanel IsVisible="{Binding HasProfiles}">
           <!-- The switch: one recessed housing, one position per profile. -->
           <Grid Margin="4,0,0,8" ColumnDefinitions="*,Auto">
-            <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{v:Tr Overview_Positions}" />
-            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="{v:Tr Overview_SaveCurrent}" Command="{Binding SaveCurrentCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <Path Classes="icon small" Width="12" Height="12" Data="{x:Static v:Icons.Plus}" />
-                <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="{v:Tr Overview_SaveCurrent}" />
+            <TextBlock Classes="section" Text="{v:Tr Overview_Positions}" />
+            <Button Grid.Column="1" Classes="ghost" Padding="8,4" AutomationProperties.Name="{v:Tr Overview_SaveCurrent}" Command="{Binding SaveCurrentCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
+                <TextBlock FontWeight="SemiBold" Text="{v:Tr Overview_SaveCurrent}" />
               </StackPanel>
             </Button>
           </Grid>
-          <Border Padding="5" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="14">
+          <Border Classes="well" Padding="4">
             <ItemsControl IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Catalog.Items}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                  <UniformGrid Rows="1" />
+                  <UniformGrid Classes="cols3" ColumnSpacing="4" RowSpacing="4" />
                 </ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:ProfileItem">
                   <Button
-                    Margin="2"
                     AutomationProperties.Name="{Binding AccessibleName}"
                     Classes="position"
                     Classes.active="{Binding IsActive}"
@@ -162,13 +134,13 @@
                     Tag="{Binding}">
                     <Grid RowDefinitions="Auto,120,Auto" RowSpacing="12">
                       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsActive}">
-                          <Path Classes="icon small" Width="13" Height="13" Stroke="{DynamicResource RsAccentText}" Data="M5 12 L10 17 L19 7" />
-                          <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource RsAccentText}" Text="{v:Tr Profile_Active}" />
+                        <TextBlock Classes="subtitle" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsActive}">
+                          <Path Classes="icon accent" Data="{x:Static v:Icons.Checkmark16}" />
+                          <TextBlock Classes="caption" FontWeight="SemiBold" Foreground="{DynamicResource RsAccentText}" Text="{v:Tr Profile_Active}" />
                         </StackPanel>
                         <Border Grid.Column="1" Classes="kbd" IsVisible="{Binding ShowsHotkeyLine}">
-                          <TextBlock Classes="num" Text="{Binding HotkeyText}" />
+                          <TextBlock Text="{Binding HotkeyText}" />
                         </Border>
                         <TextBlock Grid.Column="1" Classes="caption warning" IsVisible="{Binding ShowsReadiness}" Text="{Binding ReadyText}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ReadyTip}" />
                       </Grid>
@@ -185,11 +157,11 @@
         <!-- Games: rows, Play on the right -->
         <StackPanel Margin="0,32,0,0" IsVisible="{Binding Games.HasGames}">
           <Grid Margin="4,0,0,8" ColumnDefinitions="*,Auto">
-            <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{v:Tr Nav_Games}" />
-            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="{v:Tr Overview_AllGames}" Click="OnAllGames">
+            <TextBlock Classes="section" Text="{v:Tr Nav_Games}" />
+            <Button Grid.Column="1" Classes="ghost" Padding="8,4" AutomationProperties.Name="{v:Tr Overview_AllGames}" Click="OnAllGames">
               <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="{v:Tr Overview_AllGames}" />
-                <Path Classes="icon small" Width="12" Height="12" Data="M9 6 L15 12 L9 18" />
+                <TextBlock FontWeight="SemiBold" Text="{v:Tr Overview_AllGames}" />
+                <Path Classes="icon" Data="{x:Static v:Icons.ChevronRight16}" />
               </StackPanel>
             </Button>
           </Grid>
@@ -197,24 +169,24 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:GameItem">
                 <Border Classes="gamerow">
-                  <Grid ColumnDefinitions="64,*,Auto" ColumnSpacing="14">
-                    <Border Width="64" Height="36" Background="{DynamicResource RsRaised}" ClipToBounds="True" CornerRadius="6">
+                  <Grid ColumnDefinitions="64,*,Auto" ColumnSpacing="16">
+                    <Border Width="64" Height="36" Background="{DynamicResource RsRaised}" ClipToBounds="True" CornerRadius="{DynamicResource RsRadiusSm}">
                       <Panel>
-                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Classes="icon" IsVisible="{Binding !HasGameIcon}" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileGeometry}}" />
+                        <Path HorizontalAlignment="Center" Classes="icon md" IsVisible="{Binding !HasGameIcon}" Data="{Binding IconKey, Converter={x:Static v:Converters.ProfileSymbol}, ConverterParameter=20}" />
                         <Image Width="24" Height="24" IsVisible="{Binding HasGameIcon}" Source="{Binding GameIcon, Converter={x:Static v:Converters.IconImage}}" />
                       </Panel>
                     </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                      <TextBlock Classes="strong" FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                       <TextBlock Classes="caption" Text="{Binding SourceText}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal" Spacing="12">
                       <Border Classes="kbd" IsVisible="{Binding ShowsHotkey}">
-                        <TextBlock Classes="num" Text="{Binding HotkeyText}" />
+                        <TextBlock Text="{Binding HotkeyText}" />
                       </Border>
-                      <Button AutomationProperties.Name="{Binding PlayText}" Classes="sm" Click="OnPlay" IsEnabled="{Binding CanPlay}" Tag="{Binding}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <Path Classes="icon" Width="12" Height="12" Data="{x:Static v:Icons.Play}" />
+                      <Button AutomationProperties.Name="{Binding PlayText}" Classes="neutral" Click="OnPlay" IsEnabled="{Binding CanPlay}" Tag="{Binding}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <Path Classes="icon" Data="{x:Static v:Icons.Play16}" />
                           <TextBlock Text="{v:Tr Game_Play}" />
                         </StackPanel>
                       </Button>
@@ -229,19 +201,19 @@
     </ScrollViewer>
 
     <!-- Action bar: the active profile, the switch to the other one, the palette -->
-    <Border Grid.Row="1" Padding="12,0,6,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" IsVisible="{Binding HasProfiles}">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+    <Border Grid.Row="1" Padding="12,0,8,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" IsVisible="{Binding HasProfiles}">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
-          <Border Width="24" Height="24" Background="{DynamicResource RsAccentDuo}" CornerRadius="7">
-            <Path x:Name="BarIcon" Classes="icon small" Stroke="{DynamicResource RsAccentText}" />
+          <Border Width="28" Height="28" Background="{DynamicResource RsAccentSoft}" CornerRadius="{DynamicResource RsRadiusSm}">
+            <Path x:Name="BarIcon" HorizontalAlignment="Center" Classes="icon md accent" />
           </Border>
-          <TextBlock x:Name="BarName" VerticalAlignment="Center" Classes="strong" FontSize="13" />
-          <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{v:Tr Profile_Active}" />
+          <TextBlock x:Name="BarName" VerticalAlignment="Center" Classes="strong" />
+          <TextBlock VerticalAlignment="Center" Classes="caption" Text="{v:Tr Profile_Active}" />
         </StackPanel>
         <Button x:Name="BarSwitch" Grid.Column="1" VerticalAlignment="Center" Classes="ab" Click="OnSwitch">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock x:Name="BarSwitchText" VerticalAlignment="Center" />
-            <Border Classes="kbd"><TextBlock Text="↵" /></Border>
+            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

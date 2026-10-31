@@ -76,7 +76,7 @@ public sealed partial class ProfileSheetView : UserControl
             var item = new MenuItem
             {
                 Header = icon.Name,
-                Icon = new Path { Data = Glyphs.Profile(icon.Key), Classes = { "symbol" }, Width = 18, Height = 18 },
+                Icon = new Path { Data = ProfileSymbols.For(icon.Key, 20), Classes = { "icon", "md" } },
             };
             item.Click += (_, _) => editor.ChooseIconCommand.Execute(icon);
             iconMenu.Items.Add(item);
@@ -114,8 +114,8 @@ public sealed partial class ProfileSheetView : UserControl
             return;
         }
 
-        IconPath.Data = Glyphs.Profile(editor.SelectedIcon?.Key);
-        BarIcon.Data = IconPath.Data;
+        IconPath.Data = ProfileSymbols.For(editor.SelectedIcon?.Key, 24);
+        BarIcon.Data = ProfileSymbols.For(editor.SelectedIcon?.Key, 20);
         ProfileItem? active = ViewModel.Items.FirstOrDefault(i => i.IsActive);
         ActiveCard.DataContext = active;
         ActiveCard.IsVisible = active is not null;
