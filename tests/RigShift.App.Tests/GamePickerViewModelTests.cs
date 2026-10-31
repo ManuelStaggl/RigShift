@@ -1,4 +1,4 @@
-using RigShift.App.Views;
+using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Games;
 using Shouldly;

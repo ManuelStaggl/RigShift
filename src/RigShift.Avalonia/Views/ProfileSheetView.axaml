@@ -18,97 +18,6 @@
     <SolidColorBrush x:Key="HueBehaviorSoft" Color="#3D8A8F98" />
   </UserControl.Resources>
   <UserControl.Styles>
-    <!-- Profiles list: the selected row is the accent pill, like the rail. -->
-    <Style Selector="ListBox.profiles">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Padding" Value="6" />
-    </Style>
-    <Style Selector="ListBox.profiles ListBoxItem">
-      <Setter Property="Padding" Value="10,8" />
-      <Setter Property="Margin" Value="0,1" />
-      <Setter Property="MinHeight" Value="46" />
-      <Setter Property="CornerRadius" Value="9" />
-    </Style>
-    <Style Selector="ListBox.profiles ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsHover}" />
-    </Style>
-    <Style Selector="ListBox.profiles ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.profiles ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsRailOn}" />
-      <Setter Property="BoxShadow" Value="{DynamicResource RsRailOnShadow}" />
-    </Style>
-
-    <!-- The name as a 32 px heading that turns into a field on hover and focus. -->
-    <Style Selector="TextBox.title">
-      <Setter Property="FontSize" Value="32" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="LetterSpacing" Value="-0.7" />
-      <Setter Property="Padding" Value="6,0" />
-      <Setter Property="Margin" Value="-7,0,0,0" />
-      <Setter Property="MinHeight" Value="0" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-    </Style>
-
-    <!-- Groups: Ursa SettingsCard rows inside one card, a hairline between them. -->
-    <Style Selector="u|SettingsCard.group">
-      <Setter Property="Padding" Value="12,8" />
-      <Setter Property="MinHeight" Value="42" />
-    </Style>
-    <Style Selector="u|SettingsCard.group /template/ ContentPresenter#PART_Content">
-      <Setter Property="FontSize" Value="13" />
-    </Style>
-    <Style Selector="u|SettingsCard.group /template/ Border#PART_Separator">
-      <Setter Property="IsVisible" Value="True" />
-    </Style>
-    <Style Selector="u|SettingsCard.group /template/ Border#PART_DetailHost">
-      <Setter Property="BorderThickness" Value="0" />
-    </Style>
-    <Style Selector="u|SettingsCard.group /template/ ContentPresenter#PART_Description">
-      <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis" />
-      <Setter Property="TextBlock.TextWrapping" Value="NoWrap" />
-    </Style>
-    <Style Selector="Border.tile">
-      <Setter Property="Width" Value="26" />
-      <Setter Property="Height" Value="26" />
-      <Setter Property="CornerRadius" Value="7" />
-    </Style>
-    <Style Selector="Border.tile > Path.icon">
-      <Setter Property="StrokeThickness" Value="2" />
-    </Style>
-
-    <!-- A settings row inside a group or the inspector. -->
-    <Style Selector="Grid.row > TextBlock.label">
-      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
-    </Style>
-    <!-- Inspector key/value rows -->
-    <Style Selector="Grid.kv">
-      <Setter Property="MinHeight" Value="36" />
-    </Style>
-    <Style Selector="Grid.kv > TextBlock.k">
-      <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-    <Style Selector="Grid.kv TextBlock.val">
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-    </Style>
-
-    <!-- Action bar buttons: flat until hovered, label + keycap. -->
-    <Style Selector="Button.ab">
-      <Setter Property="Height" Value="30" />
-      <Setter Property="Padding" Value="10,0,6,0" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
-    </Style>
-    <Style Selector="Button.ab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource RsHover}" />
-    </Style>
     <!-- USB device chip: grey dot, green while the device is connected. -->
     <Style Selector="Ellipse.dot">
       <Setter Property="Fill" Value="{DynamicResource RsText4}" />
@@ -163,7 +72,7 @@
               </Border>
             </StackPanel>
           </Border>
-          <ListBox Classes="profiles" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+          <ListBox Classes="master" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:ProfileItem">
                 <Grid AutomationProperties.Name="{Binding AccessibleName}" ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
@@ -398,74 +307,7 @@
                   <Border Classes="tile" Background="{StaticResource HueAppsSoft}"><Path Classes="icon small" Stroke="{StaticResource HueApps}" Data="{x:Static v:Icons.Apps}" /></Border>
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
-                  <StackPanel Margin="36,0,4,16" Spacing="0">
-                    <ItemsControl ItemsSource="{Binding Editor.AppList.Items, FallbackValue={x:Null}}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:AppEditItem">
-                          <StackPanel>
-                            <Grid Margin="0,12" ColumnDefinitions="28,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="10">
-                              <Panel Width="24" Height="24" VerticalAlignment="Center">
-                                <Path Classes="icon" Data="{x:Static v:Icons.Window}" IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}" />
-                                <Image Source="{Binding Icon, Converter={x:Static v:Converters.IconImage}}" />
-                              </Panel>
-                              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Classes="strong" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
-                                <TextBlock Classes="caption warning" IsVisible="{Binding HasPathNote}" Text="{Binding PathNote}" />
-                              </StackPanel>
-                              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                                <Button Margin="0,0,8,0" VerticalAlignment="Center" Classes="link" Click="OnBrowse" Content="{v:Tr App_Change}" Tag="{Binding}" />
-                                <Button AutomationProperties.Name="{v:Tr App_MoveUp}" Classes="ghost" Click="OnMoveUp" Tag="{Binding}" ToolTip.Tip="{v:Tr App_MoveUp}">
-                                  <Path Classes="icon small" Data="{x:Static v:Icons.Up}" />
-                                </Button>
-                                <Button AutomationProperties.Name="{v:Tr App_MoveDown}" Classes="ghost" Click="OnMoveDown" Tag="{Binding}" ToolTip.Tip="{v:Tr App_MoveDown}">
-                                  <Path Classes="icon small" Data="{x:Static v:Icons.Down}" />
-                                </Button>
-                                <Button AutomationProperties.Name="{v:Tr App_Remove}" Classes="ghost" Click="OnRemoveApp" Tag="{Binding}" ToolTip.Tip="{v:Tr App_Remove}">
-                                  <Path Classes="icon small" Data="{x:Static v:Icons.Trash}" />
-                                </Button>
-                              </StackPanel>
-                              <!-- What, how long to wait, with which options -->
-                              <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
-                                <ComboBox MinWidth="104" AutomationProperties.Name="{v:Tr App_Action}" ItemsSource="{Binding KindChoices}" SelectedItem="{Binding SelectedKind, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_Action}" />
-                                <ComboBox Grid.Column="1" MinWidth="140" AutomationProperties.Name="{v:Tr App_When}" IsVisible="{Binding ShowWhen}" ItemsSource="{Binding WhenChoices}" SelectedItem="{Binding SelectedWhen, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_When}" />
-                                <NumericUpDown
-                                  Grid.Column="2"
-                                  Width="112"
-                                  AutomationProperties.Name="{v:Tr App_Wait}"
-                                  FormatString="0.#"
-                                  IsVisible="{Binding IsStart}"
-                                  Maximum="300"
-                                  Minimum="0"
-                                  ToolTip.Tip="{v:Tr App_Wait}"
-                                  Value="{Binding WaitSeconds, Converter={x:Static v:Converters.Seconds}}"
-                                  PlaceholderText="{v:Tr App_WaitShort}" />
-                                <TextBox Grid.Column="3" AutomationProperties.Name="{v:Tr App_Arguments}" IsVisible="{Binding IsStart}" Text="{Binding Arguments}" PlaceholderText="{v:Tr App_Arguments}" />
-                                <CheckBox Grid.Column="4" AutomationProperties.HelpText="{v:Tr App_WaitForWindowTip}" Content="{v:Tr App_WaitForWindow}" IsChecked="{Binding WaitForWindow}" IsVisible="{Binding IsStart}" ToolTip.Tip="{v:Tr App_WaitForWindowTip}" />
-                              </Grid>
-                            </Grid>
-                            <Border Classes="divider" />
-                          </StackPanel>
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock Margin="0,8,0,0" Classes="danger" IsVisible="{Binding Editor.AppList.HasProblem, FallbackValue=False}" Text="{Binding Editor.AppList.Problem}" TextWrapping="Wrap" />
-                    <Grid Classes="row" ColumnDefinitions="*,300" ColumnSpacing="12">
-                      <TextBlock Classes="label" Text="{v:Tr Editor_AppsWaitDevice}" ToolTip.Tip="{v:Tr Editor_AppsWaitHint}" />
-                      <ComboBox
-                        Grid.Column="1"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        AutomationProperties.Name="{v:Tr Editor_AppsWaitDevice}" 
-                        ItemsSource="{Binding Editor.AppList.WaitDevice.Choices, FallbackValue={x:Null}}"
-                        SelectedItem="{Binding Editor.AppList.WaitDevice.Selected, Converter={x:Static v:Converters.KeepOnNull}}" />
-                    </Grid>
-                    <Button Margin="0,8,0,0" HorizontalAlignment="Left" Classes="neutral" AutomationProperties.Name="{Binding Editor.AppList.AddText, FallbackValue=''}" Command="{Binding Editor.AppList.AddPickedCommand, FallbackValue={x:Null}}">
-                      <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
-                        <TextBlock Text="{Binding Editor.AppList.AddText, FallbackValue=''}" />
-                      </StackPanel>
-                    </Button>
-                  </StackPanel>
+                  <v:AppListView Margin="36,0,4,16" DataContext="{Binding Editor.AppList, FallbackValue={x:Null}}" />
                 </u:SettingsCard.Detail>
               </u:SettingsCard>
 

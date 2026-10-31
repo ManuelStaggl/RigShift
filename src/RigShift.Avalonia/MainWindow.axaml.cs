@@ -225,6 +225,7 @@ public sealed partial class MainWindow : Window
             {
                 AppPage.Overview => new OverviewView(),
                 AppPage.Profiles => new ProfileSheetView(),
+                AppPage.Games => new GamesView(),
                 _ => new TextBlock
                 {
                     Text = Loc.Instance["Page_NotBuilt"],

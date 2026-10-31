@@ -178,11 +178,11 @@ public sealed class GamesViewModelTests : IDisposable
             Windows = [new WindowPlacement { ProcessName = "SimHub", Title = "SimHub", Bounds = new PixelRect(0, 0, 800, 600) }],
         };
 
-        page.CaptureWindowsCommand.Execute(null);
+        await page.CaptureWindowsCommand.ExecuteAsync(null);
         editor.HasWindows.ShouldBeFalse();
 
         _dialogs.Captured = layout;
-        page.CaptureWindowsCommand.Execute(null);
+        await page.CaptureWindowsCommand.ExecuteAsync(null);
 
         _dialogs.CaptureOpenedWith.ShouldBe([null, null]);
         editor.WindowLayout.ShouldBe(layout);
@@ -615,10 +615,10 @@ public sealed class GamesViewModelTests : IDisposable
 
         public Task<PickedGame?> PickGameAsync() => Task.FromResult(PickedGame);
 
-        public WindowLayout? CaptureWindows(WindowLayout? current)
+        public Task<WindowLayout?> CaptureWindowsAsync(WindowLayout? current)
         {
             CaptureOpenedWith.Add(current);
-            return Captured;
+            return Task.FromResult(Captured);
         }
 
         public Task<bool> ConfirmDeleteAsync(string name)

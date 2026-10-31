@@ -82,7 +82,7 @@ public interface IGamePageDialogs
 
     /// <summary>The windows to put back, chosen from the open ones; <c>null</c> when cancelled.</summary>
     /// <param name="current">What the entry has now, pre-selected.</param>
-    WindowLayout? CaptureWindows(WindowLayout? current);
+    Task<WindowLayout?> CaptureWindowsAsync(WindowLayout? current);
 
     Task<bool> ConfirmDeleteAsync(string name);
 

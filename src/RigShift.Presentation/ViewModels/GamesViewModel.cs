@@ -201,9 +201,9 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
     }
 
     [RelayCommand]
-    private void CaptureWindows()
+    private async Task CaptureWindowsAsync()
     {
-        if (Editor is { } editor && _dialogs.CaptureWindows(editor.WindowLayout) is { } captured)
+        if (Editor is { } editor && await _dialogs.CaptureWindowsAsync(editor.WindowLayout) is { } captured)
         {
             editor.WindowLayout = captured;
         }

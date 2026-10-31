@@ -247,6 +247,9 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         services.AddSingleton<PageDialogs>();
         services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
         services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
+        services.AddSingleton<GameEditorFactory>();
+        services.AddSingleton<GameDialogs>();
+        services.AddSingleton<IGamePageDialogs>(sp => sp.GetRequiredService<GameDialogs>());
         services.AddSingleton(sp => new HotkeyService(
             sp.GetRequiredService<ProfileCatalog>(),
             sp.GetRequiredService<GameCatalog>(),

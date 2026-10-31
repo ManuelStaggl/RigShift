@@ -70,20 +70,25 @@ internal static class AskDialog
             }
         };
 
+        await ShowModalAsync(window);
+
+        return result;
+    }
+
+    /// <summary>Modal over the main window; asked from the tray with the window closed, it stands on its own.</summary>
+    public static async Task ShowModalAsync(Window window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
         if (App.Owner is { } owner)
         {
             await window.ShowDialog(owner);
-        }
-        else
-        {
-            // Asked from the tray with the window closed: no owner to block, so it stands on its own.
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            var closed = new TaskCompletionSource();
-            window.Closed += (_, _) => closed.TrySetResult();
-            window.Show();
-            await closed.Task;
+            return;
         }
 
-        return result;
+        window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        var closed = new TaskCompletionSource();
+        window.Closed += (_, _) => closed.TrySetResult();
+        window.Show();
+        await closed.Task;
     }
 }

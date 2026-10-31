@@ -10,7 +10,7 @@ namespace RigShift.Avalonia.Debug;
 /// <summary>
 /// Debug-only hooks for screenshots, set in the environment: RIGSHIFT_PREVIEW_DISPLAYS=&lt;profile&gt; (every profile's
 /// displays read as attached, that profile's active; nothing is ever applied), RIGSHIFT_PREVIEW_PAGE=&lt;page&gt;,
-/// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
+/// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_GAMEPICKER=single|multi, RIGSHIFT_PREVIEW_WINDOWCAPTURE=1, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
 /// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>), RIGSHIFT_PREVIEW_CRASH=1 (an exception every
 /// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
 /// that step, nothing saved before the user clicks); <c>--preview-confirmation</c> opens the countdown.
@@ -23,6 +23,12 @@ internal static class Previews
         {
             services.Replace(ServiceDescriptor.Singleton<IDisplayConfigurator>(
                 sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), active)));
+        }
+
+        // RIGSHIFT_PREVIEW_OPENXR=1: two runtimes, so the game editor offers its OpenXR choice on a machine without VR.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_OPENXR") == "1")
+        {
+            services.Replace(ServiceDescriptor.Singleton<IOpenXrRuntimes>(new PreviewOpenXrRuntimes()));
         }
     }
 
@@ -78,6 +84,41 @@ internal static class Previews
             broken.Start();
         }
 
+        // The game picker and the window capture, which otherwise only open from inside the games page. "multi" opens the
+        // picker with tick boxes; RIGSHIFT_PREVIEW_GAMES=<json> gives it a demo library on a machine without stores.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_GAMEPICKER") is { Length: > 0 } picker)
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                try
+                {
+                    GameEditorFactory factory = App.Provider.GetRequiredService<GameEditorFactory>();
+                    _ = string.Equals(picker, "multi", StringComparison.OrdinalIgnoreCase)
+                        ? (object)await Views.GamePickerWindow.PickManyAsync(factory)
+                        : await Views.GamePickerWindow.PickAsync(factory);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "Game picker preview failed");
+                }
+            });
+        }
+
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_WINDOWCAPTURE") is { Length: > 0 })
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                try
+                {
+                    await Views.WindowCaptureWindow.CaptureAsync(App.Provider.GetRequiredService<GameEditorFactory>().OpenWindows(), null);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "Window capture preview failed");
+                }
+            });
+        }
+
         // After the window, which would take the focus and so close the popup.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
         {
@@ -104,4 +145,14 @@ internal static class Previews
         });
         return true;
     }
+}
+
+/// <summary>Demo OpenXR runtimes for screenshots; nothing is read or written.</summary>
+internal sealed class PreviewOpenXrRuntimes : IOpenXrRuntimes
+{
+    public IReadOnlyList<OpenXrRuntime> Installed() =>
+    [
+        new(@"C:\Program Files (x86)\Steam\steamapps\common\SteamVR\steamxr_win64.json", "SteamVR", IsActive: true),
+        new(@"C:\Program Files\Oculus\Support\oculus-runtime\oculus_openxr_64.json", "Oculus", IsActive: false),
+    ];
 }
