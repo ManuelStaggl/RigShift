@@ -485,6 +485,10 @@
   <data name="Trigger_RuleTitle" xml:space="preserve"><value>When these devices are connected</value></data>
   <data name="Trigger_AddRule" xml:space="preserve"><value>USB rule</value></data>
   <data name="Trigger_AddDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="Usb_Detect" xml:space="preserve"><value>Detect by switching it off and on</value></data>
+  <data name="Usb_Detecting" xml:space="preserve"><value>Switch the device off and on now.</value></data>
+  <data name="Usb_DetectNone" xml:space="preserve"><value>No device turned up within a minute.</value></data>
+  <data name="Usb_DetectStop" xml:space="preserve"><value>Stop</value></data>
   <data name="Trigger_Shortcut" xml:space="preserve"><value>Desktop shortcut</value></data>
   <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Create on the desktop</value></data>
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>

@@ -370,6 +370,10 @@
                                 </StackPanel>
                               </Button>
                             </WrapPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding Owner.Detection.Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}">
+                              <TextBlock VerticalAlignment="Center" Classes="secondary" Text="{Binding Owner.Detection.Status}" TextWrapping="Wrap" />
+                              <Button VerticalAlignment="Center" Classes="link" Command="{Binding Owner.Detection.StopCommand}" Content="{v:Tr Usb_DetectStop}" IsVisible="{Binding Owner.Detection.IsDetecting}" />
+                            </StackPanel>
                             <Grid Classes="row" ColumnDefinitions="*,220">
                               <TextBlock Classes="label" Text="{v:Tr Automation_DeviceGone}" TextWrapping="Wrap" />
                               <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Automation_DeviceGone}" ItemsSource="{Binding Owner.ExitChoices}" SelectedItem="{Binding SelectedExit, Converter={x:Static v:Converters.KeepOnNull}}" />
