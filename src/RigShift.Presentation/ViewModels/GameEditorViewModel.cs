@@ -75,6 +75,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         Loc.Instance.PropertyChanged += OnLanguageChanged;
         _loading = false;
         Recalculate();
+        _ = LoadSettingsChoicesAsync();
     }
 
     public Guid Id => _original.Id;
@@ -194,13 +195,101 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     [ObservableProperty]
     public partial bool SettingsEnabled { get; set; }
 
-    /// <summary>The game's JSON settings file.</summary>
+    /// <summary>The game's JSON or INI settings file.</summary>
     [ObservableProperty]
     public partial string SettingsFile { get; set; }
 
-    /// <summary>The keys, one <c>Section/Name</c> per line.</summary>
+    /// <summary>The keys, one <c>Section/Name</c> per line; the checklist writes them.</summary>
     [ObservableProperty]
     public partial string SettingsKeys { get; set; }
+
+    /// <summary>The values of <see cref="SettingsFile"/> to tick, in file order; kept keys the file lacks come last.</summary>
+    public ObservableCollection<SettingsKeyChoice> SettingsChoices { get; } = [];
+
+    /// <summary>The file could be read: the checklist replaces the free text.</summary>
+    [ObservableProperty]
+    public partial bool HasSettingsChoices { get; private set; }
+
+    [ObservableProperty]
+    public partial string SettingsQuery { get; set; } = string.Empty;
+
+    private int _settingsRead;
+
+    partial void OnSettingsFileChanged(string value)
+    {
+        if (!_loading)
+        {
+            _ = LoadSettingsChoicesAsync();
+        }
+    }
+
+    partial void OnSettingsQueryChanged(string value)
+    {
+        foreach (SettingsKeyChoice choice in SettingsChoices)
+        {
+            choice.IsVisible = Matches(choice, value);
+        }
+    }
+
+    private static bool Matches(SettingsKeyChoice choice, string query) =>
+        query.Trim() is not { Length: > 0 } text || choice.Key.Contains(text, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Reads the file's values for the checklist; a file that cannot be read leaves the free text.</summary>
+    private async Task LoadSettingsChoicesAsync()
+    {
+        int read = ++_settingsRead;
+        string path = new GameSettings { File = SettingsFile }.FullPath;
+        IReadOnlyList<KeyValuePair<string, string>>? values = null;
+        if (path.Length > 0 && Path.IsPathFullyQualified(path))
+        {
+            try
+            {
+                values = await Task.Run(() => GameSettings.ListValues(path, File.ReadAllBytes(path)));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
+            {
+                _log.Information("Settings file {File} could not be listed: {Message}", path, ex.Message);
+            }
+        }
+
+        // A newer path was typed meanwhile.
+        if (read != _settingsRead)
+        {
+            return;
+        }
+
+        foreach (SettingsKeyChoice old in SettingsChoices)
+        {
+            old.PropertyChanged -= OnSettingsChoiceChanged;
+        }
+
+        SettingsChoices.Clear();
+        if (values is not null)
+        {
+            HashSet<string> ticked = [.. KeysOf(SettingsKeys)];
+            IEnumerable<SettingsKeyChoice> choices = values.Select(v => new SettingsKeyChoice(v.Key, v.Value, ticked.Contains(v.Key)))
+                .Concat(ticked.Where(k => !values.Any(v => v.Key == k)).Select(k => new SettingsKeyChoice(k, null, true)));
+            foreach (SettingsKeyChoice choice in choices)
+            {
+                choice.IsVisible = Matches(choice, SettingsQuery);
+                choice.PropertyChanged += OnSettingsChoiceChanged;
+                SettingsChoices.Add(choice);
+            }
+        }
+
+        HasSettingsChoices = SettingsChoices.Count > 0;
+    }
+
+    private void OnSettingsChoiceChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SettingsKeyChoice.IsChecked))
+        {
+            SettingsKeys = string.Join(Environment.NewLine, SettingsChoices.Where(c => c.IsChecked).Select(c => c.Key));
+        }
+    }
+
+    private static IEnumerable<string> KeysOf(string text) =>
+        text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal);
 
     /// <summary>How many values the entry keeps, or that they come with the end of the next session.</summary>
     public string SettingsStatus => _original.Settings is { Values.Count: > 0 } settings
@@ -410,7 +499,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
             return null;
         }
 
-        string[] keys = [.. SettingsKeys.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal)];
+        string[] keys = [.. KeysOf(SettingsKeys)];
         IReadOnlyDictionary<string, string> kept = _original.Settings?.Values ?? new Dictionary<string, string>();
         return new GameSettings
         {

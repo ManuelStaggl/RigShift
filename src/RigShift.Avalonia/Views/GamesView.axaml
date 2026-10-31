@@ -352,13 +352,35 @@
                             <StackPanel Spacing="8" IsVisible="{Binding Editor.SettingsEnabled, FallbackValue=False}">
                               <Border Margin="0,0,0,4" Classes="divider" />
                               <TextBlock Classes="caption" Text="{v:Tr Game_SettingsFile}" />
-                              <TextBox AutomationProperties.Name="{v:Tr Game_SettingsFile}" Text="{Binding Editor.SettingsFile, FallbackValue=''}" />
+                              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox AutomationProperties.Name="{v:Tr Game_SettingsFile}" Text="{Binding Editor.SettingsFile, FallbackValue=''}" />
+                                <Button Grid.Column="1" Classes="neutral" Click="OnPickSettingsFile" Content="{v:Tr Game_SettingsBrowse}" />
+                              </Grid>
                               <TextBlock Margin="0,4,0,0" Classes="caption" Text="{v:Tr Game_SettingsKeys}" />
+                              <!-- The file's values to tick; free text only while the file cannot be read. -->
+                              <StackPanel Spacing="8" IsVisible="{Binding Editor.HasSettingsChoices, FallbackValue=False}">
+                                <TextBox AutomationProperties.Name="{v:Tr Game_SettingsSearch}" PlaceholderText="{v:Tr Game_SettingsSearch}" Text="{Binding Editor.SettingsQuery, FallbackValue=''}" />
+                                <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled">
+                                  <ItemsControl ItemsSource="{Binding Editor.SettingsChoices, FallbackValue={x:Null}}">
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate x:DataType="vm:SettingsKeyChoice">
+                                        <CheckBox IsChecked="{Binding IsChecked}" IsVisible="{Binding IsVisible}" AutomationProperties.Name="{Binding Key}">
+                                          <StackPanel>
+                                            <TextBlock Text="{Binding Key}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Classes="caption" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                                          </StackPanel>
+                                        </CheckBox>
+                                      </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+                                </ScrollViewer>
+                              </StackPanel>
                               <TextBox
                                 MinHeight="96"
                                 MaxHeight="240"
                                 AcceptsReturn="True"
                                 AutomationProperties.Name="{v:Tr Game_SettingsKeys}"
+                                IsVisible="{Binding !Editor.HasSettingsChoices, FallbackValue=True}"
                                 Text="{Binding Editor.SettingsKeys, FallbackValue=''}"
                                 TextWrapping="NoWrap"
                                 VerticalContentAlignment="Top" />

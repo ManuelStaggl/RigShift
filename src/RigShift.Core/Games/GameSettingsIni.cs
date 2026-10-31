@@ -29,6 +29,19 @@ public static class GameSettingsIni
         return values;
     }
 
+    /// <summary>Every value with its <c>Section/Key</c>, in file order; a repeated key counts once, as it is read.</summary>
+    /// <exception cref="InvalidDataException">The file is UTF-16, which is not supported.</exception>
+    public static IReadOnlyList<KeyValuePair<string, string>> All(ReadOnlySpan<byte> bytes)
+    {
+        var all = new List<KeyValuePair<string, string>>();
+        foreach ((string key, (int start, int length)) in Values(bytes).OrderBy(v => v.Value.Start))
+        {
+            all.Add(new(key, Encoding.UTF8.GetString(bytes.Slice(start, length))));
+        }
+
+        return all;
+    }
+
     /// <summary>The file with the given values replaced; keys it does not hold are skipped.</summary>
     /// <exception cref="InvalidDataException">The file is UTF-16, which is not supported.</exception>
     /// <exception cref="ArgumentException">A value spans more than one line.</exception>
