@@ -96,7 +96,7 @@
                   <TextBlock Classes="caption" Text="{v:Tr Overview_Now}" />
                 </StackPanel>
                 <TextBlock x:Name="NowText" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextWrapping="Wrap" />
               </StackPanel>
               <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="6">
                 <Button Classes="sm" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">

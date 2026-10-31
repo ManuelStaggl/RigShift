@@ -19,6 +19,7 @@ public sealed partial class AppPickerWindow : Window
     public AppPickerWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
     }
 
     private AppPickerViewModel ViewModel => (AppPickerViewModel)DataContext!;

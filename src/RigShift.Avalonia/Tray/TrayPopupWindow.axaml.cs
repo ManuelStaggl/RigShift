@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using RigShift.App.ViewModels;
+using RigShift.Avalonia.Views;
 using RigShift.Windows.Ui;
 using Serilog;
 
@@ -19,6 +20,7 @@ public sealed partial class TrayPopupWindow : Window
     public TrayPopupWindow()
     {
         InitializeComponent();
+        TextScale.Apply(this);
     }
 
     public TrayPopupWindow(TrayPopupViewModel viewModel)

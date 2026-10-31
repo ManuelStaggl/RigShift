@@ -10,7 +10,9 @@ namespace RigShift.Avalonia.Services;
 /// <summary>
 /// Windows high contrast: the app's surface, text, line and accent tokens take the user's system colours, set on the
 /// application itself so they win over both theme dictionaries; leaving high contrast removes them again. Follows the
-/// setting live. Semi's own control keys keep the palette, so controls drawn only by Semi stay in the theme's colours.
+/// setting live. Semi's own control keys keep the palette, so controls drawn only by Semi stay in the theme's colours,
+/// except the toggles. A selected row or rail tile keeps the window colour behind its text and gets a ring in the
+/// highlight colour: text in the window text colour on the highlight fill would be unreadable in most contrast themes.
 /// </summary>
 internal static class HighContrast
 {
@@ -21,13 +23,18 @@ internal static class HighContrast
         ("RsBay", SystemColorKind.Window), ("RsTileFill", SystemColorKind.Window), ("RsKey", SystemColorKind.Window),
         ("RsRaised", SystemColorKind.ButtonFace), ("RsRaisedHover", SystemColorKind.ButtonFace), ("RsRaisedPressed", SystemColorKind.ButtonFace),
         ("RsHover", SystemColorKind.ButtonFace), ("RsAccentSoft", SystemColorKind.Window), ("RsAccentDuo", SystemColorKind.Window),
-        ("RsWarningSoft", SystemColorKind.Window), ("RsDangerSoft", SystemColorKind.Window), ("RsRailOn", SystemColorKind.Highlight),
+        ("RsWarningSoft", SystemColorKind.Window), ("RsDangerSoft", SystemColorKind.Window), ("RsRailOn", SystemColorKind.Window),
         ("RsText", SystemColorKind.WindowText), ("RsText2", SystemColorKind.WindowText), ("RsText3", SystemColorKind.WindowText),
-        ("RsText4", SystemColorKind.GrayText), ("RsRailOnText", SystemColorKind.HighlightText),
-        ("RsDivider", SystemColorKind.WindowText), ("RsOutline", SystemColorKind.WindowText), ("RsTileStroke", SystemColorKind.WindowText),
+        ("RsText4", SystemColorKind.GrayText), ("RsRailOnText", SystemColorKind.Highlight),
+        ("RsDivider", SystemColorKind.WindowText), ("RsNoticeLine", SystemColorKind.WindowText), ("RsOutline", SystemColorKind.WindowText), ("RsTileStroke", SystemColorKind.WindowText),
         ("RsAccent", SystemColorKind.Highlight), ("RsAccentHover", SystemColorKind.Highlight), ("RsOnAccent", SystemColorKind.HighlightText),
         ("RsAccentText", SystemColorKind.HotLight), ("RsSuccess", SystemColorKind.HotLight), ("RsWarning", SystemColorKind.HotLight),
         ("RsDanger", SystemColorKind.HotLight),
+        // Toggles: on in the highlight, off in the grey text colour, the knob in the highlight text colour on both.
+        ("ToggleSwitchContainerCheckedDefaultBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerCheckedPointeroverBackground", SystemColorKind.Highlight),
+        ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.GrayText),
+        ("ToggleSwitchContainerUnCheckedPointeroverBackground", SystemColorKind.GrayText), ("ToggleSwitchContainerUnCheckedPressedBackground", SystemColorKind.GrayText),
+        ("ToggleSwitchIndicatorBackground", SystemColorKind.HighlightText),
     ];
 
     // The theme the app asked for before high contrast took over; null while it is off.
@@ -67,6 +74,15 @@ internal static class HighContrast
             {
                 app.Resources.Remove(key);
             }
+        }
+
+        if (on)
+        {
+            app.Resources["RsRailOnShadow"] = new BoxShadows(new BoxShadow { IsInset = true, Spread = 2, Color = ColorOf(SystemColorKind.Highlight) });
+        }
+        else
+        {
+            app.Resources.Remove("RsRailOnShadow");
         }
 
         // Semi's controls keep their palette; the theme whose base matches the system background keeps their text readable.

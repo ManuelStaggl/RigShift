@@ -493,6 +493,8 @@
   <data name="Unsaved_Text" xml:space="preserve"><value>Unsaved changes are lost otherwise.</value></data>
   <data name="Unsaved_TextSwitch" xml:space="preserve"><value>You are switching to “{0}”. Unsaved changes are lost otherwise.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common_Increase" xml:space="preserve"><value>Increase</value></data>
+  <data name="Common_Decrease" xml:space="preserve"><value>Decrease</value></data>
   <data name="List_NewInstalled" xml:space="preserve"><value>Find installed games…</value></data>
   <data name="List_NewProgram" xml:space="preserve"><value>Choose a program…</value></data>
   <data name="Detail_PlayTip" xml:space="preserve"><value>Switches the profile, starts the tools and the game (Ctrl+Enter)</value></data>

@@ -42,6 +42,12 @@ public sealed partial class MainWindow : Window
                 OpenPalette();
                 e.Handled = true;
             }
+            else if (e.Key == Key.Escape && Palette.IsVisible)
+            {
+                // Wherever the focus went inside the open palette.
+                ClosePalette();
+                e.Handled = true;
+            }
         };
     }
 
@@ -51,15 +57,8 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private void ApplyTextScale()
     {
-        double factor = Math.Clamp((TextScaleSetting.Read() ?? 100) / 100d, 1, 2.25);
-        double roomWidth = double.PositiveInfinity, roomHeight = double.PositiveInfinity;
-        if (Screens.Primary is { } screen)
-        {
-            roomWidth = screen.WorkingArea.Width / screen.Scaling;
-            roomHeight = screen.WorkingArea.Height / screen.Scaling;
-            factor = Math.Min(factor, Math.Min(roomWidth / MinWidth, roomHeight / MinHeight));
-        }
-
+        (double roomWidth, double roomHeight) = TextScale.Room(this);
+        double factor = TextScaleSetting.Factor(TextScaleSetting.Read(), roomWidth, roomHeight, MinWidth, MinHeight);
         if (factor > 1)
         {
             Scaled.LayoutTransform = new ScaleTransform(factor, factor);
@@ -75,6 +74,7 @@ public sealed partial class MainWindow : Window
         SearchKey.Text = Loc.Instance["Palette_Shortcut"];
         global::Avalonia.Automation.AutomationProperties.SetName(Search, Loc.Instance["Palette_SearchName"]);
         PaletteQuery.PlaceholderText = Loc.Instance["Palette_Placeholder"];
+        global::Avalonia.Automation.AutomationProperties.SetName(PaletteQuery, Loc.Instance["Palette_Search"]);
         PaletteEmpty.Text = Loc.Instance["Palette_Empty"];
         foreach ((AppPage page, Button button) in _rail)
         {
@@ -160,6 +160,7 @@ public sealed partial class MainWindow : Window
     private static Grid Row(PaletteEntry entry)
     {
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 10, Tag = entry, MinHeight = 24 };
+        global::Avalonia.Automation.AutomationProperties.SetName(row, entry.Hint is { } kind ? $"{entry.Title}, {kind}" : entry.Title);
         row.Children.Add(new Path { Data = Geometry.Parse(entry.Glyph), Classes = { "icon", "small" }, VerticalAlignment = VerticalAlignment.Center });
         var title = new TextBlock { Text = entry.Title, Classes = { "label" } };
         Grid.SetColumn(title, 1);
