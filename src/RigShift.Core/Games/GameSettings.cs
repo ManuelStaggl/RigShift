@@ -45,6 +45,15 @@ public sealed record GameSettings
 
     /// <summary>Separates the objects of a key path.</summary>
     public const char PathSeparator = '/';
+
+    /// <summary>Every single value of a settings file with its key, in file order, for picking keys from a list.</summary>
+    /// <exception cref="JsonException">A JSON file that is not valid JSON.</exception>
+    /// <exception cref="InvalidDataException">A UTF-16 INI file.</exception>
+    public static IReadOnlyList<KeyValuePair<string, string>> ListValues(string path, ReadOnlySpan<byte> content)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        return IsIni(path) ? GameSettingsIni.All(content) : GameSettingsJson.All(content);
+    }
 }
 
 /// <summary>
@@ -76,6 +85,23 @@ public static class GameSettingsJson
         }
 
         return values;
+    }
+
+    /// <summary>Every single value with its key path, in document order; a repeated path counts once.</summary>
+    /// <exception cref="JsonException">The document is not valid JSON.</exception>
+    public static IReadOnlyList<KeyValuePair<string, string>> All(ReadOnlySpan<byte> utf8)
+    {
+        var all = new List<KeyValuePair<string, string>>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach ((string key, int start, int length) in Values(utf8))
+        {
+            if (seen.Add(key))
+            {
+                all.Add(new(key, Encoding.UTF8.GetString(utf8.Slice(start, length))));
+            }
+        }
+
+        return all;
     }
 
     /// <summary>The document with the given values replaced; keys it does not hold are skipped.</summary>

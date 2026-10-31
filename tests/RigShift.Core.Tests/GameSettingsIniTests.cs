@@ -94,6 +94,15 @@ public sealed class GameSettingsIniTests : IDisposable
     }
 
     [Fact]
+    public void ListValues_GivesEveryValueInFileOrder_ForIniAndJson()
+    {
+        GameSettings.ListValues("video.ini", Bytes(AssettoCorsa)).Select(v => v.Key + "=" + v.Value)
+            .ShouldBe(["VIDEO/FULLSCREEN=1", "VIDEO/WIDTH=7680", "VIDEO/HEIGHT=1440", "CAMERA/MODE=TRIPLE"]);
+        GameSettings.ListValues("Settings.JSON", Bytes("{ \"A\": { \"B\": 1, \"C\": \"x\" }, \"D\": [1] }")).Select(v => v.Key + "=" + v.Value)
+            .ShouldBe(["A/B=1", "A/C=\"x\""]);
+    }
+
+    [Fact]
     public void Read_SkipsTheUtf8ByteOrderMark()
     {
         byte[] withBom = [.. Encoding.UTF8.GetPreamble(), .. Bytes(AssettoCorsa)];

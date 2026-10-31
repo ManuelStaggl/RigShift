@@ -502,6 +502,54 @@ public sealed class GameEditorViewModelTests : IDisposable
         editor.HasError.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task SettingsFile_ListsItsValues_TypedKeysTicked_AndTickingWritesTheKeys()
+    {
+        string file = Path.Combine(_host.Paths.DataDirectory, "video.ini");
+        Directory.CreateDirectory(_host.Paths.DataDirectory);
+        await File.WriteAllTextAsync(file, "[VIDEO]\r\nWIDTH=7680\r\nHEIGHT=1440\r\n[CAMERA]\r\nMODE=TRIPLE\r\n", Ct);
+        GameEntry game = Game("Assetto Corsa") with { Settings = new GameSettings { File = file, Keys = ["VIDEO/WIDTH", "VIDEO/Gone"] } };
+        GameEditorViewModel editor = Editor(game);
+
+        await UntilAsync(() => editor.HasSettingsChoices);
+
+        editor.SettingsChoices.Select(c => (c.Key, c.Value, c.IsChecked)).ShouldBe([
+            ("VIDEO/WIDTH", "7680", true), ("VIDEO/HEIGHT", "1440", false), ("CAMERA/MODE", "TRIPLE", false), ("VIDEO/Gone", "–", true)]);
+        editor.IsDirty.ShouldBeFalse();
+
+        editor.SettingsChoices.Single(c => c.Key == "CAMERA/MODE").IsChecked = true;
+        editor.SettingsQuery = "video";
+
+        editor.ToGame().Settings.ShouldNotBeNull().Keys.ShouldBe(["VIDEO/WIDTH", "CAMERA/MODE", "VIDEO/Gone"]);
+        editor.IsDirty.ShouldBeTrue();
+        editor.SettingsChoices.Where(c => c.IsVisible).Select(c => c.Key).ShouldBe(["VIDEO/WIDTH", "VIDEO/HEIGHT", "VIDEO/Gone"]);
+    }
+
+    [Fact]
+    public async Task SettingsFile_ThatCannotBeRead_KeepsTheFreeText()
+    {
+        GameEntry game = Game("Rally") with { Settings = new GameSettings { File = @"C:\nowhere\rigshift\settings.json", Keys = ["A/B"] } };
+        GameEditorViewModel editor = Editor(game);
+        await Task.Delay(100, Ct);
+
+        editor.HasSettingsChoices.ShouldBeFalse();
+        editor.SettingsKeys.ShouldBe("A/B");
+    }
+
+    private static async Task UntilAsync(Func<bool> condition)
+    {
+        DateTime giveUp = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (!condition())
+        {
+            if (DateTime.UtcNow > giveUp)
+            {
+                throw new TimeoutException("condition not met");
+            }
+
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+    }
+
     public void Dispose()
     {
         foreach (GameEditorViewModel editor in _editors)

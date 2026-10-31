@@ -374,6 +374,9 @@
   <data name="Game_SettingsHint" xml:space="preserve"><value>Schreibt diese Werte vor dem Start in die Einstellungsdatei des Spiels und stellt nach dem Ende die vorherigen wieder her.</value></data>
   <data name="Game_SettingsFile" xml:space="preserve"><value>Einstellungsdatei (JSON oder INI)</value></data>
   <data name="Game_SettingsKeys" xml:space="preserve"><value>Werte, je Zeile Abschnitt/Name</value></data>
+  <data name="Game_SettingsBrowse" xml:space="preserve"><value>Auswählen…</value></data>
+  <data name="Game_SettingsSearch" xml:space="preserve"><value>Werte suchen</value></data>
+  <data name="Game_SettingsFilter" xml:space="preserve"><value>Einstellungsdateien (*.json;*.ini)|*.json;*.ini|Alle Dateien (*.*)|*.*</value></data>
   <data name="Game_SettingsRemembered" xml:space="preserve"><value>{0} Werte gemerkt. Was du im Spielmenü änderst, wird nach dem Beenden übernommen.</value></data>
   <data name="Game_SettingsNoneYet" xml:space="preserve"><value>Noch nichts gemerkt: Stell die Werte beim nächsten Spiel im Menü ein, RigShift übernimmt sie nach dem Beenden.</value></data>
   <data name="Problem_SettingsInvalid" xml:space="preserve"><value>Gib den vollständigen Pfad zu einer .json- oder .ini-Datei und mindestens einen Wert an.</value></data>
