@@ -79,59 +79,70 @@
   <Grid RowDefinitions="*,42">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
       <StackPanel MaxWidth="856" Margin="32,28,32,40" Spacing="0">
-        <!-- shortcut: English-only lead and labels (Positions, Current layout, All games, Actions); resx keys come with #160. -->
         <TextBlock Classes="h1" FontSize="32" LetterSpacing="-0.7" Text="{v:Tr Nav_Overview}" />
-        <TextBlock Margin="0,6,0,24" Classes="secondary" FontSize="13" Text="Pick a position. Displays, audio and apps follow in one switch." />
+        <TextBlock Margin="0,6,0,24" Classes="secondary" FontSize="13" Text="{v:Tr Overview_Lead}" />
 
         <Border Margin="0,0,0,16" Classes="notice danger" IsVisible="{Binding HasError}">
           <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
         </Border>
 
-        <!-- No profile yet -->
-        <StackPanel x:Name="EmptyState" Spacing="12" IsVisible="False">
-          <TextBlock Classes="h2" Text="{v:Tr Overview_SetupTitle}" />
-          <TextBlock Classes="secondary" Text="{v:Tr Overview_SetupText}" TextWrapping="Wrap" />
-          <Button HorizontalAlignment="Left" Classes="primary" Command="{Binding SetupManuallyCommand}" Content="{v:Tr Overview_SetupManual}" />
-        </StackPanel>
+        <!-- Stage: the layout Windows shows right now, also before the first profile -->
+        <Border Margin="0,0,0,32" Padding="24,20,24,26" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="16">
+          <Grid RowDefinitions="Auto,200">
+            <Grid x:Name="NowLine" ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Ellipse Width="7" Height="7" Fill="{DynamicResource RsSuccess}" />
+                  <TextBlock Classes="caption" Text="{v:Tr Overview_Now}" />
+                </StackPanel>
+                <TextBlock x:Name="NowText" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="6">
+                <Button Classes="sm" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Classes="icon" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16" />
+                    <TextBlock Text="{v:Tr Displays_Identify}" />
+                  </StackPanel>
+                </Button>
+                <Button x:Name="ReapplyButton" Classes="sm" AutomationProperties.Name="{v:Tr Profile_Reapply}" Click="OnReapply">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Classes="icon" Data="M4 12 A8 8 0 1 0 6.3 6.3 M4 4 V9 H9" />
+                    <TextBlock Text="{v:Tr Profile_Reapply}" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+            <StackPanel x:Name="SwitchingLine" Spacing="6" IsVisible="False">
+              <ProgressBar IsIndeterminate="True" />
+              <TextBlock x:Name="SwitchingText" Classes="strong" />
+            </StackPanel>
+            <v:DisplayTopology Grid.Row="1" Margin="40,16,40,0" Displays="{Binding LiveTopology}" Size="Card" />
+            <TextBlock Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="secondary" IsVisible="{Binding IsEmpty}" Text="{v:Tr Overview_Empty}" />
+          </Grid>
+        </Border>
+
+        <!-- No profile yet: save the layout on the stage as the first one. -->
+        <Border x:Name="EmptyState" MaxWidth="420" HorizontalAlignment="Left" Padding="20" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsOutline}" BorderThickness="1" CornerRadius="12" IsVisible="False">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h3" Text="{v:Tr Overview_SetupTitle}" />
+            <TextBlock Classes="secondary" Text="{v:Tr Overview_SetupText}" TextWrapping="Wrap" />
+            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding SaveCurrentCommand}" Content="{v:Tr Overview_SaveCurrent}" />
+            <Button HorizontalAlignment="Center" Classes="ghost" Command="{Binding SetupManuallyCommand}" Content="{v:Tr Overview_SetupManual}" />
+          </StackPanel>
+        </Border>
 
         <StackPanel IsVisible="{Binding HasProfiles}">
-          <!-- Stage: the layout Windows shows right now -->
-          <Border Margin="0,0,0,32" Padding="24,20,24,26" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="16">
-            <Grid RowDefinitions="Auto,200">
-              <Grid x:Name="NowLine" ColumnDefinitions="*,Auto">
-                <StackPanel Spacing="2">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Ellipse Width="7" Height="7" Fill="{DynamicResource RsSuccess}" />
-                    <TextBlock Classes="caption" Text="Current layout" />
-                  </StackPanel>
-                  <TextBlock x:Name="NowText" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" TextTrimming="CharacterEllipsis" />
-                  <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="6">
-                  <Button Classes="sm" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Classes="icon" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16" />
-                      <TextBlock Text="{v:Tr Displays_Identify}" />
-                    </StackPanel>
-                  </Button>
-                  <Button x:Name="ReapplyButton" Classes="sm" AutomationProperties.Name="{v:Tr Profile_Reapply}" Click="OnReapply">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Classes="icon" Data="M4 12 A8 8 0 1 0 6.3 6.3 M4 4 V9 H9" />
-                      <TextBlock Text="{v:Tr Profile_Reapply}" />
-                    </StackPanel>
-                  </Button>
-                </StackPanel>
-              </Grid>
-              <StackPanel x:Name="SwitchingLine" Spacing="6" IsVisible="False">
-                <ProgressBar IsIndeterminate="True" />
-                <TextBlock x:Name="SwitchingText" Classes="strong" />
-              </StackPanel>
-              <v:DisplayTopology Grid.Row="1" Margin="40,16,40,0" Displays="{Binding LiveTopology}" Size="Card" />
-            </Grid>
-          </Border>
-
           <!-- The switch: one recessed housing, one position per profile. -->
-          <TextBlock Margin="4,0,0,8" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="Positions" />
+          <Grid Margin="4,0,0,8" ColumnDefinitions="*,Auto">
+            <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{v:Tr Overview_Positions}" />
+            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="{v:Tr Overview_SaveCurrent}" Command="{Binding SaveCurrentCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon small" Width="12" Height="12" Data="{x:Static v:Icons.Plus}" />
+                <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="{v:Tr Overview_SaveCurrent}" />
+              </StackPanel>
+            </Button>
+          </Grid>
           <Border Padding="5" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="14">
             <ItemsControl IsEnabled="{Binding Coordinator.IsIdle}" ItemsSource="{Binding Catalog.Items}">
               <ItemsControl.ItemsPanel>
@@ -174,9 +185,9 @@
         <StackPanel Margin="0,32,0,0" IsVisible="{Binding Games.HasGames}">
           <Grid Margin="4,0,0,8" ColumnDefinitions="*,Auto">
             <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{v:Tr Nav_Games}" />
-            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="All games" Click="OnAllGames">
+            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="{v:Tr Overview_AllGames}" Click="OnAllGames">
               <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="All games" />
+                <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="{v:Tr Overview_AllGames}" />
                 <Path Classes="icon small" Width="12" Height="12" Data="M9 6 L15 12 L9 18" />
               </StackPanel>
             </Button>
@@ -217,7 +228,7 @@
     </ScrollViewer>
 
     <!-- Action bar: the active profile, the switch to the other one, the palette -->
-    <Border Grid.Row="1" Padding="12,0,6,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0">
+    <Border Grid.Row="1" Padding="12,0,6,0" Background="{DynamicResource RsColumn}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" IsVisible="{Binding HasProfiles}">
       <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
         <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
           <Border Width="24" Height="24" Background="{DynamicResource RsAccentDuo}" CornerRadius="7">
@@ -233,13 +244,10 @@
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />
-        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="Actions (Ctrl+K)" Click="OnActions">
+        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{v:Tr Overview_ActionsName}" Click="OnActions">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock VerticalAlignment="Center" FontWeight="Regular" Foreground="{DynamicResource RsText3}" Text="Actions" />
-            <StackPanel Orientation="Horizontal" Spacing="3">
-              <Border Classes="kbd"><TextBlock Text="Ctrl" /></Border>
-              <Border Classes="kbd"><TextBlock Text="K" /></Border>
-            </StackPanel>
+            <TextBlock VerticalAlignment="Center" FontWeight="Regular" Foreground="{DynamicResource RsText3}" Text="{v:Tr Overview_Actions}" />
+            <Border Classes="kbd"><TextBlock Text="{v:Tr Palette_Shortcut}" /></Border>
           </StackPanel>
         </Button>
       </Grid>
