@@ -1004,6 +1004,72 @@ public sealed class SwitchOrchestratorTests
         _time.Elapsed.ShouldBe(TimeSpan.Zero);
     }
 
+    private const string SimHub = "C:\\SimHub\\SimHubWPF.exe";
+    private const string Fanatec = "C:\\Fanatec\\FanatecApp.exe";
+    private const string CrewChief = "C:\\CrewChief\\CrewChiefV4.exe";
+
+    /// <summary>The rig started SimHub and Crew Chief itself; the Fanatec app ran already.</summary>
+    private async Task<(SwitchOrchestrator Orchestrator, Profile Rig)> RigWithStartedAppsAsync(bool closeApps = true)
+    {
+        _apps.IsRunning(SimHub).Returns(false, true);
+        _apps.IsRunning(CrewChief).Returns(false, true);
+        _apps.IsRunning(Fanatec).Returns(true);
+        _apps.StopAsync(default!, default, default).ReturnsForAnyArgs(true);
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+        Profile rig = Rig() with
+        {
+            CloseAppsWhenLeaving = closeApps,
+            Apps = [new AppAction { Path = Fanatec }, new AppAction { Path = SimHub }, new AppAction { Path = CrewChief }],
+        };
+        SwitchResult toRig = await orchestrator.SwitchAsync(rig, SwitchRequest.Default, Ct);
+        (await toRig.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        return (orchestrator, rig);
+    }
+
+    [Fact]
+    public async Task SwitchAway_ClosesWhatTheLeftProfileStarted_NewestFirst_NotWhatRanBefore()
+    {
+        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
+
+        SwitchResult toDesk = await orchestrator.SwitchAsync(Profile("Desk", DeskModes), new SwitchRequest { Leaving = rig }, Ct);
+
+        (await toDesk.AppsCompletion).ShouldBe(AppsOutcome.Applied);
+        Received.InOrder(() =>
+        {
+            _apps.StopAsync(CrewChief, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            _apps.StopAsync(SimHub, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+        });
+        await _apps.DidNotReceive().StopAsync(Fanatec, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SwitchAway_LeavesWhatTheNewProfileStartsToo_AndClosesNothingWhenOff()
+    {
+        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
+        Profile tv = Profile("TV", DeskModes) with { Apps = [new AppAction { Path = SimHub }] };
+
+        await (await orchestrator.SwitchAsync(tv, new SwitchRequest { Leaving = rig }, Ct)).AppsCompletion;
+
+        await _apps.Received(1).StopAsync(CrewChief, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+        await _apps.DidNotReceive().StopAsync(SimHub, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+
+        _apps.ClearReceivedCalls();
+        await (await orchestrator.SwitchAsync(Profile("Desk", DeskModes), new SwitchRequest { Leaving = rig with { CloseAppsWhenLeaving = false } }, Ct)).AppsCompletion;
+        await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
+    }
+
+    [Fact]
+    public async Task SwitchAway_ThatIsTakenBack_ClosesNothing()
+    {
+        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+
+        SwitchResult toDesk = await orchestrator.SwitchAsync(Profile("Desk", DeskModes, confirm: true), new SwitchRequest { Leaving = rig }, Ct);
+
+        toDesk.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
+    }
+
     [Fact]
     public async Task Switch_DoesNotStartRunningApp_OrStopMissingOne()
     {

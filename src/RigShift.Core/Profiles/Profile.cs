@@ -89,6 +89,12 @@ public sealed record Profile
     /// </summary>
     public bool RememberWindows { get; init; }
 
+    /// <summary>
+    /// After a switch to another profile has stayed, end the start apps RigShift started for this profile in this run.
+    /// Apps that ran before are left alone, and so are the ones the new profile starts too.
+    /// </summary>
+    public bool CloseAppsWhenLeaving { get; init; }
+
     /// <summary>Longer names push the badges and buttons off the profile card.</summary>
     public const int MaxNameLength = 60;
 

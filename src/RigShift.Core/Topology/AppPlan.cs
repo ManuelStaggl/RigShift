@@ -11,14 +11,19 @@ namespace RigShift.Core.Topology;
 /// <param name="Apps">The actions, in order.</param>
 /// <param name="WaitForUsbDeviceId">USB device the apps wait for, or <c>null</c>.</param>
 /// <param name="WaitForUsbDeviceName">Its name when it was picked, for the messages while it is missing.</param>
+/// <param name="ProfileId">The profile whose apps these are; what they start is noted for <see cref="Profile.CloseAppsWhenLeaving"/>.</param>
 internal sealed record AppPlan(
     string Name,
     IReadOnlyList<AppAction> Apps,
     string? WaitForUsbDeviceId,
-    string? WaitForUsbDeviceName)
+    string? WaitForUsbDeviceName,
+    Guid? ProfileId = null)
 {
+    /// <summary>Ends the apps of the profile that was left, before the wait for the USB device.</summary>
+    public IReadOnlyList<AppAction> StopFirst { get; init; } = [];
+
     public static AppPlan For(Profile profile) => new(
-        profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName);
+        profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, profile.Id);
 
     /// <summary>
     /// The apps of a game that run at <paramref name="when"/>. Only the ones before the game wait for the USB

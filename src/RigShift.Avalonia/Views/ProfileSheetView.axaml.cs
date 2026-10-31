@@ -125,6 +125,7 @@ public sealed partial class ProfileSheetView : UserControl
         BehaviorCard.Description = Join([
             editor.KeepAwake ? Loc.Instance["Editor_KeepAwake"] : null,
             editor.RememberWindows ? Loc.Instance["Editor_RememberWindows"] : null,
+            editor.CloseAppsWhenLeaving ? Loc.Instance["Editor_CloseAppsWhenLeaving"] : null,
             editor.SwitchWithoutAsking ? Loc.Instance["Editor_SwitchWithoutAsking"] : null,
         ]);
     }

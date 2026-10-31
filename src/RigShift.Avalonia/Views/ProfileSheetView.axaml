@@ -461,6 +461,14 @@
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                       <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="label" Text="{v:Tr Editor_CloseAppsWhenLeaving}" />
+                        <TextBlock Classes="caption" Text="{v:Tr Editor_CloseAppsWhenLeavingHint}" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_CloseAppsWhenLeaving}" IsChecked="{Binding Editor.CloseAppsWhenLeaving, FallbackValue=False}" OffContent="" OnContent="" />
+                    </Grid>
+                    <Border Classes="divider" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                      <StackPanel VerticalAlignment="Center">
                         <TextBlock Classes="label" Text="{v:Tr Editor_DesktopIcons}" />
                         <TextBlock Classes="caption" Text="{Binding Editor.DesktopIconsText, FallbackValue=''}" TextWrapping="Wrap" />
                       </StackPanel>
