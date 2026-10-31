@@ -368,13 +368,18 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Coordinator.IsSwitching.ShouldBeFalse();
     }
 
-    [Fact]
-    public async Task TurnAllDisplaysOn_WindowsRefuses_SwitchesToTheDefaultProfileWithoutAsking()
+    [Theory]
+    [InlineData(true, "Desk")]
+    [InlineData(false, "Rig")]
+    public async Task TurnAllDisplaysOn_WindowsRefuses_SwitchesToTheSignInOrElseThePreviousProfileWithoutAsking(bool signIn, string fallback)
     {
+        // Desk is the active profile; the previous one is the rig.
         Profile desk = Profile("Desk", DeskModes, confirm: true);
+        Profile rig = Rig(confirm: true);
         await _host.Store.SaveAsync(desk, CancellationToken.None);
+        await _host.Store.SaveAsync(rig, CancellationToken.None);
         await _host.Catalog.ReloadAsync(CancellationToken.None);
-        await _host.Settings.UpdateAsync(s => s with { DefaultProfileId = desk.Id }, CancellationToken.None);
+        await _host.Settings.UpdateAsync(s => s with { SignInProfileId = signIn ? desk.Id : null, PreviousProfileId = rig.Id }, CancellationToken.None);
         _host.Display.SetSnapshot(Snapshot([Attached(Ultrawide, activeMode: UltrawideMode), .. DeskModes.Select(m => Attached(m.Identity))]));
         _host.Display.EnqueueApplyResults(31, 31);
         AllDisplaysOnReport? report = null;
@@ -383,13 +388,13 @@ public sealed class SwitchCoordinatorTests : IDisposable
         AllDisplaysOnResult? result = await _host.Coordinator.TurnAllDisplaysOnAsync();
 
         result.ShouldNotBeNull().Outcome.ShouldBe(AllDisplaysOnOutcome.Failed);
-        report.ShouldNotBeNull().FallbackProfile.ShouldBe("Desk");
-        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Desk");
+        report.ShouldNotBeNull().FallbackProfile.ShouldBe(fallback);
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe(fallback);
         await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
     }
 
     [Fact]
-    public async Task TurnAllDisplaysOn_WindowsRefuses_WithoutADefaultProfile_OnlyReports()
+    public async Task TurnAllDisplaysOn_WindowsRefuses_WithoutASignInOrPreviousProfile_OnlyReports()
     {
         _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Desk4K)));
         _host.Display.EnqueueApplyResults(31, 31);

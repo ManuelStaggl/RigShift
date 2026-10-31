@@ -95,16 +95,16 @@ public static class RuleExits
     };
 
     /// <summary>
-    /// Profiles a new rule starts with: its end action switches to the default profile (the desk), or to the first profile
-    /// without a default – deterministic, unlike "switch back". The rule itself switches to the first
+    /// Profiles a new rule starts with: its end action switches to the sign-in profile (usually the desk), or to the first
+    /// profile without one – deterministic, unlike "switch back". The rule itself switches to the first
     /// other profile.
     /// </summary>
-    public static (Guid Profile, Guid ExitProfile) NewRuleProfiles(IReadOnlyList<Profile> profiles, Guid? defaultProfileId)
+    public static (Guid Profile, Guid ExitProfile) NewRuleProfiles(IReadOnlyList<Profile> profiles, Guid? signInProfileId)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentOutOfRangeException.ThrowIfZero(profiles.Count);
 
-        Profile exit = profiles.FirstOrDefault(p => p.Id == defaultProfileId) ?? profiles[0];
+        Profile exit = profiles.FirstOrDefault(p => p.Id == signInProfileId) ?? profiles[0];
         Profile start = profiles.FirstOrDefault(p => p.Id != exit.Id) ?? exit;
         return (start.Id, exit.Id);
     }
@@ -367,7 +367,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
     private readonly IReadOnlyList<AutomationRule> _others;
     private IReadOnlyList<AutomationRule> _initial;
     private readonly IReadOnlyList<Profile> _profiles;
-    private readonly Guid? _defaultProfileId;
+    private readonly Guid? _signInProfileId;
     private IReadOnlyList<UsbDevice> _connected;
     private readonly IReadOnlyDictionary<string, string>? _customNames;
     private readonly IUsbPowerCheck _powerCheck;
@@ -380,7 +380,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
         Guid profileId,
         IReadOnlyList<AutomationRule> allRules,
         IReadOnlyList<Profile> profiles,
-        Guid? defaultProfileId,
+        Guid? signInProfileId,
         IReadOnlyList<UsbDevice> connected,
         IReadOnlyDictionary<string, string>? customNames,
         IUsbPowerCheck powerCheck,
@@ -394,7 +394,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
         _others = allRules.Where(r => r.ProfileId != profileId).ToList();
         _initial = allRules.Where(r => r.ProfileId == profileId).ToList();
         _profiles = profiles;
-        _defaultProfileId = defaultProfileId;
+        _signInProfileId = signInProfileId;
         _connected = connected;
         _customNames = customNames;
         _powerCheck = powerCheck;
@@ -531,7 +531,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
     [RelayCommand]
     private void AddRule()
     {
-        (_, Guid exitProfile) = RuleExits.NewRuleProfiles(_profiles, _defaultProfileId);
+        (_, Guid exitProfile) = RuleExits.NewRuleProfiles(_profiles, _signInProfileId);
         var rule = new AutomationRule
         {
             Devices = [],

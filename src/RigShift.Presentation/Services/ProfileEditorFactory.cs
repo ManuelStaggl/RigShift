@@ -69,7 +69,7 @@ public sealed class ProfileEditorFactory(
         Core.Settings.AppSettings settings = editorServices.Settings.Current;
         ProfileCatalog catalog = editorServices.Catalog;
         var rules = new ProfileRulesEditor(
-            profile.Id, settings.AutomationRules ?? [], catalog.Profiles, settings.DefaultProfileId, devices, settings.UsbDeviceNames,
+            profile.Id, settings.AutomationRules ?? [], catalog.Profiles, settings.SignInProfileId, devices, settings.UsbDeviceNames,
             powerCheck, _log, new UsbDetection(usbDevices, TimeProvider.System));
         var appsWaitDevice = new AppsWaitDeviceChoice(
             profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, devices,

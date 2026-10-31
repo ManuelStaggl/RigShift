@@ -127,7 +127,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
 
             KeepAwakeForActiveProfile(catalog);
             UpgradeAutostartEntry();
-            await ApplyDefaultProfileWithWindowsAsync(catalog);
+            await ApplySignInProfileAsync(catalog);
             ReportSettingsProblem();
             await OfferInterruptedRestoreAsync();
             await Provider.GetRequiredService<SwitchOrchestrator>().RestoreDuckingIfUnusedAsync(catalog.ActiveProfile, CancellationToken.None);
@@ -154,10 +154,10 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     }
 
     /// <summary>
-    /// Started with Windows: switch to the default profile if the user asked for it (issue #13). Windows brings back the
+    /// Started with Windows: switch to the sign-in profile if the user chose one (issue #13). Windows brings back the
     /// layout the PC was shut down in, the rig included; a USB rule whose devices are connected wins.
     /// </summary>
-    private async Task ApplyDefaultProfileWithWindowsAsync(ProfileCatalog catalog)
+    private async Task ApplySignInProfileAsync(ProfileCatalog catalog)
     {
         if (!request.StartedWithWindows)
         {
@@ -165,7 +165,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
 
         AppSettings settings = Provider.GetRequiredService<SettingsService>().Current;
-        if (!settings.ApplyDefaultProfileWithWindows)
+        if (settings.SignInProfileId is null)
         {
             return;
         }
@@ -178,12 +178,12 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or UnauthorizedAccessException)
         {
-            Log.Warning(ex, "USB devices could not be read at startup, default profile not applied");
+            Log.Warning(ex, "USB devices could not be read at startup, sign-in profile not applied");
             return;
         }
 
         (StartupProfileDecision decision, Profile? profile) = StartupProfile.Choose(settings, catalog.Profiles, catalog.ActiveProfile?.Id, present);
-        Log.Information("Started with Windows, default profile {Profile}: {Decision}", profile?.Name ?? "(none)", decision);
+        Log.Information("Started with Windows, sign-in profile {Profile}: {Decision}", profile?.Name ?? "(none)", decision);
         if (decision == StartupProfileDecision.Apply && profile is not null)
         {
             await Provider.GetRequiredService<SwitchCoordinator>().SwitchAsync(profile);

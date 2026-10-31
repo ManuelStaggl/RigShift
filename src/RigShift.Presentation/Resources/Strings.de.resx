@@ -13,7 +13,6 @@
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} Datei(en) konnten nicht gelesen werden: {1}. Details stehen im Log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Aktiv</value></data>
-  <data name="Profile_Default" xml:space="preserve"><value>Standard</value></data>
   <data name="Profile_Primary" xml:space="preserve"><value>Hauptanzeige</value></data>
   <data name="Profile_Optional" xml:space="preserve"><value>optional</value></data>
   <data name="Display_Unnamed" xml:space="preserve"><value>Bildschirm ohne Namen</value></data>
@@ -85,8 +84,6 @@
   <data name="Outcome_Blocked" xml:space="preserve"><value>Blockiert</value></data>
   <data name="Outcome_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
   <data name="Outcome_DryRun" xml:space="preserve"><value>Geprüft</value></data>
-  <data name="Settings_DefaultProfile" xml:space="preserve"><value>Standardprofil</value></data>
-  <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Zurückschalten</value></data>
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Ein Tastenkürzel, das zum letzten Profil zurückschaltet.</value></data>
   <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Schnellumschalter</value></data>
@@ -510,7 +507,6 @@
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Funktioniert auch als Stream-Deck-Aktion.</value></data>
   <data name="Trigger_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Befehl kopiert.</value></data>
-  <data name="Profile_SetDefault" xml:space="preserve"><value>Als Standard festlegen</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Desktop-Verknüpfung anlegen</value></data>
   <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Desktopsymbole wiederherstellen</value></data>
   <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 Desktopsymbol zurückgesetzt.</value></data>
@@ -549,10 +545,10 @@
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Umschalten</value></data>
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
-  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Ziel von „Zurückschalten“, solange es kein letztes Profil gibt.</value></data>
-  <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Standardprofil beim Anmelden</value></data>
-  <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Wechselt dorthin, wenn RigShift mit Windows startet.</value></data>
-  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit diesem Schalter startet er stattdessen im Standardprofil, außer die Geräte einer USB-Regel sind verbunden. Braucht ein Standardprofil und „Mit Windows starten“.</value></data>
+  <data name="Settings_SignIn" xml:space="preserve"><value>Beim Anmelden</value></data>
+  <data name="Settings_SignInHint" xml:space="preserve"><value>Wenn RigShift mit Windows startet.</value></data>
+  <data name="Settings_SignInTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit einem Profil startet er stattdessen in diesem, außer die Geräte einer USB-Regel sind verbunden. Braucht „Mit Windows starten“.</value></data>
+  <data name="Settings_SignInKeep" xml:space="preserve"><value>Windows-Anordnung behalten</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Für Profile, die nachfragen. Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Menü im Infobereich.</value></data>
@@ -823,9 +819,6 @@
   <data name="App_WaitChoice" xml:space="preserve"><value>Warten vor der nächsten App</value></data>
   <data name="App_WaitNone" xml:space="preserve"><value>Nicht warten</value></data>
   <data name="App_WaitFixed" xml:space="preserve"><value>Feste Zeit</value></data>
-  <data name="Profile_DefaultTip" xml:space="preserve">
-    <value>Standardprofil: Ziel von „Zurückschalten“, solange es kein letztes Profil gibt. Ändern unter Einstellungen.</value>
-  </data>
   <data name="Game_HotkeyHint" xml:space="preserve">
     <value>Startet die Sitzung von überall, solange RigShift läuft.</value>
   </data>
@@ -890,7 +883,7 @@
     <value>Es gibt kein Spiel „{0}“. Eine Desktop-Verknüpfung oder Stream-Deck-Taste nutzt vielleicht noch einen alten Namen.</value>
   </data>
   <data name="Tray_NoPreviousProfile" xml:space="preserve">
-    <value>Noch gibt es kein letztes Profil. Ein Standardprofil in den Einstellungen springt ein.</value>
+    <value>Noch gibt es kein letztes Profil.</value>
   </data>
   <data name="Tray_LinkInvalid" xml:space="preserve">
     <value>Dieser Link funktioniert nicht: {0}. RigShift-Links sehen so aus: rigshift://apply/&lt;Profil&gt;.</value>

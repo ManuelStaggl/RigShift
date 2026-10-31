@@ -99,7 +99,6 @@
                 <Button.Flyout>
                   <MenuFlyout Placement="BottomEdgeAlignedRight">
                     <MenuItem Command="{Binding DuplicateCommand}" Header="{v:Tr Profile_Duplicate}" />
-                    <MenuItem Command="{Binding ToggleDefaultCommand}" Header="{v:Tr Profile_SetDefault}" ToggleType="CheckBox" IsChecked="{Binding IsSelectedDefault, Mode=OneWay}" />
                     <MenuItem Command="{Binding CreateShortcutCommand}" Header="{v:Tr Profile_ShortcutMenu}" />
                     <MenuItem Command="{Binding RestoreDesktopIconsCommand}" Header="{v:Tr Profile_RestoreIconsMenu}" />
                     <Separator />

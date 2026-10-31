@@ -33,19 +33,19 @@ public sealed class DeleteUndoTests : IDisposable
         var first = new AutomationRule { ProfileId = desk.Id };
         var own = new AutomationRule { ProfileId = rig.Id };
         var endsInRig = new AutomationRule { ProfileId = desk.Id, OnExit = ExitAction.SwitchTo, ExitProfileId = rig.Id };
-        await _host.Settings.UpdateAsync(s => s with { DefaultProfileId = rig.Id, AutomationRules = [first, own, endsInRig] }, Ct);
+        await _host.Settings.UpdateAsync(s => s with { SignInProfileId = rig.Id, AutomationRules = [first, own, endsInRig] }, Ct);
         await _host.Catalog.ReloadAsync(Ct);
 
         DeletedProfile deleted = await _host.Catalog.DeleteAsync(rig, Ct);
 
         Backups.ShouldHaveSingleItem();
         _host.Catalog.Find(rig.Id).ShouldBeNull();
-        _host.Settings.Current.DefaultProfileId.ShouldBeNull();
+        _host.Settings.Current.SignInProfileId.ShouldBeNull();
 
         await _host.Catalog.UndoDeleteAsync(deleted, Ct);
 
         _host.Catalog.Find(rig.Id).ShouldNotBeNull();
-        _host.Settings.Current.DefaultProfileId.ShouldBe(rig.Id);
+        _host.Settings.Current.SignInProfileId.ShouldBe(rig.Id);
         _host.Settings.Current.AutomationRules.ShouldBe([first, own, endsInRig]);
     }
 

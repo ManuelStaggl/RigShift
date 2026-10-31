@@ -18,8 +18,7 @@ public sealed class StartupProfileTests
 
     private AppSettings On(AutomationRule? rule = null, bool paused = false) => new()
     {
-        DefaultProfileId = _desk.Id,
-        ApplyDefaultProfileWithWindows = true,
+        SignInProfileId = _desk.Id,
         AutomationRules = rule is null ? null : [rule],
         AutomationPaused = paused,
     };
@@ -27,7 +26,7 @@ public sealed class StartupProfileTests
     private AutomationRule WheelbaseRule => new() { Devices = [new RuleDevice { Id = Wheelbase }], ProfileId = _rig.Id };
 
     [Fact]
-    public void Choose_RigLeftOverFromShutdown_AppliesTheDefault()
+    public void Choose_RigLeftOverFromShutdown_AppliesTheSignInProfile()
     {
         var (decision, profile) = StartupProfile.Choose(On(), [_desk, _rig], _rig.Id, Nothing);
 
@@ -36,21 +35,21 @@ public sealed class StartupProfileTests
     }
 
     [Fact]
-    public void Choose_SettingOff_DoesNothing()
+    public void Choose_KeepWhatWindowsRestored_DoesNothing()
     {
-        StartupProfile.Choose(On() with { ApplyDefaultProfileWithWindows = false }, [_desk, _rig], _rig.Id, Nothing)
+        StartupProfile.Choose(On() with { SignInProfileId = null }, [_desk, _rig], _rig.Id, Nothing)
             .Decision.ShouldBe(StartupProfileDecision.TurnedOff);
     }
 
     [Fact]
-    public void Choose_DefaultProfileMissing_DoesNothing()
+    public void Choose_SignInProfileDeleted_DoesNothing()
     {
-        StartupProfile.Choose(On() with { DefaultProfileId = Guid.NewGuid() }, [_desk, _rig], _rig.Id, Nothing)
-            .Decision.ShouldBe(StartupProfileDecision.NoDefaultProfile);
+        StartupProfile.Choose(On() with { SignInProfileId = Guid.NewGuid() }, [_desk, _rig], _rig.Id, Nothing)
+            .Decision.ShouldBe(StartupProfileDecision.ProfileMissing);
     }
 
     [Fact]
-    public void Choose_DefaultAlreadyActive_DoesNothing()
+    public void Choose_SignInProfileAlreadyActive_DoesNothing()
     {
         StartupProfile.Choose(On(), [_desk, _rig], _desk.Id, Nothing).Decision.ShouldBe(StartupProfileDecision.AlreadyActive);
     }
@@ -63,14 +62,14 @@ public sealed class StartupProfileTests
     }
 
     [Fact]
-    public void Choose_RuleDevicesConnectedButAutomationPaused_AppliesTheDefault()
+    public void Choose_RuleDevicesConnectedButAutomationPaused_AppliesTheSignInProfile()
     {
         StartupProfile.Choose(On(WheelbaseRule, paused: true), [_desk, _rig], _rig.Id, new HashSet<string> { Wheelbase })
             .Decision.ShouldBe(StartupProfileDecision.Apply);
     }
 
     [Fact]
-    public void Choose_RuleDevicesNotConnected_AppliesTheDefault()
+    public void Choose_RuleDevicesNotConnected_AppliesTheSignInProfile()
     {
         StartupProfile.Choose(On(WheelbaseRule), [_desk, _rig], _rig.Id, Nothing).Decision.ShouldBe(StartupProfileDecision.Apply);
     }

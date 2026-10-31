@@ -107,7 +107,7 @@ public sealed class ProfileRulesEditorTests
     }
 
     [Fact]
-    public void AddRule_WithAnotherDefaultProfile_EndsThere()
+    public void AddRule_WithAnotherSignInProfile_EndsThere()
     {
         Profile desk = Profile("Desk", []);
         var editor = new ProfileRulesEditor(_rig.Id, [], [desk, _rig], desk.Id, Connected, null, PowerCheck(), Logger.None);
@@ -170,7 +170,7 @@ public sealed class ProfileRulesEditorTests
     }
 
     [Fact]
-    public void NewRuleProfiles_WithDefaultProfile_EndsThereAndStartsWithAnother()
+    public void NewRuleProfiles_WithSignInProfile_EndsThereAndStartsWithAnother()
     {
         Profile desk = Profile("Desk", []);
         Profile tv = Profile("TV", []);
@@ -179,7 +179,7 @@ public sealed class ProfileRulesEditorTests
     }
 
     [Fact]
-    public void NewRuleProfiles_WithoutDefaultProfile_EndsAtFirstProfile()
+    public void NewRuleProfiles_WithoutSignInProfile_EndsAtFirstProfile()
     {
         Profile desk = Profile("Desk", []);
 

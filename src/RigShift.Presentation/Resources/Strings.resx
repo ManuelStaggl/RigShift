@@ -10,7 +10,6 @@
   <data name="Profiles_UnreadableFiles" xml:space="preserve"><value>{0} file(s) could not be read: {1}. Details are in the log.</value></data>
   <data name="Profile_Apply" xml:space="preserve"><value>Switch</value></data>
   <data name="Profile_Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Profile_Default" xml:space="preserve"><value>Default</value></data>
   <data name="Profile_Primary" xml:space="preserve"><value>main display</value></data>
   <data name="Profile_Optional" xml:space="preserve"><value>optional</value></data>
   <data name="Display_Unnamed" xml:space="preserve"><value>Unnamed display</value></data>
@@ -82,8 +81,6 @@
   <data name="Outcome_Blocked" xml:space="preserve"><value>Blocked</value></data>
   <data name="Outcome_Failed" xml:space="preserve"><value>Failed</value></data>
   <data name="Outcome_DryRun" xml:space="preserve"><value>Checked</value></data>
-  <data name="Settings_DefaultProfile" xml:space="preserve"><value>Default profile</value></data>
-  <data name="Settings_None" xml:space="preserve"><value>None</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Switch back</value></data>
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One hotkey that returns to the last profile.</value></data>
   <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Quick switcher</value></data>
@@ -507,7 +504,6 @@
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>
   <data name="Trigger_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Trigger_Copied" xml:space="preserve"><value>Command copied.</value></data>
-  <data name="Profile_SetDefault" xml:space="preserve"><value>Make default</value></data>
   <data name="Profile_ShortcutMenu" xml:space="preserve"><value>Create desktop shortcut</value></data>
   <data name="Profile_RestoreIconsMenu" xml:space="preserve"><value>Restore desktop icons</value></data>
   <data name="Status_IconsRestoredOne" xml:space="preserve"><value>1 desktop icon put back.</value></data>
@@ -546,10 +542,10 @@
   <data name="Settings_GroupSwitching" xml:space="preserve"><value>Switching</value></data>
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Devices</value></data>
-  <data name="Settings_DefaultProfileHint" xml:space="preserve"><value>Where “Switch back” goes when there is no last profile.</value></data>
-  <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Default profile at sign-in</value></data>
-  <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Switch to it when RigShift starts with Windows.</value></data>
-  <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. With this on, it starts in the default profile instead, unless the devices of a USB rule are connected. Needs a default profile and “Start with Windows”.</value></data>
+  <data name="Settings_SignIn" xml:space="preserve"><value>At sign-in</value></data>
+  <data name="Settings_SignInHint" xml:space="preserve"><value>When RigShift starts with Windows.</value></data>
+  <data name="Settings_SignInTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. Pick a profile to start in it instead, unless the devices of a USB rule are connected. Needs “Start with Windows”.</value></data>
+  <data name="Settings_SignInKeep" xml:space="preserve"><value>Keep what Windows restored</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>For profiles that ask. USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
@@ -820,9 +816,6 @@
   <data name="App_WaitChoice" xml:space="preserve"><value>Wait before the next app</value></data>
   <data name="App_WaitNone" xml:space="preserve"><value>No wait</value></data>
   <data name="App_WaitFixed" xml:space="preserve"><value>Fixed time</value></data>
-  <data name="Profile_DefaultTip" xml:space="preserve">
-    <value>Default profile: where “Switch back” goes when there is no last profile. Change it under Settings.</value>
-  </data>
   <data name="Game_HotkeyHint" xml:space="preserve">
     <value>Starts the session from anywhere while RigShift is running.</value>
   </data>
@@ -887,7 +880,7 @@
     <value>There is no game “{0}”. A desktop shortcut or Stream Deck key may still use an old name.</value>
   </data>
   <data name="Tray_NoPreviousProfile" xml:space="preserve">
-    <value>There is no last profile to go back to yet. A default profile in Settings fills in.</value>
+    <value>There is no last profile to go back to yet.</value>
   </data>
   <data name="Tray_LinkInvalid" xml:space="preserve">
     <value>This link does not work: {0}. RigShift links look like rigshift://apply/&lt;profile&gt;.</value>

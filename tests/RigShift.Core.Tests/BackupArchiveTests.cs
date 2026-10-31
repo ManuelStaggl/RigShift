@@ -31,7 +31,7 @@ public sealed class BackupArchiveTests : IDisposable
         await store.SaveAsync(desk, Ct);
         await store.SaveAsync(rig, Ct);
         var settingsStore = new JsonSettingsStore(SettingsFile, Logger.None);
-        await settingsStore.SaveAsync(new AppSettings { DefaultProfileId = desk.Id, Language = "de", ConfirmTimeoutSeconds = 7 }, Ct);
+        await settingsStore.SaveAsync(new AppSettings { SignInProfileId = desk.Id, Language = "de", ConfirmTimeoutSeconds = 7 }, Ct);
         using var archive = new MemoryStream();
 
         BackupArchive.Write(_directory, archive).ShouldBe(2);
@@ -50,7 +50,7 @@ public sealed class BackupArchiveTests : IDisposable
         restoredRig.Hotkey.ShouldBe(rig.Hotkey);
         restoredRig.Displays.Count.ShouldBe(rig.Displays.Count);
         AppSettings settings = await new JsonSettingsStore(Path.Combine(other, "settings.json"), Logger.None).LoadAsync(Ct);
-        settings.DefaultProfileId.ShouldBe(desk.Id);
+        settings.SignInProfileId.ShouldBe(desk.Id);
         settings.Language.ShouldBe("de");
         settings.ConfirmTimeoutSeconds.ShouldBe(7);
         Directory.Delete(other, recursive: true);

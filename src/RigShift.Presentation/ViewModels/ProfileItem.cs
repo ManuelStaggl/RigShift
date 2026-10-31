@@ -30,17 +30,8 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     /// <summary>Name for screen readers; the active state is also shown as text and check mark, not only by color.</summary>
     public string AccessibleName => IsActive ? $"{Name}, {Loc.Instance["Profile_Active"]}" : Name;
 
-    /// <summary>"Default · Active" below the name on the profile card; <c>null</c> when neither applies.</summary>
-    public string? StatusText => (IsDefault, IsActive) switch
-    {
-        (true, true) => $"{Loc.Instance["Profile_Default"]} · {Loc.Instance["Profile_Active"]}",
-        (true, false) => Loc.Instance["Profile_Default"],
-        (false, true) => Loc.Instance["Profile_Active"],
-        _ => null,
-    };
-
-    /// <summary>What "Default" in the status means; <c>null</c> for any other profile, so there is no tooltip.</summary>
-    public string? DefaultTip => IsDefault ? Loc.Instance["Profile_DefaultTip"] : null;
+    /// <summary>"Active" below the name on the profile card; <c>null</c> otherwise.</summary>
+    public string? StatusText => IsActive ? Loc.Instance["Profile_Active"] : null;
 
     /// <summary>Whether <see cref="StatusText"/> says anything, for a caption that is hidden when it would be empty.</summary>
     public bool HasStatus => StatusText is not null;
@@ -71,10 +62,6 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AccessibleName), nameof(StatusText), nameof(HasStatus), nameof(ShowsReadiness), nameof(ShowsHotkeyLine))]
     public partial bool IsActive { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText), nameof(HasStatus), nameof(DefaultTip))]
-    public partial bool IsDefault { get; set; }
 
     [ObservableProperty]
     public partial string? CheckMessage { get; set; }

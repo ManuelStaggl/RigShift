@@ -44,14 +44,14 @@ public sealed class ProfileCatalogTests : IDisposable
     }
 
     [Fact]
-    public async Task Delete_OfTheDefaultProfile_LeavesNoDefault()
+    public async Task Delete_OfTheSignInProfile_KeepsWhatWindowsRestores()
     {
         (Profile desk, _) = await TwoProfilesAsync();
-        await _host.Catalog.ToggleDefaultAsync(desk, CancellationToken.None);
+        await _host.Settings.UpdateAsync(s => s with { SignInProfileId = desk.Id }, CancellationToken.None);
 
         await _host.Catalog.DeleteAsync(desk, CancellationToken.None);
 
-        _host.Settings.Current.DefaultProfileId.ShouldBeNull();
+        _host.Settings.Current.SignInProfileId.ShouldBeNull();
     }
 
     [Theory]

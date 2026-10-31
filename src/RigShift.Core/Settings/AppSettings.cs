@@ -14,17 +14,37 @@ public sealed record AppSettings
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 
     /// <summary>
-    /// Profile marked as default: where "switch back" goes without a last profile, and with
-    /// <see cref="ApplyDefaultProfileWithWindows"/> the layout after signing in. The 1.x key
-    /// <c>applyDefaultProfileOnStartup</c> is ignored: it applied on every start, not only with Windows.
+    /// At sign-in, i.e. when RigShift starts with Windows (issue #13): switch to this profile. <c>null</c> keeps the
+    /// layout Windows brought back, the one the PC was shut down in. A USB rule whose devices are connected wins.
     /// </summary>
-    public Guid? DefaultProfileId { get; init; }
+    public Guid? SignInProfileId { get; init; }
 
     /// <summary>
-    /// Switch to <see cref="DefaultProfileId"/> when RigShift starts with Windows (issue #13): Windows brings back the
-    /// layout the PC was shut down in, the rig included. A USB rule whose devices are connected at that moment wins.
+    /// The default profile before 5.0, read only and moved by <see cref="WithSignInMigrated"/>; never written. Its
+    /// other use, where "switch back" went without a last profile, <see cref="PreviousProfileId"/> took over. The 1.x
+    /// key <c>applyDefaultProfileOnStartup</c> is ignored: it applied on every start, not only with Windows.
     /// </summary>
-    public bool ApplyDefaultProfileWithWindows { get; init; }
+    [JsonPropertyName("defaultProfileId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Guid? LegacyDefaultProfileId { get; init; }
+
+    /// <summary>"Default profile at sign-in" before 5.0, read only like <see cref="LegacyDefaultProfileId"/>.</summary>
+    [JsonPropertyName("applyDefaultProfileWithWindows")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? LegacyApplyDefaultProfileWithWindows { get; init; }
+
+    /// <summary>
+    /// The two settings before 5.0 as the one sign-in choice, with the same effect at sign-in: only a default profile
+    /// with "at sign-in" on becomes <see cref="SignInProfileId"/>; a default profile alone kept what Windows restored.
+    /// </summary>
+    public AppSettings WithSignInMigrated() => LegacyDefaultProfileId is null && LegacyApplyDefaultProfileWithWindows is null
+        ? this
+        : this with
+        {
+            SignInProfileId = SignInProfileId ?? (LegacyApplyDefaultProfileWithWindows == true ? LegacyDefaultProfileId : null),
+            LegacyDefaultProfileId = null,
+            LegacyApplyDefaultProfileWithWindows = null,
+        };
 
     /// <summary>System-wide key combination for "back to the previous profile" (1.7.0); <c>null</c> = none.</summary>
     public Profiles.Hotkey? ToggleHotkey { get; init; }
@@ -297,7 +317,7 @@ public sealed class JsonSettingsStore
                 _log.Warning("Settings file {File} held values out of range or empty entries; they were put right", _file);
             }
 
-            return MigrateRules(sanitized);
+            return MigrateRules(sanitized.WithSignInMigrated());
         }
         catch (JsonException ex)
         {

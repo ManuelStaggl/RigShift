@@ -143,7 +143,7 @@ public static partial class DiagnosticsReport
         text.AppendLine(FormattableString.Invariant($"Updates: {(settings.OnlyNotifyAboutUpdates ? "notify only" : "install automatically")}"));
         text.AppendLine(FormattableString.Invariant($"Confirmation countdown: {settings.ConfirmTimeoutSeconds} s"));
         text.AppendLine(FormattableString.Invariant(
-            $"Default profile: {(settings.DefaultProfileId is null ? "none" : "set")}, switch-back hotkey: {(settings.ToggleHotkey is null ? "none" : "set")}"));
+            $"At sign-in: {(settings.SignInProfileId is null ? "keep what Windows restored" : "switch to a profile")}, switch-back hotkey: {(settings.ToggleHotkey is null ? "none" : "set")}"));
         text.AppendLine(FormattableString.Invariant($"USB rules: {rules}{(rules > 0 && settings.AutomationPaused ? " (paused)" : string.Empty)}"));
         text.AppendLine(FormattableString.Invariant($"Games: {gameCount}"));
         text.AppendLine(FormattableString.Invariant($"Detailed log: {(settings.DetailedLogging ? "on" : "off")}"));

@@ -45,7 +45,6 @@ public sealed partial class ProfileCatalog : ObservableObject
         _dataDirectory = paths.DataDirectory;
         IsEmpty = true;
 
-        settings.Changed += (_, _) => UpdateFlags();
         Loc.Instance.PropertyChanged += (_, _) => Rebuild();
     }
 
@@ -278,21 +277,11 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 
-    /// <summary>Makes the profile the default profile, or leaves no default if it already is.</summary>
-    public async Task ToggleDefaultAsync(Profile profile, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(profile);
-
-        Guid? id = _settings.Current.DefaultProfileId == profile.Id ? null : profile.Id;
-        await _settings.UpdateAsync(s => s with { DefaultProfileId = id }, cancellationToken);
-        _log.Information("Default profile set to {Profile}", id is null ? "(none)" : profile.Name);
-    }
-
     /// <summary>How many USB rules belong to the profile and would go with it (F3, dialog text).</summary>
     public int RuleCount(Guid profileId) => _settings.Current.AutomationRules?.Count(r => r.ProfileId == profileId) ?? 0;
 
     /// <summary>
-    /// Deletes the profile; if it was the default profile, there is no default afterwards. Its USB rules go with it –
+    /// Deletes the profile; if it was the sign-in profile, sign-in keeps what Windows restored. Its USB rules go with it –
     /// a rule that switches to a profile that no longer exists would keep firing into nothing. A rule of another
     /// profile that only ends in this one keeps running and stays where it is instead. A backup is written first.
     /// </summary>
@@ -307,7 +296,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         await _settings.UpdateAsync(
             s => s with
             {
-                DefaultProfileId = s.DefaultProfileId == profile.Id ? null : s.DefaultProfileId,
+                SignInProfileId = s.SignInProfileId == profile.Id ? null : s.SignInProfileId,
                 AutomationRules = s.AutomationRules is null ? null : [.. s.AutomationRules
                     .Where(r => r.ProfileId != profile.Id)
                     .Select(r => r.OnExit == ExitAction.SwitchTo && r.ExitProfileId == profile.Id
@@ -321,7 +310,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     }
 
     /// <summary>
-    /// Brings a deleted profile back with its USB rules (at their old place), exit targets and default flag. Changes
+    /// Brings a deleted profile back with its USB rules (at their old place), exit targets and sign-in choice. Changes
     /// made to other profiles and rules since the delete stay.
     /// </summary>
     // shortcut: a hotkey or name another profile took in the meantime is not checked; the undo is offered for seconds only.
@@ -335,7 +324,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         await _settings.UpdateAsync(
             s => s with
             {
-                DefaultProfileId = before.DefaultProfileId == id && s.DefaultProfileId is null ? id : s.DefaultProfileId,
+                SignInProfileId = before.SignInProfileId == id && s.SignInProfileId is null ? id : s.SignInProfileId,
                 AutomationRules = RulesWith(s.AutomationRules, before.AutomationRules ?? [], id),
             },
             cancellationToken);
@@ -522,7 +511,6 @@ public sealed partial class ProfileCatalog : ObservableObject
         foreach (ProfileItem item in Items)
         {
             item.IsActive = item.Profile.Id == ActiveProfile?.Id;
-            item.IsDefault = item.Profile.Id == _settings.Current.DefaultProfileId;
         }
     }
 }
