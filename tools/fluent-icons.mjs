@@ -10,7 +10,7 @@ const regular = {
   ArrowUp: 'Arrow Up', ArrowDown: 'Arrow Down', ArrowRight: 'Arrow Right', Play: 'Play', Pause: 'Pause', Speaker2: 'Speaker 2',
   Apps: 'Apps', PlugConnected: 'Plug Connected', ToggleRight: 'Toggle Right', Window: 'Window', Copy: 'Copy', Dismiss: 'Dismiss',
   ArrowSwap: 'Arrow Swap', Keyboard: 'Keyboard', Archive: 'Archive', Flag: 'Flag', Open: 'Open', Pin: 'Pin', Search: 'Search',
-  Checkmark: 'Checkmark', ScanDash: 'Scan Dash', ArrowCounterclockwise: 'Arrow Counterclockwise', Info: 'Info', ArrowEnter: 'Arrow Enter',
+  Checkmark: 'Checkmark', ScanDash: 'Scan Dash', ArrowCounterclockwise: 'Arrow Counterclockwise', Info: 'Info', ArrowEnterLeft: 'Arrow Enter Left',
   VehicleCarProfile: 'Vehicle Car Profile', HeadsetVr: 'Headset VR', Tv: 'TV', Mic: 'Mic',
 };
 const filled = ['Board', 'Desktop', 'Games', 'Eye', 'Options', 'QuestionCircle', 'Play', 'Pin'];

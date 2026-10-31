@@ -665,7 +665,7 @@
         <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{Binding SwitchLabel}" Command="{Binding SwitchCommand}" IsVisible="{Binding HasSelection}">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" Text="{Binding SwitchLabel}" />
-            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
+            <Border Classes="kbd key"><Path Classes="icon md" Data="{x:Static v:Icons.ArrowEnterLeft20}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

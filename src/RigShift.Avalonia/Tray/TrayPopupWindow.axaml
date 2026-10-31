@@ -84,7 +84,7 @@
           IsVisible="{Binding HasRules}"
           ToolTip.Tip="{Binding PauseTip}"
           AutomationProperties.Name="{Binding PauseTip}">
-          <Path Classes="icon" Fill="{Binding $parent[ToggleButton].Foreground}" Data="{x:Static v:Icons.Pause16}" />
+          <Path Classes="icon" Data="{x:Static v:Icons.Pause16}" />
         </ToggleButton>
         <Button
           Grid.Column="2"

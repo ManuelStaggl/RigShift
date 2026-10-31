@@ -256,7 +256,7 @@
                               <StackPanel Spacing="8" ToolTip.Tip="{Binding Sub}">
                                 <!-- The arrangement as picture; "switch nothing" gets the desk symbol in the same place. -->
                                 <Panel Height="36">
-                                  <v:DisplayTopology Displays="{Binding Topology}" IsVisible="{Binding HasTopology}" Size="Tray" />
+                                  <v:DisplayTopology Displays="{Binding Topology}" IsVisible="{Binding HasTopology}" Size="Card" />
                                   <Path HorizontalAlignment="Center" Classes="icon md quiet" IsVisible="{Binding !HasTopology}" Data="{x:Static v:Icons.Desktop20}" />
                                 </Panel>
                                 <StackPanel>
@@ -585,7 +585,7 @@
         <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{Binding PlayLabel}" Command="{Binding PlayCommand}" IsVisible="{Binding HasSelection}">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" Text="{Binding PlayLabel}" />
-            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
+            <Border Classes="kbd key"><Path Classes="icon md" Data="{x:Static v:Icons.ArrowEnterLeft20}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

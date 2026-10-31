@@ -213,7 +213,7 @@
         <Button x:Name="BarSwitch" Grid.Column="1" VerticalAlignment="Center" Classes="ab" Click="OnSwitch">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock x:Name="BarSwitchText" VerticalAlignment="Center" />
-            <Border Classes="kbd"><Path Classes="icon" Data="{x:Static v:Icons.ArrowEnter16}" /></Border>
+            <Border Classes="kbd key"><Path Classes="icon md" Data="{x:Static v:Icons.ArrowEnterLeft20}" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />

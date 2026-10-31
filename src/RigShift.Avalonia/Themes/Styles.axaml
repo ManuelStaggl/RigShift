@@ -90,6 +90,13 @@
   <Style Selector="Button Path.icon">
     <Setter Property="Fill" Value="{Binding $parent[Button].Foreground}" />
   </Style>
+  <!-- A toggle's icon: neutral while off, the accent only while on (paused). -->
+  <Style Selector="ToggleButton Path.icon">
+    <Setter Property="Fill" Value="{DynamicResource RsText2}" />
+  </Style>
+  <Style Selector="ToggleButton:checked Path.icon">
+    <Setter Property="Fill" Value="{DynamicResource RsAccentText}" />
+  </Style>
   <Style Selector="Button.ghost Path.icon">
     <Setter Property="Fill" Value="{DynamicResource RsText2}" />
   </Style>
@@ -294,7 +301,7 @@
     <Setter Property="IsVisible" Value="True" />
   </Style>
   <Style Selector="Button.rail Path.icon">
-    <Setter Property="Fill" Value="{DynamicResource RsText3}" />
+    <Setter Property="Fill" Value="{DynamicResource RsText2}" />
   </Style>
   <Style Selector="Button.rail:pointerover Path.icon">
     <Setter Property="Fill" Value="{DynamicResource RsText}" />
@@ -339,9 +346,13 @@
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="HorizontalAlignment" Value="Center" />
   </Style>
+  <!-- A key shown as a symbol (Enter): the 20 px drawing fills the 20 px cap, Fluent's own margin keeps it inside. -->
   <Style Selector="Border.kbd > Path.icon">
     <Setter Property="Fill" Value="{DynamicResource RsText2}" />
     <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.kbd.key">
+    <Setter Property="Padding" Value="2,0" />
   </Style>
   <!-- A small label: launch source, a sim value, "Steam". -->
   <Style Selector="Border.chip">
@@ -407,6 +418,13 @@
     <Setter Property="IsVisible" Value="False" />
   </Style>
   <Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <!-- Dialogs: a caption button the window cannot use is not drawn at all, not greyed out. -->
+  <Style Selector="Window[CanMaximize=False] WindowDrawnDecorations /template/ Button#PART_MaximizeButton">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Window[CanMinimize=False] WindowDrawnDecorations /template/ Button#PART_MinimizeButton">
     <Setter Property="IsVisible" Value="False" />
   </Style>
 

@@ -34,14 +34,14 @@
       <Grid Grid.Row="1" Margin="0,20,0,0" ColumnDefinitions="*,Auto,Auto,Auto,*">
         <StackPanel Grid.Column="1" Width="176">
           <Border Height="72" Padding="8" Background="{DynamicResource RsBay}" CornerRadius="{DynamicResource RsRadiusMd}">
-            <v:DisplayTopology x:Name="BeforeTopology" Size="Tray" />
+            <v:DisplayTopology x:Name="BeforeTopology" Size="Card" />
           </Border>
           <TextBlock x:Name="BeforeName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption" TextTrimming="CharacterEllipsis" />
         </StackPanel>
         <Path Grid.Column="2" Margin="16,0,16,24" Classes="icon md quiet" Data="{x:Static v:Icons.ArrowRight20}" />
         <StackPanel Grid.Column="3" Width="176">
           <Border Height="72" Padding="8" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsAccentText}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusMd}">
-            <v:DisplayTopology x:Name="AfterTopology" Size="Tray" />
+            <v:DisplayTopology x:Name="AfterTopology" Size="Card" />
           </Border>
           <TextBlock x:Name="AfterName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption strong" TextTrimming="CharacterEllipsis" />
         </StackPanel>
