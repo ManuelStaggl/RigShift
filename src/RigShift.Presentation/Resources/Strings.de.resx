@@ -548,7 +548,7 @@
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
   <data name="Settings_SignIn" xml:space="preserve"><value>Beim Anmelden</value></data>
   <data name="Settings_SignInTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit einem Profil startet er stattdessen in diesem, außer die Geräte einer USB-Regel sind verbunden. Braucht „Mit Windows starten“.</value></data>
-  <data name="Settings_SignInKeep" xml:space="preserve"><value>Windows-Anordnung behalten</value></data>
+  <data name="Settings_SignInKeep" xml:space="preserve"><value>Nicht umschalten</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Für Profile, die nachfragen. Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Menü im Infobereich.</value></data>
