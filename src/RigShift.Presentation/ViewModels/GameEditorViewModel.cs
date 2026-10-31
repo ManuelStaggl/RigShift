@@ -312,6 +312,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
 
         GameEntry filled = SimTemplates.Apply(new GameEntry { Id = _original.Id, Name = installed.Name, Launch = installed.Launch });
+        filled = filled with { Launch = Windows.Games.GameLibrary.WithGuessedProcess(filled.Launch, _log) };
+        _launch = filled.Launch;
         ProcessName = filled.Launch.ProcessName ?? string.Empty;
         LauncherProcessName = filled.LauncherProcessName ?? string.Empty;
         SelectedEnd = EndChoices.First(c => c.Key == filled.EndsWith.ToString());
@@ -386,6 +388,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         {
             Target = LaunchTarget.Trim(),
             ProcessName = string.IsNullOrWhiteSpace(ProcessName) ? null : ProcessName.Trim(),
+
+            // A name typed over the guess is the user's.
+            ProcessNameGuessed = _launch.ProcessNameGuessed && string.Equals(ProcessName.Trim(), _launch.ProcessName, StringComparison.Ordinal),
             Arguments = SupportsArguments && !string.IsNullOrWhiteSpace(Arguments) ? Arguments.Trim() : null,
             OpenXrRuntime = _launch.Kind == GameLaunchKind.Executable ? SelectedRuntime?.Key : null,
         },

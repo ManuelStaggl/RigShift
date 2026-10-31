@@ -1,4 +1,5 @@
 using RigShift.Core.Abstractions;
+using RigShift.Core.Games;
 using Serilog;
 
 namespace RigShift.Windows.Games;
@@ -36,6 +37,24 @@ public sealed class GameLibrary : IGameLibrary
         return [.. games
             .DistinctBy(g => (g.Launch.Kind, g.Launch.Target))
             .OrderBy(g => g.Name, StringComparer.CurrentCultureIgnoreCase)];
+    }
+
+    /// <summary>
+    /// The launch with a guessed process name for a store game that has none yet, so "also run when started from the
+    /// store" works before the first start through RigShift; otherwise the launch as it is.
+    /// </summary>
+    public static GameLaunch WithGuessedProcess(GameLaunch launch, ILogger log)
+    {
+        ArgumentNullException.ThrowIfNull(launch);
+        ArgumentNullException.ThrowIfNull(log);
+        if (launch.Kind == GameLaunchKind.Executable || launch.ProcessName is not null || launch.InstallFolder is not { Length: > 0 } folder
+            || GameExecutable.GuessProcessName(folder, log) is not { } guess)
+        {
+            return launch;
+        }
+
+        log.Information("Process name of {Folder} guessed as {Process}", folder, guess);
+        return launch with { ProcessName = guess, ProcessNameGuessed = true };
     }
 
     private IReadOnlyList<InstalledGame> From(string source, Func<IReadOnlyList<InstalledGame>> find)
