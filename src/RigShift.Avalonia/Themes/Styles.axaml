@@ -137,6 +137,14 @@
   <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource RsAccentHover}" />
   </Style>
+  <!-- Disabled: the same button, faded as a whole, so the label stays readable and it never looks active. -->
+  <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RsAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource RsOnAccent}" />
+  </Style>
+  <Style Selector="Button.primary:disabled">
+    <Setter Property="Opacity" Value="0.4" />
+  </Style>
 
   <!-- Icon-only button: no fill until hovered. -->
   <Style Selector="Button.ghost">

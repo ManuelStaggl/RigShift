@@ -1,0 +1,313 @@
+<Window
+  x:Class="RigShift.Avalonia.Views.SetupWizardWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:vm="using:RigShift.App.ViewModels"
+  xmlns:services="using:RigShift.App.Services"
+  x:DataType="vm:SetupWizardViewModel"
+  Title="{v:Tr Setup_Title}"
+  Width="880"
+  Height="600"
+  MinWidth="720"
+  MinHeight="560"
+  ShowInTaskbar="True"
+  WindowStartupLocation="CenterOwner"
+  Background="{DynamicResource RsColumn}">
+  <Window.Styles>
+    <!-- Step list: a 22 px numbered circle, filled once done, ringed in the accent while current, dimmed ahead. -->
+    <Style Selector="Border.circle">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
+    </Style>
+    <Style Selector="Border.circle.current">
+      <Setter Property="BorderBrush" Value="{DynamicResource RsAccentText}" />
+    </Style>
+    <Style Selector="Border.circle.done">
+      <Setter Property="Background" Value="{DynamicResource RsAccent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RsAccent}" />
+    </Style>
+    <Style Selector="TextBlock.num">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText3}" />
+    </Style>
+    <Style Selector="TextBlock.step">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    </Style>
+    <Style Selector="TextBlock.num.current, TextBlock.step.current">
+      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    </Style>
+    <Style Selector="TextBlock.step.current">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.num.ahead, TextBlock.step.ahead">
+      <Setter Property="Foreground" Value="{DynamicResource RsText4}" />
+    </Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Padding" Value="16" />
+      <Setter Property="Background" Value="{DynamicResource RsCard}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RsOutline}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+    </Style>
+    <!-- Information, not a warning: the accent's soft tint. -->
+    <Style Selector="Border.notice.info">
+      <Setter Property="Background" Value="{DynamicResource RsAccentSoft}" />
+    </Style>
+    <Style Selector="TextBlock.field">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="220,*">
+    <!-- Step list: where the user is, and how much is left. -->
+    <DockPanel Margin="16,24,16,16">
+      <Button HorizontalAlignment="Left" Classes="link" Command="{Binding SkipCommand}" Content="{v:Tr Setup_SkipAll}" DockPanel.Dock="Bottom" />
+      <ItemsControl ItemsSource="{Binding StepList}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:WizardStepItem">
+            <Grid Height="36" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <Border Classes="circle" Classes.current="{Binding IsCurrent}" Classes.done="{Binding IsDone}">
+                <Panel>
+                  <TextBlock Classes="num" Classes.ahead="{Binding IsAhead}" Classes.current="{Binding IsCurrent}" IsVisible="{Binding !IsDone}" Text="{Binding Number}" />
+                  <Path Classes="icon small" Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsDone}" Stroke="{DynamicResource RsOnAccent}" StrokeThickness="2.5" Data="M5 12 L10 17 L19 7" />
+                </Panel>
+              </Border>
+              <TextBlock Grid.Column="1" Classes="step" Classes.ahead="{Binding IsAhead}" Classes.current="{Binding IsCurrent}" Text="{Binding Text}" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </DockPanel>
+
+    <!-- Page surface, as in the main window. -->
+    <Border Grid.Column="1" Background="{DynamicResource RsContent}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1,0,0,0">
+      <Grid Margin="32,24,32,20" RowDefinitions="*,Auto">
+
+        <!-- Welcome: the brand once in the whole app, the slogan, the three steps as cards with a symbol. -->
+        <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsWelcome}" Spacing="28">
+          <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="16">
+            <!-- The title bar's mark, larger. -->
+            <Viewbox Width="72" Height="54">
+              <Canvas Width="240" Height="180">
+                <Path
+                  Data="M76 60 L17 55 Q10 54 10 61 V124 Q10 130 17 129 L74 124 M153 63 L222 55 Q230 54 230 62 V124 Q230 130 222 129 L166 123 M47 127 V140 M32 143 L64 138 M191 127 V140 M176 138 L207 144"
+                  Stroke="{DynamicResource RsText}"
+                  StrokeJoin="Round"
+                  StrokeLineCap="Round"
+                  StrokeThickness="12" />
+                <Path Data="M141 9 L177 40 L141 71 V52 C109 49 83 60 76 88 C67 68 75 44 97 32 C110 25 124 24 141 25 Z M89 62 H137 V72 H82 Z M41 116 C77 92 97 83 116 83 L88 114 Z M124 83 C145 84 167 95 199 116 L151 114 Z M119 88 H123 L125 95 H117 Z M116 99 H126 L129 109 H113 Z M111 114 H131 L135 130 H107 Z M105 122 V139 C133 142 145 135 148 122 C160 149 139 162 105 160 V174 L77 148 Z" Fill="{DynamicResource RsAccentText}" />
+              </Canvas>
+            </Viewbox>
+            <TextBlock VerticalAlignment="Center" Classes="h1" FontSize="40" LetterSpacing="-0.8" Text="RigShift" />
+          </StackPanel>
+          <TextBlock MaxWidth="440" HorizontalAlignment="Center" Classes="secondary" Text="{v:Tr Setup_Tagline}" TextAlignment="Center" TextWrapping="Wrap" />
+          <ItemsControl MaxWidth="600" HorizontalAlignment="Center" ItemsSource="{Binding WelcomeList}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:WizardStepItem">
+                <Border Margin="6,0" Classes="card">
+                  <StackPanel Spacing="10">
+                    <Path HorizontalAlignment="Left" Classes="icon" Width="22" Height="22" Stroke="{DynamicResource RsAccentText}" Data="{Binding Number, Converter={x:Static v:SetupWizardWindow.WelcomeIcon}}" />
+                    <TextBlock Foreground="{DynamicResource RsText}" Text="{Binding Text}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <ScrollViewer Margin="0,0,-16,0" Padding="0,0,16,0" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding !IsWelcome}">
+          <StackPanel Spacing="20">
+            <!-- Heading of every step but the welcome one; read out on every step. -->
+            <StackPanel Spacing="6">
+              <TextBlock AutomationProperties.LiveSetting="Polite" Classes="h1" Text="{Binding StepTitle}" TextWrapping="Wrap" />
+              <TextBlock Classes="secondary" Text="{Binding StepText}" TextWrapping="Wrap" />
+              <TextBlock Classes="secondary" IsVisible="{Binding HasSurroundHint}" Text="{Binding SurroundHint}" TextWrapping="Wrap" />
+              <!-- The hardest part for a newcomer: how Windows turns a display off. -->
+              <StackPanel IsVisible="{Binding IsSecond}" Spacing="6">
+                <Button HorizontalAlignment="Left" Classes="link" Command="{Binding ToggleHowCommand}" Content="{v:Tr Setup_How}" />
+                <StackPanel IsVisible="{Binding ShowHow}" Spacing="2">
+                  <TextBlock Classes="secondary" Text="{v:Tr Setup_HowStep1}" TextWrapping="Wrap" />
+                  <TextBlock Classes="secondary" Text="{v:Tr Setup_HowStep2}" TextWrapping="Wrap" />
+                  <TextBlock Classes="secondary" Text="{v:Tr Setup_HowStep3}" TextWrapping="Wrap" />
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+
+            <Border Classes="notice danger" IsVisible="{Binding HasError}">
+              <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+            </Border>
+
+            <!-- Profile steps: the live picture, a name and the audio devices. -->
+            <StackPanel IsVisible="{Binding IsProfileStep}" Spacing="16">
+              <Border AutomationProperties.LiveSetting="Polite" Classes="notice" IsVisible="{Binding MatchesFirst}">
+                <TextBlock Text="{v:Tr Setup_SameText}" TextWrapping="Wrap" />
+              </Border>
+              <Border Classes="notice info" IsVisible="{Binding IsDifferent}">
+                <TextBlock Text="{Binding DifferentText}" TextWrapping="Wrap" />
+              </Border>
+
+              <Border Padding="20,14,20,18" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="12">
+                <Grid RowDefinitions="Auto,115">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock VerticalAlignment="Center" Classes="caption" Text="{v:Tr Setup_Now}" />
+                    <Button Grid.Column="1" Classes="ghost" Padding="8,4" Command="{Binding OpenDisplaySettingsCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Path Classes="icon small" Data="M14 4 H20 V10 M20 4 L11 13 M18 14 V20 H4 V6 H10" />
+                        <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource RsText2}" Text="{v:Tr Setup_OpenDisplaySettings}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <v:DisplayTopology Grid.Row="1" Margin="40,12,40,0" Displays="{Binding Topology}" IsVisible="{Binding HasDisplays}" Size="Card" />
+                  <TextBlock Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="secondary" IsVisible="{Binding HasNoDisplays}" Text="{v:Tr Setup_NoDisplays}" />
+                </Grid>
+              </Border>
+
+              <Grid ColumnDefinitions="260,16,260" RowDefinitions="Auto,12,Auto">
+                <StackPanel>
+                  <TextBlock Classes="field" Text="{v:Tr Editor_Name}" />
+                  <TextBox x:Name="NameBox" AutomationProperties.Name="{v:Tr Editor_Name}" MaxLength="60" Text="{Binding ProfileName}" />
+                  <TextBlock Margin="0,4,0,0" Classes="caption danger" IsVisible="{Binding HasNameProblem}" Text="{Binding NameProblem}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Row="2">
+                  <TextBlock Classes="field" Text="{Binding Playback.Label, FallbackValue=''}" />
+                  <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Playback.Label, FallbackValue=''}" ItemsSource="{Binding Playback.Choices, FallbackValue={x:Null}}" SelectedItem="{Binding Playback.Selected, Converter={x:Static v:Converters.KeepOnNull}, FallbackValue={x:Null}}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:AudioChoice">
+                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="2">
+                  <TextBlock Classes="field" Text="{Binding Recording.Label, FallbackValue=''}" />
+                  <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Recording.Label, FallbackValue=''}" ItemsSource="{Binding Recording.Choices, FallbackValue={x:Null}}" SelectedItem="{Binding Recording.Selected, Converter={x:Static v:Converters.KeepOnNull}, FallbackValue={x:Null}}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:AudioChoice">
+                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+              </Grid>
+              <TextBlock Classes="caption" Text="{v:Tr Setup_DetailsLater}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <!-- Trigger step: turn the device on, RigShift picks it. -->
+            <StackPanel IsVisible="{Binding IsTrigger}" Spacing="16">
+              <Border AutomationProperties.LiveSetting="Polite" Classes="notice info" IsVisible="{Binding HasDetected}">
+                <TextBlock Text="{Binding DetectedMessage}" TextWrapping="Wrap" />
+              </Border>
+              <StackPanel Width="360" HorizontalAlignment="Left">
+                <TextBlock Classes="field" Text="{v:Tr Automation_Device}" />
+                <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="{v:Tr Automation_Device}" ItemsSource="{Binding DeviceChoices}" SelectedItem="{Binding SelectedDevice, Converter={x:Static v:Converters.KeepOnNull}}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:Choice">
+                      <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+              <Border Classes="card" IsVisible="{Binding RuleText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                  <Path VerticalAlignment="Top" Classes="icon small" Data="{x:Static v:Icons.Triggers}" />
+                  <TextBlock Grid.Column="1" Foreground="{DynamicResource RsText}" Text="{Binding RuleText}" TextWrapping="Wrap" />
+                </Grid>
+              </Border>
+              <Border Classes="notice" IsVisible="{Binding HasPowerWarning}" ToolTip.Tip="{v:Tr Automation_PowerSavingTitle}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                  <TextBlock VerticalAlignment="Center" Text="{v:Tr Automation_PowerSavingText}" TextWrapping="Wrap" />
+                  <Button Grid.Column="1" VerticalAlignment="Center" Classes="link" Command="{x:Static services:HelpLinks.UsbPowerSaving}" Content="{v:Tr Automation_PowerSavingFix}" />
+                </Grid>
+              </Border>
+            </StackPanel>
+
+            <!-- Done: the two profiles as cards, the rule as a sentence, start with Windows. -->
+            <StackPanel IsVisible="{Binding IsDone}" Spacing="12">
+              <ItemsControl ItemsSource="{Binding Summary}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="12" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ProfileItem">
+                    <Border Width="260" Classes="card">
+                      <StackPanel Spacing="2">
+                        <Border Height="64" Margin="0,0,0,8" Padding="8,6" Background="{DynamicResource RsBay}" CornerRadius="8">
+                          <v:DisplayTopology Displays="{Binding Topology}" Size="Tray" />
+                        </Border>
+                        <TextBlock Classes="strong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <!-- The profile's state, as on the profile list: "Default · Active". -->
+                        <TextBlock Classes="caption" IsVisible="{Binding HasStatus}" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+                        <!-- The hotkey the assistant gave the profile, so the text above can point to it. -->
+                        <Border Margin="0,6,0,0" HorizontalAlignment="Left" Classes="kbd" IsVisible="{Binding HasHotkey}">
+                          <TextBlock Text="{Binding HotkeyText}" />
+                        </Border>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Border Padding="16,12" Classes="card" IsVisible="{Binding HasRuleSummary}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                  <Path VerticalAlignment="Top" Classes="icon small" Data="{x:Static v:Icons.Triggers}" />
+                  <TextBlock Grid.Column="1" Foreground="{DynamicResource RsText}" Text="{Binding RuleSummary}" TextWrapping="Wrap" />
+                </Grid>
+              </Border>
+
+              <!-- Preset on: without it nothing switches after the next restart. -->
+              <Border Padding="16,10" Classes="card">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Foreground="{DynamicResource RsText}" Text="{v:Tr Settings_Autostart}" />
+                    <TextBlock Classes="caption" Text="{v:Tr Setup_AutostartHint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Setup_AutostartHint}" AutomationProperties.Name="{v:Tr Settings_Autostart}" IsChecked="{Binding StartWithWindows}" OffContent="" OnContent="" />
+                </Grid>
+              </Border>
+
+              <!-- Windows 11 puts a new tray icon behind the "^": say where RigShift went. -->
+              <Grid Margin="0,2,0,0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <Path VerticalAlignment="Top" Classes="icon small" Data="M12 3 A9 9 0 1 1 11.99 3 Z M12 11 V16.5 M12 7.5 V7.6" />
+                <TextBlock Grid.Column="1" Classes="secondary" Text="{v:Tr Setup_TrayHint}" TextWrapping="Wrap" />
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- One row of actions: back on the left, the step's primary on the right. -->
+        <Grid Grid.Row="1" Margin="0,20,0,0" ColumnDefinitions="Auto,*">
+          <Button MinWidth="96" HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding BackCommand}" Content="{v:Tr Common_Back}" IsVisible="{Binding CanGoBack}" />
+          <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+            <Button x:Name="StartButton" MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding StartCommand}" Content="{v:Tr Setup_Start}" IsVisible="{Binding IsWelcome}" />
+            <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding SaveProfileCommand}" Content="{v:Tr Setup_SaveContinue}" IsVisible="{Binding IsProfileStep}" />
+            <Button HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding SkipTriggerCommand}" Content="{v:Tr Setup_NoTrigger}" IsVisible="{Binding IsTrigger}" />
+            <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding CreateRuleCommand}" Content="{v:Tr Setup_CreateRule}" IsVisible="{Binding IsTrigger}" />
+            <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding FinishCommand}" Content="{v:Tr Setup_Finish}" IsVisible="{Binding IsDone}" />
+            <!-- The aha moment: one real switch, with the countdown that takes it back. -->
+            <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding TryItCommand}" Content="{Binding TryText}" IsVisible="{Binding ShowTry}" />
+          </StackPanel>
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

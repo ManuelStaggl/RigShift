@@ -92,7 +92,32 @@ public static class Program
             .LogToTrace()
             .StartWithClassicDesktopLifetime(args, ShutdownMode.OnExplicitShutdown);
         instance.ReleaseMutex();
+        if (App.RestartRequested)
+        {
+            Restart();
+        }
+
         return exitCode;
+    }
+
+    /// <summary>After "Restart" in the repeated-error dialog, once the single-instance mutex is free.</summary>
+    private static void Restart()
+    {
+        if (Environment.ProcessPath is not { } executable)
+        {
+            return;
+        }
+
+        try
+        {
+            using System.Diagnostics.Process? process = System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(executable) { UseShellExecute = true });
+            Log.Information("Restarted RigShift as process {ProcessId}", process?.Id);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Log.Error(ex, "RigShift could not be restarted");
+        }
     }
 
     /// <summary>Velopack hook: the installed executable handles rigshift:// links.</summary>

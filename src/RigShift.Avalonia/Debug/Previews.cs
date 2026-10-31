@@ -11,7 +11,9 @@ namespace RigShift.Avalonia.Debug;
 /// Debug-only hooks for screenshots, set in the environment: RIGSHIFT_PREVIEW_DISPLAYS=&lt;profile&gt; (every profile's
 /// displays read as attached, that profile's active; nothing is ever applied), RIGSHIFT_PREVIEW_PAGE=&lt;page&gt;,
 /// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
-/// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>).
+/// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>), RIGSHIFT_PREVIEW_CRASH=1 (an exception every
+/// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
+/// that step, nothing saved before the user clicks); <c>--preview-confirmation</c> opens the countdown.
 /// </summary>
 internal static class Previews
 {
@@ -24,8 +26,21 @@ internal static class Previews
         }
     }
 
-    public static void AfterStart(App app, TrayIconService tray)
+    /// <returns><c>true</c> when the assistant opens as a preview, so the first-start assistant stays away.</returns>
+    public static bool AfterStart(App app, TrayIconService tray, bool confirmation)
     {
+        // The countdown cannot be reached on a machine without the profiles' displays: two stored profiles, or the
+        // live arrangement twice, so both pictures show something.
+        if (confirmation)
+        {
+            ProfileCatalog catalog = App.Provider.GetRequiredService<ProfileCatalog>();
+            IReadOnlyList<RigShift.Core.Profiles.Profile> profiles = catalog.Profiles;
+            ConfirmationView view = profiles.Count >= 2
+                ? new ConfirmationView(profiles[1].Id, TopologyDisplays.From(profiles[0].Displays), profiles[0].Name, TopologyDisplays.From(profiles[1].Displays), profiles[1].Name)
+                : new ConfirmationView(Guid.Empty, [], "Desk", [], "Sim Rig");
+            _ = Views.ConfirmationWindow.ShowAsync(view, TimeSpan.FromSeconds(12), CancellationToken.None);
+        }
+
         if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE"), out AppPage page))
         {
             app.ShowMainWindow(page);
@@ -52,10 +67,41 @@ internal static class Previews
                 topology.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? topology : null);
         }
 
+        // A timer that throws on every tick, which is what a broken layout pass or binding looks like.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_CRASH") is { Length: > 0 })
+        {
+            // Thrown from a posted operation, which reports to the UI thread's handler; one thrown in the tick itself
+            // stops the timer, and InvokeAsync keeps its exception in the returned operation.
+            var broken = new global::Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+            broken.Tick += (_, _) => global::Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => throw new InvalidOperationException("Preview: this timer throws on every tick."));
+            broken.Start();
+        }
+
         // After the window, which would take the focus and so close the popup.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
         {
             tray.ShowPopup();
         }
+
+        // The assistant at a step with demo profiles made from the current arrangement: welcome, second, trigger, done.
+        if (!Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep step))
+        {
+            return false;
+        }
+
+        // Logged, not discarded: a XAML error in the assistant would otherwise leave no trace at all.
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await App.Provider.GetRequiredService<Services.PageDialogs>().ShowSetupAssistantAsync(step == SetupStep.Welcome ? null : step);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Setup assistant preview failed");
+            }
+        });
+        return true;
     }
 }

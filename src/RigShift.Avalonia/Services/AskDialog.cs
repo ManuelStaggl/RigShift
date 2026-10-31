@@ -12,13 +12,14 @@ internal sealed record AskChoice<T>(string Label, T Value, bool IsDefault = fals
 
 /// <summary>
 /// A modal question over the main window: title, text and the answers as buttons, right-aligned in Windows order
-/// (the action first, Cancel last). Esc and the close button give the cancel value; Enter the default answer.
+/// (the action first, the way out last). Esc and the close button give the way out's value; Enter the default answer.
 /// </summary>
 internal static class AskDialog
 {
-    public static async Task<T> AskAsync<T>(string title, string text, T cancel, params AskChoice<T>[] choices)
+    public static async Task<T> AskAsync<T>(string title, string text, AskChoice<T> cancel, params AskChoice<T>[] choices)
     {
-        T result = cancel;
+        ArgumentNullException.ThrowIfNull(cancel);
+        T result = cancel.Value;
         var window = new Window
         {
             Title = title,
@@ -31,7 +32,7 @@ internal static class AskDialog
         window.Bind(Window.BackgroundProperty, window.GetResourceObservable("RsCard"));
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
-        foreach (AskChoice<T> choice in choices.Append(new AskChoice<T>(Loc.Instance["Common_Cancel"], cancel)))
+        foreach (AskChoice<T> choice in choices.Append(cancel))
         {
             var button = new Button
             {

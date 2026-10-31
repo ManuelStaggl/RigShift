@@ -43,7 +43,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     {
         base.OnFrameworkInitializationCompleted();
         Directory.CreateDirectory(paths.DataDirectory);
-        Dispatcher.UIThread.UnhandledException += (_, e) => Log.Error(e.Exception, "Unhandled exception on the UI thread");
+        Dispatcher.UIThread.UnhandledException += OnUnhandledException;
         LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
         Log.Information("RigShift {Version} (Avalonia) starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, paths.DataDirectory);
 
@@ -74,14 +74,88 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
                 ShowMainWindow();
             }
 #if DEBUG
-            Debug.Previews.AfterStart(this, _tray);
+            bool assistantPreview = Debug.Previews.AfterStart(this, _tray, request.PreviewConfirmation);
+#else
+            const bool assistantPreview = false;
 #endif
+
+            // First start: guide through the first two profiles. Posted, so startup finishes before the dialog blocks.
+            if (!request.Minimized && !assistantPreview && catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles
+                && !Provider.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
+            {
+                // Async void on purpose: an exception reaches the UI handler instead of vanishing in a discarded task.
+                Dispatcher.UIThread.Post(async () => await Provider.GetRequiredService<PageDialogs>().ShowSetupAssistantAsync());
+            }
         }
         catch (Exception ex)
         {
             Log.Fatal(ex, "RigShift failed to start");
             Quit();
         }
+    }
+
+    /// <summary>Set when the user chose "Restart" after a repeated error; <see cref="Program"/> starts RigShift again.</summary>
+    internal static bool RestartRequested { get; private set; }
+
+    private readonly UiExceptionTracker _uiExceptions = new(TimeProvider.System);
+
+    private void OnUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        // Handled in every case: the alternative is the process ending in the middle of whatever the user was doing.
+        // What differs is whether we keep quiet about it.
+        e.Handled = true;
+        UiExceptionVerdict verdict = _uiExceptions.Record(e.Exception);
+        if (verdict == UiExceptionVerdict.Quiet)
+        {
+            // A loop can throw hundreds of times a second; the first ones are in the log with their stack.
+            Log.Debug("Unhandled UI exception again: {Message}", e.Exception.Message);
+            return;
+        }
+
+        Log.Error(e.Exception, "Unhandled UI exception");
+        if (verdict == UiExceptionVerdict.Escalate)
+        {
+            Log.Fatal("The same UI exception keeps coming back, asking the user whether to restart");
+            Dispatcher.UIThread.Post(() => _ = AskAboutRepeatedErrorAsync(e.Exception.Message));
+            return;
+        }
+
+        _tray?.ShowUnexpectedError(e.Exception.Message);
+    }
+
+    private async Task AskAboutRepeatedErrorAsync(string message)
+    {
+        try
+        {
+            while (true)
+            {
+                RepeatedErrorChoice choice = await PageDialogs.AskAboutRepeatedErrorAsync(message);
+                if (choice == RepeatedErrorChoice.OpenLog)
+                {
+                    ShellFolders.Open(paths.Logs, Log.Logger);
+                    continue;
+                }
+
+                if (choice == RepeatedErrorChoice.Restart)
+                {
+                    RestartRequested = true;
+                    Quit();
+                    return;
+                }
+
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            // The dialog is Avalonia too and may be what is broken; then restarting is the safe way out.
+            Log.Error(ex, "The dialog about the repeated error failed, restarting");
+            RestartRequested = true;
+            Quit();
+            return;
+        }
+
+        _uiExceptions.Reset();
     }
 
     public void ShowMainWindow(AppPage? page = null)
@@ -164,7 +238,8 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     private ServiceCollection Register(ServiceCollection services)
     {
         services.AddRigShiftServices(paths, this, Log.Logger);
-        services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
+        services.AddSingleton<AvaloniaSwitchConfirmation>();
+        services.AddSingleton<ISwitchConfirmation>(sp => sp.GetRequiredService<AvaloniaSwitchConfirmation>());
         services.AddSingleton<TrayIconService>();
         services.AddSingleton<ITextClipboard, AvaloniaClipboard>();
         services.AddSingleton<IAppPicker, Views.AvaloniaAppPicker>();
@@ -179,7 +254,8 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
             sp.GetRequiredService<SwitchCoordinator>(),
             sp.GetRequiredService<SettingsService>(),
             Log.Logger,
-            new HotkeyRegistrar()));
+            new HotkeyRegistrar(),
+            sp.GetRequiredService<AvaloniaSwitchConfirmation>()));
         AppIcons.Extract = ProgramIcons.Extract;
         // Pipe requests run on the UI thread, and their awaits stay there.
         services.AddSingleton(sp => new CommandPipeServer(

@@ -32,6 +32,7 @@ internal sealed class TrayIconService : IDisposable
     private TrayPopupWindow? _popup;
     private System.Drawing.Icon? _trayIcon;
     private (int Size, bool LightTaskbar) _iconState;
+    private long? _lastErrorNotification;
 
     /// <summary>What a click on the last notification does; null when it does nothing.</summary>
     private Action? _notificationClick;
@@ -158,6 +159,22 @@ internal sealed class TrayIconService : IDisposable
 
     /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
     public void ShowKeepsRunningHint() => OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NoticeLevel.Info), click: null));
+
+    /// <summary>
+    /// An unexpected error in the UI, once per half minute so a failing timer cannot flood the tray. Without it such
+    /// errors only reached the log and a button simply seemed to do nothing.
+    /// </summary>
+    public void ShowUnexpectedError(string message)
+    {
+        long now = Environment.TickCount64;
+        if (_lastErrorNotification is { } last && now - last < 30_000)
+        {
+            return;
+        }
+
+        _lastErrorNotification = now;
+        OnUi(() => Notify(("RigShift", Loc.Format("Status_Error", message), NoticeLevel.Error), opensHelp: true));
+    }
 
     /// <summary>A link, Stream Deck key or shortcut that could not run: its caller has no console to say why.</summary>
     public void ShowRefusedCommand(string text) => OnUi(() => Notify(("RigShift", text, NoticeLevel.Warning), click: null));
