@@ -6,16 +6,6 @@
   xmlns:vm="using:RigShift.App.ViewModels"
   xmlns:up="using:RigShift.Core.Updates"
   x:DataType="vm:AboutViewModel">
-  <UserControl.Resources>
-    <SolidColorBrush x:Key="HueStart" Color="#4EA7FC" />
-    <SolidColorBrush x:Key="HueStartSoft" Color="#3D4EA7FC" />
-    <SolidColorBrush x:Key="HueKeys" Color="#3FB8AF" />
-    <SolidColorBrush x:Key="HueKeysSoft" Color="#3D3FB8AF" />
-    <SolidColorBrush x:Key="HueBackup" Color="#6CBF5A" />
-    <SolidColorBrush x:Key="HueBackupSoft" Color="#3D6CBF5A" />
-    <SolidColorBrush x:Key="HueProblem" Color="#E8836B" />
-    <SolidColorBrush x:Key="HueProblemSoft" Color="#3DE8836B" />
-  </UserControl.Resources>
   <UserControl.Styles>
     <!-- The four help cards: the hue tile and title, a line of text, the actions at the foot. -->
     <Style Selector="Border.sheet.help">

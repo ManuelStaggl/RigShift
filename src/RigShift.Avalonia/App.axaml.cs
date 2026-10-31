@@ -31,11 +31,13 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     {
         AvaloniaXamlLoader.Load(this);
 #if DEBUG
-        // Screenshots in the light theme: RIGSHIFT_PREVIEW_THEME=Light.
-        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_THEME") == "Light")
+        // Screenshots in a fixed theme whatever Windows uses: RIGSHIFT_PREVIEW_THEME=Light|Dark.
+        RequestedThemeVariant = Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_THEME") switch
         {
-            RequestedThemeVariant = ThemeVariant.Light;
-        }
+            "Light" => ThemeVariant.Light,
+            "Dark" => ThemeVariant.Dark,
+            _ => RequestedThemeVariant,
+        };
 #endif
     }
 
@@ -44,6 +46,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         base.OnFrameworkInitializationCompleted();
         Directory.CreateDirectory(paths.DataDirectory);
         Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+        HighContrast.Follow(this);
         LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
         Log.Information("RigShift {Version} (Avalonia) starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, paths.DataDirectory);
 

@@ -6,21 +6,6 @@
   xmlns:v="using:RigShift.Avalonia.Views"
   xmlns:vm="using:RigShift.App.ViewModels"
   x:DataType="vm:GamesViewModel">
-  <UserControl.Resources>
-    <!-- Section hues as on the profiles page: tools in the apps colour, triggers amber, the end grey. -->
-    <SolidColorBrush x:Key="HueLaunch" Color="#4EA7FC" />
-    <SolidColorBrush x:Key="HueLaunchSoft" Color="#3D4EA7FC" />
-    <SolidColorBrush x:Key="HueSettings" Color="#E8836B" />
-    <SolidColorBrush x:Key="HueSettingsSoft" Color="#3DE8836B" />
-    <SolidColorBrush x:Key="HueApps" Color="#3FB8AF" />
-    <SolidColorBrush x:Key="HueAppsSoft" Color="#3D3FB8AF" />
-    <SolidColorBrush x:Key="HueWindows" Color="#6CBF5A" />
-    <SolidColorBrush x:Key="HueWindowsSoft" Color="#3D6CBF5A" />
-    <SolidColorBrush x:Key="HueTriggers" Color="#F2A83B" />
-    <SolidColorBrush x:Key="HueTriggersSoft" Color="#3DF2A83B" />
-    <SolidColorBrush x:Key="HueEnd" Color="#8A8F98" />
-    <SolidColorBrush x:Key="HueEndSoft" Color="#3D8A8F98" />
-  </UserControl.Resources>
   <UserControl.Styles>
     <!-- Long hints wrap to two or three lines: keep them off the dividers. -->
     <Style Selector="Grid.row > StackPanel">

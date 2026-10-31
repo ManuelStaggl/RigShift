@@ -6,17 +6,6 @@
   xmlns:v="using:RigShift.Avalonia.Views"
   xmlns:vm="using:RigShift.App.ViewModels"
   x:DataType="vm:ProfilesViewModel">
-  <UserControl.Resources>
-    <!-- Section hues: content colour for the group tiles (24 % fill), the same in both themes. -->
-    <SolidColorBrush x:Key="HueAudio" Color="#4EA7FC" />
-    <SolidColorBrush x:Key="HueAudioSoft" Color="#3D4EA7FC" />
-    <SolidColorBrush x:Key="HueApps" Color="#3FB8AF" />
-    <SolidColorBrush x:Key="HueAppsSoft" Color="#3D3FB8AF" />
-    <SolidColorBrush x:Key="HueTriggers" Color="#F2A83B" />
-    <SolidColorBrush x:Key="HueTriggersSoft" Color="#3DF2A83B" />
-    <SolidColorBrush x:Key="HueBehavior" Color="#8A8F98" />
-    <SolidColorBrush x:Key="HueBehaviorSoft" Color="#3D8A8F98" />
-  </UserControl.Resources>
   <UserControl.Styles>
     <!-- USB device chip: grey dot, green while the device is connected. -->
     <Style Selector="Ellipse.dot">

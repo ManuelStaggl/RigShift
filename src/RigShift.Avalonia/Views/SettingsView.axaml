@@ -5,15 +5,6 @@
   xmlns:v="using:RigShift.Avalonia.Views"
   xmlns:vm="using:RigShift.App.ViewModels"
   x:DataType="vm:SettingsViewModel">
-  <UserControl.Resources>
-    <!-- Section hues from the profiles and games pages: switching blue, the app teal, devices amber like the triggers. -->
-    <SolidColorBrush x:Key="HueSwitching" Color="#4EA7FC" />
-    <SolidColorBrush x:Key="HueSwitchingSoft" Color="#3D4EA7FC" />
-    <SolidColorBrush x:Key="HueApp" Color="#3FB8AF" />
-    <SolidColorBrush x:Key="HueAppSoft" Color="#3D3FB8AF" />
-    <SolidColorBrush x:Key="HueDevices" Color="#F2A83B" />
-    <SolidColorBrush x:Key="HueDevicesSoft" Color="#3DF2A83B" />
-  </UserControl.Resources>
   <UserControl.Styles>
     <!-- Long hints wrap to two lines: keep them off the dividers. -->
     <Style Selector="Grid.row > StackPanel">
