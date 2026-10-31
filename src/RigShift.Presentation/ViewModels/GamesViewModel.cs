@@ -193,6 +193,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         {
             Id = Guid.NewGuid(),
             Name = Core.Profiles.ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), _catalog.Games.Select(g => g.Name)),
+            FormerNames = null,
             Hotkey = null,
             StartWithGame = false,
         };

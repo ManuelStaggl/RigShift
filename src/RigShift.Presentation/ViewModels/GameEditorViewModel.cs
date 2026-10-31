@@ -379,6 +379,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public GameEntry ToGame() => _original with
     {
         Name = Name.Trim(),
+        // A copy must not claim the old names of its source.
+        FormerNames = IsNew ? null : NameHistory.After(Saved.Name, Saved.FormerNames, Name),
         Icon = SelectedIcon?.Key,
         Launch = _launch with
         {

@@ -13,6 +13,9 @@ public sealed record Profile
 
     public required string Name { get; init; }
 
+    /// <summary>Names before a rename; name lookups still match them (<see cref="NameHistory"/>).</summary>
+    public IReadOnlyList<string>? FormerNames { get; init; }
+
     /// <summary>Optional symbol key, one of <see cref="ProfileIcons.All"/>; unknown keys show the RigShift symbol.</summary>
     public string? Icon { get; init; }
 
