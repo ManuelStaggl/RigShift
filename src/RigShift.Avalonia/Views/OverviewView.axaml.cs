@@ -51,7 +51,7 @@ public sealed partial class OverviewView : UserControl
         BarIcon.Data = Glyphs.Profile(active?.IconKey);
         BarSwitch.Tag = next;
         BarSwitch.IsVisible = next is not null;
-        BarSwitchText.Text = next is null ? null : $"Switch to {next.Name}";
+        BarSwitchText.Text = next is null ? null : Loc.Format("Palette_SwitchTo", next.Name);
         global::Avalonia.Automation.AutomationProperties.SetName(BarSwitch, BarSwitchText.Text);
 
         bool switching = ViewModel.Coordinator.SwitchingProfile is not null;
