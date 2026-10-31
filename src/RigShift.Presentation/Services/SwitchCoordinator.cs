@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Cli;
 using RigShift.Core.Profiles;
@@ -89,6 +90,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public event EventHandler<SwitchRecord>? FollowUpCompleted;
 
     public ObservableCollection<SwitchRecord> History { get; } = [];
+
+    /// <summary>
+    /// The steps of the running switch, or of the last one until the next starts, in the order they run. Only steps the
+    /// profile uses: a step shows once the switch announced it.
+    /// </summary>
+    public ObservableCollection<SwitchStepRow> Steps { get; } = [];
+
+    private int _stepsRun;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
@@ -272,8 +281,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             // The name first: a handler of IsSwitching already wants to say where the switch goes.
             SwitchingProfile = profile;
             IsSwitching = true;
+            Steps.Clear();
+            int run = ++_stepsRun;
             SwitchRequest effective = request with
             {
+                Progress = request.KeepDisplays || request.DryRun ? null : new StepReports(this, run),
                 DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds,
                 // Windows restored the displays already, so the profile they left is the previous one.
                 Leaving = request.KeepDisplays && _catalog.PreviousProfileId is { } previous ? _catalog.Find(previous) : _catalog.ActiveProfile,
@@ -498,6 +510,59 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         || profile.DisableCommunicationsDucking
         || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
             or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };
+
+    /// <summary>The reports of a switch, in the order they were made, on the UI thread – the list is bound to the tray and the overview.</summary>
+    /// <remarks>A late report of an earlier switch – its apps ending – never lands in the list of the next one.</remarks>
+    private sealed class StepReports(SwitchCoordinator owner, int run) : IProgress<SwitchStep>
+    {
+        public void Report(SwitchStep value)
+        {
+            if (owner._ui is { } ui)
+            {
+                ui.Post(_ => Apply(value), null);
+                return;
+            }
+
+            lock (owner.Steps)
+            {
+                Apply(value);
+            }
+        }
+
+        private void Apply(SwitchStep value)
+        {
+            if (owner._stepsRun == run)
+            {
+                owner.OnStep(value);
+            }
+        }
+    }
+
+    private void OnStep(SwitchStep step)
+    {
+        SwitchStepRow? row = Steps.FirstOrDefault(r => r.Kind == step.Kind);
+        if (row is null)
+        {
+            if (step.State != SwitchStepState.Waiting)
+            {
+                return;
+            }
+
+            // In the order the steps run, whatever order the reports arrive in.
+            row = new SwitchStepRow(step.Kind);
+            int index = Steps.TakeWhile(r => r.Kind < step.Kind).Count();
+            Steps.Insert(index, row);
+        }
+
+        // A late report never takes a finished step back.
+        if (row.State is SwitchStepState.Done or SwitchStepState.Failed && step.State is SwitchStepState.Waiting or SwitchStepState.Running)
+        {
+            return;
+        }
+
+        row.State = step.State;
+        row.Reason = step.Reason;
+    }
 
     private void RememberApplied(Profile profile, SwitchResult result)
     {

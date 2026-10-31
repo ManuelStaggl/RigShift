@@ -1938,6 +1938,49 @@ public sealed class SwitchOrchestratorTests
     /// <summary>The desktop the switch tidies up; tests that care about it reach in here.</summary>
     private FakeDesktopIcons DesktopIcons { get; } = new();
 
+    /// <summary>Hears the reports in the order they were made, unlike <see cref="Progress{T}"/> without a UI thread.</summary>
+    private sealed class StepLog : IProgress<SwitchStep>
+    {
+        public List<SwitchStep> Steps { get; } = [];
+
+        public void Report(SwitchStep value)
+        {
+            lock (Steps)
+            {
+                Steps.Add(value);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Switch_ReportsOnlyTheStepsTheProfileUses_InTheirOrder()
+    {
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+        var log = new StepLog();
+        Profile rig = Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones });
+
+        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, new SwitchRequest { Progress = log }, Ct);
+        await result.AppsCompletion;
+        await result.TidyCompletion;
+
+        log.Steps.Where(s => s.State == SwitchStepState.Waiting).Select(s => s.Kind)
+            .ShouldBe([SwitchStepKind.Displays, SwitchStepKind.Audio, SwitchStepKind.Confirmation]);
+        log.Steps.Where(s => s.Kind == SwitchStepKind.Displays).Select(s => s.State)
+            .ShouldBe([SwitchStepState.Waiting, SwitchStepState.Running, SwitchStepState.Done]);
+        log.Steps.Last(s => s.Kind == SwitchStepKind.Confirmation).State.ShouldBe(SwitchStepState.Done);
+    }
+
+    [Fact]
+    public async Task Switch_TakenBack_ReportsTheConfirmationAsFailed()
+    {
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        var log = new StepLog();
+
+        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(confirm: true), new SwitchRequest { Progress = log }, Ct);
+
+        log.Steps.Last().ShouldBe(new SwitchStep(SwitchStepKind.Confirmation, SwitchStepState.Failed, nameof(ConfirmationResult.Rejected)));
+    }
+
     private static readonly DesktopIconLayout DeskIcons = new()
     {
         CapturedAt = DateTimeOffset.UnixEpoch,

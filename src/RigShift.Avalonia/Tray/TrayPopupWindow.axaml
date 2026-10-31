@@ -19,6 +19,7 @@
   <Border Padding="8" Background="{DynamicResource RsPop}" BorderBrush="{DynamicResource RsOutline}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusLg}">
     <StackPanel Spacing="4">
       <TextBlock Margin="8,4" Classes="caption" IsVisible="{Binding Coordinator.IsSwitching}" Text="{Binding SwitchingText}" TextWrapping="Wrap" />
+      <v:SwitchStepsView Margin="8,0,8,4" IsVisible="{Binding Coordinator.IsSwitching}" Steps="{Binding Coordinator.Steps}" />
       <TextBlock Margin="8,4" Classes="secondary" IsVisible="{Binding HasStatusText}" Text="{Binding StatusText}" TextWrapping="Wrap" />
 
       <TextBlock Margin="8,4" Classes="caption" Text="{v:Tr Nav_Profiles}" />

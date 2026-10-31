@@ -131,13 +131,23 @@ public sealed class SwitchOrchestrator
             await CaptureRestAsync(profile, wayBack, cancellationToken);
         }
 
+        IProgress<SwitchStep>? progress = request.Progress;
+        AppPlan appPlan = _appRunner.PlanFor(profile, request.Leaving);
+        foreach (SwitchStepKind step in SwitchSteps.For(profile, confirmTimeout is not null, appPlan.StopFirst.Count > 0))
+        {
+            progress?.Report(new SwitchStep(step, SwitchStepState.Waiting));
+        }
+
         // Surround first: switching it on or off turns several monitors into one wide one and back, so it decides which
         // displays the arrangement can address at all - planning before it would plan against displays about to vanish.
         SurroundApplyResult surround = SurroundApplyResult.NotConfigured;
         if (profile.Surround is not null)
         {
             await RecordAsync(profile, wayBack, cancellationToken);
+            progress?.Report(new SwitchStep(SwitchStepKind.Surround, SwitchStepState.Running));
             surround = await _surroundSwitcher.SwitchAsync(profile, cancellationToken);
+            progress?.Report(new SwitchStep(
+                SwitchStepKind.Surround, surround.Outcome == SurroundOutcome.Failed ? SwitchStepState.Failed : SwitchStepState.Done, surround.Message));
             if (surround.Outcome == SurroundOutcome.Failed)
             {
                 // Nothing else was touched yet, so this is a block, not a half-finished switch. Surround itself may have
@@ -166,6 +176,7 @@ public sealed class SwitchOrchestrator
         if (TopologyApplier.BlockReason(plan) is { } blocked)
         {
             _log.Warning("Switch to {Profile} blocked: {Reason}", profile.Name, blocked);
+            progress?.Report(new SwitchStep(SwitchStepKind.Displays, SwitchStepState.Failed, blocked));
             await _surroundSwitcher.RestoreAsync(wayBack.Surround, cancellationToken);
             return await Finish(
                 new SwitchResult { Outcome = SwitchOutcome.Blocked, Plan = plan, Surround = surround.Outcome, Message = blocked },
@@ -177,7 +188,9 @@ public sealed class SwitchOrchestrator
         DateTimeOffset deadline = _time.GetUtcNow() + _options.TargetWaitBudget;
 
         await RecordAsync(profile, wayBack, cancellationToken);
+        progress?.Report(new SwitchStep(SwitchStepKind.Displays, SwitchStepState.Running));
         ApplyOutcome applied = await _topology.ApplyAsync(profile, plan, deadline, cancellationToken);
+        progress?.Report(new SwitchStep(SwitchStepKind.Displays, applied.Succeeded ? SwitchStepState.Done : SwitchStepState.Failed, applied.Message));
         if (!applied.Succeeded)
         {
             _log.Error("Switch to {Profile} failed after {Attempts} attempts: {Reason}", profile.Name, applied.Attempts, applied.Message);
@@ -195,7 +208,7 @@ public sealed class SwitchOrchestrator
             return restored == SwitchNote.RestoredPrevious ? failed with { TidyCompletion = _tidy.Start(null) } : failed;
         }
 
-        Answer answer = await ApplyRestAndAskAsync(profile, wayBack, applied, confirmTimeout, started, cancellationToken);
+        Answer answer = await ApplyRestAndAskAsync(profile, wayBack, applied, confirmTimeout, started, progress, cancellationToken);
         if (answer.Result != ConfirmationResult.Confirmed)
         {
             return await RollBackAsync(profile, wayBack, applied, answer, started, cancellationToken);
@@ -203,7 +216,6 @@ public sealed class SwitchOrchestrator
 
         // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it.
         SwitchOutcome outcome = answer.Modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
-        AppPlan appPlan = _appRunner.PlanFor(profile, request.Leaving);
         AppsOutcome apps = PendingApps(appPlan);
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, answer.Audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
@@ -229,7 +241,28 @@ public sealed class SwitchOrchestrator
         }
 
         // Applying the profile that is active already leaves its windows alone: they are where the user wants them now.
-        return AfterResult(result, profile, appPlan, restoreWindows: request.Leaving?.Id != profile.Id);
+        return ReportAfterResult(AfterResult(result, profile, appPlan, restoreWindows: request.Leaving?.Id != profile.Id), progress);
+    }
+
+    /// <summary>Apps and windows run on after the result; their steps end when they do.</summary>
+    private static SwitchResult ReportAfterResult(SwitchResult result, IProgress<SwitchStep>? progress)
+    {
+        if (progress is null)
+        {
+            return result;
+        }
+
+        progress.Report(new SwitchStep(SwitchStepKind.Apps, SwitchStepState.Running));
+        _ = result.AppsCompletion.ContinueWith(
+            apps => progress.Report(new SwitchStep(
+                SwitchStepKind.Apps, apps.Result is AppsOutcome.Incomplete or AppsOutcome.DeviceMissing ? SwitchStepState.Failed : SwitchStepState.Done,
+                apps.Result is AppsOutcome.Incomplete or AppsOutcome.DeviceMissing ? apps.Result.ToString() : null)),
+            CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        progress.Report(new SwitchStep(SwitchStepKind.Windows, SwitchStepState.Running));
+        _ = result.TidyCompletion.ContinueWith(
+            _ => progress.Report(new SwitchStep(SwitchStepKind.Windows, SwitchStepState.Done)),
+            CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return result;
     }
 
     /// <summary>
@@ -365,7 +398,8 @@ public sealed class SwitchOrchestrator
     /// back, never in that arrangement staying.
     /// </summary>
     private async Task<Answer> ApplyRestAndAskAsync(
-        Profile profile, WayBack wayBack, ApplyOutcome applied, TimeSpan? confirmTimeout, long started, CancellationToken cancellationToken)
+        Profile profile, WayBack wayBack, ApplyOutcome applied, TimeSpan? confirmTimeout, long started, IProgress<SwitchStep>? progress,
+        CancellationToken cancellationToken)
     {
         bool confirm = confirmTimeout is not null;
         ModeCheck modes = ModeCheck.AsPlanned(applied.Plan);
@@ -377,6 +411,7 @@ public sealed class SwitchOrchestrator
                 modes = await _topology.CheckDatabaseModesAsync(applied.Plan, cancellationToken);
             }
 
+            progress?.Report(new SwitchStep(SwitchStepKind.Audio, SwitchStepState.Running));
             long audioStarted = _time.GetTimestamp();
             // A display that was off may carry the profile's sound device, which wakes a moment after its picture.
             bool displaysTurnedOn = applied.Plan.Resolved.Any(d => !d.Target.IsActive);
@@ -389,6 +424,7 @@ public sealed class SwitchOrchestrator
             // With audio, not with apps: both are undone without loss, and the countdown should already run kept awake.
             SwitchKeepAwake(profile);
             await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
+            progress?.Report(new SwitchStep(SwitchStepKind.Audio, audio == AudioOutcome.Incomplete ? SwitchStepState.Failed : SwitchStepState.Done));
 
             // What the user waits for, from the click until picture and sound are there.
             _log.Information("Picture and sound of {Profile} ready after {Milliseconds:0} ms", profile.Name, _time.GetElapsedTime(started).TotalMilliseconds);
@@ -399,7 +435,11 @@ public sealed class SwitchOrchestrator
             }
 
             long askedAt = _time.GetTimestamp();
+            progress?.Report(new SwitchStep(SwitchStepKind.Confirmation, SwitchStepState.Running));
             ConfirmationResult result = await _confirmation.ConfirmAsync(profile, wayBack.Displays, timeout, cancellationToken);
+            progress?.Report(new SwitchStep(
+                SwitchStepKind.Confirmation, result == ConfirmationResult.Confirmed ? SwitchStepState.Done : SwitchStepState.Failed,
+                result == ConfirmationResult.Confirmed ? null : result.ToString()));
             if (result == ConfirmationResult.Confirmed)
             {
                 _log.Information("Switch to {Profile} confirmed after {Seconds:0.0} s", profile.Name, _time.GetElapsedTime(askedAt).TotalSeconds);

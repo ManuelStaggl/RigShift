@@ -183,6 +183,26 @@ internal static class Previews
             });
         }
 
+        // RIGSHIFT_PREVIEW_STEPS=1: a switch caught halfway, one step failed, for the step list in the tray and the overview.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_STEPS") == "1")
+        {
+            SwitchCoordinator coordinator = App.Provider.GetRequiredService<SwitchCoordinator>();
+            IReadOnlyList<RigShift.Core.Profiles.Profile> stepProfiles = App.Provider.GetRequiredService<ProfileCatalog>().Profiles;
+            coordinator.SwitchingProfile = stepProfiles.Count > 0 ? stepProfiles[0] : null;
+            coordinator.IsSwitching = true;
+            (RigShift.Core.Topology.SwitchStepKind Kind, RigShift.Core.Topology.SwitchStepState State, string? Reason)[] steps =
+            [
+                (RigShift.Core.Topology.SwitchStepKind.Displays, RigShift.Core.Topology.SwitchStepState.Done, null),
+                (RigShift.Core.Topology.SwitchStepKind.Audio, RigShift.Core.Topology.SwitchStepState.Failed, "Headset (Arctis Nova) is not connected"),
+                (RigShift.Core.Topology.SwitchStepKind.Confirmation, RigShift.Core.Topology.SwitchStepState.Running, null),
+                (RigShift.Core.Topology.SwitchStepKind.Apps, RigShift.Core.Topology.SwitchStepState.Waiting, null),
+            ];
+            foreach ((RigShift.Core.Topology.SwitchStepKind kind, RigShift.Core.Topology.SwitchStepState state, string? reason) in steps)
+            {
+                coordinator.Steps.Add(new SwitchStepRow(kind) { State = state, Reason = reason });
+            }
+        }
+
         // After the window, which would take the focus and so close the popup.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
         {
