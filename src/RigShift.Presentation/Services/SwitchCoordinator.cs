@@ -458,8 +458,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// Call after a display change, once the active profile was refreshed and a catch-up ran. A profile that became active
-    /// without RigShift switching – Windows restored its layout – only has its displays; audio, apps and the rest are
-    /// offered via <see cref="RestoredByWindows"/>. Returns whether it was offered.
+    /// without RigShift switching – Windows restored its layout – only has its displays. Audio, keep-awake and the rest
+    /// follow by themselves; starting its apps is offered via <see cref="RestoredByWindows"/>, since a program popping up
+    /// unasked in the middle of a game is worse than a click. Returns whether that was offered.
     /// </summary>
     public bool NoticeDisplayChange(Profile? before, Profile? after)
     {
@@ -468,7 +469,19 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             return false;
         }
 
-        _log.Information("Windows restored the displays of {Profile} (before: {Before}); offering the rest", after.Name, before?.Name ?? "(none)");
+        Profile withoutApps = after with { Apps = [] };
+        if (HasMoreThanDisplays(withoutApps))
+        {
+            _log.Information("Windows restored the displays of {Profile} (before: {Before}); applying the rest", after.Name, before?.Name ?? "(none)");
+            _ = SwitchAsync(withoutApps, new SwitchRequest { KeepDisplays = true });
+        }
+
+        if (after.Apps.Count == 0)
+        {
+            return false;
+        }
+
+        _log.Information("Offering the apps of {Profile}", after.Name);
         RestoredByWindows?.Invoke(this, after);
         return true;
     }

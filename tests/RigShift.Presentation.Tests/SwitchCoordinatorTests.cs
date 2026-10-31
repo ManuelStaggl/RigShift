@@ -119,11 +119,11 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
-    public void NoticeDisplayChange_OffersTheRest_OnlyForAnotherProfileWithMoreThanDisplays()
+    public void NoticeDisplayChange_OffersTheApps_OnlyForAnotherProfileWithApps()
     {
         // Windows restored the rig layout by itself when the ultrawide was switched on.
         Profile desk = Profile("Desk", DeskModes);
-        Profile rig = Rig() with { KeepAwake = true };
+        Profile rig = Rig() with { Apps = [new AppAction { Path = @"C:\SimHub\SimHubWPF.exe" }] };
         var offered = new List<Profile>();
         _host.Coordinator.RestoredByWindows += (_, profile) => offered.Add(profile);
 
@@ -133,6 +133,30 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Coordinator.NoticeDisplayChange(rig, desk).ShouldBeFalse();
 
         offered.ShouldHaveSingleItem().ShouldBe(rig);
+        _host.Coordinator.History.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task NoticeDisplayChange_AppliesAudioAndKeepAwakeByItself_ButNotTheApps()
+    {
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet, activeMode: TabletMode)));
+        Profile rig = Rig(confirm: true) with { KeepAwake = true, Apps = [new AppAction { Path = @"C:\SimHub\SimHubWPF.exe" }] };
+        var offered = new List<Profile>();
+        _host.Coordinator.RestoredByWindows += (_, profile) => offered.Add(profile);
+
+        _host.Coordinator.NoticeDisplayChange(Profile("Desk", DeskModes), rig).ShouldBeTrue();
+        await UntilAsync(() => _host.Coordinator.History.Count == 1);
+
+        offered.ShouldHaveSingleItem().ShouldBe(rig);
+        _host.Coordinator.History[0].Apps.ShouldBe(AppsOutcome.NotConfigured);
+        _host.Display.Applied.ShouldBeEmpty();
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+
+        // Without apps there is nothing to ask.
+        offered.Clear();
+        _host.Coordinator.NoticeDisplayChange(rig, Rig() with { KeepAwake = true }).ShouldBeFalse();
+        await UntilAsync(() => _host.Coordinator.History.Count == 2);
+        offered.ShouldBeEmpty();
     }
 
     [Fact]

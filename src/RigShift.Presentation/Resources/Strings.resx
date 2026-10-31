@@ -40,7 +40,7 @@
   <data name="Result_PartialText" xml:space="preserve"><value>Switched without: {0}</value></data>
   <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Displays switched. {0} follows once it is connected.</value></data>
   <data name="Restored_Title" xml:space="preserve"><value>{0} recognized</value></data>
-  <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Click here to set its audio, apps and other settings too.</value></data>
+  <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Its audio and other settings are set. Click here to start its apps too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Turn on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not on or not ready: {0}. RigShift waits up to {1} seconds for it.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>Off in the settings: every profile switches without asking.</value></data>
