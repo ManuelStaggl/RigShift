@@ -11,15 +11,15 @@ namespace RigShift.Core.Games;
 /// </summary>
 public sealed record GameSettings
 {
-    /// <summary>The game's JSON settings file. Environment variables are expanded.</summary>
+    /// <summary>The game's JSON or INI settings file. Environment variables are expanded.</summary>
     public required string File { get; init; }
 
-    /// <summary>The values to keep, as <c>Section/Name</c> paths through the JSON objects.</summary>
+    /// <summary>The values to keep, as <c>Section/Name</c> paths through the JSON objects or INI sections.</summary>
     public IReadOnlyList<string> Keys { get; set; } = [];
 
     /// <summary>
-    /// The variant's values as raw JSON (<c>25</c>, <c>0.10000000149011612</c>), by key. Raw so a number comes back
-    /// exactly as the game wrote it. Empty until the first session ends: then the user has set them in the game.
+    /// The variant's values as raw JSON or INI text (<c>25</c>, <c>0.10000000149011612</c>), by key. Raw so a number
+    /// comes back exactly as the game wrote it. Empty until the first session ends: then the user has set them in the game.
     /// </summary>
     public IReadOnlyDictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
 
@@ -27,8 +27,8 @@ public sealed record GameSettings
     public string FullPath => Environment.ExpandEnvironmentVariables(File.Trim().Trim('"'));
 
     /// <summary>
-    /// A full path to a <c>.json</c> file. <c>games.json</c> can come from somebody else, and nothing but a JSON file
-    /// of the game's is ever meant to be written here.
+    /// A full path to a <c>.json</c> or <c>.ini</c> file. <c>games.json</c> can come from somebody else, and nothing but
+    /// a settings file of the game's is ever meant to be written here.
     /// </summary>
     public bool HasValidFile
     {
@@ -36,9 +36,12 @@ public sealed record GameSettings
         {
             string path = FullPath;
             return path.Length > 0 && Path.IsPathFullyQualified(path)
-                && string.Equals(Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase);
+                && (IsIni(path) || string.Equals(Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase));
         }
     }
+
+    /// <summary>The file is read and written as INI (<see cref="GameSettingsIni"/>), otherwise as JSON.</summary>
+    public static bool IsIni(string path) => string.Equals(Path.GetExtension(path), ".ini", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Separates the objects of a key path.</summary>
     public const char PathSeparator = '/';

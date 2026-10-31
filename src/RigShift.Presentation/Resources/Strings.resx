@@ -365,11 +365,11 @@
   <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows setting)</value></data>
   <data name="Game_Settings" xml:space="preserve"><value>Own game settings</value></data>
   <data name="Game_SettingsHint" xml:space="preserve"><value>Writes these values into the game's settings file before it starts and puts the previous ones back once it has ended.</value></data>
-  <data name="Game_SettingsFile" xml:space="preserve"><value>Settings file (JSON)</value></data>
+  <data name="Game_SettingsFile" xml:space="preserve"><value>Settings file (JSON or INI)</value></data>
   <data name="Game_SettingsKeys" xml:space="preserve"><value>Values, one Section/Name per line</value></data>
   <data name="Game_SettingsRemembered" xml:space="preserve"><value>{0} values kept. Whatever you change in the game's menu is taken over when it ends.</value></data>
   <data name="Game_SettingsNoneYet" xml:space="preserve"><value>Nothing kept yet: set the values in the game's menu during the next session, RigShift takes them over when it ends.</value></data>
-  <data name="Problem_SettingsInvalid" xml:space="preserve"><value>Enter the full path to a .json file and at least one value.</value></data>
+  <data name="Problem_SettingsInvalid" xml:space="preserve"><value>Enter the full path to a .json or .ini file and at least one value.</value></data>
   <data name="Game_RuntimeMissing" xml:space="preserve"><value>{0} (not installed)</value></data>
   <data name="Game_Duplicate" xml:space="preserve"><value>Duplicate, e.g. as a VR variant</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Don't switch anything</value></data>
