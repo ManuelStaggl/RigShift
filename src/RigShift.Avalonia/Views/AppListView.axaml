@@ -33,22 +33,30 @@
                 </Button>
               </StackPanel>
               <!-- What, how long to wait, with which options -->
-              <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
+              <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="8">
                 <ComboBox MinWidth="104" AutomationProperties.Name="{v:Tr App_Action}" ItemsSource="{Binding KindChoices}" SelectedItem="{Binding SelectedKind, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_Action}" />
                 <ComboBox Grid.Column="1" MinWidth="140" AutomationProperties.Name="{v:Tr App_When}" IsVisible="{Binding ShowWhen}" ItemsSource="{Binding WhenChoices}" SelectedItem="{Binding SelectedWhen, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_When}" />
-                <NumericUpDown
+                <ComboBox
                   Grid.Column="2"
+                  MinWidth="140"
+                  AutomationProperties.Name="{v:Tr App_WaitChoice}"
+                  AutomationProperties.HelpText="{v:Tr App_WaitForWindowTip}"
+                  IsVisible="{Binding IsStart}"
+                  ItemsSource="{Binding WaitChoices}"
+                  SelectedItem="{Binding SelectedWait, Converter={x:Static v:Converters.KeepOnNull}}"
+                  ToolTip.Tip="{v:Tr App_WaitForWindowTip}" />
+                <NumericUpDown
+                  Grid.Column="3"
                   Width="112"
                   AutomationProperties.Name="{v:Tr App_Wait}"
                   FormatString="0.#"
-                  IsVisible="{Binding IsStart}"
+                  IsVisible="{Binding ShowWaitSeconds}"
                   Maximum="300"
                   Minimum="0"
                   ToolTip.Tip="{v:Tr App_Wait}"
                   Value="{Binding WaitSeconds, Converter={x:Static v:Converters.Seconds}}"
                   PlaceholderText="{v:Tr App_WaitShort}" />
-                <TextBox Grid.Column="3" AutomationProperties.Name="{v:Tr App_Arguments}" IsVisible="{Binding IsStart}" Text="{Binding Arguments}" PlaceholderText="{v:Tr App_Arguments}" />
-                <CheckBox Grid.Column="4" AutomationProperties.HelpText="{v:Tr App_WaitForWindowTip}" Content="{v:Tr App_WaitForWindow}" IsChecked="{Binding WaitForWindow}" IsVisible="{Binding IsStart}" ToolTip.Tip="{v:Tr App_WaitForWindowTip}" />
+                <TextBox Grid.Column="4" AutomationProperties.Name="{v:Tr App_Arguments}" IsVisible="{Binding IsStart}" Text="{Binding Arguments}" PlaceholderText="{v:Tr App_Arguments}" />
               </Grid>
             </Grid>
             <Border Classes="divider" />
