@@ -70,10 +70,11 @@ public sealed class ProfileEditorFactory(
         ProfileCatalog catalog = editorServices.Catalog;
         var rules = new ProfileRulesEditor(
             profile.Id, settings.AutomationRules ?? [], catalog.Profiles, settings.DefaultProfileId, devices, settings.UsbDeviceNames,
-            powerCheck, _log);
+            powerCheck, _log, new UsbDetection(usbDevices, TimeProvider.System));
         var appsWaitDevice = new AppsWaitDeviceChoice(
             profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, devices,
-            UsbDeviceChoices.Known(settings.AutomationRules, catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
+            UsbDeviceChoices.Known(settings.AutomationRules, catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames,
+            new UsbDetection(usbDevices, TimeProvider.System));
         var context = new ProfileEditorContext(
             playback, recording, appsWaitDevice, state, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
             SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, catalog.Profiles)?.Name);

@@ -174,6 +174,13 @@ public sealed partial class ProfileSheetView : UserControl
             menu.Items.Add(item);
         }
 
+        if (card.Owner.Detection is not null)
+        {
+            var detect = new MenuItem { Header = Loc.Instance["Usb_Detect"] };
+            detect.Click += (_, _) => card.DetectDeviceCommand.Execute(null);
+            menu.Items.Add(detect);
+        }
+
         if (menu.Items.Count > 0)
         {
             menu.ShowAt(button);

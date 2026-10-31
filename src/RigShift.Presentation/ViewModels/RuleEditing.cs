@@ -39,6 +39,12 @@ public interface IRuleOwner
 
     void UpdateDuplicates();
 
+    /// <summary>"Switch the device off and on"; <c>null</c> where nobody can watch the devices.</summary>
+    UsbDetection? Detection { get; }
+
+    /// <summary>The choice for a device the detection found, added to <see cref="DeviceChoices"/> when it is new.</summary>
+    Choice TakeDetected(UsbDevice device);
+
     /// <summary>Called when a rule's devices change: a newly picked device can be named at once.</summary>
     void OnRuleDevicesChanged();
 
@@ -219,6 +225,20 @@ public sealed partial class RuleCard : ObservableObject
         OnDevicesShapeChanged();
     }
 
+    /// <summary>Adds the device the user switches off and on, as the setup assistant does.</summary>
+    [RelayCommand]
+    private async Task DetectDeviceAsync()
+    {
+        if (_owner.Detection is { } detection && await detection.DetectAsync() is { } found)
+        {
+            Choice choice = _owner.TakeDetected(found);
+            if (!DeviceIds.Contains(choice.Key!, StringComparer.OrdinalIgnoreCase))
+            {
+                AddDevice(choice);
+            }
+        }
+    }
+
     /// <param name="device">The device to add; without one, the first device the card does not have yet.</param>
     [RelayCommand]
     private void AddDevice(Choice? device)
@@ -355,7 +375,7 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
     private IReadOnlyList<AutomationRule> _initial;
     private readonly IReadOnlyList<Profile> _profiles;
     private readonly Guid? _defaultProfileId;
-    private readonly IReadOnlyList<UsbDevice> _connected;
+    private IReadOnlyList<UsbDevice> _connected;
     private readonly IReadOnlyDictionary<string, string>? _customNames;
     private readonly IUsbPowerCheck _powerCheck;
     private readonly ILogger _log;
@@ -371,9 +391,11 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
         IReadOnlyList<UsbDevice> connected,
         IReadOnlyDictionary<string, string>? customNames,
         IUsbPowerCheck powerCheck,
-        ILogger log)
+        ILogger log,
+        UsbDetection? detection = null)
     {
         ArgumentNullException.ThrowIfNull(allRules);
+        Detection = detection;
         ArgumentNullException.ThrowIfNull(log);
         _profileId = profileId;
         _others = allRules.Where(r => r.ProfileId != profileId).ToList();
@@ -422,6 +444,24 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
 
     public Choice? DeviceChoiceFor(string? deviceId) =>
         DeviceChoices.FirstOrDefault(c => string.Equals(c.Key, deviceId, StringComparison.OrdinalIgnoreCase));
+
+    public UsbDetection? Detection { get; }
+
+    public Choice TakeDetected(UsbDevice device)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+        _connected = [.. _connected.Where(d => !string.Equals(d.Id, device.Id, StringComparison.OrdinalIgnoreCase)), device];
+        _windowsNames[device.Id] = device.Name;
+        _log.Information("USB device {Device} ({Id}) detected for a rule", device.Name, device.Id);
+        if (DeviceChoiceFor(device.Id) is { } known)
+        {
+            return known;
+        }
+
+        var choice = new Choice(device.Id, UsbDeviceNames.NameOf(device.Id, device.Name, _customNames));
+        DeviceChoices.Add(choice);
+        return choice;
+    }
 
     public string? DeviceNameFor(string? deviceId) =>
         deviceId is not null && _windowsNames.TryGetValue(deviceId, out string? name) ? UsbDeviceNames.NameOf(deviceId, name, _customNames) : null;
