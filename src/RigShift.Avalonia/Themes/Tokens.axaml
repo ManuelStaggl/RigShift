@@ -80,6 +80,11 @@
       </LinearGradientBrush>
       <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #14FFFFFF, 0 1 2 0 #99000000</BoxShadows>
 
+      <!-- Technical illustrations: screen surface, visible bezel, neutral field of view. -->
+      <SolidColorBrush x:Key="RsScreenSurface" Color="#25282D" />
+      <SolidColorBrush x:Key="RsScreenEdge" Color="#72767C" />
+      <SolidColorBrush x:Key="RsDiagramField" Color="#16191D" />
+
       <!-- Semi palette -->
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#106EBE" />
@@ -198,6 +203,11 @@
         <GradientStop Offset="1" Color="#EFF0F3" />
       </LinearGradientBrush>
       <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #24000000, 0 1 2 0 #1A000000</BoxShadows>
+
+      <!-- Technical illustrations: screen surface, visible bezel, neutral field of view. -->
+      <SolidColorBrush x:Key="RsScreenSurface" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsScreenEdge" Color="#7F7D86" />
+      <SolidColorBrush x:Key="RsDiagramField" Color="#E6E9EE" />
 
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#0067B8" />

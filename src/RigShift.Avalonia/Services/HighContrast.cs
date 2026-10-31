@@ -33,6 +33,8 @@ internal static class HighContrast
         ("RsOnAccent", SystemColorKind.HighlightText),
         ("RsAccentText", SystemColorKind.HotLight), ("RsSuccess", SystemColorKind.HotLight), ("RsWarning", SystemColorKind.HotLight),
         ("RsDanger", SystemColorKind.HotLight),
+        ("RsScreenSurface", SystemColorKind.Window), ("RsScreenEdge", SystemColorKind.WindowText),
+        ("RsDiagramField", SystemColorKind.Window),
         // Toggles: on in the highlight, off as an outline in the window text colour, the knob in the highlight text colour.
         ("ToggleSwitchContainerCheckedDefaultBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerCheckedPointeroverBackground", SystemColorKind.Highlight),
         ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.Window),
