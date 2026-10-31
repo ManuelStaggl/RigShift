@@ -241,11 +241,9 @@
                       </Grid>
                       <Border Classes="divider" />
                       <StackPanel x:Name="ProfileWell" Margin="16,12,8,4" Spacing="12">
-                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                          <TextBlock VerticalAlignment="Center" Classes="section" Text="{v:Tr GameTab_Profile}" />
-                          <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Game_ProfileIntro}" TextWrapping="Wrap" />
-                        </Grid>
+                        <TextBlock HorizontalAlignment="Left" Classes="section" Text="{v:Tr GameTab_Profile}" ToolTip.Tip="{v:Tr Game_ProfileIntro}" />
                         <ListBox
+                          AutomationProperties.HelpText="{v:Tr Game_ProfileIntro}"
                           AutomationProperties.Name="{v:Tr GameTab_Profile}"
                           Classes="options"
                           ItemsSource="{Binding Editor.ProfileOptions, FallbackValue={x:Null}}"
@@ -285,22 +283,16 @@
                         <u:SettingsCard.Detail>
                           <StackPanel Margin="40,0,4,16">
                             <StackPanel IsVisible="{Binding Editor.SupportsArguments, FallbackValue=False}">
-                              <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
-                                <StackPanel VerticalAlignment="Center">
-                                  <TextBlock Classes="label" Text="{v:Tr App_Arguments}" />
-                                  <TextBlock Classes="caption" Text="{v:Tr Game_ArgumentsHint}" TextWrapping="Wrap" />
-                                </StackPanel>
+                              <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_ArgumentsHint}">
+                                <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr App_Arguments}" />
                                 <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_ArgumentsHint}" AutomationProperties.Name="{v:Tr App_Arguments}" Text="{Binding Editor.Arguments, FallbackValue=''}" />
                               </Grid>
                               <Border Classes="divider" />
                             </StackPanel>
                             <StackPanel IsVisible="{Binding Editor.SupportsRuntime, FallbackValue=False}">
-                              <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
-                                <StackPanel VerticalAlignment="Center">
-                                  <TextBlock Classes="label" Text="{v:Tr Game_Runtime}" />
-                                  <TextBlock Classes="caption" Text="{v:Tr Game_RuntimeHint}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Game_Runtime}" ItemsSource="{Binding Editor.RuntimeChoices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.SelectedRuntime, Converter={x:Static v:Converters.KeepOnNull}}" />
+                              <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_RuntimeHint}">
+                                <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_Runtime}" />
+                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_RuntimeHint}" AutomationProperties.Name="{v:Tr Game_Runtime}" ItemsSource="{Binding Editor.RuntimeChoices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.SelectedRuntime, Converter={x:Static v:Converters.KeepOnNull}}" />
                               </Grid>
                               <Border Classes="divider" />
                             </StackPanel>
@@ -312,28 +304,19 @@
                               <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{Binding Editor.ProcessHint, FallbackValue=''}" AutomationProperties.Name="{v:Tr Game_ProcessName}" Text="{Binding Editor.ProcessName, FallbackValue=''}" ToolTip.Tip="{v:Tr Game_ProcessNameHintTip}" />
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Game_LauncherProcess}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_LauncherProcessHint}" TextWrapping="Wrap" />
-                              </StackPanel>
+                            <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_LauncherProcessHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_LauncherProcess}" />
                               <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_LauncherProcessHint}" AutomationProperties.Name="{v:Tr Game_LauncherProcess}" Text="{Binding Editor.LauncherProcessName, FallbackValue=''}" />
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Game_StartWithGame}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_StartWithGameHint}" TextWrapping="Wrap" />
-                              </StackPanel>
-                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_StartWithGame}" IsChecked="{Binding Editor.StartWithGame, FallbackValue=False}" OffContent="" OnContent="" />
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_StartWithGameHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_StartWithGame}" />
+                              <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Game_StartWithGameHint}" AutomationProperties.Name="{v:Tr Game_StartWithGame}" IsChecked="{Binding Editor.StartWithGame, FallbackValue=False}" OffContent="" OnContent="" />
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Game_KeepMouse}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_KeepMouseHint}" TextWrapping="Wrap" />
-                              </StackPanel>
-                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_KeepMouse}" IsChecked="{Binding Editor.KeepMouseOnDisplay, FallbackValue=False}" OffContent="" OnContent="" />
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_KeepMouseHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_KeepMouse}" />
+                              <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Game_KeepMouseHint}" AutomationProperties.Name="{v:Tr Game_KeepMouse}" IsChecked="{Binding Editor.KeepMouseOnDisplay, FallbackValue=False}" OffContent="" OnContent="" />
                             </Grid>
                           </StackPanel>
                         </u:SettingsCard.Detail>
@@ -410,14 +393,11 @@
                         </u:SettingsCard.Icon>
                         <u:SettingsCard.Detail>
                           <StackPanel Margin="40,0,4,16">
-                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{Binding Editor.WindowsText, FallbackValue=''}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_WindowsHint}" TextWrapping="Wrap" />
-                              </StackPanel>
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_WindowsHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{Binding Editor.WindowsText, FallbackValue=''}" />
                               <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="16">
                                 <Button Classes="link" Command="{Binding Editor.ClearWindowsCommand, FallbackValue={x:Null}}" Content="{v:Tr Common_Clear}" IsVisible="{Binding Editor.HasWindows, FallbackValue=False}" />
-                                <Button Classes="neutral" Command="{Binding CaptureWindowsCommand}" Content="{v:Tr Game_CaptureWindows}" />
+                                <Button AutomationProperties.HelpText="{v:Tr Game_WindowsHint}" Classes="neutral" Command="{Binding CaptureWindowsCommand}" Content="{v:Tr Game_CaptureWindows}" />
                               </StackPanel>
                             </Grid>
                             <!-- What was captured, one line per window. -->
@@ -452,12 +432,9 @@
                               <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Game_ExitLabel}" ItemsSource="{Binding Editor.ExitChoices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.SelectedExit, Converter={x:Static v:Converters.KeepOnNull}}" />
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Game_StopApps}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_StopAppsHint}" TextWrapping="Wrap" />
-                              </StackPanel>
-                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_StopApps}" IsChecked="{Binding Editor.StopApps, FallbackValue=False}" OffContent="" OnContent="" />
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Game_StopAppsHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_StopApps}" />
+                              <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Game_StopAppsHint}" AutomationProperties.Name="{v:Tr Game_StopApps}" IsChecked="{Binding Editor.StopApps, FallbackValue=False}" OffContent="" OnContent="" />
                             </Grid>
                           </StackPanel>
                         </u:SettingsCard.Detail>
@@ -484,21 +461,15 @@
                               </StackPanel>
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,Auto">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Trigger_Shortcut}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Game_ShortcutHint}" TextWrapping="Wrap" />
-                              </StackPanel>
-                              <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" Command="{Binding CreateShortcutCommand}" Content="{v:Tr Trigger_ShortcutCreate}" />
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ToolTip.Tip="{v:Tr Game_ShortcutHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Trigger_Shortcut}" />
+                              <Button Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_ShortcutHint}" Classes="neutral" Command="{Binding CreateShortcutCommand}" Content="{v:Tr Trigger_ShortcutCreate}" />
                             </Grid>
                             <Border Classes="divider" />
-                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                              <StackPanel VerticalAlignment="Center">
-                                <TextBlock Classes="label" Text="{v:Tr Trigger_Command}" />
-                                <TextBlock Classes="caption" Text="{v:Tr Trigger_CommandHint}" TextWrapping="Wrap" />
-                              </StackPanel>
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="8" ToolTip.Tip="{v:Tr Trigger_CommandHint}">
+                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Trigger_Command}" />
                               <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
-                                <TextBox Width="240" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" ToolTip.Tip="{Binding Editor.CommandText, FallbackValue=''}" />
+                                <TextBox Width="240" AutomationProperties.HelpText="{v:Tr Trigger_CommandHint}" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" ToolTip.Tip="{Binding Editor.CommandText, FallbackValue=''}" />
                                 <Button AutomationProperties.Name="{v:Tr Trigger_Copy}" Classes="ghost" Command="{Binding CopyCommandCommand}" ToolTip.Tip="{v:Tr Trigger_Copy}">
                                   <Path Classes="icon" Data="{x:Static v:Icons.Copy16}" />
                                 </Button>

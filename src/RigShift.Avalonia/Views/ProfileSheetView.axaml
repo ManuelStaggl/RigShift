@@ -217,7 +217,6 @@
                         </Button>
                       </Grid>
                       <v:DisplayTopology Grid.Row="1" Margin="32,8" Displays="{Binding Editor.TopologyDisplays}" SelectedKey="{Binding Editor.SelectedDisplayKey}" Size="Full" />
-                      <TextBlock Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Displays_ClickHint}" />
                     </Grid>
                   </Border>
                   <TextBlock Classes="danger" IsVisible="{Binding Editor.HasDisplaysProblem, FallbackValue=False}" Text="{Binding Editor.DisplaysProblem}" TextWrapping="Wrap" />
@@ -404,21 +403,15 @@
                     </Grid>
                     <TextBlock Classes="danger" IsVisible="{Binding Editor.HasHotkeyProblem, FallbackValue=False}" Text="{Binding Editor.HotkeyProblem}" TextWrapping="Wrap" />
                     <Border Classes="divider" />
-                    <Grid Classes="row" ColumnDefinitions="*,Auto">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Trigger_Shortcut}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Trigger_ShortcutHint}" TextWrapping="Wrap" />
-                      </StackPanel>
-                      <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" Command="{Binding CreateShortcutCommand}" Content="{v:Tr Trigger_ShortcutCreate}" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ToolTip.Tip="{v:Tr Trigger_ShortcutHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Trigger_Shortcut}" />
+                      <Button Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Trigger_ShortcutHint}" Classes="neutral" Command="{Binding CreateShortcutCommand}" Content="{v:Tr Trigger_ShortcutCreate}" />
                     </Grid>
                     <Border Classes="divider" />
-                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Trigger_Command}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Trigger_CommandHint}" TextWrapping="Wrap" />
-                      </StackPanel>
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="8" ToolTip.Tip="{v:Tr Trigger_CommandHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Trigger_Command}" />
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
-                        <TextBox Width="240" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" />
+                        <TextBox Width="240" AutomationProperties.HelpText="{v:Tr Trigger_CommandHint}" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" />
                         <Button AutomationProperties.Name="{v:Tr Trigger_Copy}" Classes="ghost" Command="{Binding CopyCommandCommand}" ToolTip.Tip="{v:Tr Trigger_Copy}">
                           <Path Classes="icon" Data="{x:Static v:Icons.Copy16}" />
                         </Button>
@@ -434,36 +427,24 @@
                 </u:SettingsCard.Icon>
                 <u:SettingsCard.Detail>
                   <StackPanel Margin="40,0,4,16">
-                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Editor_AskToKeepLayout}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Editor_AskToKeepLayoutHint}" TextWrapping="Wrap" />
-                      </StackPanel>
-                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_AskToKeepLayout}" IsChecked="{Binding Editor.AskToKeepLayout, FallbackValue=False}" OffContent="" OnContent="" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Editor_AskToKeepLayoutHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Editor_AskToKeepLayout}" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Editor_AskToKeepLayoutHint}" AutomationProperties.Name="{v:Tr Editor_AskToKeepLayout}" IsChecked="{Binding Editor.AskToKeepLayout, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
-                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Editor_KeepAwake}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Editor_KeepAwakeHint}" TextWrapping="Wrap" />
-                      </StackPanel>
-                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_KeepAwake}" IsChecked="{Binding Editor.KeepAwake, FallbackValue=False}" OffContent="" OnContent="" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Editor_KeepAwakeHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Editor_KeepAwake}" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Editor_KeepAwakeHint}" AutomationProperties.Name="{v:Tr Editor_KeepAwake}" IsChecked="{Binding Editor.KeepAwake, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
-                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Editor_RememberWindows}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Editor_RememberWindowsHint}" TextWrapping="Wrap" />
-                      </StackPanel>
-                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_RememberWindows}" IsChecked="{Binding Editor.RememberWindows, FallbackValue=False}" OffContent="" OnContent="" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Editor_RememberWindowsHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Editor_RememberWindows}" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Editor_RememberWindowsHint}" AutomationProperties.Name="{v:Tr Editor_RememberWindows}" IsChecked="{Binding Editor.RememberWindows, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
-                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                      <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Editor_CloseAppsWhenLeaving}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Editor_CloseAppsWhenLeavingHint}" TextWrapping="Wrap" />
-                      </StackPanel>
-                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_CloseAppsWhenLeaving}" IsChecked="{Binding Editor.CloseAppsWhenLeaving, FallbackValue=False}" OffContent="" OnContent="" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16" ToolTip.Tip="{v:Tr Editor_CloseAppsWhenLeavingHint}">
+                      <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Editor_CloseAppsWhenLeaving}" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Editor_CloseAppsWhenLeavingHint}" AutomationProperties.Name="{v:Tr Editor_CloseAppsWhenLeaving}" IsChecked="{Binding Editor.CloseAppsWhenLeaving, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
@@ -569,7 +550,7 @@
                   </Grid>
                   <Panel Margin="0,16,0,0">
                     <Rectangle RadiusX="8" RadiusY="8" Stroke="{DynamicResource RsOutline}" StrokeDashArray="4,4" StrokeThickness="1" />
-                    <TextBlock Margin="12,8" Classes="caption" Text="{v:Tr Displays_NoneSelected}" TextWrapping="Wrap" />
+                    <TextBlock Margin="12,8" Classes="caption" Text="{v:Tr Displays_ClickHint}" TextWrapping="Wrap" />
                   </Panel>
                 </StackPanel>
 
@@ -632,7 +613,7 @@
                     </ComboBox.ItemTemplate>
                   </ComboBox>
                 </Grid>
-                <TextBlock Margin="0,0,0,8" Classes="caption warning" IsVisible="{Binding Editor.SelectedDisplay.SwitchesHdr, FallbackValue=False}" Text="{v:Tr Editor_HdrWarning}" TextWrapping="Wrap" />
+                <TextBlock Margin="0,0,0,8" AutomationProperties.HelpText="{v:Tr Editor_HdrWarningTip}" Classes="caption warning" IsVisible="{Binding Editor.SelectedDisplay.SwitchesHdr, FallbackValue=False}" Text="{v:Tr Editor_HdrWarning}" TextWrapping="Wrap" ToolTip.Tip="{v:Tr Editor_HdrWarningTip}" />
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto">
                   <TextBlock Classes="label" Text="{v:Tr Editor_Primary}" />

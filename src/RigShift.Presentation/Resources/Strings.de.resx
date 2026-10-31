@@ -56,8 +56,9 @@
   <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Audio und die übrigen Einstellungen sind gesetzt. Klicke hier, um auch die Apps zu starten.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Nicht an oder nicht bereit: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
-  <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen ausprobieren. Bei manchen Monitoren, vor allem über HDMI, kann das Ein- oder Ausschalten von HDR den Grafiktreiber einfrieren.</value></data>
-  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten erscheinen, sobald der Bildschirm einmal an war, während RigShift läuft.</value></data>
+  <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR zuerst in Windows ausprobieren.</value></data>
+  <data name="Editor_HdrWarningTip" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen ausprobieren. Bei manchen Monitoren, vor allem über HDMI, kann das Ein- oder Ausschalten von HDR den Grafiktreiber einfrieren.</value></data>
+  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten, sobald er einmal an war.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (beenden)</value></data>
   <data name="Profile_AppsWait" xml:space="preserve"><value>wartet auf {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
@@ -85,9 +86,10 @@
   <data name="Outcome_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
   <data name="Outcome_DryRun" xml:space="preserve"><value>Geprüft</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Zurückschalten</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Ein Tastenkürzel, das zum letzten Profil zurückschaltet.</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Zurück zum letzten Profil.</value></data>
   <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Schnellumschalter</value></data>
-  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Öffnet aus jeder App eine Liste der Profile und Spiele auf dem Bildschirm mit der Maus.</value></data>
+  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Profil oder Spiel aus jeder App wählen.</value></data>
+  <data name="Settings_QuickSwitchHotkeyTip" xml:space="preserve"><value>Öffnet aus jeder App eine Liste der Profile und Spiele auf dem Bildschirm mit der Maus.</value></data>
   <data name="QuickSwitch_Search" xml:space="preserve"><value>Profil oder Spiel</value></data>
   <data name="QuickSwitch_Profile" xml:space="preserve"><value>Profil</value></data>
   <data name="QuickSwitch_Game" xml:space="preserve"><value>Spiel</value></data>
@@ -380,7 +382,7 @@
   <data name="Game_RuntimeWindows" xml:space="preserve"><value>Windows-Einstellung</value></data>
   <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows-Einstellung)</value></data>
   <data name="Game_Settings" xml:space="preserve"><value>Eigene Spieleinstellungen</value></data>
-  <data name="Game_SettingsHint" xml:space="preserve"><value>Schreibt diese Werte vor dem Start in die Einstellungsdatei des Spiels und stellt nach dem Ende die vorherigen wieder her.</value></data>
+  <data name="Game_SettingsHint" xml:space="preserve"><value>Schreibt diese Werte vor dem Start und stellt danach die vorherigen wieder her.</value></data>
   <data name="Game_SettingsFile" xml:space="preserve"><value>Einstellungsdatei (JSON oder INI)</value></data>
   <data name="Game_SettingsKeys" xml:space="preserve"><value>Werte, je Zeile Abschnitt/Name</value></data>
   <data name="Game_SettingsBrowse" xml:space="preserve"><value>Auswählen…</value></data>
@@ -492,7 +494,6 @@
   <data name="Tab_Behavior" xml:space="preserve"><value>Verhalten</value></data>
   <data name="Displays_ClickHint" xml:space="preserve"><value>Bildschirm anklicken zum Bearbeiten</value></data>
   <data name="Displays_OpenSettings" xml:space="preserve"><value>Windows-Anzeigeeinstellungen</value></data>
-  <data name="Displays_NoneSelected" xml:space="preserve"><value>Kein Bildschirm gewählt. Bildschirm in der Anordnung anklicken, um Name, Bildwiederholrate und HDR zu bearbeiten.</value></data>
   <data name="Audio_Intro" xml:space="preserve"><value>Wird beim Wechsel zu diesem Profil gesetzt. Geräte, die gerade nicht verbunden sind, bleiben wählbar.</value></data>
   <data name="Apps_ProfileIntro" xml:space="preserve"><value>Laufen beim Wechsel zu diesem Profil, von oben nach unten.</value></data>
   <data name="Trigger_RuleTitle" xml:space="preserve"><value>Wenn diese Geräte verbunden sind</value></data>
@@ -546,9 +547,8 @@
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Geräte</value></data>
   <data name="Settings_SignIn" xml:space="preserve"><value>Beim Anmelden</value></data>
-  <data name="Settings_SignInHint" xml:space="preserve"><value>Wenn RigShift mit Windows startet.</value></data>
   <data name="Settings_SignInTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit einem Profil startet er stattdessen in diesem, außer die Geräte einer USB-Regel sind verbunden. Braucht „Mit Windows starten“.</value></data>
-  <data name="Settings_SignInKeep" xml:space="preserve"><value>Windows-Anordnung behalten</value></data>
+  <data name="Settings_SignInKeep" xml:space="preserve"><value>Nicht umschalten</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Für Profile, die nachfragen. Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Menü im Infobereich.</value></data>
@@ -625,8 +625,6 @@
   <data name="Fov_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="Fov_Copied" xml:space="preserve"><value>Kopiert: {0}</value></data>
   <data name="Fov_Where" xml:space="preserve"><value>Wo eintragen</value></data>
-  <data name="Fov_Measure" xml:space="preserve"><value>So messen: zuerst den Sitz einstellen, dann das Maßband vom Nasenrücken zur Mitte des mittleren Bildschirms. Der Rahmen ist einer allein, Bildrand bis Gehäuserand.</value></data>
-  <data name="Fov_Vr" xml:space="preserve"><value>In VR braucht es nichts davon. Die Brille kennt ihre Geometrie selbst.</value></data>
   <data name="Fov_Warn_Curve" xml:space="preserve"><value>Deine Augen liegen innerhalb der Krümmung des Bildschirms; weiter weg setzen.</value></data>
   <data name="Fov_Warn_Triple" xml:space="preserve"><value>Bei diesem Winkel würden die Seitenbildschirme an deinen Augen vorbeireichen.</value></data>
   <data name="Fov_Warn_Angle" xml:space="preserve"><value>Über 65° sind die Seitenbildschirme kaum baubar, und manche Sims nehmen den Winkel nicht mehr an.</value></data>
@@ -661,7 +659,7 @@
   <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} nicht erkannt. Einschalten oder aufwecken, RigShift wartet beim Umschalten darauf. Oder als optional markieren.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Baugleiche Bildschirme an neuen Anschlüssen: {0}. In Windows anordnen, dann „Aktuelle Anordnung übernehmen“.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB-Geräte</value></data>
-  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet zu diesem Profil, sobald alle Geräte einer Regel verbunden sind.</value></data>
+  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet hierher, wenn alle Geräte einer Regel verbunden sind.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Befehl</value></data>
   <data name="Trigger_CommandHint" xml:space="preserve"><value>Für Stream Deck, Skripte oder die Konsole.</value></data>
   <data name="Editor_AskToKeepLayout" xml:space="preserve"><value>Nach dem Umschalten fragen, ob die Anordnung bleibt</value></data>
@@ -808,6 +806,9 @@
     <value>Alle Bildschirme an</value>
   </data>
   <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
+    <value>Wenn ein Bildschirm dunkel bleibt.</value>
+  </data>
+  <data name="Settings_AllOnHotkeyTip" xml:space="preserve">
     <value>Notfalltaste, wenn ein Bildschirm dunkel bleibt. Fest, wirkt ohne RigShift-Fenster.</value>
   </data>
   <data name="App_WaitForWindow" xml:space="preserve">

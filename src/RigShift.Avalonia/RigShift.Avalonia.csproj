@@ -43,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" Exclude="Assets\Brand\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Brand\*.ico" />
   </ItemGroup>
 
   <ItemGroup>

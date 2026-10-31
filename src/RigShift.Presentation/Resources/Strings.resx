@@ -53,8 +53,9 @@
   <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Its audio and other settings are set. Click here to start its apps too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Turn on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not on or not ready: {0}. RigShift waits up to {1} seconds for it.</value></data>
-  <data name="Editor_HdrWarning" xml:space="preserve"><value>Try HDR on this display once in Windows settings first. On some monitors, especially over HDMI, turning HDR on or off can freeze the graphics driver.</value></data>
-  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates appear once this display has been on while RigShift runs.</value></data>
+  <data name="Editor_HdrWarning" xml:space="preserve"><value>Try HDR in Windows first.</value></data>
+  <data name="Editor_HdrWarningTip" xml:space="preserve"><value>Try HDR on this display once in Windows settings first. On some monitors, especially over HDMI, turning HDR on or off can freeze the graphics driver.</value></data>
+  <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates appear once it has been on.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (close)</value></data>
   <data name="Profile_AppsWait" xml:space="preserve"><value>waits for {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio could not be switched completely.</value></data>
@@ -82,9 +83,10 @@
   <data name="Outcome_Failed" xml:space="preserve"><value>Failed</value></data>
   <data name="Outcome_DryRun" xml:space="preserve"><value>Checked</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Switch back</value></data>
-  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One hotkey that returns to the last profile.</value></data>
+  <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Back to the last profile.</value></data>
   <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Quick switcher</value></data>
-  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Opens a list of profiles and games on the display with the mouse, from any app.</value></data>
+  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Pick a profile or game from any app.</value></data>
+  <data name="Settings_QuickSwitchHotkeyTip" xml:space="preserve"><value>Opens a list of profiles and games on the display with the mouse, from any app.</value></data>
   <data name="QuickSwitch_Search" xml:space="preserve"><value>Profile or game</value></data>
   <data name="QuickSwitch_Profile" xml:space="preserve"><value>Profile</value></data>
   <data name="QuickSwitch_Game" xml:space="preserve"><value>Game</value></data>
@@ -377,7 +379,7 @@
   <data name="Game_RuntimeWindows" xml:space="preserve"><value>Windows setting</value></data>
   <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows setting)</value></data>
   <data name="Game_Settings" xml:space="preserve"><value>Own game settings</value></data>
-  <data name="Game_SettingsHint" xml:space="preserve"><value>Writes these values into the game's settings file before it starts and puts the previous ones back once it has ended.</value></data>
+  <data name="Game_SettingsHint" xml:space="preserve"><value>Writes these values before the start and restores the previous ones after.</value></data>
   <data name="Game_SettingsFile" xml:space="preserve"><value>Settings file (JSON or INI)</value></data>
   <data name="Game_SettingsKeys" xml:space="preserve"><value>Values, one Section/Name per line</value></data>
   <data name="Game_SettingsBrowse" xml:space="preserve"><value>Choose…</value></data>
@@ -489,7 +491,6 @@
   <data name="Tab_Behavior" xml:space="preserve"><value>Behavior</value></data>
   <data name="Displays_ClickHint" xml:space="preserve"><value>Click a display to edit it</value></data>
   <data name="Displays_OpenSettings" xml:space="preserve"><value>Windows display settings</value></data>
-  <data name="Displays_NoneSelected" xml:space="preserve"><value>No display chosen. Click one in the layout to edit its name, refresh rate and HDR.</value></data>
   <data name="Audio_Intro" xml:space="preserve"><value>Set when switching to this profile. Devices that are not connected right now stay selectable.</value></data>
   <data name="Apps_ProfileIntro" xml:space="preserve"><value>Run when switching to this profile, from top to bottom.</value></data>
   <data name="Trigger_RuleTitle" xml:space="preserve"><value>When these devices are connected</value></data>
@@ -543,9 +544,8 @@
   <data name="Settings_GroupApp" xml:space="preserve"><value>App</value></data>
   <data name="Settings_GroupDevices" xml:space="preserve"><value>Devices</value></data>
   <data name="Settings_SignIn" xml:space="preserve"><value>At sign-in</value></data>
-  <data name="Settings_SignInHint" xml:space="preserve"><value>When RigShift starts with Windows.</value></data>
   <data name="Settings_SignInTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. Pick a profile to start in it instead, unless the devices of a USB rule are connected. Needs “Start with Windows”.</value></data>
-  <data name="Settings_SignInKeep" xml:space="preserve"><value>Keep what Windows restored</value></data>
+  <data name="Settings_SignInKeep" xml:space="preserve"><value>Don't switch</value></data>
   <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>For profiles that ask. USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
@@ -622,8 +622,6 @@
   <data name="Fov_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="Fov_Copied" xml:space="preserve"><value>Copied: {0}</value></data>
   <data name="Fov_Where" xml:space="preserve"><value>Where it goes</value></data>
-  <data name="Fov_Measure" xml:space="preserve"><value>Measuring: set the seat first, then the tape from the bridge of your nose to the middle of the center screen. The bezel is one frame, picture edge to case edge.</value></data>
-  <data name="Fov_Vr" xml:space="preserve"><value>In VR none of this is needed. The headset knows its own geometry.</value></data>
   <data name="Fov_Warn_Curve" xml:space="preserve"><value>Your eyes are inside the curve of the screen; move back.</value></data>
   <data name="Fov_Warn_Triple" xml:space="preserve"><value>At that angle the side screens would reach past your eyes.</value></data>
   <data name="Fov_Warn_Angle" xml:space="preserve"><value>Over 65° the side screens are hard to build, and some sims no longer accept the angle.</value></data>
@@ -658,7 +656,7 @@
   <data name="Detail_BlockedNames" xml:space="preserve"><value>{0} not detected. Turn them on or wake them up; RigShift waits for them when you switch. Or mark them optional.</value></data>
   <data name="Detail_AmbiguousNames" xml:space="preserve"><value>Identical displays on new ports: {0}. Arrange them in Windows, then choose “Use current layout”.</value></data>
   <data name="Trigger_UsbTitle" xml:space="preserve"><value>USB devices</value></data>
-  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches to this profile once all devices in a rule are connected.</value></data>
+  <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches here when all devices of a rule are connected.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Command</value></data>
   <data name="Trigger_CommandHint" xml:space="preserve"><value>For Stream Deck, scripts or a terminal.</value></data>
   <data name="Editor_AskToKeepLayout" xml:space="preserve"><value>Ask to keep the layout after switching</value></data>
@@ -805,6 +803,9 @@
     <value>All displays on</value>
   </data>
   <data name="Settings_AllOnHotkeyHint" xml:space="preserve">
+    <value>For a display that stays dark.</value>
+  </data>
+  <data name="Settings_AllOnHotkeyTip" xml:space="preserve">
     <value>Emergency key for a display that stays dark. Fixed, works without a RigShift window.</value>
   </data>
   <data name="App_WaitForWindow" xml:space="preserve">

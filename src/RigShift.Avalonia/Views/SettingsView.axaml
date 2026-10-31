@@ -35,11 +35,8 @@
             <Border Classes="sheet">
               <StackPanel>
                 <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_SignInTip}">
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_SignIn}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_SignInHint}" TextWrapping="Wrap" />
-                  </StackPanel>
-                  <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Settings_SignIn}" IsEnabled="{Binding StartWithWindows}" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedSignInProfile, Converter={x:Static v:Converters.KeepOnNull}}" />
+                  <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Settings_SignIn}" />
+                  <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Settings_SignInTip}" AutomationProperties.Name="{v:Tr Settings_SignIn}" IsEnabled="{Binding StartWithWindows}" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedSignInProfile, Converter={x:Static v:Converters.KeepOnNull}}" />
                 </Grid>
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
@@ -55,7 +52,7 @@
                   </StackPanel>
                 </Grid>
                 <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_QuickSwitchHotkeyTip}">
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Classes="label" Text="{v:Tr Settings_QuickSwitchHotkey}" />
                     <TextBlock Classes="caption" Text="{Binding QuickSwitch.Hint}" TextWrapping="Wrap" />
@@ -68,25 +65,23 @@
                   </StackPanel>
                 </Grid>
                 <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_AllOnHotkeyTip}">
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Classes="label" Text="{v:Tr Settings_AllOnHotkey}" />
                     <TextBlock Classes="caption" Text="{v:Tr Settings_AllOnHotkeyHint}" TextWrapping="Wrap" />
                   </StackPanel>
-                  <Border Grid.Column="1" Classes="kbd" AutomationProperties.Name="{Binding AllDisplaysOnHotkeyText}">
+                  <Border Grid.Column="1" Classes="kbd" AutomationProperties.HelpText="{v:Tr Settings_AllOnHotkeyTip}" AutomationProperties.Name="{Binding AllDisplaysOnHotkeyText}">
                     <TextBlock Classes="num" Text="{Binding AllDisplaysOnHotkeyText}" />
                   </Border>
                 </Grid>
                 <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_ConfirmSeconds}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_ConfirmSecondsHint}" TextWrapping="Wrap" />
-                  </StackPanel>
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_ConfirmSecondsHint}">
+                  <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Settings_ConfirmSeconds}" />
                   <NumericUpDown
                     Grid.Column="1"
                     Width="112"
                     VerticalAlignment="Center"
+                    AutomationProperties.HelpText="{v:Tr Settings_ConfirmSecondsHint}"
                     AutomationProperties.Name="{v:Tr Settings_ConfirmSeconds}"
                     FormatString="0"
                     Increment="1"
@@ -118,21 +113,15 @@
                 </Grid>
                 <StackPanel IsVisible="{Binding ShowUpdateSetting}">
                   <Border Classes="divider" />
-                  <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
-                    <StackPanel VerticalAlignment="Center">
-                      <TextBlock Classes="label" Text="{v:Tr Settings_AutoUpdate}" />
-                      <TextBlock Classes="caption" Text="{v:Tr Settings_AutoUpdateHint}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Settings_AutoUpdate}" IsChecked="{Binding InstallUpdatesAutomatically}" OffContent="" OnContent="" />
+                  <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_AutoUpdateHint}">
+                    <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Settings_AutoUpdate}" />
+                    <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Settings_AutoUpdateHint}" AutomationProperties.Name="{v:Tr Settings_AutoUpdate}" IsChecked="{Binding InstallUpdatesAutomatically}" OffContent="" OnContent="" />
                   </Grid>
                 </StackPanel>
                 <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_DetailedLog}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_DetailedLogHint}" TextWrapping="Wrap" />
-                  </StackPanel>
-                  <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Settings_DetailedLog}" IsChecked="{Binding DetailedLogging}" OffContent="" OnContent="" />
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_DetailedLogHint}">
+                  <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Settings_DetailedLog}" />
+                  <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Settings_DetailedLogHint}" AutomationProperties.Name="{v:Tr Settings_DetailedLog}" IsChecked="{Binding DetailedLogging}" OffContent="" OnContent="" />
                 </Grid>
               </StackPanel>
             </Border>
@@ -140,18 +129,15 @@
 
           <!-- ===== Devices: the USB devices rules and profiles use; a name is saved on Enter or on leaving the field. ===== -->
           <StackPanel Spacing="12">
-            <StackPanel Margin="4,0,0,0" Orientation="Horizontal" Spacing="12">
+            <StackPanel Margin="4,0,0,0" Orientation="Horizontal" Spacing="12" ToolTip.Tip="{v:Tr Settings_DevicesHint}">
               <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.PlugConnected20}" /></Border>
               <TextBlock Classes="section" Text="{v:Tr Settings_GroupDevices}" />
             </StackPanel>
             <Border Classes="sheet">
               <StackPanel>
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_PauseRules}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_PauseRulesHint}" TextWrapping="Wrap" />
-                  </StackPanel>
-                  <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Settings_PauseRules}" IsChecked="{Binding Devices.IsPaused}" OffContent="" OnContent="" />
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24" ToolTip.Tip="{v:Tr Settings_PauseRulesHint}">
+                  <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Settings_PauseRules}" />
+                  <ToggleSwitch Grid.Column="1" AutomationProperties.HelpText="{v:Tr Settings_PauseRulesHint}" AutomationProperties.Name="{v:Tr Settings_PauseRules}" IsChecked="{Binding Devices.IsPaused}" OffContent="" OnContent="" />
                 </Grid>
                 <ItemsControl ItemsSource="{Binding Devices.NamedDevices}">
                   <ItemsControl.ItemTemplate>
@@ -189,7 +175,6 @@
                 </ItemsControl>
               </StackPanel>
             </Border>
-            <TextBlock Margin="4,0,0,0" Classes="caption" Text="{v:Tr Settings_DevicesHint}" TextWrapping="Wrap" />
           </StackPanel>
         </StackPanel>
       </UniformGrid>
