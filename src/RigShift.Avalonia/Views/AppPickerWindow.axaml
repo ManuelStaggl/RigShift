@@ -1,0 +1,46 @@
+<Window
+  x:Class="RigShift.Avalonia.Views.AppPickerWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:vm="using:RigShift.App.ViewModels"
+  x:DataType="vm:AppPickerViewModel"
+  Title="{v:Tr App_Browse}"
+  Width="560"
+  SizeToContent="Height"
+  CanResize="False"
+  ShowInTaskbar="False"
+  WindowStartupLocation="CenterOwner"
+  Background="{DynamicResource RsCard}">
+  <!-- Installed (Start menu) and running apps with a search, or any file through the Windows "Open" dialog. -->
+  <StackPanel Margin="24,20" Spacing="12">
+    <TextBlock Classes="h3" Text="{v:Tr App_Browse}" />
+    <TextBox x:Name="Search" Text="{Binding Query}" Watermark="{v:Tr AppPicker_Search}" />
+    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+    <ListBox
+      x:Name="List"
+      Height="360"
+      DoubleTapped="OnDoubleTapped"
+      ItemsSource="{Binding Apps}"
+      SelectedItem="{Binding Selected}"
+      SelectionMode="Single">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:AppChoice">
+          <Grid ColumnDefinitions="24,*" ColumnSpacing="12">
+            <Image Width="20" Height="20" Source="{Binding Icon, Converter={x:Static v:Converters.IconImage}}" />
+            <StackPanel Grid.Column="1">
+              <TextBlock FontSize="13" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Classes="caption" Text="{Binding ShownPath}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Classes="secondary" IsVisible="{Binding IsEmpty}" Text="{v:Tr AppPicker_Empty}" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+      <Button HorizontalAlignment="Left" Classes="link" Click="OnBrowse" Content="{v:Tr AppPicker_BrowseFile}" />
+      <Button Grid.Column="1" MinWidth="96" HorizontalContentAlignment="Center" Classes="primary" Click="OnChoose" Content="{v:Tr AppPicker_Choose}" IsDefault="True" IsEnabled="{Binding CanChoose}" />
+      <Button Grid.Column="2" MinWidth="96" HorizontalContentAlignment="Center" Classes="neutral" Click="OnCancel" Content="{v:Tr Common_Cancel}" IsCancel="True" />
+    </Grid>
+  </StackPanel>
+</Window>
