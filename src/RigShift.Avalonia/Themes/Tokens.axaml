@@ -9,37 +9,6 @@
   colour for icons, chevrons and dots and reaches 3:1, so no text uses it.
 -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Section hues: content colour of the group tiles and their 24 % fill, the same in both themes. -->
-  <SolidColorBrush x:Key="HueApp" Color="#3FB8AF" />
-  <SolidColorBrush x:Key="HueAppSoft" Color="#3D3FB8AF" />
-  <SolidColorBrush x:Key="HueApps" Color="#3FB8AF" />
-  <SolidColorBrush x:Key="HueAppsSoft" Color="#3D3FB8AF" />
-  <SolidColorBrush x:Key="HueAudio" Color="#4EA7FC" />
-  <SolidColorBrush x:Key="HueAudioSoft" Color="#3D4EA7FC" />
-  <SolidColorBrush x:Key="HueBackup" Color="#6CBF5A" />
-  <SolidColorBrush x:Key="HueBackupSoft" Color="#3D6CBF5A" />
-  <SolidColorBrush x:Key="HueBehavior" Color="#8A8F98" />
-  <SolidColorBrush x:Key="HueBehaviorSoft" Color="#3D8A8F98" />
-  <SolidColorBrush x:Key="HueDevices" Color="#F2A83B" />
-  <SolidColorBrush x:Key="HueDevicesSoft" Color="#3DF2A83B" />
-  <SolidColorBrush x:Key="HueEnd" Color="#8A8F98" />
-  <SolidColorBrush x:Key="HueEndSoft" Color="#3D8A8F98" />
-  <SolidColorBrush x:Key="HueKeys" Color="#3FB8AF" />
-  <SolidColorBrush x:Key="HueKeysSoft" Color="#3D3FB8AF" />
-  <SolidColorBrush x:Key="HueLaunch" Color="#4EA7FC" />
-  <SolidColorBrush x:Key="HueLaunchSoft" Color="#3D4EA7FC" />
-  <SolidColorBrush x:Key="HueProblem" Color="#E8836B" />
-  <SolidColorBrush x:Key="HueProblemSoft" Color="#3DE8836B" />
-  <SolidColorBrush x:Key="HueSettings" Color="#E8836B" />
-  <SolidColorBrush x:Key="HueSettingsSoft" Color="#3DE8836B" />
-  <SolidColorBrush x:Key="HueStart" Color="#4EA7FC" />
-  <SolidColorBrush x:Key="HueStartSoft" Color="#3D4EA7FC" />
-  <SolidColorBrush x:Key="HueSwitching" Color="#4EA7FC" />
-  <SolidColorBrush x:Key="HueSwitchingSoft" Color="#3D4EA7FC" />
-  <SolidColorBrush x:Key="HueTriggers" Color="#F2A83B" />
-  <SolidColorBrush x:Key="HueTriggersSoft" Color="#3DF2A83B" />
-  <SolidColorBrush x:Key="HueWindows" Color="#6CBF5A" />
-  <SolidColorBrush x:Key="HueWindowsSoft" Color="#3D6CBF5A" />
   <!-- A notice's outline: none in the themes, the window text colour in high contrast, where its tint is gone. -->
   <SolidColorBrush x:Key="RsNoticeLine" Color="Transparent" />
 
@@ -71,8 +40,13 @@
       <SolidColorBrush x:Key="RsDivider" Color="#0FFFFFFF" />
       <SolidColorBrush x:Key="RsOutline" Color="#17FFFFFF" />
       <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
-      <SolidColorBrush x:Key="RsAccentHover" Color="#1A86DC" />
+      <!-- Hover and pressed darken: white on them stays above 4.5:1. -->
+      <SolidColorBrush x:Key="RsAccentHover" Color="#106EBE" />
+      <SolidColorBrush x:Key="RsAccentPressed" Color="#005A9E" />
       <SolidColorBrush x:Key="RsAccentText" Color="#5AA9FF" />
+      <!-- Outline of inputs and switch tracks: 3:1 on every surface. -->
+      <SolidColorBrush x:Key="RsControlStroke" Color="#72767C" />
+      <SolidColorBrush x:Key="RsControlStrokeHover" Color="#8F949D" />
       <SolidColorBrush x:Key="RsAccentSoft" Color="#0F1D30" />
       <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
       <SolidColorBrush x:Key="RsSuccess" Color="#4CB782" />
@@ -106,10 +80,15 @@
       </LinearGradientBrush>
       <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #14FFFFFF, 0 1 2 0 #99000000</BoxShadows>
 
+      <!-- Technical illustrations: screen surface, visible bezel, neutral field of view. -->
+      <SolidColorBrush x:Key="RsScreenSurface" Color="#25282D" />
+      <SolidColorBrush x:Key="RsScreenEdge" Color="#72767C" />
+      <SolidColorBrush x:Key="RsDiagramField" Color="#16191D" />
+
       <!-- Semi palette -->
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
-      <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#1A86DC" />
-      <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#006CBE" />
+      <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#106EBE" />
+      <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#005A9E" />
       <SolidColorBrush x:Key="SemiColorPrimaryDisabled" Color="#1A3550" />
       <SolidColorBrush x:Key="SemiColorPrimaryLight" Color="#1F5AA9FF" />
       <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover" Color="#2E5AA9FF" />
@@ -144,21 +123,23 @@
       <BoxShadows x:Key="SemiShadowElevated">inset 0 0 0 1 #17FFFFFF, 0 4 40 8 #80000000</BoxShadows>
       <!-- Control-level overrides: a toggle that is on carries the accent fill. -->
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#1A86DC" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#006CBE" />
-      <!-- Off: a track that stands out from the card (Semi takes Fill0, the card's own colour). -->
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#3A3B40" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#45464B" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#4F5055" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#26272A" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#106EBE" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
+      <!-- Off: an outlined track as in Windows 11, the outline at 3:1 against the card. -->
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#0DFFFFFF" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#17FFFFFF" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ToggleSwitchDefaultBorderBrush" Color="#72767C" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBorderBrush" Color="#3E3F44" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#242528" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#2B2C30" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#323337" />
       <!-- Inputs carry the control outline. -->
-      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#17FFFFFF" />
-      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#24FFFFFF" />
-      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#17FFFFFF" />
-      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#24FFFFFF" />
+      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#72767C" />
+      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#8F949D" />
+      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#72767C" />
+      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#8F949D" />
     </ResourceDictionary>
 
     <!-- ================= Light ================= -->
@@ -188,7 +169,10 @@
       <SolidColorBrush x:Key="RsOutline" Color="#17000000" />
       <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
       <SolidColorBrush x:Key="RsAccentHover" Color="#0067B8" />
+      <SolidColorBrush x:Key="RsAccentPressed" Color="#005A9E" />
       <SolidColorBrush x:Key="RsAccentText" Color="#0067B8" />
+      <SolidColorBrush x:Key="RsControlStroke" Color="#85888F" />
+      <SolidColorBrush x:Key="RsControlStrokeHover" Color="#63626B" />
       <SolidColorBrush x:Key="RsAccentSoft" Color="#E8F2FC" />
       <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
       <SolidColorBrush x:Key="RsSuccess" Color="#1B722F" />
@@ -219,6 +203,11 @@
         <GradientStop Offset="1" Color="#EFF0F3" />
       </LinearGradientBrush>
       <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #24000000, 0 1 2 0 #1A000000</BoxShadows>
+
+      <!-- Technical illustrations: screen surface, visible bezel, neutral field of view. -->
+      <SolidColorBrush x:Key="RsScreenSurface" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsScreenEdge" Color="#7F7D86" />
+      <SolidColorBrush x:Key="RsDiagramField" Color="#E6E9EE" />
 
       <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
       <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#0067B8" />
@@ -258,17 +247,19 @@
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#0067B8" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#CDD0D6" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#C1C4CB" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#B5B9C0" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#E6E8EC" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#0A000000" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#14000000" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ToggleSwitchDefaultBorderBrush" Color="#85888F" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBorderBrush" Color="#C5C8CF" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#ECEEF1" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#E3E5E9" />
-      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#17000000" />
-      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#26000000" />
-      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#17000000" />
-      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#26000000" />
+      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#85888F" />
+      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#63626B" />
+      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#85888F" />
+      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#63626B" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 
@@ -276,9 +267,13 @@
   <FontFamily x:Key="RsFont">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
   <FontFamily x:Key="DefaultFontFamily">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
   <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
-  <CornerRadius x:Key="RsRadiusControl">6</CornerRadius>
-  <CornerRadius x:Key="RsRadiusSurface">10</CornerRadius>
+  <!-- Four radii: keycap/chip 4, control 6, row/inner well 8, card/panel/popup 12. Nested: inner = outer - padding. -->
+  <CornerRadius x:Key="RsRadiusXs">4</CornerRadius>
+  <CornerRadius x:Key="RsRadiusSm">6</CornerRadius>
+  <CornerRadius x:Key="RsRadiusMd">8</CornerRadius>
+  <CornerRadius x:Key="RsRadiusLg">12</CornerRadius>
   <CornerRadius x:Key="SemiBorderRadiusSmall">6</CornerRadius>
   <CornerRadius x:Key="SemiBorderRadiusMedium">6</CornerRadius>
-  <CornerRadius x:Key="SemiBorderRadiusLarge">10</CornerRadius>
+  <CornerRadius x:Key="SemiBorderRadiusLarge">12</CornerRadius>
+  <Thickness x:Key="ToggleSwitchDefaultBorderThickness">1</Thickness>
 </ResourceDictionary>

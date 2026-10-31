@@ -21,18 +21,21 @@ public sealed partial class MainWindow : Window
     private readonly Dictionary<AppPage, Control> _pages = [];
     private readonly Dictionary<AppPage, Button> _rail = [];
     private readonly Dictionary<AppPage, string> _railText = [];
+    private readonly Dictionary<AppPage, (Path Icon, Geometry Regular, Geometry Filled)> _railIcons = [];
 
     public MainWindow()
     {
         InitializeComponent();
-        AddRail(TopRail, AppPage.Overview, "Nav_Overview", Glyphs.Overview);
-        AddRail(TopRail, AppPage.Profiles, "Nav_Profiles", Glyphs.Profiles);
-        AddRail(TopRail, AppPage.Games, "Nav_Games", Glyphs.Games);
-        AddRail(TopRail, AppPage.FieldOfView, "Nav_Fov", Glyphs.Fov);
-        AddRail(BottomRail, AppPage.Settings, "Nav_Settings", Glyphs.Settings);
-        AddRail(BottomRail, AppPage.Help, "Nav_About", Glyphs.Help);
+        AddRail(TopRail, AppPage.Overview, "Nav_Overview", Icons.Board20, Icons.BoardFilled20);
+        AddRail(TopRail, AppPage.Profiles, "Nav_Profiles", Icons.Desktop20, Icons.DesktopFilled20);
+        AddRail(TopRail, AppPage.Games, "Nav_Games", Icons.Games20, Icons.GamesFilled20);
+        AddRail(TopRail, AppPage.FieldOfView, "Nav_Fov", Icons.Eye20, Icons.EyeFilled20);
+        AddRail(BottomRail, AppPage.Settings, "Nav_Settings", Icons.Options20, Icons.OptionsFilled20);
+        AddRail(BottomRail, AppPage.Help, "Nav_About", Icons.QuestionCircle20, Icons.QuestionCircleFilled20);
         ApplyTextScale();
         ApplyTexts();
+        ShowTitleIcon();
+        ActualThemeVariantChanged += (_, _) => ShowTitleIcon();
         Loc.Instance.PropertyChanged += (_, _) => ApplyTexts();
         Opened += (_, _) => Dispatcher.UIThread.Post(KeepOnScreen, DispatcherPriority.Loaded);
         KeyDown += (_, e) =>
@@ -66,6 +69,15 @@ public sealed partial class MainWindow : Window
             Height = Math.Min(Height * factor, roomHeight);
             Serilog.Log.Information("Text size {Factor:0.##}x applied to the pages", factor);
         }
+    }
+
+    /// <summary>The brand package's tray symbol in the title bar: the white one ("dark", for dark taskbars) on the dark theme.</summary>
+    private void ShowTitleIcon()
+    {
+        string variant = ActualThemeVariant == global::Avalonia.Styling.ThemeVariant.Light ? "light" : "dark";
+        string assembly = typeof(MainWindow).Assembly.GetName().Name!;
+        using Stream png = global::Avalonia.Platform.AssetLoader.Open(new Uri($"avares://{assembly}/Assets/Brand/rigshift-tray-{variant}-32.png"));
+        TitleIcon.Source = new global::Avalonia.Media.Imaging.Bitmap(png);
     }
 
     private void ApplyTexts()
@@ -105,7 +117,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private sealed record PaletteEntry(string Title, string? Hint, string Glyph, Action Run);
+    private sealed record PaletteEntry(string Title, string? Hint, Geometry Glyph, Action Run);
 
     private List<PaletteEntry> _entries = [];
 
@@ -117,10 +129,10 @@ public sealed partial class MainWindow : Window
         _entries =
         [
             .. profiles.Where(p => !p.IsActive).Select(p => new PaletteEntry(
-                Loc.Format("Palette_SwitchTo", p.Name), p.HasHotkey ? p.HotkeyText : null, Glyphs.Switch, () => overview.SwitchCommand.Execute(p))),
+                Loc.Format("Palette_SwitchTo", p.Name), p.HasHotkey ? p.HotkeyText : null, Icons.ArrowSwap16, () => overview.SwitchCommand.Execute(p))),
             .. overview.Games.Items.Where(g => g.CanPlay).Select(g => new PaletteEntry(
-                g.PlayText, g.ShowsHotkey ? g.HotkeyText : Loc.Instance["Palette_KindGame"], Glyphs.Play, () => overview.PlayCommand.Execute(g))),
-            .. profiles.Select(p => new PaletteEntry(Loc.Format("Palette_Edit", p.Name), Loc.Instance["Palette_KindProfile"], Glyphs.Profiles, () =>
+                g.PlayText, g.ShowsHotkey ? g.HotkeyText : Loc.Instance["Palette_KindGame"], Icons.Play16, () => overview.PlayCommand.Execute(g))),
+            .. profiles.Select(p => new PaletteEntry(Loc.Format("Palette_Edit", p.Name), Loc.Instance["Palette_KindProfile"], Icons.Desktop16, () =>
             {
                 Navigate(AppPage.Profiles);
                 App.Provider.GetRequiredService<ProfilesViewModel>().SelectedItem = p;
@@ -135,14 +147,14 @@ public sealed partial class MainWindow : Window
         PaletteQuery.Focus();
     }
 
-    private static string RailGlyph(AppPage page) => page switch
+    private static Geometry RailGlyph(AppPage page) => page switch
     {
-        AppPage.Overview => Glyphs.Overview,
-        AppPage.Profiles => Glyphs.Profiles,
-        AppPage.Games => Glyphs.Games,
-        AppPage.FieldOfView => Glyphs.Fov,
-        AppPage.Settings => Glyphs.Settings,
-        _ => Glyphs.Help,
+        AppPage.Overview => Icons.Board16,
+        AppPage.Profiles => Icons.Desktop16,
+        AppPage.Games => Icons.Games16,
+        AppPage.FieldOfView => Icons.Eye16,
+        AppPage.Settings => Icons.Options16,
+        _ => Icons.QuestionCircle16,
     };
 
     private void ClosePalette() => Palette.IsVisible = false;
@@ -159,9 +171,9 @@ public sealed partial class MainWindow : Window
 
     private static Grid Row(PaletteEntry entry)
     {
-        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 10, Tag = entry, MinHeight = 24 };
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 12, Tag = entry, MinHeight = 32 };
         global::Avalonia.Automation.AutomationProperties.SetName(row, entry.Hint is { } kind ? $"{entry.Title}, {kind}" : entry.Title);
-        row.Children.Add(new Path { Data = Geometry.Parse(entry.Glyph), Classes = { "icon", "small" }, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new Path { Data = entry.Glyph, Classes = { "icon" } });
         var title = new TextBlock { Text = entry.Title, Classes = { "label" } };
         Grid.SetColumn(title, 1);
         row.Children.Add(title);
@@ -238,27 +250,31 @@ public sealed partial class MainWindow : Window
         foreach ((AppPage key, Button button) in _rail)
         {
             button.Classes.Set("selected", key == page);
+            (Path icon, Geometry regular, Geometry filled) = _railIcons[key];
+            icon.Data = key == page ? filled : regular;
         }
     }
 
-    /// <summary>A rail entry: icon only, the name in the tooltip (set by <see cref="ApplyTexts"/>); selected = accent tile with a duotone icon and the marker on the left edge.</summary>
-    private void AddRail(StackPanel panel, AppPage page, string textKey, string data)
+    /// <summary>A rail entry: icon only, the name in the tooltip (set by <see cref="ApplyTexts"/>); selected = accent tile with the filled icon and the marker on the left edge.</summary>
+    private void AddRail(StackPanel panel, AppPage page, string textKey, Geometry regular, Geometry filled)
     {
+        var icon = new Path { Data = regular, Classes = { "icon", "md" }, HorizontalAlignment = HorizontalAlignment.Center };
+        _railIcons[page] = (icon, regular, filled);
         var tile = new Border
         {
             Width = 44,
             Height = 40,
-            CornerRadius = new global::Avalonia.CornerRadius(10),
+            CornerRadius = new global::Avalonia.CornerRadius(8),
             Classes = { "plate" },
-            Child = new Path { Data = Geometry.Parse(data), Classes = { "icon", "rail" }, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            Child = icon,
         };
         var marker = new Border
         {
             Width = 3,
-            Height = 18,
+            Height = 16,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Center,
-            CornerRadius = new global::Avalonia.CornerRadius(0, 3, 3, 0),
+            CornerRadius = new global::Avalonia.CornerRadius(0, 2, 2, 0),
             Classes = { "pill" },
         };
         var content = new Grid();

@@ -25,6 +25,7 @@ public sealed partial class GamePickerWindow : Window
     {
         InitializeComponent();
         TextScale.Apply(this);
+        DialogChrome.Apply(this);
         GameList.AddHandler(KeyDownEvent, OnListKeyDown, RoutingStrategies.Tunnel);
         Opened += (_, _) => SearchBox.Focus();
     }
@@ -50,6 +51,11 @@ public sealed partial class GamePickerWindow : Window
     {
         var viewModel = new GamePickerViewModel(multiple);
         var window = new GamePickerWindow { DataContext = viewModel };
+        if (multiple)
+        {
+            ToolTip.SetTip(window.IntroText, Loc.Instance["GamePicker_IntroManyTip"]);
+        }
+
         Task fill = FillAsync(factory, viewModel);
         await AskDialog.ShowModalAsync(window);
         await fill;

@@ -31,6 +31,11 @@ internal static class Previews
                 sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), active)));
         }
 
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_INERT") == "1")
+        {
+            InertPreview.Register(services);
+        }
+
         // RIGSHIFT_PREVIEW_OPENXR=1: two runtimes, so the game editor offers its OpenXR choice on a machine without VR.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_OPENXR") == "1")
         {

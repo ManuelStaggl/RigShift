@@ -39,6 +39,7 @@ public sealed partial class ConfirmationWindow : Window
     {
         InitializeComponent();
         TextScale.Apply(this);
+        DialogChrome.Apply(this);
         _hook = WndProc;
     }
 

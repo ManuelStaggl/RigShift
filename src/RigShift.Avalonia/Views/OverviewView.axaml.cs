@@ -48,7 +48,7 @@ public sealed partial class OverviewView : UserControl
         // Action bar: the active profile and the switch to the next one.
         ProfileItem? next = ViewModel.Catalog.Items.FirstOrDefault(i => !i.IsActive);
         BarName.Text = active?.Name ?? ViewModel.ActiveName;
-        BarIcon.Data = Glyphs.Profile(active?.IconKey);
+        BarIcon.Data = ProfileSymbols.For(active?.IconKey, 20);
         BarSwitch.Tag = next;
         BarSwitch.IsVisible = next is not null;
         BarSwitchText.Text = next is null ? null : Loc.Format("Palette_SwitchTo", next.Name);

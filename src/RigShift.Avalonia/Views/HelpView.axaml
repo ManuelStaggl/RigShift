@@ -7,19 +7,14 @@
   xmlns:up="using:RigShift.Core.Updates"
   x:DataType="vm:AboutViewModel">
   <UserControl.Styles>
-    <!-- The four help cards: the hue tile and title, a line of text, the actions at the foot. -->
+    <!-- The four help cards: the group tile and title, a line of text, the actions at the foot. -->
     <Style Selector="Border.sheet.help">
-      <Setter Property="Padding" Value="20,18" />
+      <Setter Property="Padding" Value="20" />
     </Style>
-    <Style Selector="Border.sheet.help TextBlock.title">
-      <Setter Property="FontSize" Value="15" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    <Style Selector="Border.sheet.help TextBlock.subtitle">
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="TextBlock.note">
-      <Setter Property="FontSize" Value="13" />
-      <Setter Property="LineHeight" Value="20" />
       <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
       <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
@@ -31,36 +26,30 @@
   </UserControl.Styles>
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-    <StackPanel MaxWidth="856" Margin="32,28,32,40" Spacing="16">
-      <TextBlock Margin="0,0,0,8" Classes="h1" FontSize="32" LetterSpacing="-0.7" Text="{v:Tr Nav_About}" />
+    <StackPanel Classes="page" Spacing="24">
+      <TextBlock Classes="display" Text="{v:Tr Nav_About}" />
 
       <!-- Head: the mark, the version, the update state and the one update action; what is new under it. -->
-      <Border Padding="24,20" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="16">
+      <Border Classes="well">
         <StackPanel Spacing="16">
-          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="18">
-            <Border Width="56" Height="56" Background="{DynamicResource RsCard}" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="14">
-              <Viewbox Width="36" Height="27">
-                <Canvas Width="240" Height="180">
-                  <Path
-                    Data="M76 60 L17 55 Q10 54 10 61 V124 Q10 130 17 129 L74 124 M153 63 L222 55 Q230 54 230 62 V124 Q230 130 222 129 L166 123 M47 127 V140 M32 143 L64 138 M191 127 V140 M176 138 L207 144"
-                    Stroke="{DynamicResource RsText}"
-                    StrokeJoin="Round"
-                    StrokeLineCap="Round"
-                    StrokeThickness="12" />
-                  <Path Data="M141 9 L177 40 L141 71 V52 C109 49 83 60 76 88 C67 68 75 44 97 32 C110 25 124 24 141 25 Z M89 62 H137 V72 H82 Z M41 116 C77 92 97 83 116 83 L88 114 Z M124 83 C145 84 167 95 199 116 L151 114 Z M119 88 H123 L125 95 H117 Z M116 99 H126 L129 109 H113 Z M111 114 H131 L135 130 H107 Z M105 122 V139 C133 142 145 135 148 122 C160 149 139 162 105 160 V174 L77 148 Z" Fill="{DynamicResource RsAccentText}" />
-                </Canvas>
-              </Viewbox>
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+            <!-- The brand mark from the brand package, in the colours for the theme behind it. -->
+            <Border Width="56" Height="56" Background="{DynamicResource RsCard}" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="{DynamicResource RsRadiusLg}">
+              <Panel Width="40" Height="40">
+                <Image x:Name="MarkDark" Source="/Assets/Brand/rigshift-symbol-color-dark-128w.png" />
+                <Image x:Name="MarkLight" Source="/Assets/Brand/rigshift-symbol-color-light-128w.png" />
+              </Panel>
             </Border>
             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-              <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" Text="{Binding VersionText}" TextWrapping="Wrap" />
-              <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Classes="title" Text="{Binding VersionText}" TextWrapping="Wrap" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
                 <Ellipse
                   Classes="status"
                   Classes.ok="{Binding UpdateStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Ok}"
                   Classes.warn="{Binding UpdateStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Warn}"
                   Classes.error="{Binding UpdateStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Error}"
                   Classes.accent="{Binding UpdateStatusKind, Converter={x:Static v:Converters.Is}, ConverterParameter=Accent}" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Classes="caption" FontSize="13" Text="{Binding UpdateStatusText}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Classes="caption" Text="{Binding UpdateStatusText}" TextWrapping="Wrap" />
               </StackPanel>
             </StackPanel>
             <Panel Grid.Column="2" VerticalAlignment="Center">
@@ -70,35 +59,35 @@
           </Grid>
 
           <!-- Height-limited: a full changelog section would make the head huge. -->
-          <StackPanel Margin="74,0,0,0" Spacing="4" IsVisible="{Binding ShowReleaseNotes}">
+          <StackPanel Margin="72,0,0,0" Spacing="4" IsVisible="{Binding ShowReleaseNotes}">
             <TextBlock Classes="section" Text="{v:Tr About_WhatsNew}" />
             <ScrollViewer MaxHeight="160" HorizontalScrollBarVisibility="Disabled">
               <ItemsControl ItemsSource="{Binding ReleaseNoteLines}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="up:ReleaseNoteLine">
-                    <TextBlock Margin="0,2,0,0" Classes="caption" Classes.heading="{Binding IsHeading}" Text="{Binding Text}" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,4,0,0" Classes="caption" Classes.heading="{Binding IsHeading}" Text="{Binding Text}" TextWrapping="Wrap" />
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
             </ScrollViewer>
-            <Button Margin="0,4,0,0" HorizontalAlignment="Left" Classes="link" Command="{Binding OpenReleaseNotesCommand}" Content="{v:Tr Settings_ReleaseNotesLink}" FontSize="13" />
+            <Button Margin="0,4,0,0" HorizontalAlignment="Left" Classes="link" Command="{Binding OpenReleaseNotesCommand}" Content="{v:Tr Settings_ReleaseNotesLink}" />
           </StackPanel>
         </StackPanel>
       </Border>
 
-      <!-- Four cards in two columns, each as tall as its own content: getting going on the left, the tools on the right. -->
-      <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-        <StackPanel Spacing="16">
+      <!-- Four cards, two columns from 1000 px, each as tall as its own content: getting going on the left, the tools on the right. -->
+      <UniformGrid Classes="cols">
+        <StackPanel Spacing="24">
           <!-- First steps -->
           <Border Classes="sheet help">
             <DockPanel>
-              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10">
-                <Border Classes="tile" Background="{StaticResource HueStartSoft}"><Path Classes="icon small" Stroke="{StaticResource HueStart}" Data="{x:Static v:Icons.Play}" /></Border>
-                <TextBlock Classes="title" Text="{v:Tr About_StartTitle}" />
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12">
+                <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Play20}" /></Border>
+                <TextBlock Classes="subtitle" Text="{v:Tr About_StartTitle}" />
               </StackPanel>
               <StackPanel Margin="0,16,0,0" DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="16">
                 <Button Classes="neutral" Command="{Binding StartAssistantCommand}" Content="{v:Tr Overview_SetupStart}" />
-                <Button VerticalAlignment="Center" Classes="link" Command="{Binding OpenGuideCommand}" Content="{v:Tr About_Guide}" FontSize="13" />
+                <Button VerticalAlignment="Center" Classes="link" Command="{Binding OpenGuideCommand}" Content="{v:Tr About_Guide}" />
               </StackPanel>
               <TextBlock Margin="0,12,0,0" Classes="note" Text="{v:Tr About_StartText}" />
             </DockPanel>
@@ -107,49 +96,49 @@
           <!-- Backup -->
           <Border Classes="sheet help">
             <DockPanel>
-              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10">
-                <Border Classes="tile" Background="{StaticResource HueBackupSoft}"><Path Classes="icon small" Stroke="{StaticResource HueBackup}" Data="{x:Static v:Icons.Archive}" /></Border>
-                <TextBlock Classes="title" Text="{v:Tr About_Backup}" />
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12">
+                <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Archive20}" /></Border>
+                <TextBlock Classes="subtitle" Text="{v:Tr About_Backup}" />
               </StackPanel>
               <StackPanel Margin="0,16,0,0" DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8">
                 <Button Classes="neutral" Command="{Binding SaveBackupCommand}" Content="{v:Tr About_SaveBackup}" />
                 <Button Classes="neutral" Command="{Binding RestoreBackupCommand}" Content="{v:Tr About_RestoreBackup}" />
               </StackPanel>
-              <StackPanel Margin="0,12,0,0" Spacing="6">
+              <StackPanel Margin="0,12,0,0" Spacing="8">
                 <TextBlock Classes="note" Text="{v:Tr About_BackupHint}" />
                 <TextBlock AutomationProperties.LiveSetting="Polite" Classes="caption" IsVisible="{Binding BackupStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding BackupStatus}" TextWrapping="Wrap" />
               </StackPanel>
             </DockPanel>
           </Border>
         </StackPanel>
-        <StackPanel Grid.Column="1" Spacing="16">
+        <StackPanel Spacing="24">
           <!-- Hotkeys and commands: the user's own, live. -->
           <Border Classes="sheet help">
             <StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="10">
-                <Border Classes="tile" Background="{StaticResource HueKeysSoft}"><Path Classes="icon small" Stroke="{StaticResource HueKeys}" Data="{x:Static v:Icons.Keyboard}" /></Border>
-                <TextBlock Classes="title" Text="{v:Tr About_Shortcuts}" />
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Keyboard20}" /></Border>
+                <TextBlock Classes="subtitle" Text="{v:Tr About_Shortcuts}" />
               </StackPanel>
               <TextBlock Margin="0,12,0,0" Classes="note" IsVisible="{Binding !HasShortcuts}" Text="{v:Tr About_NoShortcuts}" />
               <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding Shortcuts}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:ShortcutRow">
-                    <Grid MinHeight="30" ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                      <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <Grid MinHeight="32" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                      <TextBlock VerticalAlignment="Center" Classes="secondary" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                       <Border Grid.Column="1" VerticalAlignment="Center" Classes="kbd"><TextBlock Text="{Binding Keys}" /></Border>
                     </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
-              <TextBlock Margin="0,14,0,6" Classes="caption" Text="{v:Tr About_Commands}" />
-              <Border Padding="10,2,4,2" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="8">
+              <TextBlock Margin="0,16,0,8" Classes="caption" Text="{v:Tr About_Commands}" />
+              <Border Padding="12,0,0,0" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusMd}">
                 <ItemsControl ItemsSource="{Binding CommandExamples}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="x:String">
-                      <Grid MinHeight="30" ColumnDefinitions="*,Auto">
-                        <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource RsText}" Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                      <Grid MinHeight="32" ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="label" Text="{Binding}" TextTrimming="CharacterEllipsis" />
                         <Button Grid.Column="1" AutomationProperties.Name="{v:Tr About_Copy}" Classes="ghost" Command="{Binding $parent[v:HelpView].ViewModel.CopyCommandCommand}" CommandParameter="{Binding}" ToolTip.Tip="{v:Tr About_Copy}">
-                          <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
+                          <Path Classes="icon" Data="{x:Static v:Icons.Copy16}" />
                         </Button>
                       </Grid>
                     </DataTemplate>
@@ -162,9 +151,9 @@
           <!-- Report a problem: the support package, diagnostics, the issue, the folders. -->
           <Border Classes="sheet help">
             <DockPanel>
-              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10">
-                <Border Classes="tile" Background="{StaticResource HueProblemSoft}"><Path Classes="icon small" Stroke="{StaticResource HueProblem}" Data="{x:Static v:Icons.Flag}" /></Border>
-                <TextBlock Classes="title" Text="{v:Tr About_ReportProblem}" />
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12">
+                <Border Classes="tile"><Path Classes="icon md" Data="{x:Static v:Icons.Flag20}" /></Border>
+                <TextBlock Classes="subtitle" Text="{v:Tr About_ReportProblem}" />
               </StackPanel>
               <StackPanel Margin="0,16,0,0" DockPanel.Dock="Bottom" Spacing="12">
                 <WrapPanel ItemSpacing="8" LineSpacing="8">
@@ -172,33 +161,33 @@
                   <Button Classes="neutral" Command="{Binding CopyDiagnosticsCommand}" Content="{v:Tr About_CopyDiagnostics}" ToolTip.Tip="{v:Tr About_CopyHint}" />
                 </WrapPanel>
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                  <Button AutomationProperties.Name="{v:Tr About_ReportProblem}" Classes="link" Command="{Binding ReportProblemCommand}" FontSize="13">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <TextBlock Text="{v:Tr About_ReportProblem}" />
-                      <Path Classes="icon small" Width="12" Height="12" Stroke="{Binding $parent[Button].Foreground}" Data="{x:Static v:Icons.External}" />
+                  <Button AutomationProperties.Name="{v:Tr About_ReportProblem}" Classes="link" Command="{Binding ReportProblemCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock VerticalAlignment="Center" Text="{v:Tr About_ReportProblem}" />
+                      <Path Classes="icon" Data="{x:Static v:Icons.Open16}" />
                     </StackPanel>
                   </Button>
-                  <Button Classes="link" Command="{Binding OpenLogFolderCommand}" Content="{v:Tr About_Logs}" FontSize="13" />
-                  <Button Classes="link" Command="{Binding OpenProfileFolderCommand}" Content="{v:Tr About_Profiles}" FontSize="13" />
+                  <Button Classes="link" Command="{Binding OpenLogFolderCommand}" Content="{v:Tr About_Logs}" />
+                  <Button Classes="link" Command="{Binding OpenProfileFolderCommand}" Content="{v:Tr About_Profiles}" />
                 </StackPanel>
               </StackPanel>
-              <StackPanel Margin="0,12,0,0" Spacing="6">
-                <TextBlock Classes="note" Text="{v:Tr About_ProblemText}" />
+              <StackPanel Margin="0,12,0,0" Spacing="8">
+                <TextBlock Classes="note" Text="{v:Tr About_ProblemText}" ToolTip.Tip="{v:Tr About_ProblemTextTip}" />
                 <TextBlock AutomationProperties.LiveSetting="Polite" Classes="caption" IsVisible="{Binding CopyStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding CopyStatus}" TextWrapping="Wrap" />
               </StackPanel>
             </DockPanel>
           </Border>
         </StackPanel>
-      </Grid>
+      </UniformGrid>
 
       <!-- Quiet footer: license and links. -->
-      <WrapPanel Margin="4,8,0,0" ItemSpacing="18" LineSpacing="6">
+      <WrapPanel Margin="4,0,0,0" ItemSpacing="16" LineSpacing="8">
         <TextBlock VerticalAlignment="Center" Classes="caption" Text="{v:Tr About_Copyright}" />
-        <Button Classes="link" Command="{Binding OpenRepositoryCommand}" Content="{v:Tr About_Repository}" FontSize="12.5" />
-        <Button Classes="link" Command="{Binding OpenLicenseCommand}" Content="{v:Tr About_License}" FontSize="12.5" />
-        <Button Classes="link" Command="{Binding OpenThirdPartyNoticesCommand}" Content="{v:Tr About_ThirdParty}" FontSize="12.5" />
-        <Button Classes="link" Command="{Binding OpenPrivacyCommand}" Content="{v:Tr About_Privacy}" FontSize="12.5" ToolTip.Tip="{v:Tr About_PrivacyHint}" />
-        <Button Classes="link" Command="{Binding OpenKofiCommand}" Content="{v:Tr About_Kofi}" FontSize="12.5" ToolTip.Tip="{v:Tr About_KofiHint}" />
+        <Button Classes="link" Command="{Binding OpenRepositoryCommand}" Content="{v:Tr About_Repository}" />
+        <Button Classes="link" Command="{Binding OpenLicenseCommand}" Content="{v:Tr About_License}" />
+        <Button Classes="link" Command="{Binding OpenThirdPartyNoticesCommand}" Content="{v:Tr About_ThirdParty}" />
+        <Button Classes="link" Command="{Binding OpenPrivacyCommand}" Content="{v:Tr About_Privacy}" ToolTip.Tip="{v:Tr About_PrivacyHint}" />
+        <Button Classes="link" Command="{Binding OpenKofiCommand}" Content="{v:Tr About_Kofi}" ToolTip.Tip="{v:Tr About_KofiHint}" />
       </WrapPanel>
     </StackPanel>
   </ScrollViewer>

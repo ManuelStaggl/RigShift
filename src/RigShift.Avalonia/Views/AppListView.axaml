@@ -11,25 +11,25 @@
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="vm:AppEditItem">
           <StackPanel>
-            <Grid Margin="0,12" ColumnDefinitions="28,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="10">
+            <Grid Margin="0,12" ColumnDefinitions="28,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="12">
               <Panel Width="24" Height="24" VerticalAlignment="Center">
-                <Path Classes="icon" Data="{x:Static v:Icons.Window}" IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}" />
+                <Path Classes="icon lg" Data="{x:Static v:Icons.Window24}" IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}" />
                 <Image Source="{Binding Icon, Converter={x:Static v:Converters.IconImage}}" />
               </Panel>
               <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Classes="strong" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
                 <TextBlock Classes="caption warning" IsVisible="{Binding HasPathNote}" Text="{Binding PathNote}" />
               </StackPanel>
-              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
                 <Button Margin="0,0,8,0" VerticalAlignment="Center" Classes="link" Click="OnBrowse" Content="{v:Tr App_Change}" Tag="{Binding}" />
                 <Button AutomationProperties.Name="{v:Tr App_MoveUp}" Classes="ghost" Click="OnMoveUp" Tag="{Binding}" ToolTip.Tip="{v:Tr App_MoveUp}">
-                  <Path Classes="icon small" Data="{x:Static v:Icons.Up}" />
+                  <Path Classes="icon" Data="{x:Static v:Icons.ArrowUp16}" />
                 </Button>
                 <Button AutomationProperties.Name="{v:Tr App_MoveDown}" Classes="ghost" Click="OnMoveDown" Tag="{Binding}" ToolTip.Tip="{v:Tr App_MoveDown}">
-                  <Path Classes="icon small" Data="{x:Static v:Icons.Down}" />
+                  <Path Classes="icon" Data="{x:Static v:Icons.ArrowDown16}" />
                 </Button>
                 <Button AutomationProperties.Name="{v:Tr App_Remove}" Classes="ghost" Click="OnRemoveApp" Tag="{Binding}" ToolTip.Tip="{v:Tr App_Remove}">
-                  <Path Classes="icon small" Data="{x:Static v:Icons.Trash}" />
+                  <Path Classes="icon" Data="{x:Static v:Icons.Delete16}" />
                 </Button>
               </StackPanel>
               <!-- What, how long to wait, with which options -->
@@ -69,7 +69,7 @@
     </Grid>
     <Button Margin="0,8,0,0" HorizontalAlignment="Left" Classes="neutral" AutomationProperties.Name="{Binding AddText}" Command="{Binding AddPickedCommand}">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
+        <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />
         <TextBlock Text="{Binding AddText}" />
       </StackPanel>
     </Button>

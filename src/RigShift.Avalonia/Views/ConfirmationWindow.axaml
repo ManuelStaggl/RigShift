@@ -12,46 +12,50 @@
   WindowStartupLocation="CenterScreen"
   Background="{DynamicResource RsCard}">
   <!-- "Keep this layout?": before → after, a ring counting down, Keep (default) and Revert in Windows order. -->
-  <Grid Margin="28,24" RowDefinitions="Auto,Auto,Auto,Auto">
-    <Grid ColumnDefinitions="*,Auto">
-      <TextBlock VerticalAlignment="Center" Classes="h2" Text="{v:Tr Confirm_Title}" TextWrapping="Wrap" />
-      <Panel Grid.Column="1" Width="72" Height="72">
-        <Ellipse Stroke="{DynamicResource RsOutline}" StrokeThickness="5" />
-        <Arc x:Name="Ring" StartAngle="-90" Stroke="{DynamicResource RsAccentText}" StrokeLineCap="Round" StrokeThickness="5" SweepAngle="360" />
-        <TextBlock x:Name="Seconds" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="22" FontWeight="SemiBold" />
-      </Panel>
-    </Grid>
-
-    <Grid Grid.Row="1" Margin="0,20,0,0" ColumnDefinitions="*,Auto,Auto,Auto,*">
-      <StackPanel Grid.Column="1" Width="176">
-        <Border Height="72" Padding="8,6" Background="{DynamicResource RsBay}" CornerRadius="8">
-          <v:DisplayTopology x:Name="BeforeTopology" Size="Tray" />
-        </Border>
-        <TextBlock x:Name="BeforeName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption" TextTrimming="CharacterEllipsis" />
-      </StackPanel>
-      <Path Grid.Column="2" Margin="20,0,20,20" VerticalAlignment="Center" Classes="icon" Data="M5 12 H19 M13 6 L19 12 L13 18" />
-      <StackPanel Grid.Column="3" Width="176">
-        <Border Height="72" Padding="8,6" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsAccentText}" BorderThickness="1" CornerRadius="8">
-          <v:DisplayTopology x:Name="AfterTopology" Size="Tray" />
-        </Border>
-        <TextBlock x:Name="AfterName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption strong" TextTrimming="CharacterEllipsis" />
-      </StackPanel>
-    </Grid>
-
-    <StackPanel Grid.Row="2" Margin="0,20,0,0" Spacing="8">
-      <TextBlock x:Name="HintText" Classes="secondary" AutomationProperties.LiveSetting="Polite" />
-      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="6">
-        <Border VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Enter" /></Border>
-        <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Confirm_KeyKeep}" TextWrapping="Wrap" />
-        <Border Grid.Row="1" VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Esc" /></Border>
-        <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Confirm_KeyRevert}" TextWrapping="Wrap" />
-      </Grid>
-    </StackPanel>
-
+  <DockPanel>
     <!-- Windows order, as in its own "Keep these display settings?" dialog: the action first, the way back second. -->
-    <StackPanel Grid.Row="3" Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
-      <Button x:Name="KeepButton" MinWidth="110" HorizontalContentAlignment="Center" Classes="primary" Click="OnKeep" Content="{v:Tr Confirm_Keep}" IsDefault="True" />
-      <Button MinWidth="110" HorizontalContentAlignment="Center" Classes="neutral" Click="OnRevert" Content="{v:Tr Confirm_Revert}" IsCancel="True" />
-    </StackPanel>
-  </Grid>
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+        <Button x:Name="KeepButton" MinWidth="112" HorizontalContentAlignment="Center" Classes="primary" Click="OnKeep" Content="{v:Tr Confirm_Keep}" IsDefault="True" />
+        <Button MinWidth="112" HorizontalContentAlignment="Center" Classes="neutral" Click="OnRevert" Content="{v:Tr Confirm_Revert}" IsCancel="True" />
+      </StackPanel>
+    </Border>
+
+    <Grid Margin="24,0,24,24" RowDefinitions="Auto,Auto,Auto">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <TextBlock VerticalAlignment="Center" Classes="title" Text="{v:Tr Confirm_Title}" TextWrapping="Wrap" />
+        <Panel Grid.Column="1" Width="72" Height="72">
+          <Ellipse Stroke="{DynamicResource RsOutline}" StrokeThickness="4" />
+          <Arc x:Name="Ring" StartAngle="-90" Stroke="{DynamicResource RsAccentText}" StrokeLineCap="Round" StrokeThickness="4" SweepAngle="360" />
+          <TextBlock x:Name="Seconds" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="display" />
+        </Panel>
+      </Grid>
+
+      <Grid Grid.Row="1" Margin="0,20,0,0" ColumnDefinitions="*,Auto,Auto,Auto,*">
+        <StackPanel Grid.Column="1" Width="176">
+          <Border Height="72" Padding="8" Background="{DynamicResource RsBay}" CornerRadius="{DynamicResource RsRadiusMd}">
+            <v:DisplayTopology x:Name="BeforeTopology" Size="Card" />
+          </Border>
+          <TextBlock x:Name="BeforeName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <Path Grid.Column="2" Margin="16,0,16,24" Classes="icon md quiet" Data="{x:Static v:Icons.ArrowRight20}" />
+        <StackPanel Grid.Column="3" Width="176">
+          <Border Height="72" Padding="8" Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsAccentText}" BorderThickness="1" CornerRadius="{DynamicResource RsRadiusMd}">
+            <v:DisplayTopology x:Name="AfterTopology" Size="Card" />
+          </Border>
+          <TextBlock x:Name="AfterName" Margin="0,8,0,0" HorizontalAlignment="Center" Classes="caption strong" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+
+      <StackPanel Grid.Row="2" Margin="0,20,0,0" Spacing="8">
+        <TextBlock x:Name="HintText" Classes="secondary" AutomationProperties.LiveSetting="Polite" />
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="8">
+          <Border VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Enter" /></Border>
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Confirm_KeyKeep}" TextWrapping="Wrap" />
+          <Border Grid.Row="1" VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Esc" /></Border>
+          <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Classes="caption" Text="{v:Tr Confirm_KeyRevert}" TextWrapping="Wrap" />
+        </Grid>
+      </StackPanel>
+    </Grid>
+  </DockPanel>
 </Window>

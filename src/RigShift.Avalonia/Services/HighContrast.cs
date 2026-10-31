@@ -27,14 +27,19 @@ internal static class HighContrast
         ("RsText", SystemColorKind.WindowText), ("RsText2", SystemColorKind.WindowText), ("RsText3", SystemColorKind.WindowText),
         ("RsText4", SystemColorKind.GrayText), ("RsRailOnText", SystemColorKind.Highlight),
         ("RsDivider", SystemColorKind.WindowText), ("RsNoticeLine", SystemColorKind.WindowText), ("RsOutline", SystemColorKind.WindowText), ("RsTileStroke", SystemColorKind.WindowText),
-        ("RsAccent", SystemColorKind.Highlight), ("RsAccentHover", SystemColorKind.Highlight), ("RsOnAccent", SystemColorKind.HighlightText),
+        ("RsControlStroke", SystemColorKind.WindowText), ("RsControlStrokeHover", SystemColorKind.WindowText),
+        ("TextBoxDefaultBorderBrush", SystemColorKind.WindowText), ("ComboBoxSelectorBorderBrush", SystemColorKind.WindowText),
+        ("RsAccent", SystemColorKind.Highlight), ("RsAccentHover", SystemColorKind.Highlight), ("RsAccentPressed", SystemColorKind.Highlight),
+        ("RsOnAccent", SystemColorKind.HighlightText),
         ("RsAccentText", SystemColorKind.HotLight), ("RsSuccess", SystemColorKind.HotLight), ("RsWarning", SystemColorKind.HotLight),
         ("RsDanger", SystemColorKind.HotLight),
-        // Toggles: on in the highlight, off in the grey text colour, the knob in the highlight text colour on both.
+        ("RsScreenSurface", SystemColorKind.Window), ("RsScreenEdge", SystemColorKind.WindowText),
+        ("RsDiagramField", SystemColorKind.Window),
+        // Toggles: on in the highlight, off as an outline in the window text colour, the knob in the highlight text colour.
         ("ToggleSwitchContainerCheckedDefaultBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerCheckedPointeroverBackground", SystemColorKind.Highlight),
-        ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.GrayText),
-        ("ToggleSwitchContainerUnCheckedPointeroverBackground", SystemColorKind.GrayText), ("ToggleSwitchContainerUnCheckedPressedBackground", SystemColorKind.GrayText),
-        ("ToggleSwitchIndicatorBackground", SystemColorKind.HighlightText),
+        ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.Window),
+        ("ToggleSwitchContainerUnCheckedPointeroverBackground", SystemColorKind.Window), ("ToggleSwitchContainerUnCheckedPressedBackground", SystemColorKind.Window),
+        ("ToggleSwitchDefaultBorderBrush", SystemColorKind.WindowText), ("ToggleSwitchIndicatorBackground", SystemColorKind.HighlightText),
     ];
 
     // The theme the app asked for before high contrast took over; null while it is off.
