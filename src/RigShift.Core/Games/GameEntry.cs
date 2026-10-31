@@ -76,6 +76,12 @@ public sealed record GameEntry
     /// </summary>
     public bool StartWithGame { get; init; }
 
+    /// <summary>
+    /// While the game is in the foreground, the mouse cannot leave the display its window is on, so a click into a menu
+    /// does not land on a side display and take the focus away.
+    /// </summary>
+    public bool KeepMouseOnDisplay { get; init; }
+
     /// <summary>Values this entry keeps for itself in the game's settings file, e.g. lighter graphics for VR; <c>null</c> for none.</summary>
     public GameSettings? Settings { get; init; }
 

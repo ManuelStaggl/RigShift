@@ -398,6 +398,8 @@
   <data name="Game_StopApps" xml:space="preserve"><value>Tools schließen</value></data>
   <data name="Game_StartWithGame" xml:space="preserve"><value>Auch bei Start über Steam oder einen anderen Launcher</value></data>
   <data name="Game_StartWithGameHint" xml:space="preserve"><value>Klappt, sobald RigShift den Spielprozess bei einem Start über RigShift gelernt hat.</value></data>
+  <data name="Game_KeepMouse" xml:space="preserve"><value>Maus auf dem Spielbildschirm halten</value></data>
+  <data name="Game_KeepMouseHint" xml:space="preserve"><value>Solange das Spiel vorne ist. Alt+Tab oder die Windows-Taste geben sie frei.</value></data>
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Spiel beendet</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Wechsel zum Profil fehlgeschlagen, das Spiel wurde nicht gestartet</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>Das Spiel ließ sich nicht starten</value></data>
