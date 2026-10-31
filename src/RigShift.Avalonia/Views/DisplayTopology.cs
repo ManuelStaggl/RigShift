@@ -29,8 +29,8 @@ public enum TopologySize
 }
 
 /// <summary>
-/// Every display of an arrangement as a plain rectangle true to scale, placed by <see cref="TopologyLayout"/>. Number,
-/// name and mode as labels, a star for the main display; filled = in use, hollow = off, dashed = optional, dashed in the
+/// Every display of an arrangement as a framed screen true to scale, placed by <see cref="TopologyLayout"/>. Number,
+/// name and mode as labels, an accent bezel for the main display; filled = in use, hollow = off, dashed = optional, dashed in the
 /// warning colour = missing. In size Full a display is selected by click or arrow keys, and each display is its own
 /// focusable element, so Narrator reads its name. The tiles are measured in arrange only, against their own rectangle:
 /// the picture never sizes to them, so the layout cannot swing back and forth.
@@ -81,12 +81,12 @@ public sealed class DisplayTopology : Panel
 
     private double Gap => Size switch
     {
-        TopologySize.Full => 6,
+        TopologySize.Full => 4,
         TopologySize.Card => 4,
         _ => 1,
     };
 
-    private double Radius => Size == TopologySize.Tray ? 2 : 4;
+    private double Radius => Size == TopologySize.Full ? 8 : 4;
 
     protected override void OnAttachedToLogicalTree(global::Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
     {
@@ -120,7 +120,7 @@ public sealed class DisplayTopology : Panel
     {
         IReadOnlyList<TopologyRect> rects = TopologyLayout.Arrange(
             _tiles.Select(t => t.Display).ToList(), finalSize.Width, finalSize.Height, Gap,
-            HasLabels ? 60 : double.MaxValue, HasLabels ? 30 : double.MaxValue);
+            HasLabels ? 60 : double.MaxValue, HasLabels ? 48 : double.MaxValue);
         for (int i = 0; i < _tiles.Count; i++)
         {
             TopologyRect rect = rects[i];
@@ -214,6 +214,7 @@ public sealed class DisplayTopology : Panel
         var line = new TextBlock
         {
             FontSize = size,
+            LineHeight = size == 13 ? 20 : 16,
             TextAlignment = TextAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
             TextWrapping = TextWrapping.NoWrap,
@@ -225,7 +226,7 @@ public sealed class DisplayTopology : Panel
         return line;
     }
 
-    /// <summary>One display: frame, labels or the main-display dot; shows what fits once the owner knows the rectangle.</summary>
+    /// <summary>One display: frame, inset screen, labels and main-display bezel; shows what fits once the owner knows the rectangle.</summary>
     private sealed class Tile
     {
         private readonly DisplayTopology _owner;
@@ -235,7 +236,8 @@ public sealed class DisplayTopology : Panel
         private readonly Run _nameRun;
         private readonly TextBlock? _mode;
         private readonly string _modeFull = string.Empty;
-        private readonly Ellipse? _primaryDot;
+        private readonly Rectangle _screen;
+        private readonly Rectangle _bezel;
 
         public Tile(TopologyDisplay display, DisplayTopology owner)
         {
@@ -250,27 +252,40 @@ public sealed class DisplayTopology : Panel
             {
                 RadiusX = owner.Radius,
                 RadiusY = owner.Radius,
-                Fill = dimmed ? null : owner.Brush("RsTileFill"),
+                Fill = owner.Brush(!dimmed && owner.Size == TopologySize.Tray ? "RsScreenSurface" : "RsDeep"),
                 StrokeThickness = 1,
             };
             if (missing || display.IsOptional)
             {
-                _frame.StrokeDashArray = [4, 3];
+                _frame.StrokeDashArray = [4, 4];
             }
 
             Root.Children.Add(_frame);
 
-            // "★ 1 · Desk" and, when there is height for it, the mode or "missing"; both lines trim instead of overlapping.
-            _labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0), Spacing = 1, IsHitTestVisible = false };
-            _name = Line(owner.Size == TopologySize.Full ? 14 : 12);
+            _screen = new Rectangle
+            {
+                RadiusX = 4,
+                RadiusY = 4,
+                Margin = new Thickness(4, 4, 4, 8),
+                Fill = dimmed ? null : owner.Brush("RsScreenSurface"),
+                IsHitTestVisible = false,
+            };
+            Root.Children.Add(_screen);
+            _bezel = new Rectangle
+            {
+                Height = 2,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Fill = owner.Brush(missing ? "RsWarning" : display.IsPrimary ? "RsAccentText" : "RsScreenEdge"),
+                IsHitTestVisible = false,
+            };
+            Root.Children.Add(_bezel);
+
+            _labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 8, 12, 12), Spacing = 4, IsHitTestVisible = false };
+            _name = Line(owner.Size == TopologySize.Full ? 13 : 12);
             _name.FontWeight = FontWeight.SemiBold;
             _name.Foreground = owner.Brush(dimmed ? "RsText2" : "RsText");
             _name.Inlines ??= [];
-            if (display.IsPrimary)
-            {
-                _name.Inlines.Add(new Run("★ ") { Foreground = owner.Brush("RsAccentText") });
-            }
-
             _nameRun = new Run(Numbered(display));
             _name.Inlines.Add(_nameRun);
             _labels.Children.Add(_name);
@@ -285,22 +300,6 @@ public sealed class DisplayTopology : Panel
             }
 
             Root.Children.Add(_labels);
-
-            // Without labels a dot marks the main display.
-            if (display.IsPrimary)
-            {
-                _primaryDot = new Ellipse
-                {
-                    Width = 4,
-                    Height = 4,
-                    Margin = new Thickness(2),
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Fill = owner.Brush("RsAccent"),
-                    IsHitTestVisible = false,
-                };
-                Root.Children.Add(_primaryDot);
-            }
 
             if (owner.HasLabels && !string.IsNullOrEmpty(display.Details))
             {
@@ -333,18 +332,22 @@ public sealed class DisplayTopology : Panel
         public void SetSelected(bool selected)
         {
             bool missing = Display.State == TopologyDisplayState.Missing;
-            _frame.Stroke = _owner.Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsTileStroke");
+            _frame.Stroke = _owner.Brush(selected ? "RsAccentText" : missing ? "RsWarning" : "RsScreenEdge");
             _frame.StrokeThickness = selected ? 2 : 1;
             // The selected display is the one Tab lands on.
             KeyboardNavigation.SetIsTabStop(Root, selected || _owner.SelectedKey is null);
         }
 
-        /// <summary>Labels when the rectangle has room, the mode line only from 48 px height, else the dot.</summary>
+        /// <summary>Labels when the inset has room; a compact bezel remains visible at tray size.</summary>
         public void Layout(Size size, bool showLabels)
         {
             _labels.IsVisible = showLabels;
-            _mode?.IsVisible = size.Height >= 48;
-            _primaryDot?.IsVisible = !showLabels && size.Width >= 8 && size.Height >= 8;
+            _mode?.IsVisible = size.Height >= 72;
+            bool miniature = _owner.Size == TopologySize.Tray;
+            _screen.IsVisible = !miniature && size.Width >= 24 && size.Height >= 24;
+            _bezel.Width = Math.Min(miniature ? 12 : 24, Math.Max(0, size.Width - 8));
+            _bezel.Margin = new Thickness(0, 0, 0, miniature ? 2 : 4);
+            _bezel.IsVisible = size.Width >= 8 && size.Height >= 8;
             if (!showLabels)
             {
                 return;
@@ -353,8 +356,7 @@ public sealed class DisplayTopology : Panel
             // A small display drops the model ("1 · Left · CM27X3" -> "1 · Left") and the rate ("… · 100 Hz") before letters.
             double room = size.Width - _labels.Margin.Left - _labels.Margin.Right;
             string full = Numbered(Display);
-            string star = Display.IsPrimary ? "★ " : string.Empty;
-            string name = Shorter(full, TextWidth(_name, star + full) > room);
+            string name = Shorter(full, TextWidth(_name, full) > room);
             if (_nameRun.Text != name)
             {
                 _nameRun.Text = name;
