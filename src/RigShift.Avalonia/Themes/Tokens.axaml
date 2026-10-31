@@ -1,0 +1,248 @@
+<!--
+  RigShift's own token layer. Rs* are the app's names; below them the Semi.Avalonia keys the Semi and Ursa control
+  themes read, mapped onto the same palette. Semi resolves its control-level keys (ButtonDefaultBackground → SemiColorFill0)
+  with StaticResource inside its own theme dictionary, so a SemiColor* key here does not reach every control: the
+  control-level keys that matter are overridden directly further down.
+  Values: the 5.0 design system (cool grey surface ladder, brand blue accent). RsAccent is the fill (primary button,
+  toggle on), RsAccentText the line colour (focus ring, selection, nav marker).
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+
+    <!-- ================= Dark ================= -->
+    <ResourceDictionary x:Key="Dark">
+      <!-- Semi's and Ursa's control-level keys, loaded again under our palette: their StaticResource aliases
+           (ButtonDefaultBackground → SemiColorFill0) then resolve against the keys below instead of Semi's own. -->
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Semi.Avalonia/Themes/Dark/_index.axaml" />
+        <ResourceInclude Source="avares://Ursa.Themes.Semi/Themes/Dark/_index.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <Color x:Key="RsRailColor">#0C0D0F</Color>
+      <Color x:Key="RsContentColor">#151618</Color>
+      <Color x:Key="RsRaisedColor">#242528</Color>
+      <Color x:Key="RsDeepColor">#0B0C0D</Color>
+      <Color x:Key="RsAccentColor">#0078D4</Color>
+
+      <SolidColorBrush x:Key="RsRail" Color="#0C0D0F" />
+      <SolidColorBrush x:Key="RsContent" Color="#151618" />
+      <SolidColorBrush x:Key="RsRaised" Color="#242528" />
+      <SolidColorBrush x:Key="RsRaisedHover" Color="#2B2C30" />
+      <SolidColorBrush x:Key="RsRaisedPressed" Color="#323337" />
+      <SolidColorBrush x:Key="RsDeep" Color="#0B0C0D" />
+      <SolidColorBrush x:Key="RsText" Color="#F7F8F8" />
+      <SolidColorBrush x:Key="RsText2" Color="#D0D6E0" />
+      <SolidColorBrush x:Key="RsText3" Color="#8A8F98" />
+      <SolidColorBrush x:Key="RsDivider" Color="#0FFFFFFF" />
+      <SolidColorBrush x:Key="RsOutline" Color="#17FFFFFF" />
+      <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
+      <SolidColorBrush x:Key="RsAccentHover" Color="#1A86DC" />
+      <SolidColorBrush x:Key="RsAccentText" Color="#5AA9FF" />
+      <SolidColorBrush x:Key="RsAccentSoft" Color="#0F1D30" />
+      <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsSuccess" Color="#4CB782" />
+      <SolidColorBrush x:Key="RsWarning" Color="#F0BF00" />
+      <SolidColorBrush x:Key="RsDanger" Color="#EB5757" />
+      <SolidColorBrush x:Key="RsWarningSoft" Color="#24F0BF00" />
+      <SolidColorBrush x:Key="RsDangerSoft" Color="#24EB5757" />
+      <!-- Display picture: grey screens in a bezel, the selected one outlined in the accent line colour. -->
+      <SolidColorBrush x:Key="RsTileFill" Color="#1E1F23" />
+      <SolidColorBrush x:Key="RsTileStroke" Color="#3E3F44" />
+      <SolidColorBrush x:Key="RsBay" Color="#0C0D0F" />
+      <SolidColorBrush x:Key="RsColumn" Color="#111214" />
+      <SolidColorBrush x:Key="RsCard" Color="#1B1C1E" />
+      <BoxShadows x:Key="RsCardShadow">inset 0 1 0 0 #0FFFFFFF, 0 0 0 1 #66000000, 0 2 4 0 #59000000, 0 8 24 -8 #A6000000</BoxShadows>
+      <BoxShadows x:Key="RsWellShadow">inset 0 2 6 0 #B3000000, inset 0 0 0 1 #08FFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsPop" Color="#E62A2B2E" />
+      <BoxShadows x:Key="RsPopShadow">0 4 40 8 #80000000, 0 0 0 0.5 #CC000000, inset 0 0.5 0 0 #33FFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsHover" Color="#0DFFFFFF" />
+      <SolidColorBrush x:Key="RsText4" Color="#62666D" />
+      <!-- Selected rail tile: accent 24 → 12 %, a hairline ring in the accent, the icon in accent-tinted text with a 26 % fill. -->
+      <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#3D5AA9FF" />
+        <GradientStop Offset="1" Color="#1F5AA9FF" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsRailOnShadow">inset 0 1 0 0 #14FFFFFF, 0 0 0 0.5 #735AA9FF</BoxShadows>
+      <SolidColorBrush x:Key="RsRailOnText" Color="#99C9FC" />
+      <SolidColorBrush x:Key="RsAccentDuo" Color="#425AA9FF" />
+      <LinearGradientBrush x:Key="RsKey" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#2E2F33" />
+        <GradientStop Offset="1" Color="#232427" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #14FFFFFF, 0 1 2 0 #99000000</BoxShadows>
+
+      <!-- Semi palette -->
+      <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
+      <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#1A86DC" />
+      <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#006CBE" />
+      <SolidColorBrush x:Key="SemiColorPrimaryDisabled" Color="#1A3550" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLight" Color="#1F5AA9FF" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover" Color="#2E5AA9FF" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLightActive" Color="#3D5AA9FF" />
+      <SolidColorBrush x:Key="SemiColorTertiary" Color="#8A8F98" />
+      <SolidColorBrush x:Key="SemiColorSuccess" Color="#4CB782" />
+      <SolidColorBrush x:Key="SemiColorWarning" Color="#F0BF00" />
+      <SolidColorBrush x:Key="SemiColorDanger" Color="#EB5757" />
+      <SolidColorBrush x:Key="SemiColorDangerPointerover" Color="#D94C4C" />
+      <SolidColorBrush x:Key="SemiColorDangerActive" Color="#C24343" />
+      <SolidColorBrush x:Key="SemiColorText0" Color="#F7F8F8" />
+      <SolidColorBrush x:Key="SemiColorText1" Color="#D0D6E0" />
+      <SolidColorBrush x:Key="SemiColorText2" Color="#8A8F98" />
+      <SolidColorBrush x:Key="SemiColorText3" Color="#62666D" />
+      <SolidColorBrush x:Key="SemiColorLink" Color="#5AA9FF" />
+      <SolidColorBrush x:Key="SemiColorLinkPointerover" Color="#79B8FF" />
+      <SolidColorBrush x:Key="SemiColorLinkActive" Color="#0078D4" />
+      <SolidColorBrush x:Key="SemiColorBackground0" Color="#151618" />
+      <SolidColorBrush x:Key="SemiColorBackground1" Color="#0C0D0F" />
+      <SolidColorBrush x:Key="SemiColorBackground2" Color="#1B1C1E" />
+      <SolidColorBrush x:Key="SemiColorBackground3" Color="#1B1C1E" />
+      <SolidColorBrush x:Key="SemiColorBackground4" Color="#242528" />
+      <SolidColorBrush x:Key="SemiColorFill0" Color="#242528" />
+      <SolidColorBrush x:Key="SemiColorFill1" Color="#2B2C30" />
+      <SolidColorBrush x:Key="SemiColorFill2" Color="#323337" />
+      <SolidColorBrush x:Key="SemiColorBorder" Color="#0FFFFFFF" />
+      <SolidColorBrush x:Key="SemiColorFocusBorder" Color="#5AA9FF" />
+      <SolidColorBrush x:Key="SemiColorDisabledText" Color="#62666D" />
+      <SolidColorBrush x:Key="SemiColorDisabledFill" Color="#1B1C1E" />
+      <SolidColorBrush x:Key="SemiColorNavBackground" Color="#0C0D0F" />
+      <SolidColorBrush x:Key="SemiColorOverlayBackground" Color="#99050506" />
+      <BoxShadows x:Key="SemiShadowElevated">inset 0 0 0 1 #17FFFFFF, 0 4 40 8 #80000000</BoxShadows>
+      <!-- Control-level overrides: a toggle that is on carries the accent fill. -->
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#1A86DC" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#006CBE" />
+      <!-- Off: a track that stands out from the card (Semi takes Fill0, the card's own colour). -->
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#3A3B40" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#45464B" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#4F5055" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#26272A" />
+      <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#242528" />
+      <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#2B2C30" />
+      <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#323337" />
+      <!-- Inputs carry the control outline. -->
+      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#17FFFFFF" />
+      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#24FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#17FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#24FFFFFF" />
+    </ResourceDictionary>
+
+    <!-- ================= Light ================= -->
+    <ResourceDictionary x:Key="Light">
+      <!-- Semi's and Ursa's control-level keys, loaded again under our palette: their StaticResource aliases
+           (ButtonDefaultBackground → SemiColorFill0) then resolve against the keys below instead of Semi's own. -->
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Semi.Avalonia/Themes/Light/_index.axaml" />
+        <ResourceInclude Source="avares://Ursa.Themes.Semi/Themes/Light/_index.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <Color x:Key="RsRailColor">#E9EBEF</Color>
+      <Color x:Key="RsContentColor">#F8F9FB</Color>
+      <Color x:Key="RsRaisedColor">#FFFFFF</Color>
+      <Color x:Key="RsDeepColor">#ECEEF2</Color>
+      <Color x:Key="RsAccentColor">#0078D4</Color>
+
+      <SolidColorBrush x:Key="RsRail" Color="#E9EBEF" />
+      <SolidColorBrush x:Key="RsContent" Color="#F8F9FB" />
+      <SolidColorBrush x:Key="RsRaised" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsRaisedHover" Color="#F5F6F8" />
+      <SolidColorBrush x:Key="RsRaisedPressed" Color="#ECEEF1" />
+      <SolidColorBrush x:Key="RsDeep" Color="#ECEEF2" />
+      <SolidColorBrush x:Key="RsText" Color="#282A30" />
+      <SolidColorBrush x:Key="RsText2" Color="#3C4149" />
+      <SolidColorBrush x:Key="RsText3" Color="#6F6E77" />
+      <SolidColorBrush x:Key="RsDivider" Color="#0F000000" />
+      <SolidColorBrush x:Key="RsOutline" Color="#17000000" />
+      <SolidColorBrush x:Key="RsAccent" Color="#0078D4" />
+      <SolidColorBrush x:Key="RsAccentHover" Color="#0067B8" />
+      <SolidColorBrush x:Key="RsAccentText" Color="#0067B8" />
+      <SolidColorBrush x:Key="RsAccentSoft" Color="#E8F2FC" />
+      <SolidColorBrush x:Key="RsOnAccent" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsSuccess" Color="#27A644" />
+      <SolidColorBrush x:Key="RsWarning" Color="#C79A00" />
+      <SolidColorBrush x:Key="RsDanger" Color="#D9473F" />
+      <SolidColorBrush x:Key="RsWarningSoft" Color="#1FC79A00" />
+      <SolidColorBrush x:Key="RsDangerSoft" Color="#1AD9473F" />
+      <SolidColorBrush x:Key="RsTileFill" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RsTileStroke" Color="#C5C8CF" />
+      <SolidColorBrush x:Key="RsBay" Color="#E9EBEF" />
+      <SolidColorBrush x:Key="RsColumn" Color="#F2F3F6" />
+      <SolidColorBrush x:Key="RsCard" Color="#FFFFFF" />
+      <BoxShadows x:Key="RsCardShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 1 #0D000000, 0 1 2 0 #12000000, 0 8 20 -8 #2E000000</BoxShadows>
+      <BoxShadows x:Key="RsWellShadow">inset 0 1 3 0 #1F000000, inset 0 0 0 1 #0D000000</BoxShadows>
+      <SolidColorBrush x:Key="RsPop" Color="#EBFFFFFF" />
+      <BoxShadows x:Key="RsPopShadow">0 8 32 2 #24000000, 0 0 0 0.5 #1F000000, inset 0 0.5 0 0 #FFFFFFFF</BoxShadows>
+      <SolidColorBrush x:Key="RsHover" Color="#0A000000" />
+      <SolidColorBrush x:Key="RsText4" Color="#86848D" />
+      <LinearGradientBrush x:Key="RsRailOn" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#3D0067B8" />
+        <GradientStop Offset="1" Color="#1F0067B8" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsRailOnShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #730067B8</BoxShadows>
+      <SolidColorBrush x:Key="RsRailOnText" Color="#104F82" />
+      <SolidColorBrush x:Key="RsAccentDuo" Color="#420067B8" />
+      <LinearGradientBrush x:Key="RsKey" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#FFFFFF" />
+        <GradientStop Offset="1" Color="#EFF0F3" />
+      </LinearGradientBrush>
+      <BoxShadows x:Key="RsKeyShadow">inset 0 1 0 0 #FFFFFFFF, 0 0 0 0.5 #24000000, 0 1 2 0 #1A000000</BoxShadows>
+
+      <SolidColorBrush x:Key="SemiColorPrimary" Color="#0078D4" />
+      <SolidColorBrush x:Key="SemiColorPrimaryPointerover" Color="#0067B8" />
+      <SolidColorBrush x:Key="SemiColorPrimaryActive" Color="#005A9E" />
+      <SolidColorBrush x:Key="SemiColorPrimaryDisabled" Color="#B3D4F0" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLight" Color="#1F0078D4" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLightPointerover" Color="#2E0078D4" />
+      <SolidColorBrush x:Key="SemiColorPrimaryLightActive" Color="#3D0078D4" />
+      <SolidColorBrush x:Key="SemiColorTertiary" Color="#6F6E77" />
+      <SolidColorBrush x:Key="SemiColorSuccess" Color="#27A644" />
+      <SolidColorBrush x:Key="SemiColorWarning" Color="#C79A00" />
+      <SolidColorBrush x:Key="SemiColorDanger" Color="#D9473F" />
+      <SolidColorBrush x:Key="SemiColorDangerPointerover" Color="#C23E37" />
+      <SolidColorBrush x:Key="SemiColorDangerActive" Color="#AB3630" />
+      <SolidColorBrush x:Key="SemiColorText0" Color="#282A30" />
+      <SolidColorBrush x:Key="SemiColorText1" Color="#3C4149" />
+      <SolidColorBrush x:Key="SemiColorText2" Color="#6F6E77" />
+      <SolidColorBrush x:Key="SemiColorText3" Color="#86848D" />
+      <SolidColorBrush x:Key="SemiColorLink" Color="#0067B8" />
+      <SolidColorBrush x:Key="SemiColorLinkPointerover" Color="#005A9E" />
+      <SolidColorBrush x:Key="SemiColorLinkActive" Color="#004A82" />
+      <SolidColorBrush x:Key="SemiColorBackground0" Color="#F8F9FB" />
+      <SolidColorBrush x:Key="SemiColorBackground1" Color="#E9EBEF" />
+      <SolidColorBrush x:Key="SemiColorBackground2" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SemiColorBackground3" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SemiColorBackground4" Color="#F5F6F8" />
+      <SolidColorBrush x:Key="SemiColorFill0" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SemiColorFill1" Color="#F5F6F8" />
+      <SolidColorBrush x:Key="SemiColorFill2" Color="#ECEEF1" />
+      <SolidColorBrush x:Key="SemiColorBorder" Color="#0F000000" />
+      <SolidColorBrush x:Key="SemiColorFocusBorder" Color="#0067B8" />
+      <SolidColorBrush x:Key="SemiColorDisabledText" Color="#A3A6AD" />
+      <SolidColorBrush x:Key="SemiColorDisabledFill" Color="#ECEEF1" />
+      <SolidColorBrush x:Key="SemiColorNavBackground" Color="#E9EBEF" />
+      <SolidColorBrush x:Key="SemiColorOverlayBackground" Color="#2E000000" />
+      <BoxShadows x:Key="SemiShadowElevated">inset 0 0 0 1 #0F000000, 0 8 32 2 #24000000</BoxShadows>
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#0067B8" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#CDD0D6" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#C1C4CB" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#B5B9C0" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#E6E8EC" />
+      <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#ECEEF1" />
+      <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#E3E5E9" />
+      <SolidColorBrush x:Key="TextBoxDefaultBorderBrush" Color="#17000000" />
+      <SolidColorBrush x:Key="TextBoxPointeroverBorderBrush" Color="#26000000" />
+      <SolidColorBrush x:Key="ComboBoxSelectorBorderBrush" Color="#17000000" />
+      <SolidColorBrush x:Key="ComboBoxSelectorPointeroverBorderBrush" Color="#26000000" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- Type, radii, spacing -->
+  <FontFamily x:Key="RsFont">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="DefaultFontFamily">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
+  <CornerRadius x:Key="RsRadiusControl">6</CornerRadius>
+  <CornerRadius x:Key="RsRadiusSurface">10</CornerRadius>
+  <CornerRadius x:Key="SemiBorderRadiusSmall">6</CornerRadius>
+  <CornerRadius x:Key="SemiBorderRadiusMedium">6</CornerRadius>
+  <CornerRadius x:Key="SemiBorderRadiusLarge">10</CornerRadius>
+</ResourceDictionary>

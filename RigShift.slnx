@@ -4,7 +4,7 @@
     <Project Path="src/RigShift.Windows/RigShift.Windows.csproj" />
     <Project Path="src/RigShift.App/RigShift.App.csproj" />
     <Project Path="src/RigShift.Presentation/RigShift.Presentation.csproj" />
-    <Project Path="src/RigShift.UI/RigShift.UI.csproj" />
+    <Project Path="src/RigShift.Avalonia/RigShift.Avalonia.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/RigShift.Core.Tests/RigShift.Core.Tests.csproj" />

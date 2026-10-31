@@ -1,3 +1,0 @@
-# XAML event handlers must be instance methods, whether or not they use the instance.
-[*.xaml.cs]
-dotnet_diagnostic.CA1822.severity = none

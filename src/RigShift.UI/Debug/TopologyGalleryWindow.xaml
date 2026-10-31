@@ -1,9 +1,0 @@
-<Window
-  x:Class="RigShift.UI.Debug.TopologyGalleryWindow"
-  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  Title="Topology gallery">
-  <ScrollViewer Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
-    <StackPanel x:Name="Rows" Padding="24" Spacing="24" />
-  </ScrollViewer>
-</Window>

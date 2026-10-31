@@ -1,7 +1,0 @@
-<Page
-  x:Class="RigShift.UI.PlaceholderPage"
-  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
-  <TextBlock x:Name="Heading" Margin="36,24,36,0" Style="{StaticResource TitleTextBlockStyle}" />
-</Page>
