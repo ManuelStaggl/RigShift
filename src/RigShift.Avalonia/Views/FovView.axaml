@@ -257,9 +257,6 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </Border>
-
-      <TextBlock Margin="4,20,0,0" Classes="caption" Text="{v:Tr Fov_Measure}" TextWrapping="Wrap" />
-      <TextBlock Margin="4,4,0,0" Classes="caption" Text="{v:Tr Fov_Vr}" TextWrapping="Wrap" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>
