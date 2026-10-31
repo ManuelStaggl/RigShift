@@ -952,4 +952,16 @@ The log is in {1}</value>
   <data name="About_SupportFailed" xml:space="preserve">
     <value>Couldn't save. {0}</value>
   </data>
+  <data name="Palette_Search" xml:space="preserve"><value>Search profiles, games, pages…</value></data>
+  <data name="Palette_SearchName" xml:space="preserve"><value>Search (Ctrl+K)</value></data>
+  <data name="Palette_Shortcut" xml:space="preserve"><value>Ctrl K</value></data>
+  <data name="Palette_Placeholder" xml:space="preserve"><value>Type a profile, game or page…</value></data>
+  <data name="Palette_Empty" xml:space="preserve"><value>Nothing matches.</value></data>
+  <data name="Palette_SwitchTo" xml:space="preserve"><value>Switch to {0}</value></data>
+  <data name="Palette_Edit" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="Palette_GoTo" xml:space="preserve"><value>Go to {0}</value></data>
+  <data name="Palette_KindProfile" xml:space="preserve"><value>Profile</value></data>
+  <data name="Palette_KindPage" xml:space="preserve"><value>Page</value></data>
+  <data name="Palette_KindGame" xml:space="preserve"><value>Game</value></data>
+  <data name="Page_NotBuilt" xml:space="preserve"><value>This page comes with RigShift 5.0.</value></data>
 </root>

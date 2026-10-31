@@ -9,7 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
+using Avalonia.Threading;
 using RigShift.Avalonia.Views;
+using RigShift.Windows.Ui;
 
 namespace RigShift.Avalonia;
 
@@ -18,6 +20,7 @@ public sealed partial class MainWindow : Window
 {
     private readonly Dictionary<AppPage, Control> _pages = [];
     private readonly Dictionary<AppPage, Button> _rail = [];
+    private readonly Dictionary<AppPage, string> _railText = [];
 
     public MainWindow()
     {
@@ -29,6 +32,9 @@ public sealed partial class MainWindow : Window
         AddRail(BottomRail, AppPage.Settings, "Nav_Settings", Glyphs.Settings);
         AddRail(BottomRail, AppPage.Help, "Nav_About", Glyphs.Help);
         ApplyTextScale();
+        ApplyTexts();
+        Loc.Instance.PropertyChanged += (_, _) => ApplyTexts();
+        Opened += (_, _) => Dispatcher.UIThread.Post(KeepOnScreen, DispatcherPriority.Loaded);
         KeyDown += (_, e) =>
         {
             if (e.Key == Key.K && e.KeyModifiers == KeyModifiers.Control)
@@ -63,11 +69,47 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private void ApplyTexts()
+    {
+        SearchText.Text = Loc.Instance["Palette_Search"];
+        SearchKey.Text = Loc.Instance["Palette_Shortcut"];
+        global::Avalonia.Automation.AutomationProperties.SetName(Search, Loc.Instance["Palette_SearchName"]);
+        PaletteQuery.PlaceholderText = Loc.Instance["Palette_Placeholder"];
+        PaletteEmpty.Text = Loc.Instance["Palette_Empty"];
+        foreach ((AppPage page, Button button) in _rail)
+        {
+            string text = Loc.WithoutAccessKey(Loc.Instance[_railText[page]]);
+            ToolTip.SetTip(button, text);
+            global::Avalonia.Automation.AutomationProperties.SetName(button, text);
+        }
+    }
+
+    /// <summary>
+    /// Once shown, a window that sticks out of its monitor's work area is pulled back in, onto the primary monitor when
+    /// it does not fit at its size, like the WPF app's windows.
+    /// </summary>
+    private void KeepOnScreen()
+    {
+        if (WindowState != WindowState.Normal || TryGetPlatformHandle()?.Handle is not { } handle)
+        {
+            return;
+        }
+
+        if (NativeWindow.FitIntoMonitor(handle, Width, Height) is { } fit)
+        {
+            Serilog.Log.Information(
+                fit.ToPrimary
+                    ? "Main window did not fit its monitor, moved to the primary monitor at {Bounds}"
+                    : "Main window opened outside its monitor's work area, moved to {Bounds}",
+                fit.Bounds);
+        }
+    }
+
     private sealed record PaletteEntry(string Title, string? Hint, string Glyph, Action Run);
 
     private List<PaletteEntry> _entries = [];
 
-    /// <summary>Profiles first (switch, then edit), then the pages; built on every open so it follows the catalog.</summary>
+    /// <summary>Switch to a profile, play a game, edit a profile, go to a page; built on every open so it follows the catalogs.</summary>
     public void OpenPalette()
     {
         var profiles = App.Provider.GetRequiredService<ProfileCatalog>().Items;
@@ -75,14 +117,17 @@ public sealed partial class MainWindow : Window
         _entries =
         [
             .. profiles.Where(p => !p.IsActive).Select(p => new PaletteEntry(
-                $"Switch to {p.Name}", p.HasHotkey ? p.HotkeyText : null, Glyphs.Switch, () => overview.SwitchCommand.Execute(p))),
-            .. profiles.Select(p => new PaletteEntry($"Edit {p.Name}", "Profile", Glyphs.Profiles, () =>
+                Loc.Format("Palette_SwitchTo", p.Name), p.HasHotkey ? p.HotkeyText : null, Glyphs.Switch, () => overview.SwitchCommand.Execute(p))),
+            .. overview.Games.Items.Where(g => g.CanPlay).Select(g => new PaletteEntry(
+                g.PlayText, g.ShowsHotkey ? g.HotkeyText : Loc.Instance["Palette_KindGame"], Glyphs.Play, () => overview.PlayCommand.Execute(g))),
+            .. profiles.Select(p => new PaletteEntry(Loc.Format("Palette_Edit", p.Name), Loc.Instance["Palette_KindProfile"], Glyphs.Profiles, () =>
             {
                 Navigate(AppPage.Profiles);
                 App.Provider.GetRequiredService<ProfilesViewModel>().SelectedItem = p;
             })),
             .. _rail.Keys.Select(page => new PaletteEntry(
-                "Go to " + global::Avalonia.Automation.AutomationProperties.GetName(_rail[page]), "Page", RailGlyph(page), () => Navigate(page))),
+                Loc.Format("Palette_GoTo", global::Avalonia.Automation.AutomationProperties.GetName(_rail[page])),
+                Loc.Instance["Palette_KindPage"], RailGlyph(page), () => Navigate(page))),
         ];
         PaletteQuery.Text = string.Empty;
         Filter(string.Empty);
@@ -182,7 +227,7 @@ public sealed partial class MainWindow : Window
                 AppPage.Profiles => new ProfileSheetView(),
                 _ => new TextBlock
                 {
-                    Text = "Not built yet.",
+                    Text = Loc.Instance["Page_NotBuilt"],
                     Margin = new global::Avalonia.Thickness(32),
                     Classes = { "secondary" },
                 },
@@ -197,10 +242,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <summary>A rail entry: icon only, the name in the tooltip; selected = accent tile with a duotone icon and the marker on the left edge.</summary>
+    /// <summary>A rail entry: icon only, the name in the tooltip (set by <see cref="ApplyTexts"/>); selected = accent tile with a duotone icon and the marker on the left edge.</summary>
     private void AddRail(StackPanel panel, AppPage page, string textKey, string data)
     {
-        string text = Loc.WithoutAccessKey(Loc.Instance[textKey]);
         var tile = new Border
         {
             Width = 44,
@@ -222,11 +266,10 @@ public sealed partial class MainWindow : Window
         content.Children.Add(tile);
         content.Children.Add(marker);
         var button = new Button { Content = content, Classes = { "rail" } };
-        ToolTip.SetTip(button, text);
         ToolTip.SetPlacement(button, PlacementMode.Right);
-        global::Avalonia.Automation.AutomationProperties.SetName(button, text);
         button.Click += (_, _) => Navigate(page);
         _rail[page] = button;
+        _railText[page] = textKey;
         panel.Children.Add(button);
     }
 }
