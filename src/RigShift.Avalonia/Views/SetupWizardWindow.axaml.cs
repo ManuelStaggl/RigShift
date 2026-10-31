@@ -14,12 +14,12 @@ namespace RigShift.Avalonia.Views;
 public sealed partial class SetupWizardWindow : Window
 {
     /// <summary>The symbols of the three welcome cards: the desk, the rig, the USB trigger.</summary>
-    public static readonly IValueConverter WelcomeIcon = new FuncValueConverter<int, Geometry>(number => Geometry.Parse(number switch
+    public static readonly IValueConverter WelcomeIcon = new FuncValueConverter<int, Geometry>(number => number switch
     {
-        2 => Glyphs.ProfileData(ProfileIcons.Rig),
-        3 => Glyphs.Triggers,
-        _ => Glyphs.Display,
-    }));
+        2 => ProfileSymbols.For(ProfileIcons.Rig, 24),
+        3 => Icons.PlugConnected24,
+        _ => Icons.Desktop24,
+    });
 
     private readonly DispatcherTimer _usbTimer = new() { Interval = TimeSpan.FromSeconds(2) };
 
@@ -33,6 +33,7 @@ public sealed partial class SetupWizardWindow : Window
     {
         InitializeComponent();
         TextScale.Apply(this);
+        DialogChrome.Apply(this, Title, canMinimize: true);
         _hook = WndProc;
     }
 

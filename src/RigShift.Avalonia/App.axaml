@@ -13,6 +13,8 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://RigShift/Themes/Tokens.axaml" />
+        <!-- Only the WinUI progress ring of FluentAvalonia (countdown), not its theme. -->
+        <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

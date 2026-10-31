@@ -30,7 +30,7 @@ internal sealed class IdentifyWindow : Window
             Background = Brush("RsCard"),
             BorderBrush = Brush("RsOutline"),
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(16),
+            CornerRadius = new CornerRadius(12),
             Child = new StackPanel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -38,8 +38,8 @@ internal sealed class IdentifyWindow : Window
                 Spacing = 4,
                 Children =
                 {
-                    new TextBlock { Text = number.ToString(Loc.Instance.Culture), FontSize = 96, FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, Foreground = Brush("RsAccentText") },
-                    new TextBlock { Text = name, FontSize = 16, HorizontalAlignment = HorizontalAlignment.Center, Classes = { "secondary" } },
+                    new TextBlock { Text = number.ToString(Loc.Instance.Culture), FontSize = 96, LineHeight = 112, FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, Foreground = Brush("RsAccentText") },
+                    new TextBlock { Text = name, HorizontalAlignment = HorizontalAlignment.Center, Classes = { "subtitle", "secondary" } },
                 },
             },
         };

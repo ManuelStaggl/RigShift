@@ -9,10 +9,12 @@ for a given release is its SBOM (`RigShift-<version>.cdx.json` on the release pa
 | [Avalonia, Avalonia.Desktop and their platform parts](https://github.com/AvaloniaUI/Avalonia) | MIT | © 2013–2026 The AvaloniaUI Project |
 | [ANGLE (Avalonia.Angle.Windows.Natives)](https://chromium.googlesource.com/angle/angle) | BSD-3-Clause | © 2018 The ANGLE Project Authors |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MIT | © .NET Foundation and Contributors |
-| [H.NotifyIcon, H.GeneratedIcons.System.Drawing](https://github.com/HavenDV/H.NotifyIcon) | MIT | © havendv |
+| [FluentAvaloniaUI](https://github.com/amwx/FluentAvalonia) (progress ring of the countdown) | MIT | © 2025 amwx |
+| [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) (icon paths in the app and on the project page) | MIT | © 2020 Microsoft Corporation |
 | [HarfBuzzSharp, SkiaSharp](https://github.com/mono/SkiaSharp) | MIT | © Microsoft Corporation |
-| [Irihi.Ursa, Irihi.Ursa.Themes.Semi](https://github.com/irihitech/Ursa.Avalonia) | MIT | © 2025 .NET Foundation and Contributors |
+| [H.NotifyIcon, H.GeneratedIcons.System.Drawing](https://github.com/HavenDV/H.NotifyIcon) | MIT | © havendv |
 | [Irihi.Avalonia.Shared](https://github.com/irihitech/Ursa.Avalonia) | MIT | © 2023 iriHi Technology |
+| [Irihi.Ursa, Irihi.Ursa.Themes.Semi](https://github.com/irihitech/Ursa.Avalonia) | MIT | © 2025 .NET Foundation and Contributors |
 | [MicroCom.Runtime](https://github.com/kekekeks/MicroCom) | MIT | © 2021 Nikita Tsukanov |
 | [Microsoft.Extensions.DependencyInjection, Microsoft.Win32.SystemEvents](https://github.com/dotnet/runtime) | MIT | © Microsoft Corporation |
 | [Mona Sans](https://github.com/github/mona-sans) (font) | SIL Open Font License 1.1 | © 2022 The Mona Sans Project Authors, Reserved Font Name "Mona" |

@@ -67,6 +67,23 @@
         "resolved": "11.3.2",
         "contentHash": "qHDToxto1e3hci5YqbG9n0Ty8mlp3zBUN5wT66wKqaDVzXyQ0do3EnRILd4Ke9jpvsktaPpgE0YjEk7hornryQ=="
       },
+      "Avalonia.Controls.ColorPicker": {
+        "type": "Transitive",
+        "resolved": "12.1.0",
+        "contentHash": "5ye5pHOKNSPh/lqQlQ/Z4rKwTjzjCGqlWseycjAuJp4DjyDR2ZH1mt3GBgL7K/y1Th+Gxu+LfM9IqIe6UqlxFA==",
+        "dependencies": {
+          "Avalonia": "12.1.0",
+          "Avalonia.Remote.Protocol": "12.1.0"
+        }
+      },
+      "Avalonia.Controls.DataGrid": {
+        "type": "Transitive",
+        "resolved": "12.1.0",
+        "contentHash": "I4nkzELLRUWAqTLA4nY6lJ4nQFmXdZcGvRF7ze+k1aVE38KMJc5C8lqqs77F2kQQpCHKOwqmRwbO/leFKDQ5GA==",
+        "dependencies": {
+          "Avalonia": "12.1.0"
+        }
+      },
       "Avalonia.FreeDesktop": {
         "type": "Transitive",
         "resolved": "12.1.4",
@@ -397,6 +414,7 @@
         "dependencies": {
           "Avalonia": "[12.1.4, )",
           "Avalonia.Desktop": "[12.1.4, )",
+          "FluentAvaloniaUI": "[3.1.0, )",
           "H.NotifyIcon": "[2.4.1, )",
           "Irihi.Ursa": "[2.3.0, )",
           "Irihi.Ursa.Themes.Semi": "[2.3.0, )",
@@ -466,6 +484,19 @@
         "requested": "[8.4.2, )",
         "resolved": "8.4.2",
         "contentHash": "WadCzGEc2U+3e20avRLng4qNtt4zoOGWrdUISqJWrHe3/FSnrYjuM5Sb4yQb09LhkBXrrI4Zt3dLKgRMbItsrg=="
+      },
+      "FluentAvaloniaUI": {
+        "type": "CentralTransitive",
+        "requested": "[3.1.0, )",
+        "resolved": "3.1.0",
+        "contentHash": "3hDozO75M0OQXwuu8+qDRsNt0dg9jx26MB2Sqtn0jy3UKj19hVnmY8haPPCBWh3wQ8tYcnThU6kcbIaGbArFPw==",
+        "dependencies": {
+          "Avalonia": "12.1.0",
+          "Avalonia.Controls.ColorPicker": "12.1.0",
+          "Avalonia.Controls.DataGrid": "12.1.0",
+          "Avalonia.Skia": "12.1.0",
+          "MicroCom.Runtime": "0.11.6"
+        }
       },
       "H.NotifyIcon": {
         "type": "CentralTransitive",

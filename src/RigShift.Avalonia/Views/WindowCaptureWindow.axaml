@@ -14,29 +14,33 @@
   WindowStartupLocation="CenterOwner"
   Background="{DynamicResource RsCard}">
   <!-- Every open window with a tick box; one line per window with its size, the position in the tooltip. -->
-  <Grid Margin="24,20" RowDefinitions="Auto,*,Auto" RowSpacing="12">
-    <StackPanel Spacing="6">
-      <TextBlock Classes="h3" Text="{v:Tr Capture_Title}" />
-      <TextBlock Classes="secondary" Text="{v:Tr Capture_Intro}" TextWrapping="Wrap" />
-    </StackPanel>
+  <DockPanel>
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <TextBlock VerticalAlignment="Center" Classes="caption" Text="{Binding ChosenText}" />
+        <Button Grid.Column="1" MinWidth="96" HorizontalContentAlignment="Center" Classes="primary" Click="OnSave" Content="{v:Tr Capture_Save}" IsDefault="True" IsEnabled="{Binding CanSave}" />
+        <Button Grid.Column="2" MinWidth="96" HorizontalContentAlignment="Center" Classes="neutral" Click="OnCancel" Content="{v:Tr Common_Cancel}" IsCancel="True" />
+      </Grid>
+    </Border>
 
-    <ListBox x:Name="List" Grid.Row="1" AutomationProperties.Name="{v:Tr Capture_Title}" Background="Transparent" ItemsSource="{Binding Windows}" SelectionMode="Single">
-      <ListBox.ItemTemplate>
-        <DataTemplate x:DataType="vm:CaptureRow">
-          <CheckBox VerticalAlignment="Center" AutomationProperties.Name="{Binding Title}" IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Position}">
-            <StackPanel Margin="4,0,0,0">
-              <TextBlock FontSize="14" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-              <TextBlock Classes="caption" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-          </CheckBox>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
+    <Grid Margin="24,0,24,0" RowDefinitions="Auto,*" RowSpacing="12">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="subtitle" Text="{v:Tr Capture_Title}" />
+        <TextBlock Classes="secondary" Text="{v:Tr Capture_Intro}" TextWrapping="Wrap" />
+      </StackPanel>
 
-    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-      <TextBlock VerticalAlignment="Center" Classes="caption" Text="{Binding ChosenText}" />
-      <Button Grid.Column="1" MinWidth="96" HorizontalContentAlignment="Center" Classes="primary" Click="OnSave" Content="{v:Tr Capture_Save}" IsDefault="True" IsEnabled="{Binding CanSave}" />
-      <Button Grid.Column="2" MinWidth="96" HorizontalContentAlignment="Center" Classes="neutral" Click="OnCancel" Content="{v:Tr Common_Cancel}" IsCancel="True" />
+      <ListBox x:Name="List" Grid.Row="1" AutomationProperties.Name="{v:Tr Capture_Title}" Background="Transparent" ItemsSource="{Binding Windows}" SelectionMode="Single">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:CaptureRow">
+            <CheckBox VerticalAlignment="Center" AutomationProperties.Name="{Binding Title}" IsChecked="{Binding IsChosen}" ToolTip.Tip="{Binding Position}">
+              <StackPanel Margin="4,0,0,0">
+                <TextBlock Classes="label" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </CheckBox>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
     </Grid>
-  </Grid>
+  </DockPanel>
 </Window>

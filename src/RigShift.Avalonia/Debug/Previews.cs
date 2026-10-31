@@ -16,7 +16,8 @@ namespace RigShift.Avalonia.Debug;
 /// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
 /// that step, nothing saved before the user clicks), RIGSHIFT_PREVIEW_SCROLL=&lt;pixels&gt; (scrolls the shown page),
 /// RIGSHIFT_PREVIEW_DIALOG=unsaved|delete|restore (the question with demo content; nothing is changed),
-/// RIGSHIFT_PREVIEW_APPS=&lt;json&gt; (the app picker with a demo list);
+/// RIGSHIFT_PREVIEW_APPS=&lt;json&gt; (the app picker with a demo list), RIGSHIFT_PREVIEW_TRAYFAIL=&lt;n&gt; (the first n
+/// attempts to add the tray icon fail, read in TrayIconService);
 /// <c>--preview-confirmation</c> opens the countdown.
 /// </summary>
 internal static class Previews
@@ -29,6 +30,11 @@ internal static class Previews
         {
             services.Replace(ServiceDescriptor.Singleton<IDisplayConfigurator>(
                 sp => new PreviewDisplayConfigurator(sp.GetRequiredService<IProfileStore>(), active)));
+        }
+
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_INERT") == "1")
+        {
+            InertPreview.Register(services);
         }
 
         // RIGSHIFT_PREVIEW_OPENXR=1: two runtimes, so the game editor offers its OpenXR choice on a machine without VR.
