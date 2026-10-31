@@ -954,4 +954,16 @@ Das Log liegt in {1}</value>
   <data name="About_SupportFailed" xml:space="preserve">
     <value>Speichern nicht möglich. {0}</value>
   </data>
+  <data name="Palette_Search" xml:space="preserve"><value>Profile, Spiele, Seiten suchen…</value></data>
+  <data name="Palette_SearchName" xml:space="preserve"><value>Suchen (Strg+K)</value></data>
+  <data name="Palette_Shortcut" xml:space="preserve"><value>Strg K</value></data>
+  <data name="Palette_Placeholder" xml:space="preserve"><value>Profil, Spiel oder Seite eingeben…</value></data>
+  <data name="Palette_Empty" xml:space="preserve"><value>Nichts gefunden.</value></data>
+  <data name="Palette_SwitchTo" xml:space="preserve"><value>Auf „{0}“ umschalten</value></data>
+  <data name="Palette_Edit" xml:space="preserve"><value>„{0}“ bearbeiten</value></data>
+  <data name="Palette_GoTo" xml:space="preserve"><value>{0} öffnen</value></data>
+  <data name="Palette_KindProfile" xml:space="preserve"><value>Profil</value></data>
+  <data name="Palette_KindPage" xml:space="preserve"><value>Seite</value></data>
+  <data name="Palette_KindGame" xml:space="preserve"><value>Spiel</value></data>
+  <data name="Page_NotBuilt" xml:space="preserve"><value>Diese Seite kommt mit RigShift 5.0.</value></data>
 </root>

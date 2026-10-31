@@ -32,11 +32,11 @@
         </Viewbox>
         <TextBlock Classes="caption" FontSize="13" Text="RigShift" VerticalAlignment="Center" />
       </StackPanel>
-      <Button x:Name="Search" Grid.Column="1" AutomationProperties.Name="Search (Ctrl+K)" Classes="search" Width="440" Click="OnSearchClick">
+      <Button x:Name="Search" Grid.Column="1" Classes="search" Width="440" Click="OnSearchClick">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <Path Classes="icon small" Data="M11 4 A7 7 0 1 1 10.99 4 Z M16 16 L20 20" />
-          <TextBlock Grid.Column="1" Margin="8,0" Classes="caption" FontSize="13" Text="Search profiles, games, settings…" VerticalAlignment="Center" />
-          <Border Grid.Column="2" Classes="kbd"><TextBlock Text="Ctrl K" /></Border>
+          <TextBlock x:Name="SearchText" Grid.Column="1" Margin="8,0" Classes="caption" FontSize="13" VerticalAlignment="Center" />
+          <Border Grid.Column="2" Classes="kbd"><TextBlock x:Name="SearchKey" /></Border>
         </Grid>
       </Button>
     </Grid>
@@ -86,13 +86,12 @@
               Background="Transparent"
               BorderThickness="0"
               FontSize="15"
-              PlaceholderText="Type a command or a profile…"
               TextChanged="OnPaletteQueryChanged"
               KeyDown="OnPaletteKeyDown" />
             <Border Grid.Column="2" VerticalAlignment="Center" Classes="kbd"><TextBlock Text="Esc" /></Border>
           </Grid>
           <Border Classes="divider" DockPanel.Dock="Top" />
-          <TextBlock x:Name="PaletteEmpty" Margin="16,14" Classes="caption" DockPanel.Dock="Top" IsVisible="False" Text="Nothing matches." />
+          <TextBlock x:Name="PaletteEmpty" Margin="16,14" Classes="caption" DockPanel.Dock="Top" IsVisible="False" />
           <ListBox x:Name="PaletteList" MaxHeight="360" Margin="6" Background="Transparent" Focusable="False" Tapped="OnPaletteTapped" />
         </DockPanel>
       </Border>
