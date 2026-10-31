@@ -132,7 +132,8 @@ public static class ProfileEditing
 
     /// <summary>
     /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, otherwise
-    /// the default profile – unless that is the active one. <c>null</c> when there is nowhere to go.
+    /// the default profile – unless that is the active one. With exactly two profiles, the other one. <c>null</c> when
+    /// there is nowhere to go.
     /// </summary>
     public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId, Guid? defaultId)
     {
@@ -146,7 +147,7 @@ public static class ProfileEditing
             }
         }
 
-        return null;
+        return all.Count == 2 && all.Any(p => p.Id == activeId) ? all.First(p => p.Id != activeId) : null;
     }
 
     /// <summary><paramref name="baseName"/>, or <c>baseName 2</c>, <c>baseName 3</c>, … if taken.</summary>
