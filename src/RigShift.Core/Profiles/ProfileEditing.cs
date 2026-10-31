@@ -122,13 +122,12 @@ public static class ProfileEditing
             .ToList();
     }
 
-    /// <summary>Profile names are matched case-insensitively and without surrounding blanks (CLI: <c>apply rig</c>).</summary>
-    public static Profile? FindByName(IEnumerable<Profile> profiles, string name)
-    {
-        ArgumentNullException.ThrowIfNull(profiles);
-        ArgumentNullException.ThrowIfNull(name);
-        return profiles.FirstOrDefault(p => NamesEqual(p.Name, name));
-    }
+    /// <summary>
+    /// Profile names are matched case-insensitively and without surrounding blanks (CLI: <c>apply rig</c>), then former
+    /// names and the id.
+    /// </summary>
+    public static Profile? FindByName(IEnumerable<Profile> profiles, string name) =>
+        NameHistory.Find(profiles, name, p => p.Name, p => p.FormerNames, p => p.Id);
 
     /// <summary>
     /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, otherwise

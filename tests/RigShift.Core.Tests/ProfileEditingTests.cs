@@ -143,6 +143,30 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void FindByName_MatchesFormerNamesAndTheId_ButNeverOverAnotherCurrentName()
+    {
+        Profile rig = Rig() with { FormerNames = ["Sim", "Desk"] };
+        Profile desk = Profile("Desk", DeskModes);
+        Profile[] all = [rig, desk];
+
+        ProfileEditing.FindByName(all, " sim ").ShouldBe(rig);
+        ProfileEditing.FindByName(all, "Desk").ShouldBe(desk);
+        ProfileEditing.FindByName(all, rig.Id.ToString()).ShouldBe(rig);
+        ProfileEditing.FindByName(all, Guid.NewGuid().ToString()).ShouldBeNull();
+    }
+
+    [Fact]
+    public void NameHistory_After_KeepsEveryOldNameOnce_AndNeverTheCurrentOne()
+    {
+        NameHistory.After("Rig", null, "Rig").ShouldBeNull();
+        NameHistory.After("Rig", null, "Sim rig").ShouldBe(["Rig"]);
+        NameHistory.After("Sim rig", ["Rig"], "Cockpit").ShouldBe(["Rig", "Sim rig"]);
+        // Renamed back: the name is current again, not former.
+        NameHistory.After("Cockpit", ["Rig", "Sim rig"], " rig ").ShouldBe(["Sim rig", "Cockpit"]);
+        NameHistory.After("Rig", ["rig", "RIG "], "Desk").ShouldBe(["rig"]);
+    }
+
+    [Fact]
     public void UniqueName_AppendsTheFirstFreeNumber()
     {
         ProfileEditing.UniqueName("Rig", ["Desk"]).ShouldBe("Rig");

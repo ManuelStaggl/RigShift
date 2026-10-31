@@ -224,6 +224,12 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(profile);
+        if (Find(profile.Id) is { } stored)
+        {
+            profile = profile with { FormerNames = NameHistory.After(stored.Name, stored.FormerNames, profile.Name) };
+        }
+
         await _store.SaveAsync(profile, cancellationToken);
         foreach (Profile other in DisplayNames.Propagate(profile, _profiles))
         {
