@@ -56,17 +56,24 @@ internal static class AskDialog
             buttons.Children.Add(button);
         }
 
-        window.Content = new StackPanel
+        var footer = new Border { Classes = { "footer" }, Child = buttons };
+        DockPanel.SetDock(footer, Dock.Bottom);
+        window.Content = new DockPanel
         {
-            Margin = new Thickness(24, 20, 24, 20),
-            Spacing = 12,
             Children =
             {
-                new TextBlock { Text = title, Classes = { "h3" }, TextWrapping = TextWrapping.Wrap },
-                new TextBlock { Text = text, Classes = { "secondary" }, TextWrapping = TextWrapping.Wrap },
-                Details(details),
-                new Border { Height = 8 },
-                buttons,
+                footer,
+                new StackPanel
+                {
+                    Margin = new Thickness(24, 0, 24, 24),
+                    Spacing = 12,
+                    Children =
+                    {
+                        new TextBlock { Text = title, Classes = { "subtitle" }, TextWrapping = TextWrapping.Wrap },
+                        new TextBlock { Text = text, Classes = { "secondary" }, TextWrapping = TextWrapping.Wrap },
+                        Details(details),
+                    },
+                },
             },
         };
         window.KeyDown += (_, e) =>
@@ -78,6 +85,7 @@ internal static class AskDialog
         };
 
         global::RigShift.Avalonia.Views.TextScale.Apply(window);
+        global::RigShift.Avalonia.Views.DialogChrome.Apply(window);
         await ShowModalAsync(window);
 
         return result;
@@ -86,12 +94,12 @@ internal static class AskDialog
     /// <summary>The detail lines in a sunken, scrolling well: heading, the path or keys, the warning in amber.</summary>
     private static Border Details(IReadOnlyList<RestoreLine> lines)
     {
-        var list = new StackPanel { Spacing = 10, Margin = new Thickness(14, 12) };
+        var list = new StackPanel { Spacing = 8, Margin = new Thickness(16, 12) };
         foreach (RestoreLine line in lines)
         {
-            var row = new StackPanel { Spacing = 1 };
-            row.Children.Add(new TextBlock { Text = line.Heading, Classes = { "strong" }, FontSize = 13, TextTrimming = TextTrimming.CharacterEllipsis });
-            row.Children.Add(new TextBlock { Text = line.Text, Classes = { "caption" }, FontSize = 12.5, TextWrapping = TextWrapping.Wrap });
+            var row = new StackPanel();
+            row.Children.Add(new TextBlock { Text = line.Heading, Classes = { "strong" }, TextTrimming = TextTrimming.CharacterEllipsis });
+            row.Children.Add(new TextBlock { Text = line.Text, Classes = { "caption" }, TextWrapping = TextWrapping.Wrap });
             if (line.Warning is { } warning)
             {
                 row.Children.Add(new TextBlock { Text = warning, Classes = { "caption", "warning" }, TextWrapping = TextWrapping.Wrap });
@@ -102,10 +110,10 @@ internal static class AskDialog
 
         var well = new Border
         {
-            CornerRadius = new CornerRadius(8),
             IsVisible = lines.Count > 0,
             Child = new ScrollViewer { MaxHeight = 280, Content = list, HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled },
         };
+        well.Bind(Border.CornerRadiusProperty, well.GetResourceObservable("RsRadiusMd"));
         well.Bind(Border.BackgroundProperty, well.GetResourceObservable("RsDeep"));
         well.Bind(Border.BoxShadowProperty, well.GetResourceObservable("RsWellShadow"));
         return well;
