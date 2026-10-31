@@ -43,7 +43,8 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
     {
         base.OnFrameworkInitializationCompleted();
         Directory.CreateDirectory(paths.DataDirectory);
-        Dispatcher.UIThread.UnhandledException += OnUnhandledException;        LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
+        Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+        LogFileHeader.Enabled = true; // Heads the next line: version, Windows, graphics driver.
         Log.Information("RigShift {Version} (Avalonia) starting, data directory {DataDirectory}", typeof(App).Assembly.GetName().Version, paths.DataDirectory);
 
         try
