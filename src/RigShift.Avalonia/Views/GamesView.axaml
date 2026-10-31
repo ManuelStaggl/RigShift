@@ -334,6 +334,14 @@
                               </StackPanel>
                               <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_StartWithGame}" IsChecked="{Binding Editor.StartWithGame, FallbackValue=False}" OffContent="" OnContent="" />
                             </Grid>
+                            <Border Classes="divider" />
+                            <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                              <StackPanel VerticalAlignment="Center">
+                                <TextBlock Classes="label" Text="{v:Tr Game_KeepMouse}" />
+                                <TextBlock Classes="caption" Text="{v:Tr Game_KeepMouseHint}" TextWrapping="Wrap" />
+                              </StackPanel>
+                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Game_KeepMouse}" IsChecked="{Binding Editor.KeepMouseOnDisplay, FallbackValue=False}" OffContent="" OnContent="" />
+                            </Grid>
                           </StackPanel>
                         </u:SettingsCard.Detail>
                       </u:SettingsCard>

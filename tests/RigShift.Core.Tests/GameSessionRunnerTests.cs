@@ -42,9 +42,33 @@ public sealed class GameSessionRunnerTests
 
     private FakeRunningGame LongRunning() => new(_time, TimeSpan.FromHours(1));
 
-    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null) => new(
+    private GameSessionRunner Runner(
+        FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null, ICursorConfinement? cursor = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings);
+        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings, cursor);
+
+    /// <summary>The mouse is kept on the game's display for exactly the game's run, and only when the entry asks for it.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Run_KeepsTheMouseOnTheGamesDisplay_ForTheGamesRunOnly(bool wanted)
+    {
+        ICursorConfinement cursor = Substitute.For<ICursorConfinement>();
+        IDisposable held = Substitute.For<IDisposable>();
+        cursor.KeepOnWindowOf("iRacing").Returns(held);
+
+        await Runner(cursor: cursor).RunAsync(Game() with { KeepMouseOnDisplay = wanted }, alreadyRunning: false, Ct);
+
+        if (wanted)
+        {
+            cursor.Received(1).KeepOnWindowOf("iRacing");
+            held.Received(1).Dispose();
+        }
+        else
+        {
+            cursor.DidNotReceiveWithAnyArgs().KeepOnWindowOf(default!);
+        }
+    }
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {

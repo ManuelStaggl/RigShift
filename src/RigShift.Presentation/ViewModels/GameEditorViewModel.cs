@@ -56,6 +56,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         ProcessName = game.Launch.ProcessName ?? string.Empty;
         LauncherProcessName = game.LauncherProcessName ?? string.Empty;
         StartWithGame = game.StartWithGame;
+        KeepMouseOnDisplay = game.KeepMouseOnDisplay;
         StopApps = game.Exit.StopApps;
         WindowLayout = game.WindowLayout;
         Hotkey = game.Hotkey;
@@ -321,6 +322,9 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public partial bool StartWithGame { get; set; }
 
     [ObservableProperty]
+    public partial bool KeepMouseOnDisplay { get; set; }
+
+    [ObservableProperty]
     public partial bool StopApps { get; set; }
 
     [ObservableProperty]
@@ -493,6 +497,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         Exit = ExitFromChoice(),
         Hotkey = Hotkey,
         StartWithGame = StartWithGame,
+        KeepMouseOnDisplay = KeepMouseOnDisplay,
         Settings = SettingsFromFields(),
     };
 

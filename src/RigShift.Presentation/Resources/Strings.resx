@@ -395,6 +395,8 @@
   <data name="Game_StopApps" xml:space="preserve"><value>Close tools</value></data>
   <data name="Game_StartWithGame" xml:space="preserve"><value>Also run when started from Steam or another launcher</value></data>
   <data name="Game_StartWithGameHint" xml:space="preserve"><value>Works after one start through RigShift, which learns the game's process.</value></data>
+  <data name="Game_KeepMouse" xml:space="preserve"><value>Keep the mouse on the game's display</value></data>
+  <data name="Game_KeepMouseHint" xml:space="preserve"><value>While the game is in front. Alt+Tab or the Windows key free it.</value></data>
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Game ended</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Switching to the profile failed, so the game was not started</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>The game could not be started</value></data>

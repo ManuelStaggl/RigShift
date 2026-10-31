@@ -22,12 +22,14 @@ public sealed class GameSessionRunner
     private readonly WindowLayoutRestorer? _layout;
     private readonly IWindowLayout? _windows;
     private readonly IGameSettingsFiles? _settings;
+    private readonly ICursorConfinement? _cursor;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
     /// <param name="profile">Looks a profile up by id; <c>null</c> when it was deleted in the meantime.</param>
     /// <param name="windows">Restores saved window positions; <c>null</c> leaves windows where they are.</param>
     /// <param name="settings">Writes the entry's own values into the game's settings file; <c>null</c> leaves the file alone.</param>
+    /// <param name="cursor">Keeps the mouse on the game's display; <c>null</c> leaves it free.</param>
     public GameSessionRunner(
         IGameStarter starter,
         IGameProcesses processes,
@@ -39,7 +41,8 @@ public sealed class GameSessionRunner
         TimeProvider time,
         ILogger log,
         IWindowLayout? windows = null,
-        IGameSettingsFiles? settings = null)
+        IGameSettingsFiles? settings = null,
+        ICursorConfinement? cursor = null)
     {
         ArgumentNullException.ThrowIfNull(starter);
         ArgumentNullException.ThrowIfNull(processes);
@@ -62,6 +65,7 @@ public sealed class GameSessionRunner
         _layout = windows is null ? null : new WindowLayoutRestorer(windows, time, _log);
         _windows = windows;
         _settings = settings;
+        _cursor = cursor;
     }
 
     /// <summary>Raised with the learned process name so the caller can keep it in the entry; never raised twice for one session.</summary>
@@ -216,7 +220,10 @@ public sealed class GameSessionRunner
         // In the background: the game runs already, and a tool that never shows a window must not delay its end.
         Task<WindowLayoutResult?> placedLater = RestoreWindowsAsync(game, ToolWindows(game, AppTiming.AfterGame), cancellationToken);
 
-        await WaitForEndAsync(game, session, processId, learned, cancellationToken);
+        using (KeepMouse(game, learned))
+        {
+            await WaitForEndAsync(game, session, processId, learned, cancellationToken);
+        }
         _log.Information("Game {Game} ended after {Minutes:0.0} min", game.Name, _time.GetElapsedTime(started).TotalMinutes);
 
         layout = Sum(layout, await placedLater);
@@ -614,6 +621,25 @@ public sealed class GameSessionRunner
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         List<WindowPlacement> part = [.. layout.Windows.Where(w => afterGame.Contains(w.ProcessName) == (when == AppTiming.AfterGame))];
         return part.Count == 0 ? null : layout with { Windows = part };
+    }
+
+    /// <summary>For the game's whole run, released however the session ends; <c>null</c> when the entry does not want it.</summary>
+    private IDisposable? KeepMouse(GameEntry game, string? learned)
+    {
+        if (!game.KeepMouseOnDisplay || _cursor is null || (learned ?? game.Launch.KnownProcessName()) is not { } process)
+        {
+            return null;
+        }
+
+        try
+        {
+            return _cursor.KeepOnWindowOf(process);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Game {Game}: the mouse could not be kept on its display", game.Name);
+            return null;
+        }
     }
 
     private static WindowLayoutResult? Sum(WindowLayoutResult? a, WindowLayoutResult? b) =>
