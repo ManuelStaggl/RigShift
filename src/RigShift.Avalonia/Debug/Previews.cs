@@ -12,7 +12,8 @@ namespace RigShift.Avalonia.Debug;
 /// displays read as attached, that profile's active; nothing is ever applied), RIGSHIFT_PREVIEW_PAGE=&lt;page&gt;,
 /// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
 /// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>), RIGSHIFT_PREVIEW_CRASH=1 (an exception every
-/// 300 ms, so the repeated-error dialog opens); <c>--preview-confirmation</c> opens the countdown.
+/// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
+/// that step, nothing saved before the user clicks); <c>--preview-confirmation</c> opens the countdown.
 /// </summary>
 internal static class Previews
 {
@@ -25,7 +26,8 @@ internal static class Previews
         }
     }
 
-    public static void AfterStart(App app, TrayIconService tray, bool confirmation)
+    /// <returns><c>true</c> when the assistant opens as a preview, so the first-start assistant stays away.</returns>
+    public static bool AfterStart(App app, TrayIconService tray, bool confirmation)
     {
         // The countdown cannot be reached on a machine without the profiles' displays: two stored profiles, or the
         // live arrangement twice, so both pictures show something.
@@ -81,5 +83,25 @@ internal static class Previews
         {
             tray.ShowPopup();
         }
+
+        // The assistant at a step with demo profiles made from the current arrangement: welcome, second, trigger, done.
+        if (!Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SETUP"), ignoreCase: true, out SetupStep step))
+        {
+            return false;
+        }
+
+        // Logged, not discarded: a XAML error in the assistant would otherwise leave no trace at all.
+        global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await App.Provider.GetRequiredService<Services.PageDialogs>().ShowSetupAssistantAsync(step == SetupStep.Welcome ? null : step);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Setup assistant preview failed");
+            }
+        });
+        return true;
     }
 }

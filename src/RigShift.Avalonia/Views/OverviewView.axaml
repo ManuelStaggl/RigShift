@@ -122,13 +122,14 @@
           </Grid>
         </Border>
 
-        <!-- No profile yet: save the layout on the stage as the first one. -->
+        <!-- No profile yet: the setup assistant, the layout on the stage as the first profile, or the profiles page. -->
         <Border x:Name="EmptyState" MaxWidth="420" HorizontalAlignment="Left" Padding="20" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsOutline}" BorderThickness="1" CornerRadius="12" IsVisible="False">
           <StackPanel Spacing="12">
             <TextBlock Classes="h3" Text="{v:Tr Overview_SetupTitle}" />
             <TextBlock Classes="secondary" Text="{v:Tr Overview_SetupText}" TextWrapping="Wrap" />
-            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding SaveCurrentCommand}" Content="{v:Tr Overview_SaveCurrent}" />
-            <Button HorizontalAlignment="Center" Classes="ghost" Command="{Binding SetupManuallyCommand}" Content="{v:Tr Overview_SetupManual}" />
+            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding SetupAssistantCommand}" Content="{v:Tr Overview_SetupStart}" />
+            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding SaveCurrentCommand}" Content="{v:Tr Overview_SaveCurrent}" />
+            <Button HorizontalAlignment="Center" Classes="link" Command="{Binding SetupManuallyCommand}" Content="{v:Tr Overview_SetupManual}" />
           </StackPanel>
         </Border>
 

@@ -73,8 +73,18 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
                 ShowMainWindow();
             }
 #if DEBUG
-            Debug.Previews.AfterStart(this, _tray, request.PreviewConfirmation);
+            bool assistantPreview = Debug.Previews.AfterStart(this, _tray, request.PreviewConfirmation);
+#else
+            const bool assistantPreview = false;
 #endif
+
+            // First start: guide through the first two profiles. Posted, so startup finishes before the dialog blocks.
+            if (!request.Minimized && !assistantPreview && catalog.Profiles.Count == 0 && !catalog.HasUnreadableFiles
+                && !Provider.GetRequiredService<SettingsService>().Current.SetupAssistantShown)
+            {
+                // Async void on purpose: an exception reaches the UI handler instead of vanishing in a discarded task.
+                Dispatcher.UIThread.Post(async () => await Provider.GetRequiredService<PageDialogs>().ShowSetupAssistantAsync());
+            }
         }
         catch (Exception ex)
         {
