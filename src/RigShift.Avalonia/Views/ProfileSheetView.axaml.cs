@@ -157,6 +157,28 @@ public sealed partial class ProfileSheetView : UserControl
 
     private void OnRemoveRule(object? sender, RoutedEventArgs e) => _editor?.Rules.RemoveRuleCommand.Execute(TagOf<RuleCard>(sender));
 
+    /// <summary>"+ Device": the devices not yet in this rule, as a menu under the button.</summary>
+    private void OnAddDevice(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control button || TagOf<RuleCard>(sender) is not { } card)
+        {
+            return;
+        }
+
+        var menu = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
+        foreach (Choice device in card.AvailableDevices)
+        {
+            var item = new MenuItem { Header = device.Name };
+            item.Click += (_, _) => card.AddDeviceCommand.Execute(device);
+            menu.Items.Add(item);
+        }
+
+        if (menu.Items.Count > 0)
+        {
+            menu.ShowAt(button);
+        }
+    }
+
     private void OnBrowse(object? sender, RoutedEventArgs e) => _editor?.AppList.BrowseCommand.Execute(TagOf<AppEditItem>(sender));
 
     private void OnMoveUp(object? sender, RoutedEventArgs e) => _editor?.AppList.MoveUpCommand.Execute(TagOf<AppEditItem>(sender));

@@ -1,3 +1,4 @@
+using RigShift.App.Localization;
 using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
@@ -18,27 +19,32 @@ internal sealed class KeepSwitchConfirmation : ISwitchConfirmation
     }
 }
 
-/// <summary>shortcut: no app picker window yet, "Add app" does nothing; it comes with the profiles page (#161).</summary>
-internal sealed class NoAppPicker : IAppPicker
-{
-    public Task<PickedApp?> PickAsync(string? currentPath) => Task.FromResult<PickedApp?>(null);
-}
-
-/// <summary>
-/// shortcut: the editors through the shared factory, and every question answers "cancel", so nothing is deleted,
-/// discarded or restored; the dialogs come with the profiles and help pages (#161, #95).
-/// </summary>
-internal sealed class PendingDialogs(ProfileEditorFactory factory) : IProfilePageDialogs, IHelpPageDialogs
+/// <summary>The questions and builders behind the profiles page; the help page's and the wizard's come with #94 and #95.</summary>
+internal sealed class PageDialogs(ProfileEditorFactory factory) : IProfilePageDialogs, IHelpPageDialogs
 {
     public Task<Profile> NewFromCurrentAsync() => factory.NewFromCurrentAsync();
 
     public Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew) => factory.CreateEditorAsync(profile, isNew);
 
+    /// <summary>Delete is destructive: no default on the action, Enter does nothing.</summary>
+    public Task<bool> ConfirmDeleteAsync(string name, int ruleCount) =>
+        AskDialog.AskAsync(
+            Loc.Instance["Profile_DeleteTitle"],
+            Loc.Format(ruleCount > 0 ? "Profile_DeleteTextWithRules" : "Profile_DeleteText", name),
+            false,
+            new AskChoice<bool>(Loc.Instance["Profile_Delete"], true));
+
+    /// <summary>"Save changes to X?" with Save (the default: the changes were made on purpose), Discard and Cancel.</summary>
+    public Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName) =>
+        AskDialog.AskAsync(
+            Loc.Format("Unsaved_Title", name),
+            targetName is null ? Loc.Instance["Unsaved_Text"] : Loc.Format("Unsaved_TextSwitch", targetName),
+            UnsavedChoice.Cancel,
+            new AskChoice<UnsavedChoice>(Loc.Instance["Common_Save"], UnsavedChoice.Save, IsDefault: true),
+            new AskChoice<UnsavedChoice>(Loc.Instance["Common_Discard"], UnsavedChoice.Discard));
+
+    // shortcut: wizard (#95) and backup files (#94) are not built yet; nothing on screen reaches them, and the answers do nothing.
     public Task ShowSetupAssistantAsync() => Task.CompletedTask;
-
-    public Task<bool> ConfirmDeleteAsync(string name, int ruleCount) => Task.FromResult(false);
-
-    public Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName) => Task.FromResult(UnsavedChoice.Discard);
 
     public string? PickZipToSave(string suggestedName) => null;
 

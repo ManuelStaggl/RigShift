@@ -97,6 +97,10 @@ public static class Converters
     /// </summary>
     public static readonly IValueConverter KeepOnNull = new KeepOnNullConverter();
 
+    /// <summary>The editor's problem count as "2 problems" on the save bar; empty without any.</summary>
+    public static readonly IValueConverter ProblemCount = new FuncValueConverter<int, string>(count =>
+        count == 0 ? string.Empty : Loc.Format(count == 1 ? "SaveBar_Problem" : "SaveBar_Problems", count));
+
     /// <summary><c>double?</c> seconds to the <c>decimal?</c> of NumericUpDown and back.</summary>
     public static readonly IValueConverter Seconds = new SecondsConverter();
 

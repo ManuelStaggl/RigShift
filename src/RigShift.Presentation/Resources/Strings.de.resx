@@ -972,4 +972,5 @@ Das Log liegt in {1}</value>
   <data name="Overview_AllGames" xml:space="preserve"><value>Alle Spiele</value></data>
   <data name="Overview_Actions" xml:space="preserve"><value>Aktionen</value></data>
   <data name="Overview_ActionsName" xml:space="preserve"><value>Aktionen (Strg+K)</value></data>
+  <data name="Profiles_ActiveHeader" xml:space="preserve"><value>Aktives Profil</value></data>
 </root>

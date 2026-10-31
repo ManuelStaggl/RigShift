@@ -112,6 +112,12 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
 
     internal MainWindow? Window => _window;
 
+    /// <summary>Owner for dialogs: the main window while it is shown, else none.</summary>
+    internal static Window? Owner => ((App)Current!)._window is { IsVisible: true } window ? window : null;
+
+    /// <summary>The owner as a Win32 handle for native dialogs; 0 without one.</summary>
+    internal static nint OwnerHandle => Owner?.TryGetPlatformHandle()?.Handle ?? 0;
+
     public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, DisplayAssignment Mode)> displays) =>
         Views.IdentifyWindow.ShowAll(displays);
 
@@ -161,11 +167,11 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         services.AddSingleton<ISwitchConfirmation, KeepSwitchConfirmation>();
         services.AddSingleton<TrayIconService>();
         services.AddSingleton<ITextClipboard, AvaloniaClipboard>();
-        services.AddSingleton<IAppPicker, NoAppPicker>();
+        services.AddSingleton<IAppPicker, Views.AvaloniaAppPicker>();
         services.AddSingleton<ProfileEditorFactory>();
-        services.AddSingleton<PendingDialogs>();
-        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PendingDialogs>());
-        services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PendingDialogs>());
+        services.AddSingleton<PageDialogs>();
+        services.AddSingleton<IProfilePageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
+        services.AddSingleton<IHelpPageDialogs>(sp => sp.GetRequiredService<PageDialogs>());
         services.AddSingleton(sp => new HotkeyService(
             sp.GetRequiredService<ProfileCatalog>(),
             sp.GetRequiredService<GameCatalog>(),
