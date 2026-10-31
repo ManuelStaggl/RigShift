@@ -385,6 +385,43 @@
     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
   </Style>
 
+  <!-- Status dot in front of a status line: grey, green ready, amber learning, red failed, accent while running. -->
+  <Style Selector="Ellipse.status">
+    <Setter Property="Width" Value="7" />
+    <Setter Property="Height" Value="7" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Fill" Value="{DynamicResource RsText4}" />
+  </Style>
+  <Style Selector="Ellipse.status.ok">
+    <Setter Property="Fill" Value="{DynamicResource RsSuccess}" />
+  </Style>
+  <Style Selector="Ellipse.status.warn">
+    <Setter Property="Fill" Value="{DynamicResource RsWarning}" />
+  </Style>
+  <Style Selector="Ellipse.status.error">
+    <Setter Property="Fill" Value="{DynamicResource RsDanger}" />
+  </Style>
+  <Style Selector="Ellipse.status.accent">
+    <Setter Property="Fill" Value="{DynamicResource RsAccent}" />
+  </Style>
+
+  <!-- A card of setting rows, as the groups of the profiles and games pages; a hairline between the rows. -->
+  <Style Selector="Border.sheet">
+    <Setter Property="Padding" Value="16,0" />
+    <Setter Property="Background" Value="{DynamicResource RsCard}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RsCardShadow}" />
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <!-- A section's name over its card, as on the overview. -->
+  <Style Selector="TextBlock.section">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
   <!-- Action bar buttons: flat until hovered, label + keycap. -->
   <Style Selector="Button.ab">
     <Setter Property="Height" Value="30" />

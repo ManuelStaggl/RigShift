@@ -1,3 +1,4 @@
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RigShift.App.Services;
@@ -13,7 +14,9 @@ namespace RigShift.Avalonia.Debug;
 /// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_GAMEPICKER=single|multi, RIGSHIFT_PREVIEW_WINDOWCAPTURE=1, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
 /// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>), RIGSHIFT_PREVIEW_CRASH=1 (an exception every
 /// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
-/// that step, nothing saved before the user clicks); <c>--preview-confirmation</c> opens the countdown.
+/// that step, nothing saved before the user clicks), RIGSHIFT_PREVIEW_SCROLL=&lt;pixels&gt; (scrolls the shown page),
+/// RIGSHIFT_PREVIEW_DIALOG=restore (the restore question for a demo backup; nothing is restored);
+/// <c>--preview-confirmation</c> opens the countdown.
 /// </summary>
 internal static class Previews
 {
@@ -50,6 +53,36 @@ internal static class Previews
         if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE"), out AppPage page))
         {
             app.ShowMainWindow(page);
+        }
+
+        // A page taller than the window, scrolled for a second screenshot; after the page has laid out.
+        if (double.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SCROLL"), System.Globalization.CultureInfo.InvariantCulture, out double scroll)
+            && app.Window is { } scrolled)
+        {
+            global::Avalonia.Threading.DispatcherTimer.RunOnce(
+                () =>
+                {
+                    if ((scrolled.Host.Content as global::Avalonia.Visual)?.GetVisualDescendants().OfType<global::Avalonia.Controls.ScrollViewer>().FirstOrDefault() is { } scroller)
+                    {
+                        scroller.Offset = new global::Avalonia.Vector(0, scroll);
+                    }
+                },
+                TimeSpan.FromSeconds(2));
+        }
+
+        if (string.Equals(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG"), "restore", StringComparison.OrdinalIgnoreCase))
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                try
+                {
+                    await App.Provider.GetRequiredService<Services.PageDialogs>().ConfirmRestoreAsync(PreviewBackup());
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "Restore question preview failed");
+                }
+            });
         }
 
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PALETTE") is { } query && app.Window is { } window)
@@ -144,6 +177,35 @@ internal static class Previews
             }
         });
         return true;
+    }
+
+    /// <summary>The stored profiles as a backup, the first one with programs and a rule that each need a second look.</summary>
+    private static RigShift.Core.Storage.BackupContent PreviewBackup()
+    {
+        IReadOnlyList<RigShift.Core.Profiles.Profile> profiles = App.Provider.GetRequiredService<ProfileCatalog>().Profiles;
+        if (profiles.Count == 0)
+        {
+            return new RigShift.Core.Storage.BackupContent([], null);
+        }
+
+        RigShift.Core.Profiles.Profile first = profiles[0] with
+        {
+            Apps =
+            [
+                new RigShift.Core.Profiles.AppAction { Path = @"C:\Program Files (x86)\SimHub\SimHubWPF.exe" },
+                new RigShift.Core.Profiles.AppAction { Path = @"\\nas\tools\CrewChiefV4.exe", Arguments = "-profile rig" },
+                new RigShift.Core.Profiles.AppAction { Path = "overlay.exe" },
+                new RigShift.Core.Profiles.AppAction { Kind = RigShift.Core.Profiles.AppActionKind.Stop, Path = "Discord.exe" },
+            ],
+        };
+        var settings = new RigShift.Core.Settings.AppSettings
+        {
+            AutomationRules =
+            [
+                new RigShift.Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new RigShift.Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }], SkipConfirmation = true },
+            ],
+        };
+        return new RigShift.Core.Storage.BackupContent([first, .. profiles.Skip(1)], settings);
     }
 }
 

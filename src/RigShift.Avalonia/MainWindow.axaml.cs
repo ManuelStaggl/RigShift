@@ -226,12 +226,9 @@ public sealed partial class MainWindow : Window
                 AppPage.Overview => new OverviewView(),
                 AppPage.Profiles => new ProfileSheetView(),
                 AppPage.Games => new GamesView(),
-                _ => new TextBlock
-                {
-                    Text = Loc.Instance["Page_NotBuilt"],
-                    Margin = new global::Avalonia.Thickness(32),
-                    Classes = { "secondary" },
-                },
+                AppPage.FieldOfView => new FovView(),
+                AppPage.Settings => new SettingsView(),
+                _ => new HelpView(),
             };
             _pages[page] = view;
         }

@@ -199,48 +199,20 @@ public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
             Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
 
     /// <summary>
-    /// Restoring a backup replaces everything: same style as deleting (1.7.0). A backup also brings programs to
-    /// start and end, rules and hotkeys – and it may come from somebody else – so all of those are listed first.
+    /// Restoring a backup replaces everything: same style as deleting (1.7.0), with everything the backup would start,
+    /// end, switch or bind listed first (<see cref="RestoreQuestion"/>).
     /// </summary>
     public static async Task<bool> ConfirmRestoreAsync(BackupContent content)
     {
         ArgumentNullException.ThrowIfNull(content);
-        IReadOnlyList<BackupItem> items = BackupReview.Review(content);
-        string message = Loc.Format(content.Games is null ? "About_RestoreText" : "About_RestoreTextGames", content.Profiles.Count, content.Games?.Count ?? 0);
-        if (items.Count > 0)
-        {
-            message += " " + Loc.Instance[items.Any(i => i.NeedsAttention) ? "About_RestoreReviewAttention" : "About_RestoreReview"];
-        }
-
         return await DialogWindow.AskAsync(
-            Loc.Instance["About_RestoreTitle"], message,
+            Loc.Instance["About_RestoreTitle"], RestoreQuestion.Message(content),
             [
                 new DialogChoice(Loc.Instance["About_Restore"], DialogButtonKind.Danger, 1),
                 new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
             ],
             cancelResult: 0,
-            [.. items.OrderByDescending(i => i.NeedsAttention).Select(Describe)]) == 1;
-    }
-
-    /// <summary>One backup item in words; internal so the wording is covered by a test.</summary>
-    internal static DialogDetail Describe(BackupItem item)
-    {
-        ArgumentNullException.ThrowIfNull(item);
-        string what = Loc.Instance[item.Kind switch
-        {
-            BackupItemKind.StartsProgram => "Restore_Starts",
-            BackupItemKind.StopsProgram => "Restore_Stops",
-            BackupItemKind.StartsGame => "Restore_Game",
-            BackupItemKind.Rule => "Restore_Rule",
-            _ => "Restore_Hotkey",
-        }];
-        string owner = item.Owner.Length > 0 ? item.Owner : Loc.Instance["Settings_ToggleHotkey"];
-        string text = item.Keys is { } keys ? HotkeyFormat.Format(keys) : item.Detail;
-        string? warning = item.IsNetworkPath ? Loc.Instance["Restore_WarnNetwork"]
-            : item.IsNotFullPath ? Loc.Instance["Restore_WarnNotFullPath"]
-            : item.SkipsConfirmation ? Loc.Instance["Restore_WarnNoConfirm"]
-            : null;
-        return new DialogDetail($"{what} · {owner}", text, warning);
+            [.. RestoreQuestion.Lines(content).Select(l => new DialogDetail(l.Heading, l.Text, l.Warning))]) == 1;
     }
 
     /// <summary>

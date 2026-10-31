@@ -272,11 +272,40 @@ public static class NativeWindow
     /// </summary>
     /// <param name="filter">WPF style, e.g. "Programs (*.exe)|*.exe|All files (*.*)|*.*".</param>
     /// <returns>The chosen file, or <c>null</c> when the user cancelled.</returns>
-    public static unsafe string? PickFile(nint owner, string filter, string title, string? initialFolder)
+    public static string? PickFile(nint owner, string filter, string title, string? initialFolder)
+    {
+        ArgumentNullException.ThrowIfNull(title);
+        return ShowFileDialog(
+            (IFileDialog)new FileOpenDialog(),
+            owner,
+            filter,
+            title,
+            FILEOPENDIALOGOPTIONS.FOS_FILEMUSTEXIST | FILEOPENDIALOGOPTIONS.FOS_FORCEFILESYSTEM | FILEOPENDIALOGOPTIONS.FOS_NOCHANGEDIR,
+            initialFolder,
+            fileName: null);
+    }
+
+    /// <summary>The Windows "Save as" dialog, modal to <paramref name="owner"/>; it asks before replacing a file.</summary>
+    /// <param name="filter">WPF style; the first pattern's extension is added when the user types none.</param>
+    /// <param name="title">The dialog's caption; <c>null</c> keeps Windows' own "Save as".</param>
+    /// <returns>The chosen file, or <c>null</c> when the user cancelled.</returns>
+    public static string? SaveFile(nint owner, string filter, string? title, string suggestedName)
+    {
+        ArgumentNullException.ThrowIfNull(suggestedName);
+        return ShowFileDialog(
+            (IFileDialog)new FileSaveDialog(),
+            owner,
+            filter,
+            title,
+            FILEOPENDIALOGOPTIONS.FOS_OVERWRITEPROMPT | FILEOPENDIALOGOPTIONS.FOS_FORCEFILESYSTEM | FILEOPENDIALOGOPTIONS.FOS_NOCHANGEDIR,
+            initialFolder: null,
+            suggestedName);
+    }
+
+    private static unsafe string? ShowFileDialog(
+        IFileDialog dialog, nint owner, string filter, string? title, FILEOPENDIALOGOPTIONS options, string? initialFolder, string? fileName)
     {
         ArgumentNullException.ThrowIfNull(filter);
-        ArgumentNullException.ThrowIfNull(title);
-        var dialog = (IFileOpenDialog)new FileOpenDialog();
         string[] parts = filter.Split('|');
         var specs = new COMDLG_FILTERSPEC[parts.Length / 2];
         var pins = new List<GCHandle>();
@@ -292,13 +321,31 @@ public static class NativeWindow
             }
 
             fixed (COMDLG_FILTERSPEC* specsPtr = specs)
-            fixed (char* titlePtr = title)
             {
                 dialog.SetFileTypes((uint)specs.Length, specsPtr);
-                dialog.SetTitle(titlePtr);
             }
 
-            dialog.SetOptions(FILEOPENDIALOGOPTIONS.FOS_FILEMUSTEXIST | FILEOPENDIALOGOPTIONS.FOS_FORCEFILESYSTEM | FILEOPENDIALOGOPTIONS.FOS_NOCHANGEDIR);
+            if (title is not null)
+            {
+                fixed (char* titlePtr = title)
+                {
+                    dialog.SetTitle(titlePtr);
+                }
+            }
+
+            if (fileName is not null)
+            {
+                // "*.zip" → "zip": without a default extension a name typed without one is saved as is.
+                string extension = specs.Length > 0 ? Path.GetExtension(parts[1]).TrimStart('.') : string.Empty;
+                fixed (char* namePtr = fileName)
+                fixed (char* extensionPtr = extension)
+                {
+                    dialog.SetFileName(namePtr);
+                    dialog.SetDefaultExtension(extensionPtr);
+                }
+            }
+
+            dialog.SetOptions(options);
             if (initialFolder is not null && Directory.Exists(initialFolder))
             {
                 Guid shellItem = typeof(IShellItem).GUID;
