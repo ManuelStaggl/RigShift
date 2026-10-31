@@ -31,6 +31,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     private readonly IDisplayConfigurator _display;
     private readonly IDesktopIcons _desktopIcons;
     private readonly SettingsService _settings;
+    private readonly IAudioController? _audio;
+    private readonly ISurroundController? _surround;
     private readonly ILogger _log;
 
     public ProfileEditorViewModel(Profile profile, bool isNew, ProfileEditorContext context, ProfileEditorServices services)
@@ -44,6 +46,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         _catalog = services.Catalog;
         _display = services.Display;
         _settings = services.Settings;
+        _audio = services.Audio;
+        _surround = services.Surround;
         IsNew = isNew;
         ConfirmationEnabled = context.ConfirmationEnabled;
         Hotkey = profile.Hotkey;
@@ -335,6 +339,26 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     [ObservableProperty]
     public partial string? ArrangementNote { get; private set; }
 
+    /// <summary>After "use current layout": the default audio devices differ from the profile's, offered to take too.</summary>
+    [ObservableProperty]
+    public partial bool OffersCurrentAudio { get; private set; }
+
+    private (AudioEndpoint? Playback, AudioEndpoint? Recording) _currentAudio;
+
+    [RelayCommand]
+    private void TakeCurrentAudio()
+    {
+        foreach ((AudioSlot slot, AudioEndpoint? endpoint) in (ReadOnlySpan<(AudioSlot, AudioEndpoint?)>)[(AudioSlots[0], _currentAudio.Playback), (AudioSlots[1], _currentAudio.Recording)])
+        {
+            if (endpoint is not null)
+            {
+                slot.TrySelect(endpoint);
+            }
+        }
+
+        OffersCurrentAudio = false;
+    }
+
     /// <summary>Recording a hotkey RigShift holds would switch right away, so they rest while the field has the focus.</summary>
     public void BeginHotkeyRecording() => _hotkeyRecorder.Begin();
 
@@ -420,7 +444,58 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         {
             _log.Warning(ex, "Current arrangement could not be read");
             ErrorMessage = UserMessages.DescribeSwitchError(ex.NativeErrorCode);
+            return;
         }
+
+        await TakeRunningSurroundAsync();
+        await OfferCurrentAudioAsync();
+    }
+
+    /// <summary>A grid built in the NVIDIA control panel meanwhile is part of the layout as it is now.</summary>
+    private async Task TakeRunningSurroundAsync()
+    {
+        if (_surround is null || !Surround.IsVisible)
+        {
+            return;
+        }
+
+        try
+        {
+            SurroundState state = await _surround.QueryAsync(CancellationToken.None);
+            if (state.Grids.Count > 0)
+            {
+                Surround.TakeRunning(state.Grids[0]);
+            }
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            _log.Warning(ex, "Surround could not be read for the current layout");
+        }
+    }
+
+    /// <summary>Audio is asked, not taken: the editor may hold devices chosen on purpose.</summary>
+    private async Task OfferCurrentAudioAsync()
+    {
+        OffersCurrentAudio = false;
+        if (_audio is null)
+        {
+            return;
+        }
+
+        try
+        {
+            AudioEndpoint? playback = (await _audio.ListAsync(AudioDirection.Render, CancellationToken.None)).FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
+            AudioEndpoint? recording = (await _audio.ListAsync(AudioDirection.Capture, CancellationToken.None)).FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
+            _currentAudio = (playback, recording);
+            OffersCurrentAudio = Differs(playback, AudioSlots[0].Endpoint) || Differs(recording, AudioSlots[1].Endpoint);
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            _log.Warning(ex, "Default audio devices could not be read for the current layout");
+        }
+
+        static bool Differs(AudioEndpoint? current, AudioEndpoint? chosen) =>
+            current is not null && !string.Equals(current.EndpointId, chosen?.EndpointId, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>The planner's view of this profile against the live displays: missing ones in the picture, warnings above it.</summary>
@@ -609,6 +684,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         OnPropertyChanged(nameof(DesktopIconsText));
         ErrorMessage = null;
         ArrangementNote = null;
+        OffersCurrentAudio = false;
 
         _loading = true;
         try

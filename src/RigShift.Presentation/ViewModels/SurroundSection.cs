@@ -20,7 +20,7 @@ public sealed partial class SurroundSection : ObservableObject
     private const string On = "on";
 
     private readonly SurroundState _state;
-    private readonly SurroundGrid? _grid;
+    private SurroundGrid? _grid;
     private readonly string? _usedBy;
     private readonly bool _offByDefault;
     private bool _filling;
@@ -73,6 +73,20 @@ public sealed partial class SurroundSection : ObservableObject
         On when _grid is { } grid => new SurroundSetting { Enabled = true, Grid = grid },
         _ => null,
     };
+
+    /// <summary>"Use current layout": the grid that runs now becomes the profile's, switched on.</summary>
+    public void TakeRunning(SurroundGrid grid)
+    {
+        ArgumentNullException.ThrowIfNull(grid);
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        _grid = grid;
+        FillChoices(On);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>The texts in the current language; the answer stays.</summary>
     public void Relabel()
