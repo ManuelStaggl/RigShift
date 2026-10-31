@@ -172,7 +172,8 @@ public sealed class GameSessionRunner
             // A store start returns at once and the game shows up ten to forty seconds later. Waiting for its end
             // before it was ever there would end the session – and switch the displays back – while it still loads.
             // A session that hangs on the interface waits for that instead: iRacing's sim only starts with a race.
-            string? expected = game.Launch.KnownProcessName();
+            // A guessed name is not waited for: learning finds the game either way and confirms or replaces the guess.
+            string? expected = game.Launch.ProcessNameGuessed ? null : game.Launch.KnownProcessName();
             bool known = session.Process is not null
                 || (expected is not null && (EndsWithLauncher(game) || await AppearsAsync(expected, cancellationToken)));
             if (!known && expected is not null)

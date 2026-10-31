@@ -75,6 +75,8 @@ public sealed class GameEditorFactory(
                 Name = ProfileEditing.UniqueName(game.Name, names),
                 Launch = game.Launch,
             });
+            GameLaunch launch = entry.Launch;
+            entry = entry with { Launch = await Task.Run(() => Windows.Games.GameLibrary.WithGuessedProcess(launch, _log)) };
 
             await _catalog.SaveAsync(entry, CancellationToken.None);
             names.Add(entry.Name);

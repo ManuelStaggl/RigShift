@@ -113,14 +113,14 @@ public sealed partial class GameCatalog : ObservableObject
     /// </summary>
     public async Task RememberProcessNameAsync(Guid gameId, string processName, CancellationToken cancellationToken)
     {
-        if (Find(gameId) is not { } game || game.Launch.ProcessName == processName)
+        if (Find(gameId) is not { } game || (game.Launch.ProcessName == processName && !game.Launch.ProcessNameGuessed))
         {
             return;
         }
 
         try
         {
-            await _store.SaveAsync(game with { Launch = game.Launch with { ProcessName = processName } }, cancellationToken);
+            await _store.SaveAsync(game with { Launch = game.Launch with { ProcessName = processName, ProcessNameGuessed = false } }, cancellationToken);
             await ReloadAsync(cancellationToken);
             _log.Information("Game {Game}: process name {Process} remembered", game.Name, processName);
         }

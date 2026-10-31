@@ -118,6 +118,12 @@ public sealed record GameLaunch
     public string? ProcessName { get; init; }
 
     /// <summary>
+    /// <see cref="ProcessName"/> was guessed from the install folder when the game was added, not learned or typed. A
+    /// session through RigShift learns the name anyway and replaces the guess.
+    /// </summary>
+    public bool ProcessNameGuessed { get; init; }
+
+    /// <summary>
     /// Whether <see cref="Target"/> has the form its kind calls for: digits for Steam, the characters of an Epic
     /// <c>AppName</c> for Epic. The value goes into a URI, and <c>games.json</c> can come from somebody else.
     /// </summary>
