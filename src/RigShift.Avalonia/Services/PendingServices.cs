@@ -3,6 +3,7 @@ using RigShift.App.Services;
 using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
+using RigShift.Core.Settings;
 using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using RigShift.Windows.Ui;
@@ -97,6 +98,48 @@ internal sealed class PageDialogs(
             RestoreQuestion.Lines(content),
             new AskChoice<bool>(Loc.Instance["Common_Cancel"], false),
             new AskChoice<bool>(Loc.Instance["About_Restore"], true));
+
+    /// <summary>
+    /// RigShift ended between changing the screens and the confirmation, the one case the in-process rollback cannot
+    /// cover: restoring the layout from before is the default.
+    /// </summary>
+    public static Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName) =>
+        AskDialog.AskAsync(
+            Loc.Instance["Interrupted_Title"],
+            Loc.Format("Interrupted_Text", targetProfileName),
+            new AskChoice<bool>(Loc.Instance["Interrupted_Keep"], false),
+            new AskChoice<bool>(Loc.Instance["Interrupted_Restore"], true, IsDefault: true));
+
+    /// <summary>
+    /// Asked before quitting while a game session runs: without RigShift nothing switches back or closes the tools when
+    /// the game ends. Like deleting, no default on the action.
+    /// </summary>
+    public static Task<bool> ConfirmQuitDuringGameAsync(string games) =>
+        AskDialog.AskAsync(
+            Loc.Instance["QuitGame_Title"],
+            Loc.Format("QuitGame_Text", games),
+            new AskChoice<bool>(Loc.Instance["QuitGame_Stay"], false),
+            new AskChoice<bool>(Loc.Instance["QuitGame_Quit"], true));
+
+    /// <summary>
+    /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
+    /// (rules, hotkeys, the update choice) changes how the machine behaves.
+    /// </summary>
+    /// <returns><c>true</c> when the user wants to see the folder with the copy.</returns>
+    public static Task<bool> ShowSettingsProblemAsync(SettingsLoadReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        string? copy = report.BackupFile is null ? null : Path.GetFileName(report.BackupFile);
+        bool newer = report.Problem == SettingsLoadProblem.FromNewerVersion;
+        string text = newer ? Loc.Format("SettingsProblem_NewerText", copy ?? "–")
+            : copy is null ? Loc.Instance["SettingsProblem_TextNoCopy"]
+            : Loc.Format("SettingsProblem_TextCopy", copy);
+        return AskDialog.AskAsync(
+            Loc.Instance[newer ? "SettingsProblem_NewerTitle" : "SettingsProblem_Title"],
+            text,
+            new AskChoice<bool>(Loc.Instance["Common_Close"], false),
+            new AskChoice<bool>(Loc.Instance["SettingsProblem_OpenFolder"], true));
+    }
 
     /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
     public static Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>

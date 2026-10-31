@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- View models, app services and strings without a UI framework: the WPF app and the WinUI app both build on it.
+  <!-- View models, app services and strings without a UI framework: the Avalonia app builds on it.
        The namespaces stay RigShift.App.*, so moving them here changed no type name. -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <!-- Power and session events; the WPF app had them from the Windows Desktop framework. -->
+    <!-- Power and session events, which no Windows Desktop framework brings along. -->
     <PackageReference Include="Microsoft.Win32.SystemEvents" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Sinks.File" />
@@ -26,8 +26,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="RigShift" />
-    <InternalsVisibleTo Include="RigShift.Avalonia" />
-    <InternalsVisibleTo Include="RigShift.App.Tests" />
     <InternalsVisibleTo Include="RigShift.Presentation.Tests" />
   </ItemGroup>
 

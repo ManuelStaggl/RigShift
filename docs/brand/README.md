@@ -6,7 +6,7 @@ icons are not.** They are © 2026 Manuel Staggl, all rights reserved.
 This covers:
 
 - `docs/brand/` – logo files (`*.svg`, `*.png`)
-- `src/RigShift.App/Assets/Brand/` – app and tray icons (`*.ico`)
+- `src/RigShift.Avalonia/Assets/Brand/` – app and tray icons (`*.ico`)
 
 ## What you may do
 
@@ -21,8 +21,3 @@ This covers:
 - Don't modify the logo or use it for other products, merchandise or anything implying endorsement.
 
 Questions: open an issue.
-
-## Third-party symbols
-
-The profile symbols (Desk, Rig, VR, TV, Stream) are [Fluent System Icons](https://github.com/microsoft/fluentui-system-icons)
-by Microsoft, delivered through the WPF-UI symbol font, and remain under their MIT license.

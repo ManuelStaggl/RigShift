@@ -11,7 +11,7 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// What the profile pages build without asking anything: a new profile from the active displays, and the editor for a
-/// profile with its audio and USB lists, Surround state and rules. Shared by the WPF and the WinUI dialogs.
+/// profile with its audio and USB lists, Surround state and rules. Used by the dialogs of the app.
 /// </summary>
 public sealed class ProfileEditorFactory(
     ProfileEditorServices editorServices,

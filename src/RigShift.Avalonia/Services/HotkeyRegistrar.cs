@@ -11,7 +11,13 @@ internal sealed class HotkeyRegistrar : IHotkeyRegistrar
 
     public HotkeyRegistrar()
     {
-        _window.MessageReceived += (_, message) => Pressed?.Invoke(this, (int)message.WParam);
+        _window.MessageReceived += (_, message) =>
+        {
+            if (message.Message == NativeWindow.WmHotkey)
+            {
+                Pressed?.Invoke(this, (int)message.WParam);
+            }
+        };
     }
 
     public event EventHandler<int>? Pressed;

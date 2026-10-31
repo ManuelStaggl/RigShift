@@ -8,8 +8,8 @@ namespace RigShift.Avalonia.Views;
 
 /// <summary>
 /// Windows' accessibility setting "Text size" (100–225 %) for the dialogs and the tray popup, which Avalonia does not
-/// follow on its own: the content below the title bar is scaled and the window's sizes follow, like the WPF app's
-/// TextScale. Read when a window is created; a change shows in the next window opened.
+/// follow on its own: the content below the title bar is scaled and the window's sizes follow.
+/// Read when a window is created; a change shows in the next window opened.
 /// </summary>
 internal static class TextScale
 {

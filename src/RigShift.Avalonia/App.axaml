@@ -7,12 +7,12 @@
   <Application.Styles>
     <semi:SemiTheme Locale="en-US" />
     <semi:UrsaSemiTheme Locale="en-US" />
-    <StyleInclude Source="avares://RigShift.Avalonia/Themes/Styles.axaml" />
+    <StyleInclude Source="avares://RigShift/Themes/Styles.axaml" />
   </Application.Styles>
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceInclude Source="avares://RigShift.Avalonia/Themes/Tokens.axaml" />
+        <ResourceInclude Source="avares://RigShift/Themes/Tokens.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

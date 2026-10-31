@@ -8,7 +8,7 @@ using RigShift.Core.Fov;
 namespace RigShift.Avalonia.Views;
 
 /// <summary>
-/// The rig seen from above, ported from the WPF page: the head, the screens where they really stand as bars (joints on
+/// The rig seen from above: the head, the screens where they really stand as bars (joints on
 /// triples, a bow on curved panels), the cone they cover as light from the eye, the angle as one arc, the distance and
 /// width as dimensions on a 10 cm floor grid, and a small side view for the vertical angle. A change glides into the
 /// next one. The geometry comes from <see cref="RigGeometry"/>, so picture and numbers can never drift apart.
