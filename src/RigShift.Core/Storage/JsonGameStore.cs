@@ -13,7 +13,8 @@ namespace RigShift.Core.Storage;
 /// </summary>
 public sealed class JsonGameStore : IGameStore
 {
-    public const int CurrentSchemaVersion = 1;
+    /// <summary>2: the launcher name alone says the session ends with it (<see cref="GameDocument.CurrentGames"/>).</summary>
+    public const int CurrentSchemaVersion = 2;
 
     public const string FileName = "games.json";
 
@@ -70,7 +71,7 @@ public sealed class JsonGameStore : IGameStore
                 return new GameLoadResult([], problem);
             }
 
-            IReadOnlyList<GameEntry> games = [.. (document.Games ?? [])
+            IReadOnlyList<GameEntry> games = [.. document.CurrentGames()
                 .OrderBy(g => g.Name, StringComparer.CurrentCultureIgnoreCase)];
             _log.Information("Loaded {Count} games from {File}", games.Count, _file);
             return new GameLoadResult(games, null);
@@ -150,7 +151,18 @@ public sealed class JsonGameStore : IGameStore
     }
 }
 
-internal sealed record GameDocument(int SchemaVersion, IReadOnlyList<GameEntry>? Games);
+internal sealed record GameDocument(int SchemaVersion, IReadOnlyList<GameEntry>? Games)
+{
+    /// <summary>
+    /// The games as this version reads them. Schema 1 kept the session end as a choice next to the launcher name; a
+    /// name without "ends with the launcher" did nothing, so it is dropped rather than suddenly taking effect.
+    /// </summary>
+    public IReadOnlyList<GameEntry> CurrentGames() => [.. (Games ?? []).Select(g => g with
+    {
+        LauncherProcessName = SchemaVersion >= 2 || g.LegacyEndsWith == SessionEnd.LauncherProcess ? g.LauncherProcessName : null,
+        LegacyEndsWith = null,
+    })];
+}
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

@@ -527,7 +527,7 @@ public sealed class GameSessionRunner
     }
 
     private static bool EndsWithLauncher(GameEntry game) =>
-        game.EndsWith == SessionEnd.LauncherProcess && game.LauncherProcessName is { Length: > 0 };
+        !string.IsNullOrWhiteSpace(game.LauncherProcessName);
 
     /// <summary>Waits until the process is there, as long as learning would; false when it never came.</summary>
     private async Task<bool> AppearsAsync(string processName, CancellationToken cancellationToken)

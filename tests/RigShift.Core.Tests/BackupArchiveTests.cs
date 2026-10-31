@@ -171,6 +171,21 @@ public sealed class BackupArchiveTests : IDisposable
         rule.SkipsConfirmation.ShouldBe(skips);
     }
 
+    /// <summary>A 4.x backup is restored as the current schema, so its session ends have to be migrated on the way in.</summary>
+    [Fact]
+    public void Inspect_SchemaOneGames_KeepTheirSessionEnd()
+    {
+        using var archive = Zip(("games.json", """
+            {"schemaVersion":1,"games":[
+              {"id":"6f1b6f0e-0000-0000-0000-000000000001","name":"A","launch":{"kind":"Steam","target":"1"},"endsWith":"LauncherProcess","launcherProcessName":"Menu"},
+              {"id":"6f1b6f0e-0000-0000-0000-000000000002","name":"B","launch":{"kind":"Steam","target":"2"},"endsWith":"GameProcess","launcherProcessName":"Menu"}]}
+            """));
+
+        IReadOnlyList<GameEntry> games = BackupArchive.Inspect(archive).Games!;
+
+        games.Select(g => g.LauncherProcessName).ShouldBe(["Menu", null]);
+    }
+
     /// <summary>What a foreign backup would run has to be in front of the user before it is restored.</summary>
     [Fact]
     public void Review_ListsProgramsRulesAndHotkeys_AndMarksWhatNeedsASecondLook()

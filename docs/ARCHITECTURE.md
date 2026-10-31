@@ -34,8 +34,9 @@ implements them; Presentation and the app compose them.
 - **`GameSessionRunner`** – one session: apply the profile (the same `SwitchOrchestrator`), start the programs before
   the game, put the helper windows back, start the game, learn its process name, wait for it to end, stop the
   programs, run the exit action. RigShift never ends the game itself – unsaved progress, and anti-cheat drivers take a
-  dim view of anyone touching their process. What counts as "ended" is a choice (`SessionEnd`): iRacing's interface
-  outlives the sim, so hanging the session on the sim would end it between two races.
+  dim view of anyone touching their process. With a menu or launcher process set
+  (`LauncherProcessName`), the session ends with that instead: iRacing's interface outlives the sim, so hanging the
+  session on the sim would end it between two races.
 - **`AutomationRule`** – USB device trigger: switch to a profile once all of the rule's devices are connected, and
   after a delay per rule switch to a profile or back once one of them is gone. `AutomationTrigger` decides from polled
   device ids (pure logic); rules of 1.3 with a single `usbDeviceId` are migrated on load.

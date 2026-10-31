@@ -24,7 +24,6 @@ public sealed class SimTemplateTests
 
         filled.Launch.ProcessName.ShouldBe("iRacingSim64DX11");
         filled.LauncherProcessName.ShouldBe("iRacingUI");
-        filled.EndsWith.ShouldBe(SessionEnd.LauncherProcess);
     }
 
     /// <summary>A sim that is just one program keeps the plain end – there is no interface to outlive it.</summary>
@@ -36,7 +35,6 @@ public sealed class SimTemplateTests
 
         filled.Launch.ProcessName.ShouldBe("AMS2AVX");
         filled.LauncherProcessName.ShouldBeNull();
-        filled.EndsWith.ShouldBe(SessionEnd.GameProcess);
     }
 
     /// <summary>A template that argues with the user is worse than no template.</summary>

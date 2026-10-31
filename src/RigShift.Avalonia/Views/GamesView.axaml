@@ -313,19 +313,12 @@
                             </Grid>
                             <Border Classes="divider" />
                             <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
-                              <TextBlock VerticalAlignment="Center" Classes="label" Text="{v:Tr Game_EndsWith}" />
-                              <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Game_EndsWith}" ItemsSource="{Binding Editor.EndChoices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.SelectedEnd, Converter={x:Static v:Converters.KeepOnNull}}" />
+                              <StackPanel VerticalAlignment="Center">
+                                <TextBlock Classes="label" Text="{v:Tr Game_LauncherProcess}" />
+                                <TextBlock Classes="caption" Text="{v:Tr Game_LauncherProcessHint}" TextWrapping="Wrap" />
+                              </StackPanel>
+                              <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_LauncherProcessHint}" AutomationProperties.Name="{v:Tr Game_LauncherProcess}" Text="{Binding Editor.LauncherProcessName, FallbackValue=''}" />
                             </Grid>
-                            <StackPanel IsVisible="{Binding Editor.NeedsLauncherProcess, FallbackValue=False}">
-                              <Border Classes="divider" />
-                              <Grid Classes="row" ColumnDefinitions="*,260" ColumnSpacing="16">
-                                <StackPanel VerticalAlignment="Center">
-                                  <TextBlock Classes="label" Text="{v:Tr Game_LauncherProcess}" />
-                                  <TextBlock Classes="caption" Text="{v:Tr Game_LauncherProcessHint}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.HelpText="{v:Tr Game_LauncherProcessHint}" AutomationProperties.Name="{v:Tr Game_LauncherProcess}" Text="{Binding Editor.LauncherProcessName, FallbackValue=''}" />
-                              </Grid>
-                            </StackPanel>
                             <Border Classes="divider" />
                             <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                               <StackPanel VerticalAlignment="Center">

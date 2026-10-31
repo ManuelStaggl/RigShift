@@ -374,11 +374,9 @@
   <data name="Game_ProcessLearned" xml:space="preserve"><value>Wird beim ersten Start gelernt</value></data>
   <data name="Game_ProcessNameHint" xml:space="preserve"><value>Ohne Endung, so wie ihn der Task-Manager zeigt.</value></data>
   <data name="Game_ProcessNameHintTip" xml:space="preserve"><value>RigShift lernt ihn beim ersten Start; hier korrigieren, wenn er den Launcher statt das Spiel erwischt hat.</value></data>
-  <data name="Game_EndsWith" xml:space="preserve"><value>Sitzung endet mit</value></data>
-  <data name="Game_EndsWithGame" xml:space="preserve"><value>Dem Spiel</value></data>
-  <data name="Game_EndsWithLauncher" xml:space="preserve"><value>Dem Launcher</value></data>
-  <data name="Game_LauncherProcess" xml:space="preserve"><value>Launcher-Prozess</value></data>
-  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Für Sims mit eigener Menü-App, etwa iRacing: sonst würde die Sitzung bei jeder Rückkehr ins Menü enden.</value></data>
+  <data name="Game_EndsWithLauncher" xml:space="preserve"><value>Endet mit {0}</value></data>
+  <data name="Game_LauncherProcess" xml:space="preserve"><value>Menü- oder Launcher-Prozess</value></data>
+  <data name="Game_LauncherProcessHint" xml:space="preserve"><value>Die Sitzung endet mit ihm. Für Sims mit eigenem Menü, etwa iRacing. Leer: Die Sitzung endet mit dem Spiel.</value></data>
   <data name="Game_ArgumentsHint" xml:space="preserve"><value>Gehen beim Start ans Spiel, etwa +XR.</value></data>
   <data name="Game_Runtime" xml:space="preserve"><value>OpenXR-Laufzeit</value></data>
   <data name="Game_RuntimeHint" xml:space="preserve"><value>Nur für dieses Spiel; die Windows-Einstellung bleibt, wie sie ist.</value></data>
