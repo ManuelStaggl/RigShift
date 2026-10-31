@@ -99,7 +99,7 @@ public sealed partial class GamePickerViewModel : ObservableObject
         }
     }
 
-    /// <summary>Icons after the list: a store game's executable may sit deep in its install folder.</summary>
+    // Icons after the list: a store game's executable may sit deep in its install folder.
     private static async Task LoadIconsAsync(IReadOnlyList<InstalledGameItem> items)
     {
         foreach (InstalledGameItem item in items)
@@ -110,7 +110,7 @@ public sealed partial class GamePickerViewModel : ObservableObject
 
     partial void OnQueryChanged(string value) => Filter();
 
-    /// <summary>With a search, the best match is selected, so Enter takes it.</summary>
+    // The best match is selected, so Enter takes it.
     private void Filter()
     {
         InstalledGameItem? selected = Selected;

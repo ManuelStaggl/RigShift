@@ -22,7 +22,7 @@ public sealed class CommandPipeServer : IDisposable
     private const int MaxConnections = 4;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
-    /// <summary>A client that connects but sends no complete request must not hold one of the few instances.</summary>
+    // A client that connects but sends nothing complete must not hold one of the few instances.
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     private readonly TimeSpan _requestTimeout;
@@ -35,7 +35,7 @@ public sealed class CommandPipeServer : IDisposable
     private readonly Func<Func<Task<PipeResponse>>, Task<PipeResponse>> _onUiThread;
     private readonly CancellationTokenSource _stop = new();
 
-    /// <summary>Guards <see cref="_instances"/> together with creating and closing instances.</summary>
+    // Guards _instances together with creating and closing instances.
     private readonly Lock _gate = new();
     private int _instances;
 
@@ -137,13 +137,8 @@ public sealed class CommandPipeServer : IDisposable
         }
     }
 
-    /// <summary>
-    /// The next instance of the pipe. While none of ours exists, the name has to be free: Windows then refuses with
-    /// "access denied" instead of quietly adding us to a pipe somebody else created – whose access list, not ours,
-    /// would decide who may send commands. Once one of ours exists, its access list keeps everybody else from adding
-    /// instances, so the following ones are safe without the flag (and could not carry it). The lock makes "one of
-    /// ours exists" true for the whole creation and not only for the moment it was looked up.
-    /// </summary>
+    // While none of ours exists the name must be free, or we could join a foreign pipe whose access list decides; the
+    // lock spans the creation.
     private NamedPipeServerStream CreateInstance()
     {
         lock (_gate)
@@ -165,14 +160,8 @@ public sealed class CommandPipeServer : IDisposable
         }
     }
 
-    /// <summary>
-    /// An access list that lets only this Windows user in - nobody else, not even an administrator.
-    /// <see cref="PipeOptions.CurrentUserOnly"/> would be the short way to say that, but it compares the token's
-    /// <em>owner</em>, and an elevated process of the same user has <c>BUILTIN\Administrators</c> there. That locked out
-    /// exactly the case this pipe exists for: a command arriving over SSH or from a scheduled task, which has no
-    /// desktop of its own and must be answered by the instance that has one. The user SID is in both tokens, so an
-    /// access list keyed on it says what was meant all along.
-    /// </summary>
+    // Keyed on the user SID: CurrentUserOnly compares the token owner, which is BUILTIN\Administrators for an elevated
+    // SSH session.
     private static PipeSecurity OnlyThisUser()
     {
         using WindowsIdentity identity = WindowsIdentity.GetCurrent();
@@ -226,10 +215,7 @@ public sealed class CommandPipeServer : IDisposable
         }
     }
 
-    /// <summary>
-    /// A second look at who is asking. The access list already keeps other users out; this catches the case where it
-    /// somehow did not. When Windows will not name the client, the access list stays the judge.
-    /// </summary>
+    // A second check behind the access list; when Windows will not name the client, the access list decides.
     private bool IsThisUser(NamedPipeServerStream server)
     {
         try
@@ -283,10 +269,8 @@ public sealed class CommandPipeServer : IDisposable
         return new PipeResponse(response.ExitCode, response.Output);
     }
 
-    /// <summary>
-    /// What the tray says when a name is not found: most often a profile or game was renamed after the shortcut or Stream
-    /// Deck key was made. A blocked or rolled back switch has told the user already.
-    /// </summary>
+    // Usually a profile or game renamed after its shortcut or Stream Deck key was made; a blocked or rolled-back switch
+    // told the user already.
     private static string? RefusalText(CliRequest request, int exitCode) => (request.Command, exitCode) switch
     {
         (CliCommand.Apply, CliExitCodes.ProfileNotFound) => Loc.Format("Tray_ProfileNotFound", request.ProfileName),

@@ -6,7 +6,6 @@ using Serilog;
 
 namespace RigShift.Avalonia.Services;
 
-/// <summary>The clipboard of the main window; without a window (only the tray) there is none to copy to.</summary>
 internal sealed class AvaloniaClipboard : ITextClipboard
 {
     public void SetText(string text)

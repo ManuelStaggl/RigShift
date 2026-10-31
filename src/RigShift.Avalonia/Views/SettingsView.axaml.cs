@@ -28,7 +28,6 @@ public sealed partial class SettingsView : UserControl
         }
     }
 
-    /// <summary>Enter saves, Esc puts the saved name back.</summary>
     private async void OnDeviceNameKeyDown(object? sender, KeyEventArgs e)
     {
         if (sender is not Control { DataContext: UsbNameCard card })

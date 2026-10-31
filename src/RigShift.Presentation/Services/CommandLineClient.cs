@@ -19,7 +19,7 @@ namespace RigShift.App.Services;
 /// </summary>
 internal static class CommandLineClient
 {
-    /// <summary>A freshly started app first loads profiles and queries the displays.</summary>
+    // A freshly started app first loads profiles and queries the displays.
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(30);
 
     private static ILogger Logger => Log.ForContext(typeof(CommandLineClient));
@@ -77,8 +77,7 @@ internal static class CommandLineClient
     }
 
     /// <summary>
-    /// A rigshift:// link that cannot be read: a Stream Deck key or a web page has no console, so the running instance
-    /// says it in the tray. Nothing is started for it.
+    /// A Stream Deck key or web page has no console, so the running instance reports an unreadable link in the tray.
     /// </summary>
     public static void ReportInvalidLink(string link) =>
         Task.Run(async () =>
@@ -89,13 +88,8 @@ internal static class CommandLineClient
             }
         }).GetAwaiter().GetResult();
 
-    /// <summary>
-    /// The pipe of a running RigShift, our own Windows session first. Looking for the pipe rather than for the
-    /// single-instance mutex matters because the mutex is session-local: a command sent over SSH, from a scheduled
-    /// task or from a service runs in a session without a desktop, where the display API refuses everything. Handing
-    /// it to the instance that does sit on the desktop is the only way such a command can be answered at all.
-    /// Only this user's instance will accept us; the pipe's access list on the server side sees to that.
-    /// </summary>
+    // The pipe, not the session-local mutex: a command from SSH or a task has no desktop and must reach the instance
+    // that has one.
     private static string? FindRunningInstance()
     {
         string own = PipeProtocol.PipeName;

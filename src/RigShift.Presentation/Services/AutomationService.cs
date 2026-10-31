@@ -17,7 +17,7 @@ public sealed class AutomationService : IDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
 
-    /// <summary>ERROR_ACCESS_DENIED: the display calls of a session without its desktop.</summary>
+    // What the display calls return in a session without its desktop.
     private const int ErrorAccessDenied = 5;
 
     /// <summary>Shortest countdown after a rule switched: the wheelbase is on, its owner not yet in the seat.</summary>
@@ -36,7 +36,7 @@ public sealed class AutomationService : IDisposable
     private readonly ITimer _timer;
     private bool _timerEnabled;
 
-    /// <summary>Origin of the monotonic time handed to the trigger: wall-clock jumps and sleep must not end a delay.</summary>
+    // Monotonic origin: wall-clock jumps and sleep must not end a delay.
     private readonly long _started;
     private bool _running;
     private bool _polling;
@@ -83,7 +83,6 @@ public sealed class AutomationService : IDisposable
 
     public bool IsPaused => _settings.Current.AutomationPaused;
 
-    /// <summary>Whether the poll timer runs; for tests.</summary>
     internal bool IsPolling => _timerEnabled;
 
     private TimeSpan Now => _time.GetElapsedTime(_started);
@@ -102,10 +101,7 @@ public sealed class AutomationService : IDisposable
         _ui.Run(UpdateTimer);
     }
 
-    /// <summary>
-    /// The timer runs only while a rule can act: without rules or paused, a tick every two seconds only woke the UI thread
-    /// for nothing. Going idle forgets what the devices did, as the idle poll did before.
-    /// </summary>
+    // Runs only while a rule can act; idle ticks every two seconds woke the UI thread for nothing.
     private void UpdateTimer()
     {
         if (!_running)
@@ -162,10 +158,7 @@ public sealed class AutomationService : IDisposable
         _session.Changed -= OnSessionChanged;
     }
 
-    /// <summary>
-    /// Back in the session: look at the devices at once. What happened while it was locked is decided now – a wheelbase
-    /// switched on then starts its rule, one switched off ends it.
-    /// </summary>
+    // What happened while locked is decided now: a wheelbase switched on starts its rule, one switched off ends it.
     private void OnSessionChanged(object? sender, EventArgs e)
     {
         if (!_session.IsInteractive)
@@ -180,10 +173,7 @@ public sealed class AutomationService : IDisposable
         });
     }
 
-    /// <summary>
-    /// After sleep the devices are re-enumerated and the timer did not tick: a device turned off before sleeping must not
-    /// switch back on the first poll, so the next poll sets a new baseline.
-    /// </summary>
+    // After sleep the next poll sets a new baseline, so a device turned off before sleeping does not switch back on.
     private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
     {
         if (e.Mode != PowerModes.Resume)

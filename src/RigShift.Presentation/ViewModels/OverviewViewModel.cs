@@ -167,7 +167,7 @@ public sealed partial class OverviewViewModel : ObservableObject
         _log.Information("Overview shows {Count} displays, {Active} active", Displays.Count, LiveTopology.Count);
     }
 
-    /// <summary>"Switch" on a profile tile; on the active one it reads "Apply again" and does the same.</summary>
+    // On the active profile it reads "Apply again" and does the same.
     [RelayCommand]
     private async Task SwitchAsync(ProfileItem? item)
     {
@@ -202,11 +202,9 @@ public sealed partial class OverviewViewModel : ObservableObject
     [RelayCommand]
     private Task SetupAssistantAsync() => _dialogs.ShowSetupAssistantAsync();
 
-    /// <summary>"Set up by hand": the profiles page with its "+ New" menu.</summary>
     [RelayCommand]
     private void SetupManually() => _shell.ShowMainWindow(AppPage.Profiles);
 
-    /// <summary>"Save the current arrangement as a profile": the profiles page with a new, unsaved profile (F3).</summary>
     [RelayCommand]
     private Task SaveCurrentAsync()
     {
@@ -214,7 +212,6 @@ public sealed partial class OverviewViewModel : ObservableObject
         return _profiles.NewFromCurrentCommand.ExecuteAsync(null);
     }
 
-    /// <summary>The active displays as the picture draws them, with the user's names.</summary>
     private void UpdateTopology()
     {
         LiveTopology = Services.TopologyDisplays.MarkMirrors(Displays

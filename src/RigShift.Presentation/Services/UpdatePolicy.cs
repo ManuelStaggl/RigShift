@@ -37,7 +37,7 @@ public sealed class RegistryUpdatePolicy : IUpdatePolicy
 
     internal static bool IsDisabled(object? machineValue, object? userValue) => AsFlag(machineValue) ?? AsFlag(userValue) ?? false;
 
-    /// <summary>Null for a missing or unreadable value, so the next source decides.</summary>
+    // Null for a missing or unreadable value, so the next source decides.
     private static bool? AsFlag(object? value) => value switch
     {
         int number => number == 1,

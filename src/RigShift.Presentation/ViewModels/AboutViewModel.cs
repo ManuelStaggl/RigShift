@@ -87,7 +87,6 @@ public sealed partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     public partial string? BackupStatus { get; set; }
 
-    /// <summary>Profiles, rules and settings as one ZIP file (1.7.0): for a new PC or after a reinstall.</summary>
     [RelayCommand]
     private async Task SaveBackupAsync()
     {
@@ -113,7 +112,7 @@ public sealed partial class AboutViewModel : ObservableObject
         }
     }
 
-    /// <summary>Replaces every profile and the settings after a confirmation; the running app picks the new files up.</summary>
+    // The running app picks the new files up.
     [RelayCommand]
     private async Task RestoreBackupAsync()
     {
@@ -281,7 +280,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<RigShift.Core.Updates.ReleaseNoteLine> ReleaseNoteLines { get; set; } = [];
 
-    /// <summary>The recent switches go into the diagnostic report; the page for reading them is the overview.</summary>
+    // The recent switches go into the diagnostic report; the overview shows them.
     private ObservableCollection<SwitchRecord> History => _coordinator.History;
 
     [ObservableProperty]
@@ -303,7 +302,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void OpenLogFolder() => ShellFolders.Open(_paths.Logs, _log);
 
-    /// <summary>Next to the log folder: the settings page holds only settings.</summary>
+    // Here next to the log folder: the settings page holds only settings.
     [RelayCommand]
     private void OpenProfileFolder() => ShellFolders.Open(_paths.Profiles, _log);
 
@@ -313,7 +312,6 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void ReportProblem() => ShellFolders.OpenUrl(IssueUrl(_updates.CurrentVersion), _log);
 
-    /// <summary>The bug report form with the version filled in.</summary>
     internal static string IssueUrl(string version) =>
         RepositoryUrl + "/issues/new?template=bug_report.yml&version=" + Uri.EscapeDataString(version);
 
@@ -326,7 +324,7 @@ public sealed partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void OpenPrivacy() => ShellFolders.OpenUrl(RepositoryUrl + "/blob/main/PRIVACY.md", _log);
 
-    /// <summary>Voluntary donations; only a link next to the others, never a prompt.</summary>
+    // Only a link next to the others, never a prompt.
     [RelayCommand]
     private void OpenKofi() => ShellFolders.OpenUrl("https://ko-fi.com/filthyjoker", _log);
 
@@ -347,7 +345,6 @@ public sealed partial class AboutViewModel : ObservableObject
         }
     }
 
-    /// <summary>Diagnostics, logs and data files as one ZIP, then the bug report form to attach it to.</summary>
     [RelayCommand]
     private async Task SaveSupportPackageAsync()
     {

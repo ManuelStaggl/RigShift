@@ -140,10 +140,8 @@ public sealed class ProcessAppLauncher : IAppLauncher
         }
     }
 
-    /// <summary>
-    /// Processes by file name; with a full path configured, those whose executable path is readable and different are
-    /// left out, so stopping "C:\SimHub\SimHubWPF.exe" does not end a same-named program elsewhere.
-    /// </summary>
+    // With a full path, processes whose readable path differs are left out, so stopping C:\SimHub\SimHubWPF.exe spares
+    // a namesake.
     private Process[] Find(string path)
     {
         string file = Expand(path);

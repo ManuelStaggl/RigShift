@@ -10,10 +10,8 @@ namespace RigShift.Windows.Games;
 /// </summary>
 public static class GameExecutable
 {
-    /// <summary>
-    /// How long the search through the install folder may take. An install folder can hold tens of thousands of files,
-    /// and this runs while the user waits for a shortcut; without an icon the shortcut is still fine.
-    /// </summary>
+    // An install folder can hold tens of thousands of files and the user waits; without an icon the shortcut is still
+    // fine.
     private static readonly TimeSpan SearchBudget = TimeSpan.FromSeconds(3);
 
     /// <summary>The game's executable, or <c>null</c> when it cannot be found.</summary>
@@ -76,7 +74,7 @@ public static class GameExecutable
         return null;
     }
 
-    /// <summary>Programs that come along with a game but are not it, by a part of their name or of a folder they sit in.</summary>
+    // Programs that come with a game but are not it, by a part of their name or of their folder.
     private static readonly string[] Helpers =
     [
         "unins", "setup", "install", "crash", "report", "redist", "vc_redist", "vcredist", "dxsetup", "dotnet", "UnityCrashHandler",

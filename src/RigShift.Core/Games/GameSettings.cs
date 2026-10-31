@@ -154,7 +154,6 @@ public static class GameSettingsJson
         }
     }
 
-    /// <summary>Every single value that sits in objects only, with its key path and where its raw text is.</summary>
     private static List<(string Key, int Start, int Length)> Values(ReadOnlySpan<byte> utf8)
     {
         var found = new List<(string, int, int)>();

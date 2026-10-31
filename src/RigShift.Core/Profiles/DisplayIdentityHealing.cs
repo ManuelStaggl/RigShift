@@ -128,7 +128,7 @@ public static class DisplayIdentityHealing
         return rekeyed;
     }
 
-    /// <summary>The identity the display reports now; what it does not report (a failed EDID read) stays as saved.</summary>
+    // What the display does not report now (a failed EDID read) stays as saved.
     private static DisplayIdentity Merge(DisplayIdentity saved, DisplayIdentity live)
     {
         bool liveEdid = live.EdidManufacturerId != 0 || live.EdidProductCodeId != 0;
@@ -141,7 +141,7 @@ public static class DisplayIdentityHealing
         };
     }
 
-    /// <summary>Paths compare like the planner compares them, without case; a different spelling is no reason to write.</summary>
+    // Without case, like the planner compares paths; a different spelling is no reason to write.
     private static bool Same(DisplayIdentity a, DisplayIdentity b) =>
         string.Equals(a.TargetDevicePath, b.TargetDevicePath, StringComparison.OrdinalIgnoreCase)
         && string.Equals(a.AdapterDevicePath, b.AdapterDevicePath, StringComparison.OrdinalIgnoreCase)

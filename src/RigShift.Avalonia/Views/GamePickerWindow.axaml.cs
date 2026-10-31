@@ -46,7 +46,6 @@ public sealed partial class GamePickerWindow : Window
         return window._done ? window.ViewModel.Checked() : [];
     }
 
-    /// <summary>The window is up at once; the list fills while the disk is read.</summary>
     private static async Task<GamePickerWindow> ShowAsync(GameEditorFactory factory, bool multiple)
     {
         var viewModel = new GamePickerViewModel(multiple);
@@ -111,7 +110,6 @@ public sealed partial class GamePickerWindow : Window
 
     private void OnCancel(object? sender, RoutedEventArgs e) => Close();
 
-    /// <summary>Arrow down leaves the search for the list, on the selected (or first) game.</summary>
     private void OnSearchKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Down || ViewModel.Games.Count == 0)
@@ -125,7 +123,6 @@ public sealed partial class GamePickerWindow : Window
         GameList.ContainerFromItem(ViewModel.Selected)?.Focus(NavigationMethod.Directional);
     }
 
-    /// <summary>Space ticks the selected row while several are being picked; Enter takes.</summary>
     private void OnListKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space && ViewModel.IsMultiple && ViewModel.Selected is { } game)
@@ -140,7 +137,6 @@ public sealed partial class GamePickerWindow : Window
         }
     }
 
-    /// <summary>A double click takes one game; while several are being picked it only ticks the row.</summary>
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (ViewModel.Selected is not { } game)
@@ -157,7 +153,6 @@ public sealed partial class GamePickerWindow : Window
         Choose();
     }
 
-    /// <summary>Everything the sources do not know: iRacing's own installer, a sim from a folder, a launcher.</summary>
     private void OnBrowse(object? sender, RoutedEventArgs e)
     {
         nint owner = TryGetPlatformHandle()?.Handle ?? 0;

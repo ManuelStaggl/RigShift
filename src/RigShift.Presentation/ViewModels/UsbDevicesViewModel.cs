@@ -94,7 +94,6 @@ public sealed partial class UsbDevicesViewModel : ObservableObject
         HasNoNamedDevices = NamedDevices.Count == 0;
     });
 
-    /// <summary>Saves a custom name; it shows up in rules, profiles and messages at once.</summary>
     internal async Task RenameAsync(UsbNameCard card, string? name)
     {
         ArgumentNullException.ThrowIfNull(card);
@@ -120,7 +119,7 @@ public sealed partial class UsbDevicesViewModel : ObservableObject
         }
     }
 
-    /// <summary>A failed save shows an error and puts the switch back to the state on disk.</summary>
+    // A failed save shows an error and puts the switch back to the state on disk.
     private async Task SetPausedAsync(bool paused)
     {
         if (await _automation.SetPausedAsync(paused))

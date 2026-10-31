@@ -8,7 +8,7 @@ using RigShift.Core.Profiles;
 
 namespace RigShift.Avalonia.Views;
 
-/// <summary>A large number and name, centred on one display for a few seconds, like the WinUI IdentifyWindow.</summary>
+/// <summary>A large number and name, centred on one display for a few seconds.</summary>
 internal sealed class IdentifyWindow : Window
 {
     private static readonly TimeSpan ShowFor = TimeSpan.FromSeconds(3);
@@ -48,7 +48,6 @@ internal sealed class IdentifyWindow : Window
     private static IBrush? Brush(string key) =>
         Application.Current!.TryGetResource(key, Application.Current.ActualThemeVariant, out object? value) ? value as IBrush : null;
 
-    /// <summary>One window per active display; each closes on its own.</summary>
     public static void ShowAll(IEnumerable<(int Number, string Name, DisplayAssignment Mode)> displays)
     {
         foreach ((int number, string name, DisplayAssignment mode) in displays)

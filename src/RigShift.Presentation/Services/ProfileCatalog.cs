@@ -277,7 +277,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 
-    /// <summary>How many USB rules belong to the profile and would go with it (F3, dialog text).</summary>
+    /// <summary>How many USB rules belong to the profile and would go with it.</summary>
     public int RuleCount(Guid profileId) => _settings.Current.AutomationRules?.Count(r => r.ProfileId == profileId) ?? 0;
 
     /// <summary>
@@ -397,10 +397,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         await RefreshActiveAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Moves the global "confirm after switching = off" from before 5.0 into the profiles, then sets the countdown back to
-    /// its default. Profiles are saved first: if that fails, the setting stays 0 and the next load tries again.
-    /// </summary>
+    // Profiles are saved first: if that fails, the setting stays 0 and the next load tries again.
     private async Task MigrateConfirmationAsync(CancellationToken cancellationToken)
     {
         if (_settings.Current.ConfirmTimeoutSeconds > 0)
@@ -465,7 +462,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 
-    /// <summary>Before the property change goes out, so its listeners see the items' flags right.</summary>
+    // Before the property change goes out, so its listeners see the items' flags right.
     partial void OnActiveProfileChanged(Profile? value) => UpdateFlags();
 
     private static bool SameNames(IReadOnlyDictionary<string, string>? a, IReadOnlyDictionary<string, string>? b) =>
@@ -491,7 +488,6 @@ public sealed partial class ProfileCatalog : ObservableObject
         ProfilesChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Each profile against the displays as read last, so the overview and the tray say what the list says.</summary>
     private void UpdateReadiness()
     {
         if (LastSnapshot is not { } snapshot)

@@ -54,7 +54,6 @@ public sealed partial class ProfileSheetView : UserControl
         }
     }
 
-    /// <summary>A new editor behind the sheet: its icon menu and summaries follow it.</summary>
     private void Attach(ProfileEditorViewModel? editor)
     {
         if (_editor is not null)
@@ -96,7 +95,7 @@ public sealed partial class ProfileSheetView : UserControl
         }
     }
 
-    /// <summary>Rate and HDR of the chosen display, set again once its lists are in (the WinUI page does the same).</summary>
+    // Rate and HDR are set again once the display's lists are in.
     private void ShowDisplayChoices() => Dispatcher.UIThread.Post(() =>
     {
         if (_editor?.SelectedDisplay is { } display)
@@ -106,7 +105,6 @@ public sealed partial class ProfileSheetView : UserControl
         }
     });
 
-    /// <summary>What each closed group holds, in one line: the sheet reads like the profile without opening anything.</summary>
     private void ShowSummaries()
     {
         if (_editor is not { } editor)
@@ -136,7 +134,6 @@ public sealed partial class ProfileSheetView : UserControl
         return text.Length == 0 ? null : text;
     }
 
-    /// <summary>F2 edits the name.</summary>
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.F2 && ViewModel.HasSelection)
@@ -158,7 +155,6 @@ public sealed partial class ProfileSheetView : UserControl
 
     private void OnRemoveRule(object? sender, RoutedEventArgs e) => _editor?.Rules.RemoveRuleCommand.Execute(TagOf<RuleCard>(sender));
 
-    /// <summary>"+ Device": the devices not yet in this rule, as a menu under the button.</summary>
     private void OnAddDevice(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control button || TagOf<RuleCard>(sender) is not { } card)
@@ -190,7 +186,7 @@ public sealed partial class ProfileSheetView : UserControl
     private static T? TagOf<T>(object? sender)
         where T : class => (sender as Control)?.Tag as T;
 
-    /// <summary>RIGSHIFT_PREVIEW_SELECT=&lt;profile&gt;: screenshots of one profile without clicking.</summary>
+    // RIGSHIFT_PREVIEW_SELECT=<profile> (Debug screenshots).
     [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewSelect()
     {
@@ -201,7 +197,7 @@ public sealed partial class ProfileSheetView : UserControl
         }
     }
 
-    /// <summary>RIGSHIFT_PREVIEW_EXPAND=Audio,Apps,Triggers,Behavior opens those groups, once.</summary>
+    // RIGSHIFT_PREVIEW_EXPAND=Audio,Apps,Triggers,Behavior (Debug screenshots).
     [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewExpand(ProfileEditorViewModel editor)
     {

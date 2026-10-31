@@ -76,7 +76,7 @@
                   Focusable="False"
                   IsChecked="{Binding IsChecked}"
                   IsVisible="{Binding $parent[Window].((vm:GamePickerViewModel)DataContext).IsMultiple}" />
-                <!-- The game's own icon: it says more about the game than any symbol we could pick for it. -->
+                <!-- The game's own icon. -->
                 <Border Grid.Column="1" Classes="symbol small">
                   <Panel>
                     <Path Classes="icon" Data="{x:Static v:Icons.Games16}" IsVisible="{Binding !HasIcon}" />

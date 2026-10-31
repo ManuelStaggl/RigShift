@@ -15,14 +15,14 @@ public sealed class HotkeyService : IDisposable
 {
     private const int ProbeId = 0xBFFF;
 
-    /// <summary>Registration id of <see cref="AllDisplaysOnHotkey"/>; <see cref="Sync"/> counts up from 1.</summary>
+    // Sync counts up from 1.
     private const int AllDisplaysOnId = 0xBFFE;
     private const int ErrorHotkeyAlreadyRegistered = 1409;
 
-    /// <summary>Key of the toggle hotkey in <see cref="_wanted"/>; no profile has this id.</summary>
+    // No profile has this id.
     private static readonly HotkeyOwner ToggleKey = new(Guid.Empty, IsGame: false);
 
-    /// <summary>Not a profile's id: the quick switcher needs an owner of its own next to the toggle hotkey.</summary>
+    // The quick switcher needs an owner of its own next to the toggle hotkey.
     private static readonly HotkeyOwner QuickSwitchKey = new(new Guid("5f0c9a4e-1b7d-4a3e-9c2f-6d8e1a2b3c4d"), IsGame: false);
 
     private readonly ProfileCatalog _catalog;
@@ -34,11 +34,10 @@ public sealed class HotkeyService : IDisposable
     private readonly IHotkeyRegistrar _registrar;
     private readonly IOpenConfirmation? _confirmation;
 
-    /// <summary>Registration id → what it belongs to.</summary>
     private readonly Dictionary<int, HotkeyOwner> _registered = [];
     private Dictionary<HotkeyOwner, Hotkey> _wanted = [];
 
-    /// <summary>Failures the user has been told about; the same one is not announced again on every sync.</summary>
+    // Failures already announced, so a sync does not announce the same one again.
     private HashSet<(HotkeyOwner Owner, Hotkey Hotkey)> _reported = [];
     private bool _suspended;
     private bool _started;
@@ -250,7 +249,7 @@ public sealed class HotkeyService : IDisposable
         _wanted = [];
     }
 
-    /// <summary>Takes the emergency hotkey; a failure is announced once, not after every recorded hotkey.</summary>
+    // A failure is announced once, not after every recorded hotkey.
     private void RegisterAllDisplaysOn()
     {
         if (_allDisplaysOnHeld)
@@ -337,10 +336,7 @@ public sealed class HotkeyService : IDisposable
         _ = _coordinator.SwitchAsync(profile);
     }
 
-    /// <summary>
-    /// A game hotkey runs the whole session. Pressing it again while it runs does nothing – unlike a profile hotkey,
-    /// where the second press confirms the countdown; here the countdown belongs to the session's own switch.
-    /// </summary>
+    // Pressing it again while the session runs does nothing: the countdown belongs to the session's own switch.
     private void StartGame(Guid gameId)
     {
         if (_games.Find(gameId) is not { } game)
@@ -355,7 +351,6 @@ public sealed class HotkeyService : IDisposable
 }
 
 /// <summary>
-/// What a registration belongs to. A game and a profile could in principle carry the same id, and their hotkeys do
-/// entirely different things, so the flag is part of the key rather than a lookup in two catalogs.
+/// What a registration belongs to; a game and a profile could share an id, so the flag is part of the key.
 /// </summary>
 internal readonly record struct HotkeyOwner(Guid Id, bool IsGame);

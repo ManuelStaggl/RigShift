@@ -36,7 +36,7 @@ public static class PipeProtocol
         return PipeNameForSession(current.SessionId);
     }
 
-    /// <summary>Guards against a garbage length from a foreign client; real messages are a few hundred bytes.</summary>
+    // Guards against a garbage length from a foreign client; real messages are a few hundred bytes.
     private const int MaxMessageBytes = 1024 * 1024;
 
     public static Task WriteRequestAsync(Stream stream, PipeRequest request, CancellationToken cancellationToken) =>

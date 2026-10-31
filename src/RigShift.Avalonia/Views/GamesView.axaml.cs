@@ -21,7 +21,6 @@ namespace RigShift.Avalonia.Views;
 /// </summary>
 public sealed partial class GamesView : UserControl
 {
-    /// <summary>The model's "Profile" tab: a new game opens on its first decision.</summary>
     private const int ProfileTab = 1;
 
     private GameEditorViewModel? _editor;
@@ -71,7 +70,6 @@ public sealed partial class GamesView : UserControl
         }
     }
 
-    /// <summary>A new editor behind the sheet: its symbol menu and summaries follow it.</summary>
     private void Attach(GameEditorViewModel? editor)
     {
         if (_editor is not null)
@@ -118,7 +116,6 @@ public sealed partial class GamesView : UserControl
 
     private void OnAppsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) => ShowSummaries();
 
-    /// <summary>The selected game's own icon arrives after the list is up; the title follows it.</summary>
     private void FollowItem(GameItem? item)
     {
         if (_item is not null)
@@ -143,7 +140,6 @@ public sealed partial class GamesView : UserControl
         }
     }
 
-    /// <summary>A picked symbol wins; without one the game's own icon, else the generic game glyph.</summary>
     private void ShowIcon()
     {
         string? key = _editor?.SelectedIcon?.Key;
@@ -154,7 +150,6 @@ public sealed partial class GamesView : UserControl
         IconPath.Data = key is null ? Icons.Games24 : ProfileSymbols.For(key, 24);
     }
 
-    /// <summary>What each closed group holds, in one line: the sheet reads like the session without opening anything.</summary>
     private void ShowSummaries()
     {
         if (_editor is not { } editor)
@@ -184,7 +179,6 @@ public sealed partial class GamesView : UserControl
         return text.Length == 0 ? null : text;
     }
 
-    /// <summary>F2 edits the name.</summary>
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.F2 && ViewModel.HasSelection)
@@ -202,7 +196,6 @@ public sealed partial class GamesView : UserControl
         NameBox.SelectAll();
     }
 
-    /// <summary>"Not recognised" leads to the process name in the game group.</summary>
     private void OnShowGameGroup(object? sender, RoutedEventArgs e)
     {
         LaunchCard.IsExpanded = true;
@@ -226,7 +219,7 @@ public sealed partial class GamesView : UserControl
         }
     }
 
-    /// <summary>RIGSHIFT_PREVIEW_SELECT=&lt;game&gt;: screenshots of one game without clicking.</summary>
+    // RIGSHIFT_PREVIEW_SELECT=<game> (Debug screenshots).
     [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewSelect()
     {
@@ -237,7 +230,7 @@ public sealed partial class GamesView : UserControl
         }
     }
 
-    /// <summary>RIGSHIFT_PREVIEW_EXPAND=Launch,GameSettings,Tools,Windows,End,Triggers opens those groups, once.</summary>
+    // RIGSHIFT_PREVIEW_EXPAND=Launch,GameSettings,Tools,Windows,End,Triggers (Debug screenshots).
     [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewExpand()
     {

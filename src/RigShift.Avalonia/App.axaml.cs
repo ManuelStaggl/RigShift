@@ -140,7 +140,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
     }
 
-    /// <summary>Entries written before 4.2 lack <c>--autostart</c>; without it the next sign-in would not count (issue #13).</summary>
+    // Entries from before 4.2 lack --autostart, so the next sign-in would not count (issue #13).
     private static void UpgradeAutostartEntry()
     {
         try
@@ -153,10 +153,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
     }
 
-    /// <summary>
-    /// Started with Windows: switch to the sign-in profile if the user chose one (issue #13). Windows brings back the
-    /// layout the PC was shut down in, the rig included; a USB rule whose devices are connected wins.
-    /// </summary>
+    // Windows restores the layout the PC shut down in, rig included; a USB rule with connected devices wins.
     private async Task ApplySignInProfileAsync(ProfileCatalog catalog)
     {
         if (!request.StartedWithWindows)
@@ -190,17 +187,13 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
     }
 
-    /// <summary>The part of each log file's head only the running app knows.</summary>
     private static string DescribeState(ProfileCatalog catalog) =>
         catalog.LastSnapshot is { } snapshot
             ? FormattableString.Invariant($"{snapshot.Displays.Count(d => d.IsActive)} of {snapshot.Displays.Count} displays active · {catalog.Profiles.Count} profiles · active profile: {catalog.ActiveProfile?.Name ?? "none"}")
             : FormattableString.Invariant($"Displays not read yet · {catalog.Profiles.Count} profiles");
 
-    /// <summary>
-    /// A switch that was recorded but never finished means RigShift died between changing the screens and the
-    /// confirmation – the one case the in-process rollback cannot cover. Offer the way back, posted so startup finishes
-    /// before the question blocks.
-    /// </summary>
+    // An unfinished recorded switch is the one case the in-process rollback cannot cover; posted so startup finishes
+    // first.
     private static async Task OfferInterruptedRestoreAsync()
     {
         ISwitchJournal journal = Provider.GetRequiredService<ISwitchJournal>();
@@ -225,10 +218,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         });
     }
 
-    /// <summary>
-    /// Defaults in place of the user's settings are not something to find out by accident. Posted, so startup finishes
-    /// before the dialog blocks.
-    /// </summary>
+    // Posted so startup finishes before the dialog blocks.
     private void ReportSettingsProblem()
     {
         SettingsLoadReport report = Provider.GetRequiredService<SettingsService>().LastLoad;
@@ -246,7 +236,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         });
     }
 
-    /// <summary>The keep-awake request ends with the process; after a restart it follows the profile that is still active.</summary>
+    // The keep-awake request ends with the process, so a restart renews it for the active profile.
     private static void KeepAwakeForActiveProfile(ProfileCatalog catalog)
     {
         if (catalog.ActiveProfile is not { KeepAwake: true } active)
@@ -265,10 +255,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
     }
 
-    /// <summary>
-    /// Windows asks before logging off or shutting down. Blocking here would deadlock the rollback (the countdown window
-    /// needs this thread), so the session end is refused once while the switch rolls back; the app exits right after.
-    /// </summary>
+    // Blocking here would deadlock the rollback (the countdown needs this thread), so the session end is refused once.
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         if (IsExiting)
@@ -301,7 +288,6 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         _services?.Dispose();
     }
 
-    /// <summary>Set when the user chose "Restart" after a repeated error; <see cref="Program"/> starts RigShift again.</summary>
     internal static bool RestartRequested { get; private set; }
 
     private readonly UiExceptionTracker _uiExceptions = new(TimeProvider.System);
@@ -398,10 +384,8 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
 
     internal MainWindow? Window => _window;
 
-    /// <summary>Owner for dialogs: the main window while it is shown, else none.</summary>
     internal static Window? Owner => ((App)Current!)._window is { IsVisible: true } window ? window : null;
 
-    /// <summary>The owner as a Win32 handle for native dialogs; 0 without one.</summary>
     internal static nint OwnerHandle => Owner?.TryGetPlatformHandle()?.Handle ?? 0;
 
     public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, DisplayAssignment Mode)> displays) =>
@@ -443,10 +427,7 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
         }
     }
 
-    /// <summary>
-    /// The first close of the window says where RigShift went: Windows 11 puts a new tray icon behind the "^", and a
-    /// window that simply vanishes looks like a closed app. Once, remembered in the settings.
-    /// </summary>
+    // Windows 11 hides new tray icons behind the "^", so the first close says where RigShift went.
     private async void OnHiddenToTray()
     {
         SettingsService settings = Provider.GetRequiredService<SettingsService>();

@@ -109,7 +109,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     /// <summary>The profile as it is on disk: as loaded, then as last saved. The page compares it with the catalog.</summary>
     public Profile Saved { get; private set; }
 
-    /// <summary>Not saved yet: the save bar stays until the first save, and switching is not possible (F3).</summary>
+    /// <summary>Not saved yet: the save bar stays until the first save, and switching is not possible.</summary>
     [ObservableProperty]
     public partial bool IsNew { get; private set; }
 
@@ -223,7 +223,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
             layout.CapturedAt.ToLocalTime().ToString("g", Loc.Instance.Culture))
         : Loc.Instance["Editor_DesktopIconsNone"];
 
-    /// <summary>The last "save positions" did not reach the desktop; the caption says so until the symbols change.</summary>
+    // The last "save positions" did not reach the desktop; the caption says so until the symbols change.
     private bool _desktopUnreachable;
 
     partial void OnDesktopIconsChanged(DesktopIconLayout? value)
@@ -389,7 +389,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         OnDisplaysEdited();
     }
 
-    /// <summary>A display's property changed (rate, HDR, optional, name): picture and validation follow.</summary>
     internal void OnDisplaysEdited()
     {
         if (_loading)
@@ -459,7 +458,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         await OfferCurrentAudioAsync();
     }
 
-    /// <summary>A grid built in the NVIDIA control panel meanwhile is part of the layout as it is now.</summary>
+    // A grid built in the NVIDIA control panel meanwhile is part of the layout as it is now.
     private async Task TakeRunningSurroundAsync()
     {
         if (_surround is null || !Surround.IsVisible)
@@ -481,7 +480,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         }
     }
 
-    /// <summary>Audio is asked, not taken: the editor may hold devices chosen on purpose.</summary>
+    // Asked, not taken: the editor may hold devices chosen on purpose.
     private async Task OfferCurrentAudioAsync()
     {
         OffersCurrentAudio = false;
@@ -587,10 +586,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         _ = LoadRefreshRatesAsync();
     }
 
-    /// <summary>
-    /// Offers the refresh rates each display reports at its resolution. A display that is off offers the rates it reported
-    /// when it was last active; without any, a hint says why the list is short.
-    /// </summary>
+    // A display that is off offers the rates it reported when last active; without any, a hint says why.
     private async Task LoadRefreshRatesAsync()
     {
         var found = new List<(DisplayIdentity, int, int, IReadOnlyList<RefreshRate>)>();
@@ -659,7 +655,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         }
     }
 
-    /// <summary>Validation and the dirty flag after every change; cheap enough to run on each keystroke.</summary>
+    // Cheap enough to run on each keystroke.
     private void Recalculate()
     {
         if (_loading)
@@ -681,10 +677,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     private void UpdateTopology() => TopologyDisplays = Services.TopologyDisplays.From(Displays.Select(d => d.Assignment), _missingDisplays);
 
-    /// <summary>
-    /// Rebuilds the texts made in code and keeps every selection by key. One-off messages (errors, "took N displays")
-    /// are cleared rather than translated; they come back with the next action.
-    /// </summary>
+    // Keeps every selection by key; one-off messages are cleared rather than translated.
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HotkeyHint));

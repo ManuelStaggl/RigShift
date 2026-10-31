@@ -86,7 +86,7 @@ public static class GameSettingsIni
         return !value.Contains('\r', StringComparison.Ordinal) && !value.Contains('\n', StringComparison.Ordinal);
     }
 
-    /// <summary>Where the value of each <c>Section/Key</c> is, first occurrence only.</summary>
+    // First occurrence only.
     private static Dictionary<string, (int Start, int Length)> Values(ReadOnlySpan<byte> bytes)
     {
         if (bytes.StartsWith((ReadOnlySpan<byte>)[0xFF, 0xFE]) || bytes.StartsWith((ReadOnlySpan<byte>)[0xFE, 0xFF]))

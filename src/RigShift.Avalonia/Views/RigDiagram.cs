@@ -220,10 +220,7 @@ public sealed class RigDiagram : Control
         }
     }
 
-    /// <summary>
-    /// A free corner for the side view: bottom right beside a single screen's cone, top right above a triple's. The
-    /// top view never shrinks for it – without a free corner the side view is left out (the value is on the page).
-    /// </summary>
+    // The top view never shrinks for the side view; without a free corner the side view is left out.
     private Rect? SideViewBox(Frame frame)
     {
         const double W = 128;
@@ -262,7 +259,6 @@ public sealed class RigDiagram : Control
         return null;
     }
 
-    /// <summary>The small side view in a free corner: screen height, eye height and the vertical angle.</summary>
     private void SideView(DrawingContext context, Frame frame, Rect box)
     {
         const double W = 128;
@@ -360,7 +356,6 @@ public sealed class RigDiagram : Control
         return false;
     }
 
-    /// <summary>Consistent 24 px labels; the angle is the primary result and uses accent text.</summary>
     private void Chip(DrawingContext context, string text, Point centre, bool accent)
     {
         if (string.IsNullOrEmpty(text))
@@ -392,7 +387,6 @@ public sealed class RigDiagram : Control
     private IBrush BrushOf(string key) =>
         this.TryFindResource(key, ActualThemeVariant, out object? value) && value is IBrush brush ? brush : Brushes.Gray;
 
-    /// <summary>The picture for the current moment of the glide, in device-independent pixels.</summary>
     private Frame Build()
     {
         Shape shape = Shape.Lerp(_from, _to, _phase);
@@ -449,7 +443,6 @@ public sealed class RigDiagram : Control
 
     private static string Degrees(double value) => value > 0 ? value.ToString("0.0", Loc.Instance.Culture) + "°" : string.Empty;
 
-    /// <summary>One drawn picture: the screens, the cone's outline, the eye and the labels that belong to them.</summary>
     private sealed record Frame(
         IReadOnlyList<IReadOnlyList<Point>> Screens,
         IReadOnlyList<Point> Outline,
@@ -459,7 +452,7 @@ public sealed class RigDiagram : Control
         string Total,
         IReadOnlyList<string> Labels)
     {
-        /// <summary>Pixels per millimetre.</summary>
+        // Pixels per millimetre.
         public double Scale { get; init; }
 
         public string Width { get; init; } = string.Empty;
@@ -475,10 +468,7 @@ public sealed class RigDiagram : Control
         public static Frame Empty { get; } = new([], [], default, default, string.Empty, string.Empty, []);
     }
 
-    /// <summary>
-    /// The few numbers the picture is made of. The curve is carried as 1/R so a flat panel (no radius at all) and a
-    /// curved one are the two ends of one straight line – otherwise switching the curve on would jump.
-    /// </summary>
+    // The curve is carried as 1/R, so flat and curved are two ends of one line and toggling it does not jump.
     private readonly record struct Shape(double Width, double Height, double Distance, double Curvature, double Bezel, double Angle, bool Triple, int PixelWidth, int PixelHeight)
     {
         public bool IsKnown => Width > 0 && Height > 0 && Distance > 0;

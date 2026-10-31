@@ -129,7 +129,7 @@ public static class AppDiscovery
         return apps;
     }
 
-    /// <summary>The executable a shortcut starts, with environment variables expanded; null if it cannot be read.</summary>
+    // With environment variables expanded; null if it cannot be read.
     private static string? ShortcutTarget(string shortcut, ILogger log)
     {
         var link = new ShellLink();
@@ -154,7 +154,7 @@ public static class AppDiscovery
         }
     }
 
-    /// <summary>Explorer, installer icons (advertised shortcuts) and system tools are no apps for a profile.</summary>
+    // Explorer, installer icons (advertised shortcuts) and system tools are no apps for a profile.
     private static bool IsInWindowsFolder(string path) =>
         path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 }
