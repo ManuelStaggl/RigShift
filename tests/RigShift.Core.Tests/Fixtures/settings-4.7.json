@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "defaultProfileId": "8f3a1b2c-4d5e-4f60-8a9b-0c1d2e3f4a5b",
+  "applyDefaultProfileWithWindows": false,
+  "confirmTimeoutSeconds": 0,
+  "language": "en",
+  "trayHintShown": true,
+  "onlyNotifyAboutUpdates": false,
+  "automationRules": [
+    {
+      "id": "0b6f2c1e-9a4d-4c3b-8e2f-1d7a5c9e3b40",
+      "devices": [
+        {
+          "id": "VID_0EB7&PID_0006",
+          "name": "Wheel base"
+        }
+      ],
+      "profileId": "5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11",
+      "onExit": "SwitchBack",
+      "exitProfileId": null,
+      "skipConfirmation": true,
+      "exitDelaySeconds": 10
+    }
+  ],
+  "automationPaused": false
+}

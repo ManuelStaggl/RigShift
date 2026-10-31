@@ -154,6 +154,23 @@ public sealed class BackupArchiveTests : IDisposable
         Should.Throw<InvalidDataException>(() => BackupArchive.Inspect(archive)).Message.ShouldContain("games.json");
     }
 
+    [Theory]
+    [InlineData(15, false)]
+    [InlineData(0, true)]
+    public void Review_Rule_FollowsItsProfile_AndA4xBackupWithConfirmationOff(int seconds, bool skips)
+    {
+        Profile rig = Rig(confirm: true);
+        var settings = new AppSettings
+        {
+            ConfirmTimeoutSeconds = seconds,
+            AutomationRules = [new AutomationRule { ProfileId = rig.Id, Devices = [new RuleDevice { Id = "USB\\X" }] }],
+        };
+
+        BackupItem rule = BackupReview.Review(new BackupContent([rig], settings, [])).ShouldHaveSingleItem();
+
+        rule.SkipsConfirmation.ShouldBe(skips);
+    }
+
     /// <summary>A 4.x backup is restored as the current schema, so its session ends have to be migrated on the way in.</summary>
     [Fact]
     public void Inspect_SchemaOneGames_KeepTheirSessionEnd()
@@ -175,6 +192,7 @@ public sealed class BackupArchiveTests : IDisposable
     {
         Profile rig = Rig() with
         {
+            SwitchWithoutAsking = true,
             Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control, VirtualKey = 0x70 },
             Apps =
             [
@@ -187,7 +205,7 @@ public sealed class BackupArchiveTests : IDisposable
         GameEntry game = Game("rFactor") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"D:\rF\rf.exe" } };
         var settings = new AppSettings
         {
-            AutomationRules = [new AutomationRule { ProfileId = rig.Id, SkipConfirmation = true, Devices = [new RuleDevice { Id = "USB\\X", Name = "Wheel" }] }],
+            AutomationRules = [new AutomationRule { ProfileId = rig.Id, Devices = [new RuleDevice { Id = "USB\\X", Name = "Wheel" }] }],
         };
 
         IReadOnlyList<BackupItem> items = BackupReview.Review(new BackupContent([rig], settings, [game]));

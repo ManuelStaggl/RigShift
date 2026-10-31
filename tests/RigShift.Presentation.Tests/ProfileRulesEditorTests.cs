@@ -165,7 +165,7 @@ public sealed class ProfileRulesEditorTests
         var editor = new ProfileRulesEditor(_rig.Id, [own], [desk, _rig], null, Connected, null, PowerCheck(), Logger.None);
 
         editor.ChangedOnDisk([own, other]).ShouldBeFalse();
-        editor.ChangedOnDisk([own with { SkipConfirmation = !own.SkipConfirmation }]).ShouldBeTrue();
+        editor.ChangedOnDisk([own with { ExitDelaySeconds = own.ExitDelaySeconds + 1 }]).ShouldBeTrue();
         editor.ChangedOnDisk([]).ShouldBeTrue();
     }
 

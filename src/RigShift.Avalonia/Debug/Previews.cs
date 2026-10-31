@@ -253,7 +253,7 @@ internal static class Previews
         {
             AutomationRules =
             [
-                new RigShift.Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new RigShift.Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }], SkipConfirmation = true },
+                new RigShift.Core.Automation.AutomationRule { ProfileId = first.Id, Devices = [new RigShift.Core.Automation.RuleDevice { Id = "VID_0EB7&PID_0006", Name = "Fanatec Wheel Base" }] },
             ],
         };
         return new RigShift.Core.Storage.BackupContent([first, .. profiles.Skip(1)], settings);

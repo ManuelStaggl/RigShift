@@ -111,6 +111,22 @@ public sealed class AutomationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Tick_RuleSwitch_ToAProfileThatDoesNotAsk_DoesNotAsk()
+    {
+        // Rules have no confirmation switch of their own any more: the profile's decides.
+        using AutomationService automation = await CreateAsync();
+        _rig.SwitchWithoutAsking.ShouldBeTrue();
+        await automation.PollAsync();
+
+        Connected(true);
+        await automation.PollAsync();
+
+        _host.Coordinator.History.ShouldHaveSingleItem().ProfileName.ShouldBe("Rig");
+        await _host.Confirmation.DidNotReceive().ConfirmAsync(
+            Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Tick_Paused_ResetsBaselineOnce()
     {
         using AutomationService automation = await CreateAsync();

@@ -557,24 +557,35 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Theory]
-    [InlineData(false, false, 15)]
-    [InlineData(true, true, 15)]
-    [InlineData(true, false, 0)]
-    public async Task Switch_SkipsConfirmation_WhenProfileOrRequestOrSettingSaysSo(bool confirm, bool skipRequested, int appSeconds)
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task Switch_SkipsConfirmation_WhenProfileOrRequestSaysSo(bool confirm, bool skipRequested)
     {
         var display = new FakeDisplayConfigurator(DeskActive());
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirm), new SwitchRequest { SkipConfirmation = skipRequested, DefaultConfirmTimeoutSeconds = appSeconds }, Ct);
+            Rig(confirm), new SwitchRequest { SkipConfirmation = skipRequested, DefaultConfirmTimeoutSeconds = 15 }, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
     }
 
     [Fact]
+    public async Task Switch_ProfileAsks_CountdownZero_AsksWithTheDefault()
+    {
+        // Only the profile decides whether to ask; 0 seconds (a file before 5.0) is no "off" any more.
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
+
+        await Create(display).SwitchAsync(Rig(confirm: true), new SwitchRequest { DefaultConfirmTimeoutSeconds = 0 }, Ct);
+
+        await _confirmation.Received(1).ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), SwitchOptions.DefaultConfirmTimeout, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Switch_FromLink_TimeoutZero_StillConfirms()
     {
-        // A web page must not switch without asking, even with confirmation turned off.
+        // A web page must not switch without asking, even when the profile switches without asking.
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 

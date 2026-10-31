@@ -76,7 +76,7 @@ public sealed class ProfileEditorFactory(
             UsbDeviceChoices.Known(settings.AutomationRules, catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames,
             new UsbDetection(usbDevices, TimeProvider.System));
         var context = new ProfileEditorContext(
-            playback, recording, appsWaitDevice, state, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
+            playback, recording, appsWaitDevice, state, rules,
             SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, catalog.Profiles)?.Name);
         return new ProfileEditorViewModel(profile, isNew, context, editorServices);
     }

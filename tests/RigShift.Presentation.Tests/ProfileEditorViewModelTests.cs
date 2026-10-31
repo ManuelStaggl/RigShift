@@ -137,7 +137,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         [
             e => e.Name = "Rig 2",
             e => e.SelectedIcon = e.IconChoices.First(c => c.Key != e.SelectedIcon?.Key),
-            e => e.SwitchWithoutAsking = !e.SwitchWithoutAsking,
+            e => e.AskToKeepLayout = !e.AskToKeepLayout,
             e => e.Hotkey = CtrlAltR,
             e => e.KeepAwake = true,
             e => e.RememberWindows = true,
@@ -585,8 +585,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
             [new AudioDeviceInfo(Microphone, AudioDirection.Capture, true, AudioRoleMask.Console)],
             new AppsWaitDeviceChoice(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, connected, [], null),
             surround ?? SurroundState.Unavailable(SurroundAvailability.Unknown),
-            rules,
-            ConfirmationEnabled: true);
+            rules);
         var services = new ProfileEditorServices(
             catalog ?? _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, _picker, Logger.None, audio, surroundController);
         var editor = new ProfileEditorViewModel(profile, isNew, context, services);

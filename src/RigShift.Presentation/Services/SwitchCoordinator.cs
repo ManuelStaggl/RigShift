@@ -140,7 +140,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         await RunAsync(profile, new SwitchRequest(), rethrow: false);
     }
 
-    /// <summary>Switch with per-call options, e.g. an automation rule that skips the confirmation.</summary>
+    /// <summary>Switch with per-call options, e.g. an automation rule's longer countdown.</summary>
     /// <returns>The result, or <c>null</c> when another switch was running, it was cancelled or it threw.</returns>
     public Task<SwitchResult?> SwitchAsync(Profile profile, SwitchRequest request)
     {

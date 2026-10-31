@@ -341,21 +341,10 @@ public sealed class SwitchOrchestrator
     /// <summary>How long the switch waits for "keep", or <c>null</c> when it does not ask.</summary>
     private static TimeSpan? ConfirmTimeout(Profile profile, SwitchRequest request)
     {
-        TimeSpan? timeout;
-
-        // A link may come from a web page: it always asks, at least with the default timeout.
-        if (request.FromLink)
-        {
-            timeout = request.DefaultConfirmTimeoutSeconds > 0
-                ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds)
-                : SwitchOptions.DefaultConfirmTimeout;
-        }
-        else
-        {
-            timeout = request.DefaultConfirmTimeoutSeconds > 0 && !profile.SwitchWithoutAsking && !request.SkipConfirmation
-                ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds)
-                : null;
-        }
+        // Only the profile decides; a link may come from a web page, so it always asks.
+        TimeSpan? timeout = request.FromLink || (!profile.SwitchWithoutAsking && !request.SkipConfirmation)
+            ? request.DefaultConfirmTimeoutSeconds > 0 ? TimeSpan.FromSeconds(request.DefaultConfirmTimeoutSeconds) : SwitchOptions.DefaultConfirmTimeout
+            : null;
 
         TimeSpan minimum = TimeSpan.FromSeconds(request.MinimumConfirmTimeoutSeconds);
         return timeout < minimum ? minimum : timeout;

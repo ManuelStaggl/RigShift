@@ -395,6 +395,7 @@ public sealed partial class ProfileCatalog : ObservableObject
             LoadResult result = await _store.LoadAllAsync(cancellationToken);
             _profiles = result.Profiles;
             _unreadable = result.Unreadable;
+            await MigrateConfirmationAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -405,6 +406,35 @@ public sealed partial class ProfileCatalog : ObservableObject
 
         Rebuild();
         await RefreshActiveAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Moves the global "confirm after switching = off" from before 5.0 into the profiles, then sets the countdown back to
+    /// its default. Profiles are saved first: if that fails, the setting stays 0 and the next load tries again.
+    /// </summary>
+    private async Task MigrateConfirmationAsync(CancellationToken cancellationToken)
+    {
+        if (_settings.Current.ConfirmTimeoutSeconds > 0)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<Profile> migrated = _settings.Current.ProfilesToMigrate(_profiles);
+            foreach (Profile profile in migrated)
+            {
+                await _store.SaveAsync(profile, cancellationToken);
+            }
+
+            _profiles = [.. _profiles.Select(p => migrated.FirstOrDefault(m => m.Id == p.Id) ?? p)];
+            await _settings.UpdateAsync(s => s with { ConfirmTimeoutSeconds = AppSettings.DefaultConfirmTimeoutSeconds }, cancellationToken);
+            _log.Information("Confirmation was off for all profiles: {Count} profile(s) now switch without asking", migrated.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Confirmation setting could not be moved into the profiles; trying again on the next load");
+        }
     }
 
     public async Task RefreshActiveAsync(CancellationToken cancellationToken)

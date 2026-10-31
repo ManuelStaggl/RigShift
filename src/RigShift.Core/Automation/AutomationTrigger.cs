@@ -10,10 +10,7 @@ public enum TriggerReason
 }
 
 /// <summary>A switch the automation asks for.</summary>
-public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerReason Reason)
-{
-    public bool SkipConfirmation => Rule.SkipConfirmation;
-}
+public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerReason Reason);
 
 public enum TriggerEventKind
 {

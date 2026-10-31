@@ -1,3 +1,4 @@
+using System.IO;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
 using RigShift.Core.Tests.Fakes;
@@ -51,6 +52,32 @@ public sealed class ProfileCatalogTests : IDisposable
         await _host.Catalog.DeleteAsync(desk, CancellationToken.None);
 
         _host.Settings.Current.DefaultProfileId.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(0, true, 15)]
+    [InlineData(20, false, 20)]
+    public async Task Reload_ConfirmationOffBefore5_0_MovesIntoTheProfilesOnce(int seconds, bool withoutAsking, int secondsAfter)
+    {
+        // A 4.x file: the global "confirm after switching" off is a countdown of 0.
+        Directory.CreateDirectory(Path.GetDirectoryName(_host.Paths.SettingsFile)!);
+        await File.WriteAllTextAsync(_host.Paths.SettingsFile, $$"""{ "schemaVersion": 1, "confirmTimeoutSeconds": {{seconds}} }""", CancellationToken.None);
+        await _host.Settings.LoadAsync(CancellationToken.None);
+        Profile asks = new() { Id = Guid.NewGuid(), Name = "Rig", Displays = [] };
+        Profile silent = new() { Id = Guid.NewGuid(), Name = "Desk", Displays = [], SwitchWithoutAsking = true };
+        _host.Store.Profiles.AddRange([asks, silent]);
+
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+
+        _host.Store.Profiles.Single(p => p.Id == asks.Id).SwitchWithoutAsking.ShouldBe(withoutAsking);
+        _host.Catalog.Find(asks.Id).ShouldNotBeNull().SwitchWithoutAsking.ShouldBe(withoutAsking);
+        _host.Store.Profiles.Single(p => p.Id == silent.Id).SwitchWithoutAsking.ShouldBeTrue();
+        _host.Settings.Current.ConfirmTimeoutSeconds.ShouldBe(secondsAfter);
+
+        // Once moved, a profile the user switches back to asking stays that way.
+        await _host.Catalog.SaveAsync(_host.Catalog.Find(asks.Id)! with { SwitchWithoutAsking = false }, CancellationToken.None);
+        await _host.Catalog.ReloadAsync(CancellationToken.None);
+        _host.Store.Profiles.Single(p => p.Id == asks.Id).SwitchWithoutAsking.ShouldBeFalse();
     }
 
     private async Task<(Profile Desk, Profile Rig)> TwoProfilesAsync()

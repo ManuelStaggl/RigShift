@@ -49,7 +49,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         _audio = services.Audio;
         _surround = services.Surround;
         IsNew = isNew;
-        ConfirmationEnabled = context.ConfirmationEnabled;
         Hotkey = profile.Hotkey;
         _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Profile, profile.Id);
         Rules = context.Rules;
@@ -57,7 +56,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         Name = profile.Name;
         FillIconChoices(ProfileIcons.Normalize(profile.Icon));
-        SwitchWithoutAsking = profile.SwitchWithoutAsking;
+        AskToKeepLayout = !profile.SwitchWithoutAsking;
         SetDisplays(profile.Displays);
 
         AudioAssignment audio = profile.Audio;
@@ -290,16 +289,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         }
     }
 
+    /// <summary>The one switch whether hotkey, tray and rule switches to this profile ask to keep the layout.</summary>
     [ObservableProperty]
-    public partial bool SwitchWithoutAsking { get; set; }
-
-    /// <summary>
-    /// "Confirm after switching" is on in the settings. Off, every profile switches without asking, so the checkbox is
-    /// disabled and a hint says where the setting is.
-    /// </summary>
-    public bool ConfirmationEnabled { get; }
-
-    public bool ConfirmationDisabled => !ConfirmationEnabled;
+    public partial bool AskToKeepLayout { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HotkeyText), nameof(HasHotkey))]
@@ -746,7 +738,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         // A copy must not claim the old names of its source.
         FormerNames = IsNew ? null : NameHistory.After(Saved.Name, Saved.FormerNames, Name),
         Icon = SelectedIcon?.Key,
-        SwitchWithoutAsking = SwitchWithoutAsking,
+        SwitchWithoutAsking = !AskToKeepLayout,
         ConfirmTimeoutSeconds = null,
         Hotkey = Hotkey,
         Displays = Displays.Select(d => d.Assignment).ToList(),

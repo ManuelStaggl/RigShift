@@ -94,8 +94,8 @@ public sealed class GameSessionRunner
         RunAsync(game, alreadyRunning, fromLink: false, cancellationToken);
 
     /// <param name="fromLink">
-    /// The session was asked for by a <c>rigshift://play</c> link: the switch asks for confirmation even when that is
-    /// turned off, and a "no" ends the session before anything is started.
+    /// The session was asked for by a <c>rigshift://play</c> link: the switch asks for confirmation even when the
+    /// profile switches without asking, and a "no" ends the session before anything is started.
     /// </param>
     /// <inheritdoc cref="RunAsync(GameEntry, bool, CancellationToken)"/>
     public async Task<GameSessionResult> RunAsync(GameEntry game, bool alreadyRunning, bool fromLink, CancellationToken cancellationToken)

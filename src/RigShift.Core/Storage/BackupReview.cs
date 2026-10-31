@@ -28,7 +28,7 @@ public enum BackupItemKind
 /// <param name="Detail">Path and arguments, or the rule's devices; empty for a key combination.</param>
 /// <param name="IsNetworkPath">The program lies on a network share.</param>
 /// <param name="IsNotFullPath">The program is named without a full path; RigShift will refuse to start it.</param>
-/// <param name="SkipsConfirmation">The rule switches without the "keep this arrangement?" question.</param>
+/// <param name="SkipsConfirmation">The rule's profile switches without the "keep this arrangement?" question.</param>
 /// <param name="Keys">The key combination of a <see cref="BackupItemKind.Hotkey"/>; an empty owner means "previous profile".</param>
 public sealed record BackupItem(
     BackupItemKind Kind,
@@ -54,7 +54,7 @@ public static class BackupReview
     {
         ArgumentNullException.ThrowIfNull(content);
         var items = new List<BackupItem>();
-        var profileNames = content.Profiles.ToDictionary(p => p.Id, p => p.Name);
+        var profiles = content.Profiles.ToDictionary(p => p.Id);
 
         foreach (Profile profile in content.Profiles)
         {
@@ -87,8 +87,10 @@ public static class BackupReview
                 devices = rule.LegacyUsbDeviceName ?? rule.LegacyUsbDeviceId ?? "?";
             }
 
-            string owner = profileNames.TryGetValue(rule.ProfileId, out string? name) ? name : "?";
-            items.Add(new BackupItem(BackupItemKind.Rule, owner, devices, SkipsConfirmation: rule.SkipConfirmation));
+            // A rule follows its profile; a backup from before 5.0 with the global question off asks for none.
+            Profile? target = profiles.GetValueOrDefault(rule.ProfileId);
+            bool skips = target is not null && (target.SwitchWithoutAsking || content.Settings is { ConfirmTimeoutSeconds: <= 0 });
+            items.Add(new BackupItem(BackupItemKind.Rule, target?.Name ?? "?", devices, SkipsConfirmation: skips));
         }
 
         if (content.Settings?.ToggleHotkey is { } toggle)

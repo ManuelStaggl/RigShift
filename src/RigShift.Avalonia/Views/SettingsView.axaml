@@ -88,14 +88,6 @@
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                   <StackPanel VerticalAlignment="Center">
-                    <TextBlock Classes="label" Text="{v:Tr Settings_ConfirmTimeout}" />
-                    <TextBlock Classes="caption" Text="{v:Tr Settings_ConfirmHint}" TextWrapping="Wrap" />
-                  </StackPanel>
-                  <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Settings_ConfirmTimeout}" IsChecked="{Binding ConfirmEnabled}" OffContent="" OnContent="" />
-                </Grid>
-                <Border Classes="divider" />
-                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
-                  <StackPanel VerticalAlignment="Center">
                     <TextBlock Classes="label" Text="{v:Tr Settings_ConfirmSeconds}" />
                     <TextBlock Classes="caption" Text="{v:Tr Settings_ConfirmSecondsHint}" TextWrapping="Wrap" />
                   </StackPanel>
@@ -106,7 +98,6 @@
                     AutomationProperties.Name="{v:Tr Settings_ConfirmSeconds}"
                     FormatString="0"
                     Increment="1"
-                    IsEnabled="{Binding ConfirmEnabled}"
                     Maximum="120"
                     Minimum="1"
                     Value="{Binding ConfirmTimeoutSeconds, Converter={x:Static v:Converters.Seconds}}" />
