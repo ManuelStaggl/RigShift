@@ -257,6 +257,27 @@ public sealed partial class ProfileCatalog : ObservableObject
         await ReloadAsync(cancellationToken);
     }
 
+    /// <summary>Keeps the desktop symbols a switch read when it left the profile. Quiet: failures only cost this layout.</summary>
+    public async Task RememberDesktopIconsAsync(Guid profileId, DesktopIconLayout layout, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        if (Find(profileId) is not { } profile)
+        {
+            return;
+        }
+
+        try
+        {
+            await _store.SaveAsync(profile with { DesktopIcons = layout }, cancellationToken);
+            await ReloadAsync(cancellationToken);
+            _log.Information("Desktop symbols of {Profile} remembered: {Count}", profile.Name, layout.Icons.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The desktop symbols of {Profile} could not be saved", profile.Name);
+        }
+    }
+
     /// <summary>Makes the profile the default profile, or leaves no default if it already is.</summary>
     public async Task ToggleDefaultAsync(Profile profile, CancellationToken cancellationToken)
     {

@@ -25,6 +25,7 @@ public sealed class SwitchOrchestrator
     private readonly WindowMemory? _windowMemory;
     private readonly AudioSwitcher _audioSwitcher;
     private readonly AppRunner _appRunner;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly DuckingSwitcher _duckingSwitcher;
     private readonly SurroundSwitcher _surroundSwitcher;
     private readonly AllDisplaysOn _allDisplaysOn;
@@ -77,6 +78,7 @@ public sealed class SwitchOrchestrator
         _topology = new TopologyApplier(_display, planner, options, time, _log);
         _windowMemory = windowMemory;
         _tidy = new PostSwitchTidy(windows, desktopIcons, windowMemory, options, time, _log);
+        _desktopIcons = desktopIcons;
         _audioSwitcher = new AudioSwitcher(audio, options, time, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
@@ -115,6 +117,9 @@ public sealed class SwitchOrchestrator
 
         // Before anything changes: once a display goes dark, Windows has already moved what stood on it.
         RememberedWindows? leftWindows = _windowMemory?.Capture(request.Leaving, profile);
+        DesktopIconLayout? leftIcons = request.Leaving is { RemembersDesktopIcons: true } leaving && leaving.Id != profile.Id
+            ? _desktopIcons.Capture()
+            : null;
 
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
@@ -214,6 +219,7 @@ public sealed class SwitchOrchestrator
             Note = answer.Modes.Note,
             Hdr = applied.Hdr,
             DesktopIcons = PendingDesktopIcons(profile),
+            LeftDesktopIcons = leftIcons is { IsEmpty: false } ? leftIcons : null,
         }, started);
 
         // Only now: a switch that was rejected never left the profile.

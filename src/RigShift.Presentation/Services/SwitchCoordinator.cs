@@ -288,6 +288,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             await CompleteAsync(record);
             FollowUp(record, result);
             await HealAsync(result);
+            if (result.LeftDesktopIcons is { } icons && effective.Leaving is { } left)
+            {
+                await _catalog.RememberDesktopIconsAsync(left.Id, icons, CancellationToken.None);
+            }
+
             return result;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)

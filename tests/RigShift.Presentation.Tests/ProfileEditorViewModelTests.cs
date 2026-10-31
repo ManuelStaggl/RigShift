@@ -451,10 +451,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
 
         editor.HasDesktopIcons.ShouldBeTrue();
+        editor.RememberDesktopIcons.ShouldBeTrue("symbols saved by hand are meant to come back");
         editor.DesktopIconsText.ShouldNotBe(Loc.Instance["Status_IconsUnavailable"]);
         editor.IsDirty.ShouldBeTrue();
 
+        // Forgetting keeps remembering on: the next switch away reads them again.
         editor.ClearDesktopIconsCommand.Execute(null);
+        editor.HasDesktopIcons.ShouldBeFalse();
+        editor.IsDirty.ShouldBeTrue();
+
+        editor.RememberDesktopIcons = false;
         editor.IsDirty.ShouldBeFalse();
     }
 
