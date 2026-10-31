@@ -474,7 +474,7 @@
                       </StackPanel>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="16">
                         <Button Classes="link" Command="{Binding Editor.ClearDesktopIconsCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_DesktopIconsClear}" IsVisible="{Binding Editor.HasDesktopIcons, FallbackValue=False}" />
-                        <Button Classes="neutral" Command="{Binding Editor.CaptureDesktopIconsCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_DesktopIconsCapture}" />
+                        <ToggleSwitch AutomationProperties.Name="{v:Tr Editor_DesktopIcons}" IsChecked="{Binding Editor.RememberDesktopIcons, FallbackValue=False}" OffContent="" OnContent="" />
                       </StackPanel>
                     </Grid>
                     <StackPanel IsVisible="{Binding Editor.Surround.IsVisible, FallbackValue=False}">

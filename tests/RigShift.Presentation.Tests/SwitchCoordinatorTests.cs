@@ -433,6 +433,21 @@ public sealed class SwitchCoordinatorTests : IDisposable
         restarted.Coordinator.ToggleTarget.ShouldBe(desk);
     }
 
+    [Fact]
+    public async Task SwitchAway_KeepsTheDesktopIconsOfTheProfileThatWasActive()
+    {
+        var icons = new DesktopIconLayout { CapturedAt = DateTimeOffset.UnixEpoch, Icons = [new DesktopIcon { Item = "a.lnk", X = 1, Y = 2 }] };
+        _host.DesktopIcons.Restore(icons);
+        Profile desk = Profile("Desk", DeskModes) with { RememberDesktopIcons = true };
+        await _host.Store.SaveAsync(desk, TestContext.Current.CancellationToken);
+        await _host.Catalog.ReloadAsync(TestContext.Current.CancellationToken);
+        _host.Catalog.ActiveProfile.ShouldNotBeNull().Id.ShouldBe(desk.Id);
+
+        await _host.Coordinator.SwitchAsync(Rig(), SwitchRequest.Default);
+
+        _host.Catalog.Find(desk.Id).ShouldNotBeNull().DesktopIcons.ShouldNotBeNull().Icons.ShouldBe(icons.Icons);
+    }
+
     public void Dispose() => _host.Dispose();
 
     private static async Task UntilAsync(Func<bool> condition)

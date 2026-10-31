@@ -1938,6 +1938,38 @@ public sealed class SwitchOrchestratorTests
     /// <summary>The desktop the switch tidies up; tests that care about it reach in here.</summary>
     private FakeDesktopIcons DesktopIcons { get; } = new();
 
+    private static readonly DesktopIconLayout DeskIcons = new()
+    {
+        CapturedAt = DateTimeOffset.UnixEpoch,
+        Icons = [new DesktopIcon { Item = "a.lnk", X = 10, Y = 20 }],
+    };
+
+    [Fact]
+    public async Task SwitchAway_ReadsTheLeftProfilesDesktopIcons_OnlyWhenItRemembersThemAndTheSwitchStays()
+    {
+        DesktopIcons.Restore(DeskIcons);
+        Profile desk = Profile("Desk", DeskModes) with { RememberDesktopIcons = true };
+        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
+
+        SwitchResult stayed = await orchestrator.SwitchAsync(Rig(), new SwitchRequest { Leaving = desk }, Ct);
+        stayed.LeftDesktopIcons.ShouldNotBeNull().Icons.ShouldBe(DeskIcons.Icons);
+
+        (await orchestrator.SwitchAsync(Rig(), new SwitchRequest { Leaving = desk with { RememberDesktopIcons = false } }, Ct)).LeftDesktopIcons.ShouldBeNull();
+        (await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct)).LeftDesktopIcons.ShouldBeNull("no profile was active");
+
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        SwitchResult rejected = await orchestrator.SwitchAsync(Rig(confirm: true), new SwitchRequest { Leaving = desk }, Ct);
+        rejected.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        rejected.LeftDesktopIcons.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RemembersDesktopIcons_IsOnForALayoutSavedBefore()
+    {
+        Profile("Desk", DeskModes).RemembersDesktopIcons.ShouldBeFalse();
+        (Profile("Desk", DeskModes) with { DesktopIcons = DeskIcons }).RemembersDesktopIcons.ShouldBeTrue();
+    }
+
     /// <summary>A desktop layout to hand a profile: one shortcut and the recycle bin.</summary>
     private static readonly DesktopIconLayout Layout = new()
     {

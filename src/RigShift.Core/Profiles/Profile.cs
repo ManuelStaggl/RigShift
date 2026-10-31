@@ -84,6 +84,16 @@ public sealed record Profile
     public DesktopIconLayout? DesktopIcons { get; init; }
 
     /// <summary>
+    /// Read the desktop symbols each time a switch leaves this profile and keep them in <see cref="DesktopIcons"/>, so
+    /// they come back as they were left.
+    /// </summary>
+    public bool RememberDesktopIcons { get; init; }
+
+    /// <summary>On, also for a layout saved by hand before the symbols were remembered by themselves.</summary>
+    [JsonIgnore]
+    public bool RemembersDesktopIcons => RememberDesktopIcons || DesktopIcons is { IsEmpty: false };
+
+    /// <summary>
     /// Remember where every open window sits when this profile is left, and put them back when it returns
     /// (<see cref="WindowMemory"/>). The windows themselves are state and live outside the profile file.
     /// </summary>

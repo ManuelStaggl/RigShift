@@ -420,13 +420,13 @@
   <data name="Common_Save" xml:space="preserve"><value>_Speichern</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Leeren</value></data>
-  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole</value></data>
+  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole merken</value></data>
   <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows würfelt sie beim Bildschirmwechsel durcheinander. Bei aktivem Profil anordnen, dann hier speichern.</value></data>
   <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Positionen speichern</value></data>
   <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Vergessen</value></data>
-  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gespeichert</value></data>
-  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gespeichert {1}</value></data>
-  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gespeichert {1}</value></data>
+  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Werden gemerkt, wenn du dieses Profil verlässt</value></data>
+  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gemerkt {1}</value></data>
+  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gemerkt {1}</value></data>
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gespeicherten Plätze zurück, ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>

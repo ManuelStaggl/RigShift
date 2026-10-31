@@ -77,6 +77,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         _desktopIcons = services.DesktopIcons;
         DesktopIcons = profile.DesktopIcons;
+        RememberDesktopIcons = profile.RemembersDesktopIcons;
         KeepAwake = profile.KeepAwake;
         RememberWindows = profile.RememberWindows;
         CloseAppsWhenLeaving = profile.CloseAppsWhenLeaving;
@@ -211,6 +212,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public bool HasDesktopIcons => DesktopIcons is { IsEmpty: false };
 
     public string DesktopIconsText => _desktopUnreachable ? Loc.Instance["Status_IconsUnavailable"]
+        : !RememberDesktopIcons ? string.Empty
         : DesktopIcons is { IsEmpty: false } layout
         ? Loc.Format(
             layout.Icons.Count == 1 ? "Editor_DesktopIconsSavedOne" : "Editor_DesktopIconsSaved",
@@ -221,7 +223,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     /// <summary>The last "save positions" did not reach the desktop; the caption says so until the symbols change.</summary>
     private bool _desktopUnreachable;
 
-    partial void OnDesktopIconsChanged(DesktopIconLayout? value) => _desktopUnreachable = false;
+    partial void OnDesktopIconsChanged(DesktopIconLayout? value)
+    {
+        _desktopUnreachable = false;
+
+        // Symbols saved by hand are meant to come back.
+        if (value is { IsEmpty: false })
+        {
+            RememberDesktopIcons = true;
+        }
+    }
 
     [RelayCommand]
     private async Task CaptureDesktopIconsAsync()
@@ -245,6 +256,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     [RelayCommand]
     private void ClearDesktopIcons() => DesktopIcons = null;
+
+    /// <summary>The symbols are read each time a switch leaves the profile; off forgets them.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DesktopIconsText))]
+    public partial bool RememberDesktopIcons { get; set; }
 
     [ObservableProperty]
     public partial bool DisableCommunicationsDucking { get; set; }
@@ -674,7 +690,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         RememberWindows = RememberWindows,
         CloseAppsWhenLeaving = CloseAppsWhenLeaving,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
-        DesktopIcons = DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
+        RememberDesktopIcons = RememberDesktopIcons,
+        DesktopIcons = RememberDesktopIcons && DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),
     };
 }
