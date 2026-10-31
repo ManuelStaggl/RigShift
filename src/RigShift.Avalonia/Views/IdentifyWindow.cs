@@ -15,6 +15,7 @@ internal sealed class IdentifyWindow : Window
 
     private IdentifyWindow(int number, string name)
     {
+        Title = number.ToString(Loc.Instance.Culture) + " · " + name;
         WindowDecorations = global::Avalonia.Controls.WindowDecorations.None;
         Topmost = true;
         ShowActivated = false;

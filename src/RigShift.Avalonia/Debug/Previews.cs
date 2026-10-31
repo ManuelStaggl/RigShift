@@ -10,7 +10,8 @@ namespace RigShift.Avalonia.Debug;
 /// <summary>
 /// Debug-only hooks for screenshots, set in the environment: RIGSHIFT_PREVIEW_DISPLAYS=&lt;profile&gt; (every profile's
 /// displays read as attached, that profile's active; nothing is ever applied), RIGSHIFT_PREVIEW_PAGE=&lt;page&gt;,
-/// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1.
+/// RIGSHIFT_PREVIEW_PALETTE=&lt;query&gt;, RIGSHIFT_PREVIEW_IDENTIFY=1, RIGSHIFT_PREVIEW_TRAY=1,
+/// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>).
 /// </summary>
 internal static class Previews
 {
@@ -42,6 +43,13 @@ internal static class Previews
             global::Avalonia.Threading.DispatcherTimer.RunOnce(
                 () => App.Provider.GetRequiredService<OverviewViewModel>().IdentifyCommand.Execute(null),
                 TimeSpan.FromSeconds(6));
+        }
+
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TOPOLOGY") is { Length: > 0 } topology)
+        {
+            TopologyGallery.Show(
+                App.Provider.GetRequiredService<ProfileCatalog>().Items.Select(i => (i.Name, i.Topology)),
+                topology.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? topology : null);
         }
 
         // After the window, which would take the focus and so close the popup.
