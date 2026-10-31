@@ -17,6 +17,13 @@
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource RsText}" />
   </Style>
+  <!-- The countdown's seconds inside the ring, centred on both axes whatever the digits. -->
+  <Style Selector="TextBlock.countdown">
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+  </Style>
   <!-- The one sentence under a page title. -->
   <Style Selector="TextBlock.lead">
     <Setter Property="Margin" Value="0,8,0,24" />

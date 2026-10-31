@@ -3,6 +3,7 @@
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:fa="using:FluentAvalonia.UI.Controls"
   Title="{v:Tr Confirm_Title}"
   Width="520"
   SizeToContent="Height"
@@ -25,9 +26,9 @@
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
         <TextBlock VerticalAlignment="Center" Classes="title" Text="{v:Tr Confirm_Title}" TextWrapping="Wrap" />
         <Panel Grid.Column="1" Width="72" Height="72">
-          <Ellipse Stroke="{DynamicResource RsOutline}" StrokeThickness="4" />
-          <Arc x:Name="Ring" StartAngle="-90" Stroke="{DynamicResource RsAccentText}" StrokeLineCap="Round" StrokeThickness="4" SweepAngle="360" />
-          <TextBlock x:Name="Seconds" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="display" />
+          <!-- The WinUI 3 progress ring (FluentAvalonia), determinate: it empties as the seconds run out. -->
+          <fa:FAProgressRing x:Name="Ring" Width="72" Height="72" IsIndeterminate="False" Foreground="{DynamicResource RsAccentText}" Background="{DynamicResource RsOutline}" />
+          <TextBlock x:Name="Seconds" HorizontalAlignment="Stretch" VerticalAlignment="Center" Classes="countdown" />
         </Panel>
       </Grid>
 

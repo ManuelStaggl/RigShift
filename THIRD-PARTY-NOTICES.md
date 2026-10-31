@@ -7,6 +7,7 @@ for a given release is its SBOM (`RigShift-<version>.cdx.json` on the release pa
 |---|---|---|
 | [.NET runtime and WPF](https://github.com/dotnet/runtime) (self-contained) | MIT | © .NET Foundation and Contributors |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MIT | © .NET Foundation and Contributors |
+| [FluentAvaloniaUI](https://github.com/amwx/FluentAvalonia) (progress ring of the countdown) | MIT | © 2025 amwx |
 | [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) (icon paths in the app and on the project page) | MIT | © 2020 Microsoft Corporation |
 | [H.NotifyIcon, H.NotifyIcon.Wpf, H.GeneratedIcons.System.Drawing](https://github.com/HavenDV/H.NotifyIcon) | MIT | © havendv |
 | [Microsoft.Extensions.DependencyInjection](https://github.com/dotnet/runtime) | MIT | © Microsoft Corporation |

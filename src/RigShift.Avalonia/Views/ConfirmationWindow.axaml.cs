@@ -153,7 +153,8 @@ public sealed partial class ConfirmationWindow : Window
 
     private void UpdateCountdown()
     {
-        Ring.SweepAngle = 360d * _remaining / _total;
+        Ring.Maximum = _total;
+        Ring.Value = _remaining;
         Seconds.Text = _remaining.ToString(Loc.Instance.Culture);
         HintText.Text = Loc.Format("Confirm_Hint", _remaining);
     }
