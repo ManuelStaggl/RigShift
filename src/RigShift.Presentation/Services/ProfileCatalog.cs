@@ -8,6 +8,8 @@ using RigShift.App.ViewModels;
 using RigShift.Core.Abstractions;
 using RigShift.Core.Automation;
 using RigShift.Core.Profiles;
+using RigShift.Core.Settings;
+using RigShift.Core.Storage;
 using RigShift.Core.Topology;
 using Serilog;
 
@@ -23,6 +25,7 @@ public sealed partial class ProfileCatalog : ObservableObject
     private readonly ActiveProfileMatcher _matcher;
     private readonly SettingsService _settings;
     private readonly ILogger _log;
+    private readonly string _dataDirectory;
     private IReadOnlyList<Profile> _profiles = [];
     private IReadOnlyList<UnreadableProfileFile> _unreadable = [];
 
@@ -39,6 +42,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         _settings = settings;
         _log = log.ForContext<ProfileCatalog>();
         ProfileDirectory = paths.Profiles;
+        _dataDirectory = paths.DataDirectory;
         IsEmpty = true;
 
         settings.Changed += (_, _) => UpdateFlags();
@@ -68,9 +72,9 @@ public sealed partial class ProfileCatalog : ObservableObject
 
     /// <summary>
     /// The profile that was active before <see cref="ActiveProfile"/> changed – the target of "back to the previous
-    /// profile" (1.7.0). Kept while no profile is active, not persisted across restarts.
+    /// profile". Kept while no profile is active and stored in the settings, so it survives a restart.
     /// </summary>
-    public Guid? PreviousProfileId { get; private set; }
+    public Guid? PreviousProfileId => _settings.Current.PreviousProfileId;
 
     /// <summary>The profile the last switch that stayed applied; decides between profiles with the same layout.</summary>
     public Guid? LastAppliedProfileId { get; set; }
@@ -194,6 +198,7 @@ public sealed partial class ProfileCatalog : ObservableObject
                 {
                     DisplayNames = DisplayIdentityHealing.Rekey(s.DisplayNames, updates),
                     FovCurvatureMm = DisplayIdentityHealing.Rekey(s.FovCurvatureMm, updates),
+                    RefreshRates = DisplayIdentityHealing.RekeyRefreshRates(s.RefreshRates, updates),
                 },
                 cancellationToken,
                 notify: false);
@@ -224,6 +229,12 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>Saves the profile and carries its display names over to every other profile with the same monitor.</summary>
     public async Task SaveAsync(Profile profile, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(profile);
+        if (Find(profile.Id) is { } stored)
+        {
+            profile = profile with { FormerNames = NameHistory.After(stored.Name, stored.FormerNames, profile.Name) };
+        }
+
         await _store.SaveAsync(profile, cancellationToken);
         foreach (Profile other in DisplayNames.Propagate(profile, _profiles))
         {
@@ -246,6 +257,27 @@ public sealed partial class ProfileCatalog : ObservableObject
         await ReloadAsync(cancellationToken);
     }
 
+    /// <summary>Keeps the desktop symbols a switch read when it left the profile. Quiet: failures only cost this layout.</summary>
+    public async Task RememberDesktopIconsAsync(Guid profileId, DesktopIconLayout layout, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        if (Find(profileId) is not { } profile)
+        {
+            return;
+        }
+
+        try
+        {
+            await _store.SaveAsync(profile with { DesktopIcons = layout }, cancellationToken);
+            await ReloadAsync(cancellationToken);
+            _log.Information("Desktop symbols of {Profile} remembered: {Count}", profile.Name, layout.Icons.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The desktop symbols of {Profile} could not be saved", profile.Name);
+        }
+    }
+
     /// <summary>Makes the profile the default profile, or leaves no default if it already is.</summary>
     public async Task ToggleDefaultAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -262,12 +294,15 @@ public sealed partial class ProfileCatalog : ObservableObject
     /// <summary>
     /// Deletes the profile; if it was the default profile, there is no default afterwards. Its USB rules go with it –
     /// a rule that switches to a profile that no longer exists would keep firing into nothing. A rule of another
-    /// profile that only ends in this one keeps running and stays where it is instead.
+    /// profile that only ends in this one keeps running and stays where it is instead. A backup is written first.
     /// </summary>
-    public async Task DeleteAsync(Profile profile, CancellationToken cancellationToken)
+    /// <returns>What <see cref="UndoDeleteAsync"/> needs to bring it back.</returns>
+    public async Task<DeletedProfile> DeleteAsync(Profile profile, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
+        await BackupAsync("delete", cancellationToken);
+        var deleted = new DeletedProfile(profile, _settings.Current);
         await _store.DeleteAsync(profile.Id, cancellationToken);
         await _settings.UpdateAsync(
             s => s with
@@ -282,6 +317,75 @@ public sealed partial class ProfileCatalog : ObservableObject
             cancellationToken);
 
         await ReloadAsync(cancellationToken);
+        return deleted;
+    }
+
+    /// <summary>
+    /// Brings a deleted profile back with its USB rules (at their old place), exit targets and default flag. Changes
+    /// made to other profiles and rules since the delete stay.
+    /// </summary>
+    // shortcut: a hotkey or name another profile took in the meantime is not checked; the undo is offered for seconds only.
+    public async Task UndoDeleteAsync(DeletedProfile deleted, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(deleted);
+
+        Guid id = deleted.Profile.Id;
+        AppSettings before = deleted.SettingsBefore;
+        await _store.SaveAsync(deleted.Profile, cancellationToken);
+        await _settings.UpdateAsync(
+            s => s with
+            {
+                DefaultProfileId = before.DefaultProfileId == id && s.DefaultProfileId is null ? id : s.DefaultProfileId,
+                AutomationRules = RulesWith(s.AutomationRules, before.AutomationRules ?? [], id),
+            },
+            cancellationToken);
+        await ReloadAsync(cancellationToken);
+        _log.Information("Deleted profile {Profile} restored", deleted.Profile.Name);
+    }
+
+    /// <summary>Writes an automatic backup of the data folder (<see cref="AutoBackups"/>). IO failures go to the caller.</summary>
+    public async Task BackupAsync(string reason, CancellationToken cancellationToken)
+    {
+        string file = await Task.Run(() => AutoBackups.Write(_dataDirectory, reason, DateTimeOffset.Now), cancellationToken);
+        _log.Information("Automatic backup before {Reason} written to {File}", reason, file);
+    }
+
+    /// <summary>Once per app version, at start: a backup of the data the previous version left. Failures are only logged.</summary>
+    public async Task BackupOnceForVersionAsync(string version, CancellationToken cancellationToken)
+    {
+        if (_settings.Current.LastBackupVersion == version || _profiles.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await BackupAsync("version-" + version, cancellationToken);
+            await _settings.UpdateAsync(s => s with { LastBackupVersion = version }, cancellationToken, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The automatic backup for version {Version} could not be written", version);
+        }
+    }
+
+    private static List<AutomationRule>? RulesWith(IReadOnlyList<AutomationRule>? current, IReadOnlyList<AutomationRule> before, Guid id)
+    {
+        // Rules of other profiles that ended in this one went to "stay"; unless edited since, they end here again.
+        List<AutomationRule> rules = [.. (current ?? []).Select(r =>
+            r is { OnExit: ExitAction.Stay, ExitProfileId: null }
+            && before.Any(b => b.Id == r.Id && b.OnExit == ExitAction.SwitchTo && b.ExitProfileId == id)
+                ? r with { OnExit = ExitAction.SwitchTo, ExitProfileId = id }
+                : r)];
+        for (int i = 0; i < before.Count; i++)
+        {
+            if (before[i].ProfileId == id && rules.All(r => r.Id != before[i].Id))
+            {
+                rules.Insert(Math.Min(i, rules.Count), before[i]);
+            }
+        }
+
+        return current is null && rules.Count == 0 ? null : rules;
     }
 
     public async Task ReloadAsync(CancellationToken cancellationToken)
@@ -320,7 +424,7 @@ public sealed partial class ProfileCatalog : ObservableObject
         Profile? active = _matcher.FindActive(_profiles, snapshot, LastAppliedProfileId ?? ActiveProfile?.Id);
         if (ActiveProfile is { } before && before.Id != active?.Id)
         {
-            PreviousProfileId = before.Id;
+            await RememberPreviousAsync(before.Id, cancellationToken);
         }
 
         ActiveProfile = active;
@@ -328,6 +432,18 @@ public sealed partial class ProfileCatalog : ObservableObject
         LastSnapshot = snapshot;
         UpdateReadiness();
         DisplaysRefreshed?.Invoke(this, snapshot);
+    }
+
+    private async Task RememberPreviousAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _settings.UpdateAsync(s => s with { PreviousProfileId = id }, cancellationToken, notify: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "The previous profile could not be stored");
+        }
     }
 
     /// <summary>Before the property change goes out, so its listeners see the items' flags right.</summary>
@@ -380,3 +496,6 @@ public sealed partial class ProfileCatalog : ObservableObject
         }
     }
 }
+
+/// <summary>A deleted profile and the settings from just before, for undo.</summary>
+public sealed record DeletedProfile(Profile Profile, AppSettings SettingsBefore);

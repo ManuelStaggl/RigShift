@@ -14,6 +14,9 @@ public sealed record GameEntry
 
     public required string Name { get; init; }
 
+    /// <summary>Names before a rename; name lookups still match them (<see cref="NameHistory"/>).</summary>
+    public IReadOnlyList<string>? FormerNames { get; init; }
+
     /// <summary>Optional symbol key, one of <see cref="ProfileIcons.All"/>; unknown keys show the RigShift symbol.</summary>
     public string? Icon { get; init; }
 
@@ -113,6 +116,12 @@ public sealed record GameLaunch
     /// <c>null</c> until then; for <see cref="GameLaunchKind.Executable"/> it follows from the path and is not stored.
     /// </summary>
     public string? ProcessName { get; init; }
+
+    /// <summary>
+    /// <see cref="ProcessName"/> was guessed from the install folder when the game was added, not learned or typed. A
+    /// session through RigShift learns the name anyway and replaces the guess.
+    /// </summary>
+    public bool ProcessNameGuessed { get; init; }
 
     /// <summary>
     /// Whether <see cref="Target"/> has the form its kind calls for: digits for Steam, the characters of an Epic

@@ -12,4 +12,6 @@ public sealed record ProfileEditorServices(
     HotkeyService Hotkeys,
     SettingsService Settings,
     IAppPicker AppPicker,
-    ILogger Log);
+    ILogger Log,
+    IAudioController? Audio = null,
+    ISurroundController? Surround = null);

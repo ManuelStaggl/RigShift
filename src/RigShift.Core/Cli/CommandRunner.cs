@@ -283,14 +283,15 @@ public sealed class CommandRunner
         }
 
         DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
-        AudioEndpoint? playback = await DefaultPlaybackAsync(cancellationToken);
+        AudioEndpoint? playback = await DefaultDeviceAsync(AudioDirection.Render, cancellationToken);
+        AudioEndpoint? recording = await DefaultDeviceAsync(AudioDirection.Capture, cancellationToken);
 
         Profile profile = existing is null
-            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
+            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback, Recording = recording }, DisplayNames.Known(profiles))
             : existing with
             {
                 Displays = ProfileEditing.CapturedArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
-                Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
+                Audio = existing.Audio with { Playback = playback ?? existing.Audio.Playback, Recording = recording ?? existing.Audio.Recording },
             };
 
         IReadOnlyList<ProfileProblem> problems = ProfileEditing.Validate(profile, profiles);
@@ -391,9 +392,9 @@ public sealed class CommandRunner
         };
     }
 
-    private async Task<AudioEndpoint?> DefaultPlaybackAsync(CancellationToken cancellationToken)
+    private async Task<AudioEndpoint?> DefaultDeviceAsync(AudioDirection direction, CancellationToken cancellationToken)
     {
-        IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(AudioDirection.Render, cancellationToken);
+        IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(direction, cancellationToken);
         return devices.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
     }
 

@@ -1,3 +1,4 @@
+using System.IO;
 using NSubstitute;
 using RigShift.App.Localization;
 using RigShift.App.Services;
@@ -118,11 +119,11 @@ public sealed class SwitchCoordinatorTests : IDisposable
     }
 
     [Fact]
-    public void NoticeDisplayChange_OffersTheRest_OnlyForAnotherProfileWithMoreThanDisplays()
+    public void NoticeDisplayChange_OffersTheApps_OnlyForAnotherProfileWithApps()
     {
         // Windows restored the rig layout by itself when the ultrawide was switched on.
         Profile desk = Profile("Desk", DeskModes);
-        Profile rig = Rig() with { KeepAwake = true };
+        Profile rig = Rig() with { Apps = [new AppAction { Path = @"C:\SimHub\SimHubWPF.exe" }] };
         var offered = new List<Profile>();
         _host.Coordinator.RestoredByWindows += (_, profile) => offered.Add(profile);
 
@@ -132,6 +133,30 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Coordinator.NoticeDisplayChange(rig, desk).ShouldBeFalse();
 
         offered.ShouldHaveSingleItem().ShouldBe(rig);
+        _host.Coordinator.History.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task NoticeDisplayChange_AppliesAudioAndKeepAwakeByItself_ButNotTheApps()
+    {
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet, activeMode: TabletMode)));
+        Profile rig = Rig(confirm: true) with { KeepAwake = true, Apps = [new AppAction { Path = @"C:\SimHub\SimHubWPF.exe" }] };
+        var offered = new List<Profile>();
+        _host.Coordinator.RestoredByWindows += (_, profile) => offered.Add(profile);
+
+        _host.Coordinator.NoticeDisplayChange(Profile("Desk", DeskModes), rig).ShouldBeTrue();
+        await UntilAsync(() => _host.Coordinator.History.Count == 1);
+
+        offered.ShouldHaveSingleItem().ShouldBe(rig);
+        _host.Coordinator.History[0].Apps.ShouldBe(AppsOutcome.NotConfigured);
+        _host.Display.Applied.ShouldBeEmpty();
+        await _host.Confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
+
+        // Without apps there is nothing to ask.
+        offered.Clear();
+        _host.Coordinator.NoticeDisplayChange(rig, Rig() with { KeepAwake = true }).ShouldBeFalse();
+        await UntilAsync(() => _host.Coordinator.History.Count == 2);
+        offered.ShouldBeEmpty();
     }
 
     [Fact]
@@ -376,6 +401,51 @@ public sealed class SwitchCoordinatorTests : IDisposable
         report.ShouldNotBeNull().FallbackProfile.ShouldBeNull();
         _host.Coordinator.History.ShouldBeEmpty();
         _host.Display.Applied.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ToggleTarget_AfterARestart_IsTheProfileActiveBeforeTheLastChange()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile tv = Profile("TV", [Mode(Desk4K, 1920, 1080, 60, primary: true)]);
+        foreach (Profile profile in (Profile[])[desk, rig, tv])
+        {
+            await _host.Store.SaveAsync(profile, token);
+        }
+
+        await _host.Catalog.ReloadAsync(token);
+        _host.Display.SetSnapshot(Snapshot(Attached(Ultrawide, activeMode: UltrawideMode), Attached(Tablet, activeMode: TabletMode)));
+        await _host.Catalog.RefreshActiveAsync(token);
+
+        // A new start reads the settings file again.
+        using var restarted = new AppTestHost(_host.Display);
+        Directory.CreateDirectory(restarted.Paths.DataDirectory);
+        File.Copy(_host.Paths.SettingsFile, restarted.Paths.SettingsFile);
+        await restarted.Settings.LoadAsync(token);
+        foreach (Profile profile in (Profile[])[desk, rig, tv])
+        {
+            await restarted.Store.SaveAsync(profile, token);
+        }
+
+        await restarted.Catalog.ReloadAsync(token);
+        restarted.Coordinator.ToggleTarget.ShouldBe(desk);
+    }
+
+    [Fact]
+    public async Task SwitchAway_KeepsTheDesktopIconsOfTheProfileThatWasActive()
+    {
+        var icons = new DesktopIconLayout { CapturedAt = DateTimeOffset.UnixEpoch, Icons = [new DesktopIcon { Item = "a.lnk", X = 1, Y = 2 }] };
+        _host.DesktopIcons.Restore(icons);
+        Profile desk = Profile("Desk", DeskModes) with { RememberDesktopIcons = true };
+        await _host.Store.SaveAsync(desk, TestContext.Current.CancellationToken);
+        await _host.Catalog.ReloadAsync(TestContext.Current.CancellationToken);
+        _host.Catalog.ActiveProfile.ShouldNotBeNull().Id.ShouldBe(desk.Id);
+
+        await _host.Coordinator.SwitchAsync(Rig(), SwitchRequest.Default);
+
+        _host.Catalog.Find(desk.Id).ShouldNotBeNull().DesktopIcons.ShouldNotBeNull().Icons.ShouldBe(icons.Icons);
     }
 
     public void Dispose() => _host.Dispose();

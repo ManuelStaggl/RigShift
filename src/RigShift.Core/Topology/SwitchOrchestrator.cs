@@ -25,6 +25,7 @@ public sealed class SwitchOrchestrator
     private readonly WindowMemory? _windowMemory;
     private readonly AudioSwitcher _audioSwitcher;
     private readonly AppRunner _appRunner;
+    private readonly IDesktopIcons _desktopIcons;
     private readonly DuckingSwitcher _duckingSwitcher;
     private readonly SurroundSwitcher _surroundSwitcher;
     private readonly AllDisplaysOn _allDisplaysOn;
@@ -77,6 +78,7 @@ public sealed class SwitchOrchestrator
         _topology = new TopologyApplier(_display, planner, options, time, _log);
         _windowMemory = windowMemory;
         _tidy = new PostSwitchTidy(windows, desktopIcons, windowMemory, options, time, _log);
+        _desktopIcons = desktopIcons;
         _audioSwitcher = new AudioSwitcher(audio, options, time, _log);
         _appRunner = new AppRunner(apps, usbDevices, options, time, _log);
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
@@ -102,7 +104,7 @@ public sealed class SwitchOrchestrator
 
         if (request.KeepDisplays)
         {
-            return await ApplyRestAsync(profile, cancellationToken);
+            return await ApplyRestAsync(profile, request.Leaving, cancellationToken);
         }
 
         long started = _time.GetTimestamp();
@@ -115,6 +117,9 @@ public sealed class SwitchOrchestrator
 
         // Before anything changes: once a display goes dark, Windows has already moved what stood on it.
         RememberedWindows? leftWindows = _windowMemory?.Capture(request.Leaving, profile);
+        DesktopIconLayout? leftIcons = request.Leaving is { RemembersDesktopIcons: true } leaving && leaving.Id != profile.Id
+            ? _desktopIcons.Capture()
+            : null;
 
         var wayBack = new WayBack(await _display.QueryAsync(cancellationToken), await _surroundSwitcher.CaptureAsync(profile, cancellationToken));
         DisplaySnapshot planFrom = wayBack.Displays;
@@ -198,7 +203,8 @@ public sealed class SwitchOrchestrator
 
         // A missing optional display (spacedesk viewer) is no partial switch; the catch-up follows it.
         SwitchOutcome outcome = answer.Modes.DisplaysDark ? SwitchOutcome.AppliedPartially : SwitchOutcome.Applied;
-        AppsOutcome apps = PendingApps(profile);
+        AppPlan appPlan = _appRunner.PlanFor(profile, request.Leaving);
+        AppsOutcome apps = PendingApps(appPlan);
         _log.Information("Switch to {Profile} finished: {Outcome}, audio {Audio}, apps {Apps}, {Attempts} attempts, {Seconds:0.0} s",
             profile.Name, outcome, answer.Audio, apps, applied.Attempts, _time.GetElapsedTime(started).TotalSeconds);
         SwitchResult result = await Finish(new SwitchResult
@@ -213,6 +219,7 @@ public sealed class SwitchOrchestrator
             Note = answer.Modes.Note,
             Hdr = applied.Hdr,
             DesktopIcons = PendingDesktopIcons(profile),
+            LeftDesktopIcons = leftIcons is { IsEmpty: false } ? leftIcons : null,
         }, started);
 
         // Only now: a switch that was rejected never left the profile.
@@ -222,7 +229,7 @@ public sealed class SwitchOrchestrator
         }
 
         // Applying the profile that is active already leaves its windows alone: they are where the user wants them now.
-        return AfterResult(result, profile, restoreWindows: request.Leaving?.Id != profile.Id);
+        return AfterResult(result, profile, appPlan, restoreWindows: request.Leaving?.Id != profile.Id);
     }
 
     /// <summary>
@@ -232,11 +239,11 @@ public sealed class SwitchOrchestrator
     /// the automation or the next switch. The journal is gone by then, so an exit meanwhile brings no question
     /// "undo it?" at the next start.
     /// </summary>
-    private SwitchResult AfterResult(SwitchResult result, Profile profile, bool restoreWindows) =>
-        result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(profile) };
+    private SwitchResult AfterResult(SwitchResult result, Profile profile, AppPlan apps, bool restoreWindows) =>
+        result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(apps) };
 
-    private static AppsOutcome PendingApps(Profile profile) =>
-        profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
+    private static AppsOutcome PendingApps(AppPlan plan) =>
+        plan.Apps.Count == 0 && plan.StopFirst.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
 
     private static DesktopIconOutcome PendingDesktopIcons(Profile profile) =>
         profile.DesktopIcons is { IsEmpty: false } ? DesktopIconOutcome.Pending : DesktopIconOutcome.NotConfigured;
@@ -415,7 +422,7 @@ public sealed class SwitchOrchestrator
     /// Windows restored the profile's display layout on its own, e.g. when a monitor was switched on: the
     /// rest of the profile follows without a display change and without asking – the user chose it from the notification.
     /// </summary>
-    private async Task<SwitchResult> ApplyRestAsync(Profile profile, CancellationToken cancellationToken)
+    private async Task<SwitchResult> ApplyRestAsync(Profile profile, Profile? leaving, CancellationToken cancellationToken)
     {
         long started = _time.GetTimestamp();
         _log.Information("Applying the rest of profile {Profile}; Windows already restored its displays", profile.Name);
@@ -426,14 +433,15 @@ public sealed class SwitchOrchestrator
         SwitchKeepAwake(profile);
         await _duckingSwitcher.SwitchAsync(profile, cancellationToken);
 
-        AppsOutcome apps = PendingApps(profile);
+        AppPlan appPlan = _appRunner.PlanFor(profile, leaving);
+        AppsOutcome apps = PendingApps(appPlan);
         _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
         SwitchResult result = await Finish(
             new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, DesktopIcons = PendingDesktopIcons(profile) },
             started);
 
         // Windows brought the displays back, not the windows to where they were when the profile was left.
-        return AfterResult(result, profile, restoreWindows: true);
+        return AfterResult(result, profile, appPlan, restoreWindows: true);
     }
 
     /// <summary>

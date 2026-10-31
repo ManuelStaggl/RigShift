@@ -275,7 +275,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             SwitchRequest effective = request with
             {
                 DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds,
-                Leaving = _catalog.ActiveProfile,
+                // Windows restored the displays already, so the profile they left is the previous one.
+                Leaving = request.KeepDisplays && _catalog.PreviousProfileId is { } previous ? _catalog.Find(previous) : _catalog.ActiveProfile,
             };
             Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
             _current = running;
@@ -287,6 +288,11 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             await CompleteAsync(record);
             FollowUp(record, result);
             await HealAsync(result);
+            if (result.LeftDesktopIcons is { } icons && effective.Leaving is { } left)
+            {
+                await _catalog.RememberDesktopIconsAsync(left.Id, icons, CancellationToken.None);
+            }
+
             return result;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)
@@ -457,8 +463,9 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     /// <summary>
     /// Call after a display change, once the active profile was refreshed and a catch-up ran. A profile that became active
-    /// without RigShift switching – Windows restored its layout – only has its displays; audio, apps and the rest are
-    /// offered via <see cref="RestoredByWindows"/>. Returns whether it was offered.
+    /// without RigShift switching – Windows restored its layout – only has its displays. Audio, keep-awake and the rest
+    /// follow by themselves; starting its apps is offered via <see cref="RestoredByWindows"/>, since a program popping up
+    /// unasked in the middle of a game is worse than a click. Returns whether that was offered.
     /// </summary>
     public bool NoticeDisplayChange(Profile? before, Profile? after)
     {
@@ -467,7 +474,19 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             return false;
         }
 
-        _log.Information("Windows restored the displays of {Profile} (before: {Before}); offering the rest", after.Name, before?.Name ?? "(none)");
+        Profile withoutApps = after with { Apps = [] };
+        if (HasMoreThanDisplays(withoutApps))
+        {
+            _log.Information("Windows restored the displays of {Profile} (before: {Before}); applying the rest", after.Name, before?.Name ?? "(none)");
+            _ = SwitchAsync(withoutApps, new SwitchRequest { KeepDisplays = true });
+        }
+
+        if (after.Apps.Count == 0)
+        {
+            return false;
+        }
+
+        _log.Information("Offering the apps of {Profile}", after.Name);
         RestoredByWindows?.Invoke(this, after);
         return true;
     }

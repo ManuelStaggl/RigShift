@@ -7,6 +7,8 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
+using RigShift.Core.Games;
+using RigShift.Windows.Ui;
 using Ursa.Controls;
 using Path = Avalonia.Controls.Shapes.Path;
 
@@ -208,6 +210,21 @@ public sealed partial class GamesView : UserControl
     }
 
     private void OnActions(object? sender, RoutedEventArgs e) => (TopLevel.GetTopLevel(this) as MainWindow)?.OpenPalette();
+
+    private void OnPickSettingsFile(object? sender, RoutedEventArgs e)
+    {
+        if (_editor is not { } editor)
+        {
+            return;
+        }
+
+        string current = new GameSettings { File = editor.SettingsFile }.FullPath;
+        string? folder = current.Length > 0 && System.IO.Path.IsPathFullyQualified(current) ? System.IO.Path.GetDirectoryName(current) : null;
+        if (NativeWindow.PickFile(App.OwnerHandle, Loc.Instance["Game_SettingsFilter"], Loc.Instance["Game_SettingsFile"], folder) is { } file)
+        {
+            editor.SettingsFile = file;
+        }
+    }
 
     /// <summary>RIGSHIFT_PREVIEW_SELECT=&lt;game&gt;: screenshots of one game without clicking.</summary>
     [System.Diagnostics.Conditional("DEBUG")]

@@ -181,7 +181,11 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     protected override Task<bool> ConfirmDeleteAsync(ProfileItem item) => _dialogs.ConfirmDeleteAsync(item.Name, _catalog.RuleCount(item.Profile.Id));
 
-    protected override Task DeleteStoredAsync(ProfileItem item) => _catalog.DeleteAsync(item.Profile, CancellationToken.None);
+    protected override async Task<Func<Task>> DeleteStoredAsync(ProfileItem item)
+    {
+        DeletedProfile deleted = await _catalog.DeleteAsync(item.Profile, CancellationToken.None);
+        return () => _catalog.UndoDeleteAsync(deleted, CancellationToken.None);
+    }
 
     protected override bool StoredChanged(ProfileEditorViewModel editor) =>
         !StoredForm.Same(_catalog.Find(editor.Id), editor.Saved) || editor.Rules.ChangedOnDisk(_settings.Current.AutomationRules);
@@ -260,6 +264,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         {
             Id = Guid.NewGuid(),
             Name = ProfileEditing.UniqueName(Loc.Format("Profile_CopyName", item.Name), _catalog.Profiles.Select(p => p.Name)),
+            FormerNames = null,
 
             // A key combination has one owner; the copy kept it and could not be saved until it was cleared.
             Hotkey = null,

@@ -50,6 +50,12 @@ public sealed record SwitchResult
     public DesktopIconOutcome DesktopIcons { get; init; } = DesktopIconOutcome.NotConfigured;
 
     /// <summary>
+    /// The desktop symbols of the profile that was left, read before the switch, for its <see cref="Profile.DesktopIcons"/>.
+    /// Only on a switch that stayed: a switch that was taken back never left the profile.
+    /// </summary>
+    public DesktopIconLayout? LeftDesktopIcons { get; init; }
+
+    /// <summary>
     /// Completes once the tidy-up after the result ended – windows moved off displays that are off, the profile's desktop
     /// symbols put back – with what became of the symbols. Never faults. Already complete when there is nothing to tidy.
     /// </summary>

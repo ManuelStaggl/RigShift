@@ -66,6 +66,19 @@ public sealed partial class AudioSlot : ObservableObject
 
     public ObservableCollection<AudioChoice> Choices { get; } = [];
 
+    /// <summary>Picks <paramref name="endpoint"/> when the list has it.</summary>
+    public bool TrySelect(AudioEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        if (Choices.FirstOrDefault(c => c.Endpoint is { } e && SameDevice(e, endpoint)) is not { } choice)
+        {
+            return false;
+        }
+
+        Selected = choice;
+        return true;
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDevice))]
     public partial AudioChoice? Selected { get; set; }

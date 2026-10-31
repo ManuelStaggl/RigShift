@@ -64,6 +64,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
     where TEditor : class, IDetailEditor
 {
     private static readonly TimeSpan StatusDuration = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan UndoDuration = TimeSpan.FromSeconds(10);
 
     private readonly UiThread _ui = new();
     private TItem? _newItem;
@@ -141,6 +142,12 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
 
     public bool HasStatusMessage => StatusMessage is not null;
 
+    /// <summary>The status line offers "Undo" (<see cref="UndoCommand"/>).</summary>
+    [ObservableProperty]
+    public partial bool HasUndo { get; private set; }
+
+    private Func<Task>? _undo;
+
     protected ILogger Log { get; }
 
     private readonly ITextClipboard _clipboard;
@@ -160,7 +167,8 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
 
     protected abstract Task<bool> ConfirmDeleteAsync(TItem item);
 
-    protected abstract Task DeleteStoredAsync(TItem item);
+    /// <returns>What brings the entry back, offered as "Undo".</returns>
+    protected abstract Task<Func<Task>> DeleteStoredAsync(TItem item);
 
     /// <summary>Whether the entry under <paramref name="editor"/> changed on disk since the editor opened or last saved.</summary>
     protected abstract bool StoredChanged(TEditor editor);
@@ -226,7 +234,17 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         int index = Items.IndexOf(item);
         _selectAfterRebuild = Items.ElementAtOrDefault(index + 1)?.Id ?? Items.ElementAtOrDefault(index - 1)?.Id;
         CloseEditor();
-        await RunStoreActionAsync(() => DeleteStoredAsync(item), Loc.Format("Status_Deleted", item.Name));
+        Func<Task>? undo = null;
+        await RunStoreActionAsync(async () => undo = await DeleteStoredAsync(item), null);
+        if (undo is not null)
+        {
+            Guid id = item.Id;
+            ShowStatus(Loc.Format("Status_Deleted", item.Name), async () =>
+            {
+                _selectAfterRebuild = id;
+                await undo();
+            });
+        }
     }
 
     [RelayCommand]
@@ -386,13 +404,31 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         DetailMessage = text;
     }
 
-    protected void ShowStatus(string text)
+    /// <param name="undo">Offered as "Undo" next to the text, which then stays longer.</param>
+    protected void ShowStatus(string text, Func<Task>? undo = null)
     {
         _statusTimer?.Cancel();
         var timer = new CancellationTokenSource();
         _statusTimer = timer;
         StatusMessage = text;
-        _ = HideStatusAsync(timer);
+        _undo = undo;
+        HasUndo = undo is not null;
+        _ = HideStatusAsync(timer, undo is null ? StatusDuration : UndoDuration);
+    }
+
+    /// <summary>Takes back the action of the status line (a delete).</summary>
+    [RelayCommand]
+    private async Task UndoAsync()
+    {
+        if (_undo is not { } undo)
+        {
+            return;
+        }
+
+        _undo = null;
+        HasUndo = false;
+        StatusMessage = null;
+        await RunStoreActionAsync(undo, Loc.Instance["Status_Undone"]);
     }
 
     /// <summary>Runs <paramref name="action"/> on the UI thread: right away when already there.</summary>
@@ -616,12 +652,14 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         }
     }
 
-    private async Task HideStatusAsync(CancellationTokenSource timer)
+    private async Task HideStatusAsync(CancellationTokenSource timer, TimeSpan duration)
     {
         try
         {
-            await Task.Delay(StatusDuration, timer.Token);
+            await Task.Delay(duration, timer.Token);
             StatusMessage = null;
+            _undo = null;
+            HasUndo = false;
         }
         catch (OperationCanceledException)
         {

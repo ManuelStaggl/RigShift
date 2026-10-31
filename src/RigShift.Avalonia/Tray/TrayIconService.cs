@@ -110,7 +110,7 @@ internal sealed class TrayIconService : IDisposable
         hotkeys.RegistrationFailed += (_, names) =>
             OnUi(() => Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NoticeLevel.Warning), click: null));
 
-        // Windows restored a profile's displays by itself: a click applies audio, apps and the rest.
+        // Windows restored a profile's displays by itself and the rest followed: a click starts its apps too.
         coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(
             (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NoticeLevel.Info),
             async () =>

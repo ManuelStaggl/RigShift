@@ -22,6 +22,65 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
     /// <summary>The apps of the last switch, running after its result until done or cancelled.</summary>
     private PendingApps? _pendingApps;
 
+    /// <summary>What each profile's apps started themselves, oldest first; this run of RigShift only.</summary>
+    private readonly Dictionary<Guid, List<string>> _startedFor = [];
+
+    /// <summary>
+    /// The apps of <paramref name="profile"/>, led by ending what <paramref name="leaving"/> started when it closes its
+    /// apps on leaving – newest first, and none that <paramref name="profile"/> starts itself.
+    /// </summary>
+    public AppPlan PlanFor(Profile profile, Profile? leaving)
+    {
+        AppPlan plan = AppPlan.For(profile);
+        if (leaving is not { CloseAppsWhenLeaving: true } || leaving.Id == profile.Id)
+        {
+            return plan;
+        }
+
+        List<string> started;
+        lock (_appsLock)
+        {
+            started = _startedFor.TryGetValue(leaving.Id, out List<string>? paths) ? [.. paths] : [];
+        }
+
+        var wanted = new HashSet<string>(profile.Apps.Where(a => a.Kind == AppActionKind.Start).Select(a => a.Path), StringComparer.OrdinalIgnoreCase);
+        return plan with
+        {
+            StopFirst = [.. started.Where(p => !wanted.Contains(p)).Reverse().Select(p => new AppAction { Kind = AppActionKind.Stop, Path = p })],
+        };
+    }
+
+    private void Started(Guid? profileId, string path)
+    {
+        if (profileId is not { } id)
+        {
+            return;
+        }
+
+        lock (_appsLock)
+        {
+            if (!_startedFor.TryGetValue(id, out List<string>? paths))
+            {
+                _startedFor[id] = paths = [];
+            }
+
+            paths.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+            paths.Add(path);
+        }
+    }
+
+    /// <summary>Ended, or found not running: no profile started what runs under that path any more.</summary>
+    private void Gone(string path)
+    {
+        lock (_appsLock)
+        {
+            foreach (List<string> paths in _startedFor.Values)
+            {
+                paths.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+    }
+
     /// <summary>
     /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
     /// The cancellation is requested before this method first yields.
@@ -60,7 +119,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
 
     public Task<AppsOutcome> Start(AppPlan plan)
     {
-        if (plan.Apps.Count == 0)
+        if (plan.Apps.Count == 0 && plan.StopFirst.Count == 0)
         {
             return SwitchResult.NoApps;
         }
@@ -89,10 +148,14 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         long startedAt = _time.GetTimestamp();
         try
         {
+            AppsOutcome closed = plan.StopFirst.Count == 0 ? AppsOutcome.Applied : await RunAppActionsAsync(plan.StopFirst, null, cancellationToken);
+
             // Wheel software and games want to see the device when they start; without it they start anyway.
-            bool deviceMissing = !await WaitForAppsDeviceAsync(plan, cancellationToken);
-            AppsOutcome started = await RunAppActionsAsync(plan.Apps, cancellationToken);
-            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
+            bool deviceMissing = plan.Apps.Count > 0 && !await WaitForAppsDeviceAsync(plan, cancellationToken);
+            AppsOutcome started = await RunAppActionsAsync(plan.Apps, plan.ProfileId, cancellationToken);
+            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing
+                : closed == AppsOutcome.Incomplete ? AppsOutcome.Incomplete
+                : started;
             _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", plan.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
             return outcome;
         }
@@ -108,7 +171,8 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
+    /// <param name="profileId">Whose starts to note for <see cref="Profile.CloseAppsWhenLeaving"/>; <c>null</c> for none.</param>
+    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, Guid? profileId, CancellationToken cancellationToken)
     {
         bool complete = true;
         foreach (AppAction app in apps)
@@ -126,16 +190,19 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
                 if (app.Kind == AppActionKind.Stop && !running)
                 {
                     _log.Information("App {App} does not run, nothing to end", app.Path);
+                    Gone(app.Path);
                     continue;
                 }
 
                 if (app.Kind == AppActionKind.Start)
                 {
                     _apps.Start(app.Path, app.Arguments);
+                    Started(profileId, app.Path);
                     _log.Information("App {App} started", app.Path);
                 }
                 else if (await _apps.StopAsync(app.Path, _options.AppStopGrace, cancellationToken))
                 {
+                    Gone(app.Path);
                     _log.Information("App {App} ended", app.Path);
                 }
                 else

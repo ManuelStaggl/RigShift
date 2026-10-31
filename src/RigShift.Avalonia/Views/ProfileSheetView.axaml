@@ -128,7 +128,11 @@
               <StackPanel Margin="32,24,32,96" HorizontalAlignment="Stretch" Spacing="24">
 
                 <Border Classes="notice" IsVisible="{Binding HasStatusMessage}">
-                  <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+                  <DockPanel>
+                    <Button Classes="link" DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center" IsVisible="{Binding HasUndo}"
+                            Command="{Binding UndoCommand}" Content="{v:Tr Status_Undo}" />
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                  </DockPanel>
                 </Border>
 
                 <!-- No profile yet -->
@@ -219,6 +223,7 @@
                   </Border>
                   <TextBlock Classes="danger" IsVisible="{Binding Editor.HasDisplaysProblem, FallbackValue=False}" Text="{Binding Editor.DisplaysProblem}" TextWrapping="Wrap" />
                   <TextBlock Classes="secondary" IsVisible="{Binding Editor.ArrangementNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" Text="{Binding Editor.ArrangementNote}" TextWrapping="Wrap" />
+                  <Button HorizontalAlignment="Left" Classes="link" Command="{Binding Editor.TakeCurrentAudioCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_TakeCurrentAudio}" IsVisible="{Binding Editor.OffersCurrentAudio, FallbackValue=False}" />
 
                   <!-- Groups: the summary is the header, the settings open in place. -->
                   <Border Padding="4" Background="{DynamicResource RsCard}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" BoxShadow="{DynamicResource RsCardShadow}" CornerRadius="{DynamicResource RsRadiusLg}">
@@ -457,12 +462,20 @@
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                       <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="label" Text="{v:Tr Editor_CloseAppsWhenLeaving}" />
+                        <TextBlock Classes="caption" Text="{v:Tr Editor_CloseAppsWhenLeavingHint}" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_CloseAppsWhenLeaving}" IsChecked="{Binding Editor.CloseAppsWhenLeaving, FallbackValue=False}" OffContent="" OnContent="" />
+                    </Grid>
+                    <Border Classes="divider" />
+                    <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                      <StackPanel VerticalAlignment="Center">
                         <TextBlock Classes="label" Text="{v:Tr Editor_DesktopIcons}" />
                         <TextBlock Classes="caption" Text="{Binding Editor.DesktopIconsText, FallbackValue=''}" TextWrapping="Wrap" />
                       </StackPanel>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="16">
                         <Button Classes="link" Command="{Binding Editor.ClearDesktopIconsCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_DesktopIconsClear}" IsVisible="{Binding Editor.HasDesktopIcons, FallbackValue=False}" />
-                        <Button Classes="neutral" Command="{Binding Editor.CaptureDesktopIconsCommand, FallbackValue={x:Null}}" Content="{v:Tr Editor_DesktopIconsCapture}" />
+                        <ToggleSwitch AutomationProperties.Name="{v:Tr Editor_DesktopIcons}" IsChecked="{Binding Editor.RememberDesktopIcons, FallbackValue=False}" OffContent="" OnContent="" />
                       </StackPanel>
                     </Grid>
                     <StackPanel IsVisible="{Binding Editor.Surround.IsVisible, FallbackValue=False}">

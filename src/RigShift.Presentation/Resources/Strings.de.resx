@@ -43,7 +43,7 @@
   <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
   <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Bildschirme umgeschaltet. {0} folgt, sobald verbunden.</value></data>
   <data name="Restored_Title" xml:space="preserve"><value>{0} erkannt</value></data>
-  <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Klicke hier, um auch Audio, Apps und die übrigen Einstellungen zu setzen.</value></data>
+  <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Audio und die übrigen Einstellungen sind gesetzt. Klicke hier, um auch die Apps zu starten.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Nicht an oder nicht bereit: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>In den Einstellungen aus: Jedes Profil schaltet ohne Nachfrage um.</value></data>
@@ -141,6 +141,8 @@
   <data name="Status_Saved" xml:space="preserve"><value>„{0}“ gespeichert.</value></data>
   <data name="Status_Duplicated" xml:space="preserve"><value>„{0}“ angelegt.</value></data>
   <data name="Status_Deleted" xml:space="preserve"><value>„{0}“ gelöscht.</value></data>
+  <data name="Status_Undo" xml:space="preserve"><value>Rückgängig</value></data>
+  <data name="Status_Undone" xml:space="preserve"><value>Wiederhergestellt.</value></data>
   <data name="Status_ShortcutCreated" xml:space="preserve"><value>Desktop-Verknüpfung „{0}“ erstellt. Sie funktioniert auch als Stream-Deck-Aktion.</value></data>
   <data name="Status_Error" xml:space="preserve"><value>Fehler: {0}</value></data>
 
@@ -158,6 +160,7 @@
   <data name="Editor_DisplaysHint" xml:space="preserve"><value>Zuerst in Windows anordnen, dann die aktuelle Anordnung übernehmen.</value></data>
   <data name="Editor_TakeCurrent" xml:space="preserve"><value>_Aktuelle Anordnung übernehmen</value></data>
   <data name="Editor_Taken" xml:space="preserve"><value>Aktuelle Anordnung übernommen: {0} Bildschirm(e).</value></data>
+  <data name="Editor_TakeCurrentAudio" xml:space="preserve"><value>Auch die aktuellen Audiogeräte übernehmen</value></data>
   <data name="Editor_Mode" xml:space="preserve"><value>{0} × {1} · Position {2}, {3}</value></data>
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Bildwiederholrate</value></data>
   <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Bildwiederholrate. Der Bildschirm meldet seine Raten nur, solange er eingeschaltet ist.</value></data>
@@ -325,6 +328,8 @@
   <data name="Editor_KeepAwakeHint" xml:space="preserve"><value>Kein Standby, Bildschirmschoner oder Bildschirm-Aus.</value></data>
   <data name="Editor_RememberWindows" xml:space="preserve"><value>Fensterpositionen merken</value></data>
   <data name="Editor_RememberWindowsHint" xml:space="preserve"><value>Offene Fenster kehren an ihren Platz und in ihre Größe zurück, wenn du wieder zu diesem Profil wechselst.</value></data>
+  <data name="Editor_CloseAppsWhenLeaving" xml:space="preserve"><value>Apps beim Verlassen schließen</value></data>
+  <data name="Editor_CloseAppsWhenLeavingHint" xml:space="preserve"><value>Beendet die Apps, die RigShift für dieses Profil gestartet hat. Apps, die schon liefen, bleiben offen.</value></data>
   <data name="Setup_WelcomeStep1" xml:space="preserve"><value>Die Schreibtisch-Anordnung so speichern, wie sie gerade ist</value></data>
   <data name="Setup_WelcomeStep2" xml:space="preserve"><value>Zum Rig wechseln und es ebenfalls speichern</value></data>
   <data name="Setup_WelcomeStep3" xml:space="preserve"><value>Optional: ein USB-Gerät, das automatisch umschaltet</value></data>
@@ -368,11 +373,14 @@
   <data name="Game_RuntimeActive" xml:space="preserve"><value>{0} (Windows-Einstellung)</value></data>
   <data name="Game_Settings" xml:space="preserve"><value>Eigene Spieleinstellungen</value></data>
   <data name="Game_SettingsHint" xml:space="preserve"><value>Schreibt diese Werte vor dem Start in die Einstellungsdatei des Spiels und stellt nach dem Ende die vorherigen wieder her.</value></data>
-  <data name="Game_SettingsFile" xml:space="preserve"><value>Einstellungsdatei (JSON)</value></data>
+  <data name="Game_SettingsFile" xml:space="preserve"><value>Einstellungsdatei (JSON oder INI)</value></data>
   <data name="Game_SettingsKeys" xml:space="preserve"><value>Werte, je Zeile Abschnitt/Name</value></data>
+  <data name="Game_SettingsBrowse" xml:space="preserve"><value>Auswählen…</value></data>
+  <data name="Game_SettingsSearch" xml:space="preserve"><value>Werte suchen</value></data>
+  <data name="Game_SettingsFilter" xml:space="preserve"><value>Einstellungsdateien (*.json;*.ini)|*.json;*.ini|Alle Dateien (*.*)|*.*</value></data>
   <data name="Game_SettingsRemembered" xml:space="preserve"><value>{0} Werte gemerkt. Was du im Spielmenü änderst, wird nach dem Beenden übernommen.</value></data>
   <data name="Game_SettingsNoneYet" xml:space="preserve"><value>Noch nichts gemerkt: Stell die Werte beim nächsten Spiel im Menü ein, RigShift übernimmt sie nach dem Beenden.</value></data>
-  <data name="Problem_SettingsInvalid" xml:space="preserve"><value>Gib den vollständigen Pfad zu einer .json-Datei und mindestens einen Wert an.</value></data>
+  <data name="Problem_SettingsInvalid" xml:space="preserve"><value>Gib den vollständigen Pfad zu einer .json- oder .ini-Datei und mindestens einen Wert an.</value></data>
   <data name="Game_RuntimeMissing" xml:space="preserve"><value>{0} (nicht installiert)</value></data>
   <data name="Game_Duplicate" xml:space="preserve"><value>Duplizieren, z. B. als VR-Variante</value></data>
   <data name="Game_NoProfile" xml:space="preserve"><value>Nichts umschalten</value></data>
@@ -416,13 +424,13 @@
   <data name="Common_Save" xml:space="preserve"><value>_Speichern</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Leeren</value></data>
-  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole</value></data>
+  <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole merken</value></data>
   <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows würfelt sie beim Bildschirmwechsel durcheinander. Bei aktivem Profil anordnen, dann hier speichern.</value></data>
   <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Positionen speichern</value></data>
   <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Vergessen</value></data>
-  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gespeichert</value></data>
-  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gespeichert {1}</value></data>
-  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gespeichert {1}</value></data>
+  <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Werden gemerkt, wenn du dieses Profil verlässt</value></data>
+  <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gemerkt {1}</value></data>
+  <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gemerkt {1}</value></data>
   <data name="Editor_DesktopIconsRestore" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="Editor_DesktopIconsRestoreHint" xml:space="preserve"><value>Setzt die Symbole auf die gespeicherten Plätze zurück, ohne umzuschalten.</value></data>
   <data name="SaveBar_Unsaved" xml:space="preserve"><value>Ungespeicherte Änderungen</value></data>

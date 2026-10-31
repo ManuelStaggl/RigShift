@@ -328,6 +328,31 @@ public sealed class ProfileEditorViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TakeCurrent_TakesTheRunningGrid_AndOffersTheDefaultAudio()
+    {
+        IAudioController audio = Substitute.For<IAudioController>();
+        audio.ListAsync(AudioDirection.Render, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Speakers, AudioDirection.Render, true, AudioRoleMask.All)]);
+        audio.ListAsync(AudioDirection.Capture, Arg.Any<CancellationToken>())
+            .Returns([new AudioDeviceInfo(Microphone, AudioDirection.Capture, true, AudioRoleMask.All)]);
+        var driver = new FakeSurroundController { ActiveGrid = Triple };
+        ProfileEditorViewModel editor = await EditorAsync(
+            Rig(), surround: new SurroundState { Availability = SurroundAvailability.Available, Grids = [] }, audio: audio, surroundController: driver);
+
+        await editor.TakeCurrentCommand.ExecuteAsync(null);
+
+        editor.Surround.Build().ShouldBe(new SurroundSetting { Enabled = true, Grid = Triple });
+        editor.OffersCurrentAudio.ShouldBeTrue();
+        editor.AudioSlots[0].Endpoint.ShouldBeNull("asked, not taken");
+
+        editor.TakeCurrentAudioCommand.Execute(null);
+
+        editor.AudioSlots[0].Endpoint.ShouldBe(Speakers);
+        editor.AudioSlots[1].Endpoint.ShouldBe(Microphone);
+        editor.OffersCurrentAudio.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task TakeCurrent_ReplacesTheDisplaysWithWhatIsOnScreen()
     {
         ProfileEditorViewModel editor = await EditorAsync(Rig());
@@ -426,10 +451,16 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         await editor.CaptureDesktopIconsCommand.ExecuteAsync(null);
 
         editor.HasDesktopIcons.ShouldBeTrue();
+        editor.RememberDesktopIcons.ShouldBeTrue("symbols saved by hand are meant to come back");
         editor.DesktopIconsText.ShouldNotBe(Loc.Instance["Status_IconsUnavailable"]);
         editor.IsDirty.ShouldBeTrue();
 
+        // Forgetting keeps remembering on: the next switch away reads them again.
         editor.ClearDesktopIconsCommand.Execute(null);
+        editor.HasDesktopIcons.ShouldBeFalse();
+        editor.IsDirty.ShouldBeTrue();
+
+        editor.RememberDesktopIcons = false;
         editor.IsDirty.ShouldBeFalse();
     }
 
@@ -542,7 +573,8 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         (await editor.SaveAsync()).ShouldBe(expected);
 
     private async Task<ProfileEditorViewModel> EditorAsync(
-        Profile profile, bool isNew = false, SurroundState? surround = null, ProfileCatalog? catalog = null)
+        Profile profile, bool isNew = false, SurroundState? surround = null, ProfileCatalog? catalog = null,
+        IAudioController? audio = null, ISurroundController? surroundController = null)
     {
         IReadOnlyList<UsbDevice> connected = [new UsbDevice(Wheelbase, "Fanatec Wheelbase")];
         IUsbPowerCheck powerCheck = Substitute.For<IUsbPowerCheck>();
@@ -556,7 +588,7 @@ public sealed class ProfileEditorViewModelTests : IDisposable
             rules,
             ConfirmationEnabled: true);
         var services = new ProfileEditorServices(
-            catalog ?? _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, _picker, Logger.None);
+            catalog ?? _host.Catalog, _display, _desktopIcons, _hotkeys, _host.Settings, _picker, Logger.None, audio, surroundController);
         var editor = new ProfileEditorViewModel(profile, isNew, context, services);
         _editors.Add(editor);
         await RatesLoadedAsync(editor);

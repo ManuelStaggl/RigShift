@@ -179,6 +179,37 @@ public sealed class GameSessionRunnerTests
         learned.ProcessName.ShouldBe("iRacingSim64DX11");
     }
 
+    /// <summary>A guess from the install folder is not waited for: the start learns the real name and reports it.</summary>
+    [Fact]
+    public async Task Run_WithAGuessedProcessName_LearnsTheRealOne()
+    {
+        GameEntry game = Game(new GameLaunch
+        {
+            Kind = GameLaunchKind.Steam,
+            Target = "266410",
+            InstallFolder = InstallFolder,
+            ProcessName = "iRacingUI",
+            ProcessNameGuessed = true,
+        });
+        _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
+        _processes.OnListed = call =>
+        {
+            if (call == 2)
+            {
+                _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX11", InstallFolder + @"\iRacingSim64DX11.exe", _time.GetUtcNow()));
+            }
+        };
+        GameProcessLearned? learned = null;
+        GameSessionRunner runner = Runner();
+        runner.ProcessLearned += (_, e) => learned = e;
+
+        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
+        learned.ShouldNotBeNull().ProcessName.ShouldBe("iRacingSim64DX11");
+        _time.Elapsed.ShouldBeLessThan(GameProcessLearner.Timeout, "the guess is not waited for");
+    }
+
     /// <summary>Once the name is known there is nothing left to learn – the second start goes straight to waiting.</summary>
     [Fact]
     public async Task Run_WithAKnownProcessName_DoesNotLearnAgain()

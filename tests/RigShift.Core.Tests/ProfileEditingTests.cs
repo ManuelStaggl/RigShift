@@ -109,7 +109,8 @@ public sealed class ProfileEditingTests
     {
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig();
-        Profile[] all = [desk, rig];
+        Profile tv = Profile("TV", DeskModes);
+        Profile[] all = [desk, rig, tv];
 
         // Previous is active again (Windows restored it): fall through to the default.
         ProfileEditing.ToggleTarget(all, desk.Id, desk.Id, rig.Id).ShouldBe(rig);
@@ -119,12 +120,50 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void ToggleTarget_WithTwoProfiles_GoesToTheOtherOne()
+    {
+        Profile desk = Profile("Desk", DeskModes);
+        Profile rig = Rig();
+        Profile[] all = [desk, rig];
+
+        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBe(rig);
+        // Previous deleted, default is the active one.
+        ProfileEditing.ToggleTarget(all, rig.Id, Guid.NewGuid(), rig.Id).ShouldBe(desk);
+        // No profile active: there is no "other one".
+        ProfileEditing.ToggleTarget(all, null, null, null).ShouldBeNull();
+    }
+
+    [Fact]
     public void FindByName_IgnoresCaseAndBlanks()
     {
         Profile rig = Rig();
 
         ProfileEditing.FindByName([Profile("Desk", DeskModes), rig], " rig ").ShouldBe(rig);
         ProfileEditing.FindByName([rig], "Rigs").ShouldBeNull();
+    }
+
+    [Fact]
+    public void FindByName_MatchesFormerNamesAndTheId_ButNeverOverAnotherCurrentName()
+    {
+        Profile rig = Rig() with { FormerNames = ["Sim", "Desk"] };
+        Profile desk = Profile("Desk", DeskModes);
+        Profile[] all = [rig, desk];
+
+        ProfileEditing.FindByName(all, " sim ").ShouldBe(rig);
+        ProfileEditing.FindByName(all, "Desk").ShouldBe(desk);
+        ProfileEditing.FindByName(all, rig.Id.ToString()).ShouldBe(rig);
+        ProfileEditing.FindByName(all, Guid.NewGuid().ToString()).ShouldBeNull();
+    }
+
+    [Fact]
+    public void NameHistory_After_KeepsEveryOldNameOnce_AndNeverTheCurrentOne()
+    {
+        NameHistory.After("Rig", null, "Rig").ShouldBeNull();
+        NameHistory.After("Rig", null, "Sim rig").ShouldBe(["Rig"]);
+        NameHistory.After("Sim rig", ["Rig"], "Cockpit").ShouldBe(["Rig", "Sim rig"]);
+        // Renamed back: the name is current again, not former.
+        NameHistory.After("Cockpit", ["Rig", "Sim rig"], " rig ").ShouldBe(["Sim rig", "Cockpit"]);
+        NameHistory.After("Rig", ["rig", "RIG "], "Desk").ShouldBe(["rig"]);
     }
 
     [Fact]
