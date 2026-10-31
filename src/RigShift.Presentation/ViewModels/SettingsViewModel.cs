@@ -69,13 +69,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
     /// <summary>Only with a default profile and the autostart on; otherwise the switch would have no effect.</summary>
     public bool CanApplyDefaultWithWindows => StartWithWindows && SelectedDefaultProfile?.Key is not null;
 
-    /// <summary>
-    /// Switch "confirm after switching". Stored only as <see cref="AppSettings.ConfirmTimeoutSeconds"/>: off is 0, on
-    /// writes the seconds shown below, so there is no second value that could contradict it.
-    /// </summary>
-    [ObservableProperty]
-    public partial bool ConfirmEnabled { get; set; }
-
+    /// <summary>Length of the countdown; whether a switch asks at all is set per profile.</summary>
     [ObservableProperty]
     public partial double? ConfirmTimeoutSeconds { get; set; }
 
@@ -147,7 +141,6 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
             LanguageChoices.Add(new Choice("de", "Deutsch"));
             SelectedLanguage = LanguageChoices.FirstOrDefault(c => c.Key == current.Language) ?? LanguageChoices[0];
 
-            ConfirmEnabled = current.ConfirmTimeoutSeconds > 0;
             ConfirmTimeoutSeconds = current.ConfirmTimeoutSeconds > 0 ? current.ConfirmTimeoutSeconds : DefaultConfirmSeconds;
             InstallUpdatesAutomatically = !current.OnlyNotifyAboutUpdates;
             DetailedLogging = current.DetailedLogging;
@@ -206,25 +199,15 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         }
     }
 
-    partial void OnConfirmEnabledChanged(bool value)
-    {
-        if (!_loading)
-        {
-            _log.Information("Confirmation after switching turned {State}", value ? "on" : "off");
-            Persist(s => s with { ConfirmTimeoutSeconds = value ? EnabledConfirmSeconds() : 0 });
-        }
-    }
-
     partial void OnConfirmTimeoutSecondsChanged(double? value)
     {
-        if (!_loading && ConfirmEnabled && value is not null)
+        if (!_loading && value is not null)
         {
-            Persist(s => s with { ConfirmTimeoutSeconds = EnabledConfirmSeconds() });
+            // At least one second: 0 meant "no profile asks" before 5.0 and would be migrated as that.
+            int seconds = (int)Math.Clamp(Math.Round(value.Value), 1, AppSettings.MaxConfirmTimeoutSeconds);
+            Persist(s => s with { ConfirmTimeoutSeconds = seconds });
         }
     }
-
-    /// <summary>While switched on, 0 would silently mean "off" again, so at least one second.</summary>
-    private int EnabledConfirmSeconds() => (int)Math.Clamp(Math.Round(ConfirmTimeoutSeconds ?? DefaultConfirmSeconds), 1, 120);
 
     partial void OnSelectedLanguageChanged(Choice? value)
     {

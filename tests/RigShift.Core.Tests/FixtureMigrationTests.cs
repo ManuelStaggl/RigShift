@@ -146,6 +146,43 @@ public sealed class FixtureMigrationTests : IDisposable
         settings.DuckingBeforeProfiles.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task Load_SettingsFixture4_7_ConfirmationOff_MovesIntoTheProfiles()
+    {
+        Profile rig = await LoadProfileAsync("profile-1.0.json");
+        string file = Path.Combine(_directory, "settings.json");
+        File.Copy(Fixture("settings-4.7.json"), file);
+        Profile desk = rig with { Id = Guid.NewGuid(), Name = "Desk", SwitchWithoutAsking = true };
+
+        AppSettings settings = await new JsonSettingsStore(file, Logger.None).LoadAsync(Ct);
+
+        // 0 survives loading, so the profiles can still learn that none of them asked.
+        settings.ConfirmTimeoutSeconds.ShouldBe(0);
+        // The rule's own "skipConfirmation" is simply dropped: rules follow their profile.
+        settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ProfileId.ShouldBe(rig.Id);
+        Profile migrated = settings.ProfilesToMigrate([rig, desk]).ShouldHaveSingleItem();
+        migrated.Id.ShouldBe(rig.Id);
+        migrated.SwitchWithoutAsking.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("20")]
+    [InlineData(null)]
+    public async Task Load_SettingsConfirmationOn_ProfilesKeepTheirOwnSwitch(string? seconds)
+    {
+        Profile rig = await LoadProfileAsync("profile-1.0.json");
+        string file = Path.Combine(_directory, "settings.json");
+        string json = (await File.ReadAllTextAsync(Fixture("settings-4.7.json"), Ct))
+            .Replace("\"confirmTimeoutSeconds\": 0,", seconds is null ? string.Empty : $"\"confirmTimeoutSeconds\": {seconds},", StringComparison.Ordinal);
+        await File.WriteAllTextAsync(file, json, Ct);
+
+        AppSettings settings = await new JsonSettingsStore(file, Logger.None).LoadAsync(Ct);
+
+        settings.ConfirmTimeoutSeconds.ShouldBe(seconds is null ? AppSettings.DefaultConfirmTimeoutSeconds : 20);
+        settings.ProfilesToMigrate([rig]).ShouldBeEmpty();
+        rig.SwitchWithoutAsking.ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory))

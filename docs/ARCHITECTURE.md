@@ -18,7 +18,7 @@ implements them; Presentation and the app compose them.
 
 ## Core concepts
 
-- **`Profile`** – desired state: displays, audio (endpoints and volume), confirm timeout, hotkey, apps to start or
+- **`Profile`** – desired state: displays, audio (endpoints and volume), whether to ask to keep the layout, hotkey, apps to start or
   stop (optionally after a USB device appears, with a maximum wait), keep awake, communications ducking off.
 - **`DisplayAssignment`** – identity, mode (resolution, refresh rate as a fraction), position, rotation, primary,
   optional, custom name, HDR (`null` = leave as is).

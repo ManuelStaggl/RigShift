@@ -120,7 +120,7 @@ public sealed record SwitchRequest
     /// <summary>Compute and report the plan without touching displays or audio.</summary>
     public bool DryRun { get; init; }
 
-    /// <summary>Skip the keep-or-revert confirmation even if the profile asks for it.</summary>
+    /// <summary>Skip the keep-or-revert confirmation even if the profile asks for it (<c>--no-confirm</c>, a way back).</summary>
     public bool SkipConfirmation { get; init; }
 
     /// <summary>
@@ -131,11 +131,11 @@ public sealed record SwitchRequest
 
     /// <summary>
     /// The switch came from a <c>rigshift://</c> link, i.e. possibly from a web page: it always asks for confirmation,
-    /// regardless of <see cref="SkipConfirmation"/> and a timeout of 0.
+    /// regardless of the profile and <see cref="SkipConfirmation"/>.
     /// </summary>
     public bool FromLink { get; init; }
 
-    /// <summary>Confirmation timeout for profiles that do not set their own (application setting).</summary>
+    /// <summary>Length of the countdown (application setting); 0 or less takes <see cref="SwitchOptions.DefaultConfirmTimeout"/>.</summary>
     public int DefaultConfirmTimeoutSeconds { get; init; } = (int)SwitchOptions.DefaultConfirmTimeout.TotalSeconds;
 
     /// <summary>

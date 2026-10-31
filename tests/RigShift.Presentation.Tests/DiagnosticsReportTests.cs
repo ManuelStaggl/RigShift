@@ -69,7 +69,7 @@ public sealed class DiagnosticsReportTests
         report.ShouldContain("- NVIDIA GeForce RTX 4080 SUPER, driver 32.0.15.9636 (596.36)");
         report.ShouldContain("text size 125 %");
         report.ShouldContain("Updates: notify only");
-        report.ShouldContain("Confirmation: 20 s");
+        report.ShouldContain("Confirmation countdown: 20 s");
         report.ShouldContain("USB rules: 1 (paused)");
         report.ShouldContain("Games: 3");
     }

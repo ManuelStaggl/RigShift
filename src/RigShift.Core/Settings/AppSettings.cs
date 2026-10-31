@@ -39,11 +39,24 @@ public sealed record AppSettings
     public static Profiles.Hotkey DefaultQuickSwitchHotkey { get; } = new() { Modifiers = Profiles.HotkeyModifiers.Control | Profiles.HotkeyModifiers.Alt, VirtualKey = 0x20 };
 
     /// <summary>
-    /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on
-    /// purpose: the JSON source generator sets init-only properties through an object initializer and turns a missing
-    /// key into 0, which would silently switch the safety net off. With <c>set</c> it keeps the initializer value.
+    /// Length of the keep-or-revert countdown; whether a switch asks at all is up to the profile
+    /// (<see cref="Profiles.Profile.SwitchWithoutAsking"/>). 0 only comes from files before 5.0, where it switched the
+    /// question off for every profile, see <see cref="ProfilesToMigrate"/>. A regular setter on purpose: the JSON
+    /// source generator sets init-only properties through an object initializer and turns a missing key into 0. With
+    /// <c>set</c> it keeps the initializer value.
     /// </summary>
-    public int ConfirmTimeoutSeconds { get; set; } = 15;
+    public int ConfirmTimeoutSeconds { get; set; } = DefaultConfirmTimeoutSeconds;
+
+    public const int DefaultConfirmTimeoutSeconds = 15;
+
+    /// <summary>
+    /// Files before 5.0 had a global "confirm after switching"; with it off (countdown 0) no profile asked. Now each
+    /// profile decides, so the profiles that would ask must switch without asking. Empty when there is nothing to move;
+    /// afterwards the countdown goes back to <see cref="DefaultConfirmTimeoutSeconds"/>.
+    /// </summary>
+    public IReadOnlyList<Profiles.Profile> ProfilesToMigrate(IEnumerable<Profiles.Profile> profiles) => ConfirmTimeoutSeconds > 0
+        ? []
+        : [.. profiles.Where(p => !p.SwitchWithoutAsking).Select(p => p with { SwitchWithoutAsking = true })];
 
     /// <summary>UI language: <c>null</c> follows Windows, otherwise a culture name such as <c>en</c> or <c>de</c>.</summary>
     public string? Language { get; init; }

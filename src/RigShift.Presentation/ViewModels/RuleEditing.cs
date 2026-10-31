@@ -126,7 +126,6 @@ public sealed partial class RuleCard : ObservableObject
         SetDevices(rule);
         SelectedProfile = owner.ProfileChoiceFor(rule.ProfileId);
         SelectedExit = RuleExits.ChoiceFor(owner.ExitChoices, rule);
-        SkipConfirmation = rule.SkipConfirmation;
         ExitDelaySeconds = rule.ExitDelaySeconds;
 
         // A rule without a device does nothing yet, so it starts open.
@@ -185,9 +184,6 @@ public sealed partial class RuleCard : ObservableObject
 
     [ObservableProperty]
     public partial Choice? SelectedExit { get; set; }
-
-    [ObservableProperty]
-    public partial bool SkipConfirmation { get; set; }
 
     [ObservableProperty]
     public partial double? ExitDelaySeconds { get; set; }
@@ -285,7 +281,6 @@ public sealed partial class RuleCard : ObservableObject
             ProfileId = Guid.TryParse(SelectedProfile?.Key, out Guid profile) ? profile : ProfileId,
             OnExit = onExit,
             ExitProfileId = exitProfile,
-            SkipConfirmation = SkipConfirmation,
             ExitDelaySeconds = ExitDelaySeconds is { } seconds
                 ? (int)Math.Clamp(Math.Round(seconds), 0, AutomationRule.MaxExitDelaySeconds)
                 : AutomationRule.DefaultExitDelaySeconds,
@@ -321,8 +316,6 @@ public sealed partial class RuleCard : ObservableObject
     }
 
     partial void OnSelectedExitChanged(Choice? value) => _owner.OnCardChanged();
-
-    partial void OnSkipConfirmationChanged(bool value) => _owner.OnCardChanged();
 
     partial void OnExitDelaySecondsChanged(double? value) => _owner.OnCardChanged();
 }
@@ -579,7 +572,6 @@ public sealed partial class ProfileRulesEditor : ObservableObject, IRuleOwner
         && a.ProfileId == b.ProfileId
         && a.OnExit == b.OnExit
         && a.ExitProfileId == b.ExitProfileId
-        && a.SkipConfirmation == b.SkipConfirmation
         && a.ExitDelaySeconds == b.ExitDelaySeconds
         && DeviceKeyOf(a.Devices) == DeviceKeyOf(b.Devices);
 

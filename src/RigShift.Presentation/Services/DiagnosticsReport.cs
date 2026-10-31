@@ -98,7 +98,7 @@ public static partial class DiagnosticsReport
             string displays = string.Join(", ", profile.Displays.Select(d =>
                 DisplayNames.Of(d) + (d.IsPrimary ? " (primary)" : string.Empty) + (d.IsOptional ? " (optional)" : string.Empty)));
             text.AppendLine(FormattableString.Invariant(
-                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; confirmation {(profile.SwitchWithoutAsking ? "off" : "app setting")}, {profile.Apps.Count} app(s){(profile.KeepAwake ? ", keeps awake" : string.Empty)}{(profile.RememberWindows ? ", remembers windows" : string.Empty)}"));
+                $"- {profile.Name}{(profile.Id == input.ActiveProfileId ? " [active]" : string.Empty)}: {displays}; asks to keep {(profile.SwitchWithoutAsking ? "no" : "yes")}, {profile.Apps.Count} app(s){(profile.KeepAwake ? ", keeps awake" : string.Empty)}{(profile.RememberWindows ? ", remembers windows" : string.Empty)}"));
         }
 
         text.AppendLine().AppendLine("## Recent switches");
@@ -141,7 +141,7 @@ public static partial class DiagnosticsReport
         text.AppendLine().AppendLine("## Settings");
         text.AppendLine(FormattableString.Invariant($"Language {settings.Language ?? "Windows"}, text size {textScalePercent ?? 100} %"));
         text.AppendLine(FormattableString.Invariant($"Updates: {(settings.OnlyNotifyAboutUpdates ? "notify only" : "install automatically")}"));
-        text.AppendLine(FormattableString.Invariant($"Confirmation: {(settings.ConfirmTimeoutSeconds > 0 ? $"{settings.ConfirmTimeoutSeconds} s" : "off")}"));
+        text.AppendLine(FormattableString.Invariant($"Confirmation countdown: {settings.ConfirmTimeoutSeconds} s"));
         text.AppendLine(FormattableString.Invariant(
             $"Default profile: {(settings.DefaultProfileId is null ? "none" : "set")}, switch-back hotkey: {(settings.ToggleHotkey is null ? "none" : "set")}"));
         text.AppendLine(FormattableString.Invariant($"USB rules: {rules}{(rules > 0 && settings.AutomationPaused ? " (paused)" : string.Empty)}"));

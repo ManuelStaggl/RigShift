@@ -54,7 +54,6 @@
   <data name="Restored_Text" xml:space="preserve"><value>Windows restored the displays of {0} by itself. Its audio and other settings are set. Click here to start its apps too.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Turn on your display</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Not on or not ready: {0}. RigShift waits up to {1} seconds for it.</value></data>
-  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>Off in the settings: every profile switches without asking.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>Try HDR on this display once in Windows settings first. On some monitors, especially over HDMI, turning HDR on or off can freeze the graphics driver.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>More rates appear once this display has been on while RigShift runs.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (close)</value></data>
@@ -94,7 +93,6 @@
   <data name="QuickSwitch_Game" xml:space="preserve"><value>Game</value></data>
   <data name="QuickSwitch_Empty" xml:space="preserve"><value>Nothing matches.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
-  <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Same as Windows</value></data>
@@ -278,7 +276,6 @@
   <data name="Automation_ExitTo" xml:space="preserve"><value>Switch to {0}</value></data>
   <data name="Automation_ExitDelay" xml:space="preserve"><value>Wait (seconds)</value></data>
   <data name="Automation_ExitDelayHint" xml:space="preserve"><value>How long the device must stay gone before this happens. Turning it off and on again within this time changes nothing.</value></data>
-  <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Switch without confirmation</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Delete rule</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(deleted profile)</value></data>
   <data name="Automation_Device" xml:space="preserve"><value>USB device</value></data>
@@ -299,7 +296,6 @@
   <data name="Automation_DeleteTitle" xml:space="preserve"><value>Delete rule?</value></data>
   <data name="Automation_DeleteText" xml:space="preserve"><value>The rule for “{0}” will be deleted. This cannot be undone.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>This rule will be deleted. This cannot be undone.</value></data>
-  <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>The rule switches without asking. If a display stays dark, nothing is reverted automatically.</value></data>
   <data name="Automation_DevicesConnect" xml:space="preserve"><value>When all of these USB devices are connected</value></data>
   <data name="Automation_AddDevice" xml:space="preserve"><value>Add device</value></data>
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>With several devices the rule switches once all of them are connected, and its end action runs once one of them is gone.</value></data>
@@ -556,8 +552,7 @@
   <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Default profile at sign-in</value></data>
   <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Switch to it when RigShift starts with Windows.</value></data>
   <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows brings back the layout the PC was shut down in. With this on, it starts in the default profile instead, unless the devices of a USB rule are connected. Needs a default profile and “Start with Windows”.</value></data>
-  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Reverts to the old layout unless you press Keep.</value></data>
-  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>USB rules wait at least 30 s.</value></data>
+  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>For profiles that ask. USB rules wait at least 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>Pause USB rules</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>No rule switches while this is on. Also in the tray menu.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Devices show up here as soon as a rule or a profile uses them. Names appear in rules, profiles and messages.</value></data>
@@ -672,7 +667,8 @@
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Switches to this profile once all devices in a rule are connected.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Command</value></data>
   <data name="Trigger_CommandHint" xml:space="preserve"><value>For Stream Deck, scripts or a terminal.</value></data>
-  <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>No confirmation after switching to this profile.</value></data>
+  <data name="Editor_AskToKeepLayout" xml:space="preserve"><value>Ask to keep the layout after switching</value></data>
+  <data name="Editor_AskToKeepLayoutHint" xml:space="preserve"><value>Reverts to the old layout unless you press Keep.</value></data>
   <data name="Game_WindowsTitle" xml:space="preserve"><value>Window positions</value></data>
   <data name="Overview_Switch" xml:space="preserve">
     <value>Switch</value>

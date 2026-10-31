@@ -59,7 +59,6 @@ public sealed class JsonSettingsStoreTests : IDisposable
             ProfileId = Guid.NewGuid(),
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = Guid.NewGuid(),
-            SkipConfirmation = true,
             ExitDelaySeconds = 30,
         };
 

@@ -382,10 +382,6 @@
                               <TextBlock Classes="label" Text="{v:Tr Automation_ExitDelay}" ToolTip.Tip="{v:Tr Automation_ExitDelayHint}" />
                               <NumericUpDown Grid.Column="1" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Automation_ExitDelay}" FormatString="0.#" Maximum="600" Minimum="0" Value="{Binding ExitDelaySeconds, Converter={x:Static v:Converters.Seconds}}" />
                             </Grid>
-                            <Grid Classes="row" ColumnDefinitions="*,Auto">
-                              <TextBlock Classes="label" Text="{v:Tr Automation_SkipConfirmation}" ToolTip.Tip="{v:Tr Automation_SkipConfirmationHint}" />
-                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Automation_SkipConfirmation}" IsChecked="{Binding SkipConfirmation}" OffContent="" OnContent="" />
-                            </Grid>
                             <TextBlock Classes="warning" IsVisible="{Binding HasDuplicateDevice}" Text="{v:Tr Automation_DuplicateDevice}" TextWrapping="Wrap" />
                             <Border Classes="notice" IsVisible="{Binding HasPowerWarning}">
                               <TextBlock Text="{v:Tr Automation_PowerSavingText}" TextWrapping="Wrap" />
@@ -441,11 +437,10 @@
                   <StackPanel Margin="40,0,4,16">
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                       <StackPanel VerticalAlignment="Center">
-                        <TextBlock Classes="label" Text="{v:Tr Editor_SwitchWithoutAsking}" />
-                        <TextBlock Classes="caption" Text="{v:Tr Editor_SwitchWithoutAskingHint}" TextWrapping="Wrap" />
-                        <TextBlock Classes="caption warning" IsVisible="{Binding Editor.ConfirmationDisabled, FallbackValue=False}" Text="{v:Tr Editor_ConfirmationOff}" TextWrapping="Wrap" />
+                        <TextBlock Classes="label" Text="{v:Tr Editor_AskToKeepLayout}" />
+                        <TextBlock Classes="caption" Text="{v:Tr Editor_AskToKeepLayoutHint}" TextWrapping="Wrap" />
                       </StackPanel>
-                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_SwitchWithoutAsking}" IsChecked="{Binding Editor.SwitchWithoutAsking, FallbackValue=False}" IsEnabled="{Binding Editor.ConfirmationEnabled, FallbackValue=False}" OffContent="" OnContent="" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_AskToKeepLayout}" IsChecked="{Binding Editor.AskToKeepLayout, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">

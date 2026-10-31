@@ -57,7 +57,6 @@
   <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Audio und die übrigen Einstellungen sind gesetzt. Klicke hier, um auch die Apps zu starten.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Nicht an oder nicht bereit: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
-  <data name="Editor_ConfirmationOff" xml:space="preserve"><value>In den Einstellungen aus: Jedes Profil schaltet ohne Nachfrage um.</value></data>
   <data name="Editor_HdrWarning" xml:space="preserve"><value>HDR an diesem Bildschirm zuerst einmal in den Windows-Einstellungen ausprobieren. Bei manchen Monitoren, vor allem über HDMI, kann das Ein- oder Ausschalten von HDR den Grafiktreiber einfrieren.</value></data>
   <data name="Editor_RefreshRatesUnknown" xml:space="preserve"><value>Weitere Raten erscheinen, sobald der Bildschirm einmal an war, während RigShift läuft.</value></data>
   <data name="Profile_AppStop" xml:space="preserve"><value>{0} (beenden)</value></data>
@@ -97,7 +96,6 @@
   <data name="QuickSwitch_Game" xml:space="preserve"><value>Spiel</value></data>
   <data name="QuickSwitch_Empty" xml:space="preserve"><value>Nichts gefunden.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
-  <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
@@ -281,7 +279,6 @@
   <data name="Automation_ExitTo" xml:space="preserve"><value>Umschalten auf {0}</value></data>
   <data name="Automation_ExitDelay" xml:space="preserve"><value>Warten (Sekunden)</value></data>
   <data name="Automation_ExitDelayHint" xml:space="preserve"><value>So lange muss das Gerät weg sein, bevor das passiert. Aus- und wieder Einschalten innerhalb dieser Zeit ändert nichts.</value></data>
-  <data name="Automation_SkipConfirmation" xml:space="preserve"><value>Ohne Bestätigung umschalten</value></data>
   <data name="Automation_Delete" xml:space="preserve"><value>Regel löschen</value></data>
   <data name="Automation_MissingProfile" xml:space="preserve"><value>(gelöschtes Profil)</value></data>
   <data name="Automation_Device" xml:space="preserve"><value>USB-Gerät</value></data>
@@ -302,7 +299,6 @@
   <data name="Automation_DeleteTitle" xml:space="preserve"><value>Regel löschen?</value></data>
   <data name="Automation_DeleteText" xml:space="preserve"><value>Die Regel für „{0}“ wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
   <data name="Automation_DeleteTextNoDevice" xml:space="preserve"><value>Diese Regel wird gelöscht. Das lässt sich nicht rückgängig machen.</value></data>
-  <data name="Automation_SkipConfirmationHint" xml:space="preserve"><value>Die Regel schaltet ohne Nachfrage um. Bleibt ein Bildschirm dunkel, wird nichts automatisch zurückgestellt.</value></data>
   <data name="Automation_DevicesConnect" xml:space="preserve"><value>Wenn alle diese USB-Geräte verbunden sind</value></data>
   <data name="Automation_AddDevice" xml:space="preserve"><value>Gerät hinzufügen</value></data>
   <data name="Automation_AddDeviceHint" xml:space="preserve"><value>Mit mehreren Geräten schaltet die Regel erst um, wenn alle verbunden sind, und das Ende greift, sobald eines davon fehlt.</value></data>
@@ -559,8 +555,7 @@
   <data name="Settings_DefaultWithWindows" xml:space="preserve"><value>Standardprofil beim Anmelden</value></data>
   <data name="Settings_DefaultWithWindowsHint" xml:space="preserve"><value>Wechselt dorthin, wenn RigShift mit Windows startet.</value></data>
   <data name="Settings_DefaultWithWindowsTip" xml:space="preserve"><value>Windows stellt die Anordnung wieder her, in der der PC heruntergefahren wurde. Mit diesem Schalter startet er stattdessen im Standardprofil, außer die Geräte einer USB-Regel sind verbunden. Braucht ein Standardprofil und „Mit Windows starten“.</value></data>
-  <data name="Settings_ConfirmHint" xml:space="preserve"><value>Ohne „Behalten“ kommt die alte Anordnung zurück.</value></data>
-  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Bei USB-Regeln mindestens 30 s.</value></data>
+  <data name="Settings_ConfirmSecondsHint" xml:space="preserve"><value>Für Profile, die nachfragen. Bei USB-Regeln mindestens 30 s.</value></data>
   <data name="Settings_PauseRules" xml:space="preserve"><value>USB-Regeln pausieren</value></data>
   <data name="Settings_PauseRulesHint" xml:space="preserve"><value>Keine Regel schaltet um, bis der Schalter aus ist. Auch im Menü im Infobereich.</value></data>
   <data name="Settings_DevicesHint" xml:space="preserve"><value>Geräte erscheinen hier, sobald eine Regel oder ein Profil sie verwendet. Namen erscheinen in Regeln, Profilen und Meldungen.</value></data>
@@ -675,7 +670,8 @@
   <data name="Trigger_UsbCaption" xml:space="preserve"><value>Schaltet zu diesem Profil, sobald alle Geräte einer Regel verbunden sind.</value></data>
   <data name="Trigger_Command" xml:space="preserve"><value>Befehl</value></data>
   <data name="Trigger_CommandHint" xml:space="preserve"><value>Für Stream Deck, Skripte oder die Konsole.</value></data>
-  <data name="Editor_SwitchWithoutAskingHint" xml:space="preserve"><value>Keine Bestätigung nach dem Wechsel in dieses Profil.</value></data>
+  <data name="Editor_AskToKeepLayout" xml:space="preserve"><value>Nach dem Umschalten fragen, ob die Anordnung bleibt</value></data>
+  <data name="Editor_AskToKeepLayoutHint" xml:space="preserve"><value>Ohne „Behalten“ kommt die alte Anordnung zurück.</value></data>
   <data name="Game_WindowsTitle" xml:space="preserve"><value>Fensterpositionen</value></data>
   <data name="Overview_Switch" xml:space="preserve">
     <value>Umschalten</value>

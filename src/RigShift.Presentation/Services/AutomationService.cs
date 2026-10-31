@@ -288,9 +288,9 @@ public sealed class AutomationService : IDisposable
         }
 
         string reason = action.Reason == TriggerReason.Started ? "connected" : "disconnected";
-        _log.Information("{Subject} {Reason}: switching to {Profile} (skip confirmation: {SkipConfirmation})",
-            subject, reason, profile.Name, action.SkipConfirmation);
-        var request = new SwitchRequest { SkipConfirmation = action.SkipConfirmation, MinimumConfirmTimeoutSeconds = RuleConfirmSeconds };
+        _log.Information("{Subject} {Reason}: switching to {Profile} (asks to keep: {Asks})",
+            subject, reason, profile.Name, !profile.SwitchWithoutAsking);
+        var request = new SwitchRequest { MinimumConfirmTimeoutSeconds = RuleConfirmSeconds };
         SwitchResult? result = await _coordinator.SwitchAsync(profile, request);
         if (action.Reason != TriggerReason.Started)
         {

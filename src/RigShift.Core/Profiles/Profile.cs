@@ -25,8 +25,10 @@ public sealed record Profile
     public AudioAssignment Audio { get; set; } = new();
 
     /// <summary>
-    /// Switch to this profile without the keep-or-revert question. The countdown seconds come from the application
-    /// setting only.
+    /// Switch to this profile without the keep-or-revert question; the editor shows it the other way round, as "ask to
+    /// keep the layout". The only switch that decides for hotkey, tray and rule switches (a link always asks); the
+    /// countdown seconds come from the application setting. Stored this way round on purpose: <c>false</c>, the value of
+    /// a missing key, asks.
     /// </summary>
     public bool SwitchWithoutAsking { get; init; }
 
