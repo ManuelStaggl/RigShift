@@ -210,6 +210,7 @@ public sealed partial class GamesView : UserControl
     private void OnActions(object? sender, RoutedEventArgs e) => (TopLevel.GetTopLevel(this) as MainWindow)?.OpenPalette();
 
     /// <summary>RIGSHIFT_PREVIEW_SELECT=&lt;game&gt;: screenshots of one game without clicking.</summary>
+    [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewSelect()
     {
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SELECT") is { Length: > 0 } name
@@ -220,6 +221,7 @@ public sealed partial class GamesView : UserControl
     }
 
     /// <summary>RIGSHIFT_PREVIEW_EXPAND=Launch,GameSettings,Tools,Windows,End,Triggers opens those groups, once.</summary>
+    [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewExpand()
     {
         if (_previewDone || Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_EXPAND") is not { Length: > 0 } groups)
@@ -230,7 +232,7 @@ public sealed partial class GamesView : UserControl
         _previewDone = true;
         foreach (string group in groups.Split(','))
         {
-            if (this.FindControl<SettingsCard>(group.Trim() + "Card") is { } card)
+            if (this.FindControl<Control>(group.Trim() + "Card") is SettingsCard card)
             {
                 card.IsExpanded = true;
             }
@@ -238,7 +240,7 @@ public sealed partial class GamesView : UserControl
 
         // RIGSHIFT_PREVIEW_SCROLL=Launch scrolls that group to the top once the layout has run.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SCROLL") is { Length: > 0 } scroll
-            && this.FindControl<SettingsCard>(scroll.Trim() + "Card") is { } target)
+            && this.FindControl<Control>(scroll.Trim() + "Card") is SettingsCard target)
         {
             DispatcherTimer.RunOnce(() => target.BringIntoView(new global::Avalonia.Rect(0, 0, 1, 2000)), TimeSpan.FromMilliseconds(800));
         }

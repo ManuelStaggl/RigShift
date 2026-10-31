@@ -15,11 +15,14 @@ namespace RigShift.Avalonia.Debug;
 /// RIGSHIFT_PREVIEW_TOPOLOGY=1|&lt;png path&gt; (<see cref="TopologyGallery"/>), RIGSHIFT_PREVIEW_CRASH=1 (an exception every
 /// 300 ms, so the repeated-error dialog opens), RIGSHIFT_PREVIEW_SETUP=welcome|second|trigger|done (the setup assistant at
 /// that step, nothing saved before the user clicks), RIGSHIFT_PREVIEW_SCROLL=&lt;pixels&gt; (scrolls the shown page),
-/// RIGSHIFT_PREVIEW_DIALOG=restore (the restore question for a demo backup; nothing is restored);
+/// RIGSHIFT_PREVIEW_DIALOG=unsaved|delete|restore (the question with demo content; nothing is changed),
+/// RIGSHIFT_PREVIEW_APPS=&lt;json&gt; (the app picker with a demo list);
 /// <c>--preview-confirmation</c> opens the countdown.
 /// </summary>
 internal static class Previews
 {
+    private static readonly System.Text.Json.JsonSerializerOptions DemoJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+
     public static void Register(IServiceCollection services)
     {
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DISPLAYS") is { Length: > 0 } active)
@@ -70,19 +73,33 @@ internal static class Previews
                 TimeSpan.FromSeconds(2));
         }
 
-        if (string.Equals(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG"), "restore", StringComparison.OrdinalIgnoreCase))
+        // The questions, answered by nobody: nothing is restored, deleted or discarded.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_DIALOG") is { Length: > 0 } dialog)
         {
+            Services.PageDialogs dialogs = App.Provider.GetRequiredService<Services.PageDialogs>();
             global::Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {
                 try
                 {
-                    await App.Provider.GetRequiredService<Services.PageDialogs>().ConfirmRestoreAsync(PreviewBackup());
+                    _ = dialog.ToUpperInvariant() switch
+                    {
+                        "UNSAVED" => (object)await dialogs.ConfirmUnsavedAsync("Sim Rig", "Desk"),
+                        "DELETE" => await dialogs.ConfirmDeleteAsync("Sim Rig", ruleCount: 1),
+                        _ => await dialogs.ConfirmRestoreAsync(PreviewBackup()),
+                    };
                 }
                 catch (Exception ex)
                 {
-                    Serilog.Log.Error(ex, "Restore question preview failed");
+                    Serilog.Log.Error(ex, "Dialog preview failed");
                 }
             });
+        }
+
+        // The app picker with a demo list (JSON array of name, path, isRunning) for README screenshots.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_APPS") is { Length: > 0 } demoApps)
+        {
+            _ = Views.AppPickerWindow.PickAsync(null, () => System.Text.Json.JsonSerializer.Deserialize<List<RigShift.Windows.Apps.DiscoveredApp>>(
+                File.ReadAllText(demoApps), DemoJson) ?? []);
         }
 
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PALETTE") is { } query && app.Window is { } window)
