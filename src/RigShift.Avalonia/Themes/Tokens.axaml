@@ -125,13 +125,11 @@
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#106EBE" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
-      <!-- Off: an outlined track as in Windows 11, the outline at 3:1 against the card. -->
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="Transparent" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#0DFFFFFF" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#17FFFFFF" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="Transparent" />
-      <SolidColorBrush x:Key="ToggleSwitchDefaultBorderBrush" Color="#72767C" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBorderBrush" Color="#3E3F44" />
+      <!-- Off: a filled grey track at 3:1 against the card (the knob is white in both states, so no outline-only track). -->
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#72767C" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#7C8087" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#868A91" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#3A3B40" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#242528" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#2B2C30" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#323337" />
@@ -247,12 +245,10 @@
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#0067B8" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="Transparent" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#0A000000" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#14000000" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="Transparent" />
-      <SolidColorBrush x:Key="ToggleSwitchDefaultBorderBrush" Color="#85888F" />
-      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBorderBrush" Color="#C5C8CF" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#85888F" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#7A7D84" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#6F7279" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#D5D7DC" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#ECEEF1" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#E3E5E9" />
@@ -275,5 +271,4 @@
   <CornerRadius x:Key="SemiBorderRadiusSmall">6</CornerRadius>
   <CornerRadius x:Key="SemiBorderRadiusMedium">6</CornerRadius>
   <CornerRadius x:Key="SemiBorderRadiusLarge">12</CornerRadius>
-  <Thickness x:Key="ToggleSwitchDefaultBorderThickness">1</Thickness>
 </ResourceDictionary>

@@ -474,6 +474,20 @@
     </Style>
   </ContainerQuery>
 
+  <!-- An empty page: one centred block (symbol, title, one sentence, buttons) in the upper third, not a corner. -->
+  <Style Selector="StackPanel.empty">
+    <Setter Property="Margin" Value="0,96,0,0" />
+    <Setter Property="MaxWidth" Value="440" />
+    <Setter Property="Spacing" Value="12" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="StackPanel.empty > :is(Control)">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="StackPanel.empty > TextBlock">
+    <Setter Property="TextAlignment" Value="Center" />
+  </Style>
+
   <!-- ===== The sheet of the profiles and games pages ===== -->
 
   <!-- Master list: the selected row is the accent pill, like the rail. -->

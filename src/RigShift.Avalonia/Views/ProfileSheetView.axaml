@@ -132,8 +132,8 @@
                 </Border>
 
                 <!-- No profile yet -->
-                <StackPanel MaxWidth="480" HorizontalAlignment="Left" Spacing="12" IsVisible="{Binding IsEmpty}">
-                  <Path HorizontalAlignment="Left" Classes="icon lg" Data="{x:Static v:Icons.Desktop24}" />
+                <StackPanel Classes="empty" IsVisible="{Binding IsEmpty}">
+                  <Path Classes="icon lg quiet" Data="{x:Static v:Icons.Desktop24}" />
                   <TextBlock Classes="subtitle" Text="{v:Tr Profiles_EmptyTitle}" />
                   <TextBlock Classes="secondary" Text="{v:Tr Profiles_EmptyInvite}" TextWrapping="Wrap" />
                   <StackPanel Orientation="Horizontal" Spacing="8">

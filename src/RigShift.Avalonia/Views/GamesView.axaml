@@ -153,9 +153,9 @@
                 </Border>
 
                 <!-- No game yet: the games on this PC are one click away. -->
-                <StackPanel Spacing="12" IsVisible="{Binding IsEmpty}">
-                  <Path HorizontalAlignment="Left" Classes="icon lg quiet" Data="{x:Static v:Icons.Games24}" />
-                  <TextBlock Classes="title" Text="{v:Tr Games_EmptyTitle}" />
+                <StackPanel Classes="empty" IsVisible="{Binding IsEmpty}">
+                  <Path Classes="icon lg quiet" Data="{x:Static v:Icons.Games24}" />
+                  <TextBlock Classes="subtitle" Text="{v:Tr Games_EmptyTitle}" />
                   <TextBlock Classes="secondary" Text="{v:Tr Games_EmptyText}" TextWrapping="Wrap" />
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Classes="primary" Command="{Binding AddInstalledCommand}" Content="{v:Tr Games_Scan}" />

@@ -35,11 +35,11 @@ internal static class HighContrast
         ("RsDanger", SystemColorKind.HotLight),
         ("RsScreenSurface", SystemColorKind.Window), ("RsScreenEdge", SystemColorKind.WindowText),
         ("RsDiagramField", SystemColorKind.Window),
-        // Toggles: on in the highlight, off as an outline in the window text colour, the knob in the highlight text colour.
+        // Toggles: on in the highlight, off in the grey text colour, the knob in the highlight text colour on both.
         ("ToggleSwitchContainerCheckedDefaultBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerCheckedPointeroverBackground", SystemColorKind.Highlight),
-        ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.Window),
-        ("ToggleSwitchContainerUnCheckedPointeroverBackground", SystemColorKind.Window), ("ToggleSwitchContainerUnCheckedPressedBackground", SystemColorKind.Window),
-        ("ToggleSwitchDefaultBorderBrush", SystemColorKind.WindowText), ("ToggleSwitchIndicatorBackground", SystemColorKind.HighlightText),
+        ("ToggleSwitchContainerCheckedPressedBackground", SystemColorKind.Highlight), ("ToggleSwitchContainerUnCheckedDefaultBackground", SystemColorKind.GrayText),
+        ("ToggleSwitchContainerUnCheckedPointeroverBackground", SystemColorKind.GrayText), ("ToggleSwitchContainerUnCheckedPressedBackground", SystemColorKind.GrayText),
+        ("ToggleSwitchIndicatorBackground", SystemColorKind.HighlightText),
     ];
 
     // The theme the app asked for before high contrast took over; null while it is off.
