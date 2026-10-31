@@ -59,6 +59,14 @@ internal static class Previews
             _ = Views.ConfirmationWindow.ShowAsync(view, TimeSpan.FromSeconds(12), CancellationToken.None);
         }
 
+        // RIGSHIFT_PREVIEW_QUICKSWITCH=1|<filter>: the quick switcher without its hotkey, which RDP cannot press.
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_QUICKSWITCH") is { Length: > 0 } quickFilter)
+        {
+            var quick = new QuickSwitchViewModel(App.Provider.GetRequiredService<TrayPopupViewModel>());
+            Tray.QuickSwitchWindow.Open(quick);
+            quick.Query = quickFilter == "1" ? string.Empty : quickFilter;
+        }
+
         if (Enum.TryParse(Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PAGE"), out AppPage page))
         {
             app.ShowMainWindow(page);

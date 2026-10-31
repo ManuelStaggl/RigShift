@@ -22,6 +22,9 @@ public sealed class HotkeyService : IDisposable
     /// <summary>Key of the toggle hotkey in <see cref="_wanted"/>; no profile has this id.</summary>
     private static readonly HotkeyOwner ToggleKey = new(Guid.Empty, IsGame: false);
 
+    /// <summary>Not a profile's id: the quick switcher needs an owner of its own next to the toggle hotkey.</summary>
+    private static readonly HotkeyOwner QuickSwitchKey = new(new Guid("5f0c9a4e-1b7d-4a3e-9c2f-6d8e1a2b3c4d"), IsGame: false);
+
     private readonly ProfileCatalog _catalog;
     private readonly GameCatalog _games;
     private readonly GameSessionService _sessions;
@@ -88,6 +91,9 @@ public sealed class HotkeyService : IDisposable
     /// </summary>
     public event EventHandler<IReadOnlyList<string>>? RegistrationFailed;
 
+    /// <summary>The quick switcher hotkey was pressed; raised on the thread the hotkey message came in on.</summary>
+    public event EventHandler? QuickSwitchRequested;
+
     public void Start()
     {
         _started = true;
@@ -147,14 +153,15 @@ public sealed class HotkeyService : IDisposable
             return new HotkeyUse(HotkeyUseKind.AllDisplaysOn, Guid.Empty, Loc.Instance["Settings_AllOnHotkey"]);
         }
 
-        return HotkeyConflicts.Find(hotkey, new HotkeyUse(kind, id, null), _catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey);
+        return HotkeyConflicts.Find(
+            hotkey, new HotkeyUse(kind, id, null), _catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey, _settings.Current.QuickSwitchHotkey);
     }
 
     /// <summary>The hint for a combination <see cref="UsedBy"/> found taken.</summary>
     public static string UsedByText(HotkeyUse use)
     {
         ArgumentNullException.ThrowIfNull(use);
-        return Loc.Format("Problem_HotkeyUsedBy", use.Name ?? Loc.Instance["Settings_ToggleHotkey"]);
+        return Loc.Format("Problem_HotkeyUsedBy", use.Name ?? LabelOf(use.Kind));
     }
 
     public void Dispose()
@@ -178,10 +185,11 @@ public sealed class HotkeyService : IDisposable
         var names = new Dictionary<HotkeyOwner, string>();
         var holders = new Dictionary<Hotkey, string>();
         var failed = new List<(HotkeyOwner Owner, Hotkey Hotkey, string Name)>();
-        foreach ((HotkeyUse use, Hotkey hotkey) in HotkeyConflicts.All(_catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey))
+        foreach ((HotkeyUse use, Hotkey hotkey) in HotkeyConflicts.All(
+            _catalog.Profiles, _games.Games, _settings.Current.ToggleHotkey, _settings.Current.QuickSwitchHotkey))
         {
-            var owner = new HotkeyOwner(use.Id, use.Kind == HotkeyUseKind.Game);
-            string name = use.Name ?? Loc.Instance["Settings_ToggleHotkey"];
+            HotkeyOwner owner = use.Kind == HotkeyUseKind.QuickSwitch ? QuickSwitchKey : new HotkeyOwner(use.Id, use.Kind == HotkeyUseKind.Game);
+            string name = use.Name ?? LabelOf(use.Kind);
             wanted[owner] = hotkey;
             names[owner] = name;
         }
@@ -290,8 +298,18 @@ public sealed class HotkeyService : IDisposable
         }
     }
 
+    private static string LabelOf(HotkeyUseKind kind) =>
+        Loc.Instance[kind == HotkeyUseKind.QuickSwitch ? "Settings_QuickSwitchHotkey" : "Settings_ToggleHotkey"];
+
     private void OnPressed(HotkeyOwner key)
     {
+        if (key == QuickSwitchKey)
+        {
+            _log.Information("Quick switcher hotkey pressed");
+            QuickSwitchRequested?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         if (key.IsGame)
         {
             StartGame(key.Id);

@@ -49,6 +49,16 @@ public sealed class HotkeyConflictsTests
     }
 
     [Fact]
+    public void Find_TheQuickSwitcherCompetesLikeTheToggle()
+    {
+        HotkeyConflicts.Find(CtrlAltR, Self(HotkeyUseKind.QuickSwitch, Guid.Empty), [Rig], [], toggle: null, quickSwitch: CtrlAltR)
+            .ShouldNotBeNull().Kind.ShouldBe(HotkeyUseKind.Profile);
+        HotkeyConflicts.Find(CtrlAltD, Self(HotkeyUseKind.Toggle, Guid.Empty), [], [], toggle: CtrlAltD, quickSwitch: CtrlAltD)
+            .ShouldBe(new HotkeyUse(HotkeyUseKind.QuickSwitch, Guid.Empty, null));
+        HotkeyConflicts.Find(CtrlAltD, Self(HotkeyUseKind.QuickSwitch, Guid.Empty), [], [], toggle: null, quickSwitch: CtrlAltD).ShouldBeNull();
+    }
+
+    [Fact]
     public void Find_TheOwnHotkey_IsNoConflict()
     {
         HotkeyConflicts.Find(CtrlAltR, Self(HotkeyUseKind.Profile, Rig.Id), [Rig, Desk], [Iracing], toggle: null).ShouldBeNull();

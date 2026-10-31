@@ -203,6 +203,19 @@ public sealed class JsonSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task QuickSwitchHotkey_DefaultsForOldFiles_AndStaysOffOnceTurnedOff()
+    {
+        Directory.CreateDirectory(_directory);
+        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1 }""", Ct);
+        var store = new JsonSettingsStore(File, Logger.None);
+
+        (await store.LoadAsync(Ct)).QuickSwitchHotkey.ShouldBe(AppSettings.DefaultQuickSwitchHotkey);
+
+        await store.SaveAsync(new AppSettings { QuickSwitchHotkey = null }, Ct);
+        (await store.LoadAsync(Ct)).QuickSwitchHotkey.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Load_FileWithKeysOfDroppedFeatures_IgnoresThem()
     {
         // Unreleased builds wrote game rules and HTTP API settings; such files must still load.

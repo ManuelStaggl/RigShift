@@ -79,6 +79,12 @@
   <data name="Settings_None" xml:space="preserve"><value>Keines</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Zurückschalten</value></data>
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>Ein Tastenkürzel, das zum letzten Profil zurückschaltet.</value></data>
+  <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Schnellumschalter</value></data>
+  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Öffnet aus jeder App eine Liste der Profile und Spiele auf dem Bildschirm mit der Maus.</value></data>
+  <data name="QuickSwitch_Search" xml:space="preserve"><value>Profil oder Spiel</value></data>
+  <data name="QuickSwitch_Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="QuickSwitch_Game" xml:space="preserve"><value>Spiel</value></data>
+  <data name="QuickSwitch_Empty" xml:space="preserve"><value>Nichts gefunden.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Nach dem Umschalten bestätigen</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Sekunden zum Bestätigen</value></data>
