@@ -183,6 +183,7 @@ public sealed partial class ProfileSheetView : UserControl
         where T : class => (sender as Control)?.Tag as T;
 
     /// <summary>RIGSHIFT_PREVIEW_SELECT=&lt;profile&gt;: screenshots of one profile without clicking.</summary>
+    [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewSelect()
     {
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SELECT") is { Length: > 0 } name
@@ -193,6 +194,7 @@ public sealed partial class ProfileSheetView : UserControl
     }
 
     /// <summary>RIGSHIFT_PREVIEW_EXPAND=Audio,Apps,Triggers,Behavior opens those groups, once.</summary>
+    [System.Diagnostics.Conditional("DEBUG")]
     private void PreviewExpand(ProfileEditorViewModel editor)
     {
         if (_previewDone || Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_EXPAND") is not { Length: > 0 } groups)
@@ -203,7 +205,7 @@ public sealed partial class ProfileSheetView : UserControl
         _previewDone = true;
         foreach (string group in groups.Split(','))
         {
-            if (this.FindControl<SettingsCard>(group.Trim() + "Card") is { } card)
+            if (this.FindControl<Control>(group.Trim() + "Card") is SettingsCard card)
             {
                 card.IsExpanded = true;
             }
@@ -213,7 +215,7 @@ public sealed partial class ProfileSheetView : UserControl
 
         // RIGSHIFT_PREVIEW_SCROLL=Apps scrolls that group to the top once the layout has run.
         if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_SCROLL") is { Length: > 0 } scroll
-            && this.FindControl<SettingsCard>(scroll.Trim() + "Card") is { } target)
+            && this.FindControl<Control>(scroll.Trim() + "Card") is SettingsCard target)
         {
             DispatcherTimer.RunOnce(() => target.BringIntoView(new global::Avalonia.Rect(0, 0, 1, 2000)), TimeSpan.FromMilliseconds(800));
         }
