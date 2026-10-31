@@ -90,6 +90,12 @@
   <Style Selector="Path.icon.quiet">
     <Setter Property="Fill" Value="{DynamicResource RsText3}" />
   </Style>
+  <Style Selector="Path.icon.ok">
+    <Setter Property="Fill" Value="{DynamicResource RsSuccess}" />
+  </Style>
+  <Style Selector="Path.icon.error">
+    <Setter Property="Fill" Value="{DynamicResource RsDanger}" />
+  </Style>
   <Style Selector="Path.icon.accent">
     <Setter Property="Fill" Value="{DynamicResource RsAccentText}" />
   </Style>

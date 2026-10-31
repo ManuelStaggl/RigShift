@@ -27,6 +27,17 @@
   <data name="Tray_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Switching…</value></data>
+  <data name="Step_Surround" xml:space="preserve"><value>Surround</value></data>
+  <data name="Step_Displays" xml:space="preserve"><value>Displays, HDR and refresh rate</value></data>
+  <data name="Step_Audio" xml:space="preserve"><value>Audio and keep awake</value></data>
+  <data name="Step_Confirmation" xml:space="preserve"><value>Keep the layout?</value></data>
+  <data name="Step_Apps" xml:space="preserve"><value>Apps</value></data>
+  <data name="Step_Windows" xml:space="preserve"><value>Windows and desktop icons</value></data>
+  <data name="Step_State" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="StepState_Waiting" xml:space="preserve"><value>waiting</value></data>
+  <data name="StepState_Running" xml:space="preserve"><value>running</value></data>
+  <data name="StepState_Done" xml:space="preserve"><value>done</value></data>
+  <data name="StepState_Failed" xml:space="preserve"><value>failed</value></data>
   <data name="Tray_SwitchingTo" xml:space="preserve"><value>Switching to {0}…</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>No profiles</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>Play {0}</value></data>

@@ -149,4 +149,7 @@ public sealed record SwitchRequest
     /// asks for that (<see cref="Profile.RememberWindows"/>).
     /// </summary>
     public Profile? Leaving { get; init; }
+
+    /// <summary>Hears each step as it starts and ends, for a list while the switch runs; <c>null</c> for none.</summary>
+    public IProgress<SwitchStep>? Progress { get; init; }
 }

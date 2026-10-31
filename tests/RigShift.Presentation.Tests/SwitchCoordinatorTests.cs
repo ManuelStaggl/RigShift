@@ -448,6 +448,16 @@ public sealed class SwitchCoordinatorTests : IDisposable
         _host.Catalog.Find(desk.Id).ShouldNotBeNull().DesktopIcons.ShouldNotBeNull().Icons.ShouldBe(icons.Icons);
     }
 
+    [Fact]
+    public async Task Switch_ListsItsSteps_ForTheTrayAndTheOverview()
+    {
+        await _host.Coordinator.SwitchAsync(Rig() with { KeepAwake = true }, SwitchRequest.Default);
+        await UntilAsync(() => _host.Coordinator.Steps.Count == 2 && _host.Coordinator.Steps.All(s => s.IsDone));
+
+        _host.Coordinator.Steps.Select(s => s.Kind).ShouldBe([SwitchStepKind.Displays, SwitchStepKind.Audio]);
+        _host.Coordinator.Steps[0].Text.ShouldBe(Loc.Format("Step_State", Loc.Instance["Step_Displays"], Loc.Instance["StepState_Done"]));
+    }
+
     public void Dispose() => _host.Dispose();
 
     private static async Task UntilAsync(Func<bool> condition)

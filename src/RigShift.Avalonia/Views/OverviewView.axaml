@@ -79,6 +79,7 @@
             <StackPanel x:Name="SwitchingLine" Spacing="8" IsVisible="False">
               <ProgressBar IsIndeterminate="True" />
               <TextBlock x:Name="SwitchingText" Classes="strong" />
+              <v:SwitchStepsView Steps="{Binding Coordinator.Steps}" />
             </StackPanel>
             <v:DisplayTopology Grid.Row="1" Margin="40,16,40,0" Displays="{Binding LiveTopology}" Size="Card" />
             <TextBlock Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Classes="secondary" IsVisible="{Binding IsEmpty}" Text="{v:Tr Overview_Empty}" />
