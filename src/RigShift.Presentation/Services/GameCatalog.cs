@@ -150,6 +150,27 @@ public sealed partial class GameCatalog : ObservableObject
         }
     }
 
+    /// <summary>Keeps where the game's tools were at the end of a session. Quiet like the settings above.</summary>
+    public async Task RememberWindowLayoutAsync(Guid gameId, WindowLayout layout, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        if (Find(gameId) is not { WindowLayout: not null } game)
+        {
+            return;
+        }
+
+        try
+        {
+            await _store.SaveAsync(game with { WindowLayout = layout }, cancellationToken);
+            await ReloadAsync(cancellationToken);
+            _log.Information("Game {Game}: {Count} tool window position(s) remembered", game.Name, layout.Windows.Count);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _log.Warning(ex, "Game {Game}: the tool window positions could not be saved", game.Name);
+        }
+    }
+
     private void Rebuild()
     {
         Items.Clear();
