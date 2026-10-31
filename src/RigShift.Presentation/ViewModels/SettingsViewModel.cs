@@ -30,6 +30,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         _settings = settings;
         _catalog = catalog;
         _toggleHotkeyRecorder = new HotkeyRecorder(hotkeys, HotkeyUseKind.Toggle, Guid.Empty, "Settings_ToggleHotkeyHint");
+        QuickSwitch = new QuickSwitchHotkeyField(hotkeys, Persist);
         Devices = devices;
         _log = log.ForContext<SettingsViewModel>();
 
@@ -38,9 +39,13 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
         {
             OnPropertyChanged(nameof(ToggleHotkeyHint));
             OnPropertyChanged(nameof(AllDisplaysOnHotkeyText));
+            QuickSwitch.Relabel();
             Load();
         };
     }
+
+    /// <summary>The quick switcher's hotkey, a field of its own next to the toggle hotkey.</summary>
+    public QuickSwitchHotkeyField QuickSwitch { get; }
 
     /// <summary>The device group: the USB devices rules and profiles use, and the pause switch.</summary>
     public UsbDevicesViewModel Devices { get; }
@@ -149,6 +154,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IHotkeyField
             StartWithWindows = _settings.Autostart.IsEnabled;
             ApplyDefaultWithWindows = current.ApplyDefaultProfileWithWindows;
             ToggleHotkey = current.ToggleHotkey;
+            QuickSwitch.Hotkey = current.QuickSwitchHotkey;
             Devices.Refresh();
         }
         finally

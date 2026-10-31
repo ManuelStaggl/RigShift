@@ -67,6 +67,12 @@
         ItemsSource="{Binding WaitDevice.Choices}"
         SelectedItem="{Binding WaitDevice.Selected, Converter={x:Static v:Converters.KeepOnNull}}" />
     </Grid>
+    <Button HorizontalAlignment="Right" Classes="link" Command="{Binding WaitDevice.DetectCommand}" Content="{v:Tr Usb_Detect}"
+            IsVisible="{Binding WaitDevice.Detection, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding WaitDevice.Detection.Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}">
+      <TextBlock VerticalAlignment="Center" Classes="secondary" Text="{Binding WaitDevice.Detection.Status}" TextWrapping="Wrap" />
+      <Button VerticalAlignment="Center" Classes="link" Command="{Binding WaitDevice.Detection.StopCommand}" Content="{v:Tr Usb_DetectStop}" IsVisible="{Binding WaitDevice.Detection.IsDetecting}" />
+    </StackPanel>
     <Button Margin="0,8,0,0" HorizontalAlignment="Left" Classes="neutral" AutomationProperties.Name="{Binding AddText}" Command="{Binding AddPickedCommand}">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Path Classes="icon" Data="{x:Static v:Icons.Add16}" />

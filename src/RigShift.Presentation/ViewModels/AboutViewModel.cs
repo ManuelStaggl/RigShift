@@ -246,6 +246,11 @@ public sealed partial class AboutViewModel : ObservableObject
             Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_ToggleHotkey"], HotkeyFormat.Format(toggle)));
         }
 
+        if (_settings.Current.QuickSwitchHotkey is { } quickSwitch)
+        {
+            Shortcuts.Add(new ShortcutRow(Loc.Instance["Settings_QuickSwitchHotkey"], HotkeyFormat.Format(quickSwitch)));
+        }
+
         HasShortcuts = Shortcuts.Count > 0;
 
         // Always listed: the emergency hotkey has to be known before a screen stays dark.

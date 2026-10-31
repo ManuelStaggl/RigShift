@@ -42,9 +42,33 @@ public sealed class GameSessionRunnerTests
 
     private FakeRunningGame LongRunning() => new(_time, TimeSpan.FromHours(1));
 
-    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null) => new(
+    private GameSessionRunner Runner(
+        FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null, ICursorConfinement? cursor = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings);
+        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings, cursor);
+
+    /// <summary>The mouse is kept on the game's display for exactly the game's run, and only when the entry asks for it.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Run_KeepsTheMouseOnTheGamesDisplay_ForTheGamesRunOnly(bool wanted)
+    {
+        ICursorConfinement cursor = Substitute.For<ICursorConfinement>();
+        IDisposable held = Substitute.For<IDisposable>();
+        cursor.KeepOnWindowOf("iRacing").Returns(held);
+
+        await Runner(cursor: cursor).RunAsync(Game() with { KeepMouseOnDisplay = wanted }, alreadyRunning: false, Ct);
+
+        if (wanted)
+        {
+            cursor.Received(1).KeepOnWindowOf("iRacing");
+            held.Received(1).Dispose();
+        }
+        else
+        {
+            cursor.DidNotReceiveWithAnyArgs().KeepOnWindowOf(default!);
+        }
+    }
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {
@@ -857,6 +881,69 @@ public sealed class GameSessionRunnerTests
             _apps.Start(@"C:\SimHub\SimHubWPF.exe", null);
             _starter.Start(Arg.Any<GameLaunch>());
         });
+    }
+
+    /// <summary>A tool that starts after the game has no window yet before it: the game does not wait for it.</summary>
+    [Fact]
+    public async Task Run_PlacesAfterGameToolsOnceTheyStarted_WithoutHoldingUpTheGame()
+    {
+        var desktop = new FakeWindowLayout { MoveOnPlace = true };
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame } },
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement> { new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) } },
+            },
+        };
+        TimeSpan? startedAt = null;
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ =>
+        {
+            startedAt = _time.Elapsed;
+            return LongRunning();
+        });
+        _apps.When(a => a.Start(@"C:\SimHub\SimHubWPF.exe", null)).Do(_ =>
+            desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(0, 0, 800, 600), WindowState.Normal)));
+        GameWindowsRemembered? remembered = null;
+        GameSessionRunner runner = Runner(desktop);
+        runner.WindowsRemembered += (_, e) => remembered = e;
+
+        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        startedAt.ShouldBe(TimeSpan.Zero, "no wait for a window that only comes after the game");
+        result.Windows.ShouldBe(new WindowLayoutResult(1, 0, 0));
+        desktop.Placed.Single().Bounds.Left.ShouldBe(3840);
+        remembered.ShouldBeNull("the tool is where the layout put it");
+    }
+
+    /// <summary>A tool moved during the session keeps its new place for the next one.</summary>
+    [Fact]
+    public async Task Run_RemembersWhereTheToolWindowsAreAtTheEnd()
+    {
+        var desktop = new FakeWindowLayout();
+        desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(100, 100, 900, 700), WindowState.Normal));
+        GameEntry game = Game() with
+        {
+            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe" } },
+            WindowLayout = new WindowLayout
+            {
+                Windows = new List<WindowPlacement>
+                {
+                    new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) },
+                    new() { ProcessName = "CrewChiefV4", Bounds = new PixelRect(0, 0, 400, 300) },
+                },
+            },
+        };
+        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => LongRunning());
+        GameWindowsRemembered? remembered = null;
+        GameSessionRunner runner = Runner(desktop);
+        runner.WindowsRemembered += (_, e) => remembered = e;
+
+        await runner.RunAsync(game, alreadyRunning: false, Ct);
+
+        remembered.ShouldNotBeNull().GameId.ShouldBe(game.Id);
+        remembered.Layout.Windows.Select(w => w.Bounds).ShouldBe([new PixelRect(100, 100, 900, 700), new PixelRect(0, 0, 400, 300)],
+            "the window that is not open keeps its place");
     }
 
     /// <summary>A window that cannot be moved is annoying, not a reason to leave the game unstarted.</summary>

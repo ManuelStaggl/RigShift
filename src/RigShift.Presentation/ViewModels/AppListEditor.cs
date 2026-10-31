@@ -186,7 +186,7 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
 /// </summary>
 public sealed partial class AppsWaitDeviceChoice : ObservableObject
 {
-    private readonly IReadOnlyList<UsbDevice> _connected;
+    private IReadOnlyList<UsbDevice> _connected;
     private readonly IReadOnlyList<RuleDevice> _known;
     private readonly IReadOnlyDictionary<string, string>? _customNames;
     private readonly Dictionary<string, string> _windowsNames = new(StringComparer.OrdinalIgnoreCase);
@@ -198,9 +198,11 @@ public sealed partial class AppsWaitDeviceChoice : ObservableObject
         string? savedName,
         IReadOnlyList<UsbDevice> connected,
         IEnumerable<RuleDevice> known,
-        IReadOnlyDictionary<string, string>? customNames)
+        IReadOnlyDictionary<string, string>? customNames,
+        UsbDetection? detection = null)
     {
         ArgumentNullException.ThrowIfNull(connected);
+        Detection = detection;
         ArgumentNullException.ThrowIfNull(known);
         _connected = connected;
         _customNames = customNames;
@@ -219,6 +221,20 @@ public sealed partial class AppsWaitDeviceChoice : ObservableObject
 
     /// <summary>Windows' name of the device, stored with the id so a disconnected device still reads as a name.</summary>
     public string? DeviceName => Selected?.Key is { } id && _windowsNames.TryGetValue(id, out string? name) ? name : null;
+
+    /// <summary>"Switch the device off and on"; <c>null</c> where nobody can watch the devices.</summary>
+    public UsbDetection? Detection { get; }
+
+    /// <summary>Selects the device the user switches off and on, as the setup assistant does.</summary>
+    [RelayCommand]
+    private async Task DetectAsync()
+    {
+        if (Detection is not null && await Detection.DetectAsync() is { } found)
+        {
+            _connected = [.. _connected.Where(d => !string.Equals(d.Id, found.Id, StringComparison.OrdinalIgnoreCase)), found];
+            Fill(found.Id);
+        }
+    }
 
     /// <summary>New texts after a language change, same device.</summary>
     public void Relabel() => Fill(Selected?.Key);

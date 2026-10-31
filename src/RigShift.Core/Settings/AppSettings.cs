@@ -30,6 +30,15 @@ public sealed record AppSettings
     public Profiles.Hotkey? ToggleHotkey { get; init; }
 
     /// <summary>
+    /// System-wide key combination for the quick switcher; <c>null</c> = off. A regular setter, so a file without the key
+    /// gets the default, while a file that turned it off keeps <c>null</c>.
+    /// </summary>
+    public Profiles.Hotkey? QuickSwitchHotkey { get; set; } = DefaultQuickSwitchHotkey;
+
+    /// <summary>Ctrl+Alt+Space: free in Windows and in the common sims, and one hand reaches it.</summary>
+    public static Profiles.Hotkey DefaultQuickSwitchHotkey { get; } = new() { Modifiers = Profiles.HotkeyModifiers.Control | Profiles.HotkeyModifiers.Alt, VirtualKey = 0x20 };
+
+    /// <summary>
     /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on
     /// purpose: the JSON source generator sets init-only properties through an object initializer and turns a missing
     /// key into 0, which would silently switch the safety net off. With <c>set</c> it keeps the initializer value.

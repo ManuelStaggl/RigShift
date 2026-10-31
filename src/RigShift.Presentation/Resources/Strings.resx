@@ -76,6 +76,12 @@
   <data name="Settings_None" xml:space="preserve"><value>None</value></data>
   <data name="Settings_ToggleHotkey" xml:space="preserve"><value>Switch back</value></data>
   <data name="Settings_ToggleHotkeyHint" xml:space="preserve"><value>One hotkey that returns to the last profile.</value></data>
+  <data name="Settings_QuickSwitchHotkey" xml:space="preserve"><value>Quick switcher</value></data>
+  <data name="Settings_QuickSwitchHotkeyHint" xml:space="preserve"><value>Opens a list of profiles and games on the display with the mouse, from any app.</value></data>
+  <data name="QuickSwitch_Search" xml:space="preserve"><value>Profile or game</value></data>
+  <data name="QuickSwitch_Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="QuickSwitch_Game" xml:space="preserve"><value>Game</value></data>
+  <data name="QuickSwitch_Empty" xml:space="preserve"><value>Nothing matches.</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="Settings_ConfirmTimeout" xml:space="preserve"><value>Confirm after switching</value></data>
   <data name="Settings_ConfirmSeconds" xml:space="preserve"><value>Seconds to confirm</value></data>
@@ -395,6 +401,8 @@
   <data name="Game_StopApps" xml:space="preserve"><value>Close tools</value></data>
   <data name="Game_StartWithGame" xml:space="preserve"><value>Also run when started from Steam or another launcher</value></data>
   <data name="Game_StartWithGameHint" xml:space="preserve"><value>Works after one start through RigShift, which learns the game's process.</value></data>
+  <data name="Game_KeepMouse" xml:space="preserve"><value>Keep the mouse on the game's display</value></data>
+  <data name="Game_KeepMouseHint" xml:space="preserve"><value>While the game is in front. Alt+Tab or the Windows key free it.</value></data>
   <data name="GameOutcome_Ended" xml:space="preserve"><value>Game ended</value></data>
   <data name="GameOutcome_ProfileFailed" xml:space="preserve"><value>Switching to the profile failed, so the game was not started</value></data>
   <data name="GameOutcome_StartFailed" xml:space="preserve"><value>The game could not be started</value></data>
@@ -485,6 +493,10 @@
   <data name="Trigger_RuleTitle" xml:space="preserve"><value>When these devices are connected</value></data>
   <data name="Trigger_AddRule" xml:space="preserve"><value>USB rule</value></data>
   <data name="Trigger_AddDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="Usb_Detect" xml:space="preserve"><value>Detect by switching it off and on</value></data>
+  <data name="Usb_Detecting" xml:space="preserve"><value>Switch the device off and on now.</value></data>
+  <data name="Usb_DetectNone" xml:space="preserve"><value>No device turned up within a minute.</value></data>
+  <data name="Usb_DetectStop" xml:space="preserve"><value>Stop</value></data>
   <data name="Trigger_Shortcut" xml:space="preserve"><value>Desktop shortcut</value></data>
   <data name="Trigger_ShortcutCreate" xml:space="preserve"><value>Create on the desktop</value></data>
   <data name="Trigger_ShortcutHint" xml:space="preserve"><value>Also works as a Stream Deck action.</value></data>

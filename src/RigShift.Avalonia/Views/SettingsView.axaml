@@ -65,6 +65,19 @@
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                   <StackPanel VerticalAlignment="Center">
+                    <TextBlock Classes="label" Text="{v:Tr Settings_QuickSwitchHotkey}" />
+                    <TextBlock Classes="caption" Text="{Binding QuickSwitch.Hint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
+                    <v:HotkeyBox Width="200" AutomationProperties.HelpText="{v:Tr Hotkey_RecordTip}" AutomationProperties.Name="{v:Tr Settings_QuickSwitchHotkey}" Field="{Binding QuickSwitch}" PlaceholderText="{v:Tr Editor_HotkeyPlaceholder}" Text="{Binding QuickSwitch.Text, Mode=OneWay}" ToolTip.Tip="{v:Tr Hotkey_RecordTip}" />
+                    <Button AutomationProperties.Name="{v:Tr Editor_HotkeyClear}" Classes="ghost" Command="{Binding QuickSwitch.ClearHotkeyCommand}" IsVisible="{Binding QuickSwitch.HasHotkey}" ToolTip.Tip="{v:Tr Editor_HotkeyClear}">
+                      <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
+                    </Button>
+                  </StackPanel>
+                </Grid>
+                <Border Classes="divider" />
+                <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="24">
+                  <StackPanel VerticalAlignment="Center">
                     <TextBlock Classes="label" Text="{v:Tr Settings_AllOnHotkey}" />
                     <TextBlock Classes="caption" Text="{v:Tr Settings_AllOnHotkeyHint}" TextWrapping="Wrap" />
                   </StackPanel>

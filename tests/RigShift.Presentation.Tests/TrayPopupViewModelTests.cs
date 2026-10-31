@@ -139,6 +139,27 @@ public sealed class TrayPopupViewModelTests : IDisposable
         _host.Dispose();
     }
 
+    [Fact]
+    public async Task QuickSwitcher_FiltersProfilesAndGames_AndMovesAroundTheList()
+    {
+        await _catalog.SaveAsync(new GameEntry { Id = Guid.NewGuid(), Name = "Le Mans Ultimate", Launch = new GameLaunch { Kind = GameLaunchKind.Steam, Target = "2399420" } }, CancellationToken.None);
+        var quick = new QuickSwitchViewModel(await PopupAsync());
+
+        quick.Refresh();
+        quick.Items.Select(i => i.Name).ShouldBe(["Desk", "Sim Rig", "Le Mans Ultimate"]);
+        quick.Selected.ShouldBe(quick.Items[0]);
+
+        quick.Query = "  m ";
+        quick.Items.Select(i => i.Name).ShouldBe(["Sim Rig", "Le Mans Ultimate"]);
+        quick.Move(-1);
+        quick.Selected.ShouldNotBeNull().Name.ShouldBe("Le Mans Ultimate");
+        quick.Selected.Kind.ShouldBe(Loc.Instance["QuickSwitch_Game"]);
+
+        quick.Query = "nothing like it";
+        quick.IsEmpty.ShouldBeTrue();
+        quick.Run().ShouldBeFalse();
+    }
+
     private async Task<TrayPopupViewModel> PopupAsync(IAppShell? shell = null)
     {
         await _host.Catalog.SaveAsync(new Profile { Id = Guid.NewGuid(), Name = "Desk", Displays = [] }, CancellationToken.None);

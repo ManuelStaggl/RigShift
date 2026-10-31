@@ -192,6 +192,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
             runner = _runner();
             runner.ProcessLearned += OnProcessLearned;
             runner.SettingsRemembered += OnSettingsRemembered;
+            runner.WindowsRemembered += OnWindowsRemembered;
             GameSessionResult result = await Task.Run(
                 () => runner.RunAsync(game, alreadyRunning, fromLink, _stopping.Token), CancellationToken.None);
             _log.Information("Game {Game} finished as {Outcome}", game.Name, result.Outcome);
@@ -210,6 +211,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         {
             runner?.ProcessLearned -= OnProcessLearned;
             runner?.SettingsRemembered -= OnSettingsRemembered;
+            runner?.WindowsRemembered -= OnWindowsRemembered;
         }
     }
 
@@ -218,6 +220,9 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     private void OnSettingsRemembered(object? sender, GameSettingsRemembered remembered) =>
         _ui.Run(() => _ = _catalog.RememberSettingsAsync(remembered.GameId, remembered.Values, CancellationToken.None));
+
+    private void OnWindowsRemembered(object? sender, GameWindowsRemembered remembered) =>
+        _ui.Run(() => _ = _catalog.RememberWindowLayoutAsync(remembered.GameId, remembered.Layout, CancellationToken.None));
 
     private void Finish(GameEntry game, string? status, GameSessionOutcome? outcome)
     {

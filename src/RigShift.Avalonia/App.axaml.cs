@@ -89,7 +89,10 @@ public sealed class App(CliRequest request, AppPaths paths) : Application, IAppS
             Provider.GetRequiredService<AutomationService>().Start();
             Provider.GetRequiredService<GameSessionService>().StartWatching();
             Provider.GetRequiredService<UpdateService>().Start();
-            Provider.GetRequiredService<HotkeyService>().Start();
+            var quickSwitch = new QuickSwitchViewModel(Provider.GetRequiredService<TrayPopupViewModel>());
+            HotkeyService hotkeys = Provider.GetRequiredService<HotkeyService>();
+            hotkeys.QuickSwitchRequested += (_, _) => Dispatcher.UIThread.Post(() => Tray.QuickSwitchWindow.Open(quickSwitch));
+            hotkeys.Start();
 
             Provider.GetRequiredService<DisplayChangeWatcher>().DisplaysChanged +=
                 async (_, _) =>

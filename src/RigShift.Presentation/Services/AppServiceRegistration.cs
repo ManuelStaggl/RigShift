@@ -90,6 +90,7 @@ public static class AppServiceRegistration
         services.AddSingleton<IOpenXrRuntimes, Windows.Games.OpenXrRuntimes>();
         services.AddSingleton<IGameStarter, Windows.Games.ShellGameStarter>();
         services.AddSingleton<IWindowLayout, Windows.Ui.WindowLayoutManager>();
+        services.AddSingleton<ICursorConfinement, Windows.Ui.CursorConfinement>();
         services.AddSingleton<IGameSettingsFiles>(sp => new GameSettingsFiles(
             System.IO.Path.Combine(paths.DataDirectory, "backups", "game-settings"), sp.GetRequiredService<TimeProvider>(), log));
         services.AddSingleton<GameCatalog>();
@@ -107,7 +108,8 @@ public static class AppServiceRegistration
             sp.GetRequiredService<TimeProvider>(),
             log,
             sp.GetRequiredService<IWindowLayout>(),
-            sp.GetRequiredService<IGameSettingsFiles>()));
+            sp.GetRequiredService<IGameSettingsFiles>(),
+            sp.GetRequiredService<ICursorConfinement>()));
         services.AddSingleton<GameSessionService>();
 
         // View models

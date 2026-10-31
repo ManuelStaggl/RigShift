@@ -45,7 +45,8 @@ public sealed class GameEditorFactory(
             .Select(g => new RuleDevice { Id = g.AppsWaitForUsbDeviceId, Name = g.AppsWaitForUsbDeviceName })
             .Concat(profiles.Profiles.Select(p => new RuleDevice { Id = p.AppsWaitForUsbDeviceId, Name = p.AppsWaitForUsbDeviceName }));
         var appsWaitDevice = new AppsWaitDeviceChoice(
-            game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, connected, known, settings.Current.UsbDeviceNames);
+            game.AppsWaitForUsbDeviceId, game.AppsWaitForUsbDeviceName, connected, known, settings.Current.UsbDeviceNames,
+            new UsbDetection(usbDevices, TimeProvider.System));
 
         return new GameEditorViewModel(game, isNew, new GameEditorContext(profiles.Profiles, _catalog.Games, appsWaitDevice), editorServices);
     }

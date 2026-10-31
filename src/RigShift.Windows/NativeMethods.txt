@@ -170,3 +170,6 @@ FileSaveDialog
 IFileDialog
 GetSysColor
 SYS_COLOR_INDEX
+// Keep the mouse on the game's display (ClipCursor, checked against the foreground window).
+ClipCursor
+GetForegroundWindow

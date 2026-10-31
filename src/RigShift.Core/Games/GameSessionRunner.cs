@@ -20,13 +20,16 @@ public sealed class GameSessionRunner
     private readonly Func<Guid, Profile?> _profile;
     private readonly AppRunner _apps;
     private readonly WindowLayoutRestorer? _layout;
+    private readonly IWindowLayout? _windows;
     private readonly IGameSettingsFiles? _settings;
+    private readonly ICursorConfinement? _cursor;
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
     /// <param name="profile">Looks a profile up by id; <c>null</c> when it was deleted in the meantime.</param>
     /// <param name="windows">Restores saved window positions; <c>null</c> leaves windows where they are.</param>
     /// <param name="settings">Writes the entry's own values into the game's settings file; <c>null</c> leaves the file alone.</param>
+    /// <param name="cursor">Keeps the mouse on the game's display; <c>null</c> leaves it free.</param>
     public GameSessionRunner(
         IGameStarter starter,
         IGameProcesses processes,
@@ -38,7 +41,8 @@ public sealed class GameSessionRunner
         TimeProvider time,
         ILogger log,
         IWindowLayout? windows = null,
-        IGameSettingsFiles? settings = null)
+        IGameSettingsFiles? settings = null,
+        ICursorConfinement? cursor = null)
     {
         ArgumentNullException.ThrowIfNull(starter);
         ArgumentNullException.ThrowIfNull(processes);
@@ -59,7 +63,9 @@ public sealed class GameSessionRunner
         _learner = new GameProcessLearner(processes, time, _log);
         _apps = new AppRunner(apps, usbDevices, options, time, _log);
         _layout = windows is null ? null : new WindowLayoutRestorer(windows, time, _log);
+        _windows = windows;
         _settings = settings;
+        _cursor = cursor;
     }
 
     /// <summary>Raised with the learned process name so the caller can keep it in the entry; never raised twice for one session.</summary>
@@ -67,6 +73,9 @@ public sealed class GameSessionRunner
 
     /// <summary>Raised after the game ended with the values it left in its settings file, when they differ from the entry's.</summary>
     public event EventHandler<GameSettingsRemembered>? SettingsRemembered;
+
+    /// <summary>Raised once the game ended with where its tools' windows are now, when that differs from the saved layout.</summary>
+    public event EventHandler<GameWindowsRemembered>? WindowsRemembered;
 
     /// <summary>
     /// How long to wait after the session for the game's processes to be gone before its settings file is touched. The
@@ -128,8 +137,9 @@ public sealed class GameSessionRunner
         AppsOutcome apps = await _apps.Start(AppPlan.For(game, AppTiming.BeforeGame));
 
         // Before the game, not after: the tools are dragged into place while the desktop is still visible, and the
-        // arrangement they are placed on is the one the profile just applied.
-        WindowLayoutResult? layout = await RestoreWindowsAsync(game, cancellationToken);
+        // arrangement they are placed on is the one the profile just applied. Tools that start after the game are
+        // not running yet; waiting for their windows would only hold the game up.
+        WindowLayoutResult? layout = await RestoreWindowsAsync(game, ToolWindows(game, AppTiming.BeforeGame), cancellationToken);
 
         // A game started elsewhere has read its file already; its values belong to whoever started it.
         IReadOnlyDictionary<string, string>? previous = alreadyRunning ? null : await ApplySettingsAsync(game, cancellationToken);
@@ -207,9 +217,17 @@ public sealed class GameSessionRunner
         AppsOutcome afterwards = await _apps.Start(AppPlan.For(game, AppTiming.AfterGame));
         apps = Worse(apps, afterwards);
 
-        await WaitForEndAsync(game, session, processId, learned, cancellationToken);
+        // In the background: the game runs already, and a tool that never shows a window must not delay its end.
+        Task<WindowLayoutResult?> placedLater = RestoreWindowsAsync(game, ToolWindows(game, AppTiming.AfterGame), cancellationToken);
+
+        using (KeepMouse(game, learned))
+        {
+            await WaitForEndAsync(game, session, processId, learned, cancellationToken);
+        }
         _log.Information("Game {Game} ended after {Minutes:0.0} min", game.Name, _time.GetElapsedTime(started).TotalMinutes);
 
+        layout = Sum(layout, await placedLater);
+        RememberToolWindows(game);
         await EndAppsAsync(game, cancellationToken);
         SwitchOutcome? exit = await RunExitActionAsync(game, cancellationToken);
         return new GameSessionResult(GameSessionOutcome.Ended, applied, apps, exit, learned, layout);
@@ -219,9 +237,9 @@ public sealed class GameSessionRunner
     /// Puts the helper windows back, if the entry saved any. Never fails the session: a window that could not be
     /// moved is annoying, not a reason to leave the game unstarted.
     /// </summary>
-    private async Task<WindowLayoutResult?> RestoreWindowsAsync(GameEntry game, CancellationToken cancellationToken)
+    private async Task<WindowLayoutResult?> RestoreWindowsAsync(GameEntry game, WindowLayout? layout, CancellationToken cancellationToken)
     {
-        if (_layout is null || game.WindowLayout is not { IsEmpty: false } layout)
+        if (_layout is null || layout is not { IsEmpty: false })
         {
             return null;
         }
@@ -586,10 +604,84 @@ public sealed class GameSessionRunner
         SwitchResult? result = await _switcher.SwitchAsync(target, SwitchRequest.Default, cancellationToken);
         return result?.Outcome ?? SwitchOutcome.Blocked;
     }
+    /// <summary>
+    /// The saved windows of the tools that start at <paramref name="when"/>, by their program's name. Windows of no tool
+    /// of the entry – something the user had open when capturing – count as before the game.
+    /// </summary>
+    internal static WindowLayout? ToolWindows(GameEntry game, AppTiming when)
+    {
+        if (game.WindowLayout is not { IsEmpty: false } layout)
+        {
+            return null;
+        }
+
+        var afterGame = game.Apps
+            .Where(a => a.Kind == AppActionKind.Start && a.When == AppTiming.AfterGame)
+            .Select(a => Path.GetFileNameWithoutExtension(Environment.ExpandEnvironmentVariables(a.Path.Trim().Trim('"'))))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        List<WindowPlacement> part = [.. layout.Windows.Where(w => afterGame.Contains(w.ProcessName) == (when == AppTiming.AfterGame))];
+        return part.Count == 0 ? null : layout with { Windows = part };
+    }
+
+    /// <summary>For the game's whole run, released however the session ends; <c>null</c> when the entry does not want it.</summary>
+    private IDisposable? KeepMouse(GameEntry game, string? learned)
+    {
+        if (!game.KeepMouseOnDisplay || _cursor is null || (learned ?? game.Launch.KnownProcessName()) is not { } process)
+        {
+            return null;
+        }
+
+        try
+        {
+            return _cursor.KeepOnWindowOf(process);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Game {Game}: the mouse could not be kept on its display", game.Name);
+            return null;
+        }
+    }
+
+    private static WindowLayoutResult? Sum(WindowLayoutResult? a, WindowLayoutResult? b) =>
+        a is null ? b : b is null ? a : new WindowLayoutResult(a.Placed + b.Placed, a.Refused + b.Refused, a.Missing + b.Missing);
+
+    /// <summary>
+    /// Once the game is over and before its tools close: where the tools of the saved layout sit now becomes the layout,
+    /// so a tool moved during the session comes back there. A window that is gone or minimized keeps its saved place.
+    /// </summary>
+    private void RememberToolWindows(GameEntry game)
+    {
+        if (_windows is null || game.WindowLayout is not { IsEmpty: false } saved)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<WindowMatch> matches = WindowLayoutMatching.Match(saved.Windows, _windows.Open());
+            List<WindowPlacement> now = [.. matches.Select(m => m.Window is { State: not WindowState.Minimized } window
+                ? m.Placement with { Bounds = window.Bounds, State = window.State }
+                : m.Placement)];
+            if (now.SequenceEqual(saved.Windows))
+            {
+                return;
+            }
+
+            _log.Information("Game {Game}: the tool windows moved during the session, their new places are kept", game.Name);
+            WindowsRemembered?.Invoke(this, new GameWindowsRemembered(game.Id, saved with { Windows = now, CapturedAt = _time.GetUtcNow() }));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning(ex, "Game {Game}: the tool windows could not be read at the end of the session", game.Name);
+        }
+    }
 }
 
 /// <summary>The process name a first start taught us about a game.</summary>
 public sealed record GameProcessLearned(Guid GameId, string ProcessName);
+
+/// <summary>Where the tools of a game's window layout were at the end of a session, to keep in its entry.</summary>
+public sealed record GameWindowsRemembered(Guid GameId, WindowLayout Layout);
 
 /// <summary>The values a game left in its settings file at the end of a session, to keep in its entry.</summary>
 public sealed record GameSettingsRemembered(Guid GameId, IReadOnlyDictionary<string, string> Values);
