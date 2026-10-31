@@ -275,7 +275,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             SwitchRequest effective = request with
             {
                 DefaultConfirmTimeoutSeconds = _settings.Current.ConfirmTimeoutSeconds,
-                Leaving = _catalog.ActiveProfile,
+                // Windows restored the displays already, so the profile they left is the previous one.
+                Leaving = request.KeepDisplays && _catalog.PreviousProfileId is { } previous ? _catalog.Find(previous) : _catalog.ActiveProfile,
             };
             Task<SwitchResult> running = Task.Run(() => _orchestrator.SwitchAsync(profile, effective, linked.Token), CancellationToken.None);
             _current = running;

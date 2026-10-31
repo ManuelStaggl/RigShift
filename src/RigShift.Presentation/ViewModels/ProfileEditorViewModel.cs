@@ -79,6 +79,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         DesktopIcons = profile.DesktopIcons;
         KeepAwake = profile.KeepAwake;
         RememberWindows = profile.RememberWindows;
+        CloseAppsWhenLeaving = profile.CloseAppsWhenLeaving;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
         Surround = new SurroundSection(context.Surround, profile.Surround, context.SurroundUsedBy);
 
@@ -193,6 +194,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     [ObservableProperty]
     public partial bool RememberWindows { get; set; }
+
+    [ObservableProperty]
+    public partial bool CloseAppsWhenLeaving { get; set; }
 
     /// <summary>
     /// Where the desktop symbols belong in this profile, or <c>null</c> to leave them alone. Captured on demand and not
@@ -668,6 +672,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         AppsWaitForUsbDeviceName = AppList.WaitDevice.DeviceName,
         KeepAwake = KeepAwake,
         RememberWindows = RememberWindows,
+        CloseAppsWhenLeaving = CloseAppsWhenLeaving,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
         DesktopIcons = DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),
