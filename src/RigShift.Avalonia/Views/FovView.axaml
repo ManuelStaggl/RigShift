@@ -1,0 +1,284 @@
+<UserControl
+  x:Class="RigShift.Avalonia.Views.FovView"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:v="using:RigShift.Avalonia.Views"
+  xmlns:vm="using:RigShift.App.ViewModels"
+  xmlns:fov="using:RigShift.Core.Fov"
+  x:DataType="vm:FovViewModel">
+  <UserControl.Styles>
+    <!-- Label over field throughout the rig card. -->
+    <Style Selector="TextBlock.field">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+      <Setter Property="VerticalAlignment" Value="Bottom" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- "Single · Triples" as a segmented control: a recessed track, the chosen half a raised card. -->
+    <Style Selector="ListBox.segment">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="Background" Value="{DynamicResource RsDeep}" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ListBox.segment ListBoxItem">
+      <Setter Property="Padding" Value="0,6" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText2}" />
+    </Style>
+    <Style Selector="ListBox.segment ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsHover}" />
+    </Style>
+    <Style Selector="ListBox.segment ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.segment ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RsCard}" />
+      <Setter Property="BoxShadow" Value="{DynamicResource RsCardShadow}" />
+    </Style>
+    <Style Selector="ListBox.segment ListBoxItem:selected">
+      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- One result: the caption over a big figure. -->
+    <Style Selector="TextBlock.metric">
+      <Setter Property="FontSize" Value="26" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="-0.5" />
+      <Setter Property="Foreground" Value="{DynamicResource RsText}" />
+    </Style>
+
+    <!-- The sim rows: a hairline between them, a hover tint, the value as an accent chip. -->
+    <Style Selector="Border.simrow">
+      <Setter Property="BorderBrush" Value="{DynamicResource RsDivider}" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ContentPresenter:nth-child(1) > Border.simrow">
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.simrow:pointerover">
+      <Setter Property="Background" Value="{DynamicResource RsHover}" />
+    </Style>
+    <Style Selector="Border.value">
+      <Setter Property="MinWidth" Value="48" />
+      <Setter Property="Height" Value="24" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource RsAccentSoft}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.value > TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource RsAccentText}" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- In a data template a brush set on the path loses to the icon style, so the colours come as classes. -->
+    <Style Selector="Path.icon.pin">
+      <Setter Property="Stroke" Value="{DynamicResource RsAccentText}" />
+      <Setter Property="Fill" Value="{DynamicResource RsAccentText}" />
+    </Style>
+    <Style Selector="Path.icon.done">
+      <Setter Property="Stroke" Value="{DynamicResource RsSuccess}" />
+    </Style>
+    <Style Selector="Path.icon.chevron">
+      <Setter Property="RenderTransform" Value="none" />
+    </Style>
+    <Style Selector="Path.icon.chevron.open">
+      <Setter Property="RenderTransform" Value="rotate(180deg)" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel MaxWidth="1040" Margin="32,28,32,40">
+      <TextBlock Classes="h1" FontSize="32" LetterSpacing="-0.7" Text="{v:Tr Nav_Fov}" />
+      <TextBlock Margin="0,6,0,24" Classes="secondary" FontSize="13" Text="{v:Tr Fov_Intro}" />
+
+      <Grid ColumnDefinitions="300,*" ColumnSpacing="16">
+        <!-- ===== The rig: label over field throughout, the comfort switch last ===== -->
+        <Border VerticalAlignment="Top" Padding="16,14,16,16" Classes="sheet">
+          <StackPanel>
+            <TextBlock Classes="strong" Text="{v:Tr Fov_Rig}" />
+
+            <TextBlock Margin="0,14,0,6" Classes="field" Text="{v:Tr Fov_Display}" />
+            <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="{v:Tr Fov_Display}" IsEnabled="{Binding HasDisplays}" ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay, Converter={x:Static v:Converters.KeepOnNull}}" />
+            <TextBlock Margin="0,4,0,0" Classes="caption" Text="{Binding SizeText}" TextWrapping="Wrap" />
+
+            <TextBlock Margin="0,14,0,6" Classes="field" Text="{v:Tr Fov_Layout}" />
+            <ListBox AutomationProperties.Name="{v:Tr Fov_Layout}" Classes="segment" SelectedIndex="{Binding LayoutIndex}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBoxItem Content="{v:Tr Fov_Single}" />
+              <ListBoxItem Content="{v:Tr Fov_Triple}" />
+            </ListBox>
+
+            <!-- Labels and fields in rows of their own: a label that wraps must not push its field below the neighbour. -->
+            <Grid Margin="0,14,0,0" ColumnDefinitions="*,*" ColumnSpacing="12" RowDefinitions="Auto,Auto,Auto,Auto">
+              <TextBlock Classes="field" Text="{v:Tr Fov_Diagonal}" />
+              <NumericUpDown Grid.Row="1" AutomationProperties.Name="{v:Tr Fov_Diagonal}" FormatString="0.#" Increment="0.5" Maximum="120" Minimum="5" ToolTip.Tip="{v:Tr Fov_DiagonalTip}" Value="{Binding DiagonalInches, Converter={x:Static v:Converters.Number}}" />
+              <TextBlock Grid.Column="1" Classes="field" Text="{v:Tr Fov_Distance}" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" AutomationProperties.Name="{v:Tr Fov_Distance}" FormatString="0" Increment="1" Maximum="300" Minimum="20" ToolTip.Tip="{v:Tr Fov_DistanceTip}" Value="{Binding DistanceCm, Converter={x:Static v:Converters.Number}}" />
+              <TextBlock Grid.Row="2" Margin="0,12,0,6" Classes="field" Text="{v:Tr Fov_Curvature}" />
+              <ComboBox Grid.Row="3" HorizontalAlignment="Stretch" AutomationProperties.Name="{v:Tr Fov_Curvature}" ItemsSource="{Binding CurvatureChoices}" SelectedItem="{Binding SelectedCurvature, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr Fov_CurvatureTip}" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,12,0,6" Classes="field" Text="{v:Tr Fov_Offset}" />
+              <NumericUpDown Grid.Row="3" Grid.Column="1" AutomationProperties.Name="{v:Tr Fov_Offset}" FormatString="0" Increment="1" Maximum="60" Minimum="0" ToolTip.Tip="{v:Tr Fov_OffsetTip}" Value="{Binding VerticalOffsetCm, Converter={x:Static v:Converters.Number}}" />
+            </Grid>
+            <NumericUpDown Margin="0,8,0,0" AutomationProperties.Name="{v:Tr Fov_RadiusOwn}" FormatString="0" Increment="100" IsVisible="{Binding IsCustomCurvature}" Maximum="5000" Minimum="300" PlaceholderText="{v:Tr Fov_RadiusOwn}" ToolTip.Tip="{v:Tr Fov_RadiusOwn}" Value="{Binding CustomRadiusMm, Converter={x:Static v:Converters.Number}}" />
+            <TextBlock Margin="0,6,0,0" Classes="caption" IsVisible="{Binding VerticalOffsetHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding VerticalOffsetHint}" TextWrapping="Wrap" />
+
+            <!-- Triples: frame width and the side angle, measured or the ideal one. -->
+            <StackPanel IsVisible="{Binding IsTriple}">
+              <Grid Margin="0,14,0,0" ColumnDefinitions="*,*" ColumnSpacing="12" RowDefinitions="Auto,Auto">
+                <TextBlock Classes="field" Text="{v:Tr Fov_Bezel}" />
+                <NumericUpDown Grid.Row="1" AutomationProperties.Name="{v:Tr Fov_Bezel}" FormatString="0" Increment="1" Maximum="100" Minimum="0" ToolTip.Tip="{v:Tr Fov_BezelTip}" Value="{Binding BezelMm, Converter={x:Static v:Converters.Number}}" />
+                <TextBlock Grid.Column="1" Classes="field" Text="{v:Tr Fov_Angle}" />
+                <NumericUpDown Grid.Row="1" Grid.Column="1" AutomationProperties.Name="{v:Tr Fov_Angle}" FormatString="0.#" Increment="1" IsEnabled="{Binding AngleIsManual}" Maximum="89" Minimum="0" ToolTip.Tip="{v:Tr Fov_AngleManualTip}" Value="{Binding AngleDegrees, Converter={x:Static v:Converters.Number}}" />
+              </Grid>
+              <Grid Margin="0,10,0,0" ColumnDefinitions="*,Auto" ColumnSpacing="12" ToolTip.Tip="{v:Tr Fov_AngleTip}">
+                <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource RsText}" Text="{v:Tr Fov_AngleAuto}" TextWrapping="Wrap" />
+                <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Fov_AngleAuto}" IsChecked="{Binding AngleIsAutomatic}" OffContent="" OnContent="" />
+              </Grid>
+            </StackPanel>
+
+            <Border Margin="0,14,0,12" Classes="divider" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" ToolTip.Tip="{v:Tr Fov_ComfortTip}">
+              <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource RsText}" Text="{v:Tr Fov_Comfort}" TextWrapping="Wrap" />
+              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Fov_Comfort}" IsChecked="{Binding Comfort}" OffContent="" OnContent="" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- ===== The top view with the result directly under it ===== -->
+        <StackPanel Grid.Column="1" Spacing="12">
+          <Border Padding="16,12" Background="{DynamicResource RsDeep}" BoxShadow="{DynamicResource RsWellShadow}" CornerRadius="16">
+            <Panel>
+              <v:RigDiagram Height="320" AutomationProperties.Name="{Binding DiagramText}" Input="{Binding Input}" ToolTip.Tip="{Binding DiagramText}" VerticalOffsetMm="{Binding VerticalOffsetMm}" />
+              <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" Classes="caption" IsHitTestVisible="False" Text="{v:Tr Fov_TopView}" />
+            </Panel>
+          </Border>
+
+          <UniformGrid Columns="3" ColumnSpacing="12">
+            <Border Padding="16,12" Classes="sheet">
+              <StackPanel>
+                <TextBlock Classes="caption" Text="{v:Tr Fov_Horizontal}" />
+                <TextBlock Classes="metric" Text="{Binding HorizontalText}" />
+              </StackPanel>
+            </Border>
+            <Border Padding="16,12" Classes="sheet">
+              <StackPanel>
+                <TextBlock Classes="caption" Text="{v:Tr Fov_Vertical}" />
+                <TextBlock Classes="metric" Text="{Binding VerticalText}" />
+              </StackPanel>
+            </Border>
+            <Border Padding="16,12" Classes="sheet" ToolTip.Tip="{v:Tr Fov_PpdTip}">
+              <StackPanel>
+                <TextBlock Classes="caption" Text="{v:Tr Fov_Ppd}" />
+                <TextBlock Classes="metric" Text="{Binding PixelDensityText}" />
+              </StackPanel>
+            </Border>
+          </UniformGrid>
+
+          <!-- The rest of the numbers, quieter: curved and triple values. -->
+          <WrapPanel Margin="4,0,0,0" ItemSpacing="20" LineSpacing="4">
+            <StackPanel IsVisible="{Binding HasTrueHorizontal}" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{v:Tr Fov_HorizontalTrueTip}">
+              <TextBlock Classes="caption" Text="{v:Tr Fov_HorizontalTrue}" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource RsText}" Text="{Binding TrueHorizontalText}" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding IsTriple}" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{v:Tr Fov_AngleTip}">
+              <TextBlock Classes="caption" Text="{v:Tr Fov_Angle}" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource RsText}" Text="{Binding AngleText}" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding IsTriple}" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{v:Tr Fov_TotalTip}">
+              <TextBlock Classes="caption" Text="{v:Tr Fov_Total}" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource RsText}" Text="{Binding TotalText}" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding IsTriple}" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{v:Tr Fov_OuterEdgeTip}">
+              <TextBlock Classes="caption" Text="{v:Tr Fov_OuterEdge}" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource RsText}" Text="{Binding OuterEdgeText}" />
+            </StackPanel>
+          </WrapPanel>
+        </StackPanel>
+      </Grid>
+
+      <ItemsControl Margin="0,12,0,0" IsVisible="{Binding HasWarnings}" ItemsSource="{Binding Warnings}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="x:String">
+            <Border Margin="0,0,0,8" Classes="notice">
+              <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- ===== One line per sim: the value as a chip right behind its kind, copy with a short answer, search ===== -->
+      <Grid Margin="4,24,0,10" ColumnDefinitions="*,Auto">
+        <TextBlock Classes="section" Text="{v:Tr Fov_PerGame}" />
+        <TextBox Grid.Column="1" Width="240" AutomationProperties.Name="{v:Tr Fov_Search}" PlaceholderText="{v:Tr Fov_Search}" Text="{Binding SimFilter}" />
+      </Grid>
+      <Border Padding="0" Classes="sheet" ClipToBounds="True">
+        <ItemsControl ItemsSource="{Binding ShownSimRows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:FovSimRow">
+              <Border Classes="simrow">
+                <StackPanel>
+                  <Grid MinHeight="44" Margin="16,0,8,0" ColumnDefinitions="22,240,130,Auto,*,Auto,Auto,Auto" ColumnSpacing="4">
+                    <Path VerticalAlignment="Center" Classes="icon small pin" IsVisible="{Binding IsPinned}" ToolTip.Tip="{v:Tr Fov_Pinned}" Data="{x:Static v:Icons.Pin}" />
+                    <TextBlock Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource RsText}" Text="{Binding Sim}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Sim}" />
+                    <TextBlock Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" Classes="caption" Text="{Binding KindText}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding KindText}" />
+                    <Border Grid.Column="3" Classes="value">
+                      <TextBlock Text="{Binding Value}" />
+                    </Border>
+                    <TextBlock Grid.Column="4" Margin="8,0,0,0" VerticalAlignment="Center" Classes="caption" IsVisible="{Binding Alternative, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding Alternative}" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Grid.Column="5" Margin="0,0,6,0" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" IsVisible="{Binding IsCopied}" Orientation="Horizontal" Spacing="4">
+                      <Path Classes="icon small done" Width="12" Height="12" Data="M5 12 L10 17 L19 7" />
+                      <TextBlock Classes="caption" Foreground="{DynamicResource RsSuccess}" Text="{v:Tr Fov_CopiedShort}" />
+                    </StackPanel>
+                    <Button Grid.Column="6" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Fov_Copy}" Classes="ghost" Command="{Binding $parent[v:FovView].ViewModel.CopyRowCommand}" CommandParameter="{Binding}" ToolTip.Tip="{v:Tr Fov_Copy}">
+                      <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
+                    </Button>
+                    <Button Grid.Column="7" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Fov_Where}" Classes="ghost" Command="{Binding ToggleCommand}" ToolTip.Tip="{v:Tr Fov_Where}">
+                      <Path Classes="icon small chevron" Classes.open="{Binding IsExpanded}" Data="{x:Static v:Icons.ChevronDown}" />
+                    </Button>
+                  </Grid>
+
+                  <!-- Where the value goes, and the sim's own geometry fields when it renders three views. -->
+                  <StackPanel Margin="42,0,16,14" IsVisible="{Binding IsExpanded}" Spacing="4">
+                    <TextBlock Classes="caption" FontSize="12.5" Foreground="{DynamicResource RsText2}" Text="{Binding WhereText}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" IsVisible="{Binding HasConfidence}" Text="{Binding Confidence}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" IsVisible="{Binding HasWideHint}" Text="{Binding WideHint}" TextWrapping="Wrap" />
+                    <ItemsControl Margin="0,6,0,0" IsVisible="{Binding HasFields}" ItemsSource="{Binding Fields}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="fov:SimField">
+                          <Grid MinHeight="30" ColumnDefinitions="260,140,44,Auto">
+                            <TextBlock Margin="0,0,16,0" VerticalAlignment="Center" Classes="caption" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource RsText}" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="2" Margin="6,0,0,0" VerticalAlignment="Center" Classes="caption" Text="{Binding Unit}" />
+                            <Button Grid.Column="3" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Fov_Copy}" Classes="ghost" Command="{Binding $parent[v:FovView].ViewModel.CopyCommand}" CommandParameter="{Binding Value}" ToolTip.Tip="{v:Tr Fov_Copy}">
+                              <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
+                            </Button>
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+
+      <TextBlock Margin="4,20,0,0" Classes="caption" Text="{v:Tr Fov_Measure}" TextWrapping="Wrap" />
+      <TextBlock Margin="4,6,0,0" Classes="caption" Text="{v:Tr Fov_Vr}" TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

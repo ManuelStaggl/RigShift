@@ -22,26 +22,6 @@
     <SolidColorBrush x:Key="HueEndSoft" Color="#3D8A8F98" />
   </UserControl.Resources>
   <UserControl.Styles>
-    <!-- Status dot in front of a status line: grey, green ready, amber learning, red failed, accent while running. -->
-    <Style Selector="Ellipse.status">
-      <Setter Property="Width" Value="7" />
-      <Setter Property="Height" Value="7" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Fill" Value="{DynamicResource RsText4}" />
-    </Style>
-    <Style Selector="Ellipse.status.ok">
-      <Setter Property="Fill" Value="{DynamicResource RsSuccess}" />
-    </Style>
-    <Style Selector="Ellipse.status.warn">
-      <Setter Property="Fill" Value="{DynamicResource RsWarning}" />
-    </Style>
-    <Style Selector="Ellipse.status.error">
-      <Setter Property="Fill" Value="{DynamicResource RsDanger}" />
-    </Style>
-    <Style Selector="Ellipse.status.accent">
-      <Setter Property="Fill" Value="{DynamicResource RsAccent}" />
-    </Style>
-
     <!-- Long hints wrap to two or three lines: keep them off the dividers. -->
     <Style Selector="Grid.row > StackPanel">
       <Setter Property="Margin" Value="0,8" />

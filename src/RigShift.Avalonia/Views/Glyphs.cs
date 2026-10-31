@@ -37,6 +37,11 @@ public static class Glyphs
     public const string Close = "M6 6 L18 18 M18 6 L6 18";
     public const string Switch = "M4 8 H20 M16 4 L20 8 L16 12 M20 16 H4 M8 12 L4 16 L8 20";
     public const string Display = "M3 4 H21 V15 H3 Z M12 15 V19 M8 19 H16";
+    public const string Keyboard = "M3 6 H21 V18 H3 Z M7 10 V10.1 M10.5 10 V10.1 M14 10 V10.1 M17.5 10 V10.1 M7.5 14 H16.5";
+    public const string Archive = "M3 4 H21 V8 H3 Z M5 8 V20 H19 V8 M10 12 H14";
+    public const string Flag = "M5 21 V4 M5 4 H18 L15.5 8 L18 12 H5";
+    public const string External = "M14 4 H20 V10 M20 4 L11 13 M18 14 V20 H4 V6 H10";
+    public const string Pin = "M9 3 H15 L14 9 L17.5 13 H6.5 L10 9 Z M12 13 V21";
 
     /// <summary>The brand stroke drawing of a profile symbol; a profile without one gets the desk monitor.</summary>
     public static string ProfileData(string? key) => ProfileIcons.Normalize(key) switch
@@ -70,6 +75,13 @@ public static class Icons
     public static readonly Geometry Copy = Geometry.Parse(Glyphs.Copy);
     public static readonly Geometry Close = Geometry.Parse(Glyphs.Close);
     public static readonly Geometry ChevronDown = Geometry.Parse(Glyphs.ChevronDown);
+    public static readonly Geometry Switch = Geometry.Parse(Glyphs.Switch);
+    public static readonly Geometry Settings = Geometry.Parse(Glyphs.Settings);
+    public static readonly Geometry Keyboard = Geometry.Parse(Glyphs.Keyboard);
+    public static readonly Geometry Archive = Geometry.Parse(Glyphs.Archive);
+    public static readonly Geometry Flag = Geometry.Parse(Glyphs.Flag);
+    public static readonly Geometry External = Geometry.Parse(Glyphs.External);
+    public static readonly Geometry Pin = Geometry.Parse(Glyphs.Pin);
 }
 
 /// <summary><c>{v:Tr Nav_Overview}</c>: a text of the shared strings in the app's language, without the WPF access key.</summary>
@@ -112,11 +124,21 @@ public static class Converters
     /// <summary><c>double?</c> seconds to the <c>decimal?</c> of NumericUpDown and back.</summary>
     public static readonly IValueConverter Seconds = new SecondsConverter();
 
+    /// <summary><c>double</c> to the <c>decimal?</c> of NumericUpDown and back; an emptied field keeps the last value.</summary>
+    public static readonly IValueConverter Number = new NumberConverter();
+
     private sealed class KeepOnNullConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value;
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value ?? BindingOperations.DoNothing;
+    }
+
+    private sealed class NumberConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is double d ? (decimal)d : null;
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is decimal m ? (double)m : BindingOperations.DoNothing;
     }
 
     private sealed class SecondsConverter : IValueConverter

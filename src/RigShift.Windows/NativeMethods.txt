@@ -160,9 +160,10 @@ GetModuleHandle
 UnregisterClass
 HWND_MESSAGE
 FileOpenDialog
-IFileOpenDialog
 IShellItem
 SHCreateItemFromParsingName
 SIGDN
 FILEOPENDIALOGOPTIONS
 COMDLG_FILTERSPEC
+FileSaveDialog
+IFileDialog

@@ -5,11 +5,12 @@ using RigShift.Core.Abstractions;
 using RigShift.Core.Profiles;
 using RigShift.Core.Storage;
 using RigShift.Core.Topology;
+using RigShift.Windows.Ui;
 using Serilog;
 
 namespace RigShift.Avalonia.Services;
 
-/// <summary>The questions and builders behind the profiles page and the setup assistant; the help page's come with #94.</summary>
+/// <summary>The questions and builders behind the profiles and help pages and the setup assistant.</summary>
 internal sealed class PageDialogs(
     ProfileEditorFactory factory,
     ProfileEditorServices editorServices,
@@ -20,6 +21,8 @@ internal sealed class PageDialogs(
     ISurroundController surround,
     SwitchCoordinator coordinator) : IProfilePageDialogs, IHelpPageDialogs
 {
+    private const string ZipFilter = "ZIP (*.zip)|*.zip";
+
     private readonly ILogger _log = editorServices.Log.ForContext<PageDialogs>();
 
     public Task<Profile> NewFromCurrentAsync() => factory.NewFromCurrentAsync();
@@ -79,13 +82,21 @@ internal sealed class PageDialogs(
         }
     }
 
-    // shortcut: backup files (#94) are not built yet; nothing on screen reaches them, and the answers do nothing.
+    public string? PickZipToSave(string suggestedName) => NativeWindow.SaveFile(App.OwnerHandle, ZipFilter, null, suggestedName);
 
-    public string? PickZipToSave(string suggestedName) => null;
+    public string? PickZipToOpen() => NativeWindow.PickFile(App.OwnerHandle, ZipFilter, Loc.WithoutAccessKey(Loc.Instance["About_RestoreBackup"]).TrimEnd('…', ' '), null);
 
-    public string? PickZipToOpen() => null;
-
-    public Task<bool> ConfirmRestoreAsync(BackupContent content) => Task.FromResult(false);
+    /// <summary>
+    /// Restoring replaces everything, so it is asked like deleting (no default on the action), with everything the
+    /// backup would start, end, switch or bind listed under the question.
+    /// </summary>
+    public Task<bool> ConfirmRestoreAsync(BackupContent content) =>
+        AskDialog.AskAsync(
+            Loc.Instance["About_RestoreTitle"],
+            RestoreQuestion.Message(content),
+            RestoreQuestion.Lines(content),
+            new AskChoice<bool>(Loc.Instance["Common_Cancel"], false),
+            new AskChoice<bool>(Loc.Instance["About_Restore"], true));
 
     /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
     public static Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>

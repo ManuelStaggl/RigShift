@@ -966,7 +966,6 @@ Das Log liegt in {1}</value>
   <data name="Palette_KindProfile" xml:space="preserve"><value>Profil</value></data>
   <data name="Palette_KindPage" xml:space="preserve"><value>Seite</value></data>
   <data name="Palette_KindGame" xml:space="preserve"><value>Spiel</value></data>
-  <data name="Page_NotBuilt" xml:space="preserve"><value>Diese Seite kommt mit RigShift 5.0.</value></data>
   <data name="Overview_Lead" xml:space="preserve"><value>Wähle eine Position. Bildschirme, Audio und Apps folgen in einem Wechsel.</value></data>
   <data name="Overview_Positions" xml:space="preserve"><value>Positionen</value></data>
   <data name="Overview_AllGames" xml:space="preserve"><value>Alle Spiele</value></data>
