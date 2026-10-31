@@ -337,7 +337,7 @@ public static class SimCatalog
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null),
     };
 
-    /// <summary>iRacing also takes the curve itself, so those two fields show up on a single screen too.</summary>
+    // iRacing also takes the curve, so those fields show on a single screen too.
     private static List<SimField> IRacingFields(FovInput input, FovResult result)
     {
         var fields = new List<SimField>();
@@ -364,12 +364,12 @@ public static class SimCatalog
             ? [.. fields.Select(f => new SimField(f.Name, f.Value, f.Unit))]
             : [];
 
-    /// <summary>rFactor 2 and Le Mans Ultimate take one tuple: width m, height m, eye distance m, side angle °, bezel m.</summary>
+    // rFactor 2 and Le Mans Ultimate take one tuple: width m, height m, eye distance m, side angle °, bezel m.
     private static string ViewParams(FovInput input, double angle) => string.Create(
         Fixed,
         $"({input.Screen.WidthMm / 1000:0.000}, {input.Screen.HeightMm / 1000:0.000}, {input.DistanceMm / 1000:0.000}, {angle:0.000}, {input.BezelMm / 1000:0.000})");
 
-    /// <summary>ETS2 asks for the frame as an angle, not as a length.</summary>
+    // ETS2 wants the bezel as an angle, not a length.
     private static double BezelAngle(FovInput input) =>
         input.DistanceMm > 0 ? 2 * Math.Atan(input.BezelMm / input.DistanceMm) * 180 / Math.PI : 0;
 
@@ -387,15 +387,15 @@ public static class SimCatalog
 
     private static string Pixels(FovInput input) => string.Create(Fixed, $"{input.PixelWidth} × {input.PixelHeight}");
 
-    /// <summary>RaceRoom counts in tenths of its own base angle and never goes under 0.5.</summary>
+    // RaceRoom counts in tenths of its own base angle and never goes under 0.5.
     private static string Multiplier(double vertical, double baseDegrees) =>
         Math.Max(0.5, Math.Round(vertical / baseDegrees, 1)).ToString("0.0", Fixed);
 
-    /// <summary>The WRC slider runs 0–100 over 18°–68°, half a degree per step.</summary>
+    // The WRC slider runs 0–100 over 18°–68°, half a degree per step.
     private static string Slider(double vertical) =>
         Math.Clamp(Math.Round((vertical - 18) / 0.5), 0, 100).ToString("0", Fixed);
 
-    /// <summary>F1 has no angle, only a step away from its base of about 77° at 16:9.</summary>
+    // F1 has no angle, only a step from its base of about 77° at 16:9.
     private static string Offset(double horizontal)
     {
         double steps = Math.Clamp(Math.Round((horizontal - 77) / 2), -20, 20);

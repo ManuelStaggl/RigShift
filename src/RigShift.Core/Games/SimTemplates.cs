@@ -12,11 +12,7 @@ namespace RigShift.Core.Games;
 /// </summary>
 public static class SimTemplates
 {
-    /// <summary>
-    /// Known sims by Steam app id; the ones that are not on Steam are matched by name. Only titles whose process
-    /// name could actually be verified are in here – a wrong name is worse than none, because the user would trust
-    /// it instead of letting the first start learn the right one. The list grows when someone reports a title.
-    /// </summary>
+    // Only verified process names: a wrong one is worse than none, because the user would trust it over learning.
     private static readonly SimTemplate[] Known =
     [
         // iRacing's interface stays open all evening, the sim comes and goes with every "Go Racing".
@@ -70,10 +66,7 @@ public static class SimTemplates
         return filled;
     }
 
-    /// <summary>
-    /// Le Mans Ultimate keeps the graphics for monitor and VR in one file (<c>Config_DX11_VR.ini</c> holds only
-    /// anti-aliasing and post effects). These are the keys that make the difference in VR, read from a 1.4.3 file.
-    /// </summary>
+    // LMU keeps monitor and VR graphics in one file; these keys differ in VR (read from a 1.4.3 file).
     private static readonly string[] LeMansUltimateKeys =
     [
         "Graphic Options/Max Visible Vehicles",

@@ -16,18 +16,16 @@ internal sealed class GameDialogs(GameEditorFactory factory, PageDialogs pageDia
 
     public Task<GameEditorViewModel> CreateEditorAsync(GameEntry game, bool isNew) => factory.CreateEditorAsync(game, isNew);
 
-    /// <summary>Installed games from the picker with tick boxes, saved right away without the editor.</summary>
     public async Task<AddedGames> AddInstalledAsync() => await factory.AddInstalledAsync(await GamePickerWindow.PickManyAsync(factory));
 
     public Task<PickedGame?> PickGameAsync() => GamePickerWindow.PickAsync(factory);
 
     public Task<WindowLayout?> CaptureWindowsAsync(WindowLayout? current) => WindowCaptureWindow.CaptureAsync(factory.OpenWindows(), current);
 
-    /// <summary>A program from the file dialog, for "+ → Choose a program"; <c>null</c> when cancelled.</summary>
     public string? PickExecutable() =>
         NativeWindow.PickFile(App.OwnerHandle, Loc.Instance["App_FileFilter"], Loc.WithoutAccessKey(Loc.Instance["List_NewProgram"]).TrimEnd('…', ' '), null);
 
-    /// <summary>Delete is destructive: no default on the action, Enter does nothing.</summary>
+    /// <summary>Destructive, so Enter picks nothing.</summary>
     public Task<bool> ConfirmDeleteAsync(string name) =>
         AskDialog.AskAsync(
             Loc.Instance["Games_DeleteTitle"],

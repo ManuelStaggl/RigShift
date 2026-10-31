@@ -8,10 +8,10 @@ namespace RigShift.App.Services;
 
 public static class AppLogging
 {
-    /// <summary>Serilog's default would silently stop writing a day's file at 1 GB; a new file is started instead.</summary>
+    // Serilog's default silently stops a day's file at 1 GB; a new file is started instead.
     private const long FileSizeLimitBytes = 50L * 1024 * 1024;
 
-    /// <summary>Information until the settings say otherwise; the logger exists before the settings are read.</summary>
+    // The logger exists before the settings are read.
     private static readonly LoggingLevelSwitch Level = new(LogEventLevel.Information);
 
     private const string OutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] ({ProcessId}) {SourceContext}: {Message:lj}{NewLine}{Exception}";

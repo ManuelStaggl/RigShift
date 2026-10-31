@@ -15,7 +15,7 @@ public sealed class RunKeyAutostart : IAutostart
 
     private readonly string _command;
 
-    /// <summary>The entry versions before 4.2 wrote, without <c>--autostart</c>.</summary>
+    // The entry before 4.2, without --autostart.
     private readonly string _previousCommand;
     private readonly ILogger _log;
 

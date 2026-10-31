@@ -237,7 +237,6 @@ public sealed class DisplayTopology : Panel
         return line;
     }
 
-    /// <summary>One display: frame, inset screen, labels and main-display bezel; shows what fits once the owner knows the rectangle.</summary>
     private sealed class Tile
     {
         private readonly DisplayTopology _owner;
@@ -356,7 +355,6 @@ public sealed class DisplayTopology : Panel
             KeyboardNavigation.SetIsTabStop(Root, selected || _owner.SelectedKey is null);
         }
 
-        /// <summary>Labels and bezel when the inset has room; tray screens are plain rectangular silhouettes.</summary>
         public void Layout(Size size, bool showLabels)
         {
             _labels.IsVisible = showLabels;
@@ -396,7 +394,6 @@ public sealed class DisplayTopology : Panel
             }
         }
 
-        /// <summary>The text without its last " · " part when it does not fit and has one.</summary>
         private static string Shorter(string text, bool tooWide)
         {
             int cut = text.LastIndexOf(" · ", StringComparison.Ordinal);
@@ -413,7 +410,7 @@ public sealed class DisplayTopology : Panel
         private static string Numbered(TopologyDisplay display) =>
             display.Number is { } n ? n.ToString(CultureInfo.InvariantCulture) + " · " + display.Name : display.Name;
 
-        /// <summary>"1 · Left, main display, optional, 2560 × 1440 · 165 Hz" for Narrator.</summary>
+        // "1 · Left, main display, optional, 2560 × 1440 · 165 Hz" for Narrator.
         private static string SpokenName(TopologyDisplay display)
         {
             List<string> parts = [Numbered(display)];

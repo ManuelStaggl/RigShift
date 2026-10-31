@@ -56,7 +56,6 @@ public static class UserMessages
         _ => Loc.Format("Error_WindowsCode", code),
     };
 
-    /// <summary>Anything else that failed with a Windows code, such as starting a program.</summary>
     private static string DescribeWindowsError(int code) => code switch
     {
         ErrorFileNotFound or ErrorPathNotFound => Loc.Instance["Error_NotFound"],

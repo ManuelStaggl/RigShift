@@ -209,7 +209,6 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
     [RelayCommand]
     private void CloseDetailMessage() => DetailMessage = null;
 
-    /// <summary>The saved version replaces the unsaved changes (the "changed elsewhere" bar).</summary>
     [RelayCommand]
     private Task ReloadAsync()
     {
@@ -416,7 +415,6 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         _ = HideStatusAsync(timer, undo is null ? StatusDuration : UndoDuration);
     }
 
-    /// <summary>Takes back the action of the status line (a delete).</summary>
     [RelayCommand]
     private async Task UndoAsync()
     {
@@ -535,7 +533,6 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
         }
     }
 
-    /// <summary>Unbinds and disposes the editor; the detail is empty until the next one is loaded.</summary>
     private void CloseEditor()
     {
         IsStale = false;
@@ -620,8 +617,7 @@ public abstract partial class MasterDetailViewModel<TItem, TEditor> : Observable
     {
     }
 
-    /// <summary>Back to the entry as saved; a new entry disappears from the list.</summary>
-    /// <param name="target">The entry the user picked instead; its editor is loaded by whoever asked.</param>
+    // A new entry disappears from the list; whoever asked loads the target's editor.
     private void DiscardCore(TItem? target = null)
     {
         TItem? item = _newItem is not null && Editor is { IsNew: true } ? _newItem : SelectedItem;

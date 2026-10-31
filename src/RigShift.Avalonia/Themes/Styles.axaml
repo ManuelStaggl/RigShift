@@ -1,8 +1,4 @@
-<!--
-  RigShift's own styles on top of Semi. The rules (docs: visual audit #175): every spacing a multiple of 4, four radii
-  (RsRadiusXs/Sm/Md/Lg), six type roles with their line height, Fluent icons at 16/20/24 drawn unstretched, colours only
-  from tokens. Views pick a class and set no font size, radius or icon size of their own.
--->
+<!-- On top of Semi: spacing in multiples of 4, four radii, six type roles, icons at 16/20/24, colours only from tokens. -->
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:u="https://irihi.tech/ursa" xmlns:v="using:RigShift.Avalonia.Views">
 
   <!-- ===== Type: display 32/40, title 20/28, subtitle 15/20, body 13/20, caption 12/16; 400 and 600 only. ===== -->

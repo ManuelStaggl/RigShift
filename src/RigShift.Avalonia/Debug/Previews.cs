@@ -230,7 +230,6 @@ internal static class Previews
         return true;
     }
 
-    /// <summary>The stored profiles as a backup, the first one with programs and a rule that each need a second look.</summary>
     private static RigShift.Core.Storage.BackupContent PreviewBackup()
     {
         IReadOnlyList<RigShift.Core.Profiles.Profile> profiles = App.Provider.GetRequiredService<ProfileCatalog>().Profiles;
@@ -260,7 +259,6 @@ internal static class Previews
     }
 }
 
-/// <summary>Demo OpenXR runtimes for screenshots; nothing is read or written.</summary>
 internal sealed class PreviewOpenXrRuntimes : IOpenXrRuntimes
 {
     public IReadOnlyList<OpenXrRuntime> Installed() =>

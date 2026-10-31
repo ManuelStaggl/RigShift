@@ -140,8 +140,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     public bool HasError => ErrorMessage is not null;
 
     /// <summary>
-    /// The last session found no game process: the process field is the place to fix it, so it says so there
-    /// (F5, error row). Set by the page from the session result; cleared once the field changes.
+    /// The last session found no game process: the process field is the place to fix it, so it says so there.
+    /// Set by the page from the session result; cleared once the field changes.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProcessHint), nameof(ProcessHintIsError))]
@@ -234,7 +234,6 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     private static bool Matches(SettingsKeyChoice choice, string query) =>
         query.Trim() is not { Length: > 0 } text || choice.Key.Contains(text, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Reads the file's values for the checklist; a file that cannot be read leaves the free text.</summary>
     private async Task LoadSettingsChoicesAsync()
     {
         int read = ++_settingsRead;
@@ -296,7 +295,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         ? Loc.Format("Game_SettingsRemembered", settings.Values.Count)
         : Loc.Instance["Game_SettingsNoneYet"];
 
-    /// <summary>Turning it on for a game we know fills in its file and keys.</summary>
+    // Turning it on for a known game fills in its file and keys.
     partial void OnSettingsEnabledChanged(bool value)
     {
         if (value && !_loading && string.IsNullOrWhiteSpace(SettingsFile) && SimTemplates.SettingsFor(_launch) is { } suggestion)
@@ -490,7 +489,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         Settings = SettingsFromFields(),
     };
 
-    /// <summary>The fields as settings; values already kept stay for the keys that are still listed.</summary>
+    // Values already kept stay for the keys that are still listed.
     private GameSettings? SettingsFromFields()
     {
         if (!SettingsEnabled)
@@ -564,7 +563,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
 
     private void OnPartChanged(object? sender, EventArgs e) => Recalculate();
 
-    /// <summary>Validation and the dirty flag after every change; cheap enough to run on each keystroke.</summary>
+    // Cheap enough to run on each keystroke.
     private void Recalculate()
     {
         if (_loading)
@@ -598,7 +597,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         _ => nameof(GameExitKind.Stay),
     };
 
-    /// <summary>Rebuilds the texts made in code and keeps every selection by key.</summary>
+    // Rebuilds the texts made in code and keeps every selection by key.
     private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
     {
         string? profile = SelectedProfile?.Key;
@@ -670,7 +669,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         }
     }
 
-    /// <summary>"XG32UCWG, Left, Right · Ctrl+Alt+F1": the displays left to right, then the hotkey.</summary>
+    // "XG32UCWG, Left, Right · Ctrl+Alt+F1": the displays left to right, then the hotkey.
     private static string DescribeProfile(Profile profile)
     {
         string text = string.Join(", ", profile.Displays.OrderBy(d => d.PositionX).ThenBy(d => d.PositionY).Select(SwitchMessages.NameOf));

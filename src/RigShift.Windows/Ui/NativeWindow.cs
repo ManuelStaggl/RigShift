@@ -61,7 +61,7 @@ public static class NativeWindow
         return length > 0 ? new string(buffer[..length]) : null;
     }
 
-    /// <summary>Page Up/Down, End, Home, arrows, Insert, Delete, Print, Windows and menu keys, Num Lock, number pad divide.</summary>
+    // Page Up/Down, End, Home, arrows, Insert, Delete, Print, Windows and menu keys, Num Lock, number pad divide.
     private static bool IsExtendedKey(int virtualKey) =>
         virtualKey is (>= 0x21 and <= 0x28) or 0x2C or 0x2D or 0x2E or 0x5B or 0x5C or 0x5D or 0x6F or 0x90;
 
@@ -227,7 +227,7 @@ public static class NativeWindow
         return work.IsEmpty || work.Contains(window) ? null : Choose(work, wanted, primaryWork, wantedOnPrimary);
     }
 
-    /// <summary>Centered on <paramref name="work"/>, or on the primary monitor when the window fits only there.</summary>
+    // Centered on work, or on the primary monitor when the window fits only there.
     private static (System.Drawing.Rectangle Bounds, bool ToPrimary) Choose(
         System.Drawing.Rectangle work,
         System.Drawing.Size wanted,

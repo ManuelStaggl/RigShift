@@ -17,7 +17,7 @@ public sealed partial class TrayPopupViewModel : ObservableObject
     private readonly GameSessionService _sessions;
     private readonly AutomationService? _automation;
 
-    /// <summary>Resolved on the click, not in the constructor: the profiles page pulls in the whole window.</summary>
+    // Resolved on the click, not in the constructor: the profiles page pulls in the whole window.
     private readonly Func<ProfilesViewModel> _profiles;
 
     public TrayPopupViewModel(
@@ -110,7 +110,6 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         _sessions.Start(item.Game);
     }
 
-    /// <summary>Opens the profile page with the current arrangement as a new, unsaved profile – as the tray menu does.</summary>
     [RelayCommand]
     private void SaveCurrent()
     {

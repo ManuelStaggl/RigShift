@@ -61,7 +61,7 @@ public sealed record AppAction
     /// </summary>
     public AppTiming When { get; init; }
 
-    /// <summary>Up to 4.x the window wait only applied to a start; an end with it ticked waited its seconds.</summary>
+    // Up to 4.x the window wait applied only to a start; an end with it ticked waited its seconds.
     private bool LegacyWindowWait => _legacyWaitForWindow && Kind == AppActionKind.Start;
 
     /// <summary>By what the entry does: an old entry equals the new one it amounts to, whatever the fields behind it hold.</summary>

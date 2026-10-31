@@ -32,7 +32,7 @@ public sealed partial class ConfirmationWindow : Window
     // One delegate instance, so the hook can be removed again.
     private readonly Win32Properties.CustomWndProcHookCallback _hook;
 
-    /// <summary>The countdown on screen, if any. UI thread only.</summary>
+    // UI thread only.
     private static ConfirmationWindow? s_open;
 
     public ConfirmationWindow()

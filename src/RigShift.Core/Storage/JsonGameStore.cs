@@ -92,11 +92,8 @@ public sealed class JsonGameStore : IGameStore
     public Task DeleteAsync(Guid gameId, CancellationToken cancellationToken) =>
         InTurnAsync(() => DeleteCoreAsync(gameId, cancellationToken));
 
-    /// <summary>
-    /// A change reads the file, alters the list and writes it back. Two at once would both read the old list, and the
-    /// later write would drop what the other added – so they take turns. A chain of tasks rather than a semaphore: there
-    /// is nothing to dispose, and the store is created in many places that never would.
-    /// </summary>
+    // Changes take turns, so two read-modify-writes cannot drop each other's additions; a task chain needs no
+    // disposing.
     private Task InTurnAsync(Func<Task> change)
     {
         lock (_turnGate)
@@ -154,8 +151,8 @@ public sealed class JsonGameStore : IGameStore
 internal sealed record GameDocument(int SchemaVersion, IReadOnlyList<GameEntry>? Games)
 {
     /// <summary>
-    /// The games as this version reads them. Schema 1 kept the session end as a choice next to the launcher name; a
-    /// name without "ends with the launcher" did nothing, so it is dropped rather than suddenly taking effect.
+    /// Schema 1 could name a launcher without "ends with the launcher", which did nothing; it is dropped rather than
+    /// taking effect.
     /// </summary>
     public IReadOnlyList<GameEntry> CurrentGames() => [.. (Games ?? []).Select(g => g with
     {

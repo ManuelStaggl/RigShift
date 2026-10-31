@@ -30,7 +30,7 @@ internal sealed class DisplayChangeWatcher : IDisposable
 
     public event EventHandler? DisplaysChanged;
 
-    /// <summary>A top-level window of the app that always exists, e.g. for the reason Windows shows when logging off.</summary>
+    /// <summary>Always exists, so Windows can show it as the reason when logging off.</summary>
     public nint Handle => _window.Handle;
 
     public void Dispose()

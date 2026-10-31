@@ -108,7 +108,7 @@
               <Button HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding SkipTriggerCommand}" Content="{v:Tr Setup_NoTrigger}" IsVisible="{Binding IsTrigger}" />
               <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding CreateRuleCommand}" Content="{v:Tr Setup_CreateRule}" IsVisible="{Binding IsTrigger}" />
               <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="neutral" Command="{Binding FinishCommand}" Content="{v:Tr Setup_Finish}" IsVisible="{Binding IsDone}" />
-              <!-- The aha moment: one real switch, with the countdown that takes it back. -->
+              <!-- One real switch, with the countdown that takes it back. -->
               <Button MinWidth="120" HorizontalContentAlignment="Center" Classes="primary" Command="{Binding TryItCommand}" Content="{Binding TryText}" IsVisible="{Binding ShowTry}" />
             </StackPanel>
           </Grid>
@@ -167,7 +167,7 @@
                     </MultiBinding>
                   </TextBlock.IsVisible>
                 </TextBlock>
-                <!-- The hardest part for a newcomer: how Windows turns a display off. -->
+                <!-- How Windows turns a display off. -->
                 <StackPanel IsVisible="{Binding IsSecond}" Spacing="8">
                   <Button HorizontalAlignment="Left" Classes="link" Command="{Binding ToggleHowCommand}" Content="{v:Tr Setup_How}" />
                   <StackPanel IsVisible="{Binding ShowHow}" Spacing="4">

@@ -221,7 +221,6 @@ public sealed partial class RuleCard : ObservableObject
         OnDevicesShapeChanged();
     }
 
-    /// <summary>Adds the device the user switches off and on, as the setup assistant does.</summary>
     [RelayCommand]
     private async Task DetectDeviceAsync()
     {

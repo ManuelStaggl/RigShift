@@ -3,8 +3,8 @@ using Serilog;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// The last line of a process that dies: without these handlers an exception on a pool thread or in <c>Main</c> ended
-/// RigShift with nothing in the log, which is the one place anybody would look.
+/// The last log line of a dying process: without these handlers, exceptions on pool threads or in <c>Main</c> left
+/// nothing in the log.
 /// </summary>
 internal static class CrashLogging
 {
@@ -62,9 +62,8 @@ internal enum UiExceptionVerdict
 }
 
 /// <summary>
-/// Tells one UI exception from one that comes back at once. Marking every exception handled keeps the app alive after a
-/// slip in a click handler – and keeps it spinning for good when the exception comes from a layout pass or a timer.
-/// UI thread only.
+/// Tells a one-off UI exception from one that keeps coming back (layout pass, timer) and would spin for good if always
+/// handled. UI thread only.
 /// </summary>
 internal sealed class UiExceptionTracker(TimeProvider time)
 {

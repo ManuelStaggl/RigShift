@@ -326,7 +326,6 @@ public sealed partial class FovViewModel : ObservableObject
 
     partial void OnSelectedCurvatureChanged(Choice? value) => OnCurvatureChanged();
 
-    /// <summary>Copies a row's value; the row answers with "Copied ✓" for a moment instead of a line elsewhere.</summary>
     [RelayCommand]
     private async Task CopyRowAsync(FovSimRow? row)
     {
@@ -367,7 +366,7 @@ public sealed partial class FovViewModel : ObservableObject
         }
     }
 
-    /// <summary>The curve is remembered per display: a rig usually mixes a curved centre with flat sides.</summary>
+    // The curve is remembered per display: a rig usually mixes a curved centre with flat sides.
     private void OnCurvatureChanged()
     {
         if (_loading)
@@ -421,7 +420,7 @@ public sealed partial class FovViewModel : ObservableObject
         SelectedCurvature = CurvatureChoices.FirstOrDefault(c => c.Key == selected) ?? CurvatureChoices[0];
     }
 
-    /// <summary>Size and curve of the display that was just picked; a remembered radius wins over the model table.</summary>
+    // A remembered radius wins over the model table.
     private void LoadDisplay()
     {
         _loading = true;
@@ -469,7 +468,7 @@ public sealed partial class FovViewModel : ObservableObject
         return size;
     }
 
-    /// <summary>The aspect ratio from the EDID if it has one, otherwise from the resolution – both give the same on a normal panel.</summary>
+    // From the EDID if it has one, otherwise from the resolution; both agree on a normal panel.
     private ScreenSize AspectOf(FovDisplay? display)
     {
         if (display is null)

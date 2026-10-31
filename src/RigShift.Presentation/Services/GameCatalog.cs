@@ -185,10 +185,7 @@ public sealed partial class GameCatalog : ObservableObject
         _ = LoadIconsAsync([.. Items]);
     }
 
-    /// <summary>
-    /// The games' own icons, after the cards are up: finding a store game's executable can mean walking its install
-    /// folder, and no list is worth blocking for an icon. Each item keeps its symbol until its icon arrives.
-    /// </summary>
+    // After the cards are up: finding a store game's executable can mean walking its install folder.
     private static async Task LoadIconsAsync(IReadOnlyList<GameItem> items)
     {
         foreach (GameItem item in items)

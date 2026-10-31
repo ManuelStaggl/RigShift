@@ -39,7 +39,6 @@ public sealed partial class SetupWizardWindow : Window
 
     private SetupWizardViewModel ViewModel => (SetupWizardViewModel)DataContext!;
 
-    /// <summary>Shows the assistant modal over the main window, or on its own when the window is in the tray.</summary>
     internal static async Task ShowAsync(SetupWizardViewModel viewModel)
     {
         var window = new SetupWizardWindow { DataContext = viewModel };
@@ -123,7 +122,7 @@ public sealed partial class SetupWizardWindow : Window
         }
     }
 
-    /// <summary>The USB devices are looked at only while the trigger step is open.</summary>
+    // USB devices are polled only while the trigger step is open.
     private void FollowStep()
     {
         if (ViewModel.IsTrigger)

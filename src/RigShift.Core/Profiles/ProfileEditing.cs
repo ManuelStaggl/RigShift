@@ -81,10 +81,7 @@ public static class ProfileEditing
         return SinglePrimary(arrangement, before);
     }
 
-    /// <summary>
-    /// Windows reports every display of the primary source as primary; a profile has exactly one (issue #14). The one
-    /// <paramref name="previous"/> marked keeps it, otherwise the first in the list.
-    /// </summary>
+    // Windows reports every display of the primary source as primary; a profile has exactly one (issue #14).
     private static List<DisplayAssignment> SinglePrimary(List<DisplayAssignment> arrangement, List<DisplayAssignment> previous)
     {
         List<DisplayAssignment> primaries = arrangement.Where(d => d.IsPrimary).ToList();

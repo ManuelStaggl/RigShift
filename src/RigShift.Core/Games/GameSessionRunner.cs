@@ -233,10 +233,7 @@ public sealed class GameSessionRunner
         return new GameSessionResult(GameSessionOutcome.Ended, applied, apps, exit, learned, layout);
     }
 
-    /// <summary>
-    /// Puts the helper windows back, if the entry saved any. Never fails the session: a window that could not be
-    /// moved is annoying, not a reason to leave the game unstarted.
-    /// </summary>
+    // Never fails the session: a window that could not be moved is no reason to leave the game unstarted.
     private async Task<WindowLayoutResult?> RestoreWindowsAsync(GameEntry game, WindowLayout? layout, CancellationToken cancellationToken)
     {
         if (_layout is null || layout is not { IsEmpty: false })
@@ -255,10 +252,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>
-    /// Writes the entry's own values into the game's settings file before it starts.
-    /// </summary>
-    /// <returns>The values from before, to put back after the game; <c>null</c> when the file was left alone.</returns>
+    // Returns the values from before, or null when the file was left alone.
     private async Task<IReadOnlyDictionary<string, string>?> ApplySettingsAsync(GameEntry game, CancellationToken cancellationToken)
     {
         if (_settings is null || game.Settings is not { Keys.Count: > 0 } settings)
@@ -293,10 +287,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>
-    /// Once the game has closed: takes the values it left in its file as the entry's (the user may have changed them in
-    /// the game's menu) and puts the values from before back.
-    /// </summary>
+    // The values the game left (maybe changed in its menu) become the entry's; the ones from before go back.
     private async Task RestoreSettingsAsync(GameEntry game, IReadOnlyDictionary<string, string> previous, CancellationToken cancellationToken)
     {
         GameSettings settings = game.Settings!;
@@ -333,7 +324,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>Anything of the game's still runs: its known process, or any process from its folder (an anti-cheat starter, say).</summary>
+    // Its known process or any process from its folder (an anti-cheat starter, say).
     private bool IsGameRunning(GameEntry game)
     {
         if (game.Launch.KnownProcessName() is { } name && _processes.IsRunning(name))
@@ -371,12 +362,8 @@ public sealed class GameSessionRunner
         return (result.Outcome, result.AppsCompletion);
     }
 
-    /// <summary>
-    /// Waits for the session to end. For a sim whose interface outlives it – iRacing, Assetto Corsa with Content
-    /// Manager – that is the launcher's process, not the sim's: hanging on the sim would end the session on every
-    /// return to the menu between two races. Otherwise the game's own process decides, exactly where a process id
-    /// is at hand and by polling the name where it is not.
-    /// </summary>
+    // A sim whose launcher outlives it (iRacing, AC with Content Manager) ends with the launcher, not on every return
+    // to the menu.
     private async Task WaitForEndAsync(GameEntry game, StartedGame session, int? processId, string? learned, CancellationToken cancellationToken)
     {
         if (EndsWithLauncher(game) && game.LauncherProcessName is { } launcher)
@@ -438,10 +425,7 @@ public sealed class GameSessionRunner
     /// </summary>
     public static readonly TimeSpan LongRunGrace = TimeSpan.FromSeconds(2);
 
-    /// <summary>
-    /// After a stub: the game under the same name (it restarted itself), or whatever is new and runs from the game's
-    /// folder. Returns once that has ended, or when nothing showed up within <paramref name="grace"/>.
-    /// </summary>
+    // After a stub: the restarted game or whatever new runs from its folder, if it shows up within grace.
     private async Task WaitForSuccessorAsync(GameEntry game, IReadOnlySet<int> before, TimeSpan grace, CancellationToken cancellationToken)
     {
         string? name = game.Launch.KnownProcessName();
@@ -501,7 +485,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>How long the started process ran; <c>null</c> when the wait was cancelled. Never throws.</summary>
+    // Null when cancelled; never throws.
     private async Task<TimeSpan?> ObserveAsync(IRunningGame process, CancellationToken cancellationToken)
     {
         long startedAt = _time.GetTimestamp();
@@ -516,7 +500,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>What one session started, so every way out of it lets go of the process handle.</summary>
+    // So every way out of a session lets go of the process handle.
     private sealed class StartedGame
     {
         public IRunningGame? Process { get; set; }
@@ -529,7 +513,6 @@ public sealed class GameSessionRunner
     private static bool EndsWithLauncher(GameEntry game) =>
         !string.IsNullOrWhiteSpace(game.LauncherProcessName);
 
-    /// <summary>Waits until the process is there, as long as learning would; false when it never came.</summary>
     private async Task<bool> AppearsAsync(string processName, CancellationToken cancellationToken)
     {
         DateTimeOffset deadline = _time.GetUtcNow() + GameProcessLearner.Timeout;
@@ -554,7 +537,7 @@ public sealed class GameSessionRunner
         }
     }
 
-    /// <summary>The less good of two app outcomes, so one failing group is not hidden by the other succeeding.</summary>
+    // So one failing group is not hidden by the other succeeding.
     private static AppsOutcome Worse(AppsOutcome first, AppsOutcome second)
     {
         static int Rank(AppsOutcome outcome) => outcome switch
@@ -623,7 +606,6 @@ public sealed class GameSessionRunner
         return part.Count == 0 ? null : layout with { Windows = part };
     }
 
-    /// <summary>For the game's whole run, released however the session ends; <c>null</c> when the entry does not want it.</summary>
     private IDisposable? KeepMouse(GameEntry game, string? learned)
     {
         if (!game.KeepMouseOnDisplay || _cursor is null || (learned ?? game.Launch.KnownProcessName()) is not { } process)
@@ -645,10 +627,7 @@ public sealed class GameSessionRunner
     private static WindowLayoutResult? Sum(WindowLayoutResult? a, WindowLayoutResult? b) =>
         a is null ? b : b is null ? a : new WindowLayoutResult(a.Placed + b.Placed, a.Refused + b.Refused, a.Missing + b.Missing);
 
-    /// <summary>
-    /// Once the game is over and before its tools close: where the tools of the saved layout sit now becomes the layout,
-    /// so a tool moved during the session comes back there. A window that is gone or minimized keeps its saved place.
-    /// </summary>
+    // A tool moved during the session comes back there; a gone or minimized window keeps its saved place.
     private void RememberToolWindows(GameEntry game)
     {
         if (_windows is null || game.WindowLayout is not { IsEmpty: false } saved)

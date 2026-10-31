@@ -76,7 +76,6 @@ public sealed partial class DisplayEditItem : ObservableObject
     [ObservableProperty]
     public partial bool RatesUnknown { get; private set; }
 
-    /// <summary>New texts after a language change; <see cref="Sync"/> selects the same values again.</summary>
     internal void Relabel()
     {
         _syncing = true;
@@ -129,7 +128,7 @@ public sealed partial class DisplayEditItem : ObservableObject
         }
     }
 
-    /// <summary>Adds the rates the display offers. The saved rate stays, also when the list has one that looks the same.</summary>
+    /// <summary>The saved rate stays, also when the list has one that looks the same.</summary>
     internal void OfferRefreshRates(IReadOnlyList<RefreshRate> rates)
     {
         RefreshRate current = RefreshRate.Of(Assignment);

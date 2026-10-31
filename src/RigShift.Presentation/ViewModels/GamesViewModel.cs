@@ -13,11 +13,11 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// The games page: the master list on the left, the selected game's detail (its editor, tabs in session order) on the
-/// right (F5). A running session marks its game in the list and locks "Play".
+/// right. A running session marks its game in the list and locks "Play".
 /// </summary>
 public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, GameEditorViewModel>
 {
-    /// <summary>The tab that is the first decision a new game needs (F5).</summary>
+    // The first decision a new game needs.
     private const int ProfileTab = 1;
 
     private readonly GameCatalog _catalog;
@@ -48,7 +48,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
 
     public GameCatalog Catalog => _catalog;
 
-    /// <summary>The tab shown in the detail; a new game opens on "Profile", the first decision it needs (F5).</summary>
+    /// <summary>The tab shown in the detail; a new game opens on "Profile", the first decision it needs.</summary>
     [ObservableProperty]
     public partial int SelectedTabIndex { get; set; }
 
@@ -70,7 +70,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
     [ObservableProperty]
     public partial string PlayLabel { get; private set; } = string.Empty;
 
-    /// <summary>The bar offers the jump to the "Game" tab when the process was not recognised (F5, error row).</summary>
+    /// <summary>The bar offers the jump to the "Game" tab when the process was not recognised.</summary>
     [ObservableProperty]
     public partial bool DetailOffersGameTab { get; private set; }
 
@@ -115,7 +115,6 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
 
     protected override void ShowDetail(string text, InfoKind kind) => ShowDetail(text, kind, offersGameTab: false);
 
-    /// <summary>Installed games from the picker, several at once; each becomes a saved entry, the first is selected (F5).</summary>
     [RelayCommand]
     private async Task AddInstalledAsync()
     {
@@ -141,7 +140,6 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         }
     }
 
-    /// <summary>A program from the file dialog becomes an unsaved entry at the top of the list, named after the file.</summary>
     [RelayCommand]
     private async Task AddProgramAsync()
     {
@@ -161,7 +159,6 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         Log.Information("New game started from {Path}", path);
     }
 
-    /// <summary>"Choose…" on the Game tab: an installed game or a program for the entry being edited.</summary>
     [RelayCommand]
     private async Task PickGameAsync()
     {
@@ -180,10 +177,8 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         }
     }
 
-    /// <summary>
-    /// A copy of the game as saved, e.g. "LMU (VR)" next to "LMU" with its own profile and launch options. Hotkey and
-    /// "also run when started from Steam" stay with the original: both copies would answer the same key and process.
-    /// </summary>
+    // Hotkey and "also run when started from Steam" stay with the original: both copies would answer the same key and
+    // process.
     [RelayCommand]
     private async Task DuplicateAsync()
     {
@@ -238,10 +233,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         ShowDetail(Loc.Format(moved ? "Detail_RenamedShortcut" : "Detail_Renamed", oldName), InfoKind.Info);
     }
 
-    /// <summary>
-    /// A desktop shortcut that starts the whole session. Unlike a profile's it carries the game's own name and icon –
-    /// it stands next to the game's other shortcuts and should look like one, not like a RigShift setting.
-    /// </summary>
+    // Carries the game's own name and icon, so it looks like the game's other shortcuts.
     [RelayCommand]
     private void CreateShortcut()
     {
@@ -279,7 +271,6 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         }
     }
 
-    /// <summary>A session started or ended: list and head follow; the result lands in the bar of the selected game.</summary>
     private void OnSession(GameSessionEvent session)
     {
         if (!session.IsRunning)
@@ -322,7 +313,8 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         UpdateHead();
     }
 
-    /// <summary>"Running since 20:14", "Ready · last today 21:40 · ended", "Process is learned on the first start", red for a failure.</summary>
+    // "Running since 20:14", "Ready · last today 21:40 · ended", "Process is learned on the first start", red for a
+    // failure.
     private (StatusKind Kind, string Text) StatusOf(GameItem item)
     {
         if (item.IsNew)
@@ -359,7 +351,7 @@ public sealed partial class GamesViewModel : MasterDetailViewModel<GameItem, Gam
         return (StatusKind.Ok, Loc.Instance["List_Ready"]);
     }
 
-    /// <summary>"20:14" today, "14.09. 20:31" on another day.</summary>
+    // "20:14" today, "14.09. 20:31" on another day.
     private static string Clock(DateTimeOffset at)
     {
         DateTime local = at.ToLocalTime().DateTime;

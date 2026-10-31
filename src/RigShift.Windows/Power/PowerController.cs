@@ -17,7 +17,7 @@ namespace RigShift.Windows.Power;
 /// </summary>
 public sealed class PowerController : IPowerController, IDisposable
 {
-    /// <summary>POWER_REQUEST_CONTEXT_VERSION from minwinbase.h; CsWin32 does not generate it.</summary>
+    // POWER_REQUEST_CONTEXT_VERSION from minwinbase.h; CsWin32 does not generate it.
     private const uint PowerRequestContextVersion = 0;
 
     private const string Reason = "RigShift: the active profile keeps the PC awake";

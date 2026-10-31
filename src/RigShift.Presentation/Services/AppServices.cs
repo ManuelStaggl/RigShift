@@ -212,7 +212,7 @@ public static class SwitchMessages
         return (Loc.Instance["AllOn_Title"], text, icon);
     }
 
-    /// <summary>What to do about a failed display change; 0 = no code from Windows (the call threw).</summary>
+    // 0 = no code from Windows (the call threw).
     private static string FailureText(int code) =>
         code == 0 ? Loc.Instance["Result_FailedUnexpected"] : UserMessages.DescribeSwitchError(code);
 
@@ -322,7 +322,7 @@ public static class SwitchMessages
             : null;
     }
 
-    /// <summary>What went wrong with the desktop symbols and the apps; nothing while they still run.</summary>
+    // Nothing while the desktop symbols and apps still run.
     private static IEnumerable<string> FollowUpProblems(SwitchRecord record)
     {
         string? icons = record.DesktopIcons switch

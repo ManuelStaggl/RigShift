@@ -6,10 +6,7 @@ using System.Security.Principal;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Who is at the other end of the command pipe. The name <c>RigShift.&lt;SessionId&gt;</c> is predictable, so another
-/// user on the machine could put a pipe of that name up before RigShift does. The server refuses to join such a
-/// pipe; the client, which may look for an instance in another session, checks here that what it found was created
-/// by this user and lets nobody else in.
+/// Who is at the other end of the command pipe. Its name is predictable, so another user could create it first.
 /// </summary>
 internal static class PipeTrust
 {

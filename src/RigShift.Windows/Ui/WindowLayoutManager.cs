@@ -123,10 +123,7 @@ public sealed class WindowLayoutManager : IWindowLayout
         return false;
     }
 
-    /// <summary>
-    /// The work area of the display the window fills, when <paramref name="place"/> lies on another one; <c>null</c>
-    /// when both are the same display.
-    /// </summary>
+    // Null when the window fills the display that place lies on.
     private static unsafe PixelRect? FilledWorkAreaElsewhere(HWND hwnd, PixelRect place)
     {
         HMONITOR filled = PInvoke.MonitorFromWindow(hwnd, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONULL);

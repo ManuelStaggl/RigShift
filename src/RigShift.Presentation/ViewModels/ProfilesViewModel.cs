@@ -16,7 +16,7 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// The profiles page: the master list on the left, the selected profile's detail (its editor) on the right.
-/// Leaving a profile with unsaved changes asks first; the head shows what a switch would do right now (F2 phase 0).
+/// Leaving a profile with unsaved changes asks first; the head shows what a switch would do right now.
 /// </summary>
 public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileItem, ProfileEditorViewModel>
 {
@@ -155,10 +155,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     protected override string UnnamedText => Loc.Instance["Editor_NewName"];
 
-    /// <summary>
-    /// Every switch result also on the profile page: Windows suppresses tray balloons while a full-screen game runs,
-    /// which is exactly when RigShift switches.
-    /// </summary>
+    // Windows suppresses tray balloons while a full-screen game runs, which is exactly when RigShift switches.
     private void ShowSwitchResult(SwitchRecord record)
     {
         ArgumentNullException.ThrowIfNull(record);
@@ -232,7 +229,6 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     private bool CanTest() => !IsBusy && SelectedItem is { IsNew: false };
 
-    /// <summary>Dry run against the live displays; the result lands in the bar above the tabs.</summary>
     [RelayCommand(CanExecute = nameof(CanTest))]
     private async Task TestAsync()
     {
@@ -248,7 +244,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         UpdateStatuses();
     }
 
-    /// <summary>A copy of the profile as saved; unsaved changes are settled first, so the copy has them or not on purpose.</summary>
+    // Unsaved changes are settled first, so the copy has them or not on purpose.
     [RelayCommand]
     private async Task DuplicateAsync()
     {
@@ -309,11 +305,8 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
 
     private bool CanRestoreDesktopIcons() => Editor is { HasDesktopIcons: true };
 
-    /// <summary>
-    /// The saved desktop icons and nothing else: Windows reshuffles them now and then while the profile is already
-    /// active, and a full switch is a heavy way to get them back. Takes what the editor shows – a layout captured a
-    /// moment ago counts, saved or not.
-    /// </summary>
+    // Windows reshuffles the icons now and then, and a full switch is a heavy way to get them back; takes what the
+    // editor shows.
     [RelayCommand(CanExecute = nameof(CanRestoreDesktopIcons))]
     private async Task RestoreDesktopIconsAsync()
     {
@@ -347,7 +340,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
     [RelayCommand]
     private void OpenDisplaySettings() => ShellFolders.OpenDisplaySettings(Log);
 
-    /// <summary>Reads the displays itself – only when the catalog has not read them yet.</summary>
+    // Only when the catalog has not read the displays yet.
     private async Task RefreshPlansAsync()
     {
         try
@@ -360,7 +353,6 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         }
     }
 
-    /// <summary>Plans every profile against the displays as read, for the list's status lines and the head.</summary>
     private void ShowPlans(DisplaySnapshot snapshot)
     {
         CurrentTopology = TopologyDisplays.From(ProfileEditing.CurrentArrangement(snapshot, [], _catalog.KnownDisplayNames));
@@ -388,7 +380,7 @@ public sealed partial class ProfilesViewModel : MasterDetailViewModel<ProfileIte
         UpdateHead();
     }
 
-    /// <summary>"Active", "Ready · Dash missing (optional)", "Blocked: Odyssey G93SC missing" (F2 phase 0).</summary>
+    // "Active", "Ready · Dash missing (optional)", "Blocked: Odyssey G93SC missing".
     private (StatusKind Kind, string Text) StatusOf(ProfileItem item)
     {
         if (item.IsNew)
