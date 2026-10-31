@@ -85,6 +85,14 @@ jobs:
           if ($app.HasExited) { throw "RigShift.exe ended after start with $($app.ExitCode)" }
           Stop-Process -Id $app.Id
 
+      # The start above shows no window, and a page that fails to load does not end the process. The Debug build opens
+      # each page through its preview hook, with an empty data folder.
+      - name: Open every page
+        shell: pwsh
+        run: |
+          dotnet build src/RigShift.Avalonia/RigShift.Avalonia.csproj -c Debug -o debug-app
+          ./tools/open-pages.ps1 -Exe ./debug-app/RigShift.exe
+
   # Windows 10 is supported but neither CI nor the author's PCs run it. Server 2022 (build 20348) shares its Windows 10
   # code base, so the tests running here show nothing assumes a Windows 11 API.
   windows-10-base:
