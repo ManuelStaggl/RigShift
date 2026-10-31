@@ -49,7 +49,6 @@ public sealed partial class TrayPopupWindow : Window
 
     private TrayPopupViewModel ViewModel => (TrayPopupViewModel)DataContext!;
 
-    /// <summary>Next to the cursor – at the tray icon that was clicked – on whichever taskbar edge and monitor that is.</summary>
     private void PlaceAndShow()
     {
         (int X, int Y)? placed = TryGetPlatformHandle()?.Handle is { } handle ? NativeWindow.PlaceNearCursor(handle) : null;

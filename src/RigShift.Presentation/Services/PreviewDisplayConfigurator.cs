@@ -6,10 +6,8 @@ using RigShift.Core.Topology;
 namespace RigShift.App.Services;
 
 /// <summary>
-/// Debug builds only (<c>RIGSHIFT_PREVIEW_DISPLAYS=&lt;profile name&gt;</c>): reports every display of every profile as
-/// attached, with the named profile's displays active in its own arrangement. The machine that takes the screenshots has
-/// none of the demo monitors, so every profile would otherwise read "Blocked: … missing" and no page could be shown in a
-/// working state. Never touches the real display configuration.
+/// Debug builds only (<c>RIGSHIFT_PREVIEW_DISPLAYS=&lt;profile name&gt;</c>): every profile's displays read as
+/// attached, the named one's active. Never touches the real configuration.
 /// </summary>
 internal sealed class PreviewDisplayConfigurator(IProfileStore store, string activeProfile) : IDisplayConfigurator
 {

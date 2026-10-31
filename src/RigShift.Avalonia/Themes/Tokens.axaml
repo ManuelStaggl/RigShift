@@ -1,12 +1,6 @@
 <!--
-  RigShift's own token layer. Rs* are the app's names; below them the Semi.Avalonia keys the Semi and Ursa control
-  themes read, mapped onto the same palette. Semi resolves its control-level keys (ButtonDefaultBackground → SemiColorFill0)
-  with StaticResource inside its own theme dictionary, so a SemiColor* key here does not reach every control: the
-  control-level keys that matter are overridden directly further down.
-  Values: the 5.0 design system (cool grey surface ladder, brand blue accent). RsAccent is the fill (primary button,
-  toggle on), RsAccentText the line colour (focus ring, selection, nav marker).
-  Contrast: RsText to RsText3, RsAccentText and the status colours reach 4.5:1 on every surface; RsText4 is the hint
-  colour for icons, chevrons and dots and reaches 3:1, so no text uses it.
+  Rs* tokens, then the Semi keys mapped onto them. Semi resolves its control-level keys with StaticResource inside its
+  own dictionary, so those are overridden directly below. RsText..RsText3 reach 4.5:1 on every surface, RsText4 only 3:1.
 -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!-- A notice's outline: none in the themes, the window text colour in high contrast, where its tint is gone. -->
@@ -16,8 +10,7 @@
 
     <!-- ================= Dark ================= -->
     <ResourceDictionary x:Key="Dark">
-      <!-- Semi's and Ursa's control-level keys, loaded again under our palette: their StaticResource aliases
-           (ButtonDefaultBackground → SemiColorFill0) then resolve against the keys below instead of Semi's own. -->
+      <!-- Semi's and Ursa's keys again, so their StaticResource aliases resolve against our palette below. -->
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://Semi.Avalonia/Themes/Dark/_index.axaml" />
         <ResourceInclude Source="avares://Ursa.Themes.Semi/Themes/Dark/_index.axaml" />
@@ -142,8 +135,7 @@
 
     <!-- ================= Light ================= -->
     <ResourceDictionary x:Key="Light">
-      <!-- Semi's and Ursa's control-level keys, loaded again under our palette: their StaticResource aliases
-           (ButtonDefaultBackground → SemiColorFill0) then resolve against the keys below instead of Semi's own. -->
+      <!-- Semi's and Ursa's keys again, so their StaticResource aliases resolve against our palette below. -->
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://Semi.Avalonia/Themes/Light/_index.axaml" />
         <ResourceInclude Source="avares://Ursa.Themes.Semi/Themes/Light/_index.axaml" />

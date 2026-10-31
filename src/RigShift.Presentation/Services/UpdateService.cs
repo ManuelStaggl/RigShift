@@ -54,14 +54,12 @@ public sealed class UpdateService : IDisposable
     private bool _busy;
     private int _failuresInARow;
 
-    /// <summary>
-    /// Kept apart from the checks: a good check before each failed download would reset a shared count, and a broken
-    /// download was tried every minute forever.
-    /// </summary>
+    // Apart from the checks: a good check before each failed download reset a shared count, so a broken download was
+    // retried every minute.
     private int _downloadFailuresInARow;
     private DateTimeOffset? _lastSuccess;
 
-    /// <summary>Completed to end the wait for the next check early – after waking from standby.</summary>
+    // Completed after waking from standby to end the wait early.
     private volatile TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public UpdateService(
@@ -237,7 +235,6 @@ public sealed class UpdateService : IDisposable
         }
     }
 
-    /// <summary>Waits for the next check; waking from standby ends the wait when a check is due by then.</summary>
     private async Task WaitAsync(TimeSpan wait)
     {
         Task delay = Task.Delay(wait, _time, _stop.Token);

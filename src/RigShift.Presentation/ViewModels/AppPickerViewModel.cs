@@ -71,7 +71,7 @@ public sealed partial class AppPickerViewModel : ObservableObject
 
     partial void OnQueryChanged(string value) => Filter();
 
-    /// <summary>With a search, the best match is selected, so Enter takes it.</summary>
+    // The best match is selected, so Enter takes it.
     private void Filter()
     {
         AppChoice? selected = Selected;

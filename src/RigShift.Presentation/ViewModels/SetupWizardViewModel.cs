@@ -48,27 +48,25 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private readonly HotkeyService _hotkeys;
     private readonly ILogger _log;
 
-    /// <summary>
-    /// The hotkeys the first and the second profile get when they are free. Function keys, because
-    /// Ctrl+Alt+digit is AltGr+digit on many layouts and would swallow ², ³, { and [ (German) or # (French).
-    /// </summary>
+    // Function keys: Ctrl+Alt+digit is AltGr+digit on many layouts and would swallow ², ³, { and [ (German) or #
+    // (French).
     private static readonly Hotkey[] SuggestedHotkeys =
     [
         new() { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 },
         new() { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x71 },
     ];
 
-    /// <summary>Resource key of <see cref="SurroundHint"/>; <c>null</c> says nothing.</summary>
+    // Resource key of SurroundHint; null says nothing.
     private string? _surroundHintKey;
 
-    /// <summary>Devices seen so far on the trigger step; a device outside this set has just been turned on.</summary>
+    // A device outside this set has just been turned on.
     private readonly HashSet<string> _seenDevices = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _windowsNames = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<DisplayAssignment> _currentDisplays = [];
     private bool _hasUsbBaseline;
     private bool _polling;
 
-    /// <summary>The profile this step overwrites when the user came back to it; <c>null</c> while the step is new.</summary>
+    // The profile this step overwrites when the user came back to it; null while the step is new.
     private Guid? _editingId;
 
     public SetupWizardViewModel(
@@ -120,7 +118,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(SurroundHint));
     }
 
-    /// <summary>The two numbered lists; both carry translated text, so they are built, not bound to resources.</summary>
+    // Both lists carry translated text, so they are built, not bound to resources.
     private void RebuildLists()
     {
         StepList.Clear();
@@ -190,7 +188,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     /// <summary>The active displays, left to right, as the profile cards show them.</summary>
     public ObservableCollection<string> DisplayLines { get; } = [];
 
-    /// <summary>The same arrangement as the picture draws it (spec 7.5, size M).</summary>
+    /// <summary>The same arrangement as the picture draws it.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<TopologyDisplay> Topology { get; private set; } = [];
 
@@ -308,7 +306,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         _log.Information("Setup assistant went back to step {Step}", Step);
     }
 
-    /// <summary>Going back past the rule undoes it: the trigger step would otherwise offer to create a second one.</summary>
+    // Going back past the rule undoes it; the trigger step would otherwise offer to create a second one.
     private async Task RemoveCreatedRuleAsync()
     {
         if (CreatedRule is not { } rule)
@@ -437,10 +435,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     private bool CanSaveProfile() => IsProfileStep && !IsBusy && HasDisplays && !MatchesFirst && NameProblem is null;
 
-    /// <summary>
-    /// The hotkey of a step's profile: the one it had when the user came back to the step, else the suggestion when
-    /// nothing in RigShift and no other application holds it. <c>null</c> leaves the profile without one.
-    /// </summary>
+    // The step's earlier hotkey, else the suggestion when nothing holds it; null leaves the profile without one.
     private Hotkey? HotkeyFor(Guid id, int index)
     {
         if (_catalog.Profiles.FirstOrDefault(p => p.Id == id)?.Hotkey is { } kept)
@@ -619,10 +614,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [ObservableProperty]
     public partial bool StartWithWindows { get; set; }
 
-    /// <summary>
-    /// Where "Try it" switches: the profile that is not showing now, i.e. back to the first after the rig was set up
-    /// (the one click that shows what RigShift does, with the countdown that takes it back).
-    /// </summary>
+    // The profile not showing now, so "Try it" shows what RigShift does, with the countdown to take it back.
     private Profile? TryTarget => _catalog.ActiveProfile?.Id == FirstProfile?.Id ? SecondProfile : FirstProfile;
 
     public string TryText => Loc.Format("Setup_TryIt", TryTarget?.Name);
@@ -719,7 +711,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         Recording = new AudioSlot("Audio_Recording", "Audio_Unchanged", capture, recording);
     }
 
-    /// <summary>The devices of one direction and the one to preselect: the choice so far while it exists, else the default.</summary>
+    // The choice so far while it exists, else the default.
     private async Task<(IReadOnlyList<AudioDeviceInfo> Devices, AudioEndpoint? Selected)> ListAudioAsync(AudioDirection direction, AudioEndpoint? keep)
     {
         IReadOnlyList<AudioDeviceInfo> devices;
@@ -752,7 +744,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         }
     }
 
-    /// <summary>The Surround state; when it cannot be read, the assistant says nothing about Surround and saves none.</summary>
+    // When it cannot be read, the assistant says nothing about Surround and saves none.
     private async Task<SurroundState> ReadSurroundAsync()
     {
         try

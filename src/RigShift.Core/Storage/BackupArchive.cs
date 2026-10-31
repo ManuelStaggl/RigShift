@@ -23,7 +23,7 @@ public static class BackupArchive
     public const string GamesEntry = JsonGameStore.FileName;
     public const string ProfilesFolder = "profiles/";
 
-    /// <summary>Where a restore collects the new profile files before any existing file is touched.</summary>
+    // A restore collects the new files here before any existing file is touched.
     private const string StagingFolder = "profiles.restore";
 
     /// <summary>Writes the backup of <paramref name="dataDirectory"/> to <paramref name="destination"/>.</summary>
@@ -210,7 +210,7 @@ public static class BackupArchive
         }
     }
 
-    /// <summary>Written and flushed to the disk, not just to the cache: the next step relies on the file being there.</summary>
+    // Flushed to the disk, not just the cache: the next step relies on the file being there.
     private static void WriteThrough(string file, Action<FileStream> write)
     {
         using FileStream stream = File.Create(file);

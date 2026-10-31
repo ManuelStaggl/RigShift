@@ -5,11 +5,8 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// Tidies up after an arrangement that stays: windows left on displays that are off, the windows the profile remembers,
-/// and the profile's desktop symbols.
-/// Neither ever fails a switch – an untidy desktop is a log line. Both run after the result, in the background: they wait
-/// for Windows to finish its own rearranging first, and that used to hold up the result, the hotkeys and the next switch
-/// by one to eleven seconds. Logs under the orchestrator's context, so the log source stays the same.
+/// Tidies up after an arrangement that stays: lost windows, remembered windows and desktop symbols. Runs after the
+/// result, in the background, and never fails a switch.
 /// </summary>
 internal sealed class PostSwitchTidy(
     IWindowRescuer windows, IDesktopIcons desktopIcons, WindowMemory? windowMemory, SwitchOptions options, TimeProvider time, ILogger log)
@@ -23,13 +20,11 @@ internal sealed class PostSwitchTidy(
 
     private readonly Lock _gate = new();
 
-    /// <summary>The tidy-up after the last result, running until done or cancelled.</summary>
     private Pending? _pending;
 
     /// <summary>
-    /// Starts the tidy-up in the background: the windows, and with a <paramref name="profile"/> its desktop symbols, side by
-    /// side. Ends the tidy-up of an earlier result first. Completes with what became of the symbols; never faults.
-    /// With <paramref name="restoreWindows"/> the windows the profile remembers go back to their places as well.
+    /// Starts the windows and, with a profile, its desktop symbols in the background, after ending an earlier tidy-up.
+    /// Never faults.
     /// </summary>
     public Task<DesktopIconOutcome> Start(Profile? profile, bool restoreWindows = false)
     {
@@ -52,8 +47,8 @@ internal sealed class PostSwitchTidy(
     }
 
     /// <summary>
-    /// Cancels the tidy-up of an earlier result and completes once it ended. The cancellation is requested before this
-    /// method first yields: a new switch must not have its windows moved by the old one.
+    /// The cancellation is requested before the first yield: a new switch must not have its windows moved by the old
+    /// one.
     /// </summary>
     public Task CancelPendingAsync()
     {
@@ -100,10 +95,7 @@ internal sealed class PostSwitchTidy(
         }
     }
 
-    /// <summary>
-    /// The lost windows first, then the remembered ones: a window the profile knows a place for goes there, the others
-    /// stay where the rescue put them.
-    /// </summary>
+    // Lost windows first, then the remembered ones; the others stay where the rescue put them.
     private async Task TidyWindowsAsync(Profile? remembering, CancellationToken cancellationToken)
     {
         await RescueWindowsAsync(cancellationToken);
@@ -122,11 +114,7 @@ internal sealed class PostSwitchTidy(
         }
     }
 
-    /// <summary>
-    /// After every apply that stays (switch, restore after a failure, catch-up): windows left on a display that is off
-    /// now move to the primary display. Waits a moment first, because right after the arrangement changed Windows moves
-    /// them itself.
-    /// </summary>
+    // Waits a moment first: right after the arrangement changed, Windows moves the windows itself.
     private async Task RescueWindowsAsync(CancellationToken cancellationToken)
     {
         try
@@ -143,14 +131,8 @@ internal sealed class PostSwitchTidy(
         }
     }
 
-    /// <summary>
-    /// Puts the desktop symbols back where this profile wants them – only once the switch is staying, because a rejected
-    /// switch must not leave the desktop rearranged.
-    ///
-    /// Explorer lays the symbols out itself when the arrangement changes, and it does so a moment after the change – so
-    /// one attempt can be undone again right after it. Each pass therefore checks whether what it placed is still in
-    /// place and repeats while something moved.
-    /// </summary>
+    // Explorer lays the symbols out again a moment after the change, so each pass checks and repeats while something
+    // moved.
     private async Task<DesktopIconOutcome> RestoreDesktopIconsAsync(Profile profile, CancellationToken cancellationToken)
     {
         if (profile.DesktopIcons is not { IsEmpty: false } wanted)
@@ -199,7 +181,6 @@ internal sealed class PostSwitchTidy(
         return DesktopIconOutcome.Restored;
     }
 
-    /// <summary>Whether any symbol sits somewhere else than it did in <paramref name="settled"/>.</summary>
     private static bool Moved(DesktopIconLayout settled, DesktopIconLayout? now)
     {
         if (now is null)

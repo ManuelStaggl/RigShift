@@ -17,7 +17,7 @@ public sealed class HotkeyBox : TextBox
     public static readonly StyledProperty<IHotkeyField?> FieldProperty =
         AvaloniaProperty.Register<HotkeyBox, IHotkeyField?>(nameof(Field));
 
-    /// <summary>The field recording began on; it ends there, also when another editor took the box meanwhile.</summary>
+    // Recording ends on the field it began on, even if another editor took the box meanwhile.
     private IHotkeyField? _recording;
 
     public HotkeyBox()

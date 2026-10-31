@@ -100,7 +100,6 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>A new entry starts with the picker; cancelling it adds nothing.</summary>
     [RelayCommand]
     private async Task AddPickedAsync()
     {
@@ -159,10 +158,7 @@ public sealed partial class AppListEditor : ObservableObject, IDisposable
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>
-    /// Not for what an entry learns about its file: note and icon arrive from the background a moment after each change
-    /// and change nothing that is built.
-    /// </summary>
+    // Not for note and icon: they arrive from the background and change nothing that is built.
     private void OnItemChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(AppEditItem.PathNote) or nameof(AppEditItem.HasPathNote) or nameof(AppEditItem.Icon)))
@@ -225,7 +221,6 @@ public sealed partial class AppsWaitDeviceChoice : ObservableObject
     /// <summary>"Switch the device off and on"; <c>null</c> where nobody can watch the devices.</summary>
     public UsbDetection? Detection { get; }
 
-    /// <summary>Selects the device the user switches off and on, as the setup assistant does.</summary>
     [RelayCommand]
     private async Task DetectAsync()
     {

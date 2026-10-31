@@ -14,7 +14,7 @@ namespace RigShift.Windows.Games;
 /// </summary>
 public sealed class ShellGameStarter : IGameStarter
 {
-    /// <summary>The program needs elevation; only the shell can start it, and then without our environment.</summary>
+    // Only the shell can start an elevated program, and then without our environment.
     private const int ErrorElevationRequired = 740;
 
     private readonly IOpenXrRuntimes _runtimes;
@@ -88,7 +88,7 @@ public sealed class ShellGameStarter : IGameStarter
         return start;
     }
 
-    /// <summary>The chosen runtime's manifest when it is still registered with Windows, else <c>null</c> with a warning.</summary>
+    // Null with a warning when the chosen runtime is no longer registered with Windows.
     private string? RuntimeFor(GameLaunch launch)
     {
         if (launch.OpenXrRuntime is not { Length: > 0 } wanted)

@@ -9,18 +9,16 @@ using Serilog;
 namespace RigShift.Avalonia.Services;
 
 /// <summary>
-/// The icon of a game's desktop shortcut, drawn with GDI+: the game's own icon in front of a card in
-/// the RigShift gradient that shows behind it at the top right. The game stays whole and recognisable; the card says
-/// the shortcut goes through RigShift.
+/// A game's desktop shortcut icon, drawn with GDI+: the game's own icon in front of a card in the RigShift gradient.
 /// </summary>
 internal static class GameShortcutIcon
 {
-    /// <summary>The shell's sizes up to 200 % scaling. 16 px has no room for the card and keeps the plain game icon.</summary>
+    // The shell's sizes up to 200 % scaling; 16 px has no room for the card.
     private static readonly int[] Sizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256];
 
     private const int SmallestWithCard = 20;
 
-    /// <summary>Share of the edge the game and the card each take.</summary>
+    // Share of the edge the game and the card each take.
     private const float Scale = 0.8f;
 
     /// <returns>The <c>.ico</c> path, or <c>null</c> when the game's icon could not be read – then the shortcut takes the file itself.</returns>
@@ -58,7 +56,6 @@ internal static class GameShortcutIcon
         }
     }
 
-    /// <summary>Removes the icon of a deleted game; its shortcut, if the user kept one, falls back to a blank icon.</summary>
     public static void Delete(Guid gameId, string directory, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(directory);
@@ -78,7 +75,6 @@ internal static class GameShortcutIcon
     private static string PathFor(Guid gameId, string directory) =>
         Path.Combine(directory, gameId.ToString("N") + ".ico");
 
-    /// <summary>One frame as PNG: the plain icon below 20 px, else game and card stacked.</summary>
     private static byte[] Draw(Bitmap source, int size)
     {
         using var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);

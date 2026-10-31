@@ -38,7 +38,6 @@ internal sealed class TrayIconService : IDisposable
     private int _createAttempts;
 #endif
 
-    /// <summary>What a click on the last notification does; null when it does nothing.</summary>
     private Action? _notificationClick;
 
     public TrayIconService(
@@ -163,13 +162,8 @@ internal sealed class TrayIconService : IDisposable
         TryCreateIcon();
     }
 
-    /// <summary>
-    /// Adds the icon on the UI thread through <see cref="TrayIcon.Create"/>. <see cref="TrayIconWithContextMenu.Create"/>
-    /// would add it on a thread of its own, where a refused Shell_NotifyIcon (Explorer not ready at sign-in, busy, or a
-    /// restricted process) throws past every handler and ends RigShift. Here the icon's window lives in Avalonia's
-    /// message loop, which also runs the context menu; a refusal is logged and tried again every 10 s and on
-    /// TaskbarCreated until the taskbar takes it.
-    /// </summary>
+    // Not TrayIconWithContextMenu.Create: a refused Shell_NotifyIcon on its own thread throws past every handler.
+    // Retried every 10 s and on TaskbarCreated.
     private void TryCreateIcon()
     {
         if (_icon.IsCreated)
@@ -203,13 +197,9 @@ internal sealed class TrayIconService : IDisposable
         }
     }
 
-    /// <summary>"RigShift keeps running in the tray", on the first close of the window.</summary>
     public void ShowKeepsRunningHint() => OnUi(() => Notify(("RigShift", Loc.Instance["Tray_KeepsRunning"], NoticeLevel.Info), click: null));
 
-    /// <summary>
-    /// An unexpected error in the UI, once per half minute so a failing timer cannot flood the tray. Without it such
-    /// errors only reached the log and a button simply seemed to do nothing.
-    /// </summary>
+    /// <summary>Once per half minute, so a failing timer cannot flood the tray.</summary>
     public void ShowUnexpectedError(string message)
     {
         long now = Environment.TickCount64;
@@ -222,7 +212,7 @@ internal sealed class TrayIconService : IDisposable
         OnUi(() => Notify(("RigShift", Loc.Format("Status_Error", message), NoticeLevel.Error), opensHelp: true));
     }
 
-    /// <summary>A link, Stream Deck key or shortcut that could not run: its caller has no console to say why.</summary>
+    /// <summary>For callers without a console to say why: a link, Stream Deck key or shortcut.</summary>
     public void ShowRefusedCommand(string text) => OnUi(() => Notify(("RigShift", text, NoticeLevel.Warning), click: null));
 
     public void Dispose()
@@ -270,7 +260,6 @@ internal sealed class TrayIconService : IDisposable
         RebuildMenu();
     }
 
-    /// <summary>The RigShift symbol in the taskbar's colour, at the current DPI.</summary>
     private void UpdateIcon()
     {
         int size = NativeWindow.SmallIconSize();

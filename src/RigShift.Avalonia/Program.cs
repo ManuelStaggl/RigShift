@@ -101,7 +101,7 @@ public static class Program
         return exitCode;
     }
 
-    /// <summary>After "Restart" in the repeated-error dialog, once the single-instance mutex is free.</summary>
+    // Runs after "Restart" in the repeated-error dialog, once the single-instance mutex is free.
     private static void Restart()
     {
         if (Environment.ProcessPath is not { } executable)
@@ -121,7 +121,6 @@ public static class Program
         }
     }
 
-    /// <summary>Velopack hook: the installed executable handles rigshift:// links.</summary>
     private static void RegisterUriScheme()
     {
         if (Environment.ProcessPath is { } executable)
@@ -130,7 +129,7 @@ public static class Program
         }
     }
 
-    /// <summary>Velopack hook: removes link handler, autostart entry and own shortcuts. None of it may break the uninstall.</summary>
+    // Velopack hook; nothing in it may break the uninstall.
     private static void BeforeUninstall()
     {
         if (!UriSchemeRegistration.Unregister())
@@ -154,7 +153,7 @@ public static class Program
         }
     }
 
-    /// <summary>Runs before Velopack; an unreadable file means defaults, and the app logs that later.</summary>
+    // Runs before Velopack; an unreadable file means defaults, logged later.
     private static AppSettings LoadSettings(AppPaths paths) =>
         new JsonSettingsStore(paths.SettingsFile, Logger.None)
             .LoadAsync(CancellationToken.None)

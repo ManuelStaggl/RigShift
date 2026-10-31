@@ -5,10 +5,7 @@ using Serilog;
 
 namespace RigShift.Core.Topology;
 
-/// <summary>
-/// HDR per display, right after an arrangement was applied. Logs under the orchestrator's context, so the log source
-/// stays the same.
-/// </summary>
+/// <summary>HDR per display, right after an arrangement was applied.</summary>
 internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions options, TimeProvider time, ILogger log)
 {
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
@@ -19,9 +16,8 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
     private readonly ILogger _log = log;
 
     /// <summary>
-    /// Works on a fresh snapshot: a display that was just switched on only reports its HDR state once active. Rollbacks
-    /// restore it the same way, because the previous topology carries the state it had. Failures are logged and never
-    /// fail the switch; the outcome says whether every display got its HDR state.
+    /// Works on a fresh snapshot: a display just switched on only reports its HDR state once active. Never fails the
+    /// switch.
     /// </summary>
     public async Task<HdrOutcome> SwitchAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -78,14 +74,10 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
         }
     }
 
-    /// <summary>Whether an active display of the profile reports another HDR state than wanted, or none yet.</summary>
     private static bool NeedsCheck(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now) =>
         wantedDisplays.Any(wanted => now.FindActive(wanted.Identity)?.ActiveMode is { } mode && mode.Hdr != wanted.Hdr);
 
-    /// <summary>
-    /// Re-queries until two snapshots in a row show the same displays with the same modes (HDR state aside), at most
-    /// <see cref="SwitchOptions.HdrSettleBudget"/>. Returns the settled snapshot, or <c>null</c> when they kept changing.
-    /// </summary>
+    // Until two snapshots in a row agree (HDR aside), within HdrSettleBudget; null when they kept changing.
     private async Task<DisplaySnapshot?> WaitForSettledDisplaysAsync(DisplaySnapshot first, CancellationToken cancellationToken)
     {
         DateTimeOffset deadline = _time.GetUtcNow() + _options.HdrSettleBudget;
@@ -117,10 +109,7 @@ internal sealed class HdrSwitcher(IDisplayConfigurator display, SwitchOptions op
                 : string.Create(CultureInfo.InvariantCulture, $"{d.Identity.TargetDevicePath}|{d.IsAvailable}|off"))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Sets HDR where the state differs. Returns the active displays that reported no HDR state, and whether a call did not
-    /// return within <see cref="SwitchOptions.HdrCallTimeout"/> – then the remaining displays are left alone.
-    /// </summary>
+    // Returns the displays without an HDR state and whether a call hit HdrCallTimeout; then the rest are left alone.
     private async Task<Pass> SetAsync(IReadOnlyList<DisplayAssignment> wantedDisplays, DisplaySnapshot now, CancellationToken cancellationToken)
     {
         var unknown = new List<DisplayAssignment>();

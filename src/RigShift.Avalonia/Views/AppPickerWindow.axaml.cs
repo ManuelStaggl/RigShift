@@ -25,7 +25,6 @@ public sealed partial class AppPickerWindow : Window
 
     private AppPickerViewModel ViewModel => (AppPickerViewModel)DataContext!;
 
-    /// <summary>The <see cref="IAppPicker"/> of the Avalonia app: the list first, the "Open" dialog on request.</summary>
     internal static Task<PickedApp?> PickAsync(string? currentPath) => PickAsync(currentPath, () => AppDiscovery.Find(Log.Logger));
 
     /// <param name="find">Where the list comes from; Debug previews pass a demo list.</param>
@@ -81,7 +80,6 @@ public sealed partial class AppPickerWindow : Window
     }
 }
 
-/// <summary>The app picker the shared editors ask for a program.</summary>
 internal sealed class AvaloniaAppPicker : IAppPicker
 {
     public Task<PickedApp?> PickAsync(string? currentPath) => AppPickerWindow.PickAsync(currentPath);

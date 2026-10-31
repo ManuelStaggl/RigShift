@@ -104,10 +104,7 @@ public static class WindowLayoutMatching
     private static bool SameProcess(WindowPlacement placement, OpenWindow window)
         => string.Equals(placement.ProcessName, window.ProcessName, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// The first word of both titles is the same. Enough to tell "SimHub 9.4.2" from "Dash Studio" without
-    /// insisting on a caption that changes every lap.
-    /// </summary>
+    // Tells "SimHub 9.4.2" from "Dash Studio" without insisting on a caption that changes every lap.
     private static bool SharesTheStartOfTheTitle(string? saved, string open)
     {
         if (string.IsNullOrWhiteSpace(saved) || string.IsNullOrWhiteSpace(open))

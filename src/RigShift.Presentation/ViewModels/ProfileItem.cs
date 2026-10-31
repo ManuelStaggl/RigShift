@@ -70,7 +70,7 @@ public sealed partial class ProfileItem(Profile profile, IReadOnlyDictionary<str
     [ObservableProperty]
     public partial bool IsSwitchTarget { get; set; }
 
-    /// <summary>A profile that exists only in the detail so far ("New profile" at the top of the list, F3).</summary>
+    /// <summary>A profile that exists only in the detail so far ("New profile" at the top of the list).</summary>
     public bool IsNew { get; init; }
 
     /// <summary>The S-size picture in the master list.</summary>

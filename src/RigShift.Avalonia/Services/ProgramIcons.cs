@@ -5,7 +5,7 @@ using Serilog;
 
 namespace RigShift.Avalonia.Services;
 
-/// <summary>Program icons as PNG bytes, like the WinUI app's; <see cref="Views.Converters.IconImage"/> turns them into a bitmap.</summary>
+/// <summary>Program icons as PNG bytes; <see cref="Views.Converters.IconImage"/> turns them into a bitmap.</summary>
 internal static class ProgramIcons
 {
     public static object? Extract(string file)

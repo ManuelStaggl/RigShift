@@ -54,10 +54,7 @@ public sealed partial class MainWindow : Window
         };
     }
 
-    /// <summary>
-    /// Windows' text size (100–225 %) as a scale on the pages, capped so the smallest window still fits the work area;
-    /// the title bar and rail keep their size.
-    /// </summary>
+    // Capped so the smallest window still fits the work area; title bar and rail keep their size.
     private void ApplyTextScale()
     {
         (double roomWidth, double roomHeight) = TextScale.Room(this);
@@ -71,7 +68,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <summary>The brand package's tray symbol in the title bar: the white one ("dark", for dark taskbars) on the dark theme.</summary>
     private void ShowTitleIcon()
     {
         string variant = ActualThemeVariant == global::Avalonia.Styling.ThemeVariant.Light ? "light" : "dark";
@@ -96,10 +92,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Once shown, a window that sticks out of its monitor's work area is pulled back in, onto the primary monitor when
-    /// it does not fit at its size.
-    /// </summary>
     private void KeepOnScreen()
     {
         if (WindowState != WindowState.Normal || TryGetPlatformHandle()?.Handle is not { } handle)
@@ -255,7 +247,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <summary>A rail entry: icon only, the name in the tooltip (set by <see cref="ApplyTexts"/>); selected = accent tile with the filled icon and the marker on the left edge.</summary>
     private void AddRail(StackPanel panel, AppPage page, string textKey, Geometry regular, Geometry filled)
     {
         var icon = new Path { Data = regular, Classes = { "icon", "md" }, HorizontalAlignment = HorizontalAlignment.Center };

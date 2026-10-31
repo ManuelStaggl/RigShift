@@ -7,7 +7,6 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// The apps part of a switch: waits for the profile's USB device, then starts and ends apps after the switch result.
-/// Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
 internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, SwitchOptions options, TimeProvider time, ILogger log)
 {
@@ -19,10 +18,9 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
 
     private readonly Lock _appsLock = new();
 
-    /// <summary>The apps of the last switch, running after its result until done or cancelled.</summary>
     private PendingApps? _pendingApps;
 
-    /// <summary>What each profile's apps started themselves, oldest first; this run of RigShift only.</summary>
+    // Oldest first; this run of RigShift only.
     private readonly Dictionary<Guid, List<string>> _startedFor = [];
 
     /// <summary>
@@ -69,7 +67,6 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    /// <summary>Ended, or found not running: no profile started what runs under that path any more.</summary>
     private void Gone(string path)
     {
         lock (_appsLock)
@@ -82,8 +79,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
     }
 
     /// <summary>
-    /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
-    /// The cancellation is requested before this method first yields.
+    /// Completes once the earlier apps ended; the cancellation is requested before this method first yields.
     /// </summary>
     public Task CancelPendingAsync()
     {
@@ -142,7 +138,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         return run;
     }
 
-    /// <summary>Runs after the switch result on its own cancellation; never throws.</summary>
+    // Runs on its own cancellation after the switch result; never throws.
     private async Task<AppsOutcome> RunAppsAsync(AppPlan plan, CancellationToken cancellationToken)
     {
         long startedAt = _time.GetTimestamp();
@@ -231,10 +227,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         return complete ? AppsOutcome.Applied : AppsOutcome.Incomplete;
     }
 
-    /// <summary>
-    /// After starting <paramref name="app"/>: on as soon as it shows a window, at the latest after its wait time. A
-    /// program that starts into the tray never shows one; the next app still starts, only later.
-    /// </summary>
+    // A program that starts into the tray never shows a window; the next app then starts after the wait time.
     private async Task WaitForWindowAsync(AppAction app, CancellationToken cancellationToken)
     {
         TimeSpan limit = app.WaitSeconds > 0 ? TimeSpan.FromSeconds(app.WaitSeconds) : _options.AppWindowWaitLimit;
@@ -266,9 +259,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    /// <summary>
-    /// Polls for the device the profile's apps wait for, up to its wait time. True when it is there or none is set.
-    /// </summary>
+    // True when the device is there or none is set.
     private async Task<bool> WaitForAppsDeviceAsync(AppPlan plan, CancellationToken cancellationToken)
     {
         if (UsbDeviceIds.Normalize(plan.WaitForUsbDeviceId) is not { } deviceId)

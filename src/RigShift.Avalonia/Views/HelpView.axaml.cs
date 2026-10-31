@@ -22,7 +22,6 @@ public sealed partial class HelpView : UserControl
 
     public AboutViewModel ViewModel { get; }
 
-    /// <summary>The brand package draws the mark once for dark and once for light surfaces.</summary>
     private void ShowMark()
     {
         bool light = ActualThemeVariant == ThemeVariant.Light;

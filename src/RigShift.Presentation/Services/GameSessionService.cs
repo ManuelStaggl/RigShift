@@ -22,7 +22,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     private readonly ILogger _log;
     private readonly ConcurrentDictionary<Guid, RunningSession> _running = new();
 
-    /// <summary>Process names of games seen running, so one start fires the automatic session once, not every five seconds.</summary>
+    // So one start fires the automatic session once, not every five seconds.
     private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
     private readonly CancellationTokenSource _stopping = new();
     private readonly UiThread _ui = new();
@@ -31,13 +31,12 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
     private ITimer? _watch;
     private bool _watching;
 
-    /// <summary>What the timer looks for; replaced as a whole, so a look always belongs to one set.</summary>
+    // Replaced as a whole, so a look always belongs to one set.
     private volatile WatchSet _watchSet = new(NoNames, NoNames);
 
-    /// <summary>The set whose new names already set their starting point; UI thread only.</summary>
+    // UI thread only.
     private WatchSet? _baselined;
 
-    /// <summary>How often to look for a game that was started outside RigShift.</summary>
     private static readonly TimeSpan WatchInterval = TimeSpan.FromSeconds(5);
 
     private static readonly IReadOnlySet<string> NoNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -96,7 +95,6 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
 
     private void OnGamesChanged(object? sender, EventArgs e) => UpdateWatch();
 
-    /// <summary>Starts or stops the timer as the games ask for it.</summary>
     private void UpdateWatch()
     {
         var watched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -131,7 +129,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         }
     }
 
-    /// <summary>On the timer's thread: the process list stays off the UI thread, only the answer goes there.</summary>
+    // On the timer's thread: the process list stays off the UI thread.
     private void Look()
     {
         WatchSet set = _watchSet;
@@ -180,7 +178,6 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         return true;
     }
 
-    /// <summary>The command line and the tray menu start a game through here.</summary>
     bool IGamePlayer.Play(GameEntry game, bool fromLink) => Start(game, fromLink: fromLink);
 
     private async Task RunAsync(GameEntry game, bool alreadyRunning, bool fromLink)
@@ -238,10 +235,7 @@ public sealed class GameSessionService : IGamePlayer, IDisposable
         _ = _profiles.RefreshActiveAsync(CancellationToken.None);
     }
 
-    /// <summary>
-    /// Looks for a game whose process turned up without us starting it. Only games that ask for it
-    /// (<see cref="GameEntry.StartWithGame"/>) and whose process name is known – which the first start learns.
-    /// </summary>
+    // Only games with StartWithGame and a known process name, which the first start learns.
     private void CheckForStartedGames(WatchSet set, IReadOnlySet<string> running)
     {
         // A look for names that changed meanwhile decides nothing; the next one belongs to the new set.

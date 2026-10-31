@@ -244,7 +244,6 @@ public sealed class SwitchOrchestrator
         return ReportAfterResult(AfterResult(result, profile, appPlan, restoreWindows: request.Leaving?.Id != profile.Id), progress);
     }
 
-    /// <summary>Apps and windows run on after the result; their steps end when they do.</summary>
     private static SwitchResult ReportAfterResult(SwitchResult result, IProgress<SwitchStep>? progress)
     {
         if (progress is null)
@@ -265,13 +264,7 @@ public sealed class SwitchOrchestrator
         return result;
     }
 
-    /// <summary>
-    /// What follows a switch that stays, started once its result is there. Only then: a rejected switch
-    /// must not leave windows moved without a way back, programs started or someone's work closed. In the
-    /// background: neither Windows' own rearranging nor an app waiting for its device may hold up the result, the hotkeys,
-    /// the automation or the next switch. The journal is gone by then, so an exit meanwhile brings no question
-    /// "undo it?" at the next start.
-    /// </summary>
+    // Only for a switch that stays, in the background: a rejected one must not leave windows moved or programs started.
     private SwitchResult AfterResult(SwitchResult result, Profile profile, AppPlan apps, bool restoreWindows) =>
         result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(apps) };
 
@@ -281,11 +274,7 @@ public sealed class SwitchOrchestrator
     private static DesktopIconOutcome PendingDesktopIcons(Profile profile) =>
         profile.DesktopIcons is { IsEmpty: false } ? DesktopIconOutcome.Pending : DesktopIconOutcome.NotConfigured;
 
-    /// <summary>
-    /// The displays after a Surround change. Windows lists the displays of a grid that was just built or taken apart
-    /// seconds later, not at once; until the profile's required displays are there, this looks again quietly. Planning
-    /// at once used to ask the user to switch on monitors that were on.
-    /// </summary>
+    // Windows lists a new or dissolved grid's displays seconds later; planning at once asked for monitors that were on.
     private async Task<DisplaySnapshot> SettleAfterSurroundAsync(Profile profile, CancellationToken cancellationToken)
     {
         long started = _time.GetTimestamp();
@@ -306,10 +295,7 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    /// <summary>
-    /// Plans the profile and waits up to <see cref="SwitchOptions.MissingDisplayWaitBudget"/> for its required displays
-    /// that are not connected or not ready, after asking the user to switch them on.
-    /// </summary>
+    // Waits up to MissingDisplayWaitBudget after asking the user to switch missing displays on.
     private async Task<TopologyPlan> PlanAndWaitAsync(Profile profile, DisplaySnapshot snapshot, CancellationToken cancellationToken)
     {
         TopologyPlan plan = _planner.Plan(profile, snapshot);
@@ -338,7 +324,7 @@ public sealed class SwitchOrchestrator
             profile, plan, _time.GetUtcNow() + _options.MissingDisplayWaitBudget, force: false, includeDetached: true, cancellationToken);
     }
 
-    /// <summary>How long the switch waits for "keep", or <c>null</c> when it does not ask.</summary>
+    // Null when the switch does not ask.
     private static TimeSpan? ConfirmTimeout(Profile profile, SwitchRequest request)
     {
         // Only the profile decides; a link may come from a web page, so it always asks.
@@ -350,7 +336,7 @@ public sealed class SwitchOrchestrator
         return timeout < minimum ? minimum : timeout;
     }
 
-    /// <summary>Audio, keep-awake and call ducking as they are now: only a switch that asks can be rejected and undo them.</summary>
+    // Only a switch that asks can be rejected and undo these.
     private async Task CaptureRestAsync(Profile profile, WayBack wayBack, CancellationToken cancellationToken)
     {
         wayBack.Audio = await _audioSwitcher.CaptureAsync(profile.Audio, cancellationToken);
@@ -358,10 +344,7 @@ public sealed class SwitchOrchestrator
         wayBack.Ducking = await _duckingSwitcher.CaptureAsync(profile, cancellationToken);
     }
 
-    /// <summary>
-    /// Records the way back before the first change, not after: the crash this guards against can happen in between. A
-    /// switch that never gets that far leaves no record at all.
-    /// </summary>
+    // Before the first change, not after: the crash this guards against can happen in between.
     private async Task RecordAsync(Profile profile, WayBack wayBack, CancellationToken cancellationToken)
     {
         if (wayBack.Recorded)
@@ -380,12 +363,7 @@ public sealed class SwitchOrchestrator
             cancellationToken);
     }
 
-    /// <summary>
-    /// The rest of the profile – audio, keep-awake, call ducking – and then the question whether to keep it. From the apply
-    /// until the answer the screens show an arrangement nobody confirmed, possibly on displays the user cannot see.
-    /// Whatever is thrown in between – a dialog that cannot be shown, a COM surprise, the app exiting – ends in the way
-    /// back, never in that arrangement staying.
-    /// </summary>
+    // Anything thrown until the answer ends in the way back, never in an unconfirmed arrangement staying.
     private async Task<Answer> ApplyRestAndAskAsync(
         Profile profile, WayBack wayBack, ApplyOutcome applied, TimeSpan? confirmTimeout, long started, IProgress<SwitchStep>? progress,
         CancellationToken cancellationToken)
@@ -447,10 +425,8 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    /// <summary>
-    /// Windows restored the profile's display layout on its own, e.g. when a monitor was switched on: the
-    /// rest of the profile follows without a display change and without asking – the user chose it from the notification.
-    /// </summary>
+    // Windows restored the layout on its own (a monitor was switched on); the user chose the rest from the
+    // notification.
     private async Task<SwitchResult> ApplyRestAsync(Profile profile, Profile? leaving, CancellationToken cancellationToken)
     {
         long started = _time.GetTimestamp();
@@ -552,10 +528,7 @@ public sealed class SwitchOrchestrator
         return tidy ? result with { TidyCompletion = _tidy.Start(profile) } : result;
     }
 
-    /// <summary>
-    /// The switch was not confirmed: rejected, timed out, cancelled, or something threw before the answer. Everything it
-    /// changed goes back.
-    /// </summary>
+    // Rejected, timed out, cancelled, or something threw before the answer.
     private async Task<SwitchResult> RollBackAsync(
         Profile profile, WayBack wayBack, ApplyOutcome applied, Answer answer, long started, CancellationToken cancellationToken)
     {
@@ -606,7 +579,6 @@ public sealed class SwitchOrchestrator
         return rolledBack;
     }
 
-    /// <summary>The displays and the sound of a rollback, and the result it ends with.</summary>
     private async Task<SwitchResult> RollBackDisplaysAsync(
         WayBack wayBack, ApplyOutcome applied, Answer answer, string? surroundFailure, long started, CancellationToken cancellationToken)
     {
@@ -673,10 +645,8 @@ public sealed class SwitchOrchestrator
         }
     }
 
-    /// <summary>
-    /// A failed attempt may leave displays dark (Windows usually reverts on its own, but not reliably). If a display
-    /// that was active before is no longer active, re-apply the previous topology.
-    /// </summary>
+    // Windows usually reverts a failed attempt itself, but not reliably; a display left dark gets the previous
+    // topology.
     private async Task<SwitchNote> RestoreAfterFailureAsync(
         DisplaySnapshot before, SurroundSetting? surroundBefore, CancellationToken cancellationToken)
     {
@@ -722,9 +692,7 @@ public sealed class SwitchOrchestrator
         return SwitchNote.RestoredPrevious;
     }
 
-    /// <summary>
-    /// Keep-awake follows the profile. Failures are logged and never fail the switch.
-    /// </summary>
+    // Failures are logged and never fail the switch.
     private void SwitchKeepAwake(Profile profile)
     {
         try
@@ -767,23 +735,15 @@ public sealed class SwitchOrchestrator
     public Task RestoreDuckingIfUnusedAsync(Profile? activeProfile, CancellationToken cancellationToken) =>
         _duckingSwitcher.RestoreIfUnusedAsync(activeProfile, cancellationToken);
 
-    /// <summary>
-    /// Every way out of a switch passes here, so this is where the journal entry goes again – whether the switch was
-    /// applied, blocked, failed or rolled back. Only an exception leaves it behind, and that is the case the next start
-    /// should ask about. Clearing a record this switch never wrote is harmless: the app reads it once at startup,
-    /// before any switch can run, and only one switch runs at a time. A dry run runs next to a switch, so it never
-    /// comes here.
-    /// </summary>
+    // Every way out passes here, so the journal entry goes here; only an exception leaves it for the next start to ask
+    // about.
     private async Task<SwitchResult> Finish(SwitchResult result, long started)
     {
         await _journal.ClearAsync(CancellationToken.None);
         return result with { Duration = _time.GetElapsedTime(started) };
     }
 
-    /// <summary>
-    /// What a switch needs to go back, taken before it changes anything: the displays and Surround always, the rest of the
-    /// profile only when the switch asks – only then can it be rejected.
-    /// </summary>
+    // The rest of the profile is only captured when the switch asks, as only then can it be rejected.
     private sealed class WayBack(DisplaySnapshot displays, SurroundSetting? surround)
     {
         public DisplaySnapshot Displays { get; } = displays;
@@ -796,12 +756,9 @@ public sealed class SwitchOrchestrator
 
         public DuckingSwitcher.DuckingRestore? Ducking { get; set; }
 
-        /// <summary>Whether the journal holds this way back.</summary>
         public bool Recorded { get; set; }
     }
 
-    /// <summary>How far a switch got until its answer, and the answer.</summary>
-    /// <param name="Modes">The modes that run and the plan as it came out.</param>
-    /// <param name="Thrown">Something failed before the answer; the switch goes back and reports it as failed.</param>
+    // Thrown: something failed before the answer; the switch goes back and reports it as failed.
     private sealed record Answer(ModeCheck Modes, AudioOutcome Audio, ConfirmationResult Result, Exception? Thrown);
 }

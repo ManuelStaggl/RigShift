@@ -7,7 +7,7 @@ namespace RigShift.App.ViewModels;
 
 /// <summary>
 /// One USB device in the settings' device table. The name is saved when the field loses focus or on Enter, like a
-/// display name (F6), because no hardware state depends on it.
+/// display name, because no hardware state depends on it.
 /// </summary>
 public sealed partial class UsbNameCard : ObservableObject
 {
@@ -37,7 +37,6 @@ public sealed partial class UsbNameCard : ObservableObject
     [ObservableProperty]
     public partial string CustomName { get; set; }
 
-    /// <summary>The name on disk; Esc puts it back into the field.</summary>
     internal string? SavedName => _savedName;
 
     internal async Task SaveNameAsync()

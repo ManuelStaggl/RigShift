@@ -30,7 +30,7 @@ internal sealed class PageDialogs(
 
     public Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew) => factory.CreateEditorAsync(profile, isNew);
 
-    /// <summary>Delete is destructive: no default on the action, Enter does nothing.</summary>
+    /// <summary>Destructive, so Enter picks nothing.</summary>
     public Task<bool> ConfirmDeleteAsync(string name, int ruleCount) =>
         AskDialog.AskAsync(
             Loc.Instance["Profile_DeleteTitle"],
@@ -38,7 +38,6 @@ internal sealed class PageDialogs(
             new AskChoice<bool>(Loc.Instance["Common_Cancel"], false),
             new AskChoice<bool>(Loc.Instance["Profile_Delete"], true));
 
-    /// <summary>"Save changes to X?" with Save (the default: the changes were made on purpose), Discard and Cancel.</summary>
     public Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName) =>
         AskDialog.AskAsync(
             Loc.Format("Unsaved_Title", name),
@@ -49,8 +48,6 @@ internal sealed class PageDialogs(
 
     public Task ShowSetupAssistantAsync() => ShowSetupAssistantAsync(null);
 
-    /// <summary>The setup assistant; remembers that it was shown, and "Try it" on the last step switches once it closed.</summary>
-    /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
     internal async Task ShowSetupAssistantAsync(SetupStep? previewStep)
     {
         var viewModel = new SetupWizardViewModel(
@@ -87,10 +84,6 @@ internal sealed class PageDialogs(
 
     public string? PickZipToOpen() => NativeWindow.PickFile(App.OwnerHandle, ZipFilter, Loc.WithoutAccessKey(Loc.Instance["About_RestoreBackup"]).TrimEnd('…', ' '), null);
 
-    /// <summary>
-    /// Restoring replaces everything, so it is asked like deleting (no default on the action), with everything the
-    /// backup would start, end, switch or bind listed under the question.
-    /// </summary>
     public Task<bool> ConfirmRestoreAsync(BackupContent content) =>
         AskDialog.AskAsync(
             Loc.Instance["About_RestoreTitle"],
@@ -99,10 +92,6 @@ internal sealed class PageDialogs(
             new AskChoice<bool>(Loc.Instance["Common_Cancel"], false),
             new AskChoice<bool>(Loc.Instance["About_Restore"], true));
 
-    /// <summary>
-    /// RigShift ended between changing the screens and the confirmation, the one case the in-process rollback cannot
-    /// cover: restoring the layout from before is the default.
-    /// </summary>
     public static Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName) =>
         AskDialog.AskAsync(
             Loc.Instance["Interrupted_Title"],
@@ -110,10 +99,6 @@ internal sealed class PageDialogs(
             new AskChoice<bool>(Loc.Instance["Interrupted_Keep"], false),
             new AskChoice<bool>(Loc.Instance["Interrupted_Restore"], true, IsDefault: true));
 
-    /// <summary>
-    /// Asked before quitting while a game session runs: without RigShift nothing switches back or closes the tools when
-    /// the game ends. Like deleting, no default on the action.
-    /// </summary>
     public static Task<bool> ConfirmQuitDuringGameAsync(string games) =>
         AskDialog.AskAsync(
             Loc.Instance["QuitGame_Title"],
@@ -141,7 +126,6 @@ internal sealed class PageDialogs(
             new AskChoice<bool>(Loc.Instance["SettingsProblem_OpenFolder"], true));
     }
 
-    /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
     public static Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>
         AskDialog.AskAsync(
             Loc.Instance["Crash_Title"],

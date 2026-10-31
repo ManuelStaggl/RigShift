@@ -13,8 +13,7 @@
   ExtendClientAreaToDecorationsHint="True"
   ExtendClientAreaTitleBarHeightHint="40"
   WindowStartupLocation="CenterScreen">
-  <!-- The window is chrome: a 40 px title bar (brand, search, Avalonia 12's drawn caption buttons), the 64 px icon rail,
-       and the content panel floating inside with its own hairline and 10 px radius. -->
+  <!-- Chrome: 40 px title bar, 64 px icon rail, the content panel floating inside. -->
   <Grid ColumnDefinitions="64,*" RowDefinitions="40,*">
     <!-- Title bar: the whole strip drags; the search box sits on top of it and takes its own clicks. -->
     <Border Grid.ColumnSpan="2" Background="Transparent" chrome:WindowDecorationProperties.ElementRole="TitleBar" />

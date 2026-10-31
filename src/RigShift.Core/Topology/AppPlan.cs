@@ -26,8 +26,8 @@ internal sealed record AppPlan(
         profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, profile.Id);
 
     /// <summary>
-    /// The apps of a game that run at <paramref name="when"/>. Only the ones before the game wait for the USB
-    /// device: once the game runs, waiting half a minute for a wheelbase would hold up Crew Chief for no reason.
+    /// Only the apps before the game wait for the USB device: once it runs, waiting for a wheelbase would hold up Crew
+    /// Chief.
     /// </summary>
     public static AppPlan For(GameEntry game, AppTiming when) => new(
         game.Name,
@@ -36,8 +36,8 @@ internal sealed record AppPlan(
         when == AppTiming.BeforeGame ? game.AppsWaitForUsbDeviceName : null);
 
     /// <summary>
-    /// Everything a game started, turned into actions that end it again – what a game's exit runs. In reverse order,
-    /// so a dashboard goes down before the wheelbase software it talks to.
+    /// Ends everything a game started, in reverse order so a dashboard goes down before the wheelbase software it talks
+    /// to.
     /// </summary>
     public static AppPlan StopWhatWasStarted(GameEntry game)
     {

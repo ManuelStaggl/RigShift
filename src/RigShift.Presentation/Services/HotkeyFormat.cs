@@ -46,7 +46,7 @@ public static class HotkeyFormat
         _ => LayoutName(virtualKey) ?? "0x" + virtualKey.ToString("X2", CultureInfo.InvariantCulture),
     };
 
-    /// <summary>Some layouts name keys in capitals ("BILD-AUF"); shown like the other key names ("Bild-Auf").</summary>
+    // Some layouts name keys in capitals ("BILD-AUF"); shown like the others ("Bild-Auf").
     private static string? LayoutName(int virtualKey)
     {
         string? name = RigShift.Windows.Ui.NativeWindow.KeyName(virtualKey);

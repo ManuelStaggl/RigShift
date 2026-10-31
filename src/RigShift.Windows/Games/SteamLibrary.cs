@@ -140,7 +140,7 @@ public sealed class SteamLibrary
         return games;
     }
 
-    /// <summary>Steam's folder from the registry; 64-bit machine view first, then the current user's own key.</summary>
+    // 64-bit machine view first, then the current user's own key.
     private string? FindClientFolder()
     {
         try

@@ -37,7 +37,6 @@ public sealed partial class AudioSlot : ObservableObject
     [ObservableProperty]
     public partial string Label { get; private set; }
 
-    /// <summary>New texts after a language change, same device.</summary>
     internal void Relabel()
     {
         Label = Loc.Instance[_labelKey];

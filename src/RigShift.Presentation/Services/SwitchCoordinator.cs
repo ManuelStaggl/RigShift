@@ -26,24 +26,20 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private readonly ILogger _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    /// <summary>
-    /// The thread this was created on – the UI thread in the app, none in most tests. Everything that touches
-    /// <see cref="IsSwitching"/>, <see cref="History"/> and the events runs there, whoever calls: a game session
-    /// switches from a pool thread, and bound collections and the tray cannot be touched from one.
-    /// </summary>
+    // Everything touching IsSwitching, History and the events runs here: a game session switches from a pool thread.
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private readonly int _uiThread = Environment.CurrentManagedThreadId;
 
-    /// <summary>Cancelled when the app exits; a running switch rolls back and ends.</summary>
+    // Cancelled when the app exits; a running switch rolls back and ends.
     private readonly CancellationTokenSource _stopping = new();
 
-    /// <summary>The switch or catch-up running now, if any. UI thread only.</summary>
+    // UI thread only.
     private Task? _current;
 
-    /// <summary>Cancels <see cref="_current"/> alone, for the emergency hotkey. UI thread only.</summary>
+    // Cancels _current alone, for the emergency hotkey. UI thread only.
     private CancellationTokenSource? _cancelCurrent;
 
-    /// <summary>Last switch applied partially: the profile and how many displays it got. Cleared by any other switch.</summary>
+    // Last switch applied partially and how many displays it got; cleared by any other switch.
     private (Profile Profile, int Displays)? _pendingCatchUp;
 
     public SwitchCoordinator(SwitchOrchestrator orchestrator, ProfileCatalog catalog, SettingsService settings, TimeProvider time, ILogger log)
@@ -168,7 +164,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     public Profile? ToggleTarget =>
         ProfileEditing.ToggleTarget(_catalog.Profiles, _catalog.ActiveProfile?.Id, _catalog.PreviousProfileId);
 
-    /// <summary>Command line: the caller needs the exception to report a failure instead of "busy".</summary>
+    // Command line: the caller needs the exception to report a failure instead of "busy".
     Task<SwitchResult?> IProfileSwitcher.SwitchAsync(Profile profile, SwitchRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(profile);
@@ -176,10 +172,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         return RunAsync(profile, request, rethrow: true, cancellationToken);
     }
 
-    /// <summary>
-    /// A dry run only reads: it takes neither the gate nor <see cref="IsSwitching"/>, so a hotkey during "Check" still
-    /// switches.
-    /// </summary>
+    // A dry run takes neither the gate nor IsSwitching, so a hotkey during "Check" still switches.
     private async Task<SwitchResult?> CheckCoreAsync(Profile profile, bool rethrow, CancellationToken cancellationToken)
     {
         if (_stopping.IsCancellationRequested)
@@ -212,10 +205,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
     private Task<SwitchResult?> RunAsync(Profile profile, SwitchRequest request, bool rethrow, CancellationToken cancellationToken = default) =>
         OnUiThreadAsync(() => RunCoreAsync(profile, request, rethrow, cancellationToken));
 
-    /// <summary>
-    /// Runs <paramref name="work"/> on the UI thread and hands its result or exception back to the caller. A comparison
-    /// of contexts would not do: WPF hands out a new context instance per dispatcher operation.
-    /// </summary>
+    // A comparison of contexts would not do: WPF hands out a new context instance per dispatcher operation.
     private Task<T> OnUiThreadAsync<T>(Func<Task<T>> work)
     {
         if (_ui is null || Environment.CurrentManagedThreadId == _uiThread)
@@ -244,7 +234,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    /// <summary>The profile as it switches: without a Surround setting it means "off" once another profile uses Surround.</summary>
+    // Without a Surround setting a profile means "off" once another profile uses Surround.
     private Profile AsSwitched(Profile profile) =>
         SurroundDefaults.Effective(profile, _catalog.Profiles) is var surround && surround != profile.Surround
             ? profile with { Surround = surround }
@@ -513,8 +503,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         || profile.Audio is { Playback: not null } or { Recording: not null } or { PlaybackCommunications: not null } or { RecordingCommunications: not null }
             or { PlaybackVolumePercent: not null } or { RecordingVolumePercent: not null };
 
-    /// <summary>The reports of a switch, in the order they were made, on the UI thread – the list is bound to the tray and the overview.</summary>
-    /// <remarks>A late report of an earlier switch – its apps ending – never lands in the list of the next one.</remarks>
+    // A late report of an earlier switch (its apps ending) never lands in the next one's list.
     private sealed class StepReports(SwitchCoordinator owner, int run) : IProgress<SwitchStep>
     {
         public void Report(SwitchStep value)
@@ -590,20 +579,14 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     private static bool IsAmbiguous(SwitchResult result) => result.Outcome == SwitchOutcome.Blocked && result.Plan.IsAmbiguous;
 
-    /// <summary>
-    /// A blocked switch names only the required displays that blocked it, not optional ones – and of those
-    /// only the identical ones that could not be told apart, when that is why: the switch did not wait for the others.
-    /// </summary>
+    // Only the required displays that blocked it, and of those only the indistinguishable twins when that is why.
     private static IEnumerable<MissingDisplay> MissingForRecord(SwitchResult result) =>
         IsAmbiguous(result) ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional && m.Reason == MissingReason.Ambiguous)
         : result.Outcome == SwitchOutcome.Blocked && result.Plan.Missing.Any(m => !m.Assignment.IsOptional)
             ? result.Plan.Missing.Where(m => !m.Assignment.IsOptional)
             : result.Plan.Missing;
 
-    /// <summary>
-    /// Records the result and tells the listeners. Never throws: a listener that fails must not turn a switch that worked
-    /// into a second, failed history entry.
-    /// </summary>
+    // Never throws: a failing listener must not turn a switch that worked into a second, failed entry.
     private async Task CompleteAsync(SwitchRecord record)
     {
         try
@@ -648,10 +631,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    /// <summary>
-    /// A switch that stayed tells where the monitors are now: monitors found on another port or graphics card, and serial
-    /// numbers older profiles lack, go into every profile. After the result, so nothing waits for the disk.
-    /// </summary>
+    // Monitors found on another port or card, and serials older profiles lack, go into every profile; after the result,
+    // so nothing waits for the disk.
     private async Task HealAsync(SwitchResult result)
     {
         if (result.Outcome is not (SwitchOutcome.Applied or SwitchOutcome.AppliedPartially))
@@ -669,7 +650,6 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    /// <summary>Follows what the switch left running after its result, when anything still runs.</summary>
     private void FollowUp(SwitchRecord record, SwitchResult result)
     {
         if (result.Apps == AppsOutcome.Pending || result.DesktopIcons == DesktopIconOutcome.Pending)
@@ -678,10 +658,8 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
         }
     }
 
-    /// <summary>
-    /// One record update and one event once both ended, not one each: the record in the history is replaced by value, and
-    /// a second update would no longer find the first one's.
-    /// </summary>
+    // One record update once both ended: the history replaces records by value, so a second update would miss the
+    // first.
     private async Task FollowUpAsync(SwitchRecord record, Task<AppsOutcome> apps, Task<DesktopIconOutcome> tidy)
     {
         try

@@ -81,7 +81,7 @@ public sealed class ProfileEditorFactory(
         return new ProfileEditorViewModel(profile, isNew, context, editorServices);
     }
 
-    /// <summary>The Surround state, or "no driver" when it cannot be read - the editor then simply hides the section.</summary>
+    // "No driver" when the state cannot be read; the editor then hides the section.
     private async Task<SurroundState> ReadSurroundAsync()
     {
         try

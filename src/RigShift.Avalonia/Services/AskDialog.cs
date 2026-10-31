@@ -91,7 +91,6 @@ internal static class AskDialog
         return result;
     }
 
-    /// <summary>The detail lines in a sunken, scrolling well: heading, the path or keys, the warning in amber.</summary>
     private static Border Details(IReadOnlyList<RestoreLine> lines)
     {
         var list = new StackPanel { Spacing = 8, Margin = new Thickness(16, 12) };
@@ -119,7 +118,6 @@ internal static class AskDialog
         return well;
     }
 
-    /// <summary>Modal over the main window; asked from the tray with the window closed, it stands on its own.</summary>
     public static async Task ShowModalAsync(Window window)
     {
         ArgumentNullException.ThrowIfNull(window);

@@ -266,7 +266,7 @@ public sealed class JsonSettingsStore
     private readonly ILogger _log;
     private readonly TimeProvider _time;
 
-    /// <summary>The file could not be copied when it was read (it was locked); tried again before the first save.</summary>
+    // The file was locked when it was read; copying is tried again before the first save.
     private bool _copyOwed;
 
     public JsonSettingsStore(string file, ILogger log, TimeProvider? time = null)
@@ -338,7 +338,7 @@ public sealed class JsonSettingsStore
         return new AppSettings();
     }
 
-    /// <summary>Copies the file next to itself as <c>settings.&lt;tag&gt;-&lt;date&gt;.json</c>; <c>null</c> when that fails.</summary>
+    // Copies the file next to itself as settings.<tag>-<date>.json; null when that fails.
     private string? CopyAside(string tag)
     {
         string stamp = _time.GetLocalNow().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
@@ -358,11 +358,7 @@ public sealed class JsonSettingsStore
         }
     }
 
-    /// <summary>
-    /// Rules have no switch of their own any more. A rule switched off in 1.3.x would start switching
-    /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file. The single device
-    /// of 1.3.x becomes the rule's device list.
-    /// </summary>
+    // A rule switched off in 1.3.x would start switching if it came back on, so it is dropped with a warning.
     private AppSettings MigrateRules(AppSettings settings)
     {
         if (settings.AutomationRules is not { } rules
