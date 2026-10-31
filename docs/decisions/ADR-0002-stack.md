@@ -2,6 +2,9 @@
 
 Status: accepted · Date: 2026-09-13
 
+The UI part is superseded: since 5.0 the app is built on Avalonia 12 with Semi and Ursa; WPF and WPF-UI are gone
+(issue #99).
+
 ## Context
 
 The app is Windows-only, must live in the tray, touch low-level display and audio APIs, and ship as a small

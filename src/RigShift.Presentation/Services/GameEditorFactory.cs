@@ -12,7 +12,7 @@ namespace RigShift.App.Services;
 
 /// <summary>
 /// What the games pages build without asking anything: the editor for a game, the entries for picked installed games,
-/// and the lists the game picker and the window capture show. Shared by the WPF and the Avalonia dialogs.
+/// and the lists the game picker and the window capture show. Used by the dialogs of the app.
 /// </summary>
 public sealed class GameEditorFactory(
     GameEditorServices editorServices,

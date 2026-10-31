@@ -7,8 +7,8 @@ using Windows.Win32.UI.WindowsAndMessaging;
 namespace RigShift.Windows.Ui;
 
 /// <summary>
-/// An invisible message-only window that hands every message it gets to <see cref="MessageReceived"/>. Used where the
-/// UI framework has no window procedure to hook, e.g. for WM_HOTKEY in the WinUI app. Create and use it on one thread.
+/// An invisible window that hands WM_HOTKEY and WM_DISPLAYCHANGE to <see cref="MessageReceived"/>. Used where the UI
+/// framework has no window procedure to hook. Create and use it on one thread.
 /// </summary>
 public sealed unsafe class MessageWindow : IDisposable
 {
@@ -18,7 +18,11 @@ public sealed unsafe class MessageWindow : IDisposable
     private readonly WNDPROC _procedure;
     private HWND _handle;
 
-    public MessageWindow()
+    /// <param name="receivesBroadcasts">
+    /// A hidden top-level window instead of a message-only one: broadcasts such as WM_DISPLAYCHANGE only reach top-level
+    /// windows, and Windows names one when it shows why the app holds up logging off.
+    /// </param>
+    public MessageWindow(bool receivesBroadcasts = false)
     {
         _procedure = Procedure;
         fixed (char* name = _className)
@@ -35,7 +39,7 @@ public sealed unsafe class MessageWindow : IDisposable
                 throw new Win32Exception(Marshal.GetLastPInvokeError(), "Message window class not registered");
             }
 
-            _handle = PInvoke.CreateWindowEx(0, name, name, 0, 0, 0, 0, 0, HWND.HWND_MESSAGE, default, windowClass.hInstance, null);
+            _handle = PInvoke.CreateWindowEx(0, name, name, 0, 0, 0, 0, 0, receivesBroadcasts ? default : HWND.HWND_MESSAGE, default, windowClass.hInstance, null);
         }
 
         if (_handle.IsNull)
@@ -66,7 +70,7 @@ public sealed unsafe class MessageWindow : IDisposable
 
     private LRESULT Procedure(HWND hwnd, uint message, WPARAM wParam, LPARAM lParam)
     {
-        if (message == NativeWindow.WmHotkey)
+        if (message is NativeWindow.WmHotkey or NativeWindow.WmDisplayChange)
         {
             MessageReceived?.Invoke(this, (message, (nint)(nuint)wParam.Value, lParam.Value));
             return new LRESULT(0);

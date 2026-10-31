@@ -48,6 +48,7 @@ internal sealed class TrayIconService : IDisposable
         Func<ProfilesViewModel> profiles,
         IAppShell shell,
         UpdateService updates,
+        HotkeyService hotkeys,
         AutomationService automation,
         GameCatalog games,
         GameSessionService sessions,
@@ -57,6 +58,7 @@ internal sealed class TrayIconService : IDisposable
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(coordinator);
         ArgumentNullException.ThrowIfNull(updates);
+        ArgumentNullException.ThrowIfNull(hotkeys);
         ArgumentNullException.ThrowIfNull(automation);
         ArgumentNullException.ThrowIfNull(games);
         ArgumentNullException.ThrowIfNull(sessions);
@@ -73,7 +75,6 @@ internal sealed class TrayIconService : IDisposable
         _sessions = sessions;
         _log = log.ForContext<TrayIconService>();
 
-        // The same events as the WPF tray; that one goes with the WPF app (#99).
         automation.Changed += (_, _) => OnUi(RebuildMenu);
         games.Changed += (_, _) => OnUi(RebuildMenu);
         sessions.SessionChanged += (_, _) => OnUi(RebuildMenu);
@@ -106,6 +107,8 @@ internal sealed class TrayIconService : IDisposable
         coordinator.AllDisplaysOnCompleted += (_, report) => OnUi(() => Notify(SwitchMessages.ForAllDisplaysOn(report)));
         updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NoticeLevel.Info), opensHelp: true));
         updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NoticeLevel.Info), opensHelp: true));
+        hotkeys.RegistrationFailed += (_, names) =>
+            OnUi(() => Notify(("RigShift", Loc.Format("Hotkey_Failed", string.Join(", ", names)), NoticeLevel.Warning), click: null));
 
         // Windows restored a profile's displays by itself and the rest followed: a click starts its apps too.
         coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(

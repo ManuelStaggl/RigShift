@@ -6,7 +6,7 @@ using RigShift.App.ViewModels;
 
 namespace RigShift.Avalonia.Views;
 
-/// <summary>The settings in the WPF page's three groups (switching, the app, devices) as rows on cards.</summary>
+/// <summary>The settings in three groups (switching, the app, devices) as rows on cards.</summary>
 public sealed partial class SettingsView : UserControl
 {
     public SettingsView()

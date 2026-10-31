@@ -42,7 +42,8 @@ public static class Program
 
     private static int Run(string[] args, AppPaths paths)
     {
-        // Same order as the WPF app: Velopack may exit the process, and only the window app may restart for an update.
+        // Velopack must run first: it handles install/update/uninstall hooks and may exit the process. A pending update
+        // restarts the process to install itself; only the window app may do that, a CLI call would lose its exit code.
         bool isCommand = args.Length > 0 && !args[0].StartsWith('-');
         AppSettings settings = LoadSettings(paths);
         VelopackApp.Build()

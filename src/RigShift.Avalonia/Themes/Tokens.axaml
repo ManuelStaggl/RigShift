@@ -260,9 +260,9 @@
   </ResourceDictionary.ThemeDictionaries>
 
   <!-- Type, radii, spacing -->
-  <FontFamily x:Key="RsFont">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
-  <FontFamily x:Key="DefaultFontFamily">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
-  <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift.Avalonia/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="RsFont">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="DefaultFontFamily">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
+  <FontFamily x:Key="SemiFontFamilyRegular">avares://RigShift/Assets/Fonts#Mona Sans</FontFamily>
   <!-- Four radii: keycap/chip 4, control 6, row/inner well 8, card/panel/popup 12. Nested: inner = outer - padding. -->
   <CornerRadius x:Key="RsRadiusXs">4</CornerRadius>
   <CornerRadius x:Key="RsRadiusSm">6</CornerRadius>

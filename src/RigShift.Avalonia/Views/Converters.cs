@@ -30,7 +30,7 @@ public static class ProfileSymbols
     };
 }
 
-/// <summary><c>{v:Tr Nav_Overview}</c>: a text of the shared strings in the app's language, without the WPF access key.</summary>
+/// <summary><c>{v:Tr Nav_Overview}</c>: a text of the shared strings in the app's language, without the access key marker.</summary>
 public sealed class Tr(string key) : MarkupExtension
 {
     public string Key { get; } = key;
@@ -62,7 +62,7 @@ public static class Converters
     /// <summary>An enum value (or anything) equal to the parameter by name, for <c>Classes.x</c> bindings.</summary>
     public static readonly IValueConverter Is = new FuncValueConverter<object?, string?, bool>((value, name) => value?.ToString() == name);
 
-    /// <summary>A shared text with its WPF access key ("C_hoose") as plain text.</summary>
+    /// <summary>A shared text with its access key marker ("C_hoose") as plain text.</summary>
     public static readonly IValueConverter NoAccessKey = new FuncValueConverter<string?, string?>(s => s is null ? null : Loc.WithoutAccessKey(s));
 
     /// <summary><c>double?</c> seconds to the <c>decimal?</c> of NumericUpDown and back.</summary>

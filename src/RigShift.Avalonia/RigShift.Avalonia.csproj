@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Avalonia app that replaces RigShift.App: self-contained, so Velopack installs it like the WPF app. -->
+  <!-- The tray app: UI, DI container, CLI entry point, single instance, Velopack updates. The exe stays RigShift.exe, so
+       autostart entries, shortcuts, rigshift:// links and updates from the WPF releases keep working. -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <RootNamespace>RigShift.Avalonia</RootNamespace>
-    <AssemblyName>RigShift.Avalonia</AssemblyName>
-    <ApplicationIcon>..\RigShift.App\Assets\Brand\rigshift-app-light.ico</ApplicationIcon>
+    <AssemblyName>RigShift</AssemblyName>
+    <ApplicationIcon>Assets\Brand\rigshift-app-light.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Publish defaults. No single file: Velopack packs the folder anyway, and
+         separate files keep delta updates small and avoid self-extraction at start. -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun>
@@ -36,17 +39,44 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
+    <InternalsVisibleTo Include="RigShift.Avalonia.Tests" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Tray icons, read per DPI from the output folder; the brand package lives with the WPF app until the switch-over (#99). -->
-    <Content Include="..\RigShift.App\Assets\Brand\rigshift-tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Brand\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tray icons, read per DPI from the output folder. -->
+    <Content Include="Assets\Brand\rigshift-tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MIT and Apache-2.0 ask for their notices to travel with every copy. -->
+    <Content Include="$(MSBuildThisFileDirectory)../../LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+    <!-- The OFL asks for the font's license to travel with it. -->
+    <Content Include="Assets\Fonts\OFL.txt" Link="OFL-MonaSans.txt" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Screenshot helpers stay out of release builds. -->
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <Compile Remove="Debug\**" />
   </ItemGroup>
+
+  <!-- The versioned Windows TFM brings the C#/WinRT projection along: 56 MiB, a quarter of the installed app, and no
+       assembly in the package references it. WinRT.Runtime.dll stays - the CsWin32 marshalling and
+       CommunityToolkit.Mvvm use it. IncludeWindowsSDKRefFrameworkReferences=false would drop that one too. -->
+  <Target Name="DropWindowsSdkProjection" AfterTargets="ResolveRuntimePackAssets">
+    <ItemGroup>
+      <RuntimePackAsset Remove="@(RuntimePackAsset)" Condition="'%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DropWindowsSdkProjectionFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

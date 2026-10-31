@@ -11,7 +11,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace RigShift.Windows.Ui;
 
-/// <summary>Small Win32 helpers for the WPF layer, which has no interop of its own.</summary>
+/// <summary>Small Win32 helpers for the UI layer, which has no interop of its own.</summary>
 public static class NativeWindow
 {
     public const int WmHotkey = 0x0312;
@@ -21,6 +21,10 @@ public static class NativeWindow
 
     /// <summary>What Windows shows next to RigShift while it holds up logging off or shutting down.</summary>
     public static void ExplainShutdownBlock(nint hwnd, string reason) => PInvoke.ShutdownBlockReasonCreate(new HWND(hwnd), reason);
+
+    /// <summary>A plain Windows error box: for when the app's own windows may be what failed, e.g. at startup.</summary>
+    public static void ShowError(string text) =>
+        PInvoke.MessageBox(HWND.Null, text, "RigShift", MESSAGEBOX_STYLE.MB_OK | MESSAGEBOX_STYLE.MB_ICONERROR);
 
     /// <summary>Global Esc for the confirmation window: reverts from any screen, even if the window has no picture.</summary>
     public static bool RegisterEscapeHotkey(nint hwnd, int id) =>

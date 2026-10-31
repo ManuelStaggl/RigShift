@@ -88,6 +88,51 @@ public sealed class TrayPopupViewModelTests : IDisposable
         item.ShowsHotkey.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task OpenAndExit_GoThroughTheShell_OpenClosesThePopup()
+    {
+        IAppShell shell = Substitute.For<IAppShell>();
+        TrayPopupViewModel popup = await PopupAsync(shell);
+        int closes = 0;
+        popup.CloseRequested += (_, _) => closes++;
+
+        popup.OpenCommand.Execute(null);
+        popup.ExitCommand.Execute(null);
+
+        shell.Received(1).ShowMainWindow(null);
+        shell.Received(1).QuitByUser();
+        closes.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task TwoProfiles_ShowAsTiles_AndWithoutRulesThereIsNothingToPause()
+    {
+        TrayPopupViewModel popup = await PopupAsync();
+
+        popup.UseTiles.ShouldBeTrue();
+        popup.UseRows.ShouldBeFalse();
+        popup.HasRules.ShouldBeFalse();
+        popup.IsPaused.ShouldBeFalse();
+        popup.PauseTip.ShouldBe(Loc.Instance["Automation_Pause"]);
+    }
+
+    [Fact]
+    public async Task NothingToSwitchOrPlay_DoesNothing()
+    {
+        IAppShell shell = Substitute.For<IAppShell>();
+        TrayPopupViewModel popup = await PopupAsync(shell);
+        int closes = 0;
+        popup.CloseRequested += (_, _) => closes++;
+
+        popup.SwitchToNumber(0).ShouldBeFalse();
+        popup.SwitchToNumber(3).ShouldBeFalse("there are two profiles");
+        await popup.SwitchCommand.ExecuteAsync(null);
+        popup.PlayCommand.Execute(null);
+
+        closes.ShouldBe(0);
+        _host.Coordinator.History.ShouldBeEmpty();
+    }
+
     public void Dispose()
     {
         _sessions.Dispose();
@@ -115,7 +160,7 @@ public sealed class TrayPopupViewModelTests : IDisposable
         quick.Run().ShouldBeFalse();
     }
 
-    private async Task<TrayPopupViewModel> PopupAsync()
+    private async Task<TrayPopupViewModel> PopupAsync(IAppShell? shell = null)
     {
         await _host.Catalog.SaveAsync(new Profile { Id = Guid.NewGuid(), Name = "Desk", Displays = [] }, CancellationToken.None);
         await _host.Catalog.SaveAsync(new Profile { Id = Guid.NewGuid(), Name = "Sim Rig", Displays = [] }, CancellationToken.None);
@@ -127,6 +172,6 @@ public sealed class TrayPopupViewModelTests : IDisposable
             _sessions,
             _host.Coordinator,
             () => throw new InvalidOperationException("the profiles page is not built in these tests"),
-            Substitute.For<IAppShell>());
+            shell ?? Substitute.For<IAppShell>());
     }
 }
