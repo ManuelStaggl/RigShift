@@ -218,11 +218,11 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
                 continue;
             }
 
-            if (app.Kind == AppActionKind.Start && app.WaitForWindow)
+            if (app.Kind == AppActionKind.Start && app.Wait == AppWait.Window)
             {
                 await WaitForWindowAsync(app, cancellationToken);
             }
-            else if (app.WaitSeconds > 0)
+            else if (app.Wait != AppWait.None && app.WaitSeconds > 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(app.WaitSeconds), _time, cancellationToken);
             }

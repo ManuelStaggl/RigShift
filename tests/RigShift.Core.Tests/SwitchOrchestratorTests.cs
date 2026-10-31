@@ -963,7 +963,7 @@ public sealed class SwitchOrchestratorTests
         {
             Apps =
             [
-                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true },
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = 30 },
                 new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
             ],
         };
@@ -986,7 +986,7 @@ public sealed class SwitchOrchestratorTests
         {
             Apps =
             [
-                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = seconds, WaitForWindow = true },
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = seconds },
                 new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
             ],
         };
@@ -1005,7 +1005,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
         Profile rig = Rig() with
         {
-            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true }],
+            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = 30 }],
         };
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);

@@ -15,34 +15,68 @@ public sealed class AppEditItemTests
     private static readonly string Existing = Path.Combine(Environment.SystemDirectory, "notepad.exe");
 
     [Fact]
-    public void WaitForWindow_TickedWithoutSeconds_ShowsTheMinuteItWaitsAtMost()
+    public void Wait_WindowChosenWithoutSeconds_ShowsTheMinuteItWaitsAtMost()
     {
         var row = new AppEditItem(new AppAction { Path = Existing });
+        row.ShowWaitSeconds.ShouldBeFalse();
 
-        row.WaitForWindow = true;
+        row.SelectedWait = row.WaitChoices[(int)AppWait.Window];
 
-        row.WaitSeconds.ShouldBe(AppEditItem.DefaultWindowWaitSeconds);
+        row.ShowWaitSeconds.ShouldBeTrue();
+        row.WaitSeconds.ShouldBe(AppAction.DefaultWindowWaitSeconds);
         row.ToAction().ShouldSatisfyAllConditions(
-            action => action.WaitForWindow.ShouldBeTrue(),
-            action => action.WaitSeconds.ShouldBe(AppEditItem.DefaultWindowWaitSeconds));
+            action => action.Wait.ShouldBe(AppWait.Window),
+            action => action.WaitSeconds.ShouldBe(AppAction.DefaultWindowWaitSeconds));
     }
 
     [Fact]
-    public void WaitForWindow_TickedWithSeconds_KeepsThem()
+    public void Wait_WindowChosenWithSeconds_KeepsThem()
     {
-        var row = new AppEditItem(new AppAction { Path = Existing, WaitSeconds = 20 });
+        var row = new AppEditItem(new AppAction { Path = Existing, Wait = AppWait.Fixed, WaitSeconds = 20 });
 
-        row.WaitForWindow = true;
+        row.SelectedWait = row.WaitChoices[(int)AppWait.Window];
 
         row.ToAction().WaitSeconds.ShouldBe(20);
     }
 
     [Fact]
-    public void WaitForWindow_OnAStop_IsNotSaved()
+    public void Wait_NoneChosen_SavesNoSeconds()
     {
-        var row = new AppEditItem(new AppAction { Kind = AppActionKind.Stop, Path = "notepad.exe", WaitForWindow = true });
+        var row = new AppEditItem(new AppAction { Path = Existing, Wait = AppWait.Fixed, WaitSeconds = 20 });
 
-        row.ToAction().WaitForWindow.ShouldBeFalse();
+        row.SelectedWait = row.WaitChoices[(int)AppWait.None];
+
+        row.ShowWaitSeconds.ShouldBeFalse();
+        row.ToAction().ShouldSatisfyAllConditions(
+            action => action.Wait.ShouldBe(AppWait.None),
+            action => action.WaitSeconds.ShouldBe(0));
+    }
+
+    /// <summary>A 4.x entry opens with the one choice it amounts to, and saves unchanged.</summary>
+    [Theory]
+    [InlineData(AppActionKind.Start, 0, false, AppWait.None)]
+    [InlineData(AppActionKind.Start, 5, false, AppWait.Fixed)]
+    [InlineData(AppActionKind.Start, 0, true, AppWait.Window)]
+    [InlineData(AppActionKind.Start, 20, true, AppWait.Window)]
+    [InlineData(AppActionKind.Stop, 5, true, AppWait.Fixed)]
+    [InlineData(AppActionKind.Stop, 0, true, AppWait.None)]
+    public void Load_OldEntry_ShowsItsWait_AndSavesTheSame(AppActionKind kind, int seconds, bool waitForWindow, AppWait wait)
+    {
+        var old = new AppAction { Kind = kind, Path = Existing, WaitSeconds = seconds, LegacyWaitForWindow = waitForWindow };
+        var row = new AppEditItem(old);
+
+        row.SelectedWait!.Key.ShouldBe(wait.ToString());
+        row.ToAction().ShouldSatisfyAllConditions(
+            action => action.Wait.ShouldBe(old.Wait),
+            action => action.WaitSeconds.ShouldBe(old.WaitSeconds));
+    }
+
+    [Fact]
+    public void Wait_OnAStop_HasNoSecondsField()
+    {
+        var row = new AppEditItem(new AppAction { Kind = AppActionKind.Stop, Path = "notepad.exe", Wait = AppWait.Fixed, WaitSeconds = 5 });
+
+        row.ShowWaitSeconds.ShouldBeFalse();
     }
 
     [Fact]

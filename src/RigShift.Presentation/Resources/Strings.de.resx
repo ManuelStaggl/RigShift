@@ -227,7 +227,7 @@
   <data name="App_Path" xml:space="preserve"><value>App</value></data>
   <data name="App_Browse" xml:space="preserve"><value>App auswählen</value></data>
   <data name="App_Arguments" xml:space="preserve"><value>Startoptionen</value></data>
-  <data name="App_Wait" xml:space="preserve"><value>Verzögerung in Sekunden, bevor die nächste startet</value></data>
+  <data name="App_Wait" xml:space="preserve"><value>Sekunden: die Verzögerung oder die längste Wartezeit auf das Fenster</value></data>
   <data name="App_Remove" xml:space="preserve"><value>App entfernen</value></data>
   <data name="AppPicker_Search" xml:space="preserve"><value>Installierte und laufende Apps durchsuchen</value></data>
   <data name="AppPicker_Running" xml:space="preserve"><value>Läuft</value></data>
@@ -655,7 +655,7 @@
   <data name="Fov_Where_KartKraft" xml:space="preserve"><value>Das Kameramenü; es nimmt die Breiten und den Augenabstand selbst in Millimetern.</value></data>
   <data name="Fov_Where_Rbr" xml:space="preserve"><value>RSF-Launcher › Cockpit &amp; Dashboard (NGPCarMenu.ini CockpitOverrideFOVValue). Radiant, drei Dezimalstellen.</value></data>
   <data name="App_Change" xml:space="preserve"><value>Ändern…</value></data>
-  <data name="App_WaitShort" xml:space="preserve"><value>Verzögerung (s)</value></data>
+  <data name="App_WaitShort" xml:space="preserve"><value>Sekunden</value></data>
   <data name="Automation_DeviceGoneShort" xml:space="preserve"><value>Beim Trennen</value></data>
   <data name="Profile_Check" xml:space="preserve"><value>Prüfen</value></data>
   <data name="Profile_Reapply" xml:space="preserve"><value>Erneut anwenden</value></data>
@@ -818,8 +818,11 @@
     <value>Bis sein Fenster da ist</value>
   </data>
   <data name="App_WaitForWindowTip" xml:space="preserve">
-    <value>Geht weiter, sobald das Programm ein Fenster zeigt, spätestens nach den Sekunden. Nicht für Programme, die im Infobereich starten.</value>
+    <value>Wie lange die nächste App auf diese wartet. „Bis sein Fenster da ist“ geht weiter, sobald das Programm ein Fenster zeigt, spätestens nach den Sekunden; nicht für Programme, die im Infobereich starten.</value>
   </data>
+  <data name="App_WaitChoice" xml:space="preserve"><value>Warten vor der nächsten App</value></data>
+  <data name="App_WaitNone" xml:space="preserve"><value>Nicht warten</value></data>
+  <data name="App_WaitFixed" xml:space="preserve"><value>Feste Zeit</value></data>
   <data name="Profile_DefaultTip" xml:space="preserve">
     <value>Standardprofil: Ziel von „Zurückschalten“, solange es kein letztes Profil gibt. Ändern unter Einstellungen.</value>
   </data>
