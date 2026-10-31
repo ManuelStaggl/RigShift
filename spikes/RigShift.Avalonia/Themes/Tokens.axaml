@@ -110,6 +110,11 @@
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#1A86DC" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#006CBE" />
+      <!-- Off: a track that stands out from the card (Semi takes Fill0, the card's own colour). -->
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#3A3B40" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#45464B" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#4F5055" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#26272A" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#242528" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#2B2C30" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#323337" />
@@ -217,6 +222,10 @@
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedDefaultBackground" Color="#0078D4" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPointeroverBackground" Color="#0067B8" />
       <SolidColorBrush x:Key="ToggleSwitchContainerCheckedPressedBackground" Color="#005A9E" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDefaultBackground" Color="#CDD0D6" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPointeroverBackground" Color="#C1C4CB" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedPressedBackground" Color="#B5B9C0" />
+      <SolidColorBrush x:Key="ToggleSwitchContainerUnCheckedDisabledBackground" Color="#E6E8EC" />
       <SolidColorBrush x:Key="ListBoxItemSelectedBackground" Color="#FFFFFF" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedBackground" Color="#ECEEF1" />
       <SolidColorBrush x:Key="ComboBoxItemSelectedPointeroverBackground" Color="#E3E5E9" />

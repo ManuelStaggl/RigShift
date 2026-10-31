@@ -204,4 +204,7 @@ public sealed partial class ProfileSheetView : UserControl
             DispatcherTimer.RunOnce(() => target.BringIntoView(new global::Avalonia.Rect(0, 0, 1, 2000)), TimeSpan.FromMilliseconds(800));
         }
     }
+
+    private void OnActions(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
+        (TopLevel.GetTopLevel(this) as MainWindow)?.OpenPalette();
 }

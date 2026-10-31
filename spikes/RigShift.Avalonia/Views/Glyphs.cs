@@ -35,6 +35,7 @@ public static class Glyphs
     public const string Window = "M3 5 H21 V19 H3 Z M3 9 H21";
     public const string Copy = "M8 8 H20 V20 H8 Z M16 8 V4 H4 V16 H8";
     public const string Close = "M6 6 L18 18 M18 6 L6 18";
+    public const string Switch = "M4 8 H20 M16 4 L20 8 L16 12 M20 16 H4 M8 12 L4 16 L8 20";
     public const string Display = "M3 4 H21 V15 H3 Z M12 15 V19 M8 19 H16";
 
     /// <summary>The brand stroke drawing of a profile symbol; a profile without one gets the desk monitor.</summary>

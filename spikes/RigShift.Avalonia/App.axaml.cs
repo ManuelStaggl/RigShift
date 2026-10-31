@@ -55,6 +55,19 @@ public sealed class App : Application, IAppShell
             _window.Show();
             _window.Navigate(page);
             Log.Information("Spike main window shown");
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_PALETTE") is { } query)
+            {
+                _window.OpenPalette();
+                _window.PaletteQuery.Text = query;
+            }
+
+            if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_IDENTIFY") == "1")
+            {
+                // After the overview has read the displays.
+                global::Avalonia.Threading.DispatcherTimer.RunOnce(
+                    () => _services.GetRequiredService<RigShift.App.ViewModels.OverviewViewModel>().IdentifyCommand.Execute(null),
+                    TimeSpan.FromSeconds(6));
+            }
 
             _tray = new SpikeTray(this);
             if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_TRAY") == "1")
@@ -114,7 +127,7 @@ public sealed class App : Application, IAppShell
     }
 
     public void IdentifyDisplays(IReadOnlyList<(int Number, string Name, DisplayAssignment Mode)> displays) =>
-        Log.Information("Spike: identify {Count} displays (no overlay windows yet)", displays.Count);
+        Views.IdentifyWindow.ShowAll(displays);
 
     public void Quit()
     {

@@ -1,7 +1,7 @@
 <!-- RigShift's own styles on top of Semi: type scale, rail, rows, links, the one primary button. -->
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:u="https://irihi.tech/ursa">
 
-  <!-- Type: 12/14/16/20/28, regular + semibold; tabular figures where numbers line up. -->
+  <!-- Type: 12/14/16/20/28, regular + semibold. -->
   <Style Selector="TextBlock.h1">
     <Setter Property="FontSize" Value="28" />
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -41,9 +41,7 @@
   <Style Selector="TextBlock.danger">
     <Setter Property="Foreground" Value="{DynamicResource RsDanger}" />
   </Style>
-  <Style Selector="TextBlock.num">
-    <Setter Property="FontFeatures" Value="+tnum" />
-  </Style>
+  <!-- No tabular figures: Mona Sans draws the tabular 1 with a foot serif, which reads as a mono font. -->
 
   <!-- Stroke icons on the 24 grid -->
   <Style Selector="Path.icon">
@@ -59,8 +57,13 @@
     <Setter Property="Width" Value="14" />
     <Setter Property="Height" Value="14" />
   </Style>
+  <!-- Three points have no height to stretch: drawn unscaled on the 24 grid, centred like the other icons. -->
   <Style Selector="Path.icon.dots">
     <Setter Property="StrokeThickness" Value="3" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Margin" Value="-3" />
   </Style>
   <!-- A profile symbol: the brand drawing at 24 px. -->
   <Style Selector="Path.symbol">
@@ -80,6 +83,17 @@
         <Border Margin="-3" BorderBrush="{DynamicResource RsAccentText}" BorderThickness="2" CornerRadius="8" />
       </FocusAdornerTemplate>
     </Setter>
+  </Style>
+
+  <!-- Semi's NumericUpDown template leaves its field and spinner unnamed; Narrator read them as "PathIcon". -->
+  <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
+    <Setter Property="AutomationProperties.Name" Value="{Binding $parent[NumericUpDown].(AutomationProperties.Name)}" />
+  </Style>
+  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_IncreaseButton">
+    <Setter Property="AutomationProperties.Name" Value="Increase" />
+  </Style>
+  <Style Selector="ButtonSpinner /template/ RepeatButton#PART_DecreaseButton">
+    <Setter Property="AutomationProperties.Name" Value="Decrease" />
   </Style>
 
   <!-- Controls: 6 px radius, hairline outline, raised fill. -->

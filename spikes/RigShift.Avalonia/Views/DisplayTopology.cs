@@ -227,7 +227,6 @@ public sealed class DisplayTopology : Canvas
         TextTrimming = TextTrimming.CharacterEllipsis,
         TextWrapping = TextWrapping.NoWrap,
         MaxLines = 1,
-        FontFeatures = [FontFeature.Parse("tnum")],
     };
 
     private IBrush? Brush(string key) => this.TryFindResource(key, ActualThemeVariant, out object? value) ? value as IBrush : null;

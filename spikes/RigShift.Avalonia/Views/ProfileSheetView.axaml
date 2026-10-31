@@ -131,7 +131,7 @@
             </Grid>
           </Border>
           <!-- The active profile, pinned under the list. -->
-          <Border x:Name="ActiveCard" Padding="10,10,10,12" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" DockPanel.Dock="Bottom" x:DataType="vm:ProfileItem">
+          <Border x:Name="ActiveCard" IsVisible="False" Padding="10,10,10,12" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,1,0,0" DockPanel.Dock="Bottom" x:DataType="vm:ProfileItem">
             <StackPanel Spacing="6">
               <TextBlock Margin="6,0" Classes="caption" FontSize="11.5" Foreground="{DynamicResource RsText4}" Text="Active profile" />
               <Border Padding="8" Background="{DynamicResource RsRaised}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="7">
@@ -194,6 +194,7 @@
               </Button>
               <Button
                 Grid.Column="2"
+                AutomationProperties.Name="{Binding SwitchLabel}"
                 Height="28"
                 Padding="10,0"
                 Classes.neutral="{Binding !SwitchIsPrimary}"
@@ -273,11 +274,11 @@
 
                   <!-- Arrangement well: the picture picks a display, its settings open in the inspector. -->
                   <Border Background="{DynamicResource RsBay}" BorderBrush="{DynamicResource RsDivider}" BorderThickness="1" CornerRadius="10">
-                    <Grid RowDefinitions="40,300,32">
+                    <Grid RowDefinitions="40,230,32">
                       <Grid Margin="14,0,8,0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
                         <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{v:Tr Editor_Displays}" />
                         <Button Grid.Column="1" VerticalAlignment="Center" Classes="link" FontSize="12.5" Margin="0,0,12,0" Command="{Binding OpenDisplaySettingsCommand}" Content="{v:Tr Displays_OpenSettings}" />
-                        <Button Grid.Column="2" Classes="ghost" Padding="8,5" Foreground="{DynamicResource RsText}" Command="{Binding Editor.TakeCurrentCommand}" ToolTip.Tip="{v:Tr Editor_DisplaysHint}">
+                        <Button Grid.Column="2" Classes="ghost" Padding="8,5" Foreground="{DynamicResource RsText}" AutomationProperties.Name="{v:Tr Editor_TakeCurrent}" Command="{Binding Editor.TakeCurrentCommand}" ToolTip.Tip="{v:Tr Editor_DisplaysHint}">
                           <StackPanel Orientation="Horizontal" Spacing="6">
                             <Path Classes="icon small" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16 M8 12 H16" />
                             <TextBlock FontWeight="SemiBold" FontSize="12.5" Text="{v:Tr Editor_TakeCurrent}" />
@@ -310,6 +311,7 @@
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Center"
+                                AutomationProperties.Name="{Binding Label}"
                                 ItemsSource="{Binding Choices}"
                                 SelectedItem="{Binding Selected, Converter={x:Static v:Converters.KeepOnNull}}">
                                 <ComboBox.ItemTemplate>
@@ -321,7 +323,7 @@
                             </Grid>
                             <Grid Classes="row" ColumnDefinitions="*,Auto,180,48" ColumnSpacing="12" IsVisible="{Binding SupportsVolume}">
                               <CheckBox Content="{v:Tr Audio_SetVolume}" IsChecked="{Binding SetVolume}" />
-                              <Slider Grid.Column="2" VerticalAlignment="Center" IsEnabled="{Binding SetVolume}" Maximum="100" Minimum="0" Value="{Binding Volume}" />
+                              <Slider Grid.Column="2" AutomationProperties.Name="{v:Tr Audio_SetVolume}" VerticalAlignment="Center" IsEnabled="{Binding SetVolume}" Maximum="100" Minimum="0" Value="{Binding Volume}" />
                               <TextBlock Grid.Column="3" Classes="label num" Text="{Binding VolumeText}" />
                             </Grid>
                             <Border Classes="divider" />
@@ -331,7 +333,7 @@
                     </ItemsControl>
                     <Grid Classes="row" ColumnDefinitions="*,Auto">
                       <TextBlock Classes="label" Text="{v:Tr Editor_DisableDucking}" ToolTip.Tip="{v:Tr Editor_DisableDuckingHint}" />
-                      <ToggleSwitch Grid.Column="1" IsChecked="{Binding Editor.DisableCommunicationsDucking, FallbackValue=False}" OffContent="" OnContent="" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_DisableDucking}" IsChecked="{Binding Editor.DisableCommunicationsDucking, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                   </StackPanel>
                 </u:SettingsCard.Detail>
@@ -370,18 +372,19 @@
                               </StackPanel>
                               <!-- What, how long to wait, with which options -->
                               <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8">
-                                <ComboBox MinWidth="104" ItemsSource="{Binding KindChoices}" SelectedItem="{Binding SelectedKind, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_Action}" />
-                                <ComboBox Grid.Column="1" MinWidth="140" IsVisible="{Binding ShowWhen}" ItemsSource="{Binding WhenChoices}" SelectedItem="{Binding SelectedWhen, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_When}" />
+                                <ComboBox MinWidth="104" AutomationProperties.Name="{v:Tr App_Action}" ItemsSource="{Binding KindChoices}" SelectedItem="{Binding SelectedKind, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_Action}" />
+                                <ComboBox Grid.Column="1" MinWidth="140" AutomationProperties.Name="{v:Tr App_When}" IsVisible="{Binding ShowWhen}" ItemsSource="{Binding WhenChoices}" SelectedItem="{Binding SelectedWhen, Converter={x:Static v:Converters.KeepOnNull}}" ToolTip.Tip="{v:Tr App_When}" />
                                 <NumericUpDown
                                   Grid.Column="2"
                                   Width="112"
+                                  AutomationProperties.Name="{v:Tr App_Wait}"
                                   FormatString="0.#"
                                   IsVisible="{Binding IsStart}"
                                   Minimum="0"
                                   ToolTip.Tip="{v:Tr App_Wait}"
                                   Value="{Binding WaitSeconds, Converter={x:Static v:Converters.Seconds}}"
                                   PlaceholderText="{v:Tr App_WaitShort}" />
-                                <TextBox Grid.Column="3" IsVisible="{Binding IsStart}" Text="{Binding Arguments}" PlaceholderText="{v:Tr App_Arguments}" />
+                                <TextBox Grid.Column="3" AutomationProperties.Name="{v:Tr App_Arguments}" IsVisible="{Binding IsStart}" Text="{Binding Arguments}" PlaceholderText="{v:Tr App_Arguments}" />
                               </Grid>
                             </Grid>
                             <Border Classes="divider" />
@@ -396,10 +399,11 @@
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
+                        AutomationProperties.Name="{v:Tr Editor_AppsWaitDevice}" 
                         ItemsSource="{Binding Editor.AppList.WaitDevice.Choices, FallbackValue={x:Null}}"
                         SelectedItem="{Binding Editor.AppList.WaitDevice.Selected, Converter={x:Static v:Converters.KeepOnNull}}" />
                     </Grid>
-                    <Button Margin="0,8,0,0" HorizontalAlignment="Left" Classes="neutral" Command="{Binding Editor.AppList.AddPickedCommand, FallbackValue={x:Null}}">
+                    <Button Margin="0,8,0,0" HorizontalAlignment="Left" Classes="neutral" AutomationProperties.Name="{Binding Editor.AppList.AddText, FallbackValue=''}" Command="{Binding Editor.AppList.AddPickedCommand, FallbackValue={x:Null}}">
                       <StackPanel Orientation="Horizontal" Spacing="8">
                         <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
                         <TextBlock Text="{Binding Editor.AppList.AddText, FallbackValue=''}" />
@@ -426,7 +430,7 @@
                         <TextBlock Classes="label" Text="{v:Tr Trigger_UsbTitle}" />
                         <TextBlock Classes="caption" Text="{v:Tr Trigger_UsbCaption}" TextWrapping="Wrap" />
                       </StackPanel>
-                      <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" Command="{Binding Editor.Rules.AddRuleCommand, FallbackValue={x:Null}}">
+                      <Button Grid.Column="1" VerticalAlignment="Center" Classes="neutral" AutomationProperties.Name="{v:Tr Trigger_AddRule}" Command="{Binding Editor.Rules.AddRuleCommand, FallbackValue={x:Null}}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                           <Path Classes="icon small" Data="{x:Static v:Icons.Plus}" />
                           <TextBlock Text="{v:Tr Trigger_AddRule}" />
@@ -446,15 +450,15 @@
                             </Grid>
                             <Grid Classes="row" ColumnDefinitions="*,220">
                               <TextBlock Classes="label" Text="{v:Tr Automation_DeviceGone}" TextWrapping="Wrap" />
-                              <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ItemsSource="{Binding Owner.ExitChoices}" SelectedItem="{Binding SelectedExit, Converter={x:Static v:Converters.KeepOnNull}}" />
+                              <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Automation_DeviceGone}" ItemsSource="{Binding Owner.ExitChoices}" SelectedItem="{Binding SelectedExit, Converter={x:Static v:Converters.KeepOnNull}}" />
                             </Grid>
                             <Grid Classes="row" ColumnDefinitions="*,112">
                               <TextBlock Classes="label" Text="{v:Tr Automation_ExitDelay}" ToolTip.Tip="{v:Tr Automation_ExitDelayHint}" />
-                              <NumericUpDown Grid.Column="1" VerticalAlignment="Center" FormatString="0.#" Minimum="0" Value="{Binding ExitDelaySeconds, Converter={x:Static v:Converters.Seconds}}" />
+                              <NumericUpDown Grid.Column="1" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Automation_ExitDelay}" FormatString="0.#" Minimum="0" Value="{Binding ExitDelaySeconds, Converter={x:Static v:Converters.Seconds}}" />
                             </Grid>
                             <Grid Classes="row" ColumnDefinitions="*,Auto">
                               <TextBlock Classes="label" Text="{v:Tr Automation_SkipConfirmation}" ToolTip.Tip="{v:Tr Automation_SkipConfirmationHint}" />
-                              <ToggleSwitch Grid.Column="1" IsChecked="{Binding SkipConfirmation}" OffContent="" OnContent="" />
+                              <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Automation_SkipConfirmation}" IsChecked="{Binding SkipConfirmation}" OffContent="" OnContent="" />
                             </Grid>
                             <TextBlock Classes="warning" IsVisible="{Binding HasDuplicateDevice}" Text="{v:Tr Automation_DuplicateDevice}" TextWrapping="Wrap" />
                             <Border Classes="notice" IsVisible="{Binding HasPowerWarning}">
@@ -472,7 +476,7 @@
                       </StackPanel>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
                         <!-- shortcut: shows the hotkey; recording keys (the WinUI HotkeyBox) is not ported in the spike. -->
-                        <TextBox Width="200" Classes="num" IsReadOnly="True" Text="{Binding Editor.HotkeyText, FallbackValue=''}" PlaceholderText="{v:Tr Editor_HotkeyPlaceholder}" />
+                        <TextBox Width="200" AutomationProperties.Name="{v:Tr Editor_Hotkey}" IsReadOnly="True" Text="{Binding Editor.HotkeyText, FallbackValue=''}" PlaceholderText="{v:Tr Editor_HotkeyPlaceholder}" />
                         <Button AutomationProperties.Name="{v:Tr Editor_HotkeyClear}" Classes="ghost" Command="{Binding Editor.ClearHotkeyCommand, FallbackValue={x:Null}}" IsVisible="{Binding Editor.HasHotkey, FallbackValue=False}" ToolTip.Tip="{v:Tr Editor_HotkeyClear}">
                           <Path Classes="icon small" Data="{x:Static v:Icons.Close}" />
                         </Button>
@@ -494,7 +498,7 @@
                         <TextBlock Classes="caption" Text="{v:Tr Trigger_CommandHint}" TextWrapping="Wrap" />
                       </StackPanel>
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="4">
-                        <TextBox Width="240" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" />
+                        <TextBox Width="240" AutomationProperties.Name="{v:Tr Trigger_Command}" IsReadOnly="True" Text="{Binding Editor.CommandText, FallbackValue=''}" />
                         <Button AutomationProperties.Name="{v:Tr Trigger_Copy}" Classes="ghost" Command="{Binding CopyCommandCommand}" ToolTip.Tip="{v:Tr Trigger_Copy}">
                           <Path Classes="icon small" Data="{x:Static v:Icons.Copy}" />
                         </Button>
@@ -515,7 +519,7 @@
                         <TextBlock Classes="label" Text="{v:Tr Editor_SwitchWithoutAsking}" />
                         <TextBlock Classes="caption" Text="{v:Tr Editor_SwitchWithoutAskingHint}" TextWrapping="Wrap" />
                       </StackPanel>
-                      <ToggleSwitch Grid.Column="1" IsChecked="{Binding Editor.SwitchWithoutAsking, FallbackValue=False}" IsEnabled="{Binding Editor.ConfirmationEnabled, FallbackValue=False}" OffContent="" OnContent="" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_SwitchWithoutAsking}" IsChecked="{Binding Editor.SwitchWithoutAsking, FallbackValue=False}" IsEnabled="{Binding Editor.ConfirmationEnabled, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
@@ -523,7 +527,7 @@
                         <TextBlock Classes="label" Text="{v:Tr Editor_KeepAwake}" />
                         <TextBlock Classes="caption" Text="{v:Tr Editor_KeepAwakeHint}" TextWrapping="Wrap" />
                       </StackPanel>
-                      <ToggleSwitch Grid.Column="1" IsChecked="{Binding Editor.KeepAwake, FallbackValue=False}" OffContent="" OnContent="" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_KeepAwake}" IsChecked="{Binding Editor.KeepAwake, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
@@ -531,7 +535,7 @@
                         <TextBlock Classes="label" Text="{v:Tr Editor_RememberWindows}" />
                         <TextBlock Classes="caption" Text="{v:Tr Editor_RememberWindowsHint}" TextWrapping="Wrap" />
                       </StackPanel>
-                      <ToggleSwitch Grid.Column="1" IsChecked="{Binding Editor.RememberWindows, FallbackValue=False}" OffContent="" OnContent="" />
+                      <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_RememberWindows}" IsChecked="{Binding Editor.RememberWindows, FallbackValue=False}" OffContent="" OnContent="" />
                     </Grid>
                     <Border Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto" ColumnSpacing="16">
@@ -551,7 +555,7 @@
                           <TextBlock Classes="label" Text="{v:Tr Editor_Surround}" />
                           <TextBlock Classes="caption" Text="{Binding Editor.Surround.Hint, FallbackValue=''}" TextWrapping="Wrap" />
                         </StackPanel>
-                        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ItemsSource="{Binding Editor.Surround.Choices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.Surround.Selected, Converter={x:Static v:Converters.KeepOnNull}}" />
+                        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Editor_Surround}" ItemsSource="{Binding Editor.Surround.Choices, FallbackValue={x:Null}}" SelectedItem="{Binding Editor.Surround.Selected, Converter={x:Static v:Converters.KeepOnNull}}" />
                       </Grid>
                     </StackPanel>
                   </StackPanel>
@@ -599,7 +603,10 @@
           <DockPanel>
             <Border Height="44" Padding="16,0" BorderBrush="{DynamicResource RsDivider}" BorderThickness="0,0,0,1" DockPanel.Dock="Top">
               <!-- shortcut: spike-only English labels (Profile, Status, Active profile, Actions); resx keys come with the real port. -->
-              <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="Profile" />
+              <Panel VerticalAlignment="Center">
+                <TextBlock Classes="strong" FontSize="13" Text="Profile" IsVisible="{Binding !Editor.HasSelectedDisplay, FallbackValue=True}" />
+                <TextBlock Classes="strong" FontSize="13" Text="Display" IsVisible="{Binding Editor.HasSelectedDisplay, FallbackValue=False}" />
+              </Panel>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
               <StackPanel Margin="16,10,16,24">
@@ -657,13 +664,14 @@
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,150">
                   <TextBlock Classes="label" Text="{v:Tr Editor_CustomName}" />
-                  <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Editor.SelectedDisplay.CustomName, FallbackValue=''}" PlaceholderText="{v:Tr Editor_CustomNamePlaceholder}" />
+                  <TextBox Grid.Column="1" VerticalAlignment="Center" AutomationProperties.Name="{v:Tr Editor_CustomName}" Text="{Binding Editor.SelectedDisplay.CustomName, FallbackValue=''}" PlaceholderText="{v:Tr Editor_CustomNamePlaceholder}" />
                 </Grid>
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,150">
                   <TextBlock Classes="label" Text="{v:Tr Editor_RefreshRate}" />
                   <ComboBox
                     x:Name="RefreshBox"
+                    AutomationProperties.Name="{v:Tr Editor_RefreshRate}"
                     Grid.Column="1"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center"
@@ -682,6 +690,7 @@
                   <TextBlock Classes="label" Text="HDR" />
                   <ComboBox
                     x:Name="HdrBox"
+                    AutomationProperties.Name="HDR"
                     Grid.Column="1"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center"
@@ -698,13 +707,14 @@
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto">
                   <TextBlock Classes="label" Text="{v:Tr Editor_Primary}" />
-                  <ToggleSwitch Grid.Column="1" IsChecked="{Binding Editor.SelectedDisplay.IsPrimary, FallbackValue=False}" OffContent="" OnContent="" />
+                  <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_Primary}" IsChecked="{Binding Editor.SelectedDisplay.IsPrimary, FallbackValue=False}" OffContent="" OnContent="" />
                 </Grid>
                 <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto">
                   <TextBlock Classes="label" Text="{v:Tr Editor_Optional}" />
                   <ToggleSwitch
                     Grid.Column="1"
+                    AutomationProperties.Name="{v:Tr Editor_Optional}"
                     IsChecked="{Binding Editor.SelectedDisplay.IsOptional, FallbackValue=False}"
                     IsEnabled="{Binding Editor.SelectedDisplay.CanBeOptional, FallbackValue=False}"
                     OffContent=""
@@ -734,14 +744,14 @@
           <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Text="{Binding SelectedItem.Name, FallbackValue=''}" />
           <TextBlock VerticalAlignment="Center" Classes="caption" FontSize="13" Text="{Binding SelectedItem.StatusText, FallbackValue=''}" />
         </StackPanel>
-        <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" Command="{Binding SwitchCommand}" IsVisible="{Binding HasSelection}">
+        <Button Grid.Column="1" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="{Binding SwitchLabel}" Command="{Binding SwitchCommand}" IsVisible="{Binding HasSelection}">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" Text="{Binding SwitchLabel}" />
             <Border Classes="kbd"><TextBlock Text="↵" /></Border>
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />
-        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab">
+        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="Actions (Ctrl+K)" Click="OnActions">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" FontWeight="Regular" Foreground="{DynamicResource RsText3}" Text="Actions" />
             <StackPanel Orientation="Horizontal" Spacing="3">

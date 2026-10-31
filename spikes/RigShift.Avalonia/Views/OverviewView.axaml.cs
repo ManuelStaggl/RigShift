@@ -52,6 +52,7 @@ public sealed partial class OverviewView : UserControl
         BarSwitch.Tag = next;
         BarSwitch.IsVisible = next is not null;
         BarSwitchText.Text = next is null ? null : $"Switch to {next.Name}";
+        global::Avalonia.Automation.AutomationProperties.SetName(BarSwitch, BarSwitchText.Text);
 
         bool switching = ViewModel.Coordinator.SwitchingProfile is not null;
         NowLine.IsVisible = !switching;
@@ -67,4 +68,7 @@ public sealed partial class OverviewView : UserControl
     private void OnReapply(object? sender, RoutedEventArgs e) => ViewModel.SwitchCommand.Execute(Active);
 
     private void OnAllGames(object? sender, RoutedEventArgs e) => (TopLevel.GetTopLevel(this) as MainWindow)?.Navigate(RigShift.App.Services.AppPage.Games);
+
+    private void OnActions(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
+        (TopLevel.GetTopLevel(this) as MainWindow)?.OpenPalette();
 }

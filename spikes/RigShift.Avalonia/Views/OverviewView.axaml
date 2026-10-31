@@ -108,13 +108,13 @@
                   <TextBlock x:Name="NowMeta" Classes="caption" FontSize="13" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="6">
-                  <Button Classes="sm" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
+                  <Button Classes="sm" AutomationProperties.Name="{v:Tr Displays_Identify}" Command="{Binding IdentifyCommand}" ToolTip.Tip="{v:Tr Displays_IdentifyTip}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Path Classes="icon" Data="M4 8 V4 H8 M16 4 H20 V8 M20 16 V20 H16 M8 20 H4 V16" />
                       <TextBlock Text="{v:Tr Displays_Identify}" />
                     </StackPanel>
                   </Button>
-                  <Button x:Name="ReapplyButton" Classes="sm" Click="OnReapply">
+                  <Button x:Name="ReapplyButton" Classes="sm" AutomationProperties.Name="{v:Tr Profile_Reapply}" Click="OnReapply">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Path Classes="icon" Data="M4 12 A8 8 0 1 0 6.3 6.3 M4 4 V9 H9" />
                       <TextBlock Text="{v:Tr Profile_Reapply}" />
@@ -174,7 +174,7 @@
         <StackPanel Margin="0,32,0,0" IsVisible="{Binding Games.HasGames}">
           <Grid Margin="4,0,0,8" ColumnDefinitions="*,Auto">
             <TextBlock VerticalAlignment="Center" Classes="strong" FontSize="13" Foreground="{DynamicResource RsText2}" Text="{v:Tr Nav_Games}" />
-            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" Click="OnAllGames">
+            <Button Grid.Column="1" Classes="ghost" Padding="8,4" Foreground="{DynamicResource RsText2}" AutomationProperties.Name="All games" Click="OnAllGames">
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <TextBlock FontSize="12.5" FontWeight="SemiBold" Text="All games" />
                 <Path Classes="icon small" Width="12" Height="12" Data="M9 6 L15 12 L9 18" />
@@ -233,7 +233,7 @@
           </StackPanel>
         </Button>
         <Border Grid.Column="2" Width="1" Height="16" Background="{DynamicResource RsOutline}" />
-        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab">
+        <Button Grid.Column="3" VerticalAlignment="Center" Classes="ab" AutomationProperties.Name="Actions (Ctrl+K)" Click="OnActions">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock VerticalAlignment="Center" FontWeight="Regular" Foreground="{DynamicResource RsText3}" Text="Actions" />
             <StackPanel Orientation="Horizontal" Spacing="3">
