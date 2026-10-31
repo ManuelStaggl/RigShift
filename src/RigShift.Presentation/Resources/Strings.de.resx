@@ -43,7 +43,7 @@
   <data name="Result_PartialText" xml:space="preserve"><value>Umgeschaltet ohne: {0}</value></data>
   <data name="Result_AppliedFollowUpText" xml:space="preserve"><value>Bildschirme umgeschaltet. {0} folgt, sobald verbunden.</value></data>
   <data name="Restored_Title" xml:space="preserve"><value>{0} erkannt</value></data>
-  <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Klicke hier, um auch Audio, Apps und die übrigen Einstellungen zu setzen.</value></data>
+  <data name="Restored_Text" xml:space="preserve"><value>Windows hat die Bildschirme von {0} selbst wiederhergestellt. Audio und die übrigen Einstellungen sind gesetzt. Klicke hier, um auch die Apps zu starten.</value></data>
   <data name="Result_WaitingTitle" xml:space="preserve"><value>Bildschirm einschalten</value></data>
   <data name="Result_WaitingText" xml:space="preserve"><value>Nicht an oder nicht bereit: {0}. RigShift wartet bis zu {1} Sekunden darauf.</value></data>
   <data name="Editor_ConfirmationOff" xml:space="preserve"><value>In den Einstellungen aus: Jedes Profil schaltet ohne Nachfrage um.</value></data>

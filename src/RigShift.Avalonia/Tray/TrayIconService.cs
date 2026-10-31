@@ -107,7 +107,7 @@ internal sealed class TrayIconService : IDisposable
         updates.UpdateReady += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Ready", version), NoticeLevel.Info), opensHelp: true));
         updates.UpdateAvailable += (_, version) => OnUi(() => Notify(("RigShift", Loc.Format("Update_Available", version), NoticeLevel.Info), opensHelp: true));
 
-        // Windows restored a profile's displays by itself: a click applies audio, apps and the rest.
+        // Windows restored a profile's displays by itself and the rest followed: a click starts its apps too.
         coordinator.RestoredByWindows += (_, restored) => OnUi(() => Notify(
             (Loc.Format("Restored_Title", restored.Name), Loc.Format("Restored_Text", restored.Name), NoticeLevel.Info),
             async () =>
