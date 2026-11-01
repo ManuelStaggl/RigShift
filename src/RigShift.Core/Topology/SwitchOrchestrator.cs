@@ -28,6 +28,7 @@ public sealed class SwitchOrchestrator
     private readonly DuckingSwitcher _duckingSwitcher;
     private readonly SurroundSwitcher _surroundSwitcher;
     private readonly AllDisplaysOn _allDisplaysOn;
+    private readonly AppVolumeRunner? _appVolumeRunner;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -46,7 +47,8 @@ public sealed class SwitchOrchestrator
         SwitchOptions options,
         TimeProvider time,
         ILogger log,
-        WindowMemory? windowMemory = null)
+        WindowMemory? windowMemory = null,
+        IAppVolumes? appVolumes = null)
     {
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
@@ -82,6 +84,7 @@ public sealed class SwitchOrchestrator
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
         _surroundSwitcher = new SurroundSwitcher(surround, _log);
         _allDisplaysOn = new AllDisplaysOn(_display, _log);
+        _appVolumeRunner = appVolumes is null ? null : new AppVolumeRunner(appVolumes, options, time, _log);
     }
 
     /// <summary>
@@ -233,7 +236,12 @@ public sealed class SwitchOrchestrator
     /// "undo it?" at the next start.
     /// </summary>
     private SwitchResult AfterResult(SwitchResult result, Profile profile, bool restoreWindows) =>
-        result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(profile) };
+        result with
+        {
+            TidyCompletion = _tidy.Start(profile, restoreWindows),
+            AppsCompletion = _appRunner.Start(profile),
+            AppVolumesCompletion = _appVolumeRunner?.Start(profile) ?? SwitchResult.NoAppsMissing,
+        };
 
     private static AppsOutcome PendingApps(Profile profile) =>
         profile.Apps.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
@@ -459,7 +467,8 @@ public sealed class SwitchOrchestrator
     /// Cancels what an earlier switch left running after its result – apps that still start or wait for their device, and
     /// the tidy-up – and completes once it ended. The cancellation is requested before this method first yields.
     /// </summary>
-    public Task CancelPendingAsync() => Task.WhenAll(_appRunner.CancelPendingAsync(), _tidy.CancelPendingAsync());
+    public Task CancelPendingAsync() =>
+        Task.WhenAll(_appRunner.CancelPendingAsync(), _tidy.CancelPendingAsync(), _appVolumeRunner?.CancelPendingAsync() ?? Task.CompletedTask);
 
     /// <summary>
     /// The emergency hotkey: every display that is ready, at 60 Hz when the card cannot drive them all otherwise. No

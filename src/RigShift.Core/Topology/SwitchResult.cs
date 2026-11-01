@@ -44,6 +44,12 @@ public sealed record SwitchResult
     public HdrOutcome Hdr { get; init; } = HdrOutcome.NotConfigured;
 
     /// <summary>
+    /// Completes with the programs of the profile's app volumes that never opened their sound after the switch; empty
+    /// when all were set or none are listed. Never faults.
+    /// </summary>
+    public Task<IReadOnlyList<string>> AppVolumesCompletion { get; init; } = NoAppsMissing;
+
+    /// <summary>
     /// What became of the profile's desktop symbols. <see cref="DesktopIconOutcome.Pending"/> when they go back
     /// after the result – the outcome then comes with <see cref="TidyCompletion"/>.
     /// </summary>
@@ -56,6 +62,8 @@ public sealed record SwitchResult
     public Task<DesktopIconOutcome> TidyCompletion { get; init; } = NothingToTidy;
 
     internal static Task<AppsOutcome> NoApps { get; } = Task.FromResult(AppsOutcome.NotConfigured);
+
+    internal static Task<IReadOnlyList<string>> NoAppsMissing { get; } = Task.FromResult<IReadOnlyList<string>>([]);
 
     internal static Task<DesktopIconOutcome> NothingToTidy { get; } = Task.FromResult(DesktopIconOutcome.NotConfigured);
 }

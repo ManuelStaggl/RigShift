@@ -172,7 +172,8 @@ public sealed record SwitchRecord(
     SwitchNote Note = SwitchNote.None,
     bool Ambiguous = false,
     HdrOutcome Hdr = HdrOutcome.NotConfigured,
-    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured)
+    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured,
+    IReadOnlyList<string>? AppsWithoutSound = null)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -344,6 +345,11 @@ public static class SwitchMessages
         if (icons is not null)
         {
             yield return icons;
+        }
+
+        if (record.AppsWithoutSound is { Count: > 0 } silent)
+        {
+            yield return Loc.Format("Result_AppVolumesNotFound", string.Join(", ", silent));
         }
 
         string? apps = record.Apps switch

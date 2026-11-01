@@ -108,6 +108,12 @@ public sealed record SwitchOptions
     /// <summary>How often to put the desktop symbols back while Explorer keeps moving them.</summary>
     public int DesktopIconAttempts { get; init; } = 3;
 
+    /// <summary>How long programs of the profile's app volumes are looked for after the switch, until they open their sound.</summary>
+    public TimeSpan AppVolumeWait { get; init; } = TimeSpan.FromMinutes(3);
+
+    /// <summary>Interval for looking for those programs again.</summary>
+    public TimeSpan AppVolumePollInterval { get; init; } = TimeSpan.FromSeconds(2);
+
     /// <summary>Interval for checking whether the device the apps wait for is connected.</summary>
     public TimeSpan DevicePollInterval { get; init; } = TimeSpan.FromSeconds(1);
 }

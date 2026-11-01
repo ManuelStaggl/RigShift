@@ -37,6 +37,11 @@ IAudioEndpointVolume
 PKEY_Device_FriendlyName
 DEVICE_STATE
 PropVariantClear
+// Volume per program: the audio sessions of every playback device.
+IAudioSessionManager2
+IAudioSessionEnumerator
+IAudioSessionControl2
+ISimpleAudioVolume
 // USB device triggers: present devices and their names (polled).
 CM_Get_Device_ID_List_SizeW
 CM_Get_Device_ID_ListW

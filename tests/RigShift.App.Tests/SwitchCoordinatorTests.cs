@@ -269,6 +269,8 @@ public sealed class SwitchCoordinatorTests : IDisposable
         SwitchRecord done = await followUp.Task;
         done.DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
         SwitchMessages.ForFollowUpNotification(done).ShouldNotBeNull().Text.ShouldBe(Loc.Instance["Result_IconsAutoArrange"]);
+        SwitchMessages.ForFollowUpNotification(done with { DesktopIcons = DesktopIconOutcome.Restored, AppsWithoutSound = ["Discord.exe", "Spotify.exe"] })
+            .ShouldNotBeNull().Text.ShouldBe(Loc.Format("Result_AppVolumesNotFound", "Discord.exe, Spotify.exe"));
         _host.Coordinator.History.Single().DesktopIcons.ShouldBe(DesktopIconOutcome.AutoArrange);
     }
 

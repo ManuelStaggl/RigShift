@@ -29,6 +29,7 @@ public sealed class SwitchOrchestratorTests
     private readonly InMemoryDuckingMemory _duckingMemory = new();
     private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
+    private readonly IAppVolumes _appVolumes = Substitute.For<IAppVolumes>();
     private readonly InMemorySwitchJournal _journal = new();
     private readonly FakeSurroundController _surround = new();
 
@@ -1105,6 +1106,51 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_AppVolumes_AppThatStartsPlayingLaterIsSetToo()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+        // Discord has no sound open at first, then joins a call.
+        _appVolumes.Adjust("Discord.exe", 30, false).Returns(0, 0, 1);
+        _appVolumes.Adjust("Spotify.exe", 0, true).Returns(2);
+        Profile rig = Rig() with
+        {
+            AppVolumes = [new AppVolume { Executable = "Discord.exe", VolumePercent = 30 }, new AppVolume { Executable = "Spotify.exe", VolumePercent = 0, Muted = true }],
+        };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppVolumesCompletion).ShouldBeEmpty();
+        _appVolumes.Received(3).Adjust("Discord.exe", 30, false);
+        _appVolumes.Received(1).Adjust("Spotify.exe", 0, true);
+    }
+
+    [Fact]
+    public async Task Switch_AppVolumes_AppWithoutSoundIsNamedAfterTheWait()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with { AppVolumes = [new AppVolume { Executable = "Discord.exe" }] };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        (await result.AppVolumesCompletion).ShouldBe(["Discord.exe"]);
+        _time.Elapsed.ShouldBeGreaterThanOrEqualTo(new SwitchOptions().AppVolumeWait);
+    }
+
+    [Fact]
+    public async Task Switch_Rejected_LeavesTheAppVolumesAlone()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+        Profile rig = Rig(confirm: true) with { AppVolumes = [new AppVolume { Executable = "Discord.exe" }] };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+        (await result.AppVolumesCompletion).ShouldBeEmpty();
+        _appVolumes.DidNotReceiveWithAnyArgs().Adjust(default!, default, default);
+    }
+
+    [Fact]
     public async Task Switch_Hdr_IsSetWhereTheActiveDisplayDiffers()
     {
         var display = new FakeDisplayConfigurator([
@@ -1885,5 +1931,5 @@ public sealed class SwitchOrchestratorTests
 
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
         new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, DesktopIcons, _surround, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
-            options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
+            options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None, appVolumes: _appVolumes);
 }
