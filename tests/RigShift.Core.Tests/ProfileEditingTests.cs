@@ -77,9 +77,9 @@ public sealed class ProfileEditingTests
             Attached(Desk4K, activeMode: DeskModes[0]),
             Attached(DeskLeft, activeMode: DeskModes[1]));
 
-        IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CapturedArrangement(live, [DeskModes[0] with { Wallpaper = @"C:Picturesig.jpg" }]);
+        IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CapturedArrangement(live, [DeskModes[0] with { Wallpaper = @"C:\Pictures\rig.jpg" }]);
 
-        arrangement.Single(d => d.Identity == Desk4K).Wallpaper.ShouldBe(@"C:Picturesig.jpg");
+        arrangement.Single(d => d.Identity == Desk4K).Wallpaper.ShouldBe(@"C:\Pictures\rig.jpg");
         arrangement.Single(d => d.Identity == DeskLeft).Wallpaper.ShouldBeNull();
     }
 

@@ -1283,8 +1283,7 @@ public sealed class SwitchOrchestratorTests
     public async Task Switch_WallpaperFileMissing_IsReportedAndTheSwitchStays()
     {
         var display = new FakeDisplayConfigurator(DeskActive());
-        Profile rig = Rig() with { Displays = [UltrawideMode with { Wallpaper = @"C:
-owheregone.jpg" }, TabletMode] };
+        Profile rig = Rig() with { Displays = [UltrawideMode with { Wallpaper = @"C:\nowhere\gone.jpg" }, TabletMode] };
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
 
