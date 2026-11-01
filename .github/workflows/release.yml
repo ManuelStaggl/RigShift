@@ -92,7 +92,7 @@ jobs:
         run: dotnet test --solution RigShift.slnx -c Release
 
       - name: Publish
-        run: dotnet publish src/RigShift.Avalonia/RigShift.Avalonia.csproj -c Release -o publish -p:Version=${{ steps.version.outputs.version }}
+        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish -p:Version=${{ steps.version.outputs.version }}
 
       # vpk and CycloneDX in the versions of .config/dotnet-tools.json.
       - name: Restore tools
@@ -106,7 +106,7 @@ jobs:
         run: >
           dotnet vpk pack --packId RigShift --packVersion ${{ steps.version.outputs.version }} --packTitle RigShift
           --packAuthors "Manuel Staggl" --packDir publish --mainExe RigShift.exe
-          --icon src/RigShift.Avalonia/Assets/Brand/rigshift-app-light.ico --releaseNotes release-notes.md --outputDir Releases
+          --icon src/RigShift.App/Assets/Brand/rigshift-app-light.ico --releaseNotes release-notes.md --outputDir Releases
 
       # Without a delta every user downloads the full package; vpk leaves it out silently when the download failed.
       - name: Check the delta package
@@ -128,7 +128,7 @@ jobs:
       # Every NuGet package that ends up in the shipped app, as CycloneDX JSON.
       - name: Write SBOM
         run: >
-          dotnet tool run dotnet-CycloneDX src/RigShift.Avalonia/RigShift.Avalonia.csproj
+          dotnet tool run dotnet-CycloneDX src/RigShift.App/RigShift.App.csproj
           --output Releases --filename RigShift-${{ steps.version.outputs.version }}.cdx.json --output-format Json
           --set-version ${{ steps.version.outputs.version }} --exclude-dev
 

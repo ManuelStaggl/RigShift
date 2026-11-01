@@ -141,8 +141,7 @@ dotnet test --solution RigShift.slnx
 ```
 
 .NET 10 SDK. `RigShift.Core` holds profiles, planner and orchestration without Win32; `RigShift.Windows` the CCD,
-Core Audio and USB layer (CsWin32); `RigShift.Presentation` the view models and app services; `RigShift.Avalonia` the
-tray app (Avalonia) and CLI. See [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+Core Audio and USB layer (CsWin32); `RigShift.App` the WPF tray app and CLI. See [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 and the [display topology rules](docs/display-topology.md). Parts of the code are written with Claude Code; every change
 passes the same tests, analyzers and CodeQL in CI.
 

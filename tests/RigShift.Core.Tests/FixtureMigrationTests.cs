@@ -134,10 +134,8 @@ public sealed class FixtureMigrationTests : IDisposable
         AppSettings settings = await new JsonSettingsStore(file, Logger.None).LoadAsync(Ct);
 
         settings.SchemaVersion.ShouldBe(1);
-        // A default profile without "at sign-in" (1.x had no such switch) kept what Windows restored, and still does.
+        settings.DefaultProfileId.ShouldBe(Guid.Parse("5d0c2f7e-3c7b-4a7e-9d8b-6a1f0e2b4c11"));
         // The fixture still has "applyDefaultProfileOnStartup": true – removed in 1.4, the key must simply be ignored.
-        settings.SignInProfileId.ShouldBeNull();
-        settings.LegacyDefaultProfileId.ShouldBeNull();
         settings.ConfirmTimeoutSeconds.ShouldBe(20);
         settings.Language.ShouldBe("de");
         settings.OnlyNotifyAboutUpdates.ShouldBeFalse();
@@ -146,68 +144,6 @@ public sealed class FixtureMigrationTests : IDisposable
         settings.AutomationPaused.ShouldBeFalse();
         settings.HasDuckingMemory.ShouldBeFalse();
         settings.DuckingBeforeProfiles.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task Load_SettingsFixture4_7_ConfirmationOff_MovesIntoTheProfiles()
-    {
-        Profile rig = await LoadProfileAsync("profile-1.0.json");
-        string file = Path.Combine(_directory, "settings.json");
-        File.Copy(Fixture("settings-4.7.json"), file);
-        Profile desk = rig with { Id = Guid.NewGuid(), Name = "Desk", SwitchWithoutAsking = true };
-
-        AppSettings settings = await new JsonSettingsStore(file, Logger.None).LoadAsync(Ct);
-
-        // 0 survives loading, so the profiles can still learn that none of them asked.
-        settings.ConfirmTimeoutSeconds.ShouldBe(0);
-        // The rule's own "skipConfirmation" is simply dropped: rules follow their profile.
-        settings.AutomationRules.ShouldNotBeNull().ShouldHaveSingleItem().ProfileId.ShouldBe(rig.Id);
-        Profile migrated = settings.ProfilesToMigrate([rig, desk]).ShouldHaveSingleItem();
-        migrated.Id.ShouldBe(rig.Id);
-        migrated.SwitchWithoutAsking.ShouldBeTrue();
-    }
-
-    [Theory]
-    [InlineData("20")]
-    [InlineData(null)]
-    public async Task Load_SettingsConfirmationOn_ProfilesKeepTheirOwnSwitch(string? seconds)
-    {
-        Profile rig = await LoadProfileAsync("profile-1.0.json");
-        string file = Path.Combine(_directory, "settings.json");
-        string json = (await File.ReadAllTextAsync(Fixture("settings-4.7.json"), Ct))
-            .Replace("\"confirmTimeoutSeconds\": 0,", seconds is null ? string.Empty : $"\"confirmTimeoutSeconds\": {seconds},", StringComparison.Ordinal);
-        await File.WriteAllTextAsync(file, json, Ct);
-
-        AppSettings settings = await new JsonSettingsStore(file, Logger.None).LoadAsync(Ct);
-
-        settings.ConfirmTimeoutSeconds.ShouldBe(seconds is null ? AppSettings.DefaultConfirmTimeoutSeconds : 20);
-        settings.ProfilesToMigrate([rig]).ShouldBeEmpty();
-        rig.SwitchWithoutAsking.ShouldBeFalse();
-    }
-
-    [Theory]
-    [InlineData("false", false)]
-    [InlineData("true", true)]
-    [InlineData(null, false)]
-    public async Task Load_SettingsFixture4_7_DefaultProfile_IsTheSignInProfileOnlyWhenItWasAppliedAtSignIn(string? atSignIn, bool switches)
-    {
-        Directory.CreateDirectory(_directory);
-        string file = Path.Combine(_directory, "settings.json");
-        string json = (await File.ReadAllTextAsync(Fixture("settings-4.7.json"), Ct)).Replace(
-            "\"applyDefaultProfileWithWindows\": false,",
-            atSignIn is null ? string.Empty : $"\"applyDefaultProfileWithWindows\": {atSignIn},",
-            StringComparison.Ordinal);
-        await File.WriteAllTextAsync(file, json, Ct);
-        var store = new JsonSettingsStore(file, Logger.None);
-
-        AppSettings settings = await store.LoadAsync(Ct);
-        await store.SaveAsync(settings, Ct);
-
-        settings.SignInProfileId.ShouldBe(switches ? Guid.Parse("8f3a1b2c-4d5e-4f60-8a9b-0c1d2e3f4a5b") : null);
-        string saved = await File.ReadAllTextAsync(file, Ct);
-        saved.ShouldNotContain("defaultProfileId");
-        saved.ShouldNotContain("applyDefaultProfileWithWindows");
-        (await store.LoadAsync(Ct)).SignInProfileId.ShouldBe(settings.SignInProfileId);
     }
 
     public void Dispose()

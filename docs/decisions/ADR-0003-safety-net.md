@@ -14,8 +14,7 @@ After applying a profile, RigShift shows a countdown dialog on the new primary d
 on an explicit action (click, Enter, or the confirm hotkey). Mouse movement does **not** count. On timeout the
 snapshot taken before the switch is re-applied with the same retry logic. `Esc` triggers rollback immediately.
 
-Each profile decides whether its switches ask ("Ask to keep the layout after switching"); the countdown length is one
-application setting. USB rules follow their profile, `rigshift://` links always ask, CLI callers can pass `--no-confirm`.
+Profiles can set the timeout to 0 to disable the net; CLI callers can pass `--no-confirm`.
 
 ## Consequences
 

@@ -28,7 +28,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
     public async Task SaveThenLoad_RoundTrips()
     {
         var store = new JsonSettingsStore(File, Logger.None);
-        var settings = new AppSettings { SignInProfileId = Guid.NewGuid(), ConfirmTimeoutSeconds = 20, Language = "de", OnlyNotifyAboutUpdates = true };
+        var settings = new AppSettings { DefaultProfileId = Guid.NewGuid(), ConfirmTimeoutSeconds = 20, Language = "de", OnlyNotifyAboutUpdates = true };
 
         await store.SaveAsync(settings, Ct);
 
@@ -59,6 +59,7 @@ public sealed class JsonSettingsStoreTests : IDisposable
             ProfileId = Guid.NewGuid(),
             OnExit = ExitAction.SwitchTo,
             ExitProfileId = Guid.NewGuid(),
+            SkipConfirmation = true,
             ExitDelaySeconds = 30,
         };
 
@@ -199,19 +200,6 @@ public sealed class JsonSettingsStoreTests : IDisposable
         AppSettings settings = await new JsonSettingsStore(File, Logger.None).LoadAsync(Ct);
 
         settings.ConfirmTimeoutSeconds.ShouldBe(15);
-    }
-
-    [Fact]
-    public async Task QuickSwitchHotkey_DefaultsForOldFiles_AndStaysOffOnceTurnedOff()
-    {
-        Directory.CreateDirectory(_directory);
-        await System.IO.File.WriteAllTextAsync(File, """{ "schemaVersion": 1 }""", Ct);
-        var store = new JsonSettingsStore(File, Logger.None);
-
-        (await store.LoadAsync(Ct)).QuickSwitchHotkey.ShouldBe(AppSettings.DefaultQuickSwitchHotkey);
-
-        await store.SaveAsync(new AppSettings { QuickSwitchHotkey = null }, Ct);
-        (await store.LoadAsync(Ct)).QuickSwitchHotkey.ShouldBeNull();
     }
 
     [Fact]

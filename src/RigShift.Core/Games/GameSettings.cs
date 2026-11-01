@@ -11,15 +11,15 @@ namespace RigShift.Core.Games;
 /// </summary>
 public sealed record GameSettings
 {
-    /// <summary>The game's JSON or INI settings file. Environment variables are expanded.</summary>
+    /// <summary>The game's JSON settings file. Environment variables are expanded.</summary>
     public required string File { get; init; }
 
-    /// <summary>The values to keep, as <c>Section/Name</c> paths through the JSON objects or INI sections.</summary>
+    /// <summary>The values to keep, as <c>Section/Name</c> paths through the JSON objects.</summary>
     public IReadOnlyList<string> Keys { get; set; } = [];
 
     /// <summary>
-    /// The variant's values as raw JSON or INI text (<c>25</c>, <c>0.10000000149011612</c>), by key. Raw so a number
-    /// comes back exactly as the game wrote it. Empty until the first session ends: then the user has set them in the game.
+    /// The variant's values as raw JSON (<c>25</c>, <c>0.10000000149011612</c>), by key. Raw so a number comes back
+    /// exactly as the game wrote it. Empty until the first session ends: then the user has set them in the game.
     /// </summary>
     public IReadOnlyDictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
 
@@ -27,8 +27,8 @@ public sealed record GameSettings
     public string FullPath => Environment.ExpandEnvironmentVariables(File.Trim().Trim('"'));
 
     /// <summary>
-    /// A full path to a <c>.json</c> or <c>.ini</c> file. <c>games.json</c> can come from somebody else, and nothing but
-    /// a settings file of the game's is ever meant to be written here.
+    /// A full path to a <c>.json</c> file. <c>games.json</c> can come from somebody else, and nothing but a JSON file
+    /// of the game's is ever meant to be written here.
     /// </summary>
     public bool HasValidFile
     {
@@ -36,24 +36,12 @@ public sealed record GameSettings
         {
             string path = FullPath;
             return path.Length > 0 && Path.IsPathFullyQualified(path)
-                && (IsIni(path) || string.Equals(Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase));
+                && string.Equals(Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase);
         }
     }
 
-    /// <summary>The file is read and written as INI (<see cref="GameSettingsIni"/>), otherwise as JSON.</summary>
-    public static bool IsIni(string path) => string.Equals(Path.GetExtension(path), ".ini", StringComparison.OrdinalIgnoreCase);
-
     /// <summary>Separates the objects of a key path.</summary>
     public const char PathSeparator = '/';
-
-    /// <summary>Every single value of a settings file with its key, in file order, for picking keys from a list.</summary>
-    /// <exception cref="JsonException">A JSON file that is not valid JSON.</exception>
-    /// <exception cref="InvalidDataException">A UTF-16 INI file.</exception>
-    public static IReadOnlyList<KeyValuePair<string, string>> ListValues(string path, ReadOnlySpan<byte> content)
-    {
-        ArgumentNullException.ThrowIfNull(path);
-        return IsIni(path) ? GameSettingsIni.All(content) : GameSettingsJson.All(content);
-    }
 }
 
 /// <summary>
@@ -85,23 +73,6 @@ public static class GameSettingsJson
         }
 
         return values;
-    }
-
-    /// <summary>Every single value with its key path, in document order; a repeated path counts once.</summary>
-    /// <exception cref="JsonException">The document is not valid JSON.</exception>
-    public static IReadOnlyList<KeyValuePair<string, string>> All(ReadOnlySpan<byte> utf8)
-    {
-        var all = new List<KeyValuePair<string, string>>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach ((string key, int start, int length) in Values(utf8))
-        {
-            if (seen.Add(key))
-            {
-                all.Add(new(key, Encoding.UTF8.GetString(utf8.Slice(start, length))));
-            }
-        }
-
-        return all;
     }
 
     /// <summary>The document with the given values replaced; keys it does not hold are skipped.</summary>
@@ -154,6 +125,7 @@ public static class GameSettingsJson
         }
     }
 
+    /// <summary>Every single value that sits in objects only, with its key path and where its raw text is.</summary>
     private static List<(string Key, int Start, int Length)> Values(ReadOnlySpan<byte> utf8)
     {
         var found = new List<(string, int, int)>();

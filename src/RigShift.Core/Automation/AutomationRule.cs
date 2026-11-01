@@ -63,6 +63,9 @@ public sealed record AutomationRule
 
     public Guid? ExitProfileId { get; init; }
 
+    /// <summary>Switch without the keep-or-revert countdown; otherwise the profile or application setting applies.</summary>
+    public bool SkipConfirmation { get; init; }
+
     /// <summary>
     /// Seconds the device must stay gone before the end action runs, so turning a wheelbase off and on again is
     /// no end. <c>set</c>: a rule written without the key keeps the initializer value.

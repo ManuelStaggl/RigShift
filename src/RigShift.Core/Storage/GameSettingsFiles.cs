@@ -22,12 +22,8 @@ public sealed class GameSettingsFiles(string backupDirectory, TimeProvider time,
         ArgumentNullException.ThrowIfNull(keys);
         ArgumentNullException.ThrowIfNull(values);
 
-        bool ini = GameSettings.IsIni(file);
-        IReadOnlyDictionary<string, string> Read(byte[] content, IEnumerable<string> wanted) =>
-            ini ? GameSettingsIni.Read(content, wanted) : GameSettingsJson.Read(content, wanted);
-
         byte[] original = await File.ReadAllBytesAsync(file, cancellationToken);
-        IReadOnlyDictionary<string, string> before = Read(original, keys);
+        IReadOnlyDictionary<string, string> before = GameSettingsJson.Read(original, keys);
         Dictionary<string, string> changes = values
             .Where(v => before.TryGetValue(v.Key, out string? current) && current != v.Value)
             .ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
@@ -37,11 +33,11 @@ public sealed class GameSettingsFiles(string backupDirectory, TimeProvider time,
             return before;
         }
 
-        byte[] changed = ini ? GameSettingsIni.Replace(original, changes) : GameSettingsJson.Replace(original, changes);
+        byte[] changed = GameSettingsJson.Replace(original, changes);
         string backup = await BackupAsync(file, original, cancellationToken);
         await AtomicFile.WriteAsync(file, stream => stream.WriteAsync(changed, cancellationToken).AsTask(), cancellationToken);
 
-        IReadOnlyDictionary<string, string> after = Read(await File.ReadAllBytesAsync(file, cancellationToken), changes.Keys);
+        IReadOnlyDictionary<string, string> after = GameSettingsJson.Read(await File.ReadAllBytesAsync(file, cancellationToken), changes.Keys);
         if (changes.Any(c => !after.TryGetValue(c.Key, out string? written) || written != c.Value))
         {
             await AtomicFile.WriteAsync(file, stream => stream.WriteAsync(original, CancellationToken.None).AsTask(), CancellationToken.None);

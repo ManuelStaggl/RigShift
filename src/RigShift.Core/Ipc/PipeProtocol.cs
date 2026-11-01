@@ -24,9 +24,6 @@ public static class PipeProtocol
     /// </summary>
     public static string PipeName { get; } = CreatePipeName();
 
-    /// <summary>One window app per Windows session, whichever UI it is.</summary>
-    public const string SingleInstanceMutex = @"Local\RigShift.SingleInstance";
-
     public static string PipeNameForSession(int sessionId) =>
         string.Create(CultureInfo.InvariantCulture, $"RigShift.{sessionId}");
 
@@ -36,7 +33,7 @@ public static class PipeProtocol
         return PipeNameForSession(current.SessionId);
     }
 
-    // Guards against a garbage length from a foreign client; real messages are a few hundred bytes.
+    /// <summary>Guards against a garbage length from a foreign client; real messages are a few hundred bytes.</summary>
     private const int MaxMessageBytes = 1024 * 1024;
 
     public static Task WriteRequestAsync(Stream stream, PipeRequest request, CancellationToken cancellationToken) =>

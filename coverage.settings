@@ -5,7 +5,7 @@
     <ModulePaths>
       <Include>
         <!-- The app's assembly is RigShift.dll, not RigShift.App.dll. -->
-        <ModulePath>.*\\RigShift(\.Core|\.Windows|\.Presentation)?\.dll$</ModulePath>
+        <ModulePath>.*\\RigShift(\.Core|\.Windows)?\.dll$</ModulePath>
       </Include>
     </ModulePaths>
     <Sources>

@@ -62,8 +62,7 @@ RigShift wakes sleeping monitors and waits for them before it switches. More in
 ## Switching
 
 **What happens if I get no picture after a switch?**
-If the profile has "Ask to keep the layout after switching" on (the default), a countdown appears; USB rules follow
-their profile. If nobody presses Enter or a button on the wheel, button box
+With "Confirm after switching" on, a countdown appears. If nobody presses Enter or a button on the wheel, button box
 or controller, the old layout comes back by itself. If the PC crashes in the middle of a switch, RigShift restores the
 previous layout at the next start. **Ctrl+Alt+Shift+D** turns every display on, whatever happened.
 

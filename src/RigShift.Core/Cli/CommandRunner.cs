@@ -155,7 +155,10 @@ public sealed class CommandRunner
         return new CliResponse(CliExitCodes.Applied, text.ToString());
     }
 
-    // Its own command, not a status line: scripts parse status, and this only matters on NVIDIA.
+    /// <summary>
+    /// Reads the Surround state and changes nothing. Worth its own command rather than a line in <c>status</c>: scripts
+    /// parse that output, and this one only says something on NVIDIA machines.
+    /// </summary>
     private async Task<CliResponse> SurroundAsync(CancellationToken cancellationToken)
     {
         if (_surround is null)
@@ -227,6 +230,7 @@ public sealed class CommandRunner
         return await SwitchAsync(profile, request, cancellationToken);
     }
 
+    /// <summary><c>toggle</c>: back to the previous profile, or to the default profile when nothing was active before.</summary>
     private async Task<CliResponse> ToggleAsync(CliRequest request, CancellationToken cancellationToken)
     {
         if (_switcher is null)
@@ -279,15 +283,14 @@ public sealed class CommandRunner
         }
 
         DisplaySnapshot snapshot = await _display.QueryAsync(cancellationToken);
-        AudioEndpoint? playback = await DefaultDeviceAsync(AudioDirection.Render, cancellationToken);
-        AudioEndpoint? recording = await DefaultDeviceAsync(AudioDirection.Capture, cancellationToken);
+        AudioEndpoint? playback = await DefaultPlaybackAsync(cancellationToken);
 
         Profile profile = existing is null
-            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback, Recording = recording }, DisplayNames.Known(profiles))
+            ? ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = playback }, DisplayNames.Known(profiles))
             : existing with
             {
                 Displays = ProfileEditing.CapturedArrangement(snapshot, existing.Displays, DisplayNames.Known(profiles)),
-                Audio = existing.Audio with { Playback = playback ?? existing.Audio.Playback, Recording = recording ?? existing.Audio.Recording },
+                Audio = playback is null ? existing.Audio : existing.Audio with { Playback = playback },
             };
 
         IReadOnlyList<ProfileProblem> problems = ProfileEditing.Validate(profile, profiles);
@@ -304,7 +307,10 @@ public sealed class CommandRunner
             $"{verb} profile '{profile.Name}' with {profile.Displays.Count} display(s)."));
     }
 
-    // Same shape as list, so scripts read both alike; without a player nothing can be running.
+    /// <summary>
+    /// The configured games, a running one marked with <c>*</c> – the same shape as <c>list</c>, so a script can read
+    /// both the same way. Without a player (headless call, no app running) nothing can be running, so nothing is marked.
+    /// </summary>
     private async Task<CliResponse> GamesAsync(CancellationToken cancellationToken)
     {
         if (_games is null)
@@ -325,7 +331,10 @@ public sealed class CommandRunner
                 loaded.Games.Select(g => (_player?.IsRunning(g.Id) == true ? "* " : "  ") + g.Name)));
     }
 
-    // Returns at once: the session outlives the command by hours.
+    /// <summary>
+    /// Starts a game session and returns at once: the session outlives the command by hours, so waiting for it would
+    /// leave a console process hanging around for the whole evening.
+    /// </summary>
     private async Task<CliResponse> PlayAsync(string name, bool fromLink, CancellationToken cancellationToken)
     {
         if (_games is null || _player is null)
@@ -345,7 +354,10 @@ public sealed class CommandRunner
             : new CliResponse(CliExitCodes.Failed, $"'{game.Name}' is already running.");
     }
 
-    // Only the app answers: the caller may sit in a session without a desktop (SSH).
+    /// <summary>
+    /// <c>icons</c>: the saved desktop symbols of a profile, and nothing else – no display change, no confirmation.
+    /// Only the app answers it: the caller may sit in a session without a desktop (SSH), the app never does.
+    /// </summary>
     private async Task<CliResponse> IconsAsync(string name, CancellationToken cancellationToken)
     {
         if (_desktopIcons is null)
@@ -379,9 +391,9 @@ public sealed class CommandRunner
         };
     }
 
-    private async Task<AudioEndpoint?> DefaultDeviceAsync(AudioDirection direction, CancellationToken cancellationToken)
+    private async Task<AudioEndpoint?> DefaultPlaybackAsync(CancellationToken cancellationToken)
     {
-        IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(direction, cancellationToken);
+        IReadOnlyList<AudioDeviceInfo> devices = await _audio.ListAsync(AudioDirection.Render, cancellationToken);
         return devices.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
     }
 

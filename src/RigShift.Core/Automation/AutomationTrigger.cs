@@ -10,7 +10,10 @@ public enum TriggerReason
 }
 
 /// <summary>A switch the automation asks for.</summary>
-public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerReason Reason);
+public sealed record TriggerAction(AutomationRule Rule, Guid ProfileId, TriggerReason Reason)
+{
+    public bool SkipConfirmation => Rule.SkipConfirmation;
+}
 
 public enum TriggerEventKind
 {
@@ -107,8 +110,10 @@ public sealed class AutomationTrigger
 
     private const int PollsGoneForExit = 2;
 
-    // Shorter gaps are a wheelbase re-enumerating or a hub reset, not a new connection (unless the rule's delay is
-    // longer).
+    /// <summary>
+    /// The shortest gap after which a device that comes back counts as connected anew, unless the rule's own delay is
+    /// longer: a wheelbase re-enumerating after interference or a hub reset is gone for a poll or two.
+    /// </summary>
     private static readonly TimeSpan MinimumGapForStart = TimeSpan.FromSeconds(5);
 
     private readonly Dictionary<Guid, RuleState> _states = [];
@@ -383,23 +388,31 @@ public sealed class AutomationTrigger
     {
         public bool IsRunning { get; set; }
 
+        /// <summary>The device key the state was built for.</summary>
         public required string Watched { get; init; }
 
+        /// <summary>Monotonic time the device was first missed.</summary>
         public TimeSpan? GoneSince { get; set; }
 
+        /// <summary>Polls in a row without the device since <see cref="GoneSince"/>.</summary>
         public int PollsGone { get; set; }
 
-        // Kept through an end action that did not switch, so a returning device can be told from a short gap.
+        /// <summary>
+        /// Monotonic time the device went missing, kept through an end action that did not switch, so a device that comes
+        /// back can be told from a short gap. Cleared when it is back and when an end action switched away.
+        /// </summary>
         public TimeSpan? MissingSince { get; set; }
 
+        /// <summary>Polls in a row without the device since <see cref="MissingSince"/>.</summary>
         public int MissingPolls { get; set; }
 
-        // Waiting for a full-screen application to close; reported once.
+        /// <summary>The end action is due but waits for a full-screen application to close; reported once.</summary>
         public bool ExitHeld { get; set; }
 
+        /// <summary>A start that could not run is not retried before this time.</summary>
         public TimeSpan? RetryAt { get; set; }
 
-        // Connected while the rule was enabled and watched, so its exit may switch.
+        /// <summary>The device connected while the rule was enabled and watched, so its exit may switch.</summary>
         public bool StartedByRule { get; set; }
 
         public Guid? PreviousProfileId { get; set; }

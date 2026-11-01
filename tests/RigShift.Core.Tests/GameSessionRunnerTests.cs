@@ -42,33 +42,9 @@ public sealed class GameSessionRunnerTests
 
     private FakeRunningGame LongRunning() => new(_time, TimeSpan.FromHours(1));
 
-    private GameSessionRunner Runner(
-        FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null, ICursorConfinement? cursor = null) => new(
+    private GameSessionRunner Runner(FakeWindowLayout? desktop = null, IGameSettingsFiles? settings = null, ILogger? log = null) => new(
         _starter, _processes, _switcher, id => new[] { _rig, _desk }.FirstOrDefault(p => p.Id == id),
-        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings, cursor);
-
-    /// <summary>The mouse is kept on the game's display for exactly the game's run, and only when the entry asks for it.</summary>
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Run_KeepsTheMouseOnTheGamesDisplay_ForTheGamesRunOnly(bool wanted)
-    {
-        ICursorConfinement cursor = Substitute.For<ICursorConfinement>();
-        IDisposable held = Substitute.For<IDisposable>();
-        cursor.KeepOnWindowOf("iRacing").Returns(held);
-
-        await Runner(cursor: cursor).RunAsync(Game() with { KeepMouseOnDisplay = wanted }, alreadyRunning: false, Ct);
-
-        if (wanted)
-        {
-            cursor.Received(1).KeepOnWindowOf("iRacing");
-            held.Received(1).Dispose();
-        }
-        else
-        {
-            cursor.DidNotReceiveWithAnyArgs().KeepOnWindowOf(default!);
-        }
-    }
+        _apps, _usb, new SwitchOptions(), _time, log ?? Logger.None, desktop, settings);
 
     private GameEntry Game(GameLaunch? launch = null) => new()
     {
@@ -203,37 +179,6 @@ public sealed class GameSessionRunnerTests
         learned.ProcessName.ShouldBe("iRacingSim64DX11");
     }
 
-    /// <summary>A guess from the install folder is not waited for: the start learns the real name and reports it.</summary>
-    [Fact]
-    public async Task Run_WithAGuessedProcessName_LearnsTheRealOne()
-    {
-        GameEntry game = Game(new GameLaunch
-        {
-            Kind = GameLaunchKind.Steam,
-            Target = "266410",
-            InstallFolder = InstallFolder,
-            ProcessName = "iRacingUI",
-            ProcessNameGuessed = true,
-        });
-        _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
-        _processes.OnListed = call =>
-        {
-            if (call == 2)
-            {
-                _processes.Running.Add(new RunningProcess(9, "iRacingSim64DX11", InstallFolder + @"\iRacingSim64DX11.exe", _time.GetUtcNow()));
-            }
-        };
-        GameProcessLearned? learned = null;
-        GameSessionRunner runner = Runner();
-        runner.ProcessLearned += (_, e) => learned = e;
-
-        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
-
-        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
-        learned.ShouldNotBeNull().ProcessName.ShouldBe("iRacingSim64DX11");
-        _time.Elapsed.ShouldBeLessThan(GameProcessLearner.Timeout, "the guess is not waited for");
-    }
-
     /// <summary>Once the name is known there is nothing left to learn – the second start goes straight to waiting.</summary>
     [Fact]
     public async Task Run_WithAKnownProcessName_DoesNotLearnAgain()
@@ -336,7 +281,7 @@ public sealed class GameSessionRunnerTests
     [Fact]
     public async Task Run_ForASimWhoseInterfaceOutlivesIt_WaitsForTheInterfaceToShowUpFirst()
     {
-        GameEntry game = KnownSteamGame() with { LauncherProcessName = "iRacingUI" };
+        GameEntry game = KnownSteamGame() with { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
         _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
         _processes.OnIsRunning = call =>
         {
@@ -808,7 +753,7 @@ public sealed class GameSessionRunnerTests
     {
         GameEntry game = Game(new GameLaunch { Kind = GameLaunchKind.Steam, Target = "266410", ProcessName = "iRacingSim64DX11" })
             with
-        { LauncherProcessName = "iRacingUI" };
+        { EndsWith = SessionEnd.LauncherProcess, LauncherProcessName = "iRacingUI" };
         _starter.Start(Arg.Any<GameLaunch>()).Returns((IRunningGame?)null);
         _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
         // The session keeps waiting while the interface is up; only its end ends the session.
@@ -824,20 +769,6 @@ public sealed class GameSessionRunnerTests
 
         result.Outcome.ShouldBe(GameSessionOutcome.Ended);
         _processes.IsRunningCalls.ShouldBeGreaterThan(1);
-    }
-
-    /// <summary>The launcher field is the whole choice: left empty, the session ends with the game even while a menu runs on.</summary>
-    [Fact]
-    public async Task Run_WithAnEmptyLauncherField_EndsWithTheGame()
-    {
-        GameEntry game = Game() with { LauncherProcessName = "  " };
-        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => LongRunning());
-        _processes.Running.Add(new RunningProcess(1, "iRacingUI", null, _time.GetUtcNow()));
-
-        GameSessionResult result = await Runner().RunAsync(game, alreadyRunning: false, Ct);
-
-        result.Outcome.ShouldBe(GameSessionOutcome.Ended);
-        _processes.Running.ShouldContain(p => p.Name == "iRacingUI");
     }
 
     /// <summary>A dashboard has to go down before the wheelbase software it talks to.</summary>
@@ -895,69 +826,6 @@ public sealed class GameSessionRunnerTests
             _apps.Start(@"C:\SimHub\SimHubWPF.exe", null);
             _starter.Start(Arg.Any<GameLaunch>());
         });
-    }
-
-    /// <summary>A tool that starts after the game has no window yet before it: the game does not wait for it.</summary>
-    [Fact]
-    public async Task Run_PlacesAfterGameToolsOnceTheyStarted_WithoutHoldingUpTheGame()
-    {
-        var desktop = new FakeWindowLayout { MoveOnPlace = true };
-        GameEntry game = Game() with
-        {
-            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe", When = AppTiming.AfterGame } },
-            WindowLayout = new WindowLayout
-            {
-                Windows = new List<WindowPlacement> { new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) } },
-            },
-        };
-        TimeSpan? startedAt = null;
-        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ =>
-        {
-            startedAt = _time.Elapsed;
-            return LongRunning();
-        });
-        _apps.When(a => a.Start(@"C:\SimHub\SimHubWPF.exe", null)).Do(_ =>
-            desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(0, 0, 800, 600), WindowState.Normal)));
-        GameWindowsRemembered? remembered = null;
-        GameSessionRunner runner = Runner(desktop);
-        runner.WindowsRemembered += (_, e) => remembered = e;
-
-        GameSessionResult result = await runner.RunAsync(game, alreadyRunning: false, Ct);
-
-        startedAt.ShouldBe(TimeSpan.Zero, "no wait for a window that only comes after the game");
-        result.Windows.ShouldBe(new WindowLayoutResult(1, 0, 0));
-        desktop.Placed.Single().Bounds.Left.ShouldBe(3840);
-        remembered.ShouldBeNull("the tool is where the layout put it");
-    }
-
-    /// <summary>A tool moved during the session keeps its new place for the next one.</summary>
-    [Fact]
-    public async Task Run_RemembersWhereTheToolWindowsAreAtTheEnd()
-    {
-        var desktop = new FakeWindowLayout();
-        desktop.Windows.Add(new OpenWindow(1, "SimHubWPF", "SimHub", new PixelRect(100, 100, 900, 700), WindowState.Normal));
-        GameEntry game = Game() with
-        {
-            Apps = new List<AppAction> { new() { Kind = AppActionKind.Start, Path = @"C:\SimHub\SimHubWPF.exe" } },
-            WindowLayout = new WindowLayout
-            {
-                Windows = new List<WindowPlacement>
-                {
-                    new() { ProcessName = "SimHubWPF", Bounds = new PixelRect(3840, 0, 4640, 600) },
-                    new() { ProcessName = "CrewChiefV4", Bounds = new PixelRect(0, 0, 400, 300) },
-                },
-            },
-        };
-        _starter.Start(Arg.Any<GameLaunch>()).Returns(_ => LongRunning());
-        GameWindowsRemembered? remembered = null;
-        GameSessionRunner runner = Runner(desktop);
-        runner.WindowsRemembered += (_, e) => remembered = e;
-
-        await runner.RunAsync(game, alreadyRunning: false, Ct);
-
-        remembered.ShouldNotBeNull().GameId.ShouldBe(game.Id);
-        remembered.Layout.Windows.Select(w => w.Bounds).ShouldBe([new PixelRect(100, 100, 900, 700), new PixelRect(0, 0, 400, 300)],
-            "the window that is not open keeps its place");
     }
 
     /// <summary>A window that cannot be moved is annoying, not a reason to leave the game unstarted.</summary>

@@ -292,7 +292,7 @@ public sealed class PolicyConfigAudioController : IAudioController
         }
     }
 
-    // Releases the RCW now instead of at the next GC.
+    /// <summary>Releases the RCW now instead of at the next GC.</summary>
     private static void Release(object? comObject)
     {
         if (comObject is not null && Marshal.IsComObject(comObject))

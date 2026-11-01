@@ -118,7 +118,7 @@ public sealed class UsbDeviceList : IUsbDeviceList
         return null;
     }
 
-    // False when missing: an unknown device is rather offered than hidden.
+    /// <summary>False when the property is missing: an unknown device is rather offered than hidden.</summary>
     private static unsafe bool BoolProperty(uint node, DEVPROPKEY key)
     {
         DEVPROPTYPE type;

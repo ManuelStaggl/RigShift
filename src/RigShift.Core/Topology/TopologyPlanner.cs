@@ -234,8 +234,10 @@ public sealed class TopologyPlanner
         return pixelRate > _options.DualHeadPixelRateThreshold ? 2 : 1;
     }
 
-    // \\?\DISPLAY#XEC2389#5&1a2b3c4d&0&UID4352#{…} → UID4352, the card's port; the part before it changes with the
-    // card.
+    /// <summary>
+    /// <c>\\?\DISPLAY#XEC2389#5&amp;1a2b3c4d&amp;0&amp;UID4352#{…}</c> → <c>UID4352</c>: the port the graphics card reports the
+    /// monitor on. The part before it is derived from the card's own identity and changes with it. <c>null</c> without one.
+    /// </summary>
     private static string? Connector(string? targetDevicePath)
     {
         string[] parts = (targetDevicePath ?? string.Empty).Split('#');
@@ -248,7 +250,10 @@ public sealed class TopologyPlanner
         return last.Length > 3 && last.StartsWith("UID", StringComparison.OrdinalIgnoreCase) ? last : null;
     }
 
-    // Null unless each twin finds exactly one, different candidate: half a match would be a guess for the rest.
+    /// <summary>
+    /// Pairs every twin with the one candidate on its saved connector. <c>null</c> unless each finds exactly one and a
+    /// different one – half a match would be a guess for the rest.
+    /// </summary>
     private static List<(int Index, AttachedDisplay Display)>? ByConnector(
         List<int> twins, IReadOnlyList<DisplayAssignment> assignments, List<AttachedDisplay> candidates)
     {
@@ -267,7 +272,11 @@ public sealed class TopologyPlanner
         return found;
     }
 
-    // Enough free identical displays (same EDID model, or name without EDID): most likely there, only not told apart.
+    /// <summary>
+    /// Whether identical displays are attached and free – at least as many as the profile still misses of that model – so
+    /// the display is most likely there and only could not be told apart from its twins. Identical means the same
+    /// EDID model, or the same name where the EDID is unknown.
+    /// </summary>
     private static bool IsAmbiguous(
         IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, bool[] surround, int index, DisplaySnapshot snapshot,
         HashSet<AttachedDisplay> claimed)
@@ -304,7 +313,10 @@ public sealed class TopologyPlanner
                 $"{DisplayNames.Of(assignment)} was matched {string.Format(CultureInfo.InvariantCulture, why, match.Identity.TargetDevicePath)}.");
     }
 
-    // One entry per target, the available one first, like the EDID pass: a stale target never wins over a live one.
+    /// <summary>
+    /// Displays that call themselves <paramref name="wantedName"/>, one entry per target and the available one first –
+    /// the same rule the EDID pass uses, so a stale target never wins over a live one.
+    /// </summary>
     private static List<AttachedDisplay> NameCandidates(string wantedName, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
     {
         List<AttachedDisplay> candidates = PerTarget(snapshot.Displays.Where(d => !claimed.Contains(d) && SameName(d.Identity.FriendlyName, wantedName)));
@@ -316,7 +328,7 @@ public sealed class TopologyPlanner
         return candidates;
     }
 
-    // The available one first: a stale target never wins over a live one.
+    /// <summary>One entry per target, the available one first: a stale target never wins over a live one.</summary>
     private static List<AttachedDisplay> PerTarget(IEnumerable<AttachedDisplay> displays) =>
     [
         .. displays
@@ -327,7 +339,11 @@ public sealed class TopologyPlanner
     private static AttachedDisplay? Only(IEnumerable<AttachedDisplay> displays) =>
         displays.Take(2).ToList() is [var only] ? only : null;
 
-    // Identical monitors are told apart only by their port; an unknown EDID (0/0) never makes a twin.
+    /// <summary>
+    /// Whether another display of the profile that is still unmatched carries the same known EDID – then the two are
+    /// identical monitors and nothing but their port tells them apart. An unknown EDID (0/0) is not an identity and
+    /// never makes a twin.
+    /// </summary>
     private static bool HasEdidTwin(IReadOnlyList<DisplayAssignment> assignments, AttachedDisplay?[] matches, int index)
     {
         DisplayIdentity wanted = assignments[index].Identity;
@@ -343,7 +359,10 @@ public sealed class TopologyPlanner
     private static bool SameName(string a, string b) =>
         !string.IsNullOrWhiteSpace(a) && string.Equals(a.Trim(), b.Trim(), StringComparison.OrdinalIgnoreCase);
 
-    // At least the pixels of all grid monitors together; bezel correction only adds pixels, rotation keeps the area.
+    /// <summary>
+    /// Whether <paramref name="assignment"/> is the wide display of the grid the profile switches on: at least as many
+    /// pixels as all monitors of the grid together. Bezel correction only adds pixels, and rotation does not change the area.
+    /// </summary>
     private static bool IsSurroundDisplay(Profile profile, DisplayAssignment assignment) =>
         profile.Surround is { Enabled: true, Grid: { Displays.Count: > 1 } grid }
         && (long)assignment.Width * assignment.Height >= (long)grid.Width * grid.Height * grid.Displays.Count;
@@ -357,6 +376,7 @@ public sealed class TopologyPlanner
 
     private static bool HasSerial(DisplayIdentity identity) => !string.IsNullOrEmpty(identity.EdidSerialHash);
 
+    /// <summary>Same model and same serial number: the same monitor, whatever port it is on.</summary>
     private static bool SameSerial(DisplayIdentity a, DisplayIdentity b) =>
         HasSerial(a) && SameEdid(a, b) && string.Equals(a.EdidSerialHash, b.EdidSerialHash, StringComparison.Ordinal);
 
@@ -366,7 +386,7 @@ public sealed class TopologyPlanner
     private static bool SameConnector(DisplayIdentity a, DisplayIdentity b) =>
         Connector(a.TargetDevicePath) is { } connector && string.Equals(connector, Connector(b.TargetDevicePath), StringComparison.OrdinalIgnoreCase);
 
-    // Every other entry of the same target too, so no other assignment gets a duplicate.
+    /// <summary>Claims the display and every other entry of the same target, so no other assignment gets a duplicate of it.</summary>
     private static void Claim(AttachedDisplay display, DisplaySnapshot snapshot, HashSet<AttachedDisplay> claimed)
     {
         foreach (AttachedDisplay entry in snapshot.Displays)

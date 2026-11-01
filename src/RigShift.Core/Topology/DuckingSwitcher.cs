@@ -4,18 +4,25 @@ using Serilog;
 
 namespace RigShift.Core.Topology;
 
-/// <summary>The communications ducking part of a switch, its rollback and the restore at startup.</summary>
+/// <summary>
+/// The communications ducking part of a switch, its rollback and the restore at startup.
+/// Logs under the orchestrator's context, so the log source stays the same.
+/// </summary>
 internal sealed class DuckingSwitcher(IDuckingPreference ducking, IDuckingMemory duckingMemory, ILogger log)
 {
     private readonly IDuckingPreference _ducking = ducking;
 
-    // Persisted, so the value from before a ducking-disabling profile survives a crash or restart.
+    /// <summary>
+    /// The ducking setting from before a profile with <see cref="Profile.DisableCommunicationsDucking"/> took over; restored
+    /// by the next profile without it. Persisted, so it survives a crash or restart.
+    /// </summary>
     private readonly IDuckingMemory _duckingMemory = duckingMemory;
     private readonly ILogger _log = log;
 
     /// <summary>
-    /// Remembers the value from before the first profile that disables ducking; failures never fail the switch (the
-    /// registry value is undocumented).
+    /// A profile with <see cref="Profile.DisableCommunicationsDucking"/> sets "do nothing" during calls; the value from
+    /// before the first such profile is remembered and comes back with the next profile without the flag. Failures are
+    /// logged and never fail the switch (the registry value is undocumented).
     /// </summary>
     public async Task SwitchAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -50,8 +57,8 @@ internal sealed class DuckingSwitcher(IDuckingPreference ducking, IDuckingMemory
     }
 
     /// <summary>
-    /// At startup: a remembered value whose profile is no longer active (crash, restart or update in between) comes
-    /// back now.
+    /// At startup: a remembered value whose profile is no longer active (crash, restart or update in between) comes back
+    /// now instead of waiting for the next switch. With a profile that disables ducking still active, it stays remembered.
     /// </summary>
     public async Task RestoreIfUnusedAsync(Profile? activeProfile, CancellationToken cancellationToken)
     {

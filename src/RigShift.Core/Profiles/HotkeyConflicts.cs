@@ -13,9 +13,6 @@ public enum HotkeyUseKind
 
     /// <summary>The fixed emergency hotkey that turns every display on.</summary>
     AllDisplaysOn,
-
-    /// <summary>The hotkey that opens the quick switcher, from the settings.</summary>
-    QuickSwitch,
 }
 
 /// <param name="Id">Profile or game id; <see cref="Guid.Empty"/> for the toggle hotkey.</param>
@@ -33,14 +30,14 @@ public static class HotkeyConflicts
     /// conflicts with itself. Profiles first, then games, then the toggle – the order they are registered in.
     /// </summary>
     public static HotkeyUse? Find(
-        Hotkey hotkey, HotkeyUse self, IEnumerable<Profile> profiles, IEnumerable<GameEntry> games, Hotkey? toggle, Hotkey? quickSwitch = null)
+        Hotkey hotkey, HotkeyUse self, IEnumerable<Profile> profiles, IEnumerable<GameEntry> games, Hotkey? toggle)
     {
         ArgumentNullException.ThrowIfNull(hotkey);
         ArgumentNullException.ThrowIfNull(self);
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(games);
 
-        foreach ((HotkeyUse use, Hotkey used) in All(profiles, games, toggle, quickSwitch))
+        foreach ((HotkeyUse use, Hotkey used) in All(profiles, games, toggle))
         {
             if (used == hotkey && !IsSame(use, self))
             {
@@ -52,8 +49,7 @@ public static class HotkeyConflicts
     }
 
     /// <summary>Every valid hotkey with its owner, in registration order.</summary>
-    public static IEnumerable<(HotkeyUse Use, Hotkey Hotkey)> All(
-        IEnumerable<Profile> profiles, IEnumerable<GameEntry> games, Hotkey? toggle, Hotkey? quickSwitch = null)
+    public static IEnumerable<(HotkeyUse Use, Hotkey Hotkey)> All(IEnumerable<Profile> profiles, IEnumerable<GameEntry> games, Hotkey? toggle)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(games);
@@ -77,11 +73,6 @@ public static class HotkeyConflicts
         if (toggle is { IsValid: true })
         {
             yield return (new HotkeyUse(HotkeyUseKind.Toggle, Guid.Empty, null), toggle);
-        }
-
-        if (quickSwitch is { IsValid: true })
-        {
-            yield return (new HotkeyUse(HotkeyUseKind.QuickSwitch, Guid.Empty, null), quickSwitch);
         }
     }
 

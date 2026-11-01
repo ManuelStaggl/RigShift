@@ -1,8 +1,10 @@
 namespace RigShift.Windows.Input;
 
 /// <summary>
-/// Which HID reports change a device's held buttons. The first report per device and report ID only sets the baseline
-/// (a latched toggle must not answer for the user); every later difference counts, press or release.
+/// Which HID reports change the buttons a device holds. The first report of each device and report ID only sets the
+/// baseline: it shows what was held before anyone listened – a latched toggle on a button box, a stuck paddle – and
+/// must not answer for the user. Every later difference counts, a press as much as a release: a device that reports
+/// only on change sends the press as its first report, so its release is the first change that can be seen.
 /// </summary>
 internal sealed class ButtonChanges
 {

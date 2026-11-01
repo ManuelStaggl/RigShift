@@ -37,7 +37,7 @@ public sealed record GraphicsDriver(string Name, string? Provider, string? Versi
 
 public static class GraphicsDrivers
 {
-    // The display adapter class; every adapter and its driver sit in a numbered subkey.
+    /// <summary>The display adapter class; every adapter and its driver sit in a numbered subkey.</summary>
     private const string DisplayClass = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
 
     /// <summary>Every display adapter with a driver, each once; empty when the registry cannot be read.</summary>

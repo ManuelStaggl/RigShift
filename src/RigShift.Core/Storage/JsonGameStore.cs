@@ -13,8 +13,7 @@ namespace RigShift.Core.Storage;
 /// </summary>
 public sealed class JsonGameStore : IGameStore
 {
-    /// <summary>2: the launcher name alone says the session ends with it (<see cref="GameDocument.CurrentGames"/>).</summary>
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 1;
 
     public const string FileName = "games.json";
 
@@ -71,7 +70,7 @@ public sealed class JsonGameStore : IGameStore
                 return new GameLoadResult([], problem);
             }
 
-            IReadOnlyList<GameEntry> games = [.. document.CurrentGames()
+            IReadOnlyList<GameEntry> games = [.. (document.Games ?? [])
                 .OrderBy(g => g.Name, StringComparer.CurrentCultureIgnoreCase)];
             _log.Information("Loaded {Count} games from {File}", games.Count, _file);
             return new GameLoadResult(games, null);
@@ -92,8 +91,11 @@ public sealed class JsonGameStore : IGameStore
     public Task DeleteAsync(Guid gameId, CancellationToken cancellationToken) =>
         InTurnAsync(() => DeleteCoreAsync(gameId, cancellationToken));
 
-    // Changes take turns, so two read-modify-writes cannot drop each other's additions; a task chain needs no
-    // disposing.
+    /// <summary>
+    /// A change reads the file, alters the list and writes it back. Two at once would both read the old list, and the
+    /// later write would drop what the other added – so they take turns. A chain of tasks rather than a semaphore: there
+    /// is nothing to dispose, and the store is created in many places that never would.
+    /// </summary>
     private Task InTurnAsync(Func<Task> change)
     {
         lock (_turnGate)
@@ -148,18 +150,7 @@ public sealed class JsonGameStore : IGameStore
     }
 }
 
-internal sealed record GameDocument(int SchemaVersion, IReadOnlyList<GameEntry>? Games)
-{
-    /// <summary>
-    /// Schema 1 could name a launcher without "ends with the launcher", which did nothing; it is dropped rather than
-    /// taking effect.
-    /// </summary>
-    public IReadOnlyList<GameEntry> CurrentGames() => [.. (Games ?? []).Select(g => g with
-    {
-        LauncherProcessName = SchemaVersion >= 2 || g.LegacyEndsWith == SessionEnd.LauncherProcess ? g.LauncherProcessName : null,
-        LegacyEndsWith = null,
-    })];
-}
+internal sealed record GameDocument(int SchemaVersion, IReadOnlyList<GameEntry>? Games);
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

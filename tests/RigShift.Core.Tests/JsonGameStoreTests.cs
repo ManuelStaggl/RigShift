@@ -125,8 +125,7 @@ public sealed class JsonGameStoreTests : IDisposable
         await store.SaveAsync(Iracing(), Ct);
 
         string json = await System.IO.File.ReadAllTextAsync(File_, Ct);
-        json.ShouldContain("\"schemaVersion\": 2");
-        json.ShouldNotContain("endsWith");
+        json.ShouldContain("\"schemaVersion\": 1");
         json.ShouldContain("\"kind\": \"Steam\"");
         // The URI is computed from kind and target and must not end up in the file.
         json.ShouldNotContain("steam://");
@@ -255,68 +254,6 @@ public sealed class JsonGameStoreTests : IDisposable
         game.Exit.Kind.ShouldBe(GameExitKind.Stay);
         game.Exit.StopApps.ShouldBeTrue();
         game.Apps.ShouldBeEmpty();
-    }
-
-    /// <summary>
-    /// A 4.x file asked "ends with" separately; a launcher name only took effect with "the launcher". After the
-    /// migration the name alone says it, so every game keeps the session end it had.
-    /// </summary>
-    [Fact]
-    public async Task Load_SchemaOneFile_KeepsEachGamesSessionEnd()
-    {
-        Directory.CreateDirectory(_directory);
-        await System.IO.File.WriteAllTextAsync(
-            File_,
-            """
-            {
-              "schemaVersion": 1,
-              "games": [
-                {
-                  "id": "6d5f7f2e-0d4a-4a1e-9f6a-6f0f2b6f0001",
-                  "name": "iRacing",
-                  "launch": { "kind": "Steam", "target": "266410", "processName": "iRacingSim64DX11" },
-                  "endsWith": "LauncherProcess",
-                  "launcherProcessName": "iRacingUI"
-                },
-                {
-                  "id": "6d5f7f2e-0d4a-4a1e-9f6a-6f0f2b6f0002",
-                  "name": "Assetto Corsa",
-                  "launch": { "kind": "Steam", "target": "244210", "processName": "acs" },
-                  "endsWith": "GameProcess",
-                  "launcherProcessName": "Content Manager"
-                },
-                {
-                  "id": "6d5f7f2e-0d4a-4a1e-9f6a-6f0f2b6f0003",
-                  "name": "rFactor 2",
-                  "launch": { "kind": "Steam", "target": "365960" },
-                  "launcherProcessName": "rFactor2 Launcher"
-                },
-                {
-                  "id": "6d5f7f2e-0d4a-4a1e-9f6a-6f0f2b6f0004",
-                  "name": "DCS",
-                  "launch": { "kind": "Steam", "target": "223750" },
-                  "endsWith": "LauncherProcess"
-                }
-              ]
-            }
-            """,
-            Ct);
-        var store = new JsonGameStore(_directory, Logger.None);
-
-        IReadOnlyList<GameEntry> games = (await store.LoadAllAsync(Ct)).Games;
-
-        games.Single(g => g.Name == "iRacing").LauncherProcessName.ShouldBe("iRacingUI");
-        games.Single(g => g.Name == "Assetto Corsa").LauncherProcessName.ShouldBeNull();
-        games.Single(g => g.Name == "rFactor 2").LauncherProcessName.ShouldBeNull();
-        games.Single(g => g.Name == "DCS").LauncherProcessName.ShouldBeNull();
-        games.ShouldAllBe(g => g.LegacyEndsWith == null);
-
-        // Written back as schema 2, the launcher still decides and nothing comes back on the next load.
-        await store.SaveAsync(games.Single(g => g.Name == "DCS"), Ct);
-        string json = await System.IO.File.ReadAllTextAsync(File_, Ct);
-        json.ShouldContain("\"schemaVersion\": 2");
-        json.ShouldNotContain("endsWith");
-        (await store.LoadAllAsync(Ct)).Games.Select(g => g.LauncherProcessName).ShouldBe(["iRacingUI", null, null, null], ignoreOrder: true);
     }
 
     [Theory]

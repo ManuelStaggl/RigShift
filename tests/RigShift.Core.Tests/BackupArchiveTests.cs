@@ -31,7 +31,7 @@ public sealed class BackupArchiveTests : IDisposable
         await store.SaveAsync(desk, Ct);
         await store.SaveAsync(rig, Ct);
         var settingsStore = new JsonSettingsStore(SettingsFile, Logger.None);
-        await settingsStore.SaveAsync(new AppSettings { SignInProfileId = desk.Id, Language = "de", ConfirmTimeoutSeconds = 7 }, Ct);
+        await settingsStore.SaveAsync(new AppSettings { DefaultProfileId = desk.Id, Language = "de", ConfirmTimeoutSeconds = 7 }, Ct);
         using var archive = new MemoryStream();
 
         BackupArchive.Write(_directory, archive).ShouldBe(2);
@@ -50,7 +50,7 @@ public sealed class BackupArchiveTests : IDisposable
         restoredRig.Hotkey.ShouldBe(rig.Hotkey);
         restoredRig.Displays.Count.ShouldBe(rig.Displays.Count);
         AppSettings settings = await new JsonSettingsStore(Path.Combine(other, "settings.json"), Logger.None).LoadAsync(Ct);
-        settings.SignInProfileId.ShouldBe(desk.Id);
+        settings.DefaultProfileId.ShouldBe(desk.Id);
         settings.Language.ShouldBe("de");
         settings.ConfirmTimeoutSeconds.ShouldBe(7);
         Directory.Delete(other, recursive: true);
@@ -154,45 +154,12 @@ public sealed class BackupArchiveTests : IDisposable
         Should.Throw<InvalidDataException>(() => BackupArchive.Inspect(archive)).Message.ShouldContain("games.json");
     }
 
-    [Theory]
-    [InlineData(15, false)]
-    [InlineData(0, true)]
-    public void Review_Rule_FollowsItsProfile_AndA4xBackupWithConfirmationOff(int seconds, bool skips)
-    {
-        Profile rig = Rig(confirm: true);
-        var settings = new AppSettings
-        {
-            ConfirmTimeoutSeconds = seconds,
-            AutomationRules = [new AutomationRule { ProfileId = rig.Id, Devices = [new RuleDevice { Id = "USB\\X" }] }],
-        };
-
-        BackupItem rule = BackupReview.Review(new BackupContent([rig], settings, [])).ShouldHaveSingleItem();
-
-        rule.SkipsConfirmation.ShouldBe(skips);
-    }
-
-    /// <summary>A 4.x backup is restored as the current schema, so its session ends have to be migrated on the way in.</summary>
-    [Fact]
-    public void Inspect_SchemaOneGames_KeepTheirSessionEnd()
-    {
-        using var archive = Zip(("games.json", """
-            {"schemaVersion":1,"games":[
-              {"id":"6f1b6f0e-0000-0000-0000-000000000001","name":"A","launch":{"kind":"Steam","target":"1"},"endsWith":"LauncherProcess","launcherProcessName":"Menu"},
-              {"id":"6f1b6f0e-0000-0000-0000-000000000002","name":"B","launch":{"kind":"Steam","target":"2"},"endsWith":"GameProcess","launcherProcessName":"Menu"}]}
-            """));
-
-        IReadOnlyList<GameEntry> games = BackupArchive.Inspect(archive).Games!;
-
-        games.Select(g => g.LauncherProcessName).ShouldBe(["Menu", null]);
-    }
-
     /// <summary>What a foreign backup would run has to be in front of the user before it is restored.</summary>
     [Fact]
     public void Review_ListsProgramsRulesAndHotkeys_AndMarksWhatNeedsASecondLook()
     {
         Profile rig = Rig() with
         {
-            SwitchWithoutAsking = true,
             Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control, VirtualKey = 0x70 },
             Apps =
             [
@@ -205,7 +172,7 @@ public sealed class BackupArchiveTests : IDisposable
         GameEntry game = Game("rFactor") with { Launch = new GameLaunch { Kind = GameLaunchKind.Executable, Target = @"D:\rF\rf.exe" } };
         var settings = new AppSettings
         {
-            AutomationRules = [new AutomationRule { ProfileId = rig.Id, Devices = [new RuleDevice { Id = "USB\\X", Name = "Wheel" }] }],
+            AutomationRules = [new AutomationRule { ProfileId = rig.Id, SkipConfirmation = true, Devices = [new RuleDevice { Id = "USB\\X", Name = "Wheel" }] }],
         };
 
         IReadOnlyList<BackupItem> items = BackupReview.Review(new BackupContent([rig], settings, [game]));

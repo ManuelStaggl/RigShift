@@ -19,12 +19,13 @@ public sealed class AutomationTriggerTests
 
     private static RuleDevice[] On(params string[] ids) => [.. ids.Select(id => new RuleDevice { Id = id })];
 
-    private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null) => new()
+    private static AutomationRule WheelbaseRule(ExitAction onExit = ExitAction.SwitchBack, Guid? exitProfile = null, bool skip = false) => new()
     {
         Devices = On(Wheelbase),
         ProfileId = Rig,
         OnExit = onExit,
         ExitProfileId = exitProfile,
+        SkipConfirmation = skip,
     };
 
     private static HashSet<string> Present(params string[] keys) => new(keys, StringComparer.OrdinalIgnoreCase);
@@ -95,7 +96,7 @@ public sealed class AutomationTriggerTests
     public void BaselinePresent_OnePollGap_DoesNotStart()
     {
         // The wheelbase was on when RigShift started and drops out for a moment (hub reset, interference).
-        AutomationRule rule = WheelbaseRule();
+        AutomationRule rule = WheelbaseRule(skip: true);
         Poll(rule, Desk, Wheelbase).ShouldBeEmpty();
 
         Poll(rule, Desk).ShouldBeEmpty();
@@ -205,12 +206,13 @@ public sealed class AutomationTriggerTests
     [Fact]
     public void DeviceConnects_SwitchesToRuleProfile()
     {
-        AutomationRule rule = WheelbaseRule();
+        AutomationRule rule = WheelbaseRule(skip: true);
         Poll(rule, Desk).ShouldBeEmpty();
 
         IReadOnlyList<TriggerAction> actions = Poll(rule, Desk, Wheelbase);
 
         actions.ShouldHaveSingleItem().ShouldBe(new TriggerAction(rule, Rig, TriggerReason.Started));
+        actions[0].SkipConfirmation.ShouldBeTrue();
     }
 
     [Fact]

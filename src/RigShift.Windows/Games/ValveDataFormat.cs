@@ -114,7 +114,7 @@ public static class ValveDataFormat
         return root;
     }
 
-    // Resolves the backslash escapes Valve uses.
+    /// <summary>Reads a quoted token starting at <paramref name="index"/>, resolving the backslash escapes Valve uses.</summary>
     private static string ReadQuoted(string text, ref int index)
     {
         index++; // opening quote

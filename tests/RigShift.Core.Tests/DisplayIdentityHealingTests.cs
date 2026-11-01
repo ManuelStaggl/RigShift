@@ -109,25 +109,6 @@ public sealed class DisplayIdentityHealingTests
         DisplayIdentityHealing.Rekey<string>(null, [learned]).ShouldBeNull();
     }
 
-    [Fact]
-    public void RekeyRefreshRates_MovesEveryResolutionOfTheDisplay()
-    {
-        IReadOnlyDictionary<string, IReadOnlyList<string>>? memory =
-            RefreshRateMemory.With(null, DeskLeft, 2560, 1440, [new RefreshRate(144, 1), new RefreshRate(60, 1)]);
-        memory = RefreshRateMemory.With(memory, DeskLeft, 1920, 1080, [new RefreshRate(240, 1)]);
-        memory = RefreshRateMemory.With(memory, DeskRight, 2560, 1440, [new RefreshRate(60, 1)]);
-
-        IReadOnlyDictionary<string, IReadOnlyList<string>>? rekeyed =
-            DisplayIdentityHealing.RekeyRefreshRates(memory, [new IdentityUpdate(DeskLeft.TargetDevicePath, Moved)]);
-
-        RefreshRateMemory.Get(rekeyed, Moved, 2560, 1440).ShouldBe([new RefreshRate(144, 1), new RefreshRate(60, 1)]);
-        RefreshRateMemory.Get(rekeyed, Moved, 1920, 1080).ShouldBe([new RefreshRate(240, 1)]);
-        RefreshRateMemory.Get(rekeyed, DeskLeft, 2560, 1440).ShouldBeEmpty();
-        RefreshRateMemory.Get(rekeyed, DeskRight, 2560, 1440).ShouldBe([new RefreshRate(60, 1)]);
-        var learned = new IdentityUpdate(DeskLeft.TargetDevicePath, DeskLeft with { EdidSerialHash = "AAAA" });
-        DisplayIdentityHealing.RekeyRefreshRates(memory, [learned]).ShouldBeSameAs(memory);
-    }
-
     private static TopologyPlan PlanOf(Profile profile, params (DisplayAssignment Assignment, DisplayIdentity Live)[] resolved) =>
         new()
         {

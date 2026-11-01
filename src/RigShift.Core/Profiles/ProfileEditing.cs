@@ -81,7 +81,10 @@ public static class ProfileEditing
         return SinglePrimary(arrangement, before);
     }
 
-    // Windows reports every display of the primary source as primary; a profile has exactly one (issue #14).
+    /// <summary>
+    /// Windows reports every display of the primary source as primary; a profile has exactly one (issue #14). The one
+    /// <paramref name="previous"/> marked keeps it, otherwise the first in the list.
+    /// </summary>
     private static List<DisplayAssignment> SinglePrimary(List<DisplayAssignment> arrangement, List<DisplayAssignment> previous)
     {
         List<DisplayAssignment> primaries = arrangement.Where(d => d.IsPrimary).ToList();
@@ -119,28 +122,31 @@ public static class ProfileEditing
             .ToList();
     }
 
-    /// <summary>
-    /// Profile names are matched case-insensitively and without surrounding blanks (CLI: <c>apply rig</c>), then former
-    /// names and the id.
-    /// </summary>
-    public static Profile? FindByName(IEnumerable<Profile> profiles, string name) =>
-        NameHistory.Find(profiles, name, p => p.Name, p => p.FormerNames, p => p.Id);
+    /// <summary>Profile names are matched case-insensitively and without surrounding blanks (CLI: <c>apply rig</c>).</summary>
+    public static Profile? FindByName(IEnumerable<Profile> profiles, string name)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(name);
+        return profiles.FirstOrDefault(p => NamesEqual(p.Name, name));
+    }
 
     /// <summary>
-    /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, unless that
-    /// is the active one. Without one, and with exactly two profiles, the other one. <c>null</c> when there is nowhere
-    /// to go.
+    /// Where "back to the previous profile" goes (1.7.0): the profile that was active before the current one, otherwise
+    /// the default profile – unless that is the active one. <c>null</c> when there is nowhere to go.
     /// </summary>
-    public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId)
+    public static Profile? ToggleTarget(IEnumerable<Profile> profiles, Guid? activeId, Guid? previousId, Guid? defaultId)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         List<Profile> all = [.. profiles];
-        if (previousId is { } id && id != activeId && all.FirstOrDefault(p => p.Id == id) is { } target)
+        foreach (Guid? candidate in (Guid?[])[previousId, defaultId])
         {
-            return target;
+            if (candidate is { } id && id != activeId && all.FirstOrDefault(p => p.Id == id) is { } target)
+            {
+                return target;
+            }
         }
 
-        return all.Count == 2 && all.Any(p => p.Id == activeId) ? all.First(p => p.Id != activeId) : null;
+        return null;
     }
 
     /// <summary><paramref name="baseName"/>, or <c>baseName 2</c>, <c>baseName 3</c>, … if taken.</summary>

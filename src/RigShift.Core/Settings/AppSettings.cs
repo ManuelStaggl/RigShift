@@ -14,69 +14,27 @@ public sealed record AppSettings
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 
     /// <summary>
-    /// At sign-in, i.e. when RigShift starts with Windows (issue #13): switch to this profile. <c>null</c> keeps the
-    /// layout Windows brought back, the one the PC was shut down in. A USB rule whose devices are connected wins.
+    /// Profile marked as default: where "switch back" goes without a last profile, and with
+    /// <see cref="ApplyDefaultProfileWithWindows"/> the layout after signing in. The 1.x key
+    /// <c>applyDefaultProfileOnStartup</c> is ignored: it applied on every start, not only with Windows.
     /// </summary>
-    public Guid? SignInProfileId { get; init; }
+    public Guid? DefaultProfileId { get; init; }
 
     /// <summary>
-    /// The default profile before 5.0, read only and moved by <see cref="WithSignInMigrated"/>; never written. Its
-    /// other use, where "switch back" went without a last profile, <see cref="PreviousProfileId"/> took over. The 1.x
-    /// key <c>applyDefaultProfileOnStartup</c> is ignored: it applied on every start, not only with Windows.
+    /// Switch to <see cref="DefaultProfileId"/> when RigShift starts with Windows (issue #13): Windows brings back the
+    /// layout the PC was shut down in, the rig included. A USB rule whose devices are connected at that moment wins.
     /// </summary>
-    [JsonPropertyName("defaultProfileId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public Guid? LegacyDefaultProfileId { get; init; }
-
-    /// <summary>"Default profile at sign-in" before 5.0, read only like <see cref="LegacyDefaultProfileId"/>.</summary>
-    [JsonPropertyName("applyDefaultProfileWithWindows")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? LegacyApplyDefaultProfileWithWindows { get; init; }
-
-    /// <summary>
-    /// The two settings before 5.0 as the one sign-in choice, with the same effect at sign-in: only a default profile
-    /// with "at sign-in" on becomes <see cref="SignInProfileId"/>; a default profile alone kept what Windows restored.
-    /// </summary>
-    public AppSettings WithSignInMigrated() => LegacyDefaultProfileId is null && LegacyApplyDefaultProfileWithWindows is null
-        ? this
-        : this with
-        {
-            SignInProfileId = SignInProfileId ?? (LegacyApplyDefaultProfileWithWindows == true ? LegacyDefaultProfileId : null),
-            LegacyDefaultProfileId = null,
-            LegacyApplyDefaultProfileWithWindows = null,
-        };
+    public bool ApplyDefaultProfileWithWindows { get; init; }
 
     /// <summary>System-wide key combination for "back to the previous profile" (1.7.0); <c>null</c> = none.</summary>
     public Profiles.Hotkey? ToggleHotkey { get; init; }
 
     /// <summary>
-    /// System-wide key combination for the quick switcher; <c>null</c> = off. A regular setter, so a file without the key
-    /// gets the default, while a file that turned it off keeps <c>null</c>.
+    /// Confirmation timeout for profiles without their own value. 0 disables the safety net. A regular setter on
+    /// purpose: the JSON source generator sets init-only properties through an object initializer and turns a missing
+    /// key into 0, which would silently switch the safety net off. With <c>set</c> it keeps the initializer value.
     /// </summary>
-    public Profiles.Hotkey? QuickSwitchHotkey { get; set; } = DefaultQuickSwitchHotkey;
-
-    /// <summary>Ctrl+Alt+Space: free in Windows and in the common sims, and one hand reaches it.</summary>
-    public static Profiles.Hotkey DefaultQuickSwitchHotkey { get; } = new() { Modifiers = Profiles.HotkeyModifiers.Control | Profiles.HotkeyModifiers.Alt, VirtualKey = 0x20 };
-
-    /// <summary>
-    /// Length of the keep-or-revert countdown; whether a switch asks at all is up to the profile
-    /// (<see cref="Profiles.Profile.SwitchWithoutAsking"/>). 0 only comes from files before 5.0, where it switched the
-    /// question off for every profile, see <see cref="ProfilesToMigrate"/>. A regular setter on purpose: the JSON
-    /// source generator sets init-only properties through an object initializer and turns a missing key into 0. With
-    /// <c>set</c> it keeps the initializer value.
-    /// </summary>
-    public int ConfirmTimeoutSeconds { get; set; } = DefaultConfirmTimeoutSeconds;
-
-    public const int DefaultConfirmTimeoutSeconds = 15;
-
-    /// <summary>
-    /// Files before 5.0 had a global "confirm after switching"; with it off (countdown 0) no profile asked. Now each
-    /// profile decides, so the profiles that would ask must switch without asking. Empty when there is nothing to move;
-    /// afterwards the countdown goes back to <see cref="DefaultConfirmTimeoutSeconds"/>.
-    /// </summary>
-    public IReadOnlyList<Profiles.Profile> ProfilesToMigrate(IEnumerable<Profiles.Profile> profiles) => ConfirmTimeoutSeconds > 0
-        ? []
-        : [.. profiles.Where(p => !p.SwitchWithoutAsking).Select(p => p with { SwitchWithoutAsking = true })];
+    public int ConfirmTimeoutSeconds { get; set; } = 15;
 
     /// <summary>UI language: <c>null</c> follows Windows, otherwise a culture name such as <c>en</c> or <c>de</c>.</summary>
     public string? Language { get; init; }
@@ -99,12 +57,6 @@ public sealed record AppSettings
     /// carry the name too, so the core and the command line do not need the settings.
     /// </summary>
     public IReadOnlyDictionary<string, string>? DisplayNames { get; init; }
-
-    /// <summary>The app version that last wrote its automatic backup at start; a new version writes one more.</summary>
-    public string? LastBackupVersion { get; init; }
-
-    /// <summary>The profile that was active before the current one: where "back to the previous profile" goes, also after a restart.</summary>
-    public Guid? PreviousProfileId { get; init; }
 
     /// <summary>Refresh rates displays offered once, for the profile editor (<see cref="Profiles.RefreshRateMemory"/>).</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>>? RefreshRates { get; init; }
@@ -266,7 +218,7 @@ public sealed class JsonSettingsStore
     private readonly ILogger _log;
     private readonly TimeProvider _time;
 
-    // The file was locked when it was read; copying is tried again before the first save.
+    /// <summary>The file could not be copied when it was read (it was locked); tried again before the first save.</summary>
     private bool _copyOwed;
 
     public JsonSettingsStore(string file, ILogger log, TimeProvider? time = null)
@@ -317,7 +269,7 @@ public sealed class JsonSettingsStore
                 _log.Warning("Settings file {File} held values out of range or empty entries; they were put right", _file);
             }
 
-            return MigrateRules(sanitized.WithSignInMigrated());
+            return MigrateRules(sanitized);
         }
         catch (JsonException ex)
         {
@@ -338,7 +290,7 @@ public sealed class JsonSettingsStore
         return new AppSettings();
     }
 
-    // Copies the file next to itself as settings.<tag>-<date>.json; null when that fails.
+    /// <summary>Copies the file next to itself as <c>settings.&lt;tag&gt;-&lt;date&gt;.json</c>; <c>null</c> when that fails.</summary>
     private string? CopyAside(string tag)
     {
         string stamp = _time.GetLocalNow().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
@@ -358,7 +310,11 @@ public sealed class JsonSettingsStore
         }
     }
 
-    // A rule switched off in 1.3.x would start switching if it came back on, so it is dropped with a warning.
+    /// <summary>
+    /// Rules have no switch of their own any more. A rule switched off in 1.3.x would start switching
+    /// if it simply came back on, so it is dropped with a warning; the next save removes it from the file. The single device
+    /// of 1.3.x becomes the rule's device list.
+    /// </summary>
     private AppSettings MigrateRules(AppSettings settings)
     {
         if (settings.AutomationRules is not { } rules

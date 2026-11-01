@@ -64,7 +64,7 @@ jobs:
         run: |
           dotnet tool run reportgenerator "-reports:TestResults/*.cobertura.xml" "-targetdir:coverage" "-reporttypes:MarkdownSummaryGithub;JsonSummary"
           Get-Content coverage/SummaryGithub.md >> $env:GITHUB_STEP_SUMMARY
-          $floors = @{ 'RigShift.Core' = 94; 'RigShift.Presentation' = 82; 'RigShift' = 1; 'RigShift.Windows' = 41 }
+          $floors = @{ 'RigShift.Core' = 94; 'RigShift' = 72; 'RigShift.Windows' = 41 }
           $assemblies = (Get-Content coverage/Summary.json -Raw | ConvertFrom-Json).coverage.assemblies
           $low = foreach ($name in $floors.Keys) {
             $line = ($assemblies | Where-Object name -eq $name).coverage
@@ -72,26 +72,9 @@ jobs:
           }
           if ($low) { throw ($low -join "`n") }
 
-      # Same publish as release.yml, so ReadyToRun errors show up before a tag. Then a start: a missing XAML resource
-      # builds fine and only crashes at start.
-      - name: Publish and start the app
-        shell: pwsh
-        run: |
-          dotnet publish src/RigShift.Avalonia/RigShift.Avalonia.csproj -c Release -o publish
-          ./publish/RigShift.exe --version | Out-Host
-          if ($LASTEXITCODE -ne 0) { throw "RigShift.exe --version ended with $LASTEXITCODE" }
-          $app = Start-Process ./publish/RigShift.exe -PassThru
-          Start-Sleep -Seconds 10
-          if ($app.HasExited) { throw "RigShift.exe ended after start with $($app.ExitCode)" }
-          Stop-Process -Id $app.Id
-
-      # The start above shows no window, and a page that fails to load does not end the process. The Debug build opens
-      # each page through its preview hook, with an empty data folder.
-      - name: Open every page
-        shell: pwsh
-        run: |
-          dotnet build src/RigShift.Avalonia/RigShift.Avalonia.csproj -c Debug -o debug-app
-          ./tools/open-pages.ps1 -Exe ./debug-app/RigShift.exe
+      # Same publish as release.yml, so single-file or ReadyToRun errors show up before a tag.
+      - name: Publish
+        run: dotnet publish src/RigShift.App/RigShift.App.csproj -c Release -o publish
 
   # Windows 10 is supported but neither CI nor the author's PCs run it. Server 2022 (build 20348) shares its Windows 10
   # code base, so the tests running here show nothing assumes a Windows 11 API.

@@ -6,19 +6,22 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// Brings a planned arrangement onto the screens: waits for targets that are not ready, retries, restores a previous
-/// one (docs/display-topology.md).
+/// Brings a planned arrangement onto the screens: waiting for targets that are not ready, retrying, and putting a
+/// previous arrangement back. The hard rules are in docs/display-topology.md. Logs under the orchestrator's context,
+/// so the log source stays the same.
 /// </summary>
 internal sealed class TopologyApplier
 {
-    // ERROR_GEN_FAILURE: in practice "target not ready yet", not "impossible" (display-topology.md, rule 4).
+    /// <summary>ERROR_GEN_FAILURE. In practice "target not ready yet", not "impossible" (display-topology.md, rule 4).</summary>
     private const int ErrorGenFailure = 31;
 
-    // ERROR_BAD_CONFIGURATION: seen when a sleeping ultrawide dropped off the bus mid-switch (M5, 2026-09-13); as
-    // transient as 31.
+    /// <summary>
+    /// ERROR_BAD_CONFIGURATION. Observed on the gaming PC (M5, 2026-09-13) when a sleeping ultrawide dropped off the bus
+    /// mid-switch and reappeared seconds later – as transient as error 31.
+    /// </summary>
     private const int ErrorBadConfiguration = 1610;
 
-    // Per retry cycle: stored modes first, then database modes (display-topology.md, rule 5).
+    /// <summary>Per retry cycle: stored modes first, then database modes (display-topology.md, rule 5).</summary>
     private static readonly bool[] ModeSources = [false, true];
 
     private readonly IDisplayConfigurator _display;
@@ -162,6 +165,7 @@ internal sealed class TopologyApplier
             : plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.AttachedButUnavailable)
               && !plan.Missing.Any(m => !m.Assignment.IsOptional && m.Reason == MissingReason.NotAttached));
 
+    /// <summary>Why the plan cannot be applied, or <c>null</c> when it can.</summary>
     public static string? BlockReason(TopologyPlan plan)
     {
         if (plan.IsBlocked)
@@ -176,8 +180,9 @@ internal sealed class TopologyApplier
     }
 
     /// <summary>
-    /// With database modes Windows picks the modes and may leave a display dark, so a fresh snapshot is compared with
-    /// the plan.
+    /// With database modes Windows decides the modes and may even leave a display dark; the stored plan says nothing
+    /// about that. Compares a fresh snapshot with the plan: dark displays count as missing,
+    /// the note only stays when a mode differs.
     /// </summary>
     public async Task<ModeCheck> CheckDatabaseModesAsync(TopologyPlan plan, CancellationToken cancellationToken)
     {
@@ -227,8 +232,8 @@ internal sealed class TopologyApplier
     private static double Hertz(DisplayAssignment mode) => RefreshRate.Of(mode).Hertz;
 
     /// <summary>
-    /// Puts <paramref name="before"/> back, planned against <paramref name="now"/>, HDR included; every display is
-    /// optional, as a partial restore beats none.
+    /// Puts the arrangement of <paramref name="before"/> back, planned against <paramref name="now"/>, HDR states included.
+    /// Every display of it is optional: a partial restore beats none.
     /// </summary>
     public async Task<ApplyOutcome> RestoreAsync(DisplaySnapshot before, DisplaySnapshot now, CancellationToken cancellationToken)
     {

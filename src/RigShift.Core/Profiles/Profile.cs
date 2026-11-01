@@ -13,9 +13,6 @@ public sealed record Profile
 
     public required string Name { get; init; }
 
-    /// <summary>Names before a rename; name lookups still match them (<see cref="NameHistory"/>).</summary>
-    public IReadOnlyList<string>? FormerNames { get; init; }
-
     /// <summary>Optional symbol key, one of <see cref="ProfileIcons.All"/>; unknown keys show the RigShift symbol.</summary>
     public string? Icon { get; init; }
 
@@ -25,10 +22,8 @@ public sealed record Profile
     public AudioAssignment Audio { get; set; } = new();
 
     /// <summary>
-    /// Switch to this profile without the keep-or-revert question; the editor shows it the other way round, as "ask to
-    /// keep the layout". The only switch that decides for hotkey, tray and rule switches (a link always asks); the
-    /// countdown seconds come from the application setting. Stored this way round on purpose: <c>false</c>, the value of
-    /// a missing key, asks.
+    /// Switch to this profile without the keep-or-revert question. The countdown seconds come from the application
+    /// setting only.
     /// </summary>
     public bool SwitchWithoutAsking { get; init; }
 
@@ -86,26 +81,10 @@ public sealed record Profile
     public DesktopIconLayout? DesktopIcons { get; init; }
 
     /// <summary>
-    /// Read the desktop symbols each time a switch leaves this profile and keep them in <see cref="DesktopIcons"/>, so
-    /// they come back as they were left.
-    /// </summary>
-    public bool RememberDesktopIcons { get; init; }
-
-    /// <summary>On, also for a layout saved by hand before the symbols were remembered by themselves.</summary>
-    [JsonIgnore]
-    public bool RemembersDesktopIcons => RememberDesktopIcons || DesktopIcons is { IsEmpty: false };
-
-    /// <summary>
     /// Remember where every open window sits when this profile is left, and put them back when it returns
     /// (<see cref="WindowMemory"/>). The windows themselves are state and live outside the profile file.
     /// </summary>
     public bool RememberWindows { get; init; }
-
-    /// <summary>
-    /// After a switch to another profile has stayed, end the start apps RigShift started for this profile in this run.
-    /// Apps that ran before are left alone, and so are the ones the new profile starts too.
-    /// </summary>
-    public bool CloseAppsWhenLeaving { get; init; }
 
     /// <summary>Longer names push the badges and buttons off the profile card.</summary>
     public const int MaxNameLength = 60;

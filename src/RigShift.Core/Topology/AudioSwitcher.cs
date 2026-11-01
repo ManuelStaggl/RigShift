@@ -7,6 +7,7 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// The audio part of a switch: default devices and volumes per profile, and what a rollback needs to undo them.
+/// Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
 internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOptions options, TimeProvider time, ILogger log)
 {
@@ -44,7 +45,7 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         return complete ? AudioOutcome.Applied : AudioOutcome.Incomplete;
     }
 
-    // A volume belongs to the chosen device, so it is only set together with one.
+    /// <summary>A volume belongs to the chosen device, so it is only set together with one.</summary>
     private static List<(AudioEndpoint Endpoint, int Percent)> VolumeSteps(AudioAssignment audio)
     {
         var steps = new List<(AudioEndpoint, int)>();
@@ -103,8 +104,11 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         return steps;
     }
 
-    // A display's sound device becomes active a moment after its picture, so an inactive one is retried until
-    // wakeDeadline.
+    /// <summary>
+    /// Sets the default. A device that is there but not active is tried again until <paramref name="wakeDeadline"/>, if
+    /// there is one: the sound device of a display that was just switched on becomes active a moment after its picture,
+    /// and giving up at once left the sound on the wrong device.
+    /// </summary>
     private async Task<bool> SetDefaultAsync(
         AudioEndpoint endpoint, AudioRoleMask roles, AudioDirection direction, DateTimeOffset? wakeDeadline, CancellationToken cancellationToken)
     {
@@ -155,7 +159,7 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         }
     }
 
-    // A device Windows does not know at all will not wake up.
+    /// <summary>Whether Windows knows the device at all, active or not: one that is not there will not wake up.</summary>
     private async Task<bool> IsPresentAsync(AudioEndpoint endpoint, AudioDirection direction, CancellationToken cancellationToken)
     {
         try
@@ -171,8 +175,9 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
     }
 
     /// <summary>
-    /// Captures the default per role the profile changes and the volumes it sets, so a rollback gives each role its
-    /// device back.
+    /// Remembers the current default device per direction the profile changes, and the volume of every device whose
+    /// volume it sets, so a rollback can restore them. Windows keeps one default per role – sound on the speakers,
+    /// calls on the headset – so each role the switch touches goes back to the device that held it.
     /// </summary>
     public async Task<AudioRestore> CaptureAsync(AudioAssignment audio, CancellationToken cancellationToken)
     {
@@ -215,8 +220,8 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
     }
 
     /// <summary>
-    /// Puts the captured defaults back, waiting for an inactive device as after a switch: its display has just come
-    /// back on.
+    /// Puts the captured defaults back. The old arrangement's displays have just come back on, and with them maybe the
+    /// sound device the defaults were on, so an inactive one is waited for like after a switch.
     /// </summary>
     public async Task RestoreAsync(AudioRestore restore, CancellationToken cancellationToken)
     {
@@ -232,8 +237,11 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         }
     }
 
-    // A USB headset or DAC on another port gets a new ID: matched by direction and name, never between two of that
-    // name.
+    /// <summary>
+    /// The assignment with every device Windows does not know under its saved ID replaced by the one active device of the
+    /// same direction and name: a USB headset or DAC on another port gets a new ID. Between two devices
+    /// of that name nothing is guessed, and a device that is there but not active stays, so it can be waited for.
+    /// </summary>
     private async Task<AudioAssignment> ResolveAsync(AudioAssignment audio, CancellationToken cancellationToken)
     {
         var lists = new Dictionary<AudioDirection, IReadOnlyList<AudioDeviceInfo>?>();
@@ -290,7 +298,10 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         }
     }
 
-    // Ignores case and Windows' instance number: "Speakers (2- USB Audio DAC)" is still "Speakers (USB Audio DAC)".
+    /// <summary>
+    /// Names compare without case and without the number Windows gives a second instance of a device: "Speakers
+    /// (2- USB Audio DAC)" after the DAC was plugged into another port is still "Speakers (USB Audio DAC)".
+    /// </summary>
     private static bool SameDevice(string a, string b) =>
         !string.IsNullOrWhiteSpace(a) && string.Equals(Unnumbered(a), Unnumbered(b), StringComparison.OrdinalIgnoreCase);
 
@@ -306,8 +317,8 @@ internal sealed partial class AudioSwitcher(IAudioController audio, SwitchOption
         public static AudioRestore Nothing { get; } = new([], []);
 
         /// <summary>
-        /// The captured state as a profile's audio, so the journal can restore the sound after a crash; empty when
-        /// nothing was captured.
+        /// The captured defaults and volumes as a profile's audio, so the switch journal can put the sound back after a crash
+        /// the same way a switch sets it. Empty when nothing was captured.
         /// </summary>
         public AudioAssignment AsAssignment()
         {

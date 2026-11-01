@@ -6,8 +6,10 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// The emergency way back to a picture: every ready display in one call, at 60 Hz when the head budget is exceeded
-/// (docs/display-topology.md, rule 1).
+/// The emergency way back to a picture: every display Windows reports as ready, in ONE call, with the resolution and
+/// position Windows picks. When the card cannot drive them all at their current refresh rates – NVIDIA's head budget,
+/// rule 1 of docs/display-topology.md – the same call asks for 60 Hz, which needs no stream compression. Nothing is saved
+/// to the Windows display database: the next profile switch replaces this layout anyway.
 /// </summary>
 internal sealed class AllDisplaysOn(IDisplayConfigurator display, ILogger log)
 {
@@ -75,8 +77,10 @@ internal sealed class AllDisplaysOn(IDisplayConfigurator display, ILogger log)
         };
     }
 
-    // With modes left to Windows only rotation and refresh rate reach the call; a display that is off gets what Windows
-    // prefers.
+    /// <summary>
+    /// With the modes left to Windows only rotation and refresh rate reach the call: an active display keeps both, one
+    /// that is off gets what Windows prefers.
+    /// </summary>
     private static DisplayAssignment AssignmentFor(AttachedDisplay display, bool sixtyHertz)
     {
         DisplayAssignment assignment = display.ActiveMode ?? new DisplayAssignment
