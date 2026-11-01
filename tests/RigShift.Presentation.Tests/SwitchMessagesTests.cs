@@ -83,6 +83,7 @@ public sealed class SwitchMessagesTests
             Hdr = HdrOutcome.Incomplete,
             Wallpaper = WallpaperOutcome.FileMissing,
             DesktopIcons = DesktopIconOutcome.AutoArrange,
+            AppsWithoutSound = ["Discord.exe", "Spotify.exe"],
             Apps = AppsOutcome.DeviceMissing,
             AppsWaitDevice = "Wheel",
             AppsWaitSeconds = 30,
@@ -97,6 +98,7 @@ public sealed class SwitchMessagesTests
             Loc.Instance["Result_HdrIncomplete"],
             Loc.Instance["Result_WallpaperMissing"],
             Loc.Instance["Result_IconsAutoArrange"],
+            Loc.Format("Result_AppVolumesNotFound", "Discord.exe, Spotify.exe"),
             Loc.Format("Result_AppsDeviceMissing", "Wheel", 30),
         ]);
     }

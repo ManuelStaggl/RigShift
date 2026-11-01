@@ -14,4 +14,5 @@ public sealed record ProfileEditorServices(
     IAppPicker AppPicker,
     ILogger Log,
     IAudioController? Audio = null,
-    ISurroundController? Surround = null);
+    ISurroundController? Surround = null,
+    IAppVolumes? AppVolumes = null);

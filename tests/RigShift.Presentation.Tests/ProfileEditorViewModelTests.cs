@@ -98,7 +98,8 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         Profile saved = _host.Store.Profiles.ShouldHaveSingleItem();
         saved.Displays.ShouldBe(rig.Displays);
         saved.Apps.ShouldBe(rig.Apps);
-        (saved with { Displays = rig.Displays, Apps = rig.Apps }).ShouldBe(rig);
+        saved.AppVolumes.ShouldBe(rig.AppVolumes);
+        (saved with { Displays = rig.Displays, Apps = rig.Apps, AppVolumes = rig.AppVolumes }).ShouldBe(rig);
     }
 
     [Fact]
@@ -112,6 +113,20 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.IsNew.ShouldBeFalse();
         editor.IsDirty.ShouldBeFalse();
         _host.Store.Profiles.ShouldHaveSingleItem().Name.ShouldBe("Rig");
+    }
+
+    [Fact]
+    public async Task AppVolumes_AreSavedByFileName_AndOncePerApp()
+    {
+        ProfileEditorViewModel editor = await EditorAsync(Rig());
+
+        editor.AddAppVolume(@"C:\Apps\Discord\Discord.exe");
+        editor.AddAppVolume("discord.exe");
+        editor.AppVolumes.ShouldHaveSingleItem().Volume = 40;
+        editor.IsDirty.ShouldBeTrue();
+        await SaveAsync(editor, expected: true);
+
+        _host.Store.Profiles.ShouldHaveSingleItem().AppVolumes.ShouldBe([new AppVolume { Executable = "Discord.exe", VolumePercent = 40 }]);
     }
 
     [Fact]

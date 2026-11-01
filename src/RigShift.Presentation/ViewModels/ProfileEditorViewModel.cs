@@ -87,12 +87,18 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
         Surround = new SurroundSection(context.Surround, profile.Surround, context.SurroundUsedBy);
         FillWallpaperFitChoices(profile.WallpaperFit.ToString());
+        _appVolumes = services.AppVolumes;
+        foreach (AppVolume volume in profile.AppVolumes)
+        {
+            AddAppVolumeItem(new AppVolumeItem(volume));
+        }
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
         _loading = false;
 
         Displays.CollectionChanged += OnDisplaysChanged;
+        AppVolumes.CollectionChanged += OnPartChanged;
         AppList.Changed += OnPartChanged;
         Surround.Changed += OnPartChanged;
         Rules.Changed += OnPartChanged;
@@ -197,6 +203,39 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     [ObservableProperty]
     public partial bool KeepAwake { get; set; }
 
+    /// <summary>Volume per program after the switch.</summary>
+    public ObservableCollection<AppVolumeItem> AppVolumes { get; } = [];
+
+    /// <summary>Programs with sound open right now, offered when adding one; empty without audio.</summary>
+    public IReadOnlyList<string> AppsWithSound() =>
+        _appVolumes?.AppsWithSound().Where(name => !AppVolumes.Any(v => string.Equals(v.Executable, name, StringComparison.OrdinalIgnoreCase))).ToList() ?? [];
+
+    /// <summary>Adds a program by its file name or full path; a program already listed is not added twice.</summary>
+    public void AddAppVolume(string executable)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(executable);
+        string name = Path.GetFileName(executable);
+        if (!AppVolumes.Any(v => string.Equals(v.Executable, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            AddAppVolumeItem(new AppVolumeItem(new AppVolume { Executable = name }));
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveAppVolume(AppVolumeItem? item)
+    {
+        if (item is not null && AppVolumes.Remove(item))
+        {
+            item.PropertyChanged -= OnPartChanged;
+        }
+    }
+
+    private void AddAppVolumeItem(AppVolumeItem item)
+    {
+        item.PropertyChanged += OnPartChanged;
+        AppVolumes.Add(item);
+    }
+
     /// <summary>How the wallpapers are fitted: one choice for the profile, because Windows keeps one for all displays.</summary>
     public ObservableCollection<Choice> WallpaperFitChoices { get; } = [];
 
@@ -232,6 +271,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     // The last "save positions" did not reach the desktop; the caption says so until the symbols change.
     private bool _desktopUnreachable;
+
+    private readonly IAppVolumes? _appVolumes;
 
     partial void OnDesktopIconsChanged(DesktopIconLayout? value)
     {
@@ -631,6 +672,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         Rules.Changed -= OnPartChanged;
         Surround.Changed -= OnPartChanged;
         AppList.Changed -= OnPartChanged;
+        AppVolumes.CollectionChanged -= OnPartChanged;
+        foreach (AppVolumeItem volume in AppVolumes)
+        {
+            volume.PropertyChanged -= OnPartChanged;
+        }
+
         AppList.Dispose();
     }
 
@@ -699,6 +746,10 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         {
             FillIconChoices(SelectedIcon?.Key);
             FillWallpaperFitChoices(SelectedWallpaperFit?.Key);
+            foreach (AppVolumeItem volume in AppVolumes)
+            {
+                volume.Relabel();
+            }
             AppList.Relabel();
             Surround.Relabel();
             foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
@@ -773,6 +824,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         RememberDesktopIcons = RememberDesktopIcons,
         DesktopIcons = RememberDesktopIcons && DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),
+        AppVolumes = [.. AppVolumes.Select(v => v.Build())],
         WallpaperFit = Enum.TryParse(SelectedWallpaperFit?.Key, out WallpaperFit fit) ? fit : WallpaperFit.Fill,
     };
 }

@@ -18,6 +18,7 @@ internal static class InertPreview
         [typeof(IAutostart)] = ["SetEnabled", "UpgradeEntry"],
         [typeof(IDesktopIcons)] = ["Restore"],
         [typeof(IWallpapers)] = ["Show"],
+        [typeof(IAppVolumes)] = ["Adjust"],
         [typeof(IWindowRescuer)] = ["RescueOffscreenWindows"],
         [typeof(IWindowLayout)] = ["Place"],
         [typeof(IPowerController)] = ["SetKeepAwake"],

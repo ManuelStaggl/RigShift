@@ -62,6 +62,7 @@
   <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR could not be set on every display.</value></data>
   <data name="Result_WallpaperMissing" xml:space="preserve"><value>A wallpaper image was not found; that display kept its wallpaper.</value></data>
   <data name="Result_WallpaperIncomplete" xml:space="preserve"><value>The wallpaper could not be set on every display.</value></data>
+  <data name="Result_AppVolumesNotFound" xml:space="preserve"><value>Volume not set, no sound from: {0}</value></data>
   <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktop icons not placed: Windows arranges them itself (“Auto arrange icons” in the desktop's context menu).</value></data>
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop icons could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
@@ -301,6 +302,12 @@
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Wait for a device before starting</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Don't wait</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>If the device does not show up within 30 seconds, the apps start anyway.</value></data>
+  <data name="Editor_AppVolumes" xml:space="preserve"><value>Volume per app</value></data>
+  <data name="Editor_AppVolumesHint" xml:space="preserve"><value>Set after switching, also for apps that start playing within three minutes. Other apps keep their volume.</value></data>
+  <data name="Editor_AppVolumeAdd" xml:space="preserve"><value>Add app</value></data>
+  <data name="Editor_AppVolumeBrowse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Editor_AppVolumeMute" xml:space="preserve"><value>Mute</value></data>
+  <data name="Editor_AppVolumeRemove" xml:space="preserve"><value>Remove</value></data>
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Don't lower game sound during calls</value></data>
   <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Windows communications setting. Discord may need to rejoin the call.</value></data>
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Devices for calls</value></data>

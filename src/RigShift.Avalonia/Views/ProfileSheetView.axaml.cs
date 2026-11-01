@@ -176,6 +176,35 @@ public sealed partial class ProfileSheetView : UserControl
         }
     }
 
+    private void OnAddAppVolume(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control button || _editor is not { } editor)
+        {
+            return;
+        }
+
+        var menu = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
+        foreach (string app in editor.AppsWithSound())
+        {
+            var item = new MenuItem { Header = app };
+            item.Click += (_, _) => editor.AddAppVolume(app);
+            menu.Items.Add(item);
+        }
+
+        var browse = new MenuItem { Header = Loc.Instance["Editor_AppVolumeBrowse"] };
+        browse.Click += (_, _) =>
+        {
+            if (NativeWindow.PickFile(App.OwnerHandle, Loc.Instance["App_FileFilter"], Loc.Instance["Editor_AppVolumeAdd"], null) is { } file)
+            {
+                editor.AddAppVolume(file);
+            }
+        };
+        menu.Items.Add(browse);
+        menu.ShowAt(button);
+    }
+
+    private void OnRemoveAppVolume(object? sender, RoutedEventArgs e) => _editor?.RemoveAppVolumeCommand.Execute(TagOf<AppVolumeItem>(sender));
+
     private void OnRemoveRule(object? sender, RoutedEventArgs e) => _editor?.Rules.RemoveRuleCommand.Execute(TagOf<RuleCard>(sender));
 
     private void OnAddDevice(object? sender, RoutedEventArgs e)

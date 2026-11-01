@@ -287,6 +287,24 @@
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <Border Classes="divider" />
+                    <TextBlock Margin="0,12,0,0" Classes="caption" Text="{v:Tr Editor_AppVolumes}" ToolTip.Tip="{v:Tr Editor_AppVolumesHint}" />
+                    <ItemsControl ItemsSource="{Binding Editor.AppVolumes, FallbackValue={x:Null}}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AppVolumeItem">
+                          <Grid Classes="row" ColumnDefinitions="*,Auto,180,48,Auto" ColumnSpacing="12">
+                            <TextBlock Classes="label" Text="{Binding Executable}" TextTrimming="CharacterEllipsis" />
+                            <CheckBox Grid.Column="1" VerticalAlignment="Center" Content="{v:Tr Editor_AppVolumeMute}" IsChecked="{Binding Muted}" />
+                            <Slider Grid.Column="2" VerticalAlignment="Center" AutomationProperties.Name="{Binding Executable}" IsEnabled="{Binding !Muted}" Maximum="100" Minimum="0" Value="{Binding Volume}" />
+                            <TextBlock Grid.Column="3" Classes="label num" Text="{Binding VolumeText}" />
+                            <Button Grid.Column="4" AutomationProperties.Name="{v:Tr Editor_AppVolumeRemove}" Classes="ghost" Click="OnRemoveAppVolume" Tag="{Binding}" ToolTip.Tip="{v:Tr Editor_AppVolumeRemove}">
+                              <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
+                            </Button>
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Margin="0,4,0,0" HorizontalAlignment="Left" Classes="neutral" Click="OnAddAppVolume" Content="{v:Tr Editor_AppVolumeAdd}" />
+                    <Border Margin="0,12,0,0" Classes="divider" />
                     <Grid Classes="row" ColumnDefinitions="*,Auto">
                       <TextBlock Classes="label" Text="{v:Tr Editor_DisableDucking}" ToolTip.Tip="{v:Tr Editor_DisableDuckingHint}" />
                       <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_DisableDucking}" IsChecked="{Binding Editor.DisableCommunicationsDucking, FallbackValue=False}" OffContent="" OnContent="" />

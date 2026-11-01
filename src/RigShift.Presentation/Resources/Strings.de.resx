@@ -65,6 +65,7 @@
   <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR ließ sich nicht auf jedem Bildschirm setzen.</value></data>
   <data name="Result_WallpaperMissing" xml:space="preserve"><value>Ein Hintergrundbild fehlt; dieser Bildschirm behält sein bisheriges.</value></data>
   <data name="Result_WallpaperIncomplete" xml:space="preserve"><value>Das Hintergrundbild ließ sich nicht auf jedem Bildschirm setzen.</value></data>
+  <data name="Result_AppVolumesNotFound" xml:space="preserve"><value>Lautstärke nicht gesetzt, kein Ton von: {0}</value></data>
   <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktopsymbole nicht platziert: Windows ordnet sie selbst an („Symbole automatisch anordnen“ im Kontextmenü des Desktops).</value></data>
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
@@ -304,6 +305,12 @@
   <data name="Editor_AppsWaitDevice" xml:space="preserve"><value>Vor dem Start auf ein Gerät warten</value></data>
   <data name="Editor_AppsWaitNone" xml:space="preserve"><value>Nicht warten</value></data>
   <data name="Editor_AppsWaitHint" xml:space="preserve"><value>Erscheint das Gerät nicht innerhalb von 30 Sekunden, starten die Apps trotzdem.</value></data>
+  <data name="Editor_AppVolumes" xml:space="preserve"><value>Lautstärke pro App</value></data>
+  <data name="Editor_AppVolumesHint" xml:space="preserve"><value>Gilt nach dem Umschalten, auch für Apps, die innerhalb von drei Minuten Ton abspielen. Andere Apps behalten ihre Lautstärke.</value></data>
+  <data name="Editor_AppVolumeAdd" xml:space="preserve"><value>App hinzufügen</value></data>
+  <data name="Editor_AppVolumeBrowse" xml:space="preserve"><value>Durchsuchen…</value></data>
+  <data name="Editor_AppVolumeMute" xml:space="preserve"><value>Stumm</value></data>
+  <data name="Editor_AppVolumeRemove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Editor_DisableDucking" xml:space="preserve"><value>Spielton bei Anrufen nicht absenken</value></data>
   <data name="Editor_DisableDuckingHint" xml:space="preserve"><value>Windows-Kommunikationseinstellung. Discord muss dem Anruf eventuell neu beitreten.</value></data>
   <data name="Editor_AudioAdvanced" xml:space="preserve"><value>Geräte für Anrufe</value></data>

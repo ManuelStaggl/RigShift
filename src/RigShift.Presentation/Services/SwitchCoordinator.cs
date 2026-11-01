@@ -652,20 +652,20 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
 
     private void FollowUp(SwitchRecord record, SwitchResult result)
     {
-        if (result.Apps == AppsOutcome.Pending || result.DesktopIcons == DesktopIconOutcome.Pending)
+        if (result.Apps == AppsOutcome.Pending || result.DesktopIcons == DesktopIconOutcome.Pending || !result.AppVolumesCompletion.IsCompleted)
         {
-            _ = FollowUpAsync(record, result.AppsCompletion, result.TidyCompletion);
+            _ = FollowUpAsync(record, result.AppsCompletion, result.TidyCompletion, result.AppVolumesCompletion);
         }
     }
 
     // One record update once both ended: the history replaces records by value, so a second update would miss the
     // first.
-    private async Task FollowUpAsync(SwitchRecord record, Task<AppsOutcome> apps, Task<DesktopIconOutcome> tidy)
+    private async Task FollowUpAsync(SwitchRecord record, Task<AppsOutcome> apps, Task<DesktopIconOutcome> tidy, Task<IReadOnlyList<string>> volumes)
     {
         try
         {
-            await Task.WhenAll(apps, tidy);
-            SwitchRecord updated = record with { Apps = await apps, DesktopIcons = await tidy };
+            await Task.WhenAll(apps, tidy, volumes);
+            SwitchRecord updated = record with { Apps = await apps, DesktopIcons = await tidy, AppsWithoutSound = await volumes };
             int index = History.IndexOf(record);
             if (index >= 0)
             {

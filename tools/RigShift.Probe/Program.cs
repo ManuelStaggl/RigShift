@@ -88,6 +88,11 @@ switch (command)
         Print(desktop is null ? new { Reachable = false, Icons = (object?)null } : new { Reachable = true, Icons = (object?)desktop.Icons });
         break;
 
+    case "app-volumes":
+        // Read-only: the programs that have sound open on any playback device.
+        Print(new RigShift.Windows.Audio.SessionAppVolumes(log).AppsWithSound());
+        break;
+
     case "wallpapers":
         // Read-only: every display the shell knows with its wallpaper; the IDs match the snapshot's device paths.
         Print(new RigShift.Windows.Shell.Wallpapers(log).Read());

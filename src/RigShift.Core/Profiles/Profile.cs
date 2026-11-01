@@ -66,6 +66,12 @@ public sealed record Profile
     public WallpaperFit WallpaperFit { get; set; } = WallpaperFit.Fill;
 
     /// <summary>
+    /// Volume per program after a confirmed switch. <c>set</c>: an <c>init</c> initializer is skipped when the key is
+    /// missing.
+    /// </summary>
+    public IReadOnlyList<AppVolume> AppVolumes { get; set; } = [];
+
+    /// <summary>
     /// USB device (<c>VID_xxxx&amp;PID_xxxx</c>) the apps wait for before they start, e.g. the wheelbase; <c>null</c> to start
     /// them right away.
     /// </summary>

@@ -31,6 +31,8 @@ public sealed class JsonProfileStoreTests : IDisposable
             Hotkey = new Hotkey { Modifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt, VirtualKey = 0x70 },
             // A List, like the deserializer creates: Shouldly compares the collection type too.
             Apps = new List<AppAction> { new() { Kind = AppActionKind.Stop, Path = "%ProgramFiles%\\SimHub\\SimHubWPF.exe", Arguments = "-x", WaitSeconds = 2 } },
+            AppVolumes = new List<AppVolume> { new() { Executable = "Discord.exe", VolumePercent = 30, Muted = true } },
+            WallpaperFit = WallpaperFit.Span,
         };
 
         await store.SaveAsync(rig, Ct);

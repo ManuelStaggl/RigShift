@@ -43,6 +43,12 @@ public sealed record SwitchResult
     /// <summary>Whether every display got the HDR state the profile sets; only in the log before 4.0.</summary>
     public HdrOutcome Hdr { get; init; } = HdrOutcome.NotConfigured;
 
+    /// <summary>
+    /// Completes with the programs of the profile's app volumes that never opened their sound after the switch; empty
+    /// when all were set or none are listed. Never faults.
+    /// </summary>
+    public Task<IReadOnlyList<string>> AppVolumesCompletion { get; init; } = NoAppsMissing;
+
     /// <summary>Whether every display got the wallpaper the profile sets.</summary>
     public WallpaperOutcome Wallpaper { get; init; } = WallpaperOutcome.NotConfigured;
 
@@ -65,6 +71,8 @@ public sealed record SwitchResult
     public Task<DesktopIconOutcome> TidyCompletion { get; init; } = NothingToTidy;
 
     internal static Task<AppsOutcome> NoApps { get; } = Task.FromResult(AppsOutcome.NotConfigured);
+
+    internal static Task<IReadOnlyList<string>> NoAppsMissing { get; } = Task.FromResult<IReadOnlyList<string>>([]);
 
     internal static Task<DesktopIconOutcome> NothingToTidy { get; } = Task.FromResult(DesktopIconOutcome.NotConfigured);
 }
