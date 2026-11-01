@@ -10,8 +10,10 @@ namespace RigShift.Windows.Games;
 /// </summary>
 public static class GameExecutable
 {
-    // An install folder can hold tens of thousands of files and the user waits; without an icon the shortcut is still
-    // fine.
+    /// <summary>
+    /// How long the search through the install folder may take. An install folder can hold tens of thousands of files,
+    /// and this runs while the user waits for a shortcut; without an icon the shortcut is still fine.
+    /// </summary>
     private static readonly TimeSpan SearchBudget = TimeSpan.FromSeconds(3);
 
     /// <summary>The game's executable, or <c>null</c> when it cannot be found.</summary>
@@ -72,61 +74,5 @@ public static class GameExecutable
         }
 
         return null;
-    }
-
-    // Programs that come with a game but are not it, by a part of their name or of their folder.
-    private static readonly string[] Helpers =
-    [
-        "unins", "setup", "install", "crash", "report", "redist", "vc_redist", "vcredist", "dxsetup", "dotnet", "UnityCrashHandler",
-        "EasyAntiCheat", "BEService", "BattlEye", "launcher", "_CommonRedist", "DirectX", "Support",
-    ];
-
-    /// <summary>
-    /// The process name a store game most likely runs as before its first start: the largest program under its install
-    /// folder that is no installer, crash reporter, anti-cheat or launcher. An Unreal game's small starter in the top
-    /// folder loses to its <c>…-Win64-Shipping.exe</c>, which is the process that runs. A guess: the first start through
-    /// RigShift replaces it.
-    /// </summary>
-    public static string? GuessProcessName(string installFolder, ILogger log)
-    {
-        ArgumentNullException.ThrowIfNull(installFolder);
-        ArgumentNullException.ThrowIfNull(log);
-        if (!Directory.Exists(installFolder))
-        {
-            return null;
-        }
-
-        var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
-        long started = Stopwatch.GetTimestamp();
-        (string? Path, long Length) best = (null, -1);
-        try
-        {
-            foreach (string file in Directory.EnumerateFiles(installFolder, "*.exe", options))
-            {
-                if (Stopwatch.GetElapsedTime(started) > SearchBudget)
-                {
-                    log.Information("Process name of {Folder} guessed from what was found within {Budget}", installFolder, SearchBudget);
-                    break;
-                }
-
-                string[] parts = Path.GetRelativePath(installFolder, file).Split(Path.DirectorySeparatorChar);
-                if (parts.Any(part => Helpers.Any(h => part.Contains(h, StringComparison.OrdinalIgnoreCase))))
-                {
-                    continue;
-                }
-
-                long length = new FileInfo(file).Length;
-                if (length > best.Length)
-                {
-                    best = (file, length);
-                }
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            log.Warning(ex, "Programs under {Folder} could not be listed for a process name", installFolder);
-        }
-
-        return best.Path is null ? null : Path.GetFileNameWithoutExtension(best.Path);
     }
 }

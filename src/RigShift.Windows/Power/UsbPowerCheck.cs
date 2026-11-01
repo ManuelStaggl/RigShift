@@ -70,7 +70,7 @@ public sealed class UsbPowerCheck : IUsbPowerCheck
         }
     }
 
-    // Null when they cannot be listed; then every known instance counts.
+    /// <summary>Connected instance ids, or <c>null</c> when they cannot be listed – then every known instance counts.</summary>
     private HashSet<string>? ConnectedInstances()
     {
         try

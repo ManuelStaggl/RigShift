@@ -557,35 +557,24 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, true)]
-    public async Task Switch_SkipsConfirmation_WhenProfileOrRequestSaysSo(bool confirm, bool skipRequested)
+    [InlineData(false, false, 15)]
+    [InlineData(true, true, 15)]
+    [InlineData(true, false, 0)]
+    public async Task Switch_SkipsConfirmation_WhenProfileOrRequestOrSettingSaysSo(bool confirm, bool skipRequested, int appSeconds)
     {
         var display = new FakeDisplayConfigurator(DeskActive());
 
         SwitchResult result = await Create(display).SwitchAsync(
-            Rig(confirm), new SwitchRequest { SkipConfirmation = skipRequested, DefaultConfirmTimeoutSeconds = 15 }, Ct);
+            Rig(confirm), new SwitchRequest { SkipConfirmation = skipRequested, DefaultConfirmTimeoutSeconds = appSeconds }, Ct);
 
         result.Outcome.ShouldBe(SwitchOutcome.Applied);
         await _confirmation.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default, default);
     }
 
     [Fact]
-    public async Task Switch_ProfileAsks_CountdownZero_AsksWithTheDefault()
-    {
-        // Only the profile decides whether to ask; 0 seconds (a file before 5.0) is no "off" any more.
-        var display = new FakeDisplayConfigurator(DeskActive());
-        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
-
-        await Create(display).SwitchAsync(Rig(confirm: true), new SwitchRequest { DefaultConfirmTimeoutSeconds = 0 }, Ct);
-
-        await _confirmation.Received(1).ConfirmAsync(Arg.Any<Profile>(), Arg.Any<DisplaySnapshot>(), SwitchOptions.DefaultConfirmTimeout, Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task Switch_FromLink_TimeoutZero_StillConfirms()
     {
-        // A web page must not switch without asking, even when the profile switches without asking.
+        // A web page must not switch without asking, even with confirmation turned off.
         var display = new FakeDisplayConfigurator(DeskActive());
         _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
 
@@ -963,7 +952,7 @@ public sealed class SwitchOrchestratorTests
         {
             Apps =
             [
-                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = 30 },
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true },
                 new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
             ],
         };
@@ -986,7 +975,7 @@ public sealed class SwitchOrchestratorTests
         {
             Apps =
             [
-                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = seconds },
+                new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = seconds, WaitForWindow = true },
                 new AppAction { Path = "C:\\SimHub\\SimHubWPF.exe" },
             ],
         };
@@ -1005,7 +994,7 @@ public sealed class SwitchOrchestratorTests
         var display = new FakeDisplayConfigurator(DeskActive());
         Profile rig = Rig() with
         {
-            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", Wait = AppWait.Window, WaitSeconds = 30 }],
+            Apps = [new AppAction { Path = "C:\\Fanatec\\FanatecApp.exe", WaitSeconds = 30, WaitForWindow = true }],
         };
 
         SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
@@ -1013,72 +1002,6 @@ public sealed class SwitchOrchestratorTests
         (await result.AppsCompletion).ShouldBe(AppsOutcome.Applied);
         _apps.DidNotReceiveWithAnyArgs().HasWindow(default!);
         _time.Elapsed.ShouldBe(TimeSpan.Zero);
-    }
-
-    private const string SimHub = "C:\\SimHub\\SimHubWPF.exe";
-    private const string Fanatec = "C:\\Fanatec\\FanatecApp.exe";
-    private const string CrewChief = "C:\\CrewChief\\CrewChiefV4.exe";
-
-    /// <summary>The rig started SimHub and Crew Chief itself; the Fanatec app ran already.</summary>
-    private async Task<(SwitchOrchestrator Orchestrator, Profile Rig)> RigWithStartedAppsAsync(bool closeApps = true)
-    {
-        _apps.IsRunning(SimHub).Returns(false, true);
-        _apps.IsRunning(CrewChief).Returns(false, true);
-        _apps.IsRunning(Fanatec).Returns(true);
-        _apps.StopAsync(default!, default, default).ReturnsForAnyArgs(true);
-        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
-        Profile rig = Rig() with
-        {
-            CloseAppsWhenLeaving = closeApps,
-            Apps = [new AppAction { Path = Fanatec }, new AppAction { Path = SimHub }, new AppAction { Path = CrewChief }],
-        };
-        SwitchResult toRig = await orchestrator.SwitchAsync(rig, SwitchRequest.Default, Ct);
-        (await toRig.AppsCompletion).ShouldBe(AppsOutcome.Applied);
-        return (orchestrator, rig);
-    }
-
-    [Fact]
-    public async Task SwitchAway_ClosesWhatTheLeftProfileStarted_NewestFirst_NotWhatRanBefore()
-    {
-        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
-
-        SwitchResult toDesk = await orchestrator.SwitchAsync(Profile("Desk", DeskModes), new SwitchRequest { Leaving = rig }, Ct);
-
-        (await toDesk.AppsCompletion).ShouldBe(AppsOutcome.Applied);
-        Received.InOrder(() =>
-        {
-            _apps.StopAsync(CrewChief, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
-            _apps.StopAsync(SimHub, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
-        });
-        await _apps.DidNotReceive().StopAsync(Fanatec, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task SwitchAway_LeavesWhatTheNewProfileStartsToo_AndClosesNothingWhenOff()
-    {
-        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
-        Profile tv = Profile("TV", DeskModes) with { Apps = [new AppAction { Path = SimHub }] };
-
-        await (await orchestrator.SwitchAsync(tv, new SwitchRequest { Leaving = rig }, Ct)).AppsCompletion;
-
-        await _apps.Received(1).StopAsync(CrewChief, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
-        await _apps.DidNotReceive().StopAsync(SimHub, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
-
-        _apps.ClearReceivedCalls();
-        await (await orchestrator.SwitchAsync(Profile("Desk", DeskModes), new SwitchRequest { Leaving = rig with { CloseAppsWhenLeaving = false } }, Ct)).AppsCompletion;
-        await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
-    }
-
-    [Fact]
-    public async Task SwitchAway_ThatIsTakenBack_ClosesNothing()
-    {
-        (SwitchOrchestrator orchestrator, Profile rig) = await RigWithStartedAppsAsync();
-        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
-
-        SwitchResult toDesk = await orchestrator.SwitchAsync(Profile("Desk", DeskModes, confirm: true), new SwitchRequest { Leaving = rig }, Ct);
-
-        toDesk.Outcome.ShouldBe(SwitchOutcome.RolledBack);
-        await _apps.DidNotReceiveWithAnyArgs().StopAsync(default!, default, default);
     }
 
     [Fact]
@@ -1948,81 +1871,6 @@ public sealed class SwitchOrchestratorTests
 
     /// <summary>The desktop the switch tidies up; tests that care about it reach in here.</summary>
     private FakeDesktopIcons DesktopIcons { get; } = new();
-
-    /// <summary>Hears the reports in the order they were made, unlike <see cref="Progress{T}"/> without a UI thread.</summary>
-    private sealed class StepLog : IProgress<SwitchStep>
-    {
-        public List<SwitchStep> Steps { get; } = [];
-
-        public void Report(SwitchStep value)
-        {
-            lock (Steps)
-            {
-                Steps.Add(value);
-            }
-        }
-    }
-
-    [Fact]
-    public async Task Switch_ReportsOnlyTheStepsTheProfileUses_InTheirOrder()
-    {
-        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Confirmed);
-        var log = new StepLog();
-        Profile rig = Rig(confirm: true, audio: new AudioAssignment { Playback = Headphones });
-
-        SwitchResult result = await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(rig, new SwitchRequest { Progress = log }, Ct);
-        await result.AppsCompletion;
-        await result.TidyCompletion;
-
-        log.Steps.Where(s => s.State == SwitchStepState.Waiting).Select(s => s.Kind)
-            .ShouldBe([SwitchStepKind.Displays, SwitchStepKind.Audio, SwitchStepKind.Confirmation]);
-        log.Steps.Where(s => s.Kind == SwitchStepKind.Displays).Select(s => s.State)
-            .ShouldBe([SwitchStepState.Waiting, SwitchStepState.Running, SwitchStepState.Done]);
-        log.Steps.Last(s => s.Kind == SwitchStepKind.Confirmation).State.ShouldBe(SwitchStepState.Done);
-    }
-
-    [Fact]
-    public async Task Switch_TakenBack_ReportsTheConfirmationAsFailed()
-    {
-        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
-        var log = new StepLog();
-
-        await Create(new FakeDisplayConfigurator(DeskActive())).SwitchAsync(Rig(confirm: true), new SwitchRequest { Progress = log }, Ct);
-
-        log.Steps.Last().ShouldBe(new SwitchStep(SwitchStepKind.Confirmation, SwitchStepState.Failed, nameof(ConfirmationResult.Rejected)));
-    }
-
-    private static readonly DesktopIconLayout DeskIcons = new()
-    {
-        CapturedAt = DateTimeOffset.UnixEpoch,
-        Icons = [new DesktopIcon { Item = "a.lnk", X = 10, Y = 20 }],
-    };
-
-    [Fact]
-    public async Task SwitchAway_ReadsTheLeftProfilesDesktopIcons_OnlyWhenItRemembersThemAndTheSwitchStays()
-    {
-        DesktopIcons.Restore(DeskIcons);
-        Profile desk = Profile("Desk", DeskModes) with { RememberDesktopIcons = true };
-        SwitchOrchestrator orchestrator = Create(new FakeDisplayConfigurator(DeskActive()));
-
-        SwitchResult stayed = await orchestrator.SwitchAsync(Rig(), new SwitchRequest { Leaving = desk }, Ct);
-        stayed.LeftDesktopIcons.ShouldNotBeNull().Icons.ShouldBe(DeskIcons.Icons);
-
-        (await orchestrator.SwitchAsync(Rig(), new SwitchRequest { Leaving = desk with { RememberDesktopIcons = false } }, Ct)).LeftDesktopIcons.ShouldBeNull();
-        (await orchestrator.SwitchAsync(Rig(), SwitchRequest.Default, Ct)).LeftDesktopIcons.ShouldBeNull("no profile was active");
-
-        _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
-        SwitchResult rejected = await orchestrator.SwitchAsync(Rig(confirm: true), new SwitchRequest { Leaving = desk }, Ct);
-        rejected.Outcome.ShouldBe(SwitchOutcome.RolledBack);
-        rejected.LeftDesktopIcons.ShouldBeNull();
-    }
-
-    [Fact]
-    public void RemembersDesktopIcons_IsOnForALayoutSavedBefore()
-    {
-        Profile("Desk", DeskModes).RemembersDesktopIcons.ShouldBeFalse();
-        (Profile("Desk", DeskModes) with { DesktopIcons = DeskIcons }).RemembersDesktopIcons.ShouldBeTrue();
-    }
 
     /// <summary>A desktop layout to hand a profile: one shortcut and the recycle bin.</summary>
     private static readonly DesktopIconLayout Layout = new()

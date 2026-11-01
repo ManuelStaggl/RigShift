@@ -5,8 +5,9 @@ using Serilog;
 namespace RigShift.Core.Topology;
 
 /// <summary>
-/// The Surround step of a switch. It runs first because Surround decides which displays Windows sees, so a rollback
-/// undoes it first too.
+/// The Surround step of a switch. It runs before the display arrangement, because turning Surround on or off decides
+/// which displays Windows sees at all - three monitors become one wide one and back. That also makes it the one step
+/// a rollback has to undo first, which is why the state is captured before anything is touched.
 /// </summary>
 internal sealed class SurroundSwitcher
 {
@@ -20,8 +21,8 @@ internal sealed class SurroundSwitcher
     }
 
     /// <summary>
-    /// The Surround state for the rollback and the crash journal; <c>null</c> when the profile leaves Surround alone or
-    /// it cannot be read.
+    /// The Surround state as a setting that can be applied again, or <c>null</c> when the profile leaves Surround alone
+    /// or the state cannot be read. A captured state is what the rollback and the crash journal restore.
     /// </summary>
     internal async Task<SurroundSetting?> CaptureAsync(Profile profile, CancellationToken cancellationToken)
     {
@@ -42,7 +43,10 @@ internal sealed class SurroundSwitcher
             : new SurroundSetting { Enabled = false };
     }
 
-    /// <summary>A profile without a Surround setting does not care about Surround; it does not want it off.</summary>
+    /// <summary>
+    /// Applies what the profile asks for. A profile without a Surround setting is not a profile that wants Surround
+    /// off - it is one that does not care, and then nothing happens.
+    /// </summary>
     internal async Task<SurroundApplyResult> SwitchAsync(Profile profile, CancellationToken cancellationToken)
     {
         if (profile.Surround is not { } wanted)
@@ -73,8 +77,8 @@ internal sealed class SurroundSwitcher
     }
 
     /// <summary>
-    /// Never throws: a rollback has nothing better to try. Returns the driver's reason when Surround could not be put
-    /// back.
+    /// Puts a captured state back. Failures are logged, never thrown: a rollback has nothing better to try. Returns the
+    /// driver's reason when Surround could not be put back, so the result does not claim a state that is not there.
     /// </summary>
     internal async Task<string?> RestoreAsync(SurroundSetting? captured, CancellationToken cancellationToken)
     {

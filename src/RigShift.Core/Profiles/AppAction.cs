@@ -1,17 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace RigShift.Core.Profiles;
 
 /// <summary>A program to start or end after a confirmed switch.</summary>
 public sealed record AppAction
 {
-    /// <summary>The longest window wait when no seconds are given – what an empty field meant up to 4.x.</summary>
-    public const int DefaultWindowWaitSeconds = 60;
-
-    private readonly int _seconds;
-    private readonly bool _legacyWaitForWindow;
-    private AppWait? _wait;
-
     public AppActionKind Kind { get; init; }
 
     /// <summary>Path to the program; environment variables such as <c>%ProgramFiles%</c> are expanded.</summary>
@@ -23,36 +14,14 @@ public sealed record AppAction
     /// <summary>Command line arguments for <see cref="AppActionKind.Start"/>; ignored when ending an app.</summary>
     public string? Arguments { get; init; }
 
-    /// <summary>
-    /// How the next entry waits for this one. <c>set</c> rather than <c>init</c>: the JSON source generator then leaves it
-    /// alone when the key is missing, so an entry from before 5.0 keeps its meaning from <see cref="WaitSeconds"/> and
-    /// <see cref="LegacyWaitForWindow"/>, and is written in the new form on the next save.
-    /// </summary>
-    public AppWait Wait
-    {
-        get => _wait ?? (LegacyWindowWait ? AppWait.Window : _seconds > 0 ? AppWait.Fixed : AppWait.None);
-        set => _wait = value;
-    }
-
-    /// <summary>The pause for <see cref="AppWait.Fixed"/>, the longest wait for <see cref="AppWait.Window"/>.</summary>
-    public int WaitSeconds
-    {
-        get => _wait is null && LegacyWindowWait && _seconds <= 0 ? DefaultWindowWaitSeconds : _seconds;
-        init => _seconds = value;
-    }
+    /// <summary>Seconds to wait after this entry before the next one runs.</summary>
+    public int WaitSeconds { get; init; }
 
     /// <summary>
-    /// "Until its window" up to 4.x: it turned <see cref="WaitSeconds"/> into the longest wait, and none meant a minute.
-    /// Only read from old files to give <see cref="Wait"/> their meaning. It reads back <c>false</c> so that it is never
-    /// written again: an editor comparing the stored form would otherwise see a change nobody made.
+    /// For <see cref="AppActionKind.Start"/>: the wait ends as soon as the program shows a window – "SimHub is up",
+    /// instead of a guess at how long it takes. <see cref="WaitSeconds"/> is then the longest wait; without any, a minute.
     /// </summary>
-    [JsonPropertyName("waitForWindow")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool LegacyWaitForWindow
-    {
-        get => false;
-        init => _legacyWaitForWindow = value;
-    }
+    public bool WaitForWindow { get; init; }
 
     /// <summary>
     /// For a game entry: whether this program runs before or after the game itself. Ignored in a profile, which has
@@ -60,38 +29,6 @@ public sealed record AppAction
     /// keeps its meaning.
     /// </summary>
     public AppTiming When { get; init; }
-
-    // Up to 4.x the window wait applied only to a start; an end with it ticked waited its seconds.
-    private bool LegacyWindowWait => _legacyWaitForWindow && Kind == AppActionKind.Start;
-
-    /// <summary>By what the entry does: an old entry equals the new one it amounts to, whatever the fields behind it hold.</summary>
-    public bool Equals(AppAction? other) =>
-        other is not null
-        && Kind == other.Kind
-        && Path == other.Path
-        && Name == other.Name
-        && Arguments == other.Arguments
-        && Wait == other.Wait
-        && WaitSeconds == other.WaitSeconds
-        && When == other.When;
-
-    public override int GetHashCode() => HashCode.Combine(Kind, Path, Name, Arguments, Wait, WaitSeconds, When);
-}
-
-/// <summary>How the next app in the list waits for this one.</summary>
-public enum AppWait
-{
-    /// <summary>The next app runs right away.</summary>
-    None,
-
-    /// <summary>
-    /// For a start: on as soon as the program shows a window ("SimHub is up" instead of a guess at how long it takes),
-    /// at the latest after <see cref="AppAction.WaitSeconds"/>.
-    /// </summary>
-    Window,
-
-    /// <summary>Always <see cref="AppAction.WaitSeconds"/>.</summary>
-    Fixed,
 }
 
 /// <summary>

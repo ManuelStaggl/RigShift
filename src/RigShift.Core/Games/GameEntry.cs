@@ -14,9 +14,6 @@ public sealed record GameEntry
 
     public required string Name { get; init; }
 
-    /// <summary>Names before a rename; name lookups still match them (<see cref="NameHistory"/>).</summary>
-    public IReadOnlyList<string>? FormerNames { get; init; }
-
     /// <summary>Optional symbol key, one of <see cref="ProfileIcons.All"/>; unknown keys show the RigShift symbol.</summary>
     public string? Icon { get; init; }
 
@@ -53,21 +50,19 @@ public sealed record GameEntry
     public GameExitAction Exit { get; set; } = GameExitAction.Stay;
 
     /// <summary>
-    /// Process name of the menu or launcher the session ends with, without extension; <c>null</c>: the session ends
-    /// with the game. iRacing is the reason this exists: its interface (<c>iRacingUI</c>) stays open all evening while
-    /// the sim itself (<c>iRacingSim64DX11</c>) starts at "Go Racing" and ends again on every return to the menu.
-    /// Hanging the session on the sim would end it between two races. Assetto Corsa with Content Manager, rFactor 2,
-    /// Automobilista 2 and DCS are built the same way. Prefilled from <see cref="SimTemplates"/> for known sims.
+    /// What counts as "the game is over". iRacing is the reason this is a choice: its interface
+    /// (<c>iRacingUI</c>) stays open all evening while the sim itself (<c>iRacingSim64DX11</c>) starts at "Go
+    /// Racing" and ends again on every return to the menu. Hanging the session on the sim would end it between two
+    /// races; hanging it on the interface ends it when the user is really done. Assetto Corsa with Content Manager,
+    /// rFactor 2, Automobilista 2 and DCS are built the same way.
     /// </summary>
-    public string? LauncherProcessName { get; init; }
+    public SessionEnd EndsWith { get; set; } = SessionEnd.GameProcess;
 
     /// <summary>
-    /// Schema 1 asked separately whether the session ends with the launcher, and a name without that choice did
-    /// nothing. Only read: the store folds it into <see cref="LauncherProcessName"/> on load and never writes it.
+    /// Process name of the launcher or interface for <see cref="SessionEnd.LauncherProcess"/>, without extension.
+    /// Prefilled from <see cref="SimTemplates"/> where the game is a known sim.
     /// </summary>
-    [JsonPropertyName("endsWith")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SessionEnd? LegacyEndsWith { get; init; }
+    public string? LauncherProcessName { get; init; }
 
     /// <summary>System-wide key combination that starts this game while the tray app runs; <c>null</c> for none.</summary>
     public Hotkey? Hotkey { get; init; }
@@ -77,12 +72,6 @@ public sealed record GameEntry
     /// possible once <see cref="GameLaunch.ProcessName"/> is known, which the first start learns.
     /// </summary>
     public bool StartWithGame { get; init; }
-
-    /// <summary>
-    /// While the game is in the foreground, the mouse cannot leave the display its window is on, so a click into a menu
-    /// does not land on a side display and take the focus away.
-    /// </summary>
-    public bool KeepMouseOnDisplay { get; init; }
 
     /// <summary>Values this entry keeps for itself in the game's settings file, e.g. lighter graphics for VR; <c>null</c> for none.</summary>
     public GameSettings? Settings { get; init; }
@@ -124,12 +113,6 @@ public sealed record GameLaunch
     /// <c>null</c> until then; for <see cref="GameLaunchKind.Executable"/> it follows from the path and is not stored.
     /// </summary>
     public string? ProcessName { get; init; }
-
-    /// <summary>
-    /// <see cref="ProcessName"/> was guessed from the install folder when the game was added, not learned or typed. A
-    /// session through RigShift learns the name anyway and replaces the guess.
-    /// </summary>
-    public bool ProcessNameGuessed { get; init; }
 
     /// <summary>
     /// Whether <see cref="Target"/> has the form its kind calls for: digits for Steam, the characters of an Epic
@@ -210,7 +193,7 @@ public sealed record GameExitAction
     public static GameExitAction Stay { get; } = new() { Kind = GameExitKind.Stay };
 }
 
-/// <summary>What the end of a game session hung on in schema 1, see <see cref="GameEntry.LegacyEndsWith"/>.</summary>
+/// <summary>What the end of a game session hangs on.</summary>
 public enum SessionEnd
 {
     /// <summary>The game's own process ended. Right for everything that is one program.</summary>

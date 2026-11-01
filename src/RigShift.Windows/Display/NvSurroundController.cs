@@ -80,7 +80,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
     }
 
-    // A machine without an NVIDIA driver answers null forever, without trying again.
+    /// <summary>Opens NVAPI once. A machine without an NVIDIA driver answers null forever, without trying again.</summary>
     private INvMosaic? Api()
     {
         lock (_gate)
@@ -217,8 +217,11 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         return Set(api, singles, "switch Surround off", before);
     }
 
-    // A display Windows switched off does not join a new grid until set on its own (DisplayMagician does the same);
-    // failures are only logged.
+    /// <summary>
+    /// Gives every display of the grid its own 1x1 grid before the grid is built. A display the previous arrangement
+    /// switched off in Windows does not join a new grid; set on its own, it wakes up. DisplayMagician does the same
+    /// before it builds a grid on a desktop without Surround. A failure here is only logged - the build still decides.
+    /// </summary>
     private void Wake(INvMosaic api, SurroundGrid grid)
     {
         MosaicGridTopoV2[] singles = [.. Singles([grid]).Select(ToTopo)];
@@ -249,8 +252,10 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
             Displays = [display with { OverlapX = 0, OverlapY = 0 }],
         }));
 
-    // Strictest flags first (FlagSteps); only an answer naming the flags as the obstacle moves on, any other failure is
-    // final.
+    /// <summary>
+    /// Sets the grids, from the strictest flags to the loosest (<see cref="FlagSteps"/>). Only an answer that names the
+    /// flags as the obstacle moves on to the next step; any other failure is final.
+    /// </summary>
     private int SetGrids(INvMosaic api, MosaicGridTopoV2[] grids, bool validate)
     {
         int status = NvApi.Status.Ok;
@@ -292,8 +297,11 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         _ => "keep GPU topology, no driver reload",
     };
 
-    // Log only: the check rejects grids the set call then builds (DisplayMagician switched it off), so the set call
-    // decides.
+    /// <summary>
+    /// Lets the driver check the grids and logs what it finds - for the log only. The check is known to reject grids that
+    /// the set call then builds without complaint (DisplayMagician switched it off for that reason), so the set call's own
+    /// answer decides. It is asked with the same flags as the set call that follows.
+    /// </summary>
     private void Validate(INvMosaic api, MosaicGridTopoV2[] grids, uint flags)
     {
         var verdicts = new MosaicDisplayTopoStatus[grids.Length];
@@ -356,7 +364,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         return new SurroundApplyResult { Outcome = SurroundOutcome.Changed };
     }
 
-    // Blocks the worker thread the driver calls run on, as the driver calls themselves do.
+    /// <summary>A blocking pause on the worker thread the driver calls run on, as the driver calls themselves block.</summary>
     private void Pause(TimeSpan duration) => Task.Delay(duration, _time).Wait();
 
     private SurroundApplyResult Failure(INvMosaic api, string what, int status)
@@ -366,6 +374,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         return new SurroundApplyResult { Outcome = SurroundOutcome.Failed, Message = what + ": " + message + "." };
     }
 
+    /// <summary>The first display of the check that carries a problem flag, in words.</summary>
     private static string? DisplayProblems(MosaicDisplayTopoStatus check)
     {
         for (int i = 0; i < check.DisplayCount && i < NvApi.MaxDisplays; i++)
@@ -409,7 +418,10 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         }
     }
 
-    // Driver id → Windows target → live display list; ids the driver or Windows will not place get no name.
+    /// <summary>
+    /// Monitor names for driver display ids, by asking the driver which Windows target each id sits on and looking that
+    /// target up in the live display list. Ids the driver or Windows will not place simply get no name.
+    /// </summary>
     private async Task<Dictionary<uint, string>> NamesAsync(IReadOnlyList<uint> ids, CancellationToken cancellationToken)
     {
         var names = new Dictionary<uint, string>();
@@ -537,7 +549,7 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         return topo;
     }
 
-    // NV_ROTATE 0–3; 4 ("ignored") reads as none.
+    /// <summary>NV_ROTATE: 0, 90, 180 and 270 degrees as 0 to 3; 4 ("ignored") reads as none.</summary>
     private static DisplayRotation FromNvRotation(uint rotation) => rotation switch
     {
         1 => DisplayRotation.Rotate90,
@@ -554,8 +566,12 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         _ => 0,
     };
 
-    // Keeping the GPU topology fails without Surround (NVAPI_NO_ACTIVE_SLI_TOPOLOGY, RTX 2080, 610.88); the last step
-    // may reload the driver, as DisplayMagician always does.
+    /// <summary>
+    /// The flags of each try at setting grids. Keeping the running GPU topology works while Surround runs; on a desktop
+    /// without Surround there is none to keep, and the driver refuses every new grid with NVAPI_NO_ACTIVE_SLI_TOPOLOGY
+    /// (RTX 2080, driver 610.88). The second step lets the driver choose the topology but still forbids a reload; the last
+    /// is what DisplayMagician always passes. It may reload the driver - still better than no Surround when it was asked for.
+    /// </summary>
     private static readonly uint[] FlagSteps =
     [
         NvApi.SetTopologyFlag.CurrentGpuTopology | NvApi.SetTopologyFlag.NoDriverReload,
@@ -563,13 +579,13 @@ public sealed class NvSurroundController : ISurroundController, IDisposable
         NvApi.SetTopologyFlag.None,
     ];
 
-    // Every display the driver can drive, each as its own grid.
+    /// <summary>Enough for every display the driver can drive, each as its own grid.</summary>
     private const int MaxGrids = NvApi.MaxDisplays;
 
-    // Pause before the grid is built on the woken displays; DisplayMagician waits a similar time.
+    /// <summary>Pause after waking the displays, before the grid is built on them. DisplayMagician waits a similar time.</summary>
     private static readonly TimeSpan WakeSettle = TimeSpan.FromSeconds(1.5);
 
-    // How long a set call may take to show in the reported grids before it counts as "did nothing".
+    /// <summary>How long a set call may take to show in the reported grids before it counts as "did nothing".</summary>
     private static readonly TimeSpan SettleBudget = TimeSpan.FromSeconds(5);
 
     private static readonly TimeSpan SettlePoll = TimeSpan.FromMilliseconds(250);

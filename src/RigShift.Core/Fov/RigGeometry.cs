@@ -63,7 +63,7 @@ public static class RigGeometry
         return [centre, left, right];
     }
 
-    // The arc bulges away from the eye, as a concave screen does.
+    /// <summary>One panel around the middle of its chord; the arc bulges away from the eye, as a concave screen does.</summary>
     private static RigPanel Panel(FovPoint middle, double ux, double uy, double halfChord, double radius, double halfArc)
     {
         if (radius <= 0)

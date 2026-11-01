@@ -6,7 +6,7 @@ namespace RigShift.Core.Fov;
 /// </summary>
 public static class DisplayModels
 {
-    // Longest name first, so G95SC is not eaten by G95C.
+    /// <summary>Longest name first, so <c>G95SC</c> is not eaten by <c>G95C</c>.</summary>
     private static readonly (string Name, int RadiusMm)[] Known =
     [
         ("45GR95QE", 800),

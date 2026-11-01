@@ -95,7 +95,7 @@ public static class Edid
         }
     }
 
-    // The fixed first eight bytes of every EDID base block.
+    /// <summary>The fixed first eight bytes of every EDID base block.</summary>
     private static ReadOnlySpan<byte> Header => [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
 
     /// <summary>Header and base block checksum are right: the bytes are an EDID, not a broken or foreign blob.</summary>
@@ -139,6 +139,7 @@ public static class Edid
         return Convert.ToHexString(hash, 0, 8);
     }
 
+    /// <summary>The text of the first display descriptor with <paramref name="tag"/>, up to its line feed; empty without one.</summary>
     private static string DescriptorText(byte[] edid, byte tag)
     {
         for (int offset = 54; offset <= 108; offset += 18)

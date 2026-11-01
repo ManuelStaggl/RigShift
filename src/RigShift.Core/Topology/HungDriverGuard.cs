@@ -17,7 +17,7 @@ public sealed class HungDriverGuard : IDisplayConfigurator
     private readonly TimeProvider _time;
     private readonly ILogger _log;
 
-    // The driver counts as hung while this call runs.
+    /// <summary>The call that did not return in time; the driver counts as hung while it runs.</summary>
     private Task? _stuck;
 
     public HungDriverGuard(IDisplayConfigurator inner, SwitchOptions options, TimeProvider time, ILogger log)

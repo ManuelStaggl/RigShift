@@ -10,8 +10,8 @@ internal static class JsonFile
     public static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
-    /// Opens without blocking writers or deleters (an editor or antivirus may hold the file) and retries once after
-    /// <see cref="RetryDelay"/>.
+    /// Opens without blocking writers or deleters (an editor or antivirus holding the file must not hide it) and tries a
+    /// second time after <see cref="RetryDelay"/>, because such locks are usually brief. The second failure is thrown.
     /// </summary>
     public static async Task<T?> ReadWithRetryAsync<T>(
         string file, JsonTypeInfo<T> type, TimeProvider time, ILogger log, CancellationToken cancellationToken)

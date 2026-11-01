@@ -1,0 +1,415 @@
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using RigShift.App.Localization;
+using RigShift.App.ViewModels;
+using RigShift.App.Views;
+using RigShift.Core.Abstractions;
+using RigShift.Core.Profiles;
+using RigShift.Core.Storage;
+using RigShift.Core.Topology;
+using Serilog;
+using Wpf.Ui.Controls;
+
+namespace RigShift.App.Services;
+
+/// <summary>The answer to "the same error keeps coming back".</summary>
+public enum RepeatedErrorChoice
+{
+    Continue,
+    Restart,
+    OpenLog,
+}
+
+/// <summary>What the user chose when leaving a profile with unsaved changes.</summary>
+public enum UnsavedChoice
+{
+    Save,
+    Discard,
+    Cancel,
+}
+
+/// <summary>
+/// What the profiles page asks of the user or builds for them. The page's logic – what happens to unsaved changes,
+/// which profile is selected after a delete – runs against this, so it can be tested without a window.
+/// </summary>
+public interface IProfilePageDialogs
+{
+    /// <summary>A new, unsaved profile from the active displays.</summary>
+    Task<Profile> NewFromCurrentAsync();
+
+    /// <summary>The detail's editor for a profile.</summary>
+    Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew);
+
+    Task ShowSetupAssistantAsync();
+
+    /// <param name="ruleCount">USB rules that go with the profile.</param>
+    Task<bool> ConfirmDeleteAsync(string name, int ruleCount);
+
+    /// <param name="targetName">The profile the user picked instead, when the question comes from the list.</param>
+    Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName);
+}
+
+/// <summary>What the help page asks of the user: files for backups and support packages, and the restore question.</summary>
+public interface IHelpPageDialogs
+{
+    Task ShowSetupAssistantAsync();
+
+    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
+    string? PickZipToSave(string suggestedName);
+
+    /// <returns>The chosen path, or <c>null</c> when the user cancelled.</returns>
+    string? PickZipToOpen();
+
+    Task<bool> ConfirmRestoreAsync(BackupContent content);
+}
+
+/// <summary>Builds the profile detail's editor, opens the setup assistant and asks the questions around profiles.</summary>
+public sealed class ProfileDialogs : IProfilePageDialogs, IHelpPageDialogs
+{
+    private readonly ProfileEditorServices _editorServices;
+    private readonly ProfileCatalog _catalog;
+    private readonly IDisplayConfigurator _display;
+    private readonly IAudioController _audio;
+    private readonly SettingsService _settings;
+    private readonly IUsbDeviceList _usbDevices;
+    private readonly ISurroundController _surround;
+    private readonly IUsbPowerCheck _powerCheck;
+    private readonly ActiveProfileMatcher _matcher;
+    private readonly DisplayChangeWatcher _displayChanges;
+    private readonly SwitchCoordinator _coordinator;
+    private readonly ILogger _log;
+
+    /// <param name="editorServices">Handed to every editor; its catalog, displays, settings and log serve the dialogs too.</param>
+    public ProfileDialogs(
+        ProfileEditorServices editorServices,
+        IAudioController audio,
+        IUsbDeviceList usbDevices,
+        ISurroundController surround,
+        IUsbPowerCheck powerCheck,
+        ActiveProfileMatcher matcher,
+        DisplayChangeWatcher displayChanges,
+        SwitchCoordinator coordinator)
+    {
+        ArgumentNullException.ThrowIfNull(editorServices);
+        _editorServices = editorServices;
+        _catalog = editorServices.Catalog;
+        _display = editorServices.Display;
+        _settings = editorServices.Settings;
+        _audio = audio;
+        _usbDevices = usbDevices;
+        _surround = surround;
+        _powerCheck = powerCheck;
+        _matcher = matcher;
+        _displayChanges = displayChanges;
+        _coordinator = coordinator;
+        _log = editorServices.Log.ForContext<ProfileDialogs>();
+    }
+
+    Task IProfilePageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task IHelpPageDialogs.ShowSetupAssistantAsync() => ShowSetupAssistantAsync();
+
+    Task<bool> IHelpPageDialogs.ConfirmRestoreAsync(BackupContent content) => ConfirmRestoreAsync(content);
+
+    public string? PickZipToSave(string suggestedName)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = suggestedName,
+            DefaultExt = ".zip",
+            Filter = "ZIP (*.zip)|*.zip",
+            AddExtension = true,
+        };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? PickZipToOpen()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "ZIP (*.zip)|*.zip", CheckFileExists = true };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    Task<bool> IProfilePageDialogs.ConfirmDeleteAsync(string name, int ruleCount) => ConfirmDeleteAsync(name, ruleCount);
+
+    Task<UnsavedChoice> IProfilePageDialogs.ConfirmUnsavedAsync(string name, string? targetName) => ConfirmUnsavedAsync(name, targetName);
+
+    /// <summary>A new, unsaved profile from the active displays and the default playback device (F3).</summary>
+    public async Task<Profile> NewFromCurrentAsync()
+    {
+        DisplaySnapshot snapshot;
+        try
+        {
+            snapshot = await _display.QueryAsync(CancellationToken.None);
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "Current arrangement could not be read for a new profile");
+            snapshot = new DisplaySnapshot { TakenAt = DateTimeOffset.Now, Displays = [] };
+        }
+
+        IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
+        string name = ProfileEditing.UniqueName(Loc.Instance["Editor_NewName"], _catalog.Profiles.Select(p => p.Name));
+        AudioEndpoint? defaultPlayback = playback.FirstOrDefault(d => d.IsDefault && d.IsActive)?.Endpoint;
+        Profile profile = ProfileEditing.Capture(name, snapshot, new AudioAssignment { Playback = defaultPlayback }, _catalog.KnownDisplayNames);
+
+        // A running Surround grid is part of "the arrangement as it is now" - without it the profile could never
+        // reproduce the wide display it just recorded.
+        SurroundState surround = await ReadSurroundAsync();
+        if (surround.Grids.Count > 0)
+        {
+            profile = profile with { Surround = new SurroundSetting { Enabled = true, Grid = surround.Grids[0] } };
+        }
+
+        return profile;
+    }
+
+    /// <summary>The detail's editor for a profile: audio and USB lists, Surround and the profile's rules from the settings.</summary>
+    public async Task<ProfileEditorViewModel> CreateEditorAsync(Profile profile, bool isNew)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        IReadOnlyList<AudioDeviceInfo> playback = await ListAudioAsync(AudioDirection.Render);
+        IReadOnlyList<AudioDeviceInfo> recording = await ListAudioAsync(AudioDirection.Capture);
+        IReadOnlyList<Core.Automation.UsbDevice> usbDevices = await ListUsbDevicesAsync();
+        SurroundState surround = await ReadSurroundAsync();
+        Core.Settings.AppSettings settings = _settings.Current;
+        var rules = new ProfileRulesEditor(
+            profile.Id, settings.AutomationRules ?? [], _catalog.Profiles, settings.DefaultProfileId, usbDevices, settings.UsbDeviceNames,
+            _powerCheck, _log);
+        var appsWaitDevice = new AppsWaitDeviceChoice(
+            profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, usbDevices,
+            UsbDeviceChoices.Known(settings.AutomationRules, _catalog.Profiles, settings.UsbDeviceNames), settings.UsbDeviceNames);
+        var context = new ProfileEditorContext(
+            playback, recording, appsWaitDevice, surround, rules, ConfirmationEnabled: settings.ConfirmTimeoutSeconds > 0,
+            SurroundUsedBy: SurroundDefaults.UsedByAnother(profile.Id, _catalog.Profiles)?.Name);
+        return new ProfileEditorViewModel(profile, isNew, context, _editorServices);
+    }
+
+    /// <summary>The setup assistant; remembers that it was shown.</summary>
+    /// <param name="previewStep">Debug builds: open at this step with demo profiles, for screenshots.</param>
+    public async Task ShowSetupAssistantAsync(SetupStep? previewStep = null)
+    {
+        var viewModel = new SetupWizardViewModel(_catalog, _display, _audio, _usbDevices, _powerCheck, _matcher, _settings, _surround, _editorServices.Hotkeys, _log);
+#if DEBUG
+        if (previewStep is { } step)
+        {
+            await viewModel.PreviewAsync(step);
+        }
+#else
+        _ = previewStep;
+#endif
+        var window = new SetupWizardWindow(viewModel, _displayChanges);
+
+        // Looked up rather than injected: asking the container for it would build the main window just to find it hidden.
+        if (System.Windows.Application.Current?.Windows.OfType<MainWindow>().FirstOrDefault(w => w.IsVisible) is { } main)
+        {
+            window.Owner = main;
+        }
+        else
+        {
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+        }
+
+        try
+        {
+            await _settings.UpdateAsync(s => s with { SetupAssistantShown = true }, CancellationToken.None, notify: false);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _log.Warning(ex, "Could not remember that the setup assistant was shown");
+        }
+
+        _log.Information("Setup assistant opening at step {Step}", viewModel.Step);
+        window.ShowDialog();
+        _log.Information("Setup assistant closed");
+
+        // "Try it" on the last step: the first real switch, with the countdown that takes it back.
+        if (viewModel.SwitchAfterClose is { } target)
+        {
+            await _coordinator.SwitchAsync(target);
+        }
+    }
+
+    /// <summary>Delete is destructive: red text, never the accent.</summary>
+    /// <param name="ruleCount">USB rules that go with the profile; named in the question so the loss is no surprise.</param>
+    public static async Task<bool> ConfirmDeleteAsync(string name, int ruleCount = 0) =>
+        await Ask(
+            Loc.Instance["Profile_DeleteTitle"],
+            Loc.Format(ruleCount > 0 ? "Profile_DeleteTextWithRules" : "Profile_DeleteText", name),
+            Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
+
+    /// <summary>
+    /// Asks whether to undo a switch that never finished, e.g. because RigShift was killed between the apply and the
+    /// confirmation. The answer is the user's: their screens may look right by now (Windows restored them, or they
+    /// sorted it out by hand), and in that case putting the old layout back would be the disruptive move.
+    /// </summary>
+    public static async Task<bool> ConfirmRestoreInterruptedAsync(string targetProfileName) =>
+        await Ask(
+            Loc.Instance["Interrupted_Title"], Loc.Format("Interrupted_Text", targetProfileName),
+            Loc.Instance["Interrupted_Restore"], DialogButtonKind.Primary, Loc.Instance["Interrupted_Keep"]);
+
+    /// <summary>
+    /// Asks before quitting while a game session runs: without RigShift nothing switches back or closes the tools when the
+    /// game ends. An update waits for the exit, so it simply comes later.
+    /// </summary>
+    public static async Task<bool> ConfirmQuitDuringGameAsync(string games) =>
+        await Ask(
+            Loc.Instance["QuitGame_Title"], Loc.Format("QuitGame_Text", games),
+            Loc.Instance["QuitGame_Quit"], DialogButtonKind.Danger, Loc.Instance["QuitGame_Stay"]);
+
+    /// <summary>
+    /// Told once at startup: the settings file was unusable and defaults are in force. Not a toast – what is gone
+    /// (rules, hotkeys, the update choice) changes how the machine behaves, and the copy is only useful if the user
+    /// knows it exists.
+    /// </summary>
+    /// <returns><c>true</c> when the user wants to see the folder with the copy.</returns>
+    public static async Task<bool> ShowSettingsProblemAsync(Core.Settings.SettingsLoadReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        string? copy = report.BackupFile is null ? null : System.IO.Path.GetFileName(report.BackupFile);
+        bool newer = report.Problem == Core.Settings.SettingsLoadProblem.FromNewerVersion;
+        string text = newer ? Loc.Format("SettingsProblem_NewerText", copy ?? "–")
+            : copy is null ? Loc.Instance["SettingsProblem_TextNoCopy"]
+            : Loc.Format("SettingsProblem_TextCopy", copy);
+        return await Ask(
+            Loc.Instance[newer ? "SettingsProblem_NewerTitle" : "SettingsProblem_Title"], text,
+            Loc.Instance["SettingsProblem_OpenFolder"], DialogButtonKind.Secondary, Loc.Instance["Common_Close"]);
+    }
+
+    /// <summary>Asked when the same UI exception keeps coming back; restarting is the primary way out.</summary>
+    public static async Task<RepeatedErrorChoice> AskAboutRepeatedErrorAsync(string message) =>
+        (RepeatedErrorChoice)await DialogWindow.AskAsync(
+            Loc.Instance["Crash_Title"], Loc.Format("Crash_Text", message),
+            [
+                new DialogChoice(Loc.Instance["Crash_Restart"], DialogButtonKind.Primary, (int)RepeatedErrorChoice.Restart),
+                new DialogChoice(Loc.Instance["Crash_OpenLog"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.OpenLog),
+                new DialogChoice(Loc.Instance["Crash_Continue"], DialogButtonKind.Secondary, (int)RepeatedErrorChoice.Continue),
+            ],
+            cancelResult: (int)RepeatedErrorChoice.Continue);
+
+    /// <summary>Same style as deleting a profile.</summary>
+    /// <param name="deviceName">The rule's USB device, or <c>null</c> when none is chosen.</param>
+    public static async Task<bool> ConfirmDeleteRuleAsync(string? deviceName) =>
+        await Ask(
+            Loc.Instance["Automation_DeleteTitle"],
+            deviceName is null ? Loc.Instance["Automation_DeleteTextNoDevice"] : Loc.Format("Automation_DeleteText", deviceName),
+            Loc.Instance["Profile_Delete"], DialogButtonKind.Danger);
+
+    /// <summary>
+    /// Restoring a backup replaces everything: same style as deleting (1.7.0). A backup also brings programs to
+    /// start and end, rules and hotkeys – and it may come from somebody else – so all of those are listed first.
+    /// </summary>
+    public static async Task<bool> ConfirmRestoreAsync(BackupContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        IReadOnlyList<BackupItem> items = BackupReview.Review(content);
+        string message = Loc.Format(content.Games is null ? "About_RestoreText" : "About_RestoreTextGames", content.Profiles.Count, content.Games?.Count ?? 0);
+        if (items.Count > 0)
+        {
+            message += " " + Loc.Instance[items.Any(i => i.NeedsAttention) ? "About_RestoreReviewAttention" : "About_RestoreReview"];
+        }
+
+        return await DialogWindow.AskAsync(
+            Loc.Instance["About_RestoreTitle"], message,
+            [
+                new DialogChoice(Loc.Instance["About_Restore"], DialogButtonKind.Danger, 1),
+                new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0,
+            [.. items.OrderByDescending(i => i.NeedsAttention).Select(Describe)]) == 1;
+    }
+
+    /// <summary>One backup item in words; internal so the wording is covered by a test.</summary>
+    internal static DialogDetail Describe(BackupItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        string what = Loc.Instance[item.Kind switch
+        {
+            BackupItemKind.StartsProgram => "Restore_Starts",
+            BackupItemKind.StopsProgram => "Restore_Stops",
+            BackupItemKind.StartsGame => "Restore_Game",
+            BackupItemKind.Rule => "Restore_Rule",
+            _ => "Restore_Hotkey",
+        }];
+        string owner = item.Owner.Length > 0 ? item.Owner : Loc.Instance["Settings_ToggleHotkey"];
+        string text = item.Keys is { } keys ? HotkeyFormat.Format(keys) : item.Detail;
+        string? warning = item.IsNetworkPath ? Loc.Instance["Restore_WarnNetwork"]
+            : item.IsNotFullPath ? Loc.Instance["Restore_WarnNotFullPath"]
+            : item.SkipsConfirmation ? Loc.Instance["Restore_WarnNoConfirm"]
+            : null;
+        return new DialogDetail($"{what} · {owner}", text, warning);
+    }
+
+    /// <summary>
+    /// Asked when the selection or the navigation leaves a profile with unsaved changes: "Save changes to X?"
+    /// with Save, Discard and Cancel. Save is the primary button: the changes were made on purpose.
+    /// </summary>
+    /// <param name="targetName">What the user is switching to, when that is known; it explains why the dialog is here.</param>
+    public static async Task<UnsavedChoice> ConfirmUnsavedAsync(string name, string? targetName = null)
+    {
+        int answer = await DialogWindow.AskAsync(
+            Loc.Format("Unsaved_Title", name),
+            targetName is null ? Loc.Instance["Unsaved_Text"] : Loc.Format("Unsaved_TextSwitch", targetName),
+            [
+                new DialogChoice(Loc.Instance["Common_Save"].Replace("_", string.Empty, StringComparison.Ordinal), DialogButtonKind.Primary, 1),
+                new DialogChoice(Loc.Instance["Common_Discard"], DialogButtonKind.Secondary, 2),
+                new DialogChoice(Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0);
+        return answer switch
+        {
+            1 => UnsavedChoice.Save,
+            2 => UnsavedChoice.Discard,
+            _ => UnsavedChoice.Cancel,
+        };
+    }
+
+    /// <summary>A yes/no question: the action first, the way out second (Windows order).</summary>
+    private static async Task<bool> Ask(string title, string message, string actionText, DialogButtonKind kind, string? cancelText = null) =>
+        await DialogWindow.AskAsync(
+            title, message,
+            [
+                new DialogChoice(actionText, kind, 1),
+                new DialogChoice(cancelText ?? Loc.Instance["Common_Cancel"], DialogButtonKind.Secondary, 0),
+            ],
+            cancelResult: 0) == 1;
+
+    /// <summary>The Surround state, or "no driver" when it cannot be read - the editor then simply hides the section.</summary>
+    private async Task<SurroundState> ReadSurroundAsync()
+    {
+        try
+        {
+            return await _surround.QueryAsync(CancellationToken.None);
+        }
+        catch (Exception ex) when (DisplayApiFailure.Is(ex))
+        {
+            _log.Warning(ex, "Surround state could not be read for the editor");
+            return SurroundState.Unavailable(SurroundAvailability.Unknown, ex.Message);
+        }
+    }
+
+    private async Task<IReadOnlyList<Core.Automation.UsbDevice>> ListUsbDevicesAsync()
+    {
+        try
+        {
+            return await Task.Run(_usbDevices.ConnectedDevices);
+        }
+        catch (Win32Exception ex)
+        {
+            _log.Warning(ex, "USB devices could not be listed for the editor");
+            return [];
+        }
+    }
+
+    private async Task<IReadOnlyList<AudioDeviceInfo>> ListAudioAsync(AudioDirection direction)
+    {
+        try
+        {
+            return await _audio.ListAsync(direction, CancellationToken.None);
+        }
+        catch (COMException ex)
+        {
+            _log.Warning(ex, "{Direction} devices could not be listed for the editor", direction);
+            return [];
+        }
+    }
+}

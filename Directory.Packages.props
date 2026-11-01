@@ -2,19 +2,12 @@
   <!-- Central Package Management: every version is pinned here, exactly once. Verified against nuget.org on 2026-09-25. -->
   <ItemGroup>
     <!-- UI -->
-    <PackageVersion Include="H.NotifyIcon" Version="2.4.1" />
-    <PackageVersion Include="Avalonia" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
-    <PackageVersion Include="FluentAvaloniaUI" Version="3.1.0" />
-    <PackageVersion Include="Irihi.Ursa" Version="2.3.0" />
-    <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.3.0" />
-    <PackageVersion Include="System.Drawing.Common" Version="10.0.12" />
+    <PackageVersion Include="WPF-UI" Version="4.3.0" />
+    <PackageVersion Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 
     <!-- DI / Logging -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Win32.SystemEvents" Version="10.0.12" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />

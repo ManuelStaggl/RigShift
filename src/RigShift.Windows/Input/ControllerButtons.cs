@@ -19,7 +19,7 @@ public sealed class ControllerButtons : IDisposable
 
     private const ushort GenericDesktop = 0x01;
 
-    // Joystick (most wheels and button boxes), game pad, multi-axis controller.
+    /// <summary>Joystick (most wheels and button boxes), game pad, multi-axis controller.</summary>
     private static readonly ushort[] ControllerUsages = [0x04, 0x05, 0x08];
 
     private readonly ILogger _log;
@@ -125,7 +125,7 @@ public sealed class ControllerButtons : IDisposable
         return PInvoke.RegisterRawInputDevices(devices, (uint)sizeof(RAWINPUTDEVICE));
     }
 
-    // The report's first byte is the report ID (0 without).
+    /// <summary>The buttons one report holds, handed to <see cref="ButtonChanges"/>; its first byte is the report ID (0 without).</summary>
     private unsafe bool Evaluate(nint deviceHandle, Device device, byte* report, uint reportSize)
     {
         uint length = (uint)device.MaxButtons;
@@ -151,7 +151,7 @@ public sealed class ControllerButtons : IDisposable
         return _changes.Update(deviceHandle, report[0], pressed);
     }
 
-    // Read once; null for a device without buttons or one Windows does not describe.
+    /// <summary>The HID description of a device, read once; null for one without buttons or one Windows does not describe.</summary>
     private unsafe Device? DeviceFor(nint handle)
     {
         if (_devices.TryGetValue(handle, out Device? known))

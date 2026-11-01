@@ -16,7 +16,7 @@ public sealed record UninstallEntry(string DisplayName, string? Publisher, strin
 /// </summary>
 public sealed class UninstallLibrary
 {
-    // Sims that ship their own installer; matched against the start of the display name.
+    /// <summary>Sims that ship their own installer; matched against the start of the display name.</summary>
     private static readonly string[] StandaloneSims = ["Live for Speed", "Richard Burns Rally", "Kart Racing Pro", "rFactor"];
 
     private readonly ILogger _log;
@@ -82,7 +82,10 @@ public sealed class UninstallLibrary
         }, origin.Length > 0 ? origin : null);
     }
 
-    // Starts ui\iRacingUI.exe, named "iRacing" so the sim template recognizes it; the interface outlives the sim.
+    /// <summary>
+    /// iRacing as its interface starts it: <c>ui\iRacingUI.exe</c>. Named "iRacing" so the sim template recognizes it –
+    /// the interface stays open while the sim comes and goes.
+    /// </summary>
     private static InstalledGame? IRacing(string folder)
     {
         string ui = Path.Combine(folder, "ui", "iRacingUI.exe");
@@ -91,7 +94,7 @@ public sealed class UninstallLibrary
             : null;
     }
 
-    // The EA app writes this publisher for its games; the app itself and its predecessor are no games.
+    /// <summary>The EA app writes this publisher for its games; the app itself and its predecessor are no games.</summary>
     private static bool IsEaGame(string name, string? publisher) =>
         string.Equals(publisher?.Trim(), "Electronic Arts", StringComparison.OrdinalIgnoreCase)
         && !name.StartsWith("EA app", StringComparison.OrdinalIgnoreCase)

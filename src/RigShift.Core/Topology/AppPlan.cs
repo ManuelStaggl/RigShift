@@ -11,23 +11,18 @@ namespace RigShift.Core.Topology;
 /// <param name="Apps">The actions, in order.</param>
 /// <param name="WaitForUsbDeviceId">USB device the apps wait for, or <c>null</c>.</param>
 /// <param name="WaitForUsbDeviceName">Its name when it was picked, for the messages while it is missing.</param>
-/// <param name="ProfileId">The profile whose apps these are; what they start is noted for <see cref="Profile.CloseAppsWhenLeaving"/>.</param>
 internal sealed record AppPlan(
     string Name,
     IReadOnlyList<AppAction> Apps,
     string? WaitForUsbDeviceId,
-    string? WaitForUsbDeviceName,
-    Guid? ProfileId = null)
+    string? WaitForUsbDeviceName)
 {
-    /// <summary>Ends the apps of the profile that was left, before the wait for the USB device.</summary>
-    public IReadOnlyList<AppAction> StopFirst { get; init; } = [];
-
     public static AppPlan For(Profile profile) => new(
-        profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, profile.Id);
+        profile.Name, profile.Apps, profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName);
 
     /// <summary>
-    /// Only the apps before the game wait for the USB device: once it runs, waiting for a wheelbase would hold up Crew
-    /// Chief.
+    /// The apps of a game that run at <paramref name="when"/>. Only the ones before the game wait for the USB
+    /// device: once the game runs, waiting half a minute for a wheelbase would hold up Crew Chief for no reason.
     /// </summary>
     public static AppPlan For(GameEntry game, AppTiming when) => new(
         game.Name,
@@ -36,8 +31,8 @@ internal sealed record AppPlan(
         when == AppTiming.BeforeGame ? game.AppsWaitForUsbDeviceName : null);
 
     /// <summary>
-    /// Ends everything a game started, in reverse order so a dashboard goes down before the wheelbase software it talks
-    /// to.
+    /// Everything a game started, turned into actions that end it again – what a game's exit runs. In reverse order,
+    /// so a dashboard goes down before the wheelbase software it talks to.
     /// </summary>
     public static AppPlan StopWhatWasStarted(GameEntry game)
     {
@@ -47,7 +42,7 @@ internal sealed record AppPlan(
             [.. game.Apps
                 .Where(a => a.Kind == AppActionKind.Start)
                 .Reverse()
-                .Select(a => a with { Kind = AppActionKind.Stop, Wait = AppWait.None, WaitSeconds = 0 })],
+                .Select(a => a with { Kind = AppActionKind.Stop, WaitSeconds = 0 })],
             null,
             null);
     }

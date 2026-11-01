@@ -92,17 +92,16 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
-    public void ToggleTarget_GoesToThePreviousProfile()
+    public void ToggleTarget_PrefersThePreviousProfile_ThenTheDefault()
     {
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig();
         Profile tv = Profile("TV", DeskModes);
         Profile[] all = [desk, rig, tv];
 
-        ProfileEditing.ToggleTarget(all, rig.Id, desk.Id).ShouldBe(desk);
-        ProfileEditing.ToggleTarget(all, null, tv.Id).ShouldBe(tv);
-        // Without a previous profile there is no default to fill in any more.
-        ProfileEditing.ToggleTarget(all, rig.Id, null).ShouldBeNull();
+        ProfileEditing.ToggleTarget(all, rig.Id, desk.Id, tv.Id).ShouldBe(desk);
+        ProfileEditing.ToggleTarget(all, rig.Id, null, tv.Id).ShouldBe(tv);
+        ProfileEditing.ToggleTarget(all, null, null, tv.Id).ShouldBe(tv);
     }
 
     [Fact]
@@ -110,27 +109,13 @@ public sealed class ProfileEditingTests
     {
         Profile desk = Profile("Desk", DeskModes);
         Profile rig = Rig();
-        Profile tv = Profile("TV", DeskModes);
-        Profile[] all = [desk, rig, tv];
-
-        // Previous is active again (Windows restored it): nowhere to go.
-        ProfileEditing.ToggleTarget(all, desk.Id, desk.Id).ShouldBeNull();
-        // Previous was deleted.
-        ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid()).ShouldBeNull();
-    }
-
-    [Fact]
-    public void ToggleTarget_WithTwoProfiles_GoesToTheOtherOne()
-    {
-        Profile desk = Profile("Desk", DeskModes);
-        Profile rig = Rig();
         Profile[] all = [desk, rig];
 
-        ProfileEditing.ToggleTarget(all, desk.Id, null).ShouldBe(rig);
-        // Previous deleted.
-        ProfileEditing.ToggleTarget(all, rig.Id, Guid.NewGuid()).ShouldBe(desk);
-        // No profile active: there is no "other one".
-        ProfileEditing.ToggleTarget(all, null, null).ShouldBeNull();
+        // Previous is active again (Windows restored it): fall through to the default.
+        ProfileEditing.ToggleTarget(all, desk.Id, desk.Id, rig.Id).ShouldBe(rig);
+        // Previous was deleted, default is the active one: nowhere to go.
+        ProfileEditing.ToggleTarget(all, desk.Id, Guid.NewGuid(), desk.Id).ShouldBeNull();
+        ProfileEditing.ToggleTarget(all, desk.Id, null, null).ShouldBeNull();
     }
 
     [Fact]
@@ -140,30 +125,6 @@ public sealed class ProfileEditingTests
 
         ProfileEditing.FindByName([Profile("Desk", DeskModes), rig], " rig ").ShouldBe(rig);
         ProfileEditing.FindByName([rig], "Rigs").ShouldBeNull();
-    }
-
-    [Fact]
-    public void FindByName_MatchesFormerNamesAndTheId_ButNeverOverAnotherCurrentName()
-    {
-        Profile rig = Rig() with { FormerNames = ["Sim", "Desk"] };
-        Profile desk = Profile("Desk", DeskModes);
-        Profile[] all = [rig, desk];
-
-        ProfileEditing.FindByName(all, " sim ").ShouldBe(rig);
-        ProfileEditing.FindByName(all, "Desk").ShouldBe(desk);
-        ProfileEditing.FindByName(all, rig.Id.ToString()).ShouldBe(rig);
-        ProfileEditing.FindByName(all, Guid.NewGuid().ToString()).ShouldBeNull();
-    }
-
-    [Fact]
-    public void NameHistory_After_KeepsEveryOldNameOnce_AndNeverTheCurrentOne()
-    {
-        NameHistory.After("Rig", null, "Rig").ShouldBeNull();
-        NameHistory.After("Rig", null, "Sim rig").ShouldBe(["Rig"]);
-        NameHistory.After("Sim rig", ["Rig"], "Cockpit").ShouldBe(["Rig", "Sim rig"]);
-        // Renamed back: the name is current again, not former.
-        NameHistory.After("Cockpit", ["Rig", "Sim rig"], " rig ").ShouldBe(["Sim rig", "Cockpit"]);
-        NameHistory.After("Rig", ["rig", "RIG "], "Desk").ShouldBe(["rig"]);
     }
 
     [Fact]

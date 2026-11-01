@@ -14,16 +14,16 @@
 <style>
 /* Mona Sans (SIL OFL 1.1, fonts/OFL.txt), served from this site. */
 @font-face { font-family: "Mona Sans"; src: url(fonts/mona-sans.woff2) format("woff2"); font-weight: 200 900; font-display: swap; }
-/* The app's light tokens (Themes/Tokens.axaml). The screenshots show the app in its dark theme. */
+/* Light theme colours of the brand. The app itself only exists in dark, so its windows stay dark. */
 :root {
-  --bg: #F8F9FB; --surface: #FFFFFF; --tint: #ECEEF2;
-  --text: #282A30; --muted: #3C4149; --faint: #63626B; --line: rgb(0 0 0 / 0.06); --line-strong: rgb(0 0 0 / 0.09);
+  --bg: #F8FAFC; --surface: #FFFFFF; --tint: #EFF4FA; --selected: #E2EEFF;
+  --text: #0F172A; --muted: #475569; --faint: #64748B; --line: #E2E8F0; --line-strong: #CBD5E1;
   --primary: #0067B8; --primary-hover: #005A9E; --on-primary: #FFFFFF;
-  --ok: #1B722F; --warn: #7B5F00;
+  --ok: #0E743C; --warn: #805400;
   --display: "Mona Sans", "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
   --body: "Mona Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --small: "Mona Sans", "Segoe UI Variable Small", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --window-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 12px 24px -8px rgb(0 0 0 / 0.14), 0 36px 72px -24px rgb(0 0 0 / 0.22);
+  --window-shadow: 0 1px 2px rgb(15 23 42 / 0.10), 0 12px 24px -8px rgb(15 23 42 / 0.16), 0 36px 72px -24px rgb(15 23 42 / 0.26);
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -32,32 +32,32 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--primary); text-underline-offset: 3px; }
 a:hover { color: var(--primary-hover); }
-:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
 p { margin: 0; }
-code { font: 400 0.92em/1.4 var(--body); background: var(--tint); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
-kbd { font: 600 0.88em var(--body); background: var(--surface); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+code { font: 400 0.92em/1.4 var(--body); background: var(--tint); border-radius: 4px; padding: 1px 6px; overflow-wrap: anywhere; }
+kbd { font: 600 0.88em var(--body); background: var(--surface); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
 .wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 720px) { .wrap { padding: 0 32px; } }
 
 /* Header */
-.top { position: sticky; top: 0; z-index: 10; background: rgb(248 249 251 / 0.86); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid transparent; transition: border-color 200ms; }
+.top { position: sticky; top: 0; z-index: 10; background: rgb(248 250 252 / 0.86); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid transparent; transition: border-color 200ms; }
 .top.scrolled { border-bottom-color: var(--line); }
 .top .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
-.top .logo img { height: 24px; width: auto; }.top nav { margin-left: auto; display: flex; align-items: center; gap: 24px; }
+.top .logo img { height: 26px; width: auto; }.top nav { margin-left: auto; display: flex; align-items: center; gap: 24px; }
 .top nav a:not(.btn) { color: var(--muted); text-decoration: none; font-size: 15px; }
 .top nav a:not(.btn):hover { color: var(--text); }
-.lang { display: flex; gap: 4px; }
-.lang button { font: 600 13px/1 var(--small); color: var(--faint); background: transparent; border: 0; border-radius: 4px; padding: 8px; cursor: pointer; }
+.lang { display: flex; gap: 2px; }
+.lang button { font: 600 13px/1 var(--small); color: var(--faint); background: transparent; border: 0; border-radius: 4px; padding: 7px; cursor: pointer; }
 .lang button:hover { color: var(--text); }
 .lang button[aria-pressed="true"] { color: var(--text); background: var(--tint); }
-.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 6px; font: 600 15px/1 var(--body); text-decoration: none; padding: 12px 20px; transition: background 120ms, border-color 120ms; }
+.btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 6px; font: 600 16px/1 var(--body); text-decoration: none; padding: 13px 20px; transition: background 120ms, border-color 120ms; }
 .btn-primary { background: var(--primary); color: var(--on-primary); }
 .btn-primary:hover { background: var(--primary-hover); color: var(--on-primary); }
 .btn-quiet { color: var(--text); border: 1px solid var(--line-strong); background: var(--surface); }
 .btn-quiet:hover { color: var(--text); border-color: var(--faint); }
-.btn svg { width: 20px; height: 20px; flex: none; }
-.top .btn { font-size: 13px; padding: 8px 16px; }
-@media (max-width: 859px) { .top nav a.hide-s { display: none; } .top nav { gap: 8px; } }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.top .btn { font-size: 14px; padding: 9px 14px; }
+@media (max-width: 859px) { .top nav a.hide-s { display: none; } .top nav { gap: 10px; } }
 
 /* Intro */
 .intro { padding: 96px 0 0; text-align: center; }
@@ -65,57 +65,57 @@ kbd { font: 600 0.88em var(--body); background: var(--surface); border: 1px soli
 h1 { margin: 0; line-height: 0; }
 h1 img { width: clamp(280px, 42vw, 560px); height: auto; margin: 0 auto; }
 @media (max-width: 719px) { h1 img { margin: 0; } }
-.intro .lead { margin: 24px auto 0; max-width: 34em; font-size: clamp(17px, 1.5vw, 20px); color: var(--muted); text-wrap: pretty; }
+.intro .lead { margin: 22px auto 0; max-width: 34em; font-size: clamp(18px, 1.5vw, 20px); color: var(--muted); text-wrap: pretty; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
 @media (max-width: 719px) { .cta { justify-content: flex-start; } }
-.facts { margin-top: 16px; color: var(--faint); font: 400 13px/1.5 var(--small); }
+.facts { margin-top: 16px; color: var(--faint); font: 400 14px/1.5 var(--small); }
 
 /* Tour: one window, tabs above it */
 .tour { margin-top: 72px; }
 @media (max-width: 719px) { .tour { margin-top: 48px; } }
 .tabs-scroll { overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
 .tabs-scroll::-webkit-scrollbar { display: none; }
-.tabs { display: flex; width: max-content; margin: 0 auto; gap: 4px; padding: 4px; background: var(--tint); border-radius: 8px; }
-.tabs button { font: 400 15px/1 var(--body); color: var(--muted); background: transparent; border: 0; border-radius: 6px; padding: 8px 16px; cursor: pointer; white-space: nowrap; transition: color 120ms, background 120ms; }
+.tabs { display: flex; width: max-content; margin: 0 auto; gap: 2px; padding: 4px; background: var(--tint); border-radius: 10px; }
+.tabs button { font: 500 15px/1 var(--body); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 10px 16px; cursor: pointer; white-space: nowrap; transition: color 120ms, background 120ms; }
 .tabs button:hover { color: var(--text); }
-.tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 1px 1px rgb(0 0 0 / 0.04); }
-.stage { position: relative; margin-top: 32px; aspect-ratio: 1700 / 1020; border-radius: 12px; background: var(--tint); }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgb(15 23 42 / 0.10), 0 1px 1px rgb(15 23 42 / 0.04); }
+.stage { position: relative; margin-top: 28px; aspect-ratio: 1700 / 1020; border-radius: 12px; background: var(--tint); }
 .stage .view { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity 180ms, visibility 0s 180ms; }
 .stage .view.on { opacity: 1; visibility: visible; transition: opacity 180ms; }
-.stage .full { width: 100%; height: 100%; border-radius: 12px; box-shadow: var(--window-shadow); background: #151618; }
-.stage .small { border-radius: 8px; box-shadow: var(--window-shadow); background: #151618; }
+.stage .full { width: 100%; height: 100%; border-radius: 12px; box-shadow: var(--window-shadow); background: #0B1220; }
+.stage .small { border-radius: 10px; box-shadow: var(--window-shadow); background: #0B1220; }
 .stage .small.confirm { width: min(520px, 62%); }
 .stage .small.tray { width: min(361px, 46%); border-radius: 12px; }
 @media (max-width: 719px) { .stage, .stage .full { border-radius: 6px; } .stage .small { border-radius: 6px; } }
-.caption { margin: 24px auto 0; max-width: 40em; text-align: center; color: var(--muted); font-size: 17px; min-height: 3.2em; }
+.caption { margin: 22px auto 0; max-width: 40em; text-align: center; color: var(--muted); font-size: 16px; min-height: 3.2em; }
 /* Crop a region out of a screenshot, in source pixels: --iw image width, --x/--y/--w/--h the region. */
 .crop { overflow: hidden; aspect-ratio: var(--w) / var(--h); }
 .crop > img { max-width: none; width: calc(var(--iw) / var(--w) * 100%); margin-left: calc(var(--x) / var(--w) * -100%); margin-top: calc(var(--y) / var(--w) * -100%); }
 
 /* Sections */
-.section { padding-top: 128px; }
+.section { padding-top: 136px; }
 @media (max-width: 719px) { .section { padding-top: 88px; } }
 .sec-head { text-align: center; max-width: 40em; margin: 0 auto 48px; }
 @media (max-width: 719px) { .sec-head { text-align: left; margin-bottom: 32px; } }
-h2 { font: 600 clamp(32px, 3.6vw, 48px)/1.12 var(--display); letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
-.sec-head p { margin-top: 16px; color: var(--muted); font-size: 20px; }
+h2 { font: 600 clamp(30px, 3.6vw, 44px)/1.12 var(--display); letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+.sec-head p { margin-top: 14px; color: var(--muted); font-size: 18px; }
 
 /* Cards */
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04); }
-.card .txt { padding: 24px 24px 0; }
-.card.plain .txt { padding-bottom: 24px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgb(15 23 42 / 0.04); }
+.card .txt { padding: 28px 28px 0; }
+.card.plain .txt { padding-bottom: 28px; }
 h3 { font: 600 20px/1.3 var(--display); letter-spacing: -0.01em; margin: 0 0 8px; }
-.card p, .card li { color: var(--muted); font-size: 15px; line-height: 1.6; }
+.card p, .card li { color: var(--muted); font-size: 16px; line-height: 1.55; }
 .card p b, .card li b { color: var(--text); font-weight: 600; }
-.card ul { margin: 12px 0 0; padding: 0 0 0 20px; }
-.card ul li + li { margin-top: 8px; }
-.card ul li::marker { color: var(--faint); }
+.card ul { margin: 12px 0 0; padding: 0 0 0 18px; }
+.card ul li + li { margin-top: 6px; }
+.card ul li::marker { color: var(--line-strong); }
 /* A screenshot region that runs off the card's right and bottom edge */
-.vis { margin: 24px -1px -1px 24px; margin-top: auto; padding-top: 24px; }
-.vis .crop { border-radius: 8px 0 0 0; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06), 0 12px 32px -12px rgb(0 0 0 / 0.24); background: #151618; }
+.vis { margin: 28px -1px -1px 28px; margin-top: auto; padding-top: 28px; }
+.vis .crop { border-radius: 10px 0 0 0; box-shadow: 0 0 0 1px rgb(15 23 42 / 0.06), 0 10px 30px -10px rgb(15 23 42 / 0.30); background: #0B1220; }
 /* A whole small window, centred */
-.vis.win { margin: auto 24px 0; padding: 24px 0; display: flex; justify-content: center; }
-.vis.win > * { width: 100%; max-width: 380px; border-radius: 8px; box-shadow: var(--window-shadow); background: #151618; }
+.vis.win { margin: auto 28px 0; padding: 28px 0; display: flex; justify-content: center; }
+.vis.win > * { width: 100%; max-width: 380px; border-radius: 10px; box-shadow: var(--window-shadow); background: #0B1220; }
 
 .bento { display: grid; gap: 16px; }
 @media (min-width: 720px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bento .wide { grid-column: span 2; } }
@@ -126,47 +126,47 @@ h3 { font: 600 20px/1.3 var(--display); letter-spacing: -0.01em; margin: 0 0 8px
 @media (min-width: 860px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .status { list-style: none; padding: 0 !important; }
 .status li { display: flex; justify-content: space-between; gap: 16px; }
-.status .s { font: 600 13px/1.6 var(--small); white-space: nowrap; }
+.status .s { font: 600 14px/1.6 var(--small); white-space: nowrap; }
 .status .s.ok { color: var(--ok); }
 .status .s.open { color: var(--warn); }
 @media (max-width: 479px) { .status li { flex-direction: column; gap: 0; } }
 
 /* Compare */
-.table-card { padding: 8px 24px; }
+.table-card { padding: 8px 28px; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 15px; line-height: 1.45; min-width: 760px; }
-th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th, td { text-align: left; padding: 18px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 tr > :first-child { padding-left: 0; width: 30%; }
 tr > :last-child { padding-right: 0; }
 tbody tr:last-child > * { border-bottom: 0; }
-thead th { font-weight: 600; color: var(--text); padding-top: 24px; }
+thead th { font-weight: 600; color: var(--text); padding-top: 22px; }
 thead th.us { color: var(--primary); }
 tbody th { font-weight: 400; color: var(--text); }
 td { color: var(--muted); }
-td.us { color: var(--text); font-weight: 600; }
+td.us { color: var(--text); font-weight: 500; }
 /* Yes / no as marks, with the word kept for screen readers */
 .mark { display: inline-flex; vertical-align: middle; }
 .mark svg { width: 20px; height: 20px; }
 .mark.yes { color: var(--ok); }
-.mark.no { color: var(--faint); }
+.mark.no { color: var(--line-strong); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.below { margin: 20px auto 0; max-width: 46em; text-align: center; color: var(--muted); font-size: 15px; }
+.below { margin: 20px auto 0; max-width: 46em; text-align: center; color: var(--muted); font-size: 16px; }
 @media (max-width: 719px) { .below { text-align: left; } }
 
 /* FAQ */
-.faq { max-width: 800px; margin: 0 auto; display: grid; gap: 12px; }
-.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
-.faq summary { cursor: pointer; list-style: none; padding: 16px 48px 16px 24px; font-weight: 600; position: relative; }
+.faq { max-width: 800px; margin: 0 auto; display: grid; gap: 10px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.faq summary { cursor: pointer; list-style: none; padding: 18px 52px 18px 22px; font-weight: 600; position: relative; }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: ""; position: absolute; right: 20px; top: 50%; width: 20px; height: 20px; margin-top: -10px; background: var(--faint); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M15.8537 7.64582C16.0493 7.84073 16.0499 8.15731 15.855 8.35292L10.39 13.8374C10.1751 14.0531 9.82574 14.0531 9.6108 13.8374L4.14582 8.35292C3.9509 8.15731 3.95147 7.84073 4.14708 7.64582C4.34269 7.4509 4.65927 7.45147 4.85418 7.64708L10.0004 12.8117L15.1466 7.64708C15.3415 7.45147 15.6581 7.4509 15.8537 7.64582Z'/%3E%3C/svg%3E") center / 20px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M15.8537 7.64582C16.0493 7.84073 16.0499 8.15731 15.855 8.35292L10.39 13.8374C10.1751 14.0531 9.82574 14.0531 9.6108 13.8374L4.14582 8.35292C3.9509 8.15731 3.95147 7.84073 4.14708 7.64582C4.34269 7.4509 4.65927 7.45147 4.85418 7.64708L10.0004 12.8117L15.1466 7.64708C15.3415 7.45147 15.6581 7.4509 15.8537 7.64582Z'/%3E%3C/svg%3E") center / 20px no-repeat; transition: transform 200ms; }
-.faq details[open] summary::after { transform: rotate(180deg); }
-.faq details p { margin: 0; padding: 0 24px 20px; color: var(--muted); }
+.faq summary::after { content: ""; position: absolute; right: 24px; top: 24px; width: 7px; height: 7px; border-right: 2px solid var(--faint); border-bottom: 2px solid var(--faint); transform: rotate(45deg); transition: transform 200ms; }
+.faq details[open] summary::after { transform: rotate(-135deg); top: 28px; }
+.faq details p { margin: 0; padding: 0 22px 20px; color: var(--muted); }
 
 /* Support */
-.support { margin-top: 128px; padding: 96px 0; background: var(--tint); text-align: center; }
+.support { margin-top: 136px; padding: 96px 0; background: var(--tint); text-align: center; }
 @media (max-width: 719px) { .support { margin-top: 88px; padding: 64px 0; text-align: left; } }
-.support p { margin: 16px auto 0; max-width: 34em; color: var(--muted); font-size: 20px; }
-footer { border-top: 1px solid var(--line); padding: 32px 0 40px; color: var(--faint); font: 400 13px/1.6 var(--small); }
+.support p { margin: 14px auto 0; max-width: 34em; color: var(--muted); font-size: 18px; }
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--faint); font: 400 14px/1.6 var(--small); }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
 footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--text); }
@@ -202,7 +202,7 @@ footer .fine { margin-left: auto; }
       <p class="lead" data-i18n="lead">Switches a Windows PC between desk and sim rig: displays, sound, apps and desktop icons in one step.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe">
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M15.5 16.9997C15.7761 16.9997 16 17.2236 16 17.4997C16 17.7452 15.8231 17.9494 15.5899 17.9917L15.5 17.9997H4.5C4.22386 17.9997 4 17.7759 4 17.4997C4 17.2543 4.17688 17.0501 4.41012 17.0078L4.5 16.9997H15.5ZM10.0001 2.00195C10.2456 2.00195 10.4497 2.17896 10.492 2.41222L10.5 2.5021L10.496 14.296L14.1414 10.6476C14.3148 10.4739 14.5842 10.4544 14.7792 10.5892L14.8485 10.647C15.0222 10.8204 15.0418 11.0898 14.907 11.2848L14.8492 11.3541L10.3574 15.8541C10.285 15.9267 10.1957 15.9724 10.1021 15.9911L9.99608 16.0008C9.83511 16.0008 9.69192 15.9247 9.60051 15.8065L5.14386 11.3547C4.94846 11.1595 4.94823 10.8429 5.14336 10.6475C5.3168 10.4739 5.58621 10.4544 5.78117 10.5892L5.85046 10.647L9.496 14.288L9.5 2.50181C9.50008 2.22567 9.724 2.00195 10.0001 2.00195Z"/></svg>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span data-i18n="cta.dl">Download for Windows 10/11</span></a>
         <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift" data-i18n="cta.src">View on GitHub</a>
       </div>
@@ -218,7 +218,7 @@ footer .fine { margin-left: auto; }
           <div class="view"><img class="full" src="screenshots/triggers-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
           <div class="view"><img class="full" src="screenshots/game-editor-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
           <div class="view"><img class="small confirm" src="screenshots/confirmation-dark.png" width="520" height="382" alt="" loading="lazy"></div>
-          <div class="view"><div class="small tray crop" style="--iw:340; --x:0; --y:0; --w:340; --h:327"><img src="screenshots/tray-popup-dark.png" width="444" height="387" alt="" loading="lazy"></div></div>
+          <div class="view"><div class="small tray crop" style="--iw:444; --x:42; --y:16; --w:361; --h:347"><img src="screenshots/tray-popup-dark.png" width="444" height="387" alt="" loading="lazy"></div></div>
           <div class="view"><img class="full" src="screenshots/fov-dark.png" width="1700" height="1020" alt="" loading="lazy"></div>
         </div>
         <p class="caption" id="caption" aria-live="polite"></p>
@@ -237,7 +237,7 @@ footer .fine { margin-left: auto; }
             <h3 data-i18n="f.d.h">Displays</h3>
             <p data-i18n="f.d.p">Which monitors are on, their arrangement, main display, refresh rate, HDR and NVIDIA Surround. The whole layout is applied in one Windows call, so it either works completely or nothing changes.</p>
           </div>
-          <div class="vis"><div class="crop" style="--iw:1700; --x:346; --y:193; --w:1012; --h:556"><img src="screenshots/profiles-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.d" alt="Displays of the Sim Rig profile: an Odyssey G93SC as main display, a dash tablet marked optional, and the NVIDIA Surround setting."></div></div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:505; --y:228; --w:960; --h:470"><img src="screenshots/profiles-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.d" alt="Displays of the Sim Rig profile: an Odyssey G93SC as main display, a dash tablet marked optional, and the NVIDIA Surround setting."></div></div>
         </article>
         <article class="card">
           <div class="txt">
@@ -251,21 +251,21 @@ footer .fine { margin-left: auto; }
             <h3 data-i18n="f.t.h">Tray menu</h3>
             <p data-i18n="f.t.p">Profiles and games are one click away. Each profile can have a hotkey, and one more toggles between the last two.</p>
           </div>
-          <div class="vis win"><div class="crop" style="--iw:340; --x:0; --y:0; --w:340; --h:327"><img src="screenshots/tray-popup-dark.png" width="444" height="387" loading="lazy" data-i18n-alt="alt.t" alt="Tray menu with the profiles Desk and Sim Rig and three games."></div></div>
+          <div class="vis win"><div class="crop" style="--iw:444; --x:42; --y:16; --w:361; --h:347"><img src="screenshots/tray-popup-dark.png" width="444" height="387" loading="lazy" data-i18n-alt="alt.t" alt="Tray menu with the profiles Desk and Sim Rig and three games."></div></div>
         </article>
         <article class="card wide">
           <div class="txt">
             <h3 data-i18n="f.g.h">Games</h3>
             <p data-i18n="f.g.p">A game entry starts tools like SimHub and Crew Chief in order, moves their windows into place and launches the game. When the game exits, the tools close and the desk can come back. Games from Steam, Epic, EA, Xbox and iRacing are found automatically.</p>
           </div>
-          <div class="vis"><div class="crop" style="--iw:1700; --x:346; --y:256; --w:980; --h:464"><img src="screenshots/game-editor-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.g" alt="Tools of the iRacing entry: wait for the Fanatec wheelbase, then start Fanatec Control Panel and SimHub before the game and Crew Chief after it."></div></div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:505; --y:180; --w:960; --h:510"><img src="screenshots/game-editor-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.g" alt="Tools of the iRacing entry: wait for the Fanatec wheelbase, then start Fanatec Control Panel and SimHub before the game and Crew Chief after it."></div></div>
         </article>
         <article class="card wide">
           <div class="txt">
             <h3 data-i18n="f.v.h">Field of view</h3>
             <p data-i18n="f.v.p">The real screen size is read from the monitor. From seating distance and screen angle, RigShift calculates the value for 18 sims, each in the unit the game expects.</p>
           </div>
-          <div class="vis"><div class="crop" style="--iw:1700; --x:563; --y:157; --w:956; --h:420"><img src="screenshots/fov-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.v" alt="Triple screens seen from above with 53 degrees horizontal and 31.3 degrees vertical field of view."></div></div>
+          <div class="vis"><div class="crop" style="--iw:1700; --x:668; --y:138; --w:882; --h:470"><img src="screenshots/fov-dark.png" width="1700" height="1020" loading="lazy" data-i18n-alt="alt.v" alt="Triple screens seen from above with 53 degrees horizontal and 31.3 degrees vertical field of view."></div></div>
         </article>
         <article class="card plain">
           <div class="txt">
@@ -337,10 +337,10 @@ footer .fine { margin-left: auto; }
           <table data-i18n="k.table">
             <thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead>
             <tbody>
-              <tr><th>Revert after a countdown, also after a crash</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">No</span></span></td><td>Asks first, manual undo</td></tr>
-              <tr><th>Sound, apps and desktop icons in the profile</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Yes</span></span></td><td>Sound and apps per shortcut</td><td>Sound device, icons</td><td>Sound and apps</td></tr>
-              <tr><th>Window positions</th><td class="us">Per profile and per game</td><td>Planned</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Yes</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Yes</span></span></td></tr>
-              <tr><th>Switch on USB devices</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">No</span></span></td></tr>
+              <tr><th>Revert after a countdown, also after a crash</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td>Asks first, manual undo</td></tr>
+              <tr><th>Sound, apps and desktop icons in the profile</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td>Sound and apps per shortcut</td><td>Sound device, icons</td><td>Sound and apps</td></tr>
+              <tr><th>Window positions</th><td class="us">Per profile and per game</td><td>Planned</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td></tr>
+              <tr><th>Switch on USB devices</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Yes</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">No</span></span></td></tr>
               <tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td>Both</td><td>Surround by macro</td><td>Neither</td></tr>
               <tr><th>Price and source</th><td class="us">Free, MIT</td><td>Free, GPL-3.0</td><td>$34, closed</td><td>Free in early access</td></tr>
             </tbody>
@@ -373,10 +373,10 @@ footer .fine { margin-left: auto; }
       <div class="cta">
         <a class="btn btn-primary" href="https://github.com/ManuelStaggl/RigShift/releases/latest/download/RigShift-win-Setup.exe" data-i18n="cta.dl">Download for Windows 10/11</a>
         <a class="btn btn-quiet" href="https://github.com/ManuelStaggl/RigShift">
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9.10433 2.89923C9.47114 2.15598 10.531 2.15599 10.8978 2.89923L12.8282 6.81073L17.1448 7.43797C17.9651 7.55715 18.2926 8.56513 17.699 9.14366L14.5755 12.1883L15.3129 16.4875C15.453 17.3044 14.5956 17.9274 13.8619 17.5417L10.0011 15.5119L6.14018 17.5417C5.40655 17.9274 4.54913 17.3044 4.68924 16.4875L5.4266 12.1883L2.30308 9.14366C1.70956 8.56512 2.03708 7.55715 2.8573 7.43797L7.17389 6.81073L9.10433 2.89923ZM10.0011 3.3418L8.07062 7.25329C7.92496 7.54844 7.6434 7.75301 7.31769 7.80034L3.00109 8.42757L6.12461 11.4722C6.3603 11.702 6.46784 12.033 6.41221 12.3574L5.67484 16.6565L9.53572 14.6267C9.82705 14.4736 10.1751 14.4736 10.4664 14.6267L14.3273 16.6565L13.5899 12.3574C13.5343 12.033 13.6418 11.702 13.8775 11.4722L17.001 8.42757L12.6844 7.80034C12.3587 7.75301 12.0772 7.54844 11.9315 7.25329L10.0011 3.3418Z"/></svg>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7L10 2.8Z" stroke-linejoin="round"/></svg>
           <span data-i18n="u.star">Star on GitHub</span></a>
         <a class="btn btn-quiet" href="https://ko-fi.com/filthyjoker">
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5 2.5C5 2.22386 4.77614 2 4.5 2C4.22386 2 4 2.22386 4 2.5C4 3.50207 4.68608 4.01543 5.16023 4.37022L5.2 4.4C5.72551 4.79413 6 5.03046 6 5.5C6 5.77614 6.22386 6 6.5 6C6.77614 6 7 5.77614 7 5.5C7 4.49793 6.31392 3.98457 5.83977 3.62978L5.8 3.6C5.27449 3.20587 5 2.96954 5 2.5ZM15 7.93478V9H16C17.6569 9 19 10.3431 19 12C19 13.6569 17.6569 15 16 15H14.1973C13.1599 16.7934 11.2208 18 9 18C5.68629 18 3 15.3137 3 12V7.93478C3 7.41852 3.41852 7 3.93478 7H14.0652C14.5815 7 15 7.41852 15 7.93478ZM4 8V12C4 14.7614 6.23858 17 9 17C11.7614 17 14 14.7614 14 12V8H4ZM15 12C15 12.7013 14.8797 13.3744 14.6586 14H16C17.1046 14 18 13.1046 18 12C18 10.8954 17.1046 10 16 10H15V12ZM7.5 2C7.77614 2 8 2.22386 8 2.5C8 2.96954 8.27449 3.20587 8.8 3.6L8.83977 3.62978C9.31392 3.98457 10 4.49793 10 5.5C10 5.77614 9.77614 6 9.5 6C9.22386 6 9 5.77614 9 5.5C9 5.03046 8.72551 4.79413 8.2 4.4L8.16023 4.37022C7.68608 4.01543 7 3.50207 7 2.5C7 2.22386 7.22386 2 7.5 2ZM11 2.5C11 2.22386 10.7761 2 10.5 2C10.2239 2 10 2.22386 10 2.5C10 3.50207 10.6861 4.01543 11.1602 4.37022L11.2 4.4C11.7255 4.79413 12 5.03046 12 5.5C12 5.77614 12.2239 6 12.5 6C12.7761 6 13 5.77614 13 5.5C13 4.49793 12.3139 3.98457 11.8398 3.62978L11.8 3.6C11.2745 3.20587 11 2.96954 11 2.5Z"/></svg>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3.5 7h10v5a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4V7Z M13.5 8.5h1a2 2 0 0 1 0 4h-1 M6.5 2.5v2M9.5 2.5v2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span data-i18n="u.kofi">Support on Ko-fi</span></a>
       </div>
     </div>
@@ -435,7 +435,7 @@ footer .fine { margin-left: auto; }
     'i.d.h': 'Getestete Hardware',
     'i.d.l': '<li><span><b>RTX 4080 SUPER, Windows 11</b></span><span class="s ok">Täglich im Einsatz</span></li><li><span>Windows 10, in der CI bei jeder Änderung</span><span class="s ok">Getestet</span></li><li><span>NVIDIA Surround an und aus</span><span class="s open">Nach Nutzermeldungen korrigiert, unbestätigt</span></li><li><span>AMD- und Intel-Grafik. <a href="https://github.com/ManuelStaggl/RigShift/issues/new?template=hardware_report.yml">Deine melden</a></span><span class="s open">Nicht getestet</span></li>',
     'k.h': 'Vergleich mit anderen Tools',
-    'k.table': '<thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead><tbody><tr><th>Rückfall nach Countdown, auch nach Absturz</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">Nein</span></span></td><td>Vorab-Frage, manuelles Rückgängig</td></tr><tr><th>Ton, Apps und Desktop-Symbole im Profil</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Ja</span></span></td><td>Ton und Apps pro Verknüpfung</td><td>Audiogerät, Symbole</td><td>Ton und Apps</td></tr><tr><th>Fensterpositionen</th><td class="us">Pro Profil und pro Spiel</td><td>Geplant</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Ja</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Ja</span></span></td></tr><tr><th>Umschalten über USB-Geräte</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7.03212 13.9072L3.56056 10.0017C3.28538 9.69214 2.81132 9.66425 2.50174 9.93944C2.19215 10.2146 2.16426 10.6887 2.43945 10.9983L6.43945 15.4983C6.72614 15.8208 7.2252 15.8355 7.53034 15.5303L18.0303 5.03033C18.3232 4.73744 18.3232 4.26256 18.0303 3.96967C17.7374 3.67678 17.2626 3.67678 16.9697 3.96967L7.03212 13.9072Z"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 10C3 9.72386 3.22386 9.5 3.5 9.5H16.5C16.7761 9.5 17 9.72386 17 10C17 10.2761 16.7761 10.5 16.5 10.5H3.5C3.22386 10.5 3 10.2761 3 10Z"/></svg><span class="sr">Nein</span></span></td></tr><tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td>Beides</td><td>Surround per Makro</td><td>Keins</td></tr><tr><th>Preis und Quellcode</th><td class="us">Kostenlos, MIT</td><td>Kostenlos, GPL-3.0</td><td>34 $, geschlossen</td><td>Kostenlos im Early Access</td></tr></tbody>',
+    'k.table': '<thead><tr><th></th><th class="us">RigShift</th><th>DisplayMagician</th><th>DisplayFusion Pro</th><th>PitLaunch</th></tr></thead><tbody><tr><th>Rückfall nach Countdown, auch nach Absturz</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td>Vorab-Frage, manuelles Rückgängig</td></tr><tr><th>Ton, Apps und Desktop-Symbole im Profil</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td>Ton und Apps pro Verknüpfung</td><td>Audiogerät, Symbole</td><td>Ton und Apps</td></tr><tr><th>Fensterpositionen</th><td class="us">Pro Profil und pro Spiel</td><td>Geplant</td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td></tr><tr><th>Umschalten über USB-Geräte</th><td class="us"><span class="mark yes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Ja</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td><td><span class="mark no"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5.5 10h9" stroke-linecap="round"/></svg><span class="sr">Nein</span></span></td></tr><tr><th>NVIDIA Surround / AMD Eyefinity</th><td class="us">Surround</td><td>Beides</td><td>Surround per Makro</td><td>Keins</td></tr><tr><th>Preis und Quellcode</th><td class="us">Kostenlos, MIT</td><td>Kostenlos, GPL-3.0</td><td>34 $, geschlossen</td><td>Kostenlos im Early Access</td></tr></tbody>',
     'k.p': 'DisplayMagician unterstützt AMD Eyefinity und Spiele aus GOG oder Ubisoft, DisplayFusion bietet umfassendes Fenster-Management, PitLaunch ist signiert und im Microsoft Store erhältlich. <a href="https://github.com/ManuelStaggl/RigShift/blob/main/docs/compare.md">Vergleich mit sechs Tools (Englisch)</a>',
     'q.h': 'Fragen',
     'q.l': '<details><summary>Funktioniert es mit AMD- oder Intel-Grafik?</summary><p>Die Bildschirme werden über die normale Windows-Anzeige-API umgeschaltet, die jeder Treiber unterstützt, es sollte also gehen. Getestet ist es nur mit NVIDIA; Hardware-Berichte helfen. AMD Eyefinity wird nicht unterstützt.</p></details><details><summary>Was passiert, wenn ein Monitor schläft oder über spacedesk oder einen KVM hängt?</summary><p>Schlafende Monitore werden geweckt und abgewartet. Ein als optional markierter Bildschirm darf fehlen, ohne dass der Wechsel abbricht. Umschalten lässt sich nur, was Windows in dem Moment sieht.</p></details><details><summary>Unterstützt es VR?</summary><p>Ton und Apps funktionieren in einem VR-Profil, und eine USB-Regel kann auf die Link-Box eines Headsets reagieren. Das Headset ist nicht Teil der Bildschirm-Anordnung. VR ist nicht getestet.</p></details><details><summary>Braucht es Adminrechte oder Internet?</summary><p>Keine Adminrechte. Das Internet wird nur für die Update-Prüfung bei GitHub genutzt.</p></details>',

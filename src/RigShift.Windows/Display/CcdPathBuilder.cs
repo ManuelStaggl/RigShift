@@ -80,8 +80,12 @@ internal static class CcdPathBuilder
         return (paths, modes.ToArray());
     }
 
-    // Every path needs its own source, or Windows clones; a display on an earlier one's rectangle shares its source,
-    // which is how "Duplicate" is recorded.
+    /// <summary>
+    /// Every active path needs its own source, otherwise Windows clones the desktop. Targets keep their current
+    /// source where possible; the rest take the lowest free one they support. A display on exactly the rectangle of an
+    /// earlier one takes that one's source instead – that is what "Duplicate these displays" is, and the only way Windows
+    /// records two displays on the same spot, so a profile saved from it mirrors again.
+    /// </summary>
     private static CcdSource[] AssignSources(IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays)
     {
         var chosen = new CcdSource?[displays.Count];
@@ -137,6 +141,7 @@ internal static class CcdPathBuilder
         return chosen.Select(c => c!.Value).ToArray();
     }
 
+    /// <summary>The index of the first display with this one's position and size – its own index when it is the first.</summary>
     private static int FirstOnSameRectangle(IReadOnlyList<(CcdTargetHandle Target, DisplayAssignment Assignment)> displays, int index)
     {
         DisplayAssignment wanted = displays[index].Assignment;

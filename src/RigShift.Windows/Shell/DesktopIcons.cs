@@ -18,7 +18,7 @@ namespace RigShift.Windows.Shell;
 /// </summary>
 public sealed class DesktopIcons : IDesktopIcons
 {
-    // A full desktop is read and placed in well under a second; this is for an Explorer that hangs.
+    /// <summary>A desktop full of symbols is read and placed in well under a second; this is for an Explorer that hangs.</summary>
     private static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(10);
 
     private readonly ILogger _log;
@@ -49,7 +49,10 @@ public sealed class DesktopIcons : IDesktopIcons
             : DesktopIconResult.Unavailable;
     }
 
-    // Gone symbols are skipped and new ones keep their place: a profile's layout is a wish, not a demand.
+    /// <summary>
+    /// The saved positions applied to the symbols that are there right now. Symbols that are gone are skipped, and
+    /// symbols added since keep their place – a profile's layout is a wish, not a demand that the desktop be identical.
+    /// </summary>
     private static DesktopIconResult Place(IFolderView view, DesktopIconLayout layout, ILogger log)
     {
         if (AutoArranges(view, log))
@@ -131,7 +134,10 @@ public sealed class DesktopIcons : IDesktopIcons
         return point;
     }
 
-    // The caller owns the PIDLs and frees them; reading them all at once keeps that ownership in one place.
+    /// <summary>
+    /// Every symbol in the view with its parsing name. The caller owns the PIDLs and frees them again; reading them
+    /// all at once keeps that ownership in one place.
+    /// </summary>
     private static unsafe List<(string Name, nint Pidl)> Enumerate(IFolderView view)
     {
         var items = new List<(string Name, nint Pidl)>();
@@ -170,7 +176,7 @@ public sealed class DesktopIcons : IDesktopIcons
         return items;
     }
 
-    // In whichever of its three forms the folder chose to answer.
+    /// <summary>The name out of a STRRET, in whichever of its three forms the folder chose to answer.</summary>
     private static unsafe string? NameOf(STRRET* text, ITEMIDLIST* pidl)
     {
         switch (text->uType)
@@ -188,7 +194,10 @@ public sealed class DesktopIcons : IDesktopIcons
         }
     }
 
-    // Auto-arrange overrides every position we set; "Align icons to grid" only snaps them, which is fine.
+    /// <summary>
+    /// Whether Windows arranges the symbols itself. Then it overrides every position we set, and saying so beats
+    /// silently doing nothing. "Align icons to grid" is fine – it only snaps our positions to the nearest cell.
+    /// </summary>
     private static bool AutoArranges(IFolderView view, ILogger log)
     {
         if (view is not IFolderView2 flags)
@@ -214,7 +223,11 @@ public sealed class DesktopIcons : IDesktopIcons
         }
     }
 
-    // The shell hands its view to an apartment thread and switches run on background threads, so this brings its own.
+    /// <summary>
+    /// Runs <paramref name="work"/> against the desktop's shell view. The shell hands its view to an apartment thread,
+    /// and RigShift switches profiles on background threads, so this brings its own thread rather than asking the
+    /// caller to be on the right one.
+    /// </summary>
     private bool TryOnShellThread<T>(Func<IFolderView, ILogger, T> work, string what, out T result)
     {
         (bool finished, object? value, Exception? failure) = StaCall.Run<object>(
@@ -238,8 +251,11 @@ public sealed class DesktopIcons : IDesktopIcons
         return value is not null;
     }
 
-    // Shell window list → service provider → browser → active view; null without a desktop (service, SSH) or while
-    // Explorer restarts.
+    /// <summary>
+    /// The desktop's folder view: the shell's window list knows the desktop, its service provider hands out the
+    /// browser, and the browser its active view. <c>null</c> when this session has no desktop at all – a service or an
+    /// SSH session – or while Explorer is restarting.
+    /// </summary>
     private static IFolderView? OpenDesktopView()
     {
         var windows = (IShellWindows)new ShellWindows();
@@ -271,14 +287,14 @@ public sealed class DesktopIcons : IDesktopIcons
         }
     }
 
-    // SVSI_POSITIONITEM (shobjidl_core.h): position the item without touching the selection.
+    /// <summary>Position the item without touching the selection (<c>SVSI_POSITIONITEM</c>, shobjidl_core.h).</summary>
     private const uint SvsiPositionItem = 0x80;
 
     private const uint StrRetWStr = 0;
     private const uint StrRetOffset = 1;
     private const uint StrRetCStr = 2;
 
-    // SID_STopLevelBrowser, the service that hands out the view's browser.
+    /// <summary>SID_STopLevelBrowser – the service that hands out the view's browser.</summary>
     private static readonly Guid SidSTopLevelBrowser = new("4C96BE40-915C-11CF-99D3-00AA004AE837");
 }
 

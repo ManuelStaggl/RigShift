@@ -20,8 +20,11 @@ public static class GameIconSource
         return GameExecutable.Find(launch, log) ?? UninstallEntryIcon(launch, log);
     }
 
-    // A Steam game before its first start has no known executable; Steam's "Steam App <appid>" uninstall entry has a
-    // DisplayIcon.
+    /// <summary>
+    /// A Steam game before its first start: the process name is not known yet, so there is no executable to look for
+    /// under the install folder. Windows' own uninstall entry knows one – Steam writes <c>Steam App &lt;appid&gt;</c>
+    /// with a <c>DisplayIcon</c>, which is exactly what "Apps &amp; features" shows.
+    /// </summary>
     private static string? UninstallEntryIcon(GameLaunch launch, ILogger log)
     {
         if (launch.Kind != GameLaunchKind.Steam || launch.Target.Trim() is not { Length: > 0 } appId)

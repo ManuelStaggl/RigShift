@@ -7,6 +7,7 @@ namespace RigShift.Core.Topology;
 
 /// <summary>
 /// The apps part of a switch: waits for the profile's USB device, then starts and ends apps after the switch result.
+/// Logs under the orchestrator's context, so the log source stays the same.
 /// </summary>
 internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, SwitchOptions options, TimeProvider time, ILogger log)
 {
@@ -18,68 +19,12 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
 
     private readonly Lock _appsLock = new();
 
+    /// <summary>The apps of the last switch, running after its result until done or cancelled.</summary>
     private PendingApps? _pendingApps;
 
-    // Oldest first; this run of RigShift only.
-    private readonly Dictionary<Guid, List<string>> _startedFor = [];
-
     /// <summary>
-    /// The apps of <paramref name="profile"/>, led by ending what <paramref name="leaving"/> started when it closes its
-    /// apps on leaving – newest first, and none that <paramref name="profile"/> starts itself.
-    /// </summary>
-    public AppPlan PlanFor(Profile profile, Profile? leaving)
-    {
-        AppPlan plan = AppPlan.For(profile);
-        if (leaving is not { CloseAppsWhenLeaving: true } || leaving.Id == profile.Id)
-        {
-            return plan;
-        }
-
-        List<string> started;
-        lock (_appsLock)
-        {
-            started = _startedFor.TryGetValue(leaving.Id, out List<string>? paths) ? [.. paths] : [];
-        }
-
-        var wanted = new HashSet<string>(profile.Apps.Where(a => a.Kind == AppActionKind.Start).Select(a => a.Path), StringComparer.OrdinalIgnoreCase);
-        return plan with
-        {
-            StopFirst = [.. started.Where(p => !wanted.Contains(p)).Reverse().Select(p => new AppAction { Kind = AppActionKind.Stop, Path = p })],
-        };
-    }
-
-    private void Started(Guid? profileId, string path)
-    {
-        if (profileId is not { } id)
-        {
-            return;
-        }
-
-        lock (_appsLock)
-        {
-            if (!_startedFor.TryGetValue(id, out List<string>? paths))
-            {
-                _startedFor[id] = paths = [];
-            }
-
-            paths.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
-            paths.Add(path);
-        }
-    }
-
-    private void Gone(string path)
-    {
-        lock (_appsLock)
-        {
-            foreach (List<string> paths in _startedFor.Values)
-            {
-                paths.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Completes once the earlier apps ended; the cancellation is requested before this method first yields.
+    /// Cancels the apps of an earlier switch that still run or wait for their device, and completes once they ended.
+    /// The cancellation is requested before this method first yields.
     /// </summary>
     public Task CancelPendingAsync()
     {
@@ -115,7 +60,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
 
     public Task<AppsOutcome> Start(AppPlan plan)
     {
-        if (plan.Apps.Count == 0 && plan.StopFirst.Count == 0)
+        if (plan.Apps.Count == 0)
         {
             return SwitchResult.NoApps;
         }
@@ -138,20 +83,16 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         return run;
     }
 
-    // Runs on its own cancellation after the switch result; never throws.
+    /// <summary>Runs after the switch result on its own cancellation; never throws.</summary>
     private async Task<AppsOutcome> RunAppsAsync(AppPlan plan, CancellationToken cancellationToken)
     {
         long startedAt = _time.GetTimestamp();
         try
         {
-            AppsOutcome closed = plan.StopFirst.Count == 0 ? AppsOutcome.Applied : await RunAppActionsAsync(plan.StopFirst, null, cancellationToken);
-
             // Wheel software and games want to see the device when they start; without it they start anyway.
-            bool deviceMissing = plan.Apps.Count > 0 && !await WaitForAppsDeviceAsync(plan, cancellationToken);
-            AppsOutcome started = await RunAppActionsAsync(plan.Apps, plan.ProfileId, cancellationToken);
-            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing
-                : closed == AppsOutcome.Incomplete ? AppsOutcome.Incomplete
-                : started;
+            bool deviceMissing = !await WaitForAppsDeviceAsync(plan, cancellationToken);
+            AppsOutcome started = await RunAppActionsAsync(plan.Apps, cancellationToken);
+            AppsOutcome outcome = deviceMissing ? AppsOutcome.DeviceMissing : started;
             _log.Information("Apps for {Profile}: {Apps} after {Seconds:0.0} s", plan.Name, outcome, _time.GetElapsedTime(startedAt).TotalSeconds);
             return outcome;
         }
@@ -167,8 +108,7 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    /// <param name="profileId">Whose starts to note for <see cref="Profile.CloseAppsWhenLeaving"/>; <c>null</c> for none.</param>
-    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, Guid? profileId, CancellationToken cancellationToken)
+    private async Task<AppsOutcome> RunAppActionsAsync(IReadOnlyList<AppAction> apps, CancellationToken cancellationToken)
     {
         bool complete = true;
         foreach (AppAction app in apps)
@@ -186,19 +126,16 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
                 if (app.Kind == AppActionKind.Stop && !running)
                 {
                     _log.Information("App {App} does not run, nothing to end", app.Path);
-                    Gone(app.Path);
                     continue;
                 }
 
                 if (app.Kind == AppActionKind.Start)
                 {
                     _apps.Start(app.Path, app.Arguments);
-                    Started(profileId, app.Path);
                     _log.Information("App {App} started", app.Path);
                 }
                 else if (await _apps.StopAsync(app.Path, _options.AppStopGrace, cancellationToken))
                 {
-                    Gone(app.Path);
                     _log.Information("App {App} ended", app.Path);
                 }
                 else
@@ -214,11 +151,11 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
                 continue;
             }
 
-            if (app.Kind == AppActionKind.Start && app.Wait == AppWait.Window)
+            if (app.Kind == AppActionKind.Start && app.WaitForWindow)
             {
                 await WaitForWindowAsync(app, cancellationToken);
             }
-            else if (app.Wait != AppWait.None && app.WaitSeconds > 0)
+            else if (app.WaitSeconds > 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(app.WaitSeconds), _time, cancellationToken);
             }
@@ -227,7 +164,10 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         return complete ? AppsOutcome.Applied : AppsOutcome.Incomplete;
     }
 
-    // A program that starts into the tray never shows a window; the next app then starts after the wait time.
+    /// <summary>
+    /// After starting <paramref name="app"/>: on as soon as it shows a window, at the latest after its wait time. A
+    /// program that starts into the tray never shows one; the next app still starts, only later.
+    /// </summary>
     private async Task WaitForWindowAsync(AppAction app, CancellationToken cancellationToken)
     {
         TimeSpan limit = app.WaitSeconds > 0 ? TimeSpan.FromSeconds(app.WaitSeconds) : _options.AppWindowWaitLimit;
@@ -259,7 +199,9 @@ internal sealed class AppRunner(IAppLauncher apps, IUsbDeviceList usbDevices, Sw
         }
     }
 
-    // True when the device is there or none is set.
+    /// <summary>
+    /// Polls for the device the profile's apps wait for, up to its wait time. True when it is there or none is set.
+    /// </summary>
     private async Task<bool> WaitForAppsDeviceAsync(AppPlan plan, CancellationToken cancellationToken)
     {
         if (UsbDeviceIds.Normalize(plan.WaitForUsbDeviceId) is not { } deviceId)

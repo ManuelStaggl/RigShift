@@ -47,8 +47,11 @@ public sealed class ActiveProfileMatcher
         return best;
     }
 
-    // Matching active displays (0 if inactive) and how many also run the profile's modes: that tells "Rig 144 Hz" from
-    // "Rig 240 Hz".
+    /// <summary>
+    /// Number of matching active displays, or 0 if the profile is not active; and how many of them also run the profile's
+    /// resolution, refresh rate and HDR state. That second number tells "Rig 144 Hz" from "Rig 240 Hz", which have the same
+    /// layout – before, the one first in the list won, and the USB automation then skipped its end.
+    /// </summary>
     private (int Displays, int Modes) Score(Profile profile, DisplaySnapshot snapshot)
     {
         TopologyPlan plan = _planner.Plan(profile, snapshot);
@@ -91,7 +94,10 @@ public sealed class ActiveProfileMatcher
         return strangerActive ? (0, 0) : (claimed.Count, modes);
     }
 
-    // Windows reports every display of the primary source as primary, so a mirror of it counts too (issue #14).
+    /// <summary>
+    /// Windows reports every display of the primary source as primary, so a display mirroring the primary one counts as
+    /// primary too, although the profile marks only one (issue #14).
+    /// </summary>
     private static bool SharesPrimarySource(Profile profile, DisplayAssignment wanted) =>
         wanted.IsPrimary || profile.Displays.Any(d => d.IsPrimary
             && d.PositionX == wanted.PositionX && d.PositionY == wanted.PositionY

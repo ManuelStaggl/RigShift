@@ -4,6 +4,14 @@ using System.Runtime.InteropServices;
 
 namespace RigShift.Windows.Display;
 
+/// <summary>
+/// The slice of NVIDIA's NVAPI that Surround needs. Deliberately hand-written instead of taking a library: the only
+/// complete one is under the LGPL, and this repository promises MIT without strings attached. CsWin32 cannot help
+/// either - NVAPI is not a Windows API.
+///
+/// NVAPI exports exactly one symbol, <c>nvapi_QueryInterface</c>; every function is fetched from it by a numeric id.
+/// The ids and the structures below come from NVIDIA's published headers (nvapi.h, nvapi_interface.h).
+/// </summary>
 /// <summary>The Mosaic calls <see cref="NvSurroundController"/> makes, so its sequencing can run against a fake driver.</summary>
 internal interface INvMosaic : IDisposable
 {
@@ -18,10 +26,6 @@ internal interface INvMosaic : IDisposable
     bool TryGetDisplayTarget(uint displayId, out uint adapterLow, out int adapterHigh, out uint targetId);
 }
 
-/// <summary>
-/// The slice of NVAPI that Surround needs, hand-written: the only complete library is LGPL-licensed, and CsWin32 does
-/// not cover NVAPI. Every function comes from <c>nvapi_QueryInterface</c> by the ids in NVIDIA's nvapi_interface.h.
-/// </summary>
 internal sealed unsafe class NvApi : INvMosaic
 {
     /// <summary>NV_MOSAIC_MAX_DISPLAYS.</summary>
@@ -30,7 +34,7 @@ internal sealed unsafe class NvApi : INvMosaic
     /// <summary>NVAPI_MAX_DISPLAYS: NVAPI_PHYSICAL_GPUS (32) * NVAPI_ADVANCED_DISPLAY_HEADS (4).</summary>
     internal const int MaxDisplays = 128;
 
-    // NVAPI_SHORT_STRING_MAX.
+    /// <summary>NVAPI_SHORT_STRING_MAX.</summary>
     private const int ShortStringMax = 64;
 
     private readonly nint _library;

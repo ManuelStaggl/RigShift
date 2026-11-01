@@ -18,7 +18,7 @@ namespace RigShift.Windows.Ui;
 /// </summary>
 public sealed class WindowRescuer : IWindowRescuer
 {
-    // The whole rescue must not hold up a switch for longer than this.
+    /// <summary>The whole rescue must not hold up a switch for longer than this.</summary>
     private static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(3);
 
     private readonly ILogger _log;

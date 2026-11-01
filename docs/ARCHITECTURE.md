@@ -6,19 +6,17 @@
 |---|---|---|
 | `src/RigShift.Core` | `net10.0` | Domain: profiles, topology planning, switch orchestration, game entries and sessions, automation rules, CLI parsing and command runner, pipe protocol, settings and the JSON profile and game stores, release notes, legacy import parsing. **No Win32, no UI.** |
 | `src/RigShift.Windows` | `net10.0-windows10.0.26100.0` | OS adapters: CCD API, NVAPI (Surround), Core Audio + `IPolicyConfig`, communications ducking, app launcher, installed-game detection and launching, window placement, USB device list and power check, keep-awake, window rescue, autostart, `rigshift://` registration, shortcuts. CsWin32-generated interop. |
-| `src/RigShift.Presentation` | `net10.0-windows10.0.26100.0` | View models, app services (switch coordinator, automation, hotkeys, updates, pipe server), strings – no UI framework. Namespaces stay `RigShift.App.*`. |
-| `src/RigShift.Avalonia` | `net10.0-windows10.0.26100.0` | The tray app `RigShift.exe` (Avalonia 12 with Semi and Ursa, tray through H.NotifyIcon's core): views, dialogs, DI host, CLI entry point, single instance, display change watcher, Velopack updates. |
+| `src/RigShift.App` | `net10.0-windows10.0.26100.0` | WPF tray app (WPF-UI, H.NotifyIcon), DI host, CLI entry point, single instance + pipe server, display change watcher, hotkeys, automation service, Velopack updates. |
 | `tests/RigShift.Core.Tests` | `net10.0` | xunit v3 + Shouldly + NSubstitute. Runs on any OS. |
 | `tests/RigShift.Windows.Tests` | `net10.0-windows10.0.26100.0` | CCD struct layout, path building, legacy import, store detection against a fake install folder. |
-| `tests/RigShift.Presentation.Tests` | `net10.0-windows10.0.26100.0` | View models and app services without a window: switch coordinator, pipe server, settings, automation service, pages, diagnostics report. |
-| `tests/RigShift.Avalonia.Tests` | `net10.0-windows10.0.26100.0` | The app's container and what needs no window, such as the game shortcut icon. |
+| `tests/RigShift.App.Tests` | `net10.0-windows10.0.26100.0` | App services without UI automation: switch coordinator, pipe server, settings, automation service, diagnostics report. |
 
-Dependencies point inward only: `Avalonia → Presentation → Windows → Core`. Core defines the interfaces; Windows
-implements them; Presentation and the app compose them.
+Dependencies point inward only: `App → Windows → Core`. Core defines the interfaces; Windows implements them;
+App composes them.
 
 ## Core concepts
 
-- **`Profile`** – desired state: displays, audio (endpoints and volume), whether to ask to keep the layout, hotkey, apps to start or
+- **`Profile`** – desired state: displays, audio (endpoints and volume), confirm timeout, hotkey, apps to start or
   stop (optionally after a USB device appears, with a maximum wait), keep awake, communications ducking off.
 - **`DisplayAssignment`** – identity, mode (resolution, refresh rate as a fraction), position, rotation, primary,
   optional, custom name, HDR (`null` = leave as is).
@@ -34,9 +32,8 @@ implements them; Presentation and the app compose them.
 - **`GameSessionRunner`** – one session: apply the profile (the same `SwitchOrchestrator`), start the programs before
   the game, put the helper windows back, start the game, learn its process name, wait for it to end, stop the
   programs, run the exit action. RigShift never ends the game itself – unsaved progress, and anti-cheat drivers take a
-  dim view of anyone touching their process. With a menu or launcher process set
-  (`LauncherProcessName`), the session ends with that instead: iRacing's interface outlives the sim, so hanging the
-  session on the sim would end it between two races.
+  dim view of anyone touching their process. What counts as "ended" is a choice (`SessionEnd`): iRacing's interface
+  outlives the sim, so hanging the session on the sim would end it between two races.
 - **`AutomationRule`** – USB device trigger: switch to a profile once all of the rule's devices are connected, and
   after a delay per rule switch to a profile or back once one of them is gone. `AutomationTrigger` decides from polled
   device ids (pure logic); rules of 1.3 with a single `usbDeviceId` are migrated on load.
@@ -71,7 +68,7 @@ and the decisions in `docs/decisions/`.
 | `IUsbDeviceList` | `UsbDeviceList` | Present USB devices via `CM_Get_Device_ID_List`, polled every 2 s by `AutomationService` for USB rules and every second by the orchestrator while a profile's apps wait for a device. |
 | `IUsbPowerCheck` | `UsbPowerCheck` | Read-only: USB selective suspend of the active scheme on AC (`PowerReadACValueIndex`) and `Device Parameters` flags under `HKLM\…\Enum\USB`. `UsbPowerSaving.ShouldWarn` (Core) decides whether the Automation page warns. |
 | `IWindowRescuer` | `WindowRescuer` | After every successful apply (+1 s): `EnumWindows`, visible/uncloaked/non-tool windows that `MonitorFromRect` places on no monitor move to the primary work area via `SetWindowPlacement`. Geometry in `WindowGeometry` (Core). |
-| `IDuckingPreference` | `RegistryDuckingPreference` | HKCU `Software\Microsoft\Multimedia\Audio\UserDuckingPreference` (undocumented; 3 = do nothing, missing = reduce by 80 %). The previous value is kept by `IDuckingMemory` (`SettingsDuckingMemory`, Presentation). |
+| `IDuckingPreference` | `RegistryDuckingPreference` | HKCU `Software\Microsoft\Multimedia\Audio\UserDuckingPreference` (undocumented; 3 = do nothing, missing = reduce by 80 %). The previous value is kept by `IDuckingMemory` (`SettingsDuckingMemory`, App). |
 | `IGameLibrary` | `GameLibrary` (Steam + Epic) | Installed games from the stores' own manifests on disk – no sign-in, no token, no account. Steam's `libraryfolders.vdf` and `appmanifest_*.acf` are parsed by `ValveDataFormat`, Epic's by its JSON manifests. |
 | `IGameStarter` | `ShellGameStarter` | Starts a store game through `steam://rungameid/` or `com.epicgames.launcher://`, never the executable: overlay, anti-cheat and DRM expect the client in the chain. Only a direct executable hands back the game's own process, held open as `IRunningGame` so its end is never judged by a process id that Windows may have reused. One that ends within ten seconds counts as a launcher stub, and the session follows what it left behind. |
 | `IGameProcesses` | `SystemGameProcesses` | Read-only listing and waiting. `GameProcessLearner` (Core) works out which new process is the game, filtered by the install folder. |
@@ -79,10 +76,10 @@ and the decisions in `docs/decisions/`.
 | `IAutostart` | `RunKeyAutostart` | HKCU `Run`, `--minimized`. |
 | `IProfileStore` | `JsonProfileStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\profiles\*.json`, `schemaVersion`. Plain file I/O, so it lives in Core and is tested against a temp directory. Settings: `JsonSettingsStore` (Core). |
 | `IGameStore` | `JsonGameStore` (in **Core**, `Storage/`) | `%AppData%\RigShift\games.json`, one file rather than one per game: games are few and are always shown as a list. |
-| `ISwitchConfirmation` | `AvaloniaSwitchConfirmation` in `RigShift.Avalonia` | Countdown window "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |
+| `ISwitchConfirmation` | `WpfSwitchConfirmation` in `RigShift.App` | Countdown window "Keep these display settings?" on the new primary display; returns `Confirmed`, `Rejected` or `TimedOut`. |
 
 There is no device notification listener. Display changes reach the app through `DisplayChangeWatcher`
-(`RigShift.Avalonia`, a hidden top-level window receiving `WM_DISPLAYCHANGE`, debounced 1.5 s); it refreshes the active
+(`RigShift.App`, a hidden top-level window receiving `WM_DISPLAYCHANGE`, debounced 1.5 s); it refreshes the active
 profile and lets the coordinator catch up on skipped optional displays. USB devices are polled (see `IUsbDeviceList`).
 
 ## Process model
@@ -102,8 +99,8 @@ profile and lets the coordinator catch up on skipped optional displays. USB devi
   folder on uninstall.
 - Updates: `UpdateService` checks GitHub Releases at startup and every 24 h and downloads a newer version; Velopack
   installs it the next time the tray app starts (never during a CLI call, which would lose its exit code).
-- UI: Avalonia views in `RigShift.Avalonia/Views` on view models that live one per file in
-  `RigShift.Presentation/ViewModels`.
+- UI: WPF-UI pages scroll through `Controls/WheelScrolling`, which hands the mouse wheel to the page's outer scroll
+  viewer; view models live one per file in `RigShift.App/ViewModels`.
 
 ## Known limitations
 
