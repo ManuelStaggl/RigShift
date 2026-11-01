@@ -81,6 +81,13 @@ public sealed record Profile
     public DesktopIconLayout? DesktopIcons { get; init; }
 
     /// <summary>
+    /// Keep <see cref="DesktopIcons"/> current while this profile is active: moved icons are saved by themselves. Off,
+    /// the profile has no layout and leaves the icons alone. <c>set</c>: an <c>init</c> initializer is skipped when the
+    /// key is missing, and profiles from before 4.8 are meant to have it on.
+    /// </summary>
+    public bool RememberDesktopIcons { get; set; } = true;
+
+    /// <summary>
     /// Remember where every open window sits when this profile is left, and put them back when it returns
     /// (<see cref="WindowMemory"/>). The windows themselves are state and live outside the profile file.
     /// </summary>

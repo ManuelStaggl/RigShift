@@ -415,9 +415,9 @@
   <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
   <data name="Common_Clear" xml:space="preserve"><value>Leeren</value></data>
   <data name="Editor_DesktopIcons" xml:space="preserve"><value>Desktopsymbole</value></data>
-  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Windows würfelt sie beim Bildschirmwechsel durcheinander. Bei aktivem Profil anordnen, dann hier speichern.</value></data>
+  <data name="Editor_DesktopIconsHint" xml:space="preserve"><value>Werden von selbst gespeichert, wenn du sie bei aktivem Profil verschiebst, und beim Umschalten in das Profil zurückgesetzt. Windows würfelt sie beim Bildschirmwechsel durcheinander.</value></data>
   <data name="Editor_DesktopIconsCapture" xml:space="preserve"><value>Positionen speichern</value></data>
-  <data name="Editor_DesktopIconsClear" xml:space="preserve"><value>Vergessen</value></data>
+  <data name="Editor_DesktopIconsOff" xml:space="preserve"><value>Aus: Symbole bleiben, wo Windows sie hinsetzt</value></data>
   <data name="Editor_DesktopIconsNone" xml:space="preserve"><value>Nicht gespeichert</value></data>
   <data name="Editor_DesktopIconsSavedOne" xml:space="preserve"><value>1 Symbol, gespeichert {1}</value></data>
   <data name="Editor_DesktopIconsSaved" xml:space="preserve"><value>{0} Symbole, gespeichert {1}</value></data>

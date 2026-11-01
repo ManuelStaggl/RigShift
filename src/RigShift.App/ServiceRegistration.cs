@@ -69,6 +69,7 @@ public static class ServiceRegistration
         services.AddSingleton<HotkeyService>();
         services.AddSingleton<ISessionWatch>(_ => new SystemSessionWatch(log));
         services.AddSingleton<AutomationService>();
+        services.AddSingleton<DesktopIconWatcher>();
         services.AddSingleton<TrayIconService>();
 
         // By hand: the runner's later parameters are optional (the command line runs it without the tray app), and the

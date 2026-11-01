@@ -228,6 +228,8 @@ public partial class App : Application, IAppShell
             _tray.Start();
             Services.GetRequiredService<HotkeyService>().Start();
             Services.GetRequiredService<AutomationService>().Start();
+            DesktopIconWatcher iconWatcher = Services.GetRequiredService<DesktopIconWatcher>();
+            iconWatcher.Start();
             Services.GetRequiredService<GameSessionService>().StartWatching();
 #if DEBUG
             await StartPreviewsAsync(catalog);
@@ -238,6 +240,7 @@ public partial class App : Application, IAppShell
                 {
                     // Monitors in standby or a return over RDP pass through "no profile": the same profile coming back
                     // is not one Windows restored on its own.
+                    iconWatcher.Quiet();
                     Core.Profiles.Profile? before = catalog.ActiveProfile ?? _lastActive;
                     SwitchCoordinator coordinator = Services.GetRequiredService<SwitchCoordinator>();
                     await catalog.RefreshActiveAsync(CancellationToken.None);
