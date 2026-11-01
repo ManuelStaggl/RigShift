@@ -26,6 +26,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
     private readonly IReadOnlyList<GameEntry> _games;
     private readonly GameCatalog _catalog;
     private readonly HotkeyRecorder _hotkeyRecorder;
+    private readonly HotkeyService _hotkeys;
     private readonly IReadOnlyList<OpenXrRuntime> _runtimes;
     private readonly ILogger _log;
     private GameEntry _initial;
@@ -45,6 +46,7 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         _games = context.Games;
         _catalog = services.Catalog;
         _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Game, game.Id, "Game_HotkeyHint");
+        _hotkeys = services.Hotkeys;
         _log = services.Log.ForContext<GameEditorViewModel>();
         _runtimes = services.Runtimes.Installed();
         _launch = game.Launch;
@@ -487,7 +489,8 @@ public sealed partial class GameEditorViewModel : ObservableObject, IDetailEdito
         ProblemCount = problems.Count;
         NameProblem = ProblemTexts.Of(problems, GameProblem.NameMissing, GameProblem.NameTooLong, GameProblem.NameTaken);
         LaunchProblem = ProblemTexts.Of(problems, GameProblem.LaunchMissing);
-        HotkeyProblem = ProblemTexts.Of(problems, GameProblem.HotkeyInvalid, GameProblem.HotkeyTaken);
+        HotkeyProblem = ProblemTexts.Of(problems, GameProblem.HotkeyInvalid, GameProblem.HotkeyTaken)
+            ?? (_hotkeys.IsRefused(Id, isGame: true, built.Hotkey) ? Loc.Instance["Problem_HotkeyHeldElsewhere"] : null);
         AppsProblem = ProblemTexts.Of(problems, GameProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
         SettingsProblem = ProblemTexts.Of(problems, GameProblem.SettingsInvalid);

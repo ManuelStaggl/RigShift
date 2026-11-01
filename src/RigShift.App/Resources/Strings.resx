@@ -187,6 +187,7 @@
   <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>The main display cannot be optional.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this hotkey. Choose a different one.</value></data>
 
+  <data name="Problem_HotkeyHeldElsewhere" xml:space="preserve"><value>Another app uses this hotkey, so it does nothing. Choose a different one.</value></data>
   <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this hotkey. Choose a different one.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Hotkey</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Click, then press keys</value></data>

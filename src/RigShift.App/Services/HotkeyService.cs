@@ -144,6 +144,13 @@ public sealed class HotkeyService : IDisposable
     }
 
     /// <summary>
+    /// Whether Windows refused <paramref name="hotkey"/> for this profile or game at the last registration – another
+    /// program holds it. The tray says so once; the editor keeps saying it.
+    /// </summary>
+    public bool IsRefused(Guid id, bool isGame, Hotkey? hotkey) =>
+        hotkey is not null && _reported.Contains((new HotkeyOwner(id, isGame), hotkey));
+
+    /// <summary>
     /// What else in RigShift already uses <paramref name="hotkey"/> – a profile, a game or the toggle hotkey – or
     /// <c>null</c>. <see cref="IsAvailable"/> cannot see these: the own hotkeys are released while one is recorded.
     /// </summary>
