@@ -63,6 +63,8 @@
   <data name="Profile_AppsWait" xml:space="preserve"><value>wartet auf {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio konnte nicht vollständig umgeschaltet werden.</value></data>
   <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR ließ sich nicht auf jedem Bildschirm setzen.</value></data>
+  <data name="Result_WallpaperMissing" xml:space="preserve"><value>Ein Hintergrundbild fehlt; dieser Bildschirm behält sein bisheriges.</value></data>
+  <data name="Result_WallpaperIncomplete" xml:space="preserve"><value>Das Hintergrundbild ließ sich nicht auf jedem Bildschirm setzen.</value></data>
   <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktopsymbole nicht platziert: Windows ordnet sie selbst an („Symbole automatisch anordnen“ im Kontextmenü des Desktops).</value></data>
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktopsymbole konnten nicht platziert werden.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Wechsel zu {0} zurückgenommen</value></data>
@@ -179,6 +181,18 @@
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Bildwiederholrate</value></data>
   <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Bildwiederholrate. Der Bildschirm meldet seine Raten nur, solange er eingeschaltet ist.</value></data>
   <data name="Editor_HdrHint" xml:space="preserve"><value>HDR nach dem Umschalten. Bildschirme ohne HDR bleiben, wie sie sind.</value></data>
+  <data name="Editor_Wallpaper" xml:space="preserve"><value>Hintergrundbild</value></data>
+  <data name="Editor_WallpaperHint" xml:space="preserve"><value>Bild nach dem Umschalten. Ohne Bild bleibt der Hintergrund, wie er ist.</value></data>
+  <data name="Editor_WallpaperChoose" xml:space="preserve"><value>Auswählen…</value></data>
+  <data name="Editor_WallpaperRemove" xml:space="preserve"><value>Hintergrundbild entfernen</value></data>
+  <data name="Editor_WallpaperFilter" xml:space="preserve"><value>Bilder (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|Alle Dateien (*.*)|*.*</value></data>
+  <data name="Editor_WallpaperFit" xml:space="preserve"><value>Anpassung</value></data>
+  <data name="Editor_WallpaperFitHint" xml:space="preserve"><value>Windows nutzt eine Anpassung für alle Bildschirme.</value></data>
+  <data name="WallpaperFit_Fill" xml:space="preserve"><value>Ausfüllen</value></data>
+  <data name="WallpaperFit_Fit" xml:space="preserve"><value>Anpassen</value></data>
+  <data name="WallpaperFit_Stretch" xml:space="preserve"><value>Dehnen</value></data>
+  <data name="WallpaperFit_Center" xml:space="preserve"><value>Zentriert</value></data>
+  <data name="WallpaperFit_Span" xml:space="preserve"><value>Über alle Bildschirme</value></data>
   <data name="Hdr_Unchanged" xml:space="preserve"><value>Nicht ändern</value></data>
   <data name="Hdr_On" xml:space="preserve"><value>An</value></data>
   <data name="Hdr_Off" xml:space="preserve"><value>Aus</value></data>

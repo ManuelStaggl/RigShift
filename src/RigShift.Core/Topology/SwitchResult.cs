@@ -43,6 +43,9 @@ public sealed record SwitchResult
     /// <summary>Whether every display got the HDR state the profile sets; only in the log before 4.0.</summary>
     public HdrOutcome Hdr { get; init; } = HdrOutcome.NotConfigured;
 
+    /// <summary>Whether every display got the wallpaper the profile sets.</summary>
+    public WallpaperOutcome Wallpaper { get; init; } = WallpaperOutcome.NotConfigured;
+
     /// <summary>
     /// What became of the profile's desktop symbols. <see cref="DesktopIconOutcome.Pending"/> when they go back
     /// after the result – the outcome then comes with <see cref="TidyCompletion"/>.

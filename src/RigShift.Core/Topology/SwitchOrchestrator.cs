@@ -29,6 +29,7 @@ public sealed class SwitchOrchestrator
     private readonly DuckingSwitcher _duckingSwitcher;
     private readonly SurroundSwitcher _surroundSwitcher;
     private readonly AllDisplaysOn _allDisplaysOn;
+    private readonly WallpaperSwitcher? _wallpaperSwitcher;
 
     public SwitchOrchestrator(
         IDisplayConfigurator display,
@@ -47,7 +48,8 @@ public sealed class SwitchOrchestrator
         SwitchOptions options,
         TimeProvider time,
         ILogger log,
-        WindowMemory? windowMemory = null)
+        WindowMemory? windowMemory = null,
+        IWallpapers? wallpapers = null)
     {
         ArgumentNullException.ThrowIfNull(display);
         ArgumentNullException.ThrowIfNull(audio);
@@ -84,6 +86,7 @@ public sealed class SwitchOrchestrator
         _duckingSwitcher = new DuckingSwitcher(ducking, duckingMemory, _log);
         _surroundSwitcher = new SurroundSwitcher(surround, _log);
         _allDisplaysOn = new AllDisplaysOn(_display, _log);
+        _wallpaperSwitcher = wallpapers is null ? null : new WallpaperSwitcher(wallpapers, _log);
     }
 
     /// <summary>
@@ -230,6 +233,7 @@ public sealed class SwitchOrchestrator
             Surround = surround.Outcome,
             Note = answer.Modes.Note,
             Hdr = applied.Hdr,
+            Wallpaper = SetWallpapers(answer.Modes.Plan),
             DesktopIcons = PendingDesktopIcons(profile),
             LeftDesktopIcons = leftIcons is { IsEmpty: false } ? leftIcons : null,
         }, started);
@@ -267,6 +271,9 @@ public sealed class SwitchOrchestrator
     // Only for a switch that stays, in the background: a rejected one must not leave windows moved or programs started.
     private SwitchResult AfterResult(SwitchResult result, Profile profile, AppPlan apps, bool restoreWindows) =>
         result with { TidyCompletion = _tidy.Start(profile, restoreWindows), AppsCompletion = _appRunner.Start(apps) };
+
+    // Only on a switch that stays: Windows has no way back to the wallpaper before.
+    private WallpaperOutcome SetWallpapers(TopologyPlan plan) => _wallpaperSwitcher?.Switch(plan) ?? WallpaperOutcome.NotConfigured;
 
     private static AppsOutcome PendingApps(AppPlan plan) =>
         plan.Apps.Count == 0 && plan.StopFirst.Count == 0 ? AppsOutcome.NotConfigured : AppsOutcome.Pending;
@@ -442,7 +449,15 @@ public sealed class SwitchOrchestrator
         AppsOutcome apps = PendingApps(appPlan);
         _log.Information("Rest of {Profile} applied: audio {Audio}, apps {Apps}", profile.Name, audio, apps);
         SwitchResult result = await Finish(
-            new SwitchResult { Outcome = SwitchOutcome.Applied, Plan = plan, Audio = audio, Apps = apps, DesktopIcons = PendingDesktopIcons(profile) },
+            new SwitchResult
+            {
+                Outcome = SwitchOutcome.Applied,
+                Plan = plan,
+                Audio = audio,
+                Apps = apps,
+                Wallpaper = SetWallpapers(plan),
+                DesktopIcons = PendingDesktopIcons(profile),
+            },
             started);
 
         // Windows brought the displays back, not the windows to where they were when the profile was left.
@@ -523,6 +538,7 @@ public sealed class SwitchOrchestrator
             LastNativeError = applied.LastNativeError,
             Message = applied.Message,
             Note = note,
+            Wallpaper = applied.Succeeded ? SetWallpapers(modes.Plan) : WallpaperOutcome.NotConfigured,
             DesktopIcons = tidy ? PendingDesktopIcons(profile) : DesktopIconOutcome.NotConfigured,
         }, started);
         return tidy ? result with { TidyCompletion = _tidy.Start(profile) } : result;

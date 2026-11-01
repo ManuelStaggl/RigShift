@@ -88,6 +88,11 @@ switch (command)
         Print(desktop is null ? new { Reachable = false, Icons = (object?)null } : new { Reachable = true, Icons = (object?)desktop.Icons });
         break;
 
+    case "wallpapers":
+        // Read-only: every display the shell knows with its wallpaper; the IDs match the snapshot's device paths.
+        Print(new RigShift.Windows.Shell.Wallpapers(log).Read());
+        break;
+
     case "desktop-icons-restore" when args.Length >= 2:
         // Changes something: reads the layout from a JSON file written by "desktop-icons" and puts the symbols there.
         var wanted = System.Text.Json.JsonSerializer.Deserialize<RigShift.Core.Profiles.DesktopIconLayout>(

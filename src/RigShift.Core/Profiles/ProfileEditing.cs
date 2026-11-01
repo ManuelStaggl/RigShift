@@ -27,17 +27,16 @@ public static class ProfileEditing
     /// The active displays as a profile saves them: <see cref="CurrentArrangement"/>, but without taking over the HDR state.
     ///A profile that sets HDR turns every change the user makes in Windows back on the next switch, and
     /// switching HDR is what froze a driver in a hardware test. A display <paramref name="previous"/> already has keeps its HDR choice
-    /// – "don't change" included.
+    /// – "don't change" included – and its wallpaper.
     /// </summary>
     public static IReadOnlyList<DisplayAssignment> CapturedArrangement(
         DisplaySnapshot snapshot, IEnumerable<DisplayAssignment> previous, IReadOnlyDictionary<string, string>? knownNames = null)
     {
         List<DisplayAssignment> before = [.. previous];
         return CurrentArrangement(snapshot, before, knownNames)
-            .Select(live => live with
-            {
-                Hdr = before.FirstOrDefault(d => string.Equals(d.Identity.TargetDevicePath, live.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase))?.Hdr,
-            })
+            .Select(live => before.FirstOrDefault(d => string.Equals(d.Identity.TargetDevicePath, live.Identity.TargetDevicePath, StringComparison.OrdinalIgnoreCase)) is { } kept
+                ? live with { Hdr = kept.Hdr, Wallpaper = kept.Wallpaper }
+                : live with { Hdr = null })
             .ToList();
     }
 

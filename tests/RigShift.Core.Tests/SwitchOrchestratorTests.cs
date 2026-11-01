@@ -29,6 +29,7 @@ public sealed class SwitchOrchestratorTests
     private readonly InMemoryDuckingMemory _duckingMemory = new();
     private readonly IWindowRescuer _windows = Substitute.For<IWindowRescuer>();
     private readonly ISwitchConfirmation _confirmation = Substitute.For<ISwitchConfirmation>();
+    private readonly IWallpapers _wallpapers = Substitute.For<IWallpapers>();
     private readonly InMemorySwitchJournal _journal = new();
     private readonly FakeSurroundController _surround = new();
 
@@ -1182,6 +1183,112 @@ public sealed class SwitchOrchestratorTests
     }
 
     [Fact]
+    public async Task Switch_Wallpaper_IsSetOnTheResolvedDisplay()
+    {
+        string image = Path.GetTempFileName();
+        try
+        {
+            var display = new FakeDisplayConfigurator(DeskActive());
+            _wallpapers.Show(default, default!, default).ReturnsForAnyArgs(true);
+            Profile rig = Rig() with { Displays = [UltrawideMode with { Wallpaper = image }, TabletMode], WallpaperFit = WallpaperFit.Fit };
+
+            SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+            result.Wallpaper.ShouldBe(WallpaperOutcome.Applied);
+            _wallpapers.Received(1).Show(Ultrawide.TargetDevicePath, image, WallpaperFit.Fit);
+            _wallpapers.ReceivedWithAnyArgs(1).Show(default, default!, default);
+        }
+        finally
+        {
+            File.Delete(image);
+        }
+    }
+
+    [Fact]
+    public async Task Switch_WallpaperSpan_SetsThePrimaryImageOnAllDisplays()
+    {
+        string primary = Path.GetTempFileName();
+        string other = Path.GetTempFileName();
+        try
+        {
+            var display = new FakeDisplayConfigurator(DeskActive());
+            _wallpapers.Show(default, default!, default).ReturnsForAnyArgs(true);
+            Profile rig = Rig() with
+            {
+                Displays = [TabletMode with { Wallpaper = other }, UltrawideMode with { Wallpaper = primary }],
+                WallpaperFit = WallpaperFit.Span,
+            };
+            rig.Displays.Single(d => d.Wallpaper == primary).IsPrimary.ShouldBeTrue();
+
+            SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+            result.Wallpaper.ShouldBe(WallpaperOutcome.Applied);
+            _wallpapers.Received(1).Show(null, primary, WallpaperFit.Span);
+            _wallpapers.ReceivedWithAnyArgs(1).Show(default, default!, default);
+        }
+        finally
+        {
+            File.Delete(primary);
+            File.Delete(other);
+        }
+    }
+
+    [Fact]
+    public async Task Switch_WallpaperFileMissing_IsReportedAndTheSwitchStays()
+    {
+        var display = new FakeDisplayConfigurator(DeskActive());
+        Profile rig = Rig() with { Displays = [UltrawideMode with { Wallpaper = @"C:
+owheregone.jpg" }, TabletMode] };
+
+        SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+        result.Outcome.ShouldBe(SwitchOutcome.Applied);
+        result.Wallpaper.ShouldBe(WallpaperOutcome.FileMissing);
+        _wallpapers.DidNotReceiveWithAnyArgs().Show(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Switch_WallpaperNotTaken_IsIncomplete()
+    {
+        string image = Path.GetTempFileName();
+        try
+        {
+            var display = new FakeDisplayConfigurator(DeskActive());
+            Profile rig = Rig() with { Displays = [UltrawideMode with { Wallpaper = image }, TabletMode] };
+
+            SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+            result.Wallpaper.ShouldBe(WallpaperOutcome.Incomplete);
+        }
+        finally
+        {
+            File.Delete(image);
+        }
+    }
+
+    [Fact]
+    public async Task Switch_Rejected_LeavesTheWallpaperAlone()
+    {
+        string image = Path.GetTempFileName();
+        try
+        {
+            var display = new FakeDisplayConfigurator(DeskActive());
+            _confirmation.ConfirmAsync(default!, default!, default, default).ReturnsForAnyArgs(ConfirmationResult.Rejected);
+            Profile rig = Rig(confirm: true) with { Displays = [UltrawideMode with { Wallpaper = image }, TabletMode] };
+
+            SwitchResult result = await Create(display).SwitchAsync(rig, SwitchRequest.Default, Ct);
+
+            result.Outcome.ShouldBe(SwitchOutcome.RolledBack);
+            result.Wallpaper.ShouldBe(WallpaperOutcome.NotConfigured);
+            _wallpapers.DidNotReceiveWithAnyArgs().Show(default, default!, default);
+        }
+        finally
+        {
+            File.Delete(image);
+        }
+    }
+
+    [Fact]
     public async Task Switch_Hdr_IsSetWhereTheActiveDisplayDiffers()
     {
         var display = new FakeDisplayConfigurator([
@@ -2037,5 +2144,5 @@ public sealed class SwitchOrchestratorTests
 
     private SwitchOrchestrator Create(FakeDisplayConfigurator display, SwitchOptions? options = null) =>
         new(display, _audio, _apps, _usbDevices, _power, _ducking, _duckingMemory, _windows, DesktopIcons, _surround, _confirmation, _journal, new TopologyPlanner(new TopologyPlannerOptions()),
-            options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None);
+            options ?? new SwitchOptions { WindowRescueDelay = TimeSpan.Zero }, _time, Logger.None, wallpapers: _wallpapers);
 }

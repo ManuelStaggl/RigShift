@@ -71,6 +71,19 @@ public sealed class ProfileEditingTests
     }
 
     [Fact]
+    public void CapturedArrangement_KeepsTheWallpaper()
+    {
+        DisplaySnapshot live = Snapshot(
+            Attached(Desk4K, activeMode: DeskModes[0]),
+            Attached(DeskLeft, activeMode: DeskModes[1]));
+
+        IReadOnlyList<DisplayAssignment> arrangement = ProfileEditing.CapturedArrangement(live, [DeskModes[0] with { Wallpaper = @"C:Picturesig.jpg" }]);
+
+        arrangement.Single(d => d.Identity == Desk4K).Wallpaper.ShouldBe(@"C:Picturesig.jpg");
+        arrangement.Single(d => d.Identity == DeskLeft).Wallpaper.ShouldBeNull();
+    }
+
+    [Fact]
     public void SetPrimary_ShiftsAllPositionsSoThePrimaryIsAtOrigin()
     {
         IReadOnlyList<DisplayAssignment> displays = [DeskModes[1], DeskModes[0], DeskModes[2]];

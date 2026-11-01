@@ -60,6 +60,12 @@ public sealed record Profile
     public SurroundSetting? Surround { get; init; }
 
     /// <summary>
+    /// How the wallpapers of <see cref="DisplayAssignment.Wallpaper"/> are fitted; only set when a display has one.
+    /// <c>set</c>: an <c>init</c> initializer is skipped when the key is missing.
+    /// </summary>
+    public WallpaperFit WallpaperFit { get; set; } = WallpaperFit.Fill;
+
+    /// <summary>
     /// USB device (<c>VID_xxxx&amp;PID_xxxx</c>) the apps wait for before they start, e.g. the wheelbase; <c>null</c> to start
     /// them right away.
     /// </summary>

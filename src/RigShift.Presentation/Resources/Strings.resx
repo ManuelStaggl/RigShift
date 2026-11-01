@@ -60,6 +60,8 @@
   <data name="Profile_AppsWait" xml:space="preserve"><value>waits for {0}</value></data>
   <data name="Result_AudioIncomplete" xml:space="preserve"><value>Audio could not be switched completely.</value></data>
   <data name="Result_HdrIncomplete" xml:space="preserve"><value>HDR could not be set on every display.</value></data>
+  <data name="Result_WallpaperMissing" xml:space="preserve"><value>A wallpaper image was not found; that display kept its wallpaper.</value></data>
+  <data name="Result_WallpaperIncomplete" xml:space="preserve"><value>The wallpaper could not be set on every display.</value></data>
   <data name="Result_IconsAutoArrange" xml:space="preserve"><value>Desktop icons not placed: Windows arranges them itself (“Auto arrange icons” in the desktop's context menu).</value></data>
   <data name="Result_IconsUnavailable" xml:space="preserve"><value>Desktop icons could not be placed.</value></data>
   <data name="Result_RolledBackTitle" xml:space="preserve"><value>Switch to {0} reverted</value></data>
@@ -176,6 +178,18 @@
   <data name="Editor_RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
   <data name="Editor_RefreshRateHint" xml:space="preserve"><value>Refresh rate. The display lists its rates only while it is on.</value></data>
   <data name="Editor_HdrHint" xml:space="preserve"><value>HDR after switching. Displays without HDR stay as they are.</value></data>
+  <data name="Editor_Wallpaper" xml:space="preserve"><value>Wallpaper</value></data>
+  <data name="Editor_WallpaperHint" xml:space="preserve"><value>Image after switching. Without one the wallpaper stays as it is.</value></data>
+  <data name="Editor_WallpaperChoose" xml:space="preserve"><value>Choose…</value></data>
+  <data name="Editor_WallpaperRemove" xml:space="preserve"><value>Remove wallpaper</value></data>
+  <data name="Editor_WallpaperFilter" xml:space="preserve"><value>Images (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|All files (*.*)|*.*</value></data>
+  <data name="Editor_WallpaperFit" xml:space="preserve"><value>Fit</value></data>
+  <data name="Editor_WallpaperFitHint" xml:space="preserve"><value>Windows uses one fit for all displays.</value></data>
+  <data name="WallpaperFit_Fill" xml:space="preserve"><value>Fill</value></data>
+  <data name="WallpaperFit_Fit" xml:space="preserve"><value>Fit</value></data>
+  <data name="WallpaperFit_Stretch" xml:space="preserve"><value>Stretch</value></data>
+  <data name="WallpaperFit_Center" xml:space="preserve"><value>Center</value></data>
+  <data name="WallpaperFit_Span" xml:space="preserve"><value>Span</value></data>
   <data name="Hdr_Unchanged" xml:space="preserve"><value>Don't change</value></data>
   <data name="Hdr_On" xml:space="preserve"><value>On</value></data>
   <data name="Hdr_Off" xml:space="preserve"><value>Off</value></data>

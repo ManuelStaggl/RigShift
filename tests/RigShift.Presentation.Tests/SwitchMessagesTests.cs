@@ -75,12 +75,13 @@ public sealed class SwitchMessagesTests
     }
 
     [Fact]
-    public void ForNotification_AudioHdrIconsAndApps_AddALineEach()
+    public void ForNotification_AudioHdrWallpaperIconsAndApps_AddALineEach()
     {
         SwitchRecord record = Record(SwitchOutcome.Applied) with
         {
             Audio = AudioOutcome.Incomplete,
             Hdr = HdrOutcome.Incomplete,
+            Wallpaper = WallpaperOutcome.FileMissing,
             DesktopIcons = DesktopIconOutcome.AutoArrange,
             Apps = AppsOutcome.DeviceMissing,
             AppsWaitDevice = "Wheel",
@@ -94,6 +95,7 @@ public sealed class SwitchMessagesTests
             Loc.Instance["Result_AppliedText"],
             Loc.Instance["Result_AudioIncomplete"],
             Loc.Instance["Result_HdrIncomplete"],
+            Loc.Instance["Result_WallpaperMissing"],
             Loc.Instance["Result_IconsAutoArrange"],
             Loc.Format("Result_AppsDeviceMissing", "Wheel", 30),
         ]);

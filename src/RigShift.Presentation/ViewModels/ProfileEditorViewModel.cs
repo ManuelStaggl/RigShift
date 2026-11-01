@@ -86,6 +86,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         CloseAppsWhenLeaving = profile.CloseAppsWhenLeaving;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
         Surround = new SurroundSection(context.Surround, profile.Surround, context.SurroundUsedBy);
+        FillWallpaperFitChoices(profile.WallpaperFit.ToString());
 
         // The editor's own reading of the profile, so defaults it fills in do not count as changes.
         _initial = Build();
@@ -195,6 +196,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     [ObservableProperty]
     public partial bool KeepAwake { get; set; }
+
+    /// <summary>How the wallpapers are fitted: one choice for the profile, because Windows keeps one for all displays.</summary>
+    public ObservableCollection<Choice> WallpaperFitChoices { get; } = [];
+
+    [ObservableProperty]
+    public partial Choice? SelectedWallpaperFit { get; set; }
 
     [ObservableProperty]
     public partial bool RememberWindows { get; set; }
@@ -691,6 +698,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         try
         {
             FillIconChoices(SelectedIcon?.Key);
+            FillWallpaperFitChoices(SelectedWallpaperFit?.Key);
             AppList.Relabel();
             Surround.Relabel();
             foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
@@ -712,6 +720,17 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         UpdateTopology();
         Recalculate();
+    }
+
+    private void FillWallpaperFitChoices(string? selectedKey)
+    {
+        WallpaperFitChoices.Clear();
+        foreach (WallpaperFit fit in Enum.GetValues<WallpaperFit>())
+        {
+            WallpaperFitChoices.Add(new Choice(fit.ToString(), Loc.Instance["WallpaperFit_" + fit]));
+        }
+
+        SelectedWallpaperFit = WallpaperFitChoices.FirstOrDefault(c => c.Key == selectedKey) ?? WallpaperFitChoices[0];
     }
 
     private void FillIconChoices(string? selectedKey)
@@ -754,5 +773,6 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         RememberDesktopIcons = RememberDesktopIcons,
         DesktopIcons = RememberDesktopIcons && DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),
+        WallpaperFit = Enum.TryParse(SelectedWallpaperFit?.Key, out WallpaperFit fit) ? fit : WallpaperFit.Fill,
     };
 }

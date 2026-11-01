@@ -72,6 +72,16 @@ public sealed partial class DisplayEditItem : ObservableObject
     /// <summary>HDR is set on or off: the editor warns to try it in Windows first.</summary>
     public bool SwitchesHdr => SelectedHdr?.Value is not null;
 
+    /// <summary>Image file shown on this display after the switch; <c>null</c> leaves the wallpaper alone.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWallpaper), nameof(WallpaperText))]
+    public partial string? Wallpaper { get; set; }
+
+    public bool HasWallpaper => Wallpaper is not null;
+
+    /// <summary>The image's file name, or "Choose…" on the button that picks one.</summary>
+    public string WallpaperText => Wallpaper is null ? Loc.Instance["Editor_WallpaperChoose"] : Path.GetFileName(Wallpaper);
+
     /// <summary>The display offered no rates now and none are remembered, so only the saved one is listed.</summary>
     [ObservableProperty]
     public partial bool RatesUnknown { get; private set; }
@@ -94,6 +104,7 @@ public sealed partial class DisplayEditItem : ObservableObject
 
         Sync(Assignment);
         OnPropertyChanged(nameof(Name));
+        OnPropertyChanged(nameof(WallpaperText));
     }
 
     private static HdrChoice[] NewHdrChoices() =>
@@ -121,6 +132,7 @@ public sealed partial class DisplayEditItem : ObservableObject
 
             SelectedRefresh = RefreshChoices.First(c => c.Rate == rate);
             SelectedHdr = HdrChoices.First(c => c.Value == assignment.Hdr);
+            Wallpaper = assignment.Wallpaper;
         }
         finally
         {
@@ -175,6 +187,15 @@ public sealed partial class DisplayEditItem : ObservableObject
         if (!_syncing && value is not null)
         {
             Assignment = Assignment with { Hdr = value.Value };
+            _owner.OnDisplaysEdited();
+        }
+    }
+
+    partial void OnWallpaperChanged(string? value)
+    {
+        if (!_syncing)
+        {
+            Assignment = Assignment with { Wallpaper = value };
             _owner.OnDisplaysEdited();
         }
     }

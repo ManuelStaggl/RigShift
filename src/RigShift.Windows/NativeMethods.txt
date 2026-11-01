@@ -132,6 +132,10 @@ SHGetDesktopFolder
 SHGDNF
 ILFree
 StrRetToStrW
+// Wallpaper per display. The fit (DESKTOP_WALLPAPER_POSITION) is one for all displays.
+IDesktopWallpaper
+DesktopWallpaper
+DESKTOP_WALLPAPER_POSITION
 // Countdown: any button on a wheel, button box or game controller keeps the switch. Raw Input for the
 // reports, the HID parser for which buttons they hold; axes and hat switches are never read.
 RegisterRawInputDevices

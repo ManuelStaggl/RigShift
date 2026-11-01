@@ -575,7 +575,7 @@ public sealed partial class SwitchCoordinator : ObservableObject, IDisposable, I
             profile.AppsWaitForUsbDeviceId is null && profile.AppsWaitForUsbDeviceName is null
                 ? null
                 : Core.Automation.UsbDeviceNames.NameOf(profile.AppsWaitForUsbDeviceId, profile.AppsWaitForUsbDeviceName, _settings.Current.UsbDeviceNames),
-            Profile.AppsDeviceWaitSeconds, result.Note, Ambiguous: IsAmbiguous(result), Hdr: result.Hdr, DesktopIcons: result.DesktopIcons);
+            Profile.AppsDeviceWaitSeconds, result.Note, Ambiguous: IsAmbiguous(result), Hdr: result.Hdr, DesktopIcons: result.DesktopIcons, Wallpaper: result.Wallpaper);
 
     private static bool IsAmbiguous(SwitchResult result) => result.Outcome == SwitchOutcome.Blocked && result.Plan.IsAmbiguous;
 

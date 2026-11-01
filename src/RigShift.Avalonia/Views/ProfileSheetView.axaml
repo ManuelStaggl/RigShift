@@ -615,6 +615,35 @@
                 </Grid>
                 <TextBlock Margin="0,0,0,8" AutomationProperties.HelpText="{v:Tr Editor_HdrWarningTip}" Classes="caption warning" IsVisible="{Binding Editor.SelectedDisplay.SwitchesHdr, FallbackValue=False}" Text="{v:Tr Editor_HdrWarning}" TextWrapping="Wrap" ToolTip.Tip="{v:Tr Editor_HdrWarningTip}" />
                 <Border Classes="divider" />
+                <Grid Classes="row" ColumnDefinitions="*,150">
+                  <TextBlock Classes="label" Text="{v:Tr Editor_Wallpaper}" />
+                  <Grid Grid.Column="1" VerticalAlignment="Center" ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" AutomationProperties.Name="{v:Tr Editor_Wallpaper}" Classes="neutral" Click="OnPickWallpaper" ToolTip.Tip="{v:Tr Editor_WallpaperHint}">
+                      <TextBlock Text="{Binding Editor.SelectedDisplay.WallpaperText, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+                    </Button>
+                    <Button
+                      Grid.Column="1"
+                      AutomationProperties.Name="{v:Tr Editor_WallpaperRemove}"
+                      Classes="ghost"
+                      Click="OnRemoveWallpaper"
+                      IsVisible="{Binding Editor.SelectedDisplay.HasWallpaper, FallbackValue=False}"
+                      ToolTip.Tip="{v:Tr Editor_WallpaperRemove}">
+                      <Path Classes="icon" Data="{x:Static v:Icons.Dismiss16}" />
+                    </Button>
+                  </Grid>
+                </Grid>
+                <Grid Classes="row" ColumnDefinitions="*,150" IsVisible="{Binding Editor.SelectedDisplay.HasWallpaper, FallbackValue=False}">
+                  <TextBlock Classes="label" Text="{v:Tr Editor_WallpaperFit}" />
+                  <ComboBox
+                    AutomationProperties.Name="{v:Tr Editor_WallpaperFit}"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding Editor.WallpaperFitChoices}"
+                    SelectedItem="{Binding Editor.SelectedWallpaperFit, Converter={x:Static v:Converters.KeepOnNull}}"
+                    ToolTip.Tip="{v:Tr Editor_WallpaperFitHint}" />
+                </Grid>
+                <Border Classes="divider" />
                 <Grid Classes="row" ColumnDefinitions="*,Auto">
                   <TextBlock Classes="label" Text="{v:Tr Editor_Primary}" />
                   <ToggleSwitch Grid.Column="1" AutomationProperties.Name="{v:Tr Editor_Primary}" IsChecked="{Binding Editor.SelectedDisplay.IsPrimary, FallbackValue=False}" OffContent="" OnContent="" />

@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using RigShift.App.Localization;
 using RigShift.App.ViewModels;
+using RigShift.Windows.Ui;
 using Ursa.Controls;
 
 namespace RigShift.Avalonia.Views;
@@ -152,6 +153,28 @@ public sealed partial class ProfileSheetView : UserControl
     }
 
     private void OnRemoveDisplay(object? sender, RoutedEventArgs e) => _editor?.RemoveDisplayCommand.Execute(_editor.SelectedDisplay);
+
+    private void OnPickWallpaper(object? sender, RoutedEventArgs e)
+    {
+        if (_editor?.SelectedDisplay is not { } display)
+        {
+            return;
+        }
+
+        string? folder = display.Wallpaper is { } current ? System.IO.Path.GetDirectoryName(current) : null;
+        if (NativeWindow.PickFile(App.OwnerHandle, Loc.Instance["Editor_WallpaperFilter"], Loc.Instance["Editor_Wallpaper"], folder) is { } file)
+        {
+            display.Wallpaper = file;
+        }
+    }
+
+    private void OnRemoveWallpaper(object? sender, RoutedEventArgs e)
+    {
+        if (_editor?.SelectedDisplay is { } display)
+        {
+            display.Wallpaper = null;
+        }
+    }
 
     private void OnRemoveRule(object? sender, RoutedEventArgs e) => _editor?.Rules.RemoveRuleCommand.Execute(TagOf<RuleCard>(sender));
 

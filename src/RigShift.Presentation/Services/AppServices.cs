@@ -163,7 +163,8 @@ public sealed record SwitchRecord(
     SwitchNote Note = SwitchNote.None,
     bool Ambiguous = false,
     HdrOutcome Hdr = HdrOutcome.NotConfigured,
-    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured)
+    DesktopIconOutcome DesktopIcons = DesktopIconOutcome.NotConfigured,
+    WallpaperOutcome Wallpaper = WallpaperOutcome.NotConfigured)
 {
     public string OutcomeText => SwitchMessages.Outcome(Outcome);
 
@@ -299,6 +300,17 @@ public static class SwitchMessages
         if (record.Hdr == HdrOutcome.Incomplete)
         {
             text += Environment.NewLine + Loc.Instance["Result_HdrIncomplete"];
+        }
+
+        string? wallpaper = record.Wallpaper switch
+        {
+            WallpaperOutcome.FileMissing => Loc.Instance["Result_WallpaperMissing"],
+            WallpaperOutcome.Incomplete => Loc.Instance["Result_WallpaperIncomplete"],
+            _ => null,
+        };
+        if (wallpaper is not null)
+        {
+            text += Environment.NewLine + wallpaper;
         }
 
         foreach (string problem in FollowUpProblems(record))

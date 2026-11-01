@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RigShift.Core.Profiles;
 
 /// <summary>One display inside a profile: identity plus desired mode and position.</summary>
@@ -36,6 +38,13 @@ public sealed record DisplayAssignment
     /// when the display does not support HDR.
     /// </summary>
     public bool? Hdr { get; init; }
+
+    /// <summary>
+    /// Image file for this display's wallpaper after the switch; <c>null</c> leaves whatever Windows shows. How it is
+    /// fitted is <see cref="Profile.WallpaperFit"/>: Windows keeps one fit for all displays.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Wallpaper { get; init; }
 
     /// <summary>
     /// Optional displays (e.g. a spacedesk tablet) are skipped when absent and picked up later

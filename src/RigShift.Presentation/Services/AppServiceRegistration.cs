@@ -49,6 +49,7 @@ public static class AppServiceRegistration
         services.AddSingleton<IWindowMemoryStore>(_ => new JsonWindowMemoryStore(paths.DataDirectory, log));
         services.AddSingleton<Core.Profiles.WindowMemory>();
         services.AddSingleton<IDesktopIcons, Windows.Shell.DesktopIcons>();
+        services.AddSingleton<IWallpapers, Windows.Shell.Wallpapers>();
         services.AddSingleton<IDisplaySizeReader, EdidDisplaySizeReader>();
         services.AddSingleton<ISurroundController, NvSurroundController>();
         services.AddSingleton<ISwitchJournal>(_ => new JsonSwitchJournal(paths.DataDirectory, log));

@@ -412,6 +412,11 @@ public sealed class CommandRunner
                 text.Append(CultureInfo.InvariantCulture, $", HDR {result.Hdr}");
             }
 
+            if (result.Wallpaper != WallpaperOutcome.NotConfigured)
+            {
+                text.Append(CultureInfo.InvariantCulture, $", wallpaper {result.Wallpaper}");
+            }
+
             if (result.DesktopIcons == DesktopIconOutcome.Pending)
             {
                 text.Append(", desktop symbols go back in the background");
