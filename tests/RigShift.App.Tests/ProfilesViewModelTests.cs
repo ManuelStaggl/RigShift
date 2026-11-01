@@ -469,7 +469,7 @@ public sealed class ProfilesViewModelTests : IDisposable
 
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeTrue("what the row shows is what the button restores");
 
-        page.Editor.ClearDesktopIconsCommand.Execute(null);
+        page.Editor.RememberDesktopIcons = false;
         page.RestoreDesktopIconsCommand.CanExecute(null).ShouldBeFalse();
     });
 

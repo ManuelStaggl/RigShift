@@ -429,7 +429,9 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.DesktopIconsText.ShouldNotBe(Loc.Instance["Status_IconsUnavailable"]);
         editor.IsDirty.ShouldBeTrue();
 
-        editor.ClearDesktopIconsCommand.Execute(null);
+        editor.RememberDesktopIcons = false;
+        editor.HasDesktopIcons.ShouldBeFalse("off forgets the layout");
+        editor.RememberDesktopIcons = true;
         editor.IsDirty.ShouldBeFalse();
     }
 

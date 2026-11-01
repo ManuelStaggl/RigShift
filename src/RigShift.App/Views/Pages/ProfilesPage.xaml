@@ -671,8 +671,8 @@
                     SelectedItem="{Binding Surround.Selected}"
                     Style="{StaticResource RigShift.Segment}" />
                 </controls:SettingRow>
-                <!-- Desktop symbols: captured on demand, because they are only right while this profile's screens are
-                     up. The caption is the saved state; how to use it is the tooltip. -->
+                <!-- Desktop symbols: saved by themselves while this profile is active, or on demand here. The caption
+                     is the saved state; how it works is the tooltip. -->
                 <controls:SettingRow
                   Margin="0,8,0,0"
                   Caption="{Binding DesktopIconsText}"
@@ -680,12 +680,6 @@
                   ToolTip="{loc:Tr Editor_DesktopIconsHint}">
                   <StackPanel Orientation="Horizontal">
                     <Button
-                      Command="{Binding ClearDesktopIconsCommand}"
-                      Content="{loc:Tr Editor_DesktopIconsClear}"
-                      Style="{StaticResource RigShift.Button.Ghost}"
-                      Visibility="{Binding HasDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
-                    <Button
-                      Margin="8,0,0,0"
                       Command="{Binding DataContext.RestoreDesktopIconsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                       Content="{loc:Tr Editor_DesktopIconsRestore}"
                       Style="{StaticResource RigShift.Button}"
@@ -695,7 +689,14 @@
                       Margin="8,0,0,0"
                       Command="{Binding CaptureDesktopIconsCommand}"
                       Content="{loc:Tr Editor_DesktopIconsCapture}"
-                      Style="{StaticResource RigShift.Button}" />
+                      Style="{StaticResource RigShift.Button}"
+                      Visibility="{Binding RememberDesktopIcons, Converter={StaticResource BoolToVisibility}}" />
+                    <ui:ToggleSwitch
+                      Margin="16,0,0,0"
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="{loc:Tr Editor_DesktopIcons}"
+                      IsChecked="{Binding RememberDesktopIcons}"
+                      Style="{StaticResource RigShift.Toggle}" />
                   </StackPanel>
                 </controls:SettingRow>
               </StackPanel>

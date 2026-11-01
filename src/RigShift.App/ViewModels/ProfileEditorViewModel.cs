@@ -77,6 +77,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         _desktopIcons = services.DesktopIcons;
         DesktopIcons = profile.DesktopIcons;
+        RememberDesktopIcons = profile.RememberDesktopIcons;
         KeepAwake = profile.KeepAwake;
         RememberWindows = profile.RememberWindows;
         DisableCommunicationsDucking = profile.DisableCommunicationsDucking;
@@ -195,9 +196,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public partial bool RememberWindows { get; set; }
 
     /// <summary>
-    /// Where the desktop symbols belong in this profile, or <c>null</c> to leave them alone. Captured on demand and not
-    /// on every save: the positions are only right while this profile's arrangement is the one on screen, and saving an
-    /// unrelated change from the other arrangement would quietly overwrite good ones.
+    /// Where the desktop symbols belong in this profile, or <c>null</c> to leave them alone. Not taken on every save of
+    /// the editor: the positions are only right while this profile's arrangement is the one on screen. While the profile
+    /// is active, moved icons are saved by themselves (<see cref="Services.DesktopIconWatcher"/>).
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DesktopIconsText))]
@@ -207,6 +208,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
     public bool HasDesktopIcons => DesktopIcons is { IsEmpty: false };
 
     public string DesktopIconsText => _desktopUnreachable ? Loc.Instance["Status_IconsUnavailable"]
+        : !RememberDesktopIcons ? Loc.Instance["Editor_DesktopIconsOff"]
         : DesktopIcons is { IsEmpty: false } layout
         ? Loc.Format(
             layout.Icons.Count == 1 ? "Editor_DesktopIconsSavedOne" : "Editor_DesktopIconsSaved",
@@ -239,8 +241,18 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         }
     }
 
-    [RelayCommand]
-    private void ClearDesktopIcons() => DesktopIcons = null;
+    /// <summary>Off, the profile forgets its layout and leaves the icons alone.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DesktopIconsText))]
+    public partial bool RememberDesktopIcons { get; set; }
+
+    partial void OnRememberDesktopIconsChanged(bool value)
+    {
+        if (!value)
+        {
+            DesktopIcons = null;
+        }
+    }
 
     [ObservableProperty]
     public partial bool DisableCommunicationsDucking { get; set; }
@@ -667,7 +679,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         KeepAwake = KeepAwake,
         RememberWindows = RememberWindows,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
-        DesktopIcons = DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
+        RememberDesktopIcons = RememberDesktopIcons,
+        DesktopIcons = RememberDesktopIcons && DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),
     };
 }

@@ -18,6 +18,23 @@ public sealed record DesktopIconLayout
     public DateTimeOffset CapturedAt { get; init; }
 
     public bool IsEmpty => Icons.Count == 0;
+
+    /// <summary>The same icons at the same places, in any order; when they were captured does not count.</summary>
+    public bool SamePositions(DesktopIconLayout? other)
+    {
+        if (other is null || other.Icons.Count != Icons.Count)
+        {
+            return false;
+        }
+
+        var places = new Dictionary<string, (int X, int Y)>(StringComparer.OrdinalIgnoreCase);
+        foreach (DesktopIcon icon in other.Icons)
+        {
+            places[icon.Item] = (icon.X, icon.Y);
+        }
+
+        return Icons.All(icon => places.TryGetValue(icon.Item, out (int X, int Y) at) && at == (icon.X, icon.Y));
+    }
 }
 
 /// <summary>One symbol's place on the desktop.</summary>

@@ -246,6 +246,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         display["identity"]!.AsObject().Remove("friendlyName").ShouldBeTrue();
         profile.Remove("audio").ShouldBeTrue();
         profile.Remove("appsWaitSeconds").ShouldBeTrue();
+        profile.Remove("rememberDesktopIcons").ShouldBeTrue();
         await File.WriteAllTextAsync(file, profile.Parent!.ToJsonString(), Ct);
 
         Profile loaded = (await store.LoadAllAsync(Ct)).Profiles.Single();
@@ -255,6 +256,7 @@ public sealed class JsonProfileStoreTests : IDisposable
         loaded.Audio.ShouldNotBeNull();
         loaded.AppsWaitSeconds.ShouldBe(Profiles.Profile.AppsDeviceWaitSeconds);
         loaded.DisableCommunicationsDucking.ShouldBeFalse();
+        loaded.RememberDesktopIcons.ShouldBeTrue("profiles from before 4.8 keep their icons current");
     }
 
     [Fact]

@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Desktop icons are saved to the active profile by themselves when you move them, a few seconds after they stop
+  moving. Windows' own reshuffling after a switch or a display change is not saved. A switch per profile turns it off.
+
 ## [4.7.0] - 2026-10-29
 
 ### Changed
