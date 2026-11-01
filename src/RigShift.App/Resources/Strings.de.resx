@@ -30,6 +30,7 @@
   <data name="Tray_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Wechselt…</value></data>
+  <data name="Tray_IconsSaved" xml:space="preserve"><value>Symbole gespeichert {0}</value></data>
   <data name="Tray_SwitchingTo" xml:space="preserve"><value>Wechselt zu {0}…</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>Keine Profile</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>{0} spielen</value></data>
