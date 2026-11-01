@@ -211,6 +211,21 @@ public sealed class ProfileEditorViewModelTests : IDisposable
         editor.HotkeyText.ShouldBeEmpty();
     }
 
+    /// <summary>The tray says it once at start; the editor keeps saying why the key does nothing.</summary>
+    [Fact]
+    public async Task SavedHotkey_HeldByAnotherApp_IsShownAsAProblem()
+    {
+        Profile rig = Rig() with { Hotkey = CtrlAltD };
+        await _host.Catalog.SaveAsync(rig, Ct);
+        _registrar.TakenElsewhere.Add(CtrlAltD);
+        _hotkeys.Start();
+
+        ProfileEditorViewModel editor = await EditorAsync(rig);
+
+        editor.HotkeyProblem.ShouldBe(Loc.Instance["Problem_HotkeyHeldElsewhere"]);
+        editor.ProblemCount.ShouldBe(0, "saving stays possible");
+    }
+
     [Fact]
     public async Task RecordHotkey_HeldByAGame_NamesTheGame()
     {
