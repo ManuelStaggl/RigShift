@@ -88,6 +88,11 @@ switch (command)
         Print(desktop is null ? new { Reachable = false, Icons = (object?)null } : new { Reachable = true, Icons = (object?)desktop.Icons });
         break;
 
+    case "app-volumes":
+        // Read-only: the programs that have sound open on any playback device.
+        Print(new RigShift.Windows.Audio.SessionAppVolumes(log).AppsWithSound());
+        break;
+
     case "desktop-icons-restore" when args.Length >= 2:
         // Changes something: reads the layout from a JSON file written by "desktop-icons" and puts the symbols there.
         var wanted = System.Text.Json.JsonSerializer.Deserialize<RigShift.Core.Profiles.DesktopIconLayout>(

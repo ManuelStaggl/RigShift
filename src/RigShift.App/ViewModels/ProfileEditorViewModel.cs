@@ -22,6 +22,7 @@ namespace RigShift.App.ViewModels;
 public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEditor, IHotkeyField
 {
     private readonly HotkeyRecorder _hotkeyRecorder;
+    private readonly IAppPicker _appPicker;
     private readonly HotkeyService _hotkeys;
     private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
@@ -76,6 +77,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         }
 
         AppList = new AppListEditor(profile.Apps, showWhen: false, context.AppsWaitDevice, services.AppPicker, "App_Path");
+        _appPicker = services.AppPicker;
+        foreach (AppVolume volume in profile.AppVolumes)
+        {
+            AddAppVolumeItem(new AppVolumeItem(volume));
+        }
 
         _desktopIcons = services.DesktopIcons;
         DesktopIcons = profile.DesktopIcons;
@@ -91,6 +97,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
         Displays.CollectionChanged += OnDisplaysChanged;
         AppList.Changed += OnPartChanged;
+        AppVolumes.CollectionChanged += OnPartChanged;
         Surround.Changed += OnPartChanged;
         Rules.Changed += OnPartChanged;
 
@@ -120,6 +127,45 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 
     /// <summary>Playback and recording.</summary>
     public IReadOnlyList<AudioSlot> AudioSlots { get; }
+
+    /// <summary>Volume per program after the switch.</summary>
+    public ObservableCollection<AppVolumeItem> AppVolumes { get; } = [];
+
+    /// <summary>Adds a program by its file name or full path; a program already listed is not added twice.</summary>
+    public void AddAppVolume(string executable)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(executable);
+        string name = Path.GetFileName(executable);
+        if (!AppVolumes.Any(v => string.Equals(v.Executable, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            AddAppVolumeItem(new AppVolumeItem(new AppVolume { Executable = name }));
+        }
+    }
+
+    /// <summary>The same picker as the app list: running programs, the Start menu, or a file.</summary>
+    [RelayCommand]
+    private void PickAppVolume()
+    {
+        if (_appPicker.Pick(null) is { } picked)
+        {
+            AddAppVolume(picked.Path);
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveAppVolume(AppVolumeItem? item)
+    {
+        if (item is not null && AppVolumes.Remove(item))
+        {
+            item.PropertyChanged -= OnPartChanged;
+        }
+    }
+
+    private void AddAppVolumeItem(AppVolumeItem item)
+    {
+        item.PropertyChanged += OnPartChanged;
+        AppVolumes.Add(item);
+    }
 
     /// <summary>Call devices, under "Devices for calls"; by default they follow playback and recording.</summary>
     public IReadOnlyList<AudioSlot> CommunicationsAudioSlots { get; }
@@ -555,6 +601,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         Rules.Changed -= OnPartChanged;
         Surround.Changed -= OnPartChanged;
         AppList.Changed -= OnPartChanged;
+        AppVolumes.CollectionChanged -= OnPartChanged;
+        foreach (AppVolumeItem volume in AppVolumes)
+        {
+            volume.PropertyChanged -= OnPartChanged;
+        }
+
         AppList.Dispose();
     }
 
@@ -626,6 +678,11 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         {
             FillIconChoices(SelectedIcon?.Key);
             AppList.Relabel();
+            foreach (AppVolumeItem volume in AppVolumes)
+            {
+                volume.Relabel();
+            }
+
             Surround.Relabel();
             foreach (AudioSlot slot in AudioSlots.Concat(CommunicationsAudioSlots))
             {
@@ -682,6 +739,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         KeepAwake = KeepAwake,
         RememberWindows = RememberWindows,
         DisableCommunicationsDucking = DisableCommunicationsDucking,
+        AppVolumes = [.. AppVolumes.Select(v => v.Build())],
         RememberDesktopIcons = RememberDesktopIcons,
         DesktopIcons = RememberDesktopIcons && DesktopIcons is { IsEmpty: false } ? DesktopIcons : null,
         Surround = Surround.Build(),

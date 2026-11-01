@@ -752,6 +752,64 @@
                     </controls:SettingRow>
                   </StackPanel>
                 </Border>
+                <!-- Volume per app: set after the switch, also for apps that start playing a little later. -->
+                <Border Style="{StaticResource RigShift.Card.Group}">
+                  <StackPanel>
+                    <TextBlock
+                      Margin="0,12,0,4"
+                      Style="{StaticResource RigShift.Text.CardTitle}"
+                      Text="{loc:Tr Editor_AppVolumes}"
+                      ToolTip="{loc:Tr Editor_AppVolumesHint}" />
+                    <ItemsControl x:Name="AppVolumeList" Focusable="False" ItemsSource="{Binding AppVolumes}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:AppVolumeItem}">
+                          <controls:SettingRow Style="{StaticResource RigShift.SettingRow.Inner}" Title="{Binding Executable}">
+                            <StackPanel Orientation="Horizontal">
+                              <CheckBox
+                                VerticalAlignment="Center"
+                                AutomationProperties.HelpText="{Binding Executable}"
+                                Content="{loc:Tr Editor_AppVolumeMute}"
+                                IsChecked="{Binding Muted}" />
+                              <Slider
+                                Width="200"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="{Binding Executable}"
+                                IsSnapToTickEnabled="True"
+                                LargeChange="10"
+                                Maximum="100"
+                                Minimum="0"
+                                SmallChange="1"
+                                Style="{StaticResource RigShift.Slider}"
+                                TickFrequency="1"
+                                Value="{Binding Volume}" />
+                              <TextBlock
+                                Width="48"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource RigShift.Text.Body}"
+                                Text="{Binding VolumeText}"
+                                TextAlignment="Right"
+                                Typography.NumeralAlignment="Tabular" />
+                              <Button
+                                Margin="8,0,0,0"
+                                AutomationProperties.HelpText="{Binding Executable}"
+                                Command="{Binding DataContext.RemoveAppVolumeCommand, ElementName=AppVolumeList}"
+                                CommandParameter="{Binding}"
+                                Content="{loc:Tr Editor_AppVolumeRemove}"
+                                Style="{StaticResource RigShift.Button.Ghost}" />
+                            </StackPanel>
+                          </controls:SettingRow>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button
+                      Margin="0,8,0,12"
+                      HorizontalAlignment="Left"
+                      Command="{Binding PickAppVolumeCommand}"
+                      Content="{loc:Tr Editor_AppVolumeAdd}"
+                      Style="{StaticResource RigShift.Button}" />
+                  </StackPanel>
+                </Border>
               </StackPanel>
               </controls:ContentColumn>
             </ScrollViewer>
