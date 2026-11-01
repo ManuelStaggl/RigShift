@@ -22,13 +22,17 @@ public sealed class DesktopIconWatcherTests : IDisposable
     public async Task MovedIcons_AreSavedToTheActiveProfile_OnceTheyHeldStill()
     {
         using DesktopIconWatcher watcher = await CreateAsync(Profile("Desk", DeskModes) with { DesktopIcons = Saved });
+        var saves = new List<DateTimeOffset>();
+        watcher.Saved += (_, at) => saves.Add(at);
         _host.DesktopIcons.Restore(Moved);
 
         await watcher.CheckAsync();
         StoredIcons().ShouldBe(Saved, "one look could be the middle of a drag");
+        saves.ShouldBeEmpty();
 
         await watcher.CheckAsync();
         StoredIcons().ShouldNotBeNull().SamePositions(Moved).ShouldBeTrue();
+        saves.ShouldHaveSingleItem().ShouldBe(_time.GetLocalNow(), "the tray popup shows when");
     }
 
     [Fact]

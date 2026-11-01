@@ -27,7 +27,8 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         SwitchCoordinator coordinator,
         Func<ProfilesViewModel> profiles,
         IAppShell shell,
-        AutomationService? automation = null)
+        AutomationService? automation = null,
+        DesktopIconWatcher? icons = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(games);
@@ -46,6 +47,16 @@ public sealed partial class TrayPopupViewModel : ObservableObject
         }
 
         catalog.ProfilesChanged += (_, _) => OnStatusChanged();
+        if (icons is not null)
+        {
+            icons.Saved += (_, at) =>
+            {
+                _iconsSavedAt = at;
+                OnPropertyChanged(nameof(IconsSavedText));
+                OnPropertyChanged(nameof(HasIconsSavedText));
+            };
+        }
+
         Loc.Instance.PropertyChanged += (_, _) => OnStatusChanged();
 
         // The games list is the catalog's own; nobody else marks its items as running, so the popup does it.
@@ -80,6 +91,13 @@ public sealed partial class TrayPopupViewModel : ObservableObject
 
     /// <summary>What the pause button does next, and that rules are paused.</summary>
     public string PauseTip => Loc.Instance[IsPaused ? "Tray_RulesPausedTip" : "Automation_Pause"];
+
+    /// <summary>"Icons saved 18:30" next to the profiles, after the active profile saved moved desktop icons.</summary>
+    public string? IconsSavedText => _iconsSavedAt is { } at ? Loc.Format("Tray_IconsSaved", at.ToString("t", Loc.Instance.Culture)) : null;
+
+    public bool HasIconsSavedText => _iconsSavedAt is not null;
+
+    private DateTimeOffset? _iconsSavedAt;
 
     /// <summary>"Switching to Sim Rig …" above the progress line; the plain sentence when the target is unknown.</summary>
     public string SwitchingText => Coordinator.SwitchingProfile is { } profile
