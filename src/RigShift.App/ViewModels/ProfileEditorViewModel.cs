@@ -23,6 +23,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
 {
     private readonly HotkeyRecorder _hotkeyRecorder;
     private readonly IAppPicker _appPicker;
+    private readonly HotkeyService _hotkeys;
     private IReadOnlySet<string> _missingDisplays = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
 
@@ -49,6 +50,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         ConfirmationEnabled = context.ConfirmationEnabled;
         Hotkey = profile.Hotkey;
         _hotkeyRecorder = new HotkeyRecorder(services.Hotkeys, HotkeyUseKind.Profile, profile.Id);
+        _hotkeys = services.Hotkeys;
         Rules = context.Rules;
         _log = services.Log.ForContext<ProfileEditorViewModel>();
 
@@ -649,7 +651,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDetailEd
         ProblemCount = problems.Count;
         NameProblem = ProblemTexts.Of(problems, ProfileProblem.NameMissing, ProfileProblem.NameTooLong, ProfileProblem.NameTaken);
         DisplaysProblem = ProblemTexts.Of(problems, ProfileProblem.NoDisplays, ProfileProblem.NoSinglePrimary, ProfileProblem.PrimaryIsOptional);
-        HotkeyProblem = ProblemTexts.Of(problems, ProfileProblem.HotkeyInvalid, ProfileProblem.HotkeyTaken);
+        HotkeyProblem = ProblemTexts.Of(problems, ProfileProblem.HotkeyInvalid, ProfileProblem.HotkeyTaken)
+            ?? (_hotkeys.IsRefused(Id, isGame: false, built.Hotkey) ? Loc.Instance["Problem_HotkeyHeldElsewhere"] : null);
         AppsProblem = ProblemTexts.Of(problems, ProfileProblem.AppPathMissing);
         AppList.Problem = AppsProblem;
         IsDirty = IsNew || Rules.IsDirty || !StoredForm.Same(built, _initial);

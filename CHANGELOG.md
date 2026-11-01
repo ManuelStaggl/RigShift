@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows
 
 - Desktop icons are saved to the active profile by themselves when you move them, a few seconds after they stop
   moving. Windows' own reshuffling after a switch or a display change is not saved. A switch per profile turns it off.
+- A hotkey that another app holds now says so in the profile and game editor, not only once in a notification at start.
 
 ## [4.7.0] - 2026-10-29
 

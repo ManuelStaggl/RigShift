@@ -27,6 +27,7 @@
   <data name="Tray_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
   <data name="Tray_Switching" xml:space="preserve"><value>Switching…</value></data>
+  <data name="Tray_IconsSaved" xml:space="preserve"><value>Icons saved {0}</value></data>
   <data name="Tray_SwitchingTo" xml:space="preserve"><value>Switching to {0}…</value></data>
   <data name="Tray_NoProfiles" xml:space="preserve"><value>No profiles</value></data>
   <data name="Tray_PlayGame" xml:space="preserve"><value>Play {0}</value></data>
@@ -188,6 +189,7 @@
   <data name="Problem_PrimaryIsOptional" xml:space="preserve"><value>The main display cannot be optional.</value></data>
   <data name="Problem_HotkeyInUse" xml:space="preserve"><value>Another app already uses this hotkey. Choose a different one.</value></data>
 
+  <data name="Problem_HotkeyHeldElsewhere" xml:space="preserve"><value>Another app uses this hotkey, so it does nothing. Choose a different one.</value></data>
   <data name="Problem_HotkeyUsedBy" xml:space="preserve"><value>“{0}” already uses this hotkey. Choose a different one.</value></data>
   <data name="Editor_Hotkey" xml:space="preserve"><value>Hotkey</value></data>
   <data name="Editor_HotkeyPlaceholder" xml:space="preserve"><value>Click, then press keys</value></data>

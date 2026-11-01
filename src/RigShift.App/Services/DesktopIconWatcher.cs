@@ -49,6 +49,9 @@ public sealed class DesktopIconWatcher : IDisposable
         Quiet();
     }
 
+    /// <summary>Raised on the UI thread after a moved layout was saved, with the time of the save.</summary>
+    public event EventHandler<DateTimeOffset>? Saved;
+
     public void Start() => _timer.Start();
 
     /// <summary>The displays changed: Explorer moves the icons now, which is not the user's arrangement.</summary>
@@ -94,6 +97,7 @@ public sealed class DesktopIconWatcher : IDisposable
 
             await _catalog.SaveAsync(stored with { DesktopIcons = now }, CancellationToken.None);
             _log.Information("Desktop icons of {Profile} saved after they were moved: {Count}", stored.Name, now.Icons.Count);
+            Saved?.Invoke(this, _time.GetLocalNow());
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
