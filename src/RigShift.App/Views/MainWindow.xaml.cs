@@ -108,6 +108,18 @@ public partial class MainWindow : FluentWindow
             UpdateNavWidth();
             ShowPage(_page);
         };
+        PreviewOpen();
+    }
+
+    // RIGSHIFT_PREVIEW_OPEN=Profiles (Debug): opens on that page; CI opens every page this way (tools/open-pages.ps1).
+    [System.Diagnostics.Conditional("DEBUG")]
+    private void PreviewOpen()
+    {
+        if (Environment.GetEnvironmentVariable("RIGSHIFT_PREVIEW_OPEN") is { Length: > 0 } name
+            && Pages.FirstOrDefault(p => p.Page.Name == name + "Page") is { } entry)
+        {
+            _page = entry.Page;
+        }
     }
 
     /// <summary>Windows' text size setting as a factor; the rail's width check counts in layout pixels.</summary>
