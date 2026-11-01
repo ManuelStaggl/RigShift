@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [4.8.0] - 2026-11-01
+
 ### Added
 
 - Desktop icons are saved to the active profile by themselves when you move them, a few seconds after they stop
